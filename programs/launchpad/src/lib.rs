@@ -8,6 +8,21 @@ pub mod state;
 
 use instructions::*;
 
+#[cfg(not(feature = "no-entrypoint"))]
+use solana_security_txt::security_txt;
+
+#[cfg(not(feature = "no-entrypoint"))]
+security_txt! {
+    name: "launchpad",
+    project_url: "https://metadao.fi",
+    contacts: "email:metaproph3t@protonmail.com",
+    policy: "The market will decide whether we pay a bug bounty.",
+    source_code: "https://github.com/metaDAOproject/futarchy",
+    source_release: "delayed-twap-v0.4.1",
+    auditors: "Accretion",
+    acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
+}
+
 declare_id!("AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE");
 
 /// 10M tokens with 6 decimals

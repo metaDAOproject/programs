@@ -10,7 +10,7 @@ security_txt! {
     contacts: "email:metaproph3t@protonmail.com",
     policy: "The market will decide whether we pay a bug bounty.",
     source_code: "https://github.com/metaDAOproject/futarchy",
-    source_release: "v0.4",
+    source_release: "delayed-twap-v0.4.1",
     auditors: "Neodyme",
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }

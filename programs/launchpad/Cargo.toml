@@ -1,6 +1,6 @@
 [package]
 name = "launchpad"
-version = "0.4.0"
+version = "0.4.1"
 description = "Created with Anchor"
 edition = "2021"
 
@@ -26,4 +26,5 @@ spl-memo = "=4.0.0"
 solana-program = "=1.17.14"
 spl-token = "=4.0.0"
 ahash = "=0.8.6"
+solana-security-txt = "1.1.1"
 

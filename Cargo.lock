@@ -73,7 +73,7 @@ dependencies = [
 
 [[package]]
 name = "amm"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -402,7 +402,7 @@ checksum = "0c4b4d0bd25bd0b74681c0ad21497610ce1b7c91b1022cd21c80c6fbdd9476b0"
 
 [[package]]
 name = "autocrat"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "amm",
  "anchor-lang",
@@ -1138,7 +1138,7 @@ dependencies = [
 
 [[package]]
 name = "launchpad"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "ahash 0.8.6",
  "anchor-lang",
@@ -1146,6 +1146,7 @@ dependencies = [
  "autocrat",
  "raydium-cpmm-cpi",
  "solana-program",
+ "solana-security-txt",
  "spl-memo",
  "spl-token",
 ]
