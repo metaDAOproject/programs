@@ -187,12 +187,6 @@ impl Amm {
     pub fn update_twap(&mut self, current_slot: Slot) -> Result<Option<u128>> {
         let oracle = &mut self.oracle;
 
-        // Check if the start delay has passed
-        let twap_start_slot = self.created_at_slot + oracle.start_delay_slots;
-        if current_slot < twap_start_slot {
-            return Ok(None);
-        }
-
         // a manipulator is likely to be "bursty" with their usage, such as a
         // validator who abuses their slots to manipulate the TWAP.
         // meanwhile, regular trading is less likely to happen in each slot.
@@ -242,15 +236,25 @@ impl Amm {
             max(price, min_observation)
         };
 
-        // Adjust slot difference to account for the delay
-        let effective_last_updated_slot = oracle.last_updated_slot.max(twap_start_slot);
-        let slot_difference = (current_slot - effective_last_updated_slot) as u128;
+        // if the start delay hasn't passed, we don't update the aggregator
+        // but we still update the observation
+        let twap_start_slot = self.created_at_slot + oracle.start_delay_slots;
 
-        // if this saturates, the aggregator will wrap back to 0, so this value doesn't
-        // really matter. we just can't panic.
-        let weighted_observation = new_observation.saturating_mul(slot_difference);
+        let new_aggregator = if current_slot <= twap_start_slot {
+            oracle.aggregator
+        } else {
+            // so that we don't act as if the first update ocurred over the whole
+            // pre-start delay period
+            let effective_last_updated_slot = oracle.last_updated_slot.max(twap_start_slot);
 
-        let new_aggregator = oracle.aggregator.wrapping_add(weighted_observation);
+            let slot_difference = (current_slot - effective_last_updated_slot) as u128;
+
+            // if this saturates, the aggregator will wrap back to 0, so this value doesn't
+            // really matter. we just can't panic.
+            let weighted_observation = new_observation.saturating_mul(slot_difference);
+
+            oracle.aggregator.wrapping_add(weighted_observation)
+        };
 
         let new_oracle = TwapOracle {
             last_updated_slot: current_slot,

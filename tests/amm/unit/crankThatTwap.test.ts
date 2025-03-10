@@ -1,9 +1,9 @@
-import { AmmClient, AmmMath } from "@metadaoproject/futarchy/v0.4";
+import { AmmClient, AmmMath, PriceMath } from "@metadaoproject/futarchy/v0.4";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, mintTo } from "spl-token-bankrun";
 import * as anchor from "@coral-xyz/anchor";
-import { advanceBySlots, DAY_IN_SLOTS, toBN } from "../../utils.js";
+import { advanceBySlots, DAY_IN_SLOTS, ONE_MINUTE_IN_SLOTS, toBN } from "../../utils.js";
 import { BN } from "bn.js";
 
 export default function suite() {
@@ -38,8 +38,10 @@ export default function suite() {
     await this.mintTo(USDC, this.payer.publicKey, this.payer, 10_000 * 10 ** 6);
 
     let proposal = Keypair.generate().publicKey;
-    amm = await ammClient.createAmm(proposal, META, USDC, toBN(twapStartDelaySlots), 500);
+    // $500 initial price, $10 change per update
+    amm = await ammClient.createAmm(proposal, META, USDC, toBN(twapStartDelaySlots), 500, 10);
 
+    // $1000 where liquidity is,
     await ammClient
       .addLiquidityIx(
         amm,
@@ -50,6 +52,100 @@ export default function suite() {
         new BN(0)
       )
       .rpc();
+  });
+
+  it("does not update oracle if insufficient slots have passed", async function () {
+    const initialAmm = await ammClient.getAmm(amm);
+    const initialLastUpdatedSlot = initialAmm.oracle.lastUpdatedSlot;
+
+    await advanceBySlots(this.context, ONE_MINUTE_IN_SLOTS -1n);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 1
+          }),
+        ])
+        .rpc();
+
+    let updatedAmm = await ammClient.getAmm(amm);
+
+    assert.isTrue(updatedAmm.oracle.lastUpdatedSlot.eq(initialLastUpdatedSlot), "Oracle should not be updated if insufficient slots have passed");
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(500, 9, 6)));
+
+    await advanceBySlots(this.context, 1n);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2
+          }),
+        ])
+        .rpc();
+
+    updatedAmm = await ammClient.getAmm(amm);
+
+    // observation should be updated but not aggregator
+    assert.isTrue(updatedAmm.oracle.lastUpdatedSlot.eq(initialLastUpdatedSlot.addn(Number(ONE_MINUTE_IN_SLOTS))))
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(510, 9, 6)));
+    assert.isTrue(updatedAmm.oracle.aggregator.eqn(0));
+
+    await advanceBySlots(this.context, DAY_IN_SLOTS / 2n);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 3
+          }),
+        ])
+        .rpc();
+
+    updatedAmm = await ammClient.getAmm(amm);
+
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(520, 9, 6)));
+    assert.isTrue(updatedAmm.oracle.aggregator.eqn(0));
+
+    await advanceBySlots(this.context, DAY_IN_SLOTS / 2n + 1n - ONE_MINUTE_IN_SLOTS);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 4
+          }),
+        ])
+        .rpc();
+
+    updatedAmm = await ammClient.getAmm(amm);
+
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(530, 9, 6)));
+    // only 1 slot has passed, so aggregator should be 0
+    assert.isTrue(updatedAmm.oracle.aggregator.eq(PriceMath.getAmmPrice(530, 9, 6)));
+
+    const twapStartSlot = initialAmm.createdAtSlot.addn(Number(twapStartDelaySlots));
+    const twapSlotsPassed = updatedAmm.oracle.lastUpdatedSlot.sub(twapStartSlot);
+    assert.isTrue(twapSlotsPassed.eqn(1));
+    // if this is true, then `get_twap()` will return 530 (530 / 1)
+
+    await advanceBySlots(this.context, ONE_MINUTE_IN_SLOTS * 2n);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 5
+          }),
+        ])
+        .rpc();
+
+    updatedAmm = await ammClient.getAmm(amm);
+
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(540, 9, 6)));
+    // 2 minutes have passed, so aggregator should be 2 * 540 + 530
+    assert.isTrue(updatedAmm.oracle.aggregator.eq(PriceMath.getAmmPrice(540, 9, 6).mul(new BN(ONE_MINUTE_IN_SLOTS.toString())).muln(2).add(PriceMath.getAmmPrice(530, 9, 6))));
   });
 
   it("updates oracle and sequence number when crankThatTwap is called", async function () {
@@ -148,106 +244,6 @@ export default function suite() {
     assert.isTrue(
       finalAmm.seqNum.eq(initialSeqNum.addn(3)),
       "Sequence number should increase by 3 after 3 crankThatTwap calls"
-    );
-  });
-
-  it("respects TWAP timing constraints for cranking", async function () {
-    const initialAmm = await ammClient.getAmm(amm);
-    const initialLastUpdatedSlot = initialAmm.oracle.lastUpdatedSlot;
-    
-    // Try to crank before start delay - should fail
-    await ammClient
-      .crankThatTwapIx(amm)
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: 100_000,
-        }),
-      ])
-      .rpc();
-    let currentAmm = await ammClient.getAmm(amm);
-    assert.isTrue(
-      currentAmm.oracle.lastUpdatedSlot.eq(initialLastUpdatedSlot),
-      "Should not update lastUpdatedSlot before start delay"
-    );
-
-    // Advance just before start delay - should still fail
-    await advanceBySlots(this.context, twapStartDelaySlots - 1n);
-    await ammClient
-      .crankThatTwapIx(amm)
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: 100_001,
-        }),
-      ])
-      .rpc();
-    currentAmm = await ammClient.getAmm(amm);
-    assert.isTrue(
-      currentAmm.oracle.lastUpdatedSlot.eq(initialLastUpdatedSlot),
-      "Should not update lastUpdatedSlot right before start delay"
-    );
-
-    // Advance to exactly start delay - should succeed
-    await advanceBySlots(this.context, 1n);
-    await ammClient
-      .crankThatTwapIx(amm)
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: 100_002,
-        }),
-      ])
-      .rpc();
-    currentAmm = await ammClient.getAmm(amm);
-    assert.isTrue(
-      currentAmm.oracle.lastUpdatedSlot.gt(initialLastUpdatedSlot),
-      "LastUpdatedSlot should increase after first valid crank"
-    );
-
-    // Try to crank immediately after - should fail (needs 150 slots)
-    const lastUpdatedSlotAfterFirstCrank = currentAmm.oracle.lastUpdatedSlot;
-    await ammClient
-      .crankThatTwapIx(amm)
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: 100_003,
-        }),
-      ])
-      .rpc();
-    currentAmm = await ammClient.getAmm(amm);
-    assert.isTrue(
-      currentAmm.oracle.lastUpdatedSlot.eq(lastUpdatedSlotAfterFirstCrank),
-      "Should not update lastUpdatedSlot before minimum slot difference"
-    );
-
-    // Advance by 149 slots - should still fail
-    await advanceBySlots(this.context, 149n);
-    await ammClient
-      .crankThatTwapIx(amm)
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: 100_004,
-        }),
-      ])
-      .rpc();
-    currentAmm = await ammClient.getAmm(amm);
-    assert.isTrue(
-      currentAmm.oracle.lastUpdatedSlot.eq(lastUpdatedSlotAfterFirstCrank),
-      "Should not update lastUpdatedSlot just before minimum slot difference"
-    );
-
-    // Advance one more slot - should succeed
-    await advanceBySlots(this.context, 1n);
-    await ammClient
-      .crankThatTwapIx(amm)
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: 100_005,
-        }),
-      ])
-      .rpc();
-    currentAmm = await ammClient.getAmm(amm);
-    assert.isTrue(
-      currentAmm.oracle.lastUpdatedSlot.gt(lastUpdatedSlotAfterFirstCrank),
-      "LastUpdatedSlot should increase after second valid crank"
     );
   });
 }
