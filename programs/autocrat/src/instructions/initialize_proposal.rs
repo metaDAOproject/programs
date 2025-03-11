@@ -106,6 +106,12 @@ impl InitializeProposal<'_> {
                 self.dao.twap_max_observation_change_per_update,
                 AutocratError::InvalidMaxObservationChange
             );
+
+            require_eq!(
+                amm.oracle.start_delay_slots,
+                self.dao.twap_start_delay_slots,
+                AutocratError::InvalidStartDelaySlots
+            );
         }
 
         // Should never be the case because the oracle is the proposal account, and you can't re-initialize a proposal

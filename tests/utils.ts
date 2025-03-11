@@ -1,5 +1,13 @@
 import { assert } from "chai";
 import { Clock, ProgramTestContext } from "solana-bankrun";
+import { BN } from "bn.js";
+
+export const TEN_SECONDS_IN_SLOTS = 25n;
+export const ONE_MINUTE_IN_SLOTS = TEN_SECONDS_IN_SLOTS * 6n;
+export const HOUR_IN_SLOTS = ONE_MINUTE_IN_SLOTS * 60n;
+export const DAY_IN_SLOTS = HOUR_IN_SLOTS * 24n;
+
+export const toBN = (val: bigint): typeof BN.prototype => new BN(val.toString());
 
 export const expectError = (
   expectedError: string,

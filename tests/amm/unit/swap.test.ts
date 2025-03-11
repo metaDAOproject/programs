@@ -14,7 +14,7 @@ import {
   getMint,
 } from "spl-token-bankrun";
 import * as anchor from "@coral-xyz/anchor";
-import { expectError } from "../../utils.js";
+import { DAY_IN_SLOTS, expectError, toBN } from "../../utils.js";
 import { advanceBySlots } from "../../utils.js";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
@@ -49,7 +49,7 @@ export default function suite() {
     await this.mintTo(USDC, this.payer.publicKey, this.payer, 10_000 * 10 ** 6);
 
     let proposal = Keypair.generate().publicKey;
-    amm = await ammClient.createAmm(proposal, META, USDC, 500);
+    amm = await ammClient.createAmm(proposal, META, USDC, toBN(DAY_IN_SLOTS), 500);
 
     await ammClient
       .addLiquidityIx(

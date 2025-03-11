@@ -353,6 +353,13 @@ export type Autocrat = {
             type: "u128";
           },
           {
+            name: "twapStartDelaySlots";
+            docs: [
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots"
+            ];
+            type: "u64";
+          },
+          {
             name: "minQuoteFutarchicLiquidity";
             docs: [
               "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
@@ -487,6 +494,10 @@ export type Autocrat = {
           {
             name: "twapMaxObservationChangePerUpdate";
             type: "u128";
+          },
+          {
+            name: "twapStartDelaySlots";
+            type: "u64";
           },
           {
             name: "minQuoteFutarchicLiquidity";
@@ -939,41 +950,46 @@ export type Autocrat = {
     },
     {
       code: 6003;
+      name: "InvalidStartDelaySlots";
+      msg: "An amm has a `start_delay_slots` that doesn't match the `dao`'s config";
+    },
+    {
+      code: 6004;
       name: "InvalidSettlementAuthority";
       msg: "One of the vaults has an invalid `settlement_authority`";
     },
     {
-      code: 6004;
+      code: 6005;
       name: "ProposalTooYoung";
       msg: "Proposal is too young to be executed or rejected";
     },
     {
-      code: 6005;
+      code: 6006;
       name: "MarketsTooYoung";
       msg: "Markets too young for proposal to be finalized. TWAP might need to be cranked";
     },
     {
-      code: 6006;
+      code: 6007;
       name: "ProposalAlreadyFinalized";
       msg: "This proposal has already been finalized";
     },
     {
-      code: 6007;
+      code: 6008;
       name: "InvalidVaultNonce";
       msg: "A conditional vault has an invalid nonce. A nonce should encode the proposal number";
     },
     {
-      code: 6008;
+      code: 6009;
       name: "ProposalNotPassed";
       msg: "This proposal can't be executed because it isn't in the passed state";
     },
     {
-      code: 6009;
+      code: 6010;
       name: "InsufficientLpTokenBalance";
       msg: "The proposer has fewer pass or fail LP tokens than they requested to lock";
     },
     {
-      code: 6010;
+      code: 6011;
       name: "InsufficientLpTokenLock";
       msg: "The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`";
     }
@@ -1335,6 +1351,13 @@ export const IDL: Autocrat = {
             type: "u128",
           },
           {
+            name: "twapStartDelaySlots",
+            docs: [
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
+            ],
+            type: "u64",
+          },
+          {
             name: "minQuoteFutarchicLiquidity",
             docs: [
               "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
@@ -1469,6 +1492,10 @@ export const IDL: Autocrat = {
           {
             name: "twapMaxObservationChangePerUpdate",
             type: "u128",
+          },
+          {
+            name: "twapStartDelaySlots",
+            type: "u64",
           },
           {
             name: "minQuoteFutarchicLiquidity",
@@ -1921,41 +1948,46 @@ export const IDL: Autocrat = {
     },
     {
       code: 6003,
+      name: "InvalidStartDelaySlots",
+      msg: "An amm has a `start_delay_slots` that doesn't match the `dao`'s config",
+    },
+    {
+      code: 6004,
       name: "InvalidSettlementAuthority",
       msg: "One of the vaults has an invalid `settlement_authority`",
     },
     {
-      code: 6004,
+      code: 6005,
       name: "ProposalTooYoung",
       msg: "Proposal is too young to be executed or rejected",
     },
     {
-      code: 6005,
+      code: 6006,
       name: "MarketsTooYoung",
       msg: "Markets too young for proposal to be finalized. TWAP might need to be cranked",
     },
     {
-      code: 6006,
+      code: 6007,
       name: "ProposalAlreadyFinalized",
       msg: "This proposal has already been finalized",
     },
     {
-      code: 6007,
+      code: 6008,
       name: "InvalidVaultNonce",
       msg: "A conditional vault has an invalid nonce. A nonce should encode the proposal number",
     },
     {
-      code: 6008,
+      code: 6009,
       name: "ProposalNotPassed",
       msg: "This proposal can't be executed because it isn't in the passed state",
     },
     {
-      code: 6009,
+      code: 6010,
       name: "InsufficientLpTokenBalance",
       msg: "The proposer has fewer pass or fail LP tokens than they requested to lock",
     },
     {
-      code: 6010,
+      code: 6011,
       name: "InsufficientLpTokenLock",
       msg: "The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`",
     },

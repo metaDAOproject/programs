@@ -27,6 +27,8 @@ pub struct Dao {
     /// in 50 minutes.
     pub twap_initial_observation: u128,
     pub twap_max_observation_change_per_update: u128,
+    /// Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots
+    pub twap_start_delay_slots: u64,
     /// As an anti-spam measure and to help liquidity, you need to lock up some liquidity
     /// in both futarchic markets in order to create a proposal.
     ///

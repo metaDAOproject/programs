@@ -64,7 +64,8 @@ security_txt! {
 declare_id!("autowMzCbM29YXMgVG3T62Hkgo7RcyrvgQQkd54fDQL");
 
 pub const SLOTS_PER_10_SECS: u64 = 25;
-pub const THREE_DAYS_IN_SLOTS: u64 = 3 * 24 * 60 * 6 * SLOTS_PER_10_SECS;
+pub const DAY_IN_SLOTS: u64 = 24 * 60 * 6 * SLOTS_PER_10_SECS;
+pub const THREE_DAYS_IN_SLOTS: u64 = 3 * DAY_IN_SLOTS;
 
 pub const TEN_DAYS_IN_SECONDS: i64 = 10 * 24 * 60 * 60;
 

@@ -144,7 +144,7 @@ async function main() {
   let storedAmm: Amm | null = await ammProgram.fetchAmm(amm);
   console.log(storedAmm);
   if (!storedAmm) {
-    await ammProgram.initializeAmmIx(pUp, pDown, new BN(0), new BN(0)).rpc();
+    await ammProgram.initializeAmmIx(pUp, pDown, new BN(0), new BN(0), new BN(0)).rpc();
     storedAmm = await ammProgram.fetchAmm(amm);
   }
 

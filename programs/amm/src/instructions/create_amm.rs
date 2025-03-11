@@ -11,6 +11,7 @@ use crate::events::{CommonFields, CreateAmmEvent};
 pub struct CreateAmmArgs {
     pub twap_initial_observation: u128,
     pub twap_max_observation_change_per_update: u128,
+    pub twap_start_delay_slots: u64,
 }
 
 #[event_cpi]
@@ -94,6 +95,7 @@ impl CreateAmm<'_> {
         let CreateAmmArgs {
             twap_initial_observation,
             twap_max_observation_change_per_update,
+            twap_start_delay_slots,
         } = args;
 
         amm.set_inner(Amm {
@@ -115,6 +117,7 @@ impl CreateAmm<'_> {
                 current_slot,
                 twap_initial_observation,
                 twap_max_observation_change_per_update,
+                twap_start_delay_slots,
             ),
 
             seq_num: 0,

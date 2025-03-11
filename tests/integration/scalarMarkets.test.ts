@@ -11,11 +11,7 @@ import BN from "bn.js";
 import { assert } from "chai";
 import * as token from "@solana/spl-token";
 import {
-  createMint,
-  createAssociatedTokenAccount,
-  mintTo,
   getAccount,
-  getMint,
 } from "spl-token-bankrun";
 
 export default async function test() {
@@ -92,7 +88,7 @@ export default async function test() {
   const NO = storedVault.conditionalTokenMints[1];
 
   // Initialize AMM
-  await ammClient.initializeAmmIx(YES, NO, new BN(100), new BN(1000)).rpc();
+  await ammClient.initializeAmmIx(YES, NO, new BN(0), new BN(100), new BN(1000)).rpc();
   const amm = getAmmAddr(ammClient.getProgramId(), YES, NO)[0];
 
   // Create token accounts for Alice, Bob, Carol, and Dan

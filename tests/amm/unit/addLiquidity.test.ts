@@ -12,7 +12,7 @@ import {
   getAccount,
 } from "spl-token-bankrun";
 import * as anchor from "@coral-xyz/anchor";
-import { expectError } from "../../utils.js";
+import { DAY_IN_SLOTS, expectError, toBN } from "../../utils.js";
 import * as token from "@solana/spl-token";
 import { BN } from "bn.js";
 
@@ -40,7 +40,7 @@ export default function suite() {
     );
 
     let proposal = Keypair.generate().publicKey;
-    amm = await ammClient.createAmm(proposal, META, USDC, 500);
+    amm = await ammClient.createAmm(proposal, META, USDC, toBN(DAY_IN_SLOTS), 500);
 
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);

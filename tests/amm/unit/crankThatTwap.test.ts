@@ -1,9 +1,9 @@
-import { AmmClient, AmmMath } from "@metadaoproject/futarchy/v0.4";
+import { AmmClient, AmmMath, PriceMath } from "@metadaoproject/futarchy/v0.4";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, mintTo } from "spl-token-bankrun";
 import * as anchor from "@coral-xyz/anchor";
-import { advanceBySlots } from "../../utils.js";
+import { advanceBySlots, DAY_IN_SLOTS, ONE_MINUTE_IN_SLOTS, toBN } from "../../utils.js";
 import { BN } from "bn.js";
 
 export default function suite() {
@@ -11,6 +11,7 @@ export default function suite() {
   let META: PublicKey;
   let USDC: PublicKey;
   let amm: PublicKey;
+  let twapStartDelaySlots: bigint;
 
   beforeEach(async function () {
     ammClient = this.ammClient;
@@ -28,6 +29,7 @@ export default function suite() {
       this.payer.publicKey,
       6
     );
+    twapStartDelaySlots = DAY_IN_SLOTS;
 
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
@@ -36,8 +38,10 @@ export default function suite() {
     await this.mintTo(USDC, this.payer.publicKey, this.payer, 10_000 * 10 ** 6);
 
     let proposal = Keypair.generate().publicKey;
-    amm = await ammClient.createAmm(proposal, META, USDC, 500);
+    // $500 initial price, $10 change per update
+    amm = await ammClient.createAmm(proposal, META, USDC, toBN(twapStartDelaySlots), 500, 10);
 
+    // $1000 where liquidity is,
     await ammClient
       .addLiquidityIx(
         amm,
@@ -50,6 +54,100 @@ export default function suite() {
       .rpc();
   });
 
+  it("does not update oracle if insufficient slots have passed", async function () {
+    const initialAmm = await ammClient.getAmm(amm);
+    const initialLastUpdatedSlot = initialAmm.oracle.lastUpdatedSlot;
+
+    await advanceBySlots(this.context, ONE_MINUTE_IN_SLOTS -1n);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 1
+          }),
+        ])
+        .rpc();
+
+    let updatedAmm = await ammClient.getAmm(amm);
+
+    assert.isTrue(updatedAmm.oracle.lastUpdatedSlot.eq(initialLastUpdatedSlot), "Oracle should not be updated if insufficient slots have passed");
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(500, 9, 6)));
+
+    await advanceBySlots(this.context, 1n);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2
+          }),
+        ])
+        .rpc();
+
+    updatedAmm = await ammClient.getAmm(amm);
+
+    // observation should be updated but not aggregator
+    assert.isTrue(updatedAmm.oracle.lastUpdatedSlot.eq(initialLastUpdatedSlot.addn(Number(ONE_MINUTE_IN_SLOTS))))
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(510, 9, 6)));
+    assert.isTrue(updatedAmm.oracle.aggregator.eqn(0));
+
+    await advanceBySlots(this.context, DAY_IN_SLOTS / 2n);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 3
+          }),
+        ])
+        .rpc();
+
+    updatedAmm = await ammClient.getAmm(amm);
+
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(520, 9, 6)));
+    assert.isTrue(updatedAmm.oracle.aggregator.eqn(0));
+
+    await advanceBySlots(this.context, DAY_IN_SLOTS / 2n + 1n - ONE_MINUTE_IN_SLOTS);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 4
+          }),
+        ])
+        .rpc();
+
+    updatedAmm = await ammClient.getAmm(amm);
+
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(530, 9, 6)));
+    // only 1 slot has passed, so aggregator should be 0
+    assert.isTrue(updatedAmm.oracle.aggregator.eq(PriceMath.getAmmPrice(530, 9, 6)));
+
+    const twapStartSlot = initialAmm.createdAtSlot.addn(Number(twapStartDelaySlots));
+    const twapSlotsPassed = updatedAmm.oracle.lastUpdatedSlot.sub(twapStartSlot);
+    assert.isTrue(twapSlotsPassed.eqn(1));
+    // if this is true, then `get_twap()` will return 530 (530 / 1)
+
+    await advanceBySlots(this.context, ONE_MINUTE_IN_SLOTS * 2n);
+
+    await ammClient
+        .crankThatTwapIx(amm)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 5
+          }),
+        ])
+        .rpc();
+
+    updatedAmm = await ammClient.getAmm(amm);
+
+    assert.isTrue(updatedAmm.oracle.lastObservation.eq(PriceMath.getAmmPrice(540, 9, 6)));
+    // 2 minutes have passed, so aggregator should be 2 * 540 + 530
+    assert.isTrue(updatedAmm.oracle.aggregator.eq(PriceMath.getAmmPrice(540, 9, 6).mul(new BN(ONE_MINUTE_IN_SLOTS.toString())).muln(2).add(PriceMath.getAmmPrice(530, 9, 6))));
+  });
+
   it("updates oracle and sequence number when crankThatTwap is called", async function () {
     const initialAmm = await ammClient.getAmm(amm);
     const initialSeqNum = initialAmm.seqNum;
@@ -57,9 +155,10 @@ export default function suite() {
     const initialAggregator = initialAmm.oracle.aggregator;
 
     // Advance slots to simulate time passing
-    // this needs to be greater than 150 because the twap oracle
-    // only updates when the slot difference is greater than 150 (1 minute in slots)
-    await advanceBySlots(this.context, 200n);
+    // this needs to be greater than 150 + twapStartDelaySlots because the twap oracle
+    // only updates when the slot difference is greater than 150 (1 minute in slots) and
+    // is past the twap start delay
+    await advanceBySlots(this.context, 200n + twapStartDelaySlots);
 
     // Call crankThatTwap
     await ammClient.crankThatTwap(amm);
@@ -99,6 +198,9 @@ export default function suite() {
   it("updates oracle multiple times with consecutive crankThatTwap calls", async function () {
     const initialAmm = await ammClient.getAmm(amm);
     const initialSeqNum = initialAmm.seqNum;
+
+    // Advance slots to get past the initial TWAP start delay period
+    await advanceBySlots(this.context, twapStartDelaySlots);
 
     for (let i = 0; i < 3; i++) {
       await advanceBySlots(this.context, 151n);

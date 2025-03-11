@@ -73,6 +73,7 @@ export class AmmClient {
     proposal: PublicKey,
     baseMint: PublicKey,
     quoteMint: PublicKey,
+    twapStartDelaySlots: BN,
     twapInitialObservation: number,
     twapMaxObservationChangePerUpdate?: number
   ): Promise<PublicKey> {
@@ -101,6 +102,7 @@ export class AmmClient {
     await this.initializeAmmIx(
       baseMint,
       quoteMint,
+      twapStartDelaySlots,
       twapFirstObservationScaled,
       twapMaxObservationChangePerUpdateScaled
     ).rpc();
@@ -112,6 +114,7 @@ export class AmmClient {
   initializeAmmIx(
     baseMint: PublicKey,
     quoteMint: PublicKey,
+    twapStartDelaySlots: BN,
     twapInitialObservation: BN,
     twapMaxObservationChangePerUpdate: BN
   ) {
@@ -125,6 +128,7 @@ export class AmmClient {
       .createAmm({
         twapInitialObservation,
         twapMaxObservationChangePerUpdate,
+        twapStartDelaySlots,
       })
       .accounts({
         user: this.provider.publicKey,

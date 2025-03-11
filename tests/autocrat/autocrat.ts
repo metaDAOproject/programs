@@ -21,7 +21,7 @@ import {
   getAccount,
 } from "spl-token-bankrun";
 
-import { advanceBySlots, expectError } from "../utils.js";
+import { advanceBySlots, DAY_IN_SLOTS, expectError } from "../utils.js";
 import { Autocrat, IDL as AutocratIDL } from "../../target/types/autocrat.js";
 import {
   ConditionalVault,
@@ -177,7 +177,7 @@ export default function suite() {
 
   describe("#initialize_dao", async function () {
     it("initializes the DAO", async function () {
-      dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
+      dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC, undefined, new BN(DAY_IN_SLOTS.toString()));
 
       let treasuryPdaBump;
       [daoTreasury, treasuryPdaBump] = PublicKey.findProgramAddressSync(
@@ -401,13 +401,13 @@ export default function suite() {
           passBaseMint,
           passQuoteMint,
           { buy: {} },
-          new BN(500).muln(1_000_000),
+          new BN(100).muln(1_000_000),
           new BN(0)
         )
         .rpc();
 
       for (let i = 0; i < 100; i++) {
-        await advanceBySlots(context, 10_000n);
+        await advanceBySlots(context, 20_000n);
 
         await ammClient
           .crankThatTwapIx(passAmm)

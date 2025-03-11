@@ -10,6 +10,8 @@ pub enum AutocratError {
         "An amm has a `max_observation_change_per_update` that doesn't match the `dao`'s config"
     )]
     InvalidMaxObservationChange,
+    #[msg("An amm has a `start_delay_slots` that doesn't match the `dao`'s config")]
+    InvalidStartDelaySlots,
     #[msg("One of the vaults has an invalid `settlement_authority`")]
     InvalidSettlementAuthority,
     #[msg("Proposal is too young to be executed or rejected")]

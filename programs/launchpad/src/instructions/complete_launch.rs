@@ -22,6 +22,7 @@ use raydium_cpmm_cpi::{
 
 use autocrat::program::Autocrat;
 use autocrat::InitializeDaoParams;
+use autocrat::{DAY_IN_SLOTS};
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
@@ -287,7 +288,8 @@ impl CompleteLaunch<'_> {
                     min_quote_futarchic_liquidity: total_committed_amount / 100,
                     min_base_futarchic_liquidity: AVAILABLE_TOKENS / 100,
                     pass_threshold_bps: None,
-                    slots_per_proposal: None,
+                    slots_per_proposal: Some(3 * DAY_IN_SLOTS),
+                    twap_start_delay_slots: DAY_IN_SLOTS,
                 },
             )?;
 

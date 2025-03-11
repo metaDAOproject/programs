@@ -47,6 +47,7 @@ const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
+import twap from "./integration/twap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
 
 before(async function () {
@@ -231,9 +232,7 @@ describe("autocrat", autocrat);
 describe("launchpad", launchpad);
 describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
-  it(
-    "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
-    scalarMarkets
-  );
+  it("tests scalar markets (mint, split, swap, redeem) with some fuzzing", scalarMarkets);
+  it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
   it("full launch", fullLaunch);
 });

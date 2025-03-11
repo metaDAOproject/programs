@@ -8,7 +8,7 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint } from "spl-token-bankrun";
 import * as anchor from "@coral-xyz/anchor";
-import { expectError } from "../../utils.js";
+import { DAY_IN_SLOTS, expectError, toBN } from "../../utils.js";
 import { BN } from "bn.js";
 
 export default function suite() {
@@ -37,12 +37,13 @@ export default function suite() {
   it("creates an amm", async function () {
     let expectedInitialObservation = new BN(500_000_000_000);
     let expectedMaxObservationChangePerUpdate = new BN(10_000_000_000);
+    let twapStartDelaySlots = toBN(DAY_IN_SLOTS);
 
     let bump: number;
     let amm: PublicKey;
     [amm, bump] = getAmmAddr(ammClient.program.programId, META, USDC);
 
-    await ammClient.createAmm(Keypair.generate().publicKey, META, USDC, 500);
+    await ammClient.createAmm(Keypair.generate().publicKey, META, USDC, twapStartDelaySlots, 500);
 
     const ammAcc = await ammClient.getAmm(amm);
 
@@ -65,9 +66,15 @@ export default function suite() {
       ammAcc.oracle.initialObservation.eq(expectedInitialObservation)
     );
     assert.equal(ammAcc.seqNum.toString(), "0");
+    assert.isTrue(
+      ammAcc.oracle.startDelaySlots.eq(
+        twapStartDelaySlots
+      )
+    );
   });
 
   it("fails to create an amm with two identical mints", async function () {
+    let twapStartDelaySlots = toBN(DAY_IN_SLOTS);
     let [twapFirstObservationScaled, twapMaxObservationChangePerUpdateScaled] =
       PriceMath.getAmmPrices(9, 9, 100, 1);
 
@@ -82,6 +89,7 @@ export default function suite() {
       .initializeAmmIx(
         META,
         META,
+        twapStartDelaySlots,
         twapFirstObservationScaled,
         twapMaxObservationChangePerUpdateScaled
       )
