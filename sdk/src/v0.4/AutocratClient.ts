@@ -634,8 +634,30 @@ export class AutocratClient {
         quoteVault,
         passAmm,
         failAmm,
-        // passBaseMint,
-        // passQuoteMint,
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          baseVault,
+          true
+        ),
+        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          quoteVault,
+          true
+        ),
+        userBaseTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          this.provider.publicKey,
+          true
+        ),
+        userQuoteTokenAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          this.provider.publicKey,
+          true
+        ),
+        passBaseMint,
+        passQuoteMint,
+        failBaseMint,
+        failQuoteMint,
         passLpMint: passLp,
         failLpMint: failLp,
         passAmmBaseVault: getAssociatedTokenAddressSync(

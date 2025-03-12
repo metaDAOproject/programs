@@ -330,12 +330,12 @@ export default function suite() {
         .postInstructions(
           await InstructionUtils.getInstructions(
             vaultClient.initializeVaultIx(question, storedDao.usdcMint, 2),
-            ammClient.initializeAmmIx(
-              passBaseMint,
-              passQuoteMint,
-              storedDao.twapInitialObservation,
-              storedDao.twapMaxObservationChangePerUpdate
-            ),
+            // ammClient.initializeAmmIx(
+            //   passBaseMint,
+            //   passQuoteMint,
+            //   storedDao.twapInitialObservation,
+            //   storedDao.twapMaxObservationChangePerUpdate
+            // ),
             ammClient.initializeAmmIx(
               failBaseMint,
               failQuoteMint,
@@ -388,26 +388,24 @@ export default function suite() {
         authority: payer.publicKey,
         lookupTable: lookupTableAddress,
         addresses: [
-          // Add the addresses you want to include
-          // vault,
-          // vaultProgram.programId,
-          // autocrat.programId,
-          // ammClient.program.programId,
-          // getEventAuthorityAddr(ammClient.program.programId)[0],
-          // SystemProgram.programId,
-          // autocratClient.getProgramId(),
-          // dao,
+          vaultProgram.programId,
+          ammClient.program.programId,
+          getEventAuthorityAddr(ammClient.program.programId)[0],
+          getEventAuthorityAddr(vaultProgram.programId)[0],
+          SystemProgram.programId,
+          autocratClient.getProgramId(),
+          dao,
           token.TOKEN_PROGRAM_ID,
-          // payer.publicKey,
-          // question,
-          // baseVault,
-          // quoteVault,
-          // passAmm,
-          // failAmm,
-          // passBaseMint,
-          // passQuoteMint,
-          // failBaseMint,
-          // failQuoteMint,
+          payer.publicKey,
+          baseVault,
+          this.payer.publicKey,
+          quoteVault,
+          passAmm,
+          failAmm,
+          passBaseMint,
+          passQuoteMint,
+          failBaseMint,
+          failQuoteMint,
           // question,
           // tokenAccount,
           // ... other addresses

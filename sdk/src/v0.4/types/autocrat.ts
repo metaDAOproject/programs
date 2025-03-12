@@ -114,6 +114,46 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "baseVaultUnderlyingTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "userBaseTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "userQuoteTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "failBaseUserAccount";
           isMut: true;
           isSigner: false;
@@ -1165,6 +1205,46 @@ export const IDL: Autocrat = {
         },
         {
           name: "passQuoteUserAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "userBaseTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "userQuoteTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passQuoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failQuoteMint",
           isMut: true,
           isSigner: false,
         },
