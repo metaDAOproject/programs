@@ -242,7 +242,8 @@ export class AutocratClient {
     daoKeypair: Keypair,
     tokenMint: PublicKey,
     params: InitializeDaoParams,
-    usdcMint: PublicKey = MAINNET_USDC
+    usdcMint: PublicKey = MAINNET_USDC,
+    payer: PublicKey = this.provider.publicKey
   ) {
     return this.autocrat.methods
       .initializeDao(params)
@@ -250,6 +251,7 @@ export class AutocratClient {
         dao: daoKeypair.publicKey,
         tokenMint,
         usdcMint,
+        payer,
       })
       .signers([daoKeypair]);
   }
