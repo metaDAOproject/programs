@@ -56,6 +56,23 @@ deploy_verifiable() {
     solana program deploy --use-rpc -u "$CLUSTER" --program-id ./target/deploy/"$PROGRAM_NAME"-keypair.json ./verifiable-builds/"$PROGRAM_NAME".so --with-compute-unit-price 5 --max-sign-attempts 15 && PROGRAM_ID=$(solana-keygen pubkey ./target/deploy/"$PROGRAM_NAME"-keypair.json) && anchor idl init --filepath ./target/idl/"$PROGRAM_NAME".json $PROGRAM_ID --provider.cluster "$CLUSTER"
 }
 
+write_buffer_verifiable() {
+    PROGRAM_NAME=$1
+    CLUSTER=$2
+    solana program write-buffer --use-rpc -u "$CLUSTER" ./verifiable-builds/"$PROGRAM_NAME".so --with-compute-unit-price 5 --max-sign-attempts 15
+}
+
+export_verifiable() {
+    PROGRAM_NAME=$1
+    PROGRAM_ID=$2
+    solana-verify export-pda-tx https://github.com/metaDAOproject/futarchy --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf -b ellipsislabs/solana:1.17.16 --library-name "$PROGRAM_NAME" -- --features default
+}
+
+verify() {
+    PROGRAM_ID=$1
+    solana-verify remote submit-job --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf
+}
+
 upgrade() {
     PROGRAM_NAME=$1
     PROGRAM_ID=$2
@@ -132,6 +149,9 @@ case "$1" in
     build_verifiable) build_verifiable "$2" ;;
     deploy) deploy "$2" "$3" ;;
     deploy_verifiable) deploy_verifiable "$2" "$3" ;;
+    write_buffer_verifiable) write_buffer_verifiable "$2" "$3" ;;
+    export_verifiable) export_verifiable "$2" "$3" ;;
+    verify) verify "$2" ;;
     upgrade) upgrade "$2" "$3" "$4" ;;
     upgrade_idl) upgrade_idl "$2" "$3" "$4" ;;
     bankrun) bankrun ;;
