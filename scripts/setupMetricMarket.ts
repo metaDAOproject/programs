@@ -7,9 +7,11 @@ import {
   ConditionalVaultClient,
   getAmmAddr,
   getDownAndUpMintAddrs,
+  getEventAuthorityAddr,
   getFailAndPassMintAddrs,
   getQuestionAddr,
   getVaultAddr,
+  MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.4";
 import { sha256 } from "@metadaoproject/futarchy";
 import { Question, Amm } from "@metadaoproject/futarchy/v0.4";
@@ -34,6 +36,14 @@ const rpcUrl = network === 'custom'
     ? "https://api.devnet.solana.com"
     : "https://api.mainnet-beta.solana.com";
 
+// Add default oracle addresses
+const DEFAULT_ORACLE = "6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf";
+
+const oracleAddress = await input({ 
+  message: 'Enter the oracle address', 
+  default: DEFAULT_ORACLE 
+});
+
 const walletPath = await input({ message: 'Enter the path to your wallet file', default: join(homedir(), '.config/solana/id.json') });
 process.env.ANCHOR_WALLET = walletPath;
 const provider = anchor.AnchorProvider.local(rpcUrl, { commitment: "confirmed" });
@@ -48,7 +58,8 @@ const metricQuestionText = await input({ message: 'Enter the metric question tex
 
 const liquidityAmount = await input({ message: 'Enter the amount of USDC to provide as liquidity (example: 1000, must be at least 100):\n' });
 
-const USDC = new PublicKey("CRWxbGNtVrTr9FAJX6SZpsvPZyi9R7VetuqecoZ1jCdD");
+// const USDC = new PublicKey("CRWxbGNtVrTr9FAJX6SZpsvPZyi9R7VetuqecoZ1jCdD");
+const USDC = MAINNET_USDC;
 
 async function sendAndConfirmTransaction(
   tx: Transaction,
@@ -80,6 +91,8 @@ async function main() {
 
   let tx = new Transaction();
 
+  let oracle = new PublicKey(oracleAddress);
+
   const outcomeQuestionId = sha256(
     new TextEncoder().encode(outcomeQuestionText)
   );
@@ -91,13 +104,13 @@ async function main() {
   const outcomeQuestion = getQuestionAddr(
     vaultProgram.vaultProgram.programId,
     outcomeQuestionId,
-    payer.publicKey,
+    oracle,
     2
   )[0];
   const metricQuestion = getQuestionAddr(
     vaultProgram.vaultProgram.programId,
     metricQuestionId,
-    payer.publicKey,
+    oracle,
     2
   )[0];
 
@@ -106,7 +119,7 @@ async function main() {
   );
   if (!storedOutcomeQuestion) {
     tx.add(await vaultProgram
-      .initializeQuestionIx(outcomeQuestionId, payer.publicKey, 2)
+      .initializeQuestionIx(outcomeQuestionId, oracle, 2)
       .transaction()
     );
     storedOutcomeQuestion = await vaultProgram.fetchQuestion(outcomeQuestion);
@@ -117,7 +130,7 @@ async function main() {
   );
   if (!storedMetricQuestion) {
     tx.add(await vaultProgram
-      .initializeQuestionIx(metricQuestionId, payer.publicKey, 2)
+      .initializeQuestionIx(metricQuestionId, oracle, 2)
       .transaction()
     );
     storedMetricQuestion = await vaultProgram.fetchQuestion(metricQuestion);
