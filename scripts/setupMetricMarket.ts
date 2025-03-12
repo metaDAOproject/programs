@@ -50,6 +50,25 @@ const liquidityAmount = await input({ message: 'Enter the amount of USDC to prov
 
 const USDC = new PublicKey("CRWxbGNtVrTr9FAJX6SZpsvPZyi9R7VetuqecoZ1jCdD");
 
+async function sendAndConfirmTransaction(
+  tx: Transaction,
+  label: string
+) {
+  tx.feePayer = payer.publicKey;
+  tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
+  tx.partialSign(payer);
+  const txHash = await provider.connection.sendRawTransaction(tx.serialize(), { skipPreflight: true });
+  console.log(`${label} transaction sent:`, txHash);
+  
+  await provider.connection.confirmTransaction(txHash, "confirmed");
+  const txStatus = await provider.connection.getTransaction(txHash, { maxSupportedTransactionVersion: 0 });
+  if (txStatus?.meta?.err) {
+    throw new Error(`Transaction failed: ${txHash}\nError: ${JSON.stringify(txStatus?.meta?.err)}`);
+  }
+  console.log(`${label} transaction confirmed`);
+  return txHash;
+}
+
 async function main() {
   if (!outcomeQuestionText) {
     throw new Error("Outcome question text cannot be empty");
@@ -155,19 +174,7 @@ async function main() {
     metricVault
   );
 
-  tx.feePayer = payer.publicKey;
-  tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
-  tx.partialSign(payer);
-  const txHash = await provider.connection.sendTransaction(tx, [payer]);
-  console.log("First transaction sent:", txHash);
-  
-  // Wait for confirmation and check status
-  await provider.connection.confirmTransaction(txHash, "confirmed");
-  const tx1Status = await provider.connection.getTransaction(txHash, { maxSupportedTransactionVersion: 0 });
-  if (!tx1Status?.meta?.err === null) {
-    throw new Error(`Transaction failed: ${txHash}\nError: ${JSON.stringify(tx1Status?.meta?.err)}`);
-  }
-  console.log("First transaction confirmed");
+  await sendAndConfirmTransaction(tx, "First");
   
   // NOW ADD METADATA TO THE VAULTS
   tx = new Transaction();
@@ -205,19 +212,7 @@ async function main() {
   ).transaction());
 
 
-  tx.feePayer = payer.publicKey;
-  tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
-  tx.partialSign(payer);
-  const txHash2 = await provider.connection.sendRawTransaction(tx.serialize(), { skipPreflight: true });
-  console.log("Second transaction sent:", txHash2);
-  
-  // Wait for confirmation and check status
-  await provider.connection.confirmTransaction(txHash2, "confirmed");
-  const tx2Status = await provider.connection.getTransaction(txHash2, { maxSupportedTransactionVersion: 0 });
-  if (!tx2Status?.meta?.err === null) {
-    throw new Error(`Transaction failed: ${txHash2}\nError: ${JSON.stringify(tx2Status?.meta?.err)}`);
-  }
-  console.log("Second transaction confirmed");
+  await sendAndConfirmTransaction(tx, "Second");
 
   const liquidityAmountNum = Number(liquidityAmount);
 
@@ -263,19 +258,7 @@ async function main() {
     payer.publicKey
   ).transaction());
 
-  tx.feePayer = payer.publicKey;
-  tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
-  tx.partialSign(payer);
-  const txHash3 = await provider.connection.sendRawTransaction(tx.serialize(), { skipPreflight: true });
-  console.log("Third transaction sent:", txHash3);
-  
-  // Wait for confirmation and check status
-  await provider.connection.confirmTransaction(txHash3, "confirmed");
-  const tx3Status = await provider.connection.getTransaction(txHash3, {commitment: "confirmed"});
-  if (tx3Status?.meta?.err !== null) {
-    throw new Error(`Transaction failed: ${txHash3}\nError: ${JSON.stringify(tx3Status?.meta?.err)}`);
-  }
-  console.log("Third transaction confirmed");
+  await sendAndConfirmTransaction(tx, "Third");
 }
 
 // Make sure the promise rejection is handled
