@@ -29,6 +29,8 @@ impl AddOrRemoveLiquidity<'_> {
             token_program,
             program: _,
             event_authority: _,
+            system_program: _,
+            associated_token_program: _,
         } = ctx.accounts;
 
         let RemoveLiquidityArgs {

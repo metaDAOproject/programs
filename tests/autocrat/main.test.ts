@@ -316,6 +316,8 @@ export default function suite() {
         passQuoteMint,
         failBaseMint,
         failQuoteMint,
+        passLp,
+        failLp,
         question,
       } = autocratClient.getProposalPdas(
         proposal,
@@ -336,12 +338,12 @@ export default function suite() {
             //   storedDao.twapInitialObservation,
             //   storedDao.twapMaxObservationChangePerUpdate
             // ),
-            ammClient.initializeAmmIx(
-              failBaseMint,
-              failQuoteMint,
-              storedDao.twapInitialObservation,
-              storedDao.twapMaxObservationChangePerUpdate
-            )
+            // ammClient.initializeAmmIx(
+            //   failBaseMint,
+            //   failQuoteMint,
+            //   storedDao.twapInitialObservation,
+            //   storedDao.twapMaxObservationChangePerUpdate
+            // )
           )
         )
         .rpc();
@@ -406,6 +408,10 @@ export default function suite() {
           passQuoteMint,
           failBaseMint,
           failQuoteMint,
+          passLp,
+          failLp,
+          token.getAssociatedTokenAddressSync(passLp, payer.publicKey),
+          token.getAssociatedTokenAddressSync(failLp, payer.publicKey),
           // question,
           // tokenAccount,
           // ... other addresses
@@ -486,7 +492,7 @@ export default function suite() {
         question,
         baseTokensToLP,
         quoteTokensToLP
-      ).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1000000 })]).transaction();
+      ).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1000000 }), ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 200 })]).transaction();
 
       const dummyTx = new VersionedTransaction(
         new TransactionMessage({

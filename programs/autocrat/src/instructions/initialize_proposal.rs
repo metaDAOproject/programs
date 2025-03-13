@@ -30,29 +30,21 @@ pub struct InitializeProposal<'info> {
     #[account(
         init,
         payer = proposer,
-        space = 1000,
+        space = 500,
         seeds = [b"proposal", proposer.key().as_ref(), &args.nonce.to_le_bytes()],
         bump
     )]
     pub proposal: Box<Account<'info, Proposal>>,
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
-    #[account(
-        constraint = question.oracle == proposal.key()
-    )]
-    pub question: Box<Account<'info, Question>>,
-    #[account(
-        constraint = quote_vault.underlying_token_mint == dao.usdc_mint,
-        has_one = question,
-        mut,
-    )]
-    pub quote_vault: Account<'info, ConditionalVaultAccount>,
-    #[account(
-        constraint = base_vault.underlying_token_mint == dao.token_mint,
-        has_one = question,
-        mut,
-    )]
-    pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,
+    /// CHECK: checked by vault program
+    pub question: UncheckedAccount<'info>,
+    /// CHECK: checked by vault program
+    #[account(mut)]
+    pub quote_vault: UncheckedAccount<'info>,
+    /// CHECK: checked by vault program
+    #[account(mut)]
+    pub base_vault: UncheckedAccount<'info>,
     /// CHECK: checked by AMM program
     #[account(mut)]
     pub pass_amm: UncheckedAccount<'info>,
@@ -65,14 +57,12 @@ pub struct InitializeProposal<'info> {
     /// CHECK: checked by AMM program
     #[account(mut)]
     pub fail_amm: UncheckedAccount<'info>,
-    #[account(
-        mut,
-    )]
-    pub pass_base_user_account: Box<Account<'info, TokenAccount>>,
-    #[account(
-        mut,
-    )]
-    pub pass_quote_user_account: Box<Account<'info, TokenAccount>>,
+    /// CHECK: checked by vault program
+    #[account(mut)]
+    pub pass_base_user_account: UncheckedAccount<'info>,
+    /// CHECK: checked by vault program
+    #[account(mut)]
+    pub pass_quote_user_account: UncheckedAccount<'info>,
     /// CHECK: checked by vault program
     #[account(mut)]
     pub base_vault_underlying_token_account: UncheckedAccount<'info>,
@@ -122,18 +112,10 @@ pub struct InitializeProposal<'info> {
     #[account(mut)]
     pub fail_lp_user_account: UncheckedAccount<'info>,
     /// CHECK: checked by AMM program
-    #[account(
-        mut,
-        // associated_token::mint = pass_amm.lp_mint,
-        // associated_token::authority = dao.treasury,
-    )]
+    #[account(mut)]
     pub pass_lp_vault_account: UncheckedAccount<'info>,
     /// CHECK: checked by AMM program
-    #[account(
-        mut
-        // associated_token::mint = fail_amm.lp_mint,
-        // associated_token::authority = dao.treasury,
-    )]
+    #[account(mut)]
     pub fail_lp_vault_account: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -199,7 +181,6 @@ impl InitializeProposal<'_> {
             fail_amm_base_vault,
             fail_amm_quote_vault,
             pass_lp_user_account,
-            fail_lp_user_account,
             pass_lp_vault_account,
             fail_lp_vault_account,
             token_program,
@@ -221,6 +202,7 @@ impl InitializeProposal<'_> {
             pass_quote_mint,
             fail_base_mint,
             fail_quote_mint,
+            fail_lp_user_account,
         } = ctx.accounts;
 
         let InitializeProposalParams {
@@ -233,6 +215,7 @@ impl InitializeProposal<'_> {
             quote_tokens_to_lp,
         } = params;
 
+        {
         conditional_vault::cpi::split_tokens(
             CpiContext::new(
                 conditional_vault_program.to_account_info(),
@@ -278,29 +261,96 @@ impl InitializeProposal<'_> {
             ]),
             quote_tokens_to_lp,
         )?;
+        }
 
-        amm::cpi::create_amm(
+        {
+            amm::cpi::create_amm(
+                CpiContext::new(
+                    amm_program.to_account_info(),
+                    amm::cpi::accounts::CreateAmm {
+                        user: proposer.to_account_info(),
+                        amm: pass_amm.to_account_info(),
+                        lp_mint: pass_lp_mint.to_account_info(),
+                        base_mint: pass_base_mint.to_account_info(),
+                        quote_mint: pass_quote_mint.to_account_info(),
+                        vault_ata_base: pass_amm_base_vault.to_account_info(),
+                        vault_ata_quote: pass_amm_quote_vault.to_account_info(),
+                        program: amm_program.to_account_info(),
+                        event_authority: amm_event_authority.to_account_info(),
+                        system_program: system_program.to_account_info(),
+                        associated_token_program: associated_token_program.to_account_info(),
+                        token_program: token_program.to_account_info(),
+                    },
+                ),
+                CreateAmmArgs {
+                    twap_initial_observation: dao.twap_initial_observation,
+                    twap_max_observation_change_per_update: dao.twap_max_observation_change_per_update,
+                }
+            )?;
+
+            amm::cpi::create_amm(
+                CpiContext::new(
+                    amm_program.to_account_info(),
+                    amm::cpi::accounts::CreateAmm {
+                        user: proposer.to_account_info(),
+                        amm: fail_amm.to_account_info(),
+                        lp_mint: fail_lp_mint.to_account_info(),
+                        base_mint: fail_base_mint.to_account_info(),
+                        quote_mint: fail_quote_mint.to_account_info(),
+                        vault_ata_base: fail_amm_base_vault.to_account_info(),
+                        vault_ata_quote: fail_amm_quote_vault.to_account_info(),
+                        program: amm_program.to_account_info(),
+                        event_authority: amm_event_authority.to_account_info(),
+                        system_program: system_program.to_account_info(),
+                        associated_token_program: associated_token_program.to_account_info(),
+                        token_program: token_program.to_account_info(),
+                    },
+                ),
+                CreateAmmArgs {
+                    twap_initial_observation: dao.twap_initial_observation,
+                    twap_max_observation_change_per_update: dao.twap_max_observation_change_per_update,
+                }
+            )?;
+        }
+
+        associated_token::create(
             CpiContext::new(
-                amm_program.to_account_info(),
-                amm::cpi::accounts::CreateAmm {
-                    user: proposer.to_account_info(),
-                    amm: pass_amm.to_account_info(),
-                    lp_mint: pass_lp_mint.to_account_info(),
-                    base_mint: pass_base_mint.to_account_info(),
-                    quote_mint: pass_quote_mint.to_account_info(),
-                    vault_ata_base: pass_amm_base_vault.to_account_info(),
-                    vault_ata_quote: pass_amm_quote_vault.to_account_info(),
-                    program: amm_program.to_account_info(),
-                    event_authority: amm_event_authority.to_account_info(),
+                associated_token_program.to_account_info(),
+                associated_token::Create {
+                    payer: proposer.to_account_info(),
+                    mint: fail_lp_mint.to_account_info(),
+                    associated_token: fail_lp_user_account.to_account_info(),
+                    authority: proposer.to_account_info(),
                     system_program: system_program.to_account_info(),
-                    associated_token_program: associated_token_program.to_account_info(),
                     token_program: token_program.to_account_info(),
                 },
             ),
-            CreateAmmArgs {
-                twap_initial_observation: dao.twap_initial_observation,
-                twap_max_observation_change_per_update: dao.twap_max_observation_change_per_update,
-            }
+        )?;
+
+        amm::cpi::add_liquidity(
+            CpiContext::new(
+                amm_program.to_account_info(),
+                amm::cpi::accounts::AddOrRemoveLiquidity {
+                    user: proposer.to_account_info(),
+                    amm: fail_amm.to_account_info(),
+                    lp_mint: fail_lp_mint.to_account_info(),
+                    user_lp_account: fail_lp_user_account.to_account_info(),
+                    user_base_account: fail_base_user_account.to_account_info(),
+                    user_quote_account: fail_quote_user_account.to_account_info(),
+                    vault_ata_base: fail_amm_base_vault.to_account_info(),
+                    vault_ata_quote: fail_amm_quote_vault.to_account_info(),
+                    event_authority: amm_event_authority.to_account_info(),
+                    program: amm_program.to_account_info(),
+                    token_program: token_program.to_account_info(),
+                    system_program: system_program.to_account_info(),
+                    associated_token_program: associated_token_program.to_account_info(),
+                },
+            ),
+            AddLiquidityArgs {
+                quote_amount: quote_tokens_to_lp,
+                max_base_amount: base_tokens_to_lp,
+                min_lp_tokens: 0,
+            },
         )?;
 
         associated_token::create(
@@ -317,68 +367,33 @@ impl InitializeProposal<'_> {
             ),
         )?;
 
+        amm::cpi::add_liquidity(
+            CpiContext::new(
+                amm_program.to_account_info(),
+                amm::cpi::accounts::AddOrRemoveLiquidity {
+                    user: proposer.to_account_info(),
+                    amm: pass_amm.to_account_info(),
+                    lp_mint: pass_lp_mint.to_account_info(),
+                    user_lp_account: pass_lp_user_account.to_account_info(),
+                    user_base_account: pass_base_user_account.to_account_info(),
+                    user_quote_account: pass_quote_user_account.to_account_info(),
+                    vault_ata_base: pass_amm_base_vault.to_account_info(),
+                    vault_ata_quote: pass_amm_quote_vault.to_account_info(),
+                    event_authority: amm_event_authority.to_account_info(),
+                    program: amm_program.to_account_info(),
+                    token_program: token_program.to_account_info(),
+                    system_program: system_program.to_account_info(),
+                    associated_token_program: associated_token_program.to_account_info(),
+                },
+            ),
+            AddLiquidityArgs {
+                quote_amount: quote_tokens_to_lp,
+                max_base_amount: base_tokens_to_lp,
+                min_lp_tokens: 0,
+            },
+        )?;
 
-        // amm::cpi::add_liquidity(
-        //     CpiContext::new(
-        //         amm_program.to_account_info(),
-        //         amm::cpi::accounts::AddOrRemoveLiquidity {
-        //             user: proposer.to_account_info(),
-        //             amm: pass_amm.to_account_info(),
-        //             lp_mint: pass_lp_mint.to_account_info(),
-        //             user_lp_account: pass_lp_user_account.to_account_info(),
-        //             user_base_account: pass_base_user_account.to_account_info(),
-        //             user_quote_account: pass_quote_user_account.to_account_info(),
-        //             vault_ata_base: pass_amm_base_vault.to_account_info(),
-        //             vault_ata_quote: pass_amm_quote_vault.to_account_info(),
-        //             event_authority: amm_event_authority.to_account_info(),
-        //             program: amm_program.to_account_info(),
-        //             token_program: token_program.to_account_info(),
-        //         },
-        //     ),
-        //     AddLiquidityArgs {
-        //         quote_amount: quote_tokens_to_lp,
-        //         max_base_amount: base_tokens_to_lp,
-        //         min_lp_tokens: 0,
-        //     },
-        // )?;
 
-        // associated_token::create(
-        //     CpiContext::new(
-        //         associated_token_program.to_account_info(),
-        //         associated_token::Create {
-        //             payer: proposer.to_account_info(),
-        //             mint: fail_lp_mint.to_account_info(),
-        //             associated_token: fail_lp_user_account.to_account_info(),
-        //             authority: proposer.to_account_info(),
-        //             system_program: system_program.to_account_info(),
-        //             token_program: token_program.to_account_info(),
-        //         },
-        //     ),
-        // )?;
-
-        // amm::cpi::add_liquidity(
-        //     CpiContext::new(
-        //         amm_program.to_account_info(),
-        //         amm::cpi::accounts::AddOrRemoveLiquidity {
-        //             user: proposer.to_account_info(),
-        //             amm: fail_amm.to_account_info(),
-        //             lp_mint: fail_lp_mint.to_account_info(),
-        //             user_lp_account: fail_lp_user_account.to_account_info(),
-        //             user_base_account: fail_base_user_account.to_account_info(),
-        //             user_quote_account: fail_quote_user_account.to_account_info(),
-        //             vault_ata_base: fail_amm_base_vault.to_account_info(),
-        //             vault_ata_quote: fail_amm_quote_vault.to_account_info(),
-        //             event_authority: amm_event_authority.to_account_info(),
-        //             program: amm_program.to_account_info(),
-        //             token_program: token_program.to_account_info(),
-        //         },
-        //     ),
-        //     AddLiquidityArgs {
-        //         quote_amount: quote_tokens_to_lp,
-        //         max_base_amount: base_tokens_to_lp,
-        //         min_lp_tokens: 0,
-        //     },
-        // )?;
 
         return Ok(());
 

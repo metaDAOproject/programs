@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount}};
 
 use crate::*;
 
@@ -17,8 +17,8 @@ pub struct AddOrRemoveLiquidity<'info> {
     pub lp_mint: Box<Account<'info, Mint>>,
     #[account(
         mut,
-        token::mint = lp_mint,
-        token::authority = user,
+        associated_token::mint = lp_mint,
+        associated_token::authority = user,
     )]
     pub user_lp_account: Box<Account<'info, TokenAccount>>,
     #[account(
@@ -46,4 +46,6 @@ pub struct AddOrRemoveLiquidity<'info> {
     )]
     pub vault_ata_quote: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }

@@ -697,12 +697,12 @@ export class AutocratClient {
           failQuoteMint,
           this.provider.publicKey
         ),
-        passLpUserAccount: getAssociatedTokenAddressSync(
-          passLp,
-          this.provider.publicKey
-        ),
         failLpUserAccount: getAssociatedTokenAddressSync(
           failLp,
+          this.provider.publicKey
+        ),
+        passLpUserAccount: getAssociatedTokenAddressSync(
+          passLp,
           this.provider.publicKey
         ),
         passLpVaultAccount,

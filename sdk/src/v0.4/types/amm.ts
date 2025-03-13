@@ -124,6 +124,16 @@ export type Amm = {
           isSigner: false;
         },
         {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -188,6 +198,16 @@ export type Amm = {
         },
         {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -937,6 +957,16 @@ export const IDL: Amm = {
           isSigner: false,
         },
         {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -1001,6 +1031,16 @@ export const IDL: Amm = {
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
