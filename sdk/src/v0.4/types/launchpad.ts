@@ -1,5 +1,5 @@
 export type Launchpad = {
-  version: "0.4.0";
+  version: "0.4.1";
   name: "launchpad";
   instructions: [
     {
@@ -999,7 +999,7 @@ export type Launchpad = {
 };
 
 export const IDL: Launchpad = {
-  version: "0.4.0",
+  version: "0.4.1",
   name: "launchpad",
   instructions: [
     {

@@ -6,7 +6,8 @@
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
         "setup-metric-market": "tsx --tsconfig tsconfig.json scripts/setupMetricMarket.ts",
         "launch-init": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchInit.ts",
-        "launch-start": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchStart.ts"
+        "launch-start": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchStart.ts",
+        "launch-complete": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchComplete.ts"
     },
     "dependencies": {
         "@coral-xyz/anchor": "0.29.0",

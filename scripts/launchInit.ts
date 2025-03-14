@@ -112,9 +112,11 @@ async function main() {
     launchAuthorityKeypair.publicKey.toBase58()
   );
 
+  const mintKeypair = Keypair.generate();
+
   const [launchAddr] = getLaunchAddr(
     launchpad.getProgramId(),
-    launchAuthorityKeypair.publicKey
+    mintKeypair.publicKey
   );
   const [launchSigner] = getLaunchSignerAddr(
     launchpad.getProgramId(),
@@ -122,16 +124,20 @@ async function main() {
   );
 
   console.log("Creating mint...");
-
+  
   const mint = await token.createMint(
     provider.connection,
     payer,
     launchSigner,
     null,
     6,
-    launchAuthorityKeypair
+    mintKeypair,
+    {
+      // Let's be 100% sure the mint is created
+      commitment: "finalized",
+    }
   );
-
+  
   console.log("Mint created:", mint.toBase58());
 
   console.log("Launching...");
@@ -145,17 +151,15 @@ async function main() {
       secondsForLaunch,
       mint,
       launchAuthorityKeypair.publicKey,
-      isDevnet
+      isDevnet,
+      payer.publicKey
     )
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
-      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 }),
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 5 }),
     ])
     .transaction();
-
-  await sendAndConfirmTransaction(tx, "Initialize launch", [
-    launchAuthorityKeypair,
-  ]);
+  await sendAndConfirmTransaction(tx, "Initialize launch");
 
   console.log("Launch initialized!");
   console.log("Launch address:", launchAddr.toBase58());
@@ -177,20 +181,19 @@ async function sendAndConfirmTransaction(
     await provider.connection.getLatestBlockhash()
   ).blockhash;
   tx.partialSign(payer, ...signers);
-  const txHash = await provider.connection.sendRawTransaction(tx.serialize(), {
-    skipPreflight: true,
-  });
+  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
   console.log(`${label} transaction sent:`, txHash);
 
   await provider.connection.confirmTransaction(txHash, "confirmed");
   const txStatus = await provider.connection.getTransaction(txHash, {
     maxSupportedTransactionVersion: 0,
+    commitment: "confirmed",
   });
   if (txStatus?.meta?.err) {
     throw new Error(
       `Transaction failed: ${txHash}\nError: ${JSON.stringify(
         txStatus?.meta?.err
-      )}`
+      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`
     );
   }
   console.log(`${label} transaction confirmed`);
