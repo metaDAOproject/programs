@@ -117,7 +117,8 @@ export class LaunchpadClient {
     secondsForLaunch: number,
     tokenMint: PublicKey,
     launchAuthority: PublicKey = this.provider.publicKey,
-    isDevnet: boolean = false
+    isDevnet: boolean = false,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
 
@@ -153,10 +154,11 @@ export class LaunchpadClient {
         tokenMint,
         tokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+        payer,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          launchAuthority,
+          payer,
           getAssociatedTokenAddressSync(USDC, launchSigner, true),
           launchSigner,
           USDC
