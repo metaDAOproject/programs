@@ -91,3 +91,19 @@ export type LaunchpadEvent =
   | LaunchInitializedEvent
   | LaunchRefundedEvent
   | LaunchStartedEvent;
+
+export type InitializeDaoEvent =
+  IdlEvents<AutocratProgram>["InitializeDaoEvent"];
+export type UpdateDaoEvent = IdlEvents<AutocratProgram>["UpdateDaoEvent"];
+export type InitializeProposalEvent =
+  IdlEvents<AutocratProgram>["InitializeProposalEvent"];
+export type FinalizeProposalEvent =
+  IdlEvents<AutocratProgram>["FinalizeProposalEvent"];
+export type ExecuteProposalEvent =
+  IdlEvents<AutocratProgram>["ExecuteProposalEvent"];
+export type AutocratEvent =
+  | InitializeDaoEvent
+  | UpdateDaoEvent
+  | InitializeProposalEvent
+  | FinalizeProposalEvent
+  | ExecuteProposalEvent;
