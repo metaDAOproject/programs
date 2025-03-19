@@ -44,6 +44,7 @@ pub struct Proposal {
     pub nonce: u64,
     pub pda_bump: u8,
     pub question: Pubkey,
+    pub duration_in_slots: u64,
 }
 
 impl From<&ProposalInstruction> for Instruction {

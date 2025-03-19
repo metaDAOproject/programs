@@ -134,7 +134,7 @@ impl FinalizeProposal<'_> {
             let slots_passed = amm.oracle.last_updated_slot - proposal.slot_enqueued;
 
             require!(
-                slots_passed >= dao.slots_per_proposal,
+                slots_passed >= proposal.duration_in_slots,
                 AutocratError::MarketsTooYoung
             );
 
