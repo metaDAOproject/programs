@@ -228,6 +228,7 @@ impl InitializeProposal<'_> {
             nonce,
             pda_bump: ctx.bumps.proposal,
             question: question.key(),
+            duration_in_slots: dao.slots_per_proposal,
         });
 
         emit_cpi!(InitializeProposalEvent {
@@ -248,6 +249,7 @@ impl InitializeProposal<'_> {
             fail_lp_tokens_locked: fail_lp_tokens_to_lock,
             pda_bump: ctx.bumps.proposal,
             instruction,
+            duration_in_slots: proposal.duration_in_slots,
         });
 
         Ok(())
