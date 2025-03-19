@@ -1,5 +1,5 @@
 export type Autocrat = {
-  version: "0.4.1";
+  version: "0.4.2";
   name: "autocrat";
   instructions: [
     {
@@ -460,6 +460,10 @@ export type Autocrat = {
           {
             name: "question";
             type: "publicKey";
+          },
+          {
+            name: "durationInSlots";
+            type: "u64";
           }
         ];
       };
@@ -862,6 +866,11 @@ export type Autocrat = {
             defined: "ProposalInstruction";
           };
           index: false;
+        },
+        {
+          name: "durationInSlots";
+          type: "u64";
+          index: false;
         }
       ];
     },
@@ -997,7 +1006,7 @@ export type Autocrat = {
 };
 
 export const IDL: Autocrat = {
-  version: "0.4.1",
+  version: "0.4.2",
   name: "autocrat",
   instructions: [
     {
@@ -1459,6 +1468,10 @@ export const IDL: Autocrat = {
             name: "question",
             type: "publicKey",
           },
+          {
+            name: "durationInSlots",
+            type: "u64",
+          },
         ],
       },
     },
@@ -1859,6 +1872,11 @@ export const IDL: Autocrat = {
           type: {
             defined: "ProposalInstruction",
           },
+          index: false,
+        },
+        {
+          name: "durationInSlots",
+          type: "u64",
           index: false,
         },
       ],
