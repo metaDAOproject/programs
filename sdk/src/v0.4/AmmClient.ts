@@ -353,7 +353,7 @@ export class AmmClient {
       .preInstructions([
         // create the receiving token account if it doesn't exist
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
+          user,
           getAssociatedTokenAddressSync(receivingToken, user),
           user,
           receivingToken
