@@ -786,10 +786,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@metadaoproject/futarchy@0.4.0-alpha.57":
-  version "0.4.0-alpha.57"
-  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.4.0-alpha.57.tgz#2872d4b35bed5dd79963206d6243e443ce4a3c6f"
-  integrity sha512-m5rDyjppgbLAFTJOqdZQvucP91J7ByagL6+ynJC+N4OlCLF1h28nooKnRO1Hc8OFTxi53gstV9IlMxRKS2wazw==
+"@metadaoproject/futarchy@0.4.0-alpha.58":
+  version "0.4.0-alpha.58"
+  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.4.0-alpha.58.tgz#ef9e7408af09c01dd8959c7a768eebda0f657a5e"
+  integrity sha512-JoisNei6uNzGWhppym2DMe5gppnyw8QTyNAvuhz9uI9TN1fQzVottH+hTE6FvGH/K0/qXg/eXVpro+GpT4++Yw==
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@metaplex-foundation/umi" "^0.9.2"
