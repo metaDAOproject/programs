@@ -65,7 +65,8 @@ write_buffer_verifiable() {
 export_verifiable() {
     PROGRAM_NAME=$1
     PROGRAM_ID=$2
-    solana-verify export-pda-tx https://github.com/metaDAOproject/futarchy --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf -b ellipsislabs/solana:1.17.16 --library-name "$PROGRAM_NAME" -- --features default
+    FEATURES=$3
+    solana-verify export-pda-tx https://github.com/metaDAOproject/futarchy --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf -b ellipsislabs/solana:1.17.16 --library-name "$PROGRAM_NAME" -- --features $FEATURES
 }
 
 verify() {
@@ -92,10 +93,15 @@ show_size_diff() {
     PROGRAM_NAME=$1
     PROGRAM_ID=$2
     CLUSTER=$3
+    IS_VERIFIABLE=$4
 
     EXISTING_SIZE=$(solana program show "$PROGRAM_ID" -u "$CLUSTER" | awk '/Data Length:/ {print $3}')
 
-    NEW_SIZE=$(wc -c < ./target/deploy/"$PROGRAM_NAME".so)
+    if [ "$IS_VERIFIABLE" = "true" ]; then
+        NEW_SIZE=$(wc -c < ./verifiable-builds/"$PROGRAM_NAME".so)
+    else
+        NEW_SIZE=$(wc -c < ./target/deploy/"$PROGRAM_NAME".so)
+    fi
 
     echo "Existing size: $EXISTING_SIZE bytes"
     echo "New size: $NEW_SIZE bytes"
@@ -150,7 +156,7 @@ case "$1" in
     deploy) deploy "$2" "$3" ;;
     deploy_verifiable) deploy_verifiable "$2" "$3" ;;
     write_buffer_verifiable) write_buffer_verifiable "$2" "$3" ;;
-    export_verifiable) export_verifiable "$2" "$3" ;;
+    export_verifiable) export_verifiable "$2" "$3" "$4" ;;
     verify) verify "$2" ;;
     upgrade) upgrade "$2" "$3" "$4" ;;
     upgrade_idl) upgrade_idl "$2" "$3" "$4" ;;
@@ -162,6 +168,6 @@ case "$1" in
     bankrun_timelock) bankrun_timelock ;;
     bankrun_vault_logs) bankrun_vault_logs ;;
     bankrun_logs) bankrun_logs ;;
-    show_size_diff) show_size_diff "$2" "$3" "$4" ;;
+    show_size_diff) show_size_diff "$2" "$3" "$4" "$5" ;;
     *) echo "Unknown command: $1" ;;
 esac
