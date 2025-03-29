@@ -73,7 +73,7 @@ async function main() {
     .initializeLaunchIx(
       "mtnCapital",
       "MTN",
-      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/launchpad/scripts/assets/MTN/MTN.json",
+      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/MTN/MTN.json",
       new BN(0),
       SEVEN_DAYS_IN_SECONDS,
       MTN,
