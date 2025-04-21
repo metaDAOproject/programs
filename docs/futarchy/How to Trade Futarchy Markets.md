@@ -24,7 +24,9 @@ Here's how it works in practice:
 
 To participate, you first mint **conditional tokens** — these represent two possible ways you can influence the market.
 
-You can mint using either:
+Let’s walk through an example using MetaDAO governance. 
+
+You can mint conditional tokens using one of two assets:
 - **META** (MetaDAO's native governance token)
 - **USDC** (a stablecoin)
 
@@ -42,7 +44,7 @@ If minting with USDC:
 
 <figure><img src="../.gitbook/assets/pusdc-fusdc-example.png" alt="pUSDC and fUSDC" width="563"><figcaption></figcaption></figure>
 
-Using META (or the DAOs governance token) lets you affect the relative prices of the fail or pass market. Using USDC lets you add capital directly into the outcome you support, increasing its market cap.
+Using META lets you affect the relative prices of the fail or pass market. Using USDC lets you add capital directly into the outcome you support, increasing its market cap.
 
 ## Step 2: Trade Based on What You Believe
 
