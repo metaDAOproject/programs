@@ -22,8 +22,6 @@ Your goal is to raise the market cap of the side you support:
 
 Here's how it works in practice:
 
----
-
 ## Step 1: Mint Conditional Tokens
 
 To participate, you first mint **conditional tokens** — these represent two possible ways you can influence the market.
@@ -56,7 +54,7 @@ With META:
 - In favor of pass: Sell fMETA to lower the fail market and hold pMETA.
 - In favor of fail: Sell pMETA to lower the pass market and hold fMETA.
 
-<figure><img src="../.gitbook/assets/META-Matrix.png" alt="META Market Matrix" width="563"><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/Meta-Matrix.png" alt="META Market Matrix" width="563"><figcaption></figcaption></figure>
 
 With USDC:
 - In favor of pass: Use pUSDC to buy pMETA to raise the pass market.
