@@ -1,6 +1,4 @@
-In futarchy markets, your trades signal whether you think a proposal should pass or fail.
-
-To participate, you’ll mint conditional tokens and trade them to raise the market cap of your preferred outcome or lower the opposing one.
+In futarchy markets, your trades signal whether you think a proposal should pass or fail. To participate, you’ll mint conditional tokens and trade them to raise the market cap of your preferred outcome or lower the opposing one.
 
 Each futarchy proposal includes two markets:
 - Pass (green)
