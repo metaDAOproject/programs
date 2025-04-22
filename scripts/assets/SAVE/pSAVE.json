@@ -1,0 +1,6 @@
+{
+  "name": "Pass SAVE",
+  "symbol": "pSAVE",
+  "description": "A token that redeems back to SAVE if the proposal passes",
+  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/SAVE/pSAVE.png"
+}
