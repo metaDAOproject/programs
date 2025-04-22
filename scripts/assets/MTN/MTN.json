@@ -1,6 +1,6 @@
 {
-  "name": "Mountain Capital",
+  "name": "mtnCapital",
   "symbol": "MTN",
-  "description": "A token that represents a stake in Mountain Capital",
-  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/ORE/fORE.png"
+  "description": "First futarchy-governed investment fund",
+  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/MTN/MTN.png"
 }

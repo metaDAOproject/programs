@@ -15,7 +15,7 @@ import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import { walletAdapterIdentity } from "@metaplex-foundation/umi-signer-wallet-adapters";
 import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
-import { ComputeBudgetProgram, Keypair } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import * as fs from "fs";
 
 // Use the RPC endpoint of your choice.
@@ -31,72 +31,61 @@ const vaultProgram: ConditionalVaultClient =
   ConditionalVaultClient.createClient({ provider });
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
+const ONE_MINUTE_IN_SECONDS = 60;
+const ONE_HOUR_IN_SECONDS = ONE_MINUTE_IN_SECONDS * 60;
+const ONE_DAY_IN_SECONDS = ONE_HOUR_IN_SECONDS * 24;
+const SEVEN_DAYS_IN_SECONDS = ONE_DAY_IN_SECONDS * 7;
+const KOLLAN_PUBKEY = new PublicKey("CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf");
+
 async function main() {
-  const keypairFile = fs.readFileSync("./target/mtn.json");
-  const keypairData = JSON.parse(keypairFile.toString());
-  // const mtnKeypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
-  const mtnKeypair = Keypair.generate();
-  console.log(mtnKeypair.publicKey.toBase58());
+  const seed = "186fMCnZjcoD8i9K";
+  const MTN = await PublicKey.createWithSeed(payer.publicKey, seed, token.TOKEN_PROGRAM_ID);
 
-  // const MTN = await token.createMint(provider.connection, payer, payer.publicKey, null, 6, mtnKeypair);
-  const MTN = mtnKeypair.publicKey;
-
-  // createMetadataAccountV3(umi, {
-  //     mint: fromWeb3JsPublicKey(MTN),
-  //     mintAuthority: payer.publicKey,
-  //     data: {
-  //         name: 'Mountain Capital',
-  //         symbol: 'MTN',
-  //         uri: 'https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/launchpad/scripts/assets/MTN/MTN.json',
-  //         sellerFeeBasisPoints: 0,
-  //         creators: null,
-  //         collection: null,
-  //         uses: null,
-  //     },
-  //     isMutable: true,
-  //     collectionDetails: null,
-  // }).sendAndConfirm(umi, {
-  //     send: {
-  //         skipPreflight: true,
-  //     }
-  // });
-
-  const [launchAddr] = getLaunchAddr(launchpad.getProgramId(), MTN);
+  const [launch] = getLaunchAddr(launchpad.getProgramId(), MTN);
   const [launchSigner] = getLaunchSignerAddr(
     launchpad.getProgramId(),
-    launchAddr
+    launch
   );
+
+  console.log(launch.toBase58());
+
+  const lamports = await provider.connection.getMinimumBalanceForRentExemption(token.MINT_SIZE);
+
+  const tx = new Transaction().add(
+    SystemProgram.createAccountWithSeed({
+      fromPubkey: payer.publicKey,
+      newAccountPubkey: MTN,
+      basePubkey: payer.publicKey,
+      seed,
+      lamports: lamports,
+      space: token.MINT_SIZE,
+      programId: token.TOKEN_PROGRAM_ID,
+    }),
+    token.createInitializeMint2Instruction(MTN, 6, launchSigner, null)
+  );
+  tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
+  tx.feePayer = payer.publicKey;
+  tx.sign(payer);
+
+  await provider.connection.sendRawTransaction(tx.serialize());
 
   await launchpad
     .initializeLaunchIx(
+      "mtnCapital",
       "MTN",
-      "MTN",
-      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/launchpad/scripts/assets/MTN/MTN.json",
-      new BN(10),
-      60,
-      mtnKeypair,
+      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/MTN/MTN.json",
+      new BN(0),
+      SEVEN_DAYS_IN_SECONDS,
+      MTN,
+      KOLLAN_PUBKEY,
+      false,
       payer.publicKey,
-      true
     )
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
       ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 }),
     ])
     .rpc();
-
-  await launchpad.startLaunchIx(launchAddr, payer.publicKey).rpc();
-
-  await launchpad.fundIx(launchAddr, new BN(10), payer.publicKey, true).rpc();
-
-  // await launchpad.completeLaunchIx(launchAddr, USDC, MTN)
-  //     .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
-
-  // await launchpad.refundIx(launchAddr, DEVNET_MUSDC, pORE, payer.publicKey).rpc();
-  // await launchpad.claimIx(launchAddr, MTN, payer.publicKey).rpc();
-
-  console.log(launchAddr.toBase58());
-
-  return;
 }
 
 main();

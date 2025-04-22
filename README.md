@@ -8,9 +8,9 @@ Programs for market-driven governance
 
 | program           | tag  | program ID                                   |
 | ----------------- | ---- | -------------------------------------------- |
-| launchpad         | v0.4 | AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE |
-| autocrat          | v0.4 | autowMzCbM29YXMgVG3T62Hkgo7RcyrvgQQkd54fDQL  |
-| amm               | v0.4 | AMMyu265tkBpRW21iGQxKGLaves3gKm2JcMUqfXNSpqD |
+| launchpad         | delayed-twap-v0.4.1 | AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE |
+| autocrat          | proposal-duration-v0.4.2 | autowMzCbM29YXMgVG3T62Hkgo7RcyrvgQQkd54fDQL  |
+| amm               | delayed-twap-v0.4.1 | AMMyu265tkBpRW21iGQxKGLaves3gKm2JcMUqfXNSpqD |
 | conditional_vault | v0.4 | VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg  |
 | autocrat          | v0.3 | autoQP9RmUNkzzKRXsMkWicDVZ3h29vvyMDcAYjCxxg  |
 | amm               | v0.3 | AMM5G2nxuKUwCLRYTW7qqEwuoqCtNSjtbipwEmm2g8bH |

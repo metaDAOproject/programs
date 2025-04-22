@@ -9,11 +9,11 @@ use crate::{generate_amm_seeds, state::*};
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct AddLiquidityArgs {
     /// How much quote token you will deposit to the pool
-    quote_amount: u64,
+    pub quote_amount: u64,
     /// The maximum base token you will deposit to the pool
-    max_base_amount: u64,
+    pub max_base_amount: u64,
     /// The minimum LP token you will get back
-    min_lp_tokens: u64,
+    pub min_lp_tokens: u64,
 }
 
 impl AddOrRemoveLiquidity<'_> {
