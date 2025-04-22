@@ -229,7 +229,7 @@ export class AmmClient {
   ) {
     const [lpMint] = getAmmLpMintAddr(this.program.programId, amm);
 
-    const userLpAccount = getAssociatedTokenAddressSync(lpMint, user);
+    const userLpAccount = getAssociatedTokenAddressSync(lpMint, user, true);
 
     return this.program.methods
       .addLiquidity({
@@ -242,8 +242,8 @@ export class AmmClient {
         amm,
         lpMint,
         userLpAccount,
-        userBaseAccount: getAssociatedTokenAddressSync(baseMint, user),
-        userQuoteAccount: getAssociatedTokenAddressSync(quoteMint, user),
+        userBaseAccount: getAssociatedTokenAddressSync(baseMint, user, true),
+        userQuoteAccount: getAssociatedTokenAddressSync(quoteMint, user, true),
         vaultAtaBase: getAssociatedTokenAddressSync(baseMint, amm, true),
         vaultAtaQuote: getAssociatedTokenAddressSync(quoteMint, amm, true),
       })
@@ -279,15 +279,18 @@ export class AmmClient {
         lpMint,
         userLpAccount: getAssociatedTokenAddressSync(
           lpMint,
-          this.provider.publicKey
+          this.provider.publicKey,
+          true
         ),
         userBaseAccount: getAssociatedTokenAddressSync(
           baseMint,
-          this.provider.publicKey
+          this.provider.publicKey,
+          true
         ),
         userQuoteAccount: getAssociatedTokenAddressSync(
           quoteMint,
-          this.provider.publicKey
+          this.provider.publicKey,
+          true
         ),
         vaultAtaBase: getAssociatedTokenAddressSync(baseMint, ammAddr, true),
         vaultAtaQuote: getAssociatedTokenAddressSync(quoteMint, ammAddr, true),
@@ -354,7 +357,7 @@ export class AmmClient {
         // create the receiving token account if it doesn't exist
         createAssociatedTokenAccountIdempotentInstruction(
           user,
-          getAssociatedTokenAddressSync(receivingToken, user),
+          getAssociatedTokenAddressSync(receivingToken, user, true),
           user,
           receivingToken
         ),

@@ -620,8 +620,16 @@ export class AutocratClient {
         failAmm,
         passLpMint: passLp,
         failLpMint: failLp,
-        passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer),
-        failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer),
+        passLpUserAccount: getAssociatedTokenAddressSync(
+          passLp,
+          proposer,
+          true
+        ),
+        failLpUserAccount: getAssociatedTokenAddressSync(
+          failLp,
+          proposer,
+          true
+        ),
         passLpVaultAccount,
         failLpVaultAccount,
         proposer,
@@ -693,8 +701,8 @@ export class AutocratClient {
       question,
       // baseVault,
       // quoteVault,
-      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer),
-      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer),
+      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer, true),
+      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer, true),
       passLpVaultAccount: getAssociatedTokenAddressSync(
         passLp,
         daoTreasury,
