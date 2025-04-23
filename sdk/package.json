@@ -41,6 +41,7 @@
     "solana-bankrun": "^0.2.0",
     "spl-token-bankrun": "0.2.3",
     "ts-mocha": "^10.0.0",
+    "typedoc": "^0.28.3",
     "typescript": "^4.9.5"
   }
 }
