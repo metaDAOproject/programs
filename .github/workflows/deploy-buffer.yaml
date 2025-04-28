@@ -15,6 +15,26 @@ on:
         description: 'RPC URL'
         required: true
         type: string
+      program_executable_data:
+        required: true
+        type: string
+        description: "The program executable data address"
+        default: "H5rxQS4BGc77552Da6aDDNH2G7HCpC1fUxyeuDpwEQK4"
+      multisig_pda:
+        required: true
+        type: string
+        description: "The multisig pda to set as buffer authority"
+        default: "J5wHJwmkyhx1rnn7xeYyUVKYgCvDPwGJz4h44WE6cHCJ"
+      multisig_vault_index:
+        required: true
+        type: string
+        description: "Index of the multisig vault executing the upgrade"
+        default: "0"
+      spill_address:
+        required: true
+        type: string
+        description: "Spill address to recoup funds from buffers"
+        default: "2SG7fCnreQ9wHoqQC7U6pfDN2rYmBqExKuqcGR3StrZW"
 
 
 jobs:
@@ -38,4 +58,60 @@ jobs:
           timeout_minutes: 30
           max_attempts: 10
           shell: bash
-          command: solana program write-buffer --max-sign-attempts 50 --with-compute-unit-price 100 --use-rpc --buffer ./buffer-keypair ./verifiable-builds/${{ inputs.program_name }}.so -u $NETWORK
+          command: solana program write-buffer --max-sign-attempts 50 --with-compute-unit-price 100 --use-rpc --buffer ./buffer-keypair ./verifiable-builds/${{ inputs.program_name }}.so -u ${{ inputs.rpc_url }} > ./buffer.out
+      - name: IDL Buffer Deploy
+        uses: nick-invision/retry@v2
+        id: idl-buffer-deploy
+        with:
+          timeout_minutes: 30
+          max_attempts: 10
+          shell: bash
+          command: anchor idl write-buffer ${{ inputs.program_id }} --filepath ./verifiable-builds/${{ inputs.program_name }}.json --provider.cluster ${{ inputs.rpc_url }} --provider.wallet ./deploy-keypair.json > idl-buffer.out
+      - name: Buffer Deploy Store
+        shell: bash
+        id: buffer-deploy-store
+        run: |
+          echo "BUFFER=$(cat buffer.out | sed 's/Buffer: //g' | xargs echo -n)" >> $GITHUB_OUTPUT
+          echo "IDL_BUFFER=$(cat idl-buffer.out | grep -oE '[1-9A-HJ-NP-Za-km-z]{32,44}$' | xargs echo -n)" >> $GITHUB_OUTPUT
+      - run: echo "The buffer is ${{ steps.buffer-deploy-store.outputs.BUFFER }}"
+        shell: bash
+      - run: echo "the idl buffer is ${{ steps.buffer-deploy-store.outputs.IDL_BUFFER }}"
+        shell: bash
+      - name: Transfer idl buffer to authority
+        uses: nick-invision/retry@v2
+        if: steps.cache-buffer.outputs.cache-hit != 'true'
+        with:
+          timeout_minutes: 10
+          max_attempts: 20
+          shell: bash
+          command: anchor idl set-authority $IDL_BUFFER --provider.cluster $NETWORK --program-id $PROGRAM_ID --new-authority $AUTHORITY --provider.wallet ./deploy-keypair.json
+        env:
+          IDL_BUFFER: ${{ steps.buffer-deploy-store.outputs.IDL_BUFFER }}
+          AUTHORITY: ${{ inputs.buffer-authority }}
+          NETWORK: ${{ inputs.network }}
+          PROGRAM_ID: ${{ inputs.program-id }}
+      - name: Transfer program buffer to authority
+        uses: nick-invision/retry@v2
+        if: steps.cache-buffer.outputs.cache-hit != 'true'
+        with:
+          timeout_minutes: 10
+          max_attempts: 20
+          shell: bash
+          command: solana program set-buffer-authority $BUFFER -k ./deploy-keypair.json --new-buffer-authority $AUTHORITY -u $NETWORK
+        env:
+          BUFFER: ${{ steps.buffer-deploy-store.outputs.BUFFER }}
+          AUTHORITY: ${{ inputs.buffer-authority }}
+          NETWORK: ${{ inputs.network }}
+      - name: Set upgrade authority to Squads multisig
+        uses: pileks/squads-v4-program-upgrade@0.0.3
+        with:
+          network-url: ${{ inputs.rpc_url }}
+          multisig-pda: ${{ inputs.multisig_pda }}
+          multisig-vault-index: ${{ inputs.multisig_vault_index }}
+          program-id: ${{ inputs.program_id }}
+          buffer: "${{ steps.buffer-deploy-store.outputs.BUFFER }}"
+          spill-address: ${{ inputs.spill_address }}
+          name: "Test Upgrade"
+          executable-data: ${{ inputs.program_executable_data }}
+          keypair: ${{ secrets.DEPLOYER_KEYPAIR }}
+          idl-buffer: "${{ steps.buffer-deploy-store.outputs.IDL_BUFFER }}"
