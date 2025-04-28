@@ -8,7 +8,7 @@ on:
 
 jobs:
   generate-verifiable-autocrat:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: metadaoproject/anchor-verifiable-build@v0.2
@@ -25,7 +25,7 @@ jobs:
           default_author: github_actions
           message: 'Update autocrat verifiable build'
   generate-verifiable-vault:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: metadaoproject/anchor-verifiable-build@v0.2
@@ -43,7 +43,7 @@ jobs:
           default_author: github_actions
           message: 'Update conditional_vault verifiable build'
   generate-verifiable-amm:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: metadaoproject/anchor-verifiable-build@v0.2
@@ -60,7 +60,7 @@ jobs:
           default_author: github_actions
           message: 'Update amm verifiable build'
   generate-verifiable-launchpad:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: metadaoproject/anchor-verifiable-build@v0.2
