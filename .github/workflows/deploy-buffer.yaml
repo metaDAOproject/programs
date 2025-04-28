@@ -103,7 +103,7 @@ jobs:
           AUTHORITY: ${{ inputs.buffer-authority }}
           NETWORK: ${{ inputs.network }}
       - name: Set upgrade authority to Squads multisig
-        uses: pileks/squads-v4-program-upgrade@0.0.3
+        uses: metaDAOproject/squads-v4-program-upgrade@0.0.3
         with:
           network-url: ${{ inputs.rpc_url }}
           multisig-pda: ${{ inputs.multisig_pda }}
