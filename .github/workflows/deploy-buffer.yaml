@@ -30,6 +30,11 @@ on:
         type: string
         description: "Index of the multisig vault executing the upgrade"
         default: "0"
+      multisig-vault-address:
+        required: true
+        type: string
+        description: "Address of the multisig vault executing the upgrade"
+        default: "ALxsUozu7d8ibng4k3aF9CPj1VGPGt8ZRogbpUwYsZkq"
       spill_address:
         required: true
         type: string
@@ -103,11 +108,12 @@ jobs:
           AUTHORITY: ${{ inputs.buffer-authority }}
           NETWORK: ${{ inputs.network }}
       - name: Set upgrade authority to Squads multisig
-        uses: metaDAOproject/squads-v4-program-upgrade@0.0.3
+        uses: metaDAOproject/squads-v4-program-upgrade@1.0.0
         with:
           network-url: ${{ inputs.rpc_url }}
           multisig-pda: ${{ inputs.multisig_pda }}
           multisig-vault-index: ${{ inputs.multisig_vault_index }}
+          multisig-vault-address: ${{ inputs.multisig_vault_address }}
           program-id: ${{ inputs.program_id }}
           buffer: "${{ steps.buffer-deploy-store.outputs.BUFFER }}"
           spill-address: ${{ inputs.spill_address }}
