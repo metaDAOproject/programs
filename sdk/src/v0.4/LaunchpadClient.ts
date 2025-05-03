@@ -387,7 +387,11 @@ export class LaunchpadClient {
         fundingRecord,
         launchSigner,
         funder,
-        funderTokenAccount: getAssociatedTokenAddressSync(tokenMint, funder),
+        funderTokenAccount: getAssociatedTokenAddressSync(
+          tokenMint,
+          funder,
+          true
+        ),
         tokenMint,
         launchTokenVault: getAssociatedTokenAddressSync(
           tokenMint,
