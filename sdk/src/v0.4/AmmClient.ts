@@ -249,9 +249,9 @@ export class AmmClient {
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
+          user,
           userLpAccount,
-          this.provider.publicKey,
+          user,
           lpMint
         ),
       ]);

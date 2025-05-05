@@ -632,7 +632,7 @@ export class AutocratClient {
         ),
         passLpVaultAccount,
         failLpVaultAccount,
-        proposer: proposer,
+        proposer,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
