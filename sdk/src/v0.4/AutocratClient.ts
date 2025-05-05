@@ -573,11 +573,7 @@ export class AutocratClient {
     question: PublicKey,
     user: PublicKey = this.provider.publicKey
   ) {
-    let [proposal] = getProposalAddr(
-      this.autocrat.programId,
-      user,
-      nonce
-    );
+    let [proposal] = getProposalAddr(this.autocrat.programId, user, nonce);
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
       proposal,
@@ -624,19 +620,11 @@ export class AutocratClient {
         failAmm,
         passLpMint: passLp,
         failLpMint: failLp,
-        passLpUserAccount: getAssociatedTokenAddressSync(
-          passLp,
-          user,
-          true
-        ),
-        failLpUserAccount: getAssociatedTokenAddressSync(
-          failLp,
-          user,
-          true
-        ),
+        passLpUserAccount: getAssociatedTokenAddressSync(passLp, user, true),
+        failLpUserAccount: getAssociatedTokenAddressSync(failLp, user, true),
         passLpVaultAccount,
         failLpVaultAccount,
-        proposer: user
+        proposer: user,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
