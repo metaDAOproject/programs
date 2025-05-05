@@ -571,9 +571,9 @@ export class AutocratClient {
     failLpTokensToLock: BN,
     nonce: BN,
     question: PublicKey,
-    user: PublicKey = this.provider.publicKey
+    proposer: PublicKey = this.provider.publicKey
   ) {
-    let [proposal] = getProposalAddr(this.autocrat.programId, user, nonce);
+    let [proposal] = getProposalAddr(this.autocrat.programId, proposer, nonce);
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
       proposal,
@@ -620,21 +620,29 @@ export class AutocratClient {
         failAmm,
         passLpMint: passLp,
         failLpMint: failLp,
-        passLpUserAccount: getAssociatedTokenAddressSync(passLp, user, true),
-        failLpUserAccount: getAssociatedTokenAddressSync(failLp, user, true),
+        passLpUserAccount: getAssociatedTokenAddressSync(
+          passLp,
+          proposer,
+          true
+        ),
+        failLpUserAccount: getAssociatedTokenAddressSync(
+          failLp,
+          proposer,
+          true
+        ),
         passLpVaultAccount,
         failLpVaultAccount,
-        proposer: user,
+        proposer: proposer,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          user,
+          proposer,
           passLpVaultAccount,
           daoTreasury,
           passLp
         ),
         createAssociatedTokenAccountIdempotentInstruction(
-          user,
+          proposer,
           failLpVaultAccount,
           daoTreasury,
           failLp
@@ -693,8 +701,8 @@ export class AutocratClient {
       question,
       // baseVault,
       // quoteVault,
-      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer),
-      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer),
+      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer, true),
+      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer, true),
       passLpVaultAccount: getAssociatedTokenAddressSync(
         passLp,
         daoTreasury,

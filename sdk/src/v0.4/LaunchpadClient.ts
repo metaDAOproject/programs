@@ -194,7 +194,7 @@ export class LaunchpadClient {
       launchSigner,
       true
     );
-    const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder);
+    const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder, true);
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
@@ -353,7 +353,7 @@ export class LaunchpadClient {
       launchSigner,
       true
     );
-    const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder);
+    const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder, true);
 
     return this.launchpad.methods.refund().accounts({
       launch,

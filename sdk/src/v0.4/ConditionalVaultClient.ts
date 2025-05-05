@@ -260,7 +260,7 @@ export class ConditionalVaultClient {
     const preInstructions = conditionalTokenMintAddrs.map((mint) =>
       createAssociatedTokenAccountIdempotentInstruction(
         payer,
-        getAssociatedTokenAddressSync(mint, user),
+        getAssociatedTokenAddressSync(mint, user, true),
         user,
         mint
       )
@@ -348,7 +348,7 @@ export class ConditionalVaultClient {
         conditionalTokenMintAddrs.map((conditionalTokenMint) => {
           return createAssociatedTokenAccountIdempotentInstruction(
             payer,
-            getAssociatedTokenAddressSync(conditionalTokenMint, user),
+            getAssociatedTokenAddressSync(conditionalTokenMint, user, true),
             user,
             conditionalTokenMint
           );
