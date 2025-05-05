@@ -415,7 +415,7 @@ export class ConditionalVaultClient {
         conditionalTokenMintAddrs.map((conditionalTokenMint) => {
           return createAssociatedTokenAccountIdempotentInstruction(
             payer,
-            getAssociatedTokenAddressSync(conditionalTokenMint, user),
+            getAssociatedTokenAddressSync(conditionalTokenMint, user, true),
             user,
             conditionalTokenMint
           );
