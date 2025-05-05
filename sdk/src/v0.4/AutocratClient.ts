@@ -570,11 +570,12 @@ export class AutocratClient {
     passLpTokensToLock: BN,
     failLpTokensToLock: BN,
     nonce: BN,
-    question: PublicKey
+    question: PublicKey,
+    user: PublicKey = this.provider.publicKey
   ) {
     let [proposal] = getProposalAddr(
       this.autocrat.programId,
-      this.provider.publicKey,
+      user,
       nonce
     );
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
@@ -625,25 +626,27 @@ export class AutocratClient {
         failLpMint: failLp,
         passLpUserAccount: getAssociatedTokenAddressSync(
           passLp,
-          this.provider.publicKey
+          user,
+          true
         ),
         failLpUserAccount: getAssociatedTokenAddressSync(
           failLp,
-          this.provider.publicKey
+          user,
+          true
         ),
         passLpVaultAccount,
         failLpVaultAccount,
-        proposer: this.provider.publicKey,
+        proposer: user
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
+          user,
           passLpVaultAccount,
           daoTreasury,
           passLp
         ),
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
+          user,
           failLpVaultAccount,
           daoTreasury,
           failLp
