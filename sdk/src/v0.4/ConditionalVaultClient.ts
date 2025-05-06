@@ -247,7 +247,7 @@ export class ConditionalVaultClient {
     vault: PublicKey,
     numOutcomes: number,
     user: PublicKey,
-    payer: PublicKey = this.provider.publicKey
+    payer?: PublicKey
   ) {
     const conditionalTokenMintAddrs = this.getConditionalTokenMints(
       vault,
@@ -259,8 +259,8 @@ export class ConditionalVaultClient {
 
     const preInstructions = conditionalTokenMintAddrs.map((mint) =>
       createAssociatedTokenAccountIdempotentInstruction(
-        payer,
-        getAssociatedTokenAddressSync(mint, user),
+        payer ?? user,
+        getAssociatedTokenAddressSync(mint, user, true),
         user,
         mint
       )
@@ -348,7 +348,7 @@ export class ConditionalVaultClient {
         conditionalTokenMintAddrs.map((conditionalTokenMint) => {
           return createAssociatedTokenAccountIdempotentInstruction(
             payer,
-            getAssociatedTokenAddressSync(conditionalTokenMint, user),
+            getAssociatedTokenAddressSync(conditionalTokenMint, user, true),
             user,
             conditionalTokenMint
           );
@@ -415,7 +415,7 @@ export class ConditionalVaultClient {
         conditionalTokenMintAddrs.map((conditionalTokenMint) => {
           return createAssociatedTokenAccountIdempotentInstruction(
             payer,
-            getAssociatedTokenAddressSync(conditionalTokenMint, user),
+            getAssociatedTokenAddressSync(conditionalTokenMint, user, true),
             user,
             conditionalTokenMint
           );

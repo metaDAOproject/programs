@@ -570,13 +570,10 @@ export class AutocratClient {
     passLpTokensToLock: BN,
     failLpTokensToLock: BN,
     nonce: BN,
-    question: PublicKey
+    question: PublicKey,
+    proposer: PublicKey = this.provider.publicKey
   ) {
-    let [proposal] = getProposalAddr(
-      this.autocrat.programId,
-      this.provider.publicKey,
-      nonce
-    );
+    let [proposal] = getProposalAddr(this.autocrat.programId, proposer, nonce);
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
       proposal,
@@ -625,25 +622,27 @@ export class AutocratClient {
         failLpMint: failLp,
         passLpUserAccount: getAssociatedTokenAddressSync(
           passLp,
-          this.provider.publicKey
+          proposer,
+          true
         ),
         failLpUserAccount: getAssociatedTokenAddressSync(
           failLp,
-          this.provider.publicKey
+          proposer,
+          true
         ),
         passLpVaultAccount,
         failLpVaultAccount,
-        proposer: this.provider.publicKey,
+        proposer,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
+          proposer,
           passLpVaultAccount,
           daoTreasury,
           passLp
         ),
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
+          proposer,
           failLpVaultAccount,
           daoTreasury,
           failLp
@@ -702,8 +701,8 @@ export class AutocratClient {
       question,
       // baseVault,
       // quoteVault,
-      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer),
-      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer),
+      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer, true),
+      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer, true),
       passLpVaultAccount: getAssociatedTokenAddressSync(
         passLp,
         daoTreasury,
