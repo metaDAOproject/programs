@@ -18,7 +18,7 @@ on:
       solana-cli-version:
         description: 'Solana CLI version'
         required: true
-        default: '1.17.16'
+        default: '1.18.26'
 
 jobs:
   verify-build:
