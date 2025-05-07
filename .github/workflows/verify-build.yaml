@@ -18,14 +18,14 @@ on:
       solana-cli-version:
         description: 'Solana CLI version'
         required: true
-        default: '1.18.26'
+        default: '1.17.16'
 
 jobs:
   verify-build:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: metadaoproject/setup-anchor@v2
+      - uses: metadaoproject/setup-anchor@v3.2
         with:
           anchor-version: ${{ inputs.anchor-version }}
           solana-cli-version: ${{ inputs.solana-cli-version }}

@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0.2
+      - uses: metadaoproject/anchor-verifiable-build@v0.3
         with:
           program: autocrat
           anchor-version: '0.29.0'
-          solana-cli-version: '1.18.26'
+          solana-cli-version: '1.17.16'
       - run: 'git pull --rebase'
       - run: cp target/deploy/autocrat.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
@@ -27,11 +27,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0.2
+      - uses: metadaoproject/anchor-verifiable-build@v0.3
         with:
           program: conditional_vault
           anchor-version: '0.29.0'
-          solana-cli-version: '1.18.26'
+          solana-cli-version: '1.17.16'
           features: 'production'
       - run: 'git pull --rebase'
       - run: cp target/deploy/conditional_vault.so ./verifiable-builds
@@ -44,11 +44,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0.2
+      - uses: metadaoproject/anchor-verifiable-build@v0.3
         with:
           program: amm
           anchor-version: '0.29.0'
-          solana-cli-version: '1.18.26'
+          solana-cli-version: '1.17.16'
       - run: 'git pull --rebase'
       - run: cp target/deploy/amm.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
@@ -60,11 +60,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0.2
+      - uses: metadaoproject/anchor-verifiable-build@v0.3
         with:
           program: launchpad
           anchor-version: '0.29.0'
-          solana-cli-version: '1.18.26'
+          solana-cli-version: '1.17.16'
           features: 'production'
       - run: 'git pull --rebase'
       - run: cp target/deploy/launchpad.so ./verifiable-builds
