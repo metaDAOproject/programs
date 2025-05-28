@@ -8,11 +8,17 @@ on:
 
 jobs:
   run-anchor-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set toolchain
+        run: |
+          rustup toolchain install 1.86.0 --profile minimal
+          rustup override set 1.86.0
+
       - uses: metadaoproject/anchor-test@v2.3
         with:
-            anchor-version: '0.29.0'
-            solana-cli-version: '1.17.16'
-            
+          anchor-version: '0.29.0'
+          solana-cli-version: '1.17.16'
