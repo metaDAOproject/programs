@@ -10,7 +10,7 @@ jobs:
   run-anchor-test:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: metadaoproject/anchor-test@v2.3
         with:
             anchor-version: '0.29.0'
