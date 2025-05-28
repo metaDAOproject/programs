@@ -10,13 +10,11 @@ jobs:
   run-anchor-test:
     runs-on: ubuntu-latest
 
+    env:
+      RUSTUP_TOOLCHAIN: '1.86.0'
+
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set toolchain
-        run: |
-          rustup toolchain install 1.86.0 --profile minimal
-          rustup override set 1.86.0
 
       - uses: metadaoproject/anchor-test@v2.3
         with:
