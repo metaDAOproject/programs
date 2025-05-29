@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.5
+      - uses: metadaoproject/anchor-verifiable-build@v0.3
         with:
           program: autocrat
           anchor-version: '0.29.0'
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.5
+      - uses: metadaoproject/anchor-verifiable-build@v0.3
         with:
           program: conditional_vault
           anchor-version: '0.29.0'
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.5
+      - uses: metadaoproject/anchor-verifiable-build@v0.3
         with:
           program: amm
           anchor-version: '0.29.0'
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.5
+      - uses: metadaoproject/anchor-verifiable-build@v0.3
         with:
           program: launchpad
           anchor-version: '0.29.0'

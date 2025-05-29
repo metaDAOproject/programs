@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/setup-anchor@v3.5
+      - uses: metadaoproject/setup-anchor@v3.2
         with:
           solana-cli-version: '1.17.16'
           anchor-version: '0.29.0'
