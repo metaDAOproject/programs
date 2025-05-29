@@ -10,8 +10,8 @@ jobs:
   generate-verifiable-autocrat:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0.3
+      - uses: actions/checkout@v4
+      - uses: metadaoproject/anchor-verifiable-build@v0.4
         with:
           program: autocrat
           anchor-version: '0.29.0'
@@ -26,8 +26,8 @@ jobs:
   generate-verifiable-vault:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0.3
+      - uses: actions/checkout@v4
+      - uses: metadaoproject/anchor-verifiable-build@v0.4
         with:
           program: conditional_vault
           anchor-version: '0.29.0'
@@ -43,8 +43,8 @@ jobs:
   generate-verifiable-amm:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0.3
+      - uses: actions/checkout@v4
+      - uses: metadaoproject/anchor-verifiable-build@v0.4
         with:
           program: amm
           anchor-version: '0.29.0'
@@ -59,8 +59,8 @@ jobs:
   generate-verifiable-launchpad:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0.3
+      - uses: actions/checkout@v4
+      - uses: metadaoproject/anchor-verifiable-build@v0.4
         with:
           program: launchpad
           anchor-version: '0.29.0'
