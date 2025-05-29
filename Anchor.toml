@@ -26,6 +26,7 @@ initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
 create-proposal = "yarn run tsx scripts/createProposal.ts"
 create-v04-dao = "yarn run tsx scripts/createV04DAO.ts"
 create-v04-proposal = "yarn run tsx scripts/createV04Proposal.ts"
+add-v04-metadata = "yarn run tsx scripts/addV04Metadata.ts"
 
 [test]
 startup_wait = 5000

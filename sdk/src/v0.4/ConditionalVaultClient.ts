@@ -247,7 +247,7 @@ export class ConditionalVaultClient {
     vault: PublicKey,
     numOutcomes: number,
     user: PublicKey,
-    payer: PublicKey = this.provider.publicKey
+    payer?: PublicKey
   ) {
     const conditionalTokenMintAddrs = this.getConditionalTokenMints(
       vault,
