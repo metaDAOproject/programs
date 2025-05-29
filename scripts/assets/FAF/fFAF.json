@@ -1,0 +1,6 @@
+{
+  "name": "Fail FAF",
+  "symbol": "fFAF",
+  "description": "A token that redeems back to FAF if the proposal fails",
+  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/FAF/fFAF.png"
+}
