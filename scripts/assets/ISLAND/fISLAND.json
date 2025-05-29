@@ -1,0 +1,6 @@
+{
+  "name": "Fail ISLAND",
+  "symbol": "fISLAND",
+  "description": "A token that redeems back to ISLAND if the proposal fails",
+  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/ISLAND/fISLAND.png"
+}
