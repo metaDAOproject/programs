@@ -19,12 +19,12 @@ on:
 
 jobs:
   deploy-buffer:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: metadaoproject/setup-anchor@v3
+      - uses: actions/checkout@v4
+      - uses: metadaoproject/setup-anchor@v3.2
         with:
-          solana-cli-version: '1.18.18'
+          solana-cli-version: '1.17.16'
           anchor-version: '0.29.0'
       - run: echo "$DEPLOYER_KEYPAIR" > deployer-keypair.json && chmod 600 deployer-keypair.json
         shell: bash
