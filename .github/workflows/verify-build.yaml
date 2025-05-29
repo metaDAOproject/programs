@@ -22,15 +22,15 @@ on:
 
 jobs:
   verify-build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: metadaoproject/setup-anchor@v2
+      - uses: actions/checkout@v4
+      - uses: metadaoproject/setup-anchor@v3.4
         with:
           anchor-version: ${{ inputs.anchor-version }}
           solana-cli-version: ${{ inputs.solana-cli-version }}
       - name: Cache Cargo registry + index
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache-cargo-registry
         with:
           path: |
@@ -39,7 +39,7 @@ jobs:
             ~/.cargo/git/db/
           key: cargo-${{ runner.os }}-v0001-${{ hashFiles('**/Cargo.lock') }}
       - name: Cache Solana Verify
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache-solana-verify
         with:
           path: |
