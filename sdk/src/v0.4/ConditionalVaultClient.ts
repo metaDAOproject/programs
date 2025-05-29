@@ -246,7 +246,7 @@ export class ConditionalVaultClient {
   getConditionalTokenAccountsAndInstructions(
     vault: PublicKey,
     numOutcomes: number,
-    user: PublicKey,
+    user: PublicKey = this.provider.publicKey,
     payer: PublicKey = this.provider.publicKey
   ) {
     const conditionalTokenMintAddrs = this.getConditionalTokenMints(
@@ -280,10 +280,16 @@ export class ConditionalVaultClient {
     underlyingTokenMint: PublicKey,
     amount: BN,
     numOutcomes: number,
-    user: PublicKey = this.provider.publicKey
+    user: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const { preInstructions, remainingAccounts } =
-      this.getConditionalTokenAccountsAndInstructions(vault, numOutcomes, user);
+      this.getConditionalTokenAccountsAndInstructions(
+        vault,
+        numOutcomes,
+        user,
+        payer
+      );
 
     return this.vaultProgram.methods
       .splitTokens(amount)
