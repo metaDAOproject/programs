@@ -19,6 +19,7 @@ import { DAY_IN_SLOTS, expectError, toBN } from "../../utils.js";
 import { BN } from "bn.js";
 
 import { StreamflowEscrow, IDL as StreamflowEscrowIDL } from "../../fixtures/streamflow_escrow.js";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 // import { IDL as StreamflowEscrowIDL } from "../../fixtures/streamflow_escrow.json";
 
 
@@ -45,7 +46,7 @@ export const deriveExecutionRecordPDA = (
   nonce: number,
 ): anchor.web3.PublicKey => {
   return anchor.web3.PublicKey.findProgramAddressSync(
-    [EXECUTION_RECORD_PREFIX, order.toBuffer(), executor.toBuffer(), new anchor.BN(nonce).toArrayLike(Buffer, 'le', 4)],
+    [EXECUTION_RECORD_PREFIX, order.toBuffer(), executor.toBuffer(), new BN(nonce).toArrayLike(Buffer, 'le', 4)],
     programId,
   )[0];
 };
@@ -130,6 +131,40 @@ export default async function() {
       executor: null,
       partner: null,
     })
+    .rpc();
+
+    const fillNonce = 0;
+  const fromKey = getAssociatedTokenAddressSync(USDC, authority, true);
+  const toBaseKey = getAssociatedTokenAddressSync(META, authority, true);
+  const toQuoteKey = getAssociatedTokenAddressSync(USDC, authority, true);
+  const contractKeypair = Keypair.generate();
+  const contractKey = contractKeypair.publicKey;
+  const escrowKey = deriveEscrowPDA(STREAMFLOW_ESCROW_PROGRAM_ID, contractKey);
+  const recordKey = deriveExecutionRecordPDA(STREAMFLOW_ESCROW_PROGRAM_ID, orderKey, authority, fillNonce);
+
+  console.log('Filling order vested:', recordKey.toBase58());
+  await escrow.methods
+    .fillOrderVested(fillNonce, amount, price, false)
+    .accounts({
+      common: {
+        executor: authority,
+        from: fromKey,
+        toBase: toBaseKey,
+        order: orderKey,
+        toQuote: toQuoteKey,
+        baseTokenProgram: token.TOKEN_PROGRAM_ID,
+        quotaTokenProgram: token.TOKEN_PROGRAM_ID,
+        vault: vaultKey,
+        creator: authority,
+        baseMint: META,
+        quoteMint: USDC,
+      },
+      streamMetadata: contractKey,
+      escrowTokens: escrowKey,
+
+    })
+    .accounts({ executionRecord: recordKey, streamflowProgram: STREAMFLOW_ESCROW_PROGRAM_ID })
+    .signers([contractKeypair])
     .rpc();
 
 
