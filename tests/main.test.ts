@@ -1,6 +1,6 @@
 import conditionalVault from "./conditionalVault/main.test.js";
 import amm from "./amm/main.test.js";
-import autocrat from "./autocrat/autocrat.js";
+import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 
 import { Clock, startAnchor } from "solana-bankrun";
@@ -44,6 +44,9 @@ const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
 const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
   "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
 );
+const STREAMFLOW_ESCROW_PROGRAM_ID = new PublicKey(
+  "ESCRoWj8QUJ5cTXCBWbGpW6AzaaEAtRbZuwKp8c4YYGs"
+);
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
@@ -66,6 +69,10 @@ before(async function () {
       {
         name: "raydium_cp_swap",
         programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
+      },
+      {
+        name: "streamflow_escrow",
+        programId: STREAMFLOW_ESCROW_PROGRAM_ID,
       },
     ],
     [
