@@ -20,6 +20,10 @@ build_launchpad() {
     find programs | entr -sc 'anchor build -p launchpad'
 }
 
+build_shared_liquidity_manager() {
+    find programs | entr -sc 'anchor build -p shared_liquidity_manager'
+}
+
 test_vault() {
     # anchor doesn't let you past test files, so we do this weird thing where we
     # modify the Anchor.toml and then put it back
@@ -151,6 +155,7 @@ case "$1" in
     test_logs_no_build) test_logs_no_build ;;
     vault) test_vault ;;
     build_vault) build_vault ;;
+    build_shared_liquidity_manager) build_shared_liquidity_manager ;;
     test_no_build) test_no_build ;;
     build_verifiable) build_verifiable "$2" ;;
     deploy) deploy "$2" "$3" ;;

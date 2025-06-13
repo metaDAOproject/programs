@@ -13,6 +13,7 @@ import {
   DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
   MPL_TOKEN_METADATA_PROGRAM_ID,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
+  SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
 } from "../constants.js";
 import { LAUNCHPAD_PROGRAM_ID } from "../constants.js";
 
@@ -199,6 +200,17 @@ export const getLiquidityPoolAddr = (
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("pool_state"), dao.toBuffer()],
+    programId
+  );
+};
+
+export const getSharedLiquidityPoolAddr = (
+  programId: PublicKey = SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
+  dao: PublicKey,
+  spotPool: PublicKey
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("pool"), spotPool.toBuffer(), dao.toBuffer()],
     programId
   );
 };

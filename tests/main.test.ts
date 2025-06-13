@@ -12,6 +12,7 @@ import {
   AutocratClient,
   ConditionalVaultClient,
   LaunchpadClient,
+  SharedLiquidityManagerClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
 } from "@metadaoproject/futarchy/v0.4";
@@ -117,6 +118,7 @@ before(async function () {
     provider: provider as any,
   });
   this.ammClient = AmmClient.createClient({ provider: provider as any });
+  this.sharedLiquidityManagerClient = SharedLiquidityManagerClient.createClient({ provider: provider as any });
   this.payer = provider.wallet.payer;
 
   this.createTokenAccount = async (mint: PublicKey, owner: PublicKey) => {

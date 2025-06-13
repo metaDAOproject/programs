@@ -11,6 +11,7 @@ import {
   RAYDIUM_AUTHORITY,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+  SharedLiquidityManagerClient,
 } from "@metadaoproject/futarchy/v0.4";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
@@ -30,6 +31,7 @@ import { IDL } from "../../fixtures/raydium_cpmm.js";
 export default async function () {
   let ammClient: AmmClient;
   let autocratClient: AutocratClient;
+  let sharedLiquidityManagerClient: SharedLiquidityManagerClient;
   let META: PublicKey;
   let USDC: PublicKey;
   let amm: PublicKey;
@@ -38,6 +40,7 @@ export default async function () {
 
   ammClient = this.ammClient;
   autocratClient = this.autocratClient;
+  sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
 
   META = await createMint(
     this.banksClient,
@@ -103,6 +106,11 @@ export default async function () {
   }).signers([poolStateKp]).rpc({ skipPreflight: true });
 
   // Third, initialize a SharedLiquidityManager for the DAO / Raydium spot pool
+
+  await sharedLiquidityManagerClient.initializePoolIx(dao, poolStateKp.publicKey).rpc();
+
+
+
 
   // Fourth, have the DAO provide liquidity to the pool
 
