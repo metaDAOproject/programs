@@ -4,6 +4,7 @@ import {
   AutocratClient,
   getAmmAddr,
   getAmmLpMintAddr,
+  initializeProposalTx,
 } from "@metadaoproject/futarchy/v0.4";
 import { Keypair, PublicKey, AddressLookupTableProgram, Transaction, AddressLookupTableAccount, TransactionMessage, VersionedTransaction, SystemProgram } from "@solana/web3.js";
 import { assert } from "chai";
@@ -105,7 +106,7 @@ export default async function () {
   // const quoteMint = new PublicKey(quoteAddr);
   const amount = new BN(684_208_000_000);
   const price = new BN(1_000_000_000_000);
-  const orderNonce = 0;
+  const orderNonce = 1;
   const vestingStartTs = new BN(Math.floor(Date.now() / 1000) + 3600);
   const vestingPeriod = new BN(30);
   const vestingAmountPerPeriod = new BN(3_759_384_615);
@@ -151,7 +152,7 @@ export default async function () {
       amount,
       startPrice: price,
       partialAllowed: false,
-      expiryTs: new BN(0),
+      expiryTs: new BN(1_752_508_800),
       claimType: { vested: {} },
       vestingStartTs,
       vestingPeriod,
@@ -292,7 +293,7 @@ export default async function () {
 
   fillOrderIx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
   fillOrderIx.feePayer = this.payer.publicKey;
-  fillOrderIx.sign(this.payer, contractKeypair);
+  fillOrderIx.sign(this.payer);
 
   // console.log(fillOrderIx.serialize().length)
 
@@ -300,12 +301,8 @@ export default async function () {
   // console.log(fillOrderIx.keys.length)
   // console.log(fillOrderIx.data.length)
 
-  // Create a new transaction that uses the lookup table
-  // const lookupTableAccount = await this.banksClient.getAddressLookupTable(lookupTableAddress);
-  // const lookupTableAddresses = lookupTableAccount.value?.state.addresses || [];
-
   // Create a proposal with the fillOrderVested instruction using lookup table addresses
-  const { proposal, tx: proposalTx } = await autocratClient.initializeProposal(
+  const { transactions, proposal } = await (autocratClient as any).initializeProposalTx(
     dao,
     "",
     {
@@ -318,16 +315,14 @@ export default async function () {
       data: fillOrderIx.instructions[0].data,
     },
     new BN(5 * 10 ** 9), // baseTokensToLP
-    new BN(5000 * 10 ** 6),  // quoteTokensToLP
-    acc
-  ) as any as { tx: Transaction, proposal: PublicKey };
+    new BN(5000 * 10 ** 6)  // quoteTokensToLP
+  );
 
   const transferIx = SystemProgram.transfer({
     fromPubkey: this.payer.publicKey,
     toPubkey: daoTreasury,
     lamports:  1_000_000_000,
   });
-
 
   const transferTx = new Transaction().add(transferIx);
   transferTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
@@ -337,14 +332,20 @@ export default async function () {
 
   await this.advanceBySlots(1n)
 
+  // Process all transactions except the last one
+  for (let i = 0; i < transactions.length - 1; i++) {
+    const tx = transactions[i];
+    tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = this.payer.publicKey;
+    tx.sign(this.payer);
+    await this.banksClient.processTransaction(tx);
+    await this.advanceBySlots(1n);
+  }
 
-  console.log(proposalTx);
-  // Extract unique accounts from the instruction to add to lookup table
-  const accountsToAdd = proposalTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
-  // accountsToAdd.push(proposal.instructions[0].programId);
-
-  // Remove duplicates
-  const uniqueAccounts = [...new Set(accountsToAdd.flat())];
+  // Extract unique accounts from the last instruction to add to lookup table
+  const lastTx = transactions[transactions.length - 1];
+  const accountsToAdd = lastTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
+  const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
 
   // Create extend instruction
   const extendInstruction3 = AddressLookupTableProgram.extendLookupTable({
@@ -367,7 +368,7 @@ export default async function () {
     payer: this.payer.publicKey,
     authority: this.payer.publicKey,
     lookupTable: acc.key,
-    addresses: uniqueAccounts
+    addresses: [daoTreasury]
   });
 
   // Execute extend instruction
@@ -378,20 +379,6 @@ export default async function () {
   await this.banksClient.processTransaction(extendTx4);
 
   await this.advanceBySlots(1n)
-
-
-
-  // // Advance clock by 1 slot to allow lookup table to be used
-  // const currentClock = await this.banksClient.getClock();
-  // this.context.setClock(
-  //   new Clock(
-  //     currentClock.slot + 1n,
-  //     currentClock.epochStartTimestamp,
-  //     currentClock.epoch,
-  //     currentClock.leaderScheduleEpoch,
-  //     currentClock.unixTimestamp
-  //   )
-  // );
 
   lookupTable = await this.banksClient.getAccount(lookupTableAddress);
 
@@ -406,11 +393,12 @@ export default async function () {
   const messageV0 = new TransactionMessage({
     payerKey: this.payer.publicKey,
     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-    instructions: (proposalTx as any).instructions,
+    instructions: lastTx.instructions,
   }).compileToV0Message([acc2]);
 
   console.log(messageV0.addressTableLookups);
-  // console.log(messageV0.serialize().length);
+
+  return;
 
   const transactionV0 = new VersionedTransaction(messageV0);
 

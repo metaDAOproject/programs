@@ -44,7 +44,7 @@ const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
 const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
   "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
 );
-const STREAMFLOW_ESCROW_PROGRAM_ID = new PublicKey(
+export const STREAMFLOW_ESCROW_PROGRAM_ID = new PublicKey(
   "ESCRoWj8QUJ5cTXCBWbGpW6AzaaEAtRbZuwKp8c4YYGs"
 );
 export const STREAMFLOW_VESTING_PROGRAM_ID = new PublicKey(

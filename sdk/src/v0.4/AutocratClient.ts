@@ -516,134 +516,143 @@ export class AutocratClient {
     return proposal;
   }
 
-  // async createProposalTxAndPDAs(
-  //   dao: PublicKey,
-  //   descriptionUrl: string,
-  //   instruction: ProposalInstruction,
-  //   baseTokensToLP: BN,
-  //   quoteTokensToLP: BN
-  // ): Promise<
-  //   [
-  //     Transaction[],
-  //     {
-  //       proposalAcct: PublicKey;
-  //       baseCondVaultAcct: PublicKey;
-  //       quoteCondVaultAcct: PublicKey;
-  //       passMarketAcct: PublicKey;
-  //       failMarketAcct: PublicKey;
-  //     }
-  //   ]
-  // > {
-  //   const storedDao = await this.getDao(dao);
+  async initializeProposalTx(
+    dao: PublicKey,
+    descriptionUrl: string,
+    instruction: ProposalInstruction,
+    baseTokensToLP: BN,
+    quoteTokensToLP: BN,
+    nonce: BN = new BN(Math.random() * 2 ** 50)
+  ): Promise<{ transactions: Transaction[]; proposal: PublicKey }> {
+    const storedDao = await this.getDao(dao);
 
-  //   const nonce = new BN(Math.random() * 2 ** 50);
+    let [proposal] = getProposalAddr(
+      this.autocrat.programId,
+      this.provider.publicKey,
+      nonce
+    );
 
-  //   let [proposal] = getProposalAddr(
-  //     this.autocrat.programId,
-  //     this.provider.publicKey,
-  //     nonce
-  //   );
+    // Get the initialize question transaction
+    const questionTx = await this.vaultClient
+      .initializeQuestionIx(
+        sha256(`Will ${proposal} pass?/FAIL/PASS`),
+        proposal,
+        2
+      )
+      .transaction();
 
-  //   const {
-  //     baseVault,
-  //     quoteVault,
-  //     passAmm,
-  //     failAmm,
-  //     passBaseMint,
-  //     passQuoteMint,
-  //     failBaseMint,
-  //     failQuoteMint,
-  //   } = this.getProposalPdas(
-  //     proposal,
-  //     storedDao.tokenMint,
-  //     storedDao.usdcMint,
-  //     dao
-  //   );
+    const {
+      baseVault,
+      quoteVault,
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      question,
+    } = this.getProposalPdas(
+      proposal,
+      storedDao.tokenMint,
+      storedDao.usdcMint,
+      dao
+    );
 
-  //   // it's important that these happen in a single atomic transaction
-  //   const initVaultTx = await this.vaultClient
-  //     .initializeVaultIx(proposal, storedDao.tokenMint)
-  //     .postInstructions(
-  //       await InstructionUtils.getInstructions(
-  //         this.vaultClient.initializeVaultIx(proposal, storedDao.usdcMint),
-  //         this.ammClient.createAmmIx(
-  //           passBaseMint,
-  //           passQuoteMint,
-  //           storedDao.twapInitialObservation,
-  //           storedDao.twapMaxObservationChangePerUpdate
-  //         ),
-  //         this.ammClient.createAmmIx(
-  //           failBaseMint,
-  //           failQuoteMint,
-  //           storedDao.twapInitialObservation,
-  //           storedDao.twapMaxObservationChangePerUpdate
-  //         )
-  //       )
-  //     )
-  //     .transaction();
+    // Get the initialize vaults and AMMs transaction
+    const initializeVaultsTx = await this.vaultClient
+      .initializeVaultIx(question, storedDao.tokenMint, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.vaultClient.initializeVaultIx(question, storedDao.usdcMint, 2),
+          this.ammClient.initializeAmmIx(
+            passBaseMint,
+            passQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          ),
+          this.ammClient.initializeAmmIx(
+            failBaseMint,
+            failQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          )
+        )
+      )
+      .transaction();
 
-  //   const mintConditionalTokensTx = await this.vaultClient
-  //     .mintConditionalTokensIx(baseVault, storedDao.tokenMint, baseTokensToLP)
-  //     .postInstructions(
-  //       await InstructionUtils.getInstructions(
-  //         this.vaultClient.mintConditionalTokensIx(
-  //           quoteVault,
-  //           storedDao.usdcMint,
-  //           quoteTokensToLP
-  //         )
-  //       )
-  //     )
-  //     .transaction();
+    // Get the split tokens transaction
+    const splitTokensTx = await this.vaultClient
+      .splitTokensIx(
+        question,
+        baseVault,
+        storedDao.tokenMint,
+        baseTokensToLP,
+        2
+      )
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.vaultClient.splitTokensIx(
+            question,
+            quoteVault,
+            storedDao.usdcMint,
+            quoteTokensToLP,
+            2
+          )
+        )
+      )
+      .transaction();
 
-  //   const addLiquidityTx = await this.ammClient
-  //     .addLiquidityIx(
-  //       passAmm,
-  //       passBaseMint,
-  //       passQuoteMint,
-  //       quoteTokensToLP,
-  //       baseTokensToLP,
-  //       new BN(0)
-  //     )
-  //     .postInstructions(
-  //       await InstructionUtils.getInstructions(
-  //         this.ammClient.addLiquidityIx(
-  //           failAmm,
-  //           failBaseMint,
-  //           failQuoteMint,
-  //           quoteTokensToLP,
-  //           baseTokensToLP,
-  //           new BN(0)
-  //         )
-  //       )
-  //     )
-  //     .transaction();
+    // Get the add liquidity transaction
+    const addLiquidityTx = await this.ammClient
+      .addLiquidityIx(
+        passAmm,
+        passBaseMint,
+        passQuoteMint,
+        quoteTokensToLP,
+        baseTokensToLP,
+        new BN(0)
+      )
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.ammClient.addLiquidityIx(
+            failAmm,
+            failBaseMint,
+            failQuoteMint,
+            quoteTokensToLP,
+            baseTokensToLP,
+            new BN(0)
+          )
+        )
+      )
+      .transaction();
 
-  //   // this is how many original tokens are created
-  //   const lpTokens = quoteTokensToLP;
+    // Get the initialize proposal transaction
+    const lpTokens = quoteTokensToLP;
+    const initializeProposalTx = await this.initializeProposalIx(
+      descriptionUrl,
+      instruction,
+      dao,
+      storedDao.tokenMint,
+      storedDao.usdcMint,
+      lpTokens,
+      lpTokens,
+      nonce,
+      question
+    ).transaction();
 
-  //   const initTx = await this.initializeProposalIx(
-  //     descriptionUrl,
-  //     instruction,
-  //     dao,
-  //     storedDao.tokenMint,
-  //     storedDao.usdcMint,
-  //     lpTokens,
-  //     lpTokens,
-  //     nonce,
-  //     question
-  //   ).transaction();
-
-  //   return [
-  //     [initVaultTx, mintConditionalTokensTx, addLiquidityTx, initTx],
-  //     {
-  //       baseCondVaultAcct: baseVault,
-  //       quoteCondVaultAcct: quoteVault,
-  //       failMarketAcct: failAmm,
-  //       passMarketAcct: passAmm,
-  //       proposalAcct: proposal,
-  //     },
-  //   ];
-  // }
+    return {
+      transactions: [
+        questionTx,
+        initializeVaultsTx,
+        splitTokensTx,
+        addLiquidityTx,
+        initializeProposalTx,
+      ],
+      proposal,
+    };
+  }
 
   initializeProposalIx(
     descriptionUrl: string,
