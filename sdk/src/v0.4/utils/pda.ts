@@ -215,3 +215,34 @@ export const getRaydiumCpmmLpMintAddr = (
     programId
   );
 };
+
+export const getRaydiumCpmmPoolVaultAddr = (
+  poolState: PublicKey,
+  token: PublicKey,
+  isDevnet: boolean
+): [PublicKey, number] => {
+  const programId = isDevnet
+    ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
+    : RAYDIUM_CP_SWAP_PROGRAM_ID;
+  return PublicKey.findProgramAddressSync(
+    [
+      utils.bytes.utf8.encode("pool_vault"),
+      poolState.toBuffer(),
+      token.toBuffer(),
+    ],
+    programId
+  );
+};
+
+export const getRaydiumCpmmObservationStateAddr = (
+  poolState: PublicKey,
+  isDevnet: boolean
+): [PublicKey, number] => {
+  const programId = isDevnet
+    ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
+    : RAYDIUM_CP_SWAP_PROGRAM_ID;
+  return PublicKey.findProgramAddressSync(
+    [utils.bytes.utf8.encode("observation"), poolState.toBuffer()],
+    programId
+  );
+};

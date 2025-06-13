@@ -2,6 +2,7 @@ import conditionalVault from "./conditionalVault/main.test.js";
 import amm from "./amm/main.test.js";
 import autocrat from "./autocrat/autocrat.js";
 import launchpad from "./launchpad/main.test.js";
+import sharedLiquidityManager from "./sharedLiquidityManager/main.test.js";
 
 import { Clock, startAnchor } from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
@@ -230,6 +231,7 @@ describe("conditional_vault", conditionalVault);
 describe("amm", amm);
 describe("autocrat", autocrat);
 describe("launchpad", launchpad);
+describe("shared_liquidity_manager", sharedLiquidityManager)
 describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
   it("tests scalar markets (mint, split, swap, redeem) with some fuzzing", scalarMarkets);
