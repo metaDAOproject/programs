@@ -141,7 +141,6 @@ export default async function () {
     new BN(10_000 * 10 ** 6) // 10,000 USDC
   ).preInstructions([ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 256 })]).rpc();
 
-  return;
 
   const storedUnderlyingPool = await cpSwap.account.poolState.fetch(poolStateKp.publicKey);
   console.log("storedUnderlyingPool", storedUnderlyingPool);
@@ -232,11 +231,7 @@ export default async function () {
   await this.createTokenAccount(token0Mint, failAmm, true);
   await this.createTokenAccount(token1Mint, failAmm, true);
 
-  // Initialize conditional token accounts
-  // await this.createTokenAccount(token0PassMint, pool, true);
-  // await this.createTokenAccount(token0FailMint, pool, true);
-  // await this.createTokenAccount(token1PassMint, pool, true);
-  // await this.createTokenAccount(token1FailMint, pool, true);
+  return;
 
   let initProposalWithLiquidityTx = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
     dao,

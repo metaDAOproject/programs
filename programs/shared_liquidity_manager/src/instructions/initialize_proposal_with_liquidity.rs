@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use raydium_cpmm_cpi::cpi::accounts::Withdraw;
-use raydium_cpmm_cpi::cpi::withdraw;
+use anchor_spl::token::{Mint, TokenAccount};
 use conditional_vault::cpi::accounts::InteractWithVault;
 use conditional_vault::cpi::split_tokens;
+use raydium_cpmm_cpi::cpi::accounts::Withdraw;
+use raydium_cpmm_cpi::cpi::withdraw;
 
 use crate::state::SharedLiquidityPool;
 
@@ -18,7 +18,8 @@ pub struct RaydiumAccounts<'info> {
     #[account(mut)]
     pub lp_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
     #[account(mut)]
-    pub pool_lp_token_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    pub pool_lp_token_account:
+        Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
     /// CHECK: Raydium authority PDA
     pub raydium_authority: UncheckedAccount<'info>,
     pub token_program: Program<'info, anchor_spl::token::Token>,
@@ -34,17 +35,13 @@ pub struct ConditionalVaultAccounts<'info> {
     #[account(mut)]
     pub question: Account<'info, conditional_vault::state::Question>,
     #[account(mut)]
-    pub vault_0: Account<'info, conditional_vault::state::ConditionalVault>,
+    pub base_vault: Account<'info, conditional_vault::state::ConditionalVault>,
     #[account(mut)]
-    pub vault_1: Account<'info, conditional_vault::state::ConditionalVault>,
+    pub quote_vault: Account<'info, conditional_vault::state::ConditionalVault>,
     #[account(mut)]
-    pub vault_0_underlying_token_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    pub base_underlying_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub vault_1_underlying_token_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(mut)]
-    pub pool_token_0_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(mut)]
-    pub pool_token_1_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    pub quote_underlying_token_account: Box<Account<'info, TokenAccount>>,
     pub conditional_vault_program: Program<'info, conditional_vault::program::ConditionalVault>,
     #[account(mut)]
     pub token_0_pass_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
@@ -69,18 +66,6 @@ pub struct ConditionalVaultAccounts<'info> {
     pub token_program: Program<'info, anchor_spl::token::Token>,
     pub system_program: Program<'info, System>,
     pub pool: Account<'info, SharedLiquidityPool>,
-}
-
-#[derive(Accounts)]
-pub struct ConditionalTokenAccounts<'info> {
-    #[account(mut)]
-    pub pool_p_token_0_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(mut)]
-    pub pool_f_token_0_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(mut)]
-    pub pool_p_token_1_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(mut)]
-    pub pool_f_token_1_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
 }
 
 #[derive(Accounts)]
@@ -114,28 +99,33 @@ pub struct AmmAccounts<'info> {
 #[derive(Accounts)]
 pub struct InitializeProposalWithLiquidity<'info> {
     // Shared liquidity pool state
-    // #[account(mut, has_one = pool_base_vault, has_one = pool_quote_vault)]
-    pub pool: Account<'info, SharedLiquidityPool>,
+    #[account(mut,
+        has_one = sl_pool_base_vault,
+        has_one = sl_pool_quote_vault,
+        has_one = sl_pool_spot_lp_vault,
+        has_one = base_mint,
+        has_one = quote_mint,
+    )]
+    pub sl_pool: Account<'info, SharedLiquidityPool>,
     pub proposal_creator: Signer<'info>,
     /// CHECK: initialized by autocrat
     pub proposal: UncheckedAccount<'info>,
 
     #[account(mut)]
-    pub pool_base_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    pub sl_pool_base_vault: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub pool_quote_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    pub sl_pool_quote_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub sl_pool_spot_lp_vault: Box<Account<'info, TokenAccount>>,
 
-    pub token_0_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
-    pub token_1_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
+    pub base_mint: Box<Account<'info, Mint>>,
+    pub quote_mint: Box<Account<'info, Mint>>,
 
     // Raydium accounts
     pub raydium: RaydiumAccounts<'info>,
 
     // Conditional vault accounts
     pub conditional_vault: ConditionalVaultAccounts<'info>,
-
-    // Conditional token accounts
-    // pub conditional_tokens: ConditionalTokenAccounts<'info>,
 
     // AMM accounts
     pub amm: AmmAccounts<'info>,
@@ -351,8 +341,8 @@ impl InitializeProposalWithLiquidity<'_> {
 
 #[error_code]
 pub enum ErrorCode {
-    #[msg("No LP tokens in pool's LP token account")] 
+    #[msg("No LP tokens in pool's LP token account")]
     NoLpTokensInPool,
-    #[msg("Not enough LP tokens to withdraw half")] 
+    #[msg("Not enough LP tokens to withdraw half")]
     NotEnoughLpTokens,
-} 
+}

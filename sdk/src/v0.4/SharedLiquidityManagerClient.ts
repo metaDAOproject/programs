@@ -171,176 +171,176 @@ export class SharedLiquidityManagerClient {
       });
   }
 
-  // initializeProposalWithLiquidityIx(
-  //   dao: PublicKey,
-  //   spotPoolState: PublicKey,
-  //   proposal: PublicKey,
-  //   question: PublicKey,
-  //   vault0: PublicKey,
-  //   vault1: PublicKey,
-  //   token0Mint: PublicKey,
-  //   token1Mint: PublicKey,
-  //   passAmm: PublicKey,
-  //   failAmm: PublicKey,
-  //   passLpMint: PublicKey,
-  //   failLpMint: PublicKey,
-  //   token0PassMint: PublicKey,
-  //   token0FailMint: PublicKey,
-  //   token0PassVault: PublicKey,
-  //   token0FailVault: PublicKey,
-  //   token1PassMint: PublicKey,
-  //   token1FailMint: PublicKey,
-  //   token1PassVault: PublicKey,
-  //   token1FailVault: PublicKey,
-  //   baseMint: PublicKey,
-  //   quoteMint: PublicKey,
-  //   passBaseMint: PublicKey,
-  //   passQuoteMint: PublicKey,
-  //   failBaseMint: PublicKey,
-  //   failQuoteMint: PublicKey
-  // ) {
-  //   const [pool] = getSharedLiquidityPoolAddr(
-  //     this.program.programId,
-  //     dao,
-  //     spotPoolState
-  //   );
+  initializeProposalWithLiquidityIx(
+    dao: PublicKey,
+    spotPoolState: PublicKey,
+    proposal: PublicKey,
+    question: PublicKey,
+    vault0: PublicKey,
+    vault1: PublicKey,
+    token0Mint: PublicKey,
+    token1Mint: PublicKey,
+    passAmm: PublicKey,
+    failAmm: PublicKey,
+    passLpMint: PublicKey,
+    failLpMint: PublicKey,
+    token0PassMint: PublicKey,
+    token0FailMint: PublicKey,
+    token0PassVault: PublicKey,
+    token0FailVault: PublicKey,
+    token1PassMint: PublicKey,
+    token1FailMint: PublicKey,
+    token1PassVault: PublicKey,
+    token1FailVault: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    passBaseMint: PublicKey,
+    passQuoteMint: PublicKey,
+    failBaseMint: PublicKey,
+    failQuoteMint: PublicKey
+  ) {
+    const [pool] = getSharedLiquidityPoolAddr(
+      this.program.programId,
+      dao,
+      spotPoolState
+    );
 
-  //   console.log(spotPoolState.toBase58());
-  //   console.log(token0Mint.toBase58());
+    console.log(spotPoolState.toBase58());
+    console.log(token0Mint.toBase58());
 
-  //   return this.program.methods.initializeProposalWithLiquidity().accounts({
-  //     pool,
-  //     proposalCreator: this.provider.wallet.publicKey,
-  //     proposal,
-  //     token0Vault: getAssociatedTokenAddressSync(token0Mint, pool, true),
-  //     token1Vault: getAssociatedTokenAddressSync(token1Mint, pool, true),
-  //     token0Mint,
-  //     token1Mint,
-  //     raydium: {
-  //       spotPoolState,
-  //       token0Vault: getRaydiumCpmmPoolVaultAddr(
-  //         spotPoolState,
-  //         token0Mint,
-  //         false
-  //       )[0],
-  //       token1Vault: getRaydiumCpmmPoolVaultAddr(
-  //         spotPoolState,
-  //         token1Mint,
-  //         false
-  //       )[0],
-  //       lpMint: getRaydiumCpmmLpMintAddr(spotPoolState, false)[0],
-  //       poolLpTokenAccount: getAssociatedTokenAddressSync(
-  //         getRaydiumCpmmLpMintAddr(spotPoolState, false)[0],
-  //         pool,
-  //         true
-  //       ),
-  //       raydiumAuthority: RAYDIUM_AUTHORITY,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenProgram2022: TOKEN_2022_PROGRAM_ID,
-  //       cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
-  //       memoProgram: MEMO_PROGRAM_ID,
-  //     },
-  //     conditionalVault: {
-  //       question,
-  //       vault0,
-  //       vault1,
-  //       vault0UnderlyingTokenAccount: getAssociatedTokenAddressSync(
-  //         token0Mint,
-  //         vault0,
-  //         true
-  //       ),
-  //       vault1UnderlyingTokenAccount: getAssociatedTokenAddressSync(
-  //         token1Mint,
-  //         vault1,
-  //         true
-  //       ),
-  //       poolToken0Account: getAssociatedTokenAddressSync(
-  //         token0Mint,
-  //         pool,
-  //         true
-  //       ),
-  //       poolToken1Account: getAssociatedTokenAddressSync(
-  //         token1Mint,
-  //         pool,
-  //         true
-  //       ),
-  //       conditionalVaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
-  //       token0PassMint,
-  //       token0FailMint,
-  //       token0PassVault,
-  //       token0FailVault,
-  //       token1PassMint,
-  //       token1FailMint,
-  //       token1PassVault,
-  //       token1FailVault,
-  //       vaultEventAuthority: getEventAuthorityAddr(
-  //         CONDITIONAL_VAULT_PROGRAM_ID
-  //       )[0],
-  //       pool,
-  //     },
-  //     // conditionalTokens: {
-  //     //   poolPToken0Account: getAssociatedTokenAddressSync(
-  //     //     token0Mint,
-  //     //     pool,
-  //     //     true
-  //     //   ),
-  //     //   poolFToken0Account: getAssociatedTokenAddressSync(
-  //     //     token0Mint,
-  //     //     pool,
-  //     //     true
-  //     //   ),
-  //     //   poolPToken1Account: getAssociatedTokenAddressSync(
-  //     //     token1Mint,
-  //     //     pool,
-  //     //     true
-  //     //   ),
-  //     //   poolFToken1Account: getAssociatedTokenAddressSync(
-  //     //     token1Mint,
-  //     //     pool,
-  //     //     true
-  //     //   ),
-  //     // },
-  //     amm: {
-  //       passAmm,
-  //       failAmm,
-  //       passLpMint,
-  //       failLpMint,
-  //       poolPassLpAccount: getAssociatedTokenAddressSync(
-  //         passLpMint,
-  //         pool,
-  //         true
-  //       ),
-  //       poolFailLpAccount: getAssociatedTokenAddressSync(
-  //         failLpMint,
-  //         pool,
-  //         true
-  //       ),
-  //       passAmmVaultAtaBase: getAssociatedTokenAddressSync(
-  //         passBaseMint,
-  //         passAmm,
-  //         true
-  //       ),
-  //       passAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-  //         passQuoteMint,
-  //         passAmm,
-  //         true
-  //       ),
-  //       failAmmVaultAtaBase: getAssociatedTokenAddressSync(
-  //         token0FailMint,
-  //         failAmm,
-  //         true
-  //       ),
-  //       failAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-  //         token1FailMint,
-  //         failAmm,
-  //         true
-  //       ),
-  //       ammProgram: AMM_PROGRAM_ID,
-  //       eventAuthority: getEventAuthorityAddr(AMM_PROGRAM_ID)[0],
-  //     },
-  //     dao,
-  //     autocratProgram: AUTOCRAT_PROGRAM_ID,
-  //     systemProgram: SystemProgram.programId,
-  //   });
-  // }
+    return this.program.methods.initializeProposalWithLiquidity().accounts({
+      pool,
+      proposalCreator: this.provider.wallet.publicKey,
+      proposal,
+      token0Vault: getAssociatedTokenAddressSync(token0Mint, pool, true),
+      token1Vault: getAssociatedTokenAddressSync(token1Mint, pool, true),
+      token0Mint,
+      token1Mint,
+      raydium: {
+        spotPoolState,
+        token0Vault: getRaydiumCpmmPoolVaultAddr(
+          spotPoolState,
+          token0Mint,
+          false
+        )[0],
+        token1Vault: getRaydiumCpmmPoolVaultAddr(
+          spotPoolState,
+          token1Mint,
+          false
+        )[0],
+        lpMint: getRaydiumCpmmLpMintAddr(spotPoolState, false)[0],
+        poolLpTokenAccount: getAssociatedTokenAddressSync(
+          getRaydiumCpmmLpMintAddr(spotPoolState, false)[0],
+          pool,
+          true
+        ),
+        raydiumAuthority: RAYDIUM_AUTHORITY,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+        cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
+        memoProgram: MEMO_PROGRAM_ID,
+      },
+      conditionalVault: {
+        question,
+        vault0,
+        vault1,
+        vault0UnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          token0Mint,
+          vault0,
+          true
+        ),
+        vault1UnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          token1Mint,
+          vault1,
+          true
+        ),
+        poolToken0Account: getAssociatedTokenAddressSync(
+          token0Mint,
+          pool,
+          true
+        ),
+        poolToken1Account: getAssociatedTokenAddressSync(
+          token1Mint,
+          pool,
+          true
+        ),
+        conditionalVaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
+        token0PassMint,
+        token0FailMint,
+        token0PassVault,
+        token0FailVault,
+        token1PassMint,
+        token1FailMint,
+        token1PassVault,
+        token1FailVault,
+        vaultEventAuthority: getEventAuthorityAddr(
+          CONDITIONAL_VAULT_PROGRAM_ID
+        )[0],
+        pool,
+      },
+      // conditionalTokens: {
+      //   poolPToken0Account: getAssociatedTokenAddressSync(
+      //     token0Mint,
+      //     pool,
+      //     true
+      //   ),
+      //   poolFToken0Account: getAssociatedTokenAddressSync(
+      //     token0Mint,
+      //     pool,
+      //     true
+      //   ),
+      //   poolPToken1Account: getAssociatedTokenAddressSync(
+      //     token1Mint,
+      //     pool,
+      //     true
+      //   ),
+      //   poolFToken1Account: getAssociatedTokenAddressSync(
+      //     token1Mint,
+      //     pool,
+      //     true
+      //   ),
+      // },
+      amm: {
+        passAmm,
+        failAmm,
+        passLpMint,
+        failLpMint,
+        poolPassLpAccount: getAssociatedTokenAddressSync(
+          passLpMint,
+          pool,
+          true
+        ),
+        poolFailLpAccount: getAssociatedTokenAddressSync(
+          failLpMint,
+          pool,
+          true
+        ),
+        passAmmVaultAtaBase: getAssociatedTokenAddressSync(
+          passBaseMint,
+          passAmm,
+          true
+        ),
+        passAmmVaultAtaQuote: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          passAmm,
+          true
+        ),
+        failAmmVaultAtaBase: getAssociatedTokenAddressSync(
+          token0FailMint,
+          failAmm,
+          true
+        ),
+        failAmmVaultAtaQuote: getAssociatedTokenAddressSync(
+          token1FailMint,
+          failAmm,
+          true
+        ),
+        ammProgram: AMM_PROGRAM_ID,
+        eventAuthority: getEventAuthorityAddr(AMM_PROGRAM_ID)[0],
+      },
+      dao,
+      autocratProgram: AUTOCRAT_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    });
+  }
 }

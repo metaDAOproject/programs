@@ -221,8 +221,8 @@ export type SharedLiquidityManager = {
       name: "initializeProposalWithLiquidity";
       accounts: [
         {
-          name: "pool";
-          isMut: false;
+          name: "slPool";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -236,22 +236,27 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
-          name: "poolBaseVault";
+          name: "slPoolBaseVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "poolQuoteVault";
+          name: "slPoolQuoteVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "token0Mint";
+          name: "slPoolSpotLpVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "token1Mint";
+          name: "quoteMint";
           isMut: false;
           isSigner: false;
         },
@@ -319,32 +324,22 @@ export type SharedLiquidityManager = {
               isSigner: false;
             },
             {
-              name: "vault0";
+              name: "baseVault";
               isMut: true;
               isSigner: false;
             },
             {
-              name: "vault1";
+              name: "quoteVault";
               isMut: true;
               isSigner: false;
             },
             {
-              name: "vault0UnderlyingTokenAccount";
+              name: "baseUnderlyingTokenAccount";
               isMut: true;
               isSigner: false;
             },
             {
-              name: "vault1UnderlyingTokenAccount";
-              isMut: true;
-              isSigner: false;
-            },
-            {
-              name: "poolToken0Account";
-              isMut: true;
-              isSigner: false;
-            },
-            {
-              name: "poolToken1Account";
+              name: "quoteUnderlyingTokenAccount";
               isMut: true;
               isSigner: false;
             },
@@ -915,8 +910,8 @@ export const IDL: SharedLiquidityManager = {
       name: "initializeProposalWithLiquidity",
       accounts: [
         {
-          name: "pool",
-          isMut: false,
+          name: "slPool",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -930,22 +925,27 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
         {
-          name: "poolBaseVault",
+          name: "slPoolBaseVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "poolQuoteVault",
+          name: "slPoolQuoteVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "token0Mint",
+          name: "slPoolSpotLpVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "token1Mint",
+          name: "quoteMint",
           isMut: false,
           isSigner: false,
         },
@@ -1013,32 +1013,22 @@ export const IDL: SharedLiquidityManager = {
               isSigner: false,
             },
             {
-              name: "vault0",
+              name: "baseVault",
               isMut: true,
               isSigner: false,
             },
             {
-              name: "vault1",
+              name: "quoteVault",
               isMut: true,
               isSigner: false,
             },
             {
-              name: "vault0UnderlyingTokenAccount",
+              name: "baseUnderlyingTokenAccount",
               isMut: true,
               isSigner: false,
             },
             {
-              name: "vault1UnderlyingTokenAccount",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "poolToken0Account",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "poolToken1Account",
+              name: "quoteUnderlyingTokenAccount",
               isMut: true,
               isSigner: false,
             },
