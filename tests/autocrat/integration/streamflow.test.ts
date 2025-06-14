@@ -5,7 +5,7 @@ import {
   getAmmAddr,
   getAmmLpMintAddr,
 } from "@metadaoproject/futarchy/v0.4";
-import { Keypair, PublicKey, AddressLookupTableProgram, Transaction, AddressLookupTableAccount } from "@solana/web3.js";
+import { Keypair, PublicKey, AddressLookupTableProgram, Transaction, AddressLookupTableAccount, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   createMint,
@@ -22,6 +22,7 @@ import { BN } from "bn.js";
 import { StreamflowEscrow, IDL as StreamflowEscrowIDL } from "../../fixtures/streamflow_escrow.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { STREAMFLOW_VESTING_PROGRAM_ID } from "../../main.test.js";
+import { Clock } from "solana-bankrun";
 // import { IDL as StreamflowEscrowIDL } from "../../fixtures/streamflow_escrow.json";
 
 
@@ -171,6 +172,17 @@ export default async function() {
     recentSlot: slot - 1n,
   });
 
+  const daoKeypair = Keypair.generate();
+  const dao = await autocratClient.initializeDao(
+    RAY,
+    400, // tokenPriceUiAmount
+    5, // minBaseFutarchicLiquidity
+    5000, // minQuoteFutarchicLiquidity
+    USDC,
+    daoKeypair,
+    new BN(Number(DAY_IN_SLOTS))
+  );
+
   // Add all the accounts needed for fillOrderVested to the lookup table
   const extendInstruction = AddressLookupTableProgram.extendLookupTable({
     payer: this.payer.publicKey,
@@ -187,6 +199,7 @@ export default async function() {
       // RAY,
       // USDC,
       this.payer.publicKey,
+      daoKeypair.publicKey,
       // contractKey,
       // new PublicKey("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"),
       // new PublicKey("B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT"),
@@ -224,7 +237,7 @@ export default async function() {
   await this.banksClient.processTransaction(tx);
 
 
-  const lookupTable = await this.banksClient.getAccount(lookupTableAddress);
+  let lookupTable = await this.banksClient.getAccount(lookupTableAddress);
 
   console.log(lookupTable);
   let acc = new AddressLookupTableAccount({
@@ -233,16 +246,6 @@ export default async function() {
   });
 
   // Create a DAO if it doesn't exist
-  const daoKeypair = Keypair.generate();
-  const dao = await autocratClient.initializeDao(
-    RAY,
-    400, // tokenPriceUiAmount
-    5, // minBaseFutarchicLiquidity
-    5000, // minQuoteFutarchicLiquidity
-    USDC,
-    daoKeypair,
-    new BN(Number(DAY_IN_SLOTS))
-  );
 
   // Create the fillOrderVested instruction
   const fillOrderIx = await escrow.methods
@@ -268,32 +271,131 @@ export default async function() {
       executionRecord: recordKey,
       streamflowProgram: STREAMFLOW_VESTING_PROGRAM_ID,
     })
-    .instruction();
+    .transaction();
+
+  fillOrderIx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  fillOrderIx.feePayer = this.payer.publicKey;
+  fillOrderIx.sign(this.payer, contractKeypair);
+
+  console.log(fillOrderIx.serialize().length)
+
   
-  console.log(fillOrderIx.keys.length)
-  console.log(fillOrderIx.data.length)
+  // console.log(fillOrderIx.keys.length)
+  // console.log(fillOrderIx.data.length)
 
   // Create a new transaction that uses the lookup table
   // const lookupTableAccount = await this.banksClient.getAddressLookupTable(lookupTableAddress);
   // const lookupTableAddresses = lookupTableAccount.value?.state.addresses || [];
 
   // Create a proposal with the fillOrderVested instruction using lookup table addresses
-  const proposal = await autocratClient.initializeProposal(
+  const {proposal, tx: proposalTx} = await autocratClient.initializeProposal(
     dao,
     "",
     {
-      programId: fillOrderIx.programId,
-      accounts: fillOrderIx.keys.map(key => ({
+      programId: fillOrderIx.instructions[0].programId,
+      accounts: fillOrderIx.instructions[0].keys.map(key => ({
         pubkey: key.pubkey,
         isSigner: key.isSigner,
         isWritable: key.isWritable
       })),
-      data: fillOrderIx.data,
+      data: fillOrderIx.instructions[0].data,
     },
     new BN(5 * 10 ** 9), // baseTokensToLP
     new BN(5000 * 10 ** 6),  // quoteTokensToLP
     acc
-  );
+  ) as any as {tx: Transaction, proposal: PublicKey};
+
+  console.log(proposalTx);
+  // Extract unique accounts from the instruction to add to lookup table
+  const accountsToAdd = proposalTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey)  );
+  // accountsToAdd.push(proposal.instructions[0].programId);
+
+  // Remove duplicates
+  const uniqueAccounts = [...new Set(accountsToAdd.flat())];
+
+  // Create extend instruction
+  const extendInstruction3 = AddressLookupTableProgram.extendLookupTable({
+    payer: this.payer.publicKey,
+    authority: this.payer.publicKey, 
+    lookupTable: acc.key,
+    addresses: uniqueAccounts
+  });
+
+  // Execute extend instruction
+  let extendTx = new Transaction().add(extendInstruction3);
+  extendTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  extendTx.feePayer = this.payer.publicKey;
+  extendTx.sign(this.payer);
+  await this.banksClient.processTransaction(extendTx);
+
+  await this.advanceBySlots(1n)
+
+  const extendInstruction4 = AddressLookupTableProgram.extendLookupTable({
+    payer: this.payer.publicKey,
+    authority: this.payer.publicKey, 
+    lookupTable: acc.key,
+    addresses: uniqueAccounts
+  });
+
+  // Execute extend instruction
+  let extendTx4 = new Transaction().add(extendInstruction4);
+  extendTx4.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  extendTx4.feePayer = this.payer.publicKey;
+  extendTx4.sign(this.payer);
+  await this.banksClient.processTransaction(extendTx4);
+
+  await this.advanceBySlots(1n)
+
+
+
+  // // Advance clock by 1 slot to allow lookup table to be used
+  // const currentClock = await this.banksClient.getClock();
+  // this.context.setClock(
+  //   new Clock(
+  //     currentClock.slot + 1n,
+  //     currentClock.epochStartTimestamp,
+  //     currentClock.epoch,
+  //     currentClock.leaderScheduleEpoch,
+  //     currentClock.unixTimestamp
+  //   )
+  // );
+
+  lookupTable = await this.banksClient.getAccount(lookupTableAddress);
+
+  console.log(lookupTable);
+  let acc2 = new AddressLookupTableAccount({
+    key: lookupTableAddress,
+    state: AddressLookupTableAccount.deserialize(lookupTable.data),
+  });
+
+  console.log(proposal);
+
+  const messageV0 = new TransactionMessage({
+    payerKey: this.payer.publicKey,
+    recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+    instructions: (proposalTx as any).instructions,
+  }).compileToV0Message([acc2]);
+
+  console.log(messageV0.addressTableLookups);
+  // console.log(messageV0.serialize().length);
+
+  const transactionV0 = new VersionedTransaction(messageV0);
+
+  transactionV0.sign([this.payer]);
+
+  console.log(transactionV0.serialize().length);
+
+  await this.banksClient.processTransaction(transactionV0);
+
+  console.log(await autocratClient.getProposal(proposal));
+
+  // transactionV0.sign([(this.payer as any).payer as any]);
+
+  // this.banksClient.sendRawTransaction(transactionV0.serialize());
+
+  // console.log(transactionV0.serialize().length);
+
+  
 
   // Execute the proposal
   // await autocratClient.executeProposal(proposal);

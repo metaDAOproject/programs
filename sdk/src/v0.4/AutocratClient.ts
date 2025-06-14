@@ -3,6 +3,7 @@ import {
   AccountInfo,
   AccountMeta,
   AddressLookupTableAccount,
+  AddressLookupTableProgram,
   ComputeBudgetProgram,
   Connection,
   Keypair,
@@ -438,34 +439,78 @@ export class AutocratClient {
     } else {
       const tx = await builder.transaction();
 
-      const banksClient = (this.provider.connection as any).banksClient;
+      return { tx: tx, proposal: proposal } as any;
 
-      // console.log((this.provider.connection as any).banksClient);
+      // const banksClient = (this.provider.connection as any).banksClient;
 
-      console.log(tx.instructions);
+      // const extendInstruction = AddressLookupTableProgram.extendLookupTable({
+      //   payer: this.provider.publicKey,
+      //   authority: this.provider.publicKey,
+      //   lookupTable: lookupTableAccount.key,
+      //   addresses: [question, dao, passAmm, failAmm],
+      // });
 
-      const messageV0 = new TransactionMessage({
-        payerKey: this.provider.publicKey,
-        recentBlockhash: (await banksClient.getLatestBlockhash())[0],
-        instructions: tx.instructions.slice(0, 2),
-      }).compileToV0Message([lookupTableAccount]);
-
-      console.log(messageV0.addressTableLookups);
-
-      const transactionV0 = new VersionedTransaction(messageV0);
-
-      console.log((this.provider.wallet as any).payer);
-
-      transactionV0.sign([(this.provider.wallet as any).payer as any]);
-
-      console.log(transactionV0.serialize().length);
-
-      tx.instructions = tx.instructions.slice(2);
-      console.log(tx.instructions[0].data.length);
-
-      // await this.provider.connection.sendRawTransaction(
-      //   transactionV0.serialize()
+      // // await this.advanceBySlots(1n)
+      // const currentClock = await banksClient.getClock();
+      // banksClient.setClock(
+      //   new Clock(
+      //     currentClock.slot + 1n,
+      //     currentClock.epochStartTimestamp,
+      //     currentClock.epoch,
+      //     currentClock.leaderScheduleEpoch,
+      //     50n
+      //   )
       // );
+
+      // // Create and extend the lookup table
+      // let tx2 = new Transaction().add(extendInstruction);
+      // tx2.recentBlockhash = (await banksClient.getLatestBlockhash())[0];
+      // tx2.feePayer = this.provider.publicKey;
+      // tx2.sign((this.provider.wallet as any).payer);
+      // await banksClient.processTransaction(tx2);
+
+      // const extendInstruction2 = AddressLookupTableProgram.extendLookupTable({
+      //   payer: this.provider.publicKey,
+      //   authority: this.provider.publicKey,
+      //   lookupTable: lookupTableAccount.key,
+      //   addresses: [question],
+      // });
+
+      // // await this.advanceBySlots(1n)
+
+      // // Create and extend the lookup table
+      // let tx3 = new Transaction().add(extendInstruction2);
+      // tx3.recentBlockhash = (await banksClient.getLatestBlockhash())[0];
+      // tx3.feePayer = this.provider.publicKey;
+      // tx3.sign((this.provider.wallet as any).payer);
+      // await banksClient.processTransaction(tx3);
+
+      // // console.log((this.provider.connection as any).banksClient);
+
+      // console.log(tx.instructions);
+
+      // const messageV0 = new TransactionMessage({
+      //   payerKey: this.provider.publicKey,
+      //   recentBlockhash: (await banksClient.getLatestBlockhash())[0],
+      //   instructions: tx.instructions,
+      // }).compileToV0Message([lookupTableAccount]);
+
+      // console.log(messageV0.addressTableLookups);
+
+      // const transactionV0 = new VersionedTransaction(messageV0);
+
+      // console.log((this.provider.wallet as any).payer);
+
+      // transactionV0.sign([(this.provider.wallet as any).payer as any]);
+
+      // console.log(transactionV0.serialize().length);
+
+      // tx.instructions = tx.instructions.slice(2);
+      // console.log(tx.instructions[0].data.length);
+
+      // // await this.provider.connection.sendRawTransaction(
+      // //   transactionV0.serialize()
+      // // );
     }
 
     return proposal;
