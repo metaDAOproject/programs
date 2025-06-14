@@ -85,12 +85,16 @@ export default async function () {
 
   const [lpMint] = getRaydiumCpmmLpMintAddr(poolStateKp.publicKey, false);
 
+  console.log("META", META.toBuffer().toString("hex"));
+  console.log("USDC", USDC.toBuffer().toString("hex"));
+  console.log("META < USDC", META.toBuffer() < USDC.toBuffer());
+
   // Determine which token should be token0 (smaller address)
-  const [token0Mint, token1Mint] = META.toBase58() < USDC.toBase58() 
+  const [token0Mint, token1Mint] = META.toBuffer() < USDC.toBuffer() 
     ? [META, USDC] 
     : [USDC, META];
 
-  const [amount0, amount1] = META.toBase58() < USDC.toBase58()
+  const [amount0, amount1] = META.toBuffer() < USDC.toBuffer()
     ? [new BN(10 * 10 ** 9), new BN(1000 * 10 ** 6)]  // META is token0
     : [new BN(1000 * 10 ** 6), new BN(10 * 10 ** 9)]; // USDC is token0
 
@@ -115,9 +119,8 @@ export default async function () {
     token1Program: token.TOKEN_PROGRAM_ID
   }).signers([poolStateKp]).rpc({ skipPreflight: true });
 
-  // Third, initialize a SharedLiquidityManager for the DAO / Raydium spot pool
 
-  await sharedLiquidityManagerClient.initializePoolIx(dao, poolStateKp.publicKey, token0Mint, token1Mint).preInstructions([ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 256 })]).rpc();
+  await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, poolStateKp.publicKey, META, USDC).rpc();
 
   // Fourth, we provide liquidity to the pool
   const [pool] = getSharedLiquidityPoolAddr(
@@ -126,20 +129,19 @@ export default async function () {
     poolStateKp.publicKey
   );
 
-  // Deposit 10 META and 10,000 USDC
-  const [depositAmount0, depositAmount1] = META.toBase58() < USDC.toBase58()
-    ? [new BN(10 * 10 ** 9), new BN(10_000 * 10 ** 6)]  // META is token0
-    : [new BN(10_000 * 10 ** 6), new BN(10 * 10 ** 9)]; // USDC is token0
 
-  await sharedLiquidityManagerClient.depositIx(
+  // Deposit 10 META and 10,000 USDC
+  await sharedLiquidityManagerClient.depositSharedLiquidityIx(
     dao,
     poolStateKp.publicKey,
-    token0Mint,
-    token1Mint,
+    META,
+    USDC,
     new BN(3162258560), // Let Raydium calculate the LP token amount
-    depositAmount0,
-    depositAmount1
+    new BN(10 * 10 ** 9), // 10 META
+    new BN(10_000 * 10 ** 6) // 10,000 USDC
   ).preInstructions([ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 256 })]).rpc();
+
+  return;
 
   const storedUnderlyingPool = await cpSwap.account.poolState.fetch(poolStateKp.publicKey);
   console.log("storedUnderlyingPool", storedUnderlyingPool);
@@ -322,7 +324,7 @@ export default async function () {
     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
     instructions: [
       ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
-      ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 32 * 1024 }),
     ].concat(initProposalWithLiquidityTx.instructions)
   }).compileToV0Message([storedLookupTable]);
 
@@ -331,6 +333,7 @@ export default async function () {
 
   let tx = new VersionedTransaction(messageV0);
   tx.sign([this.payer]);
+
 
 
   console.log("tx size", tx.serialize().length);

@@ -1,52 +1,47 @@
 export type SharedLiquidityManager = {
   version: "0.1.0";
   name: "shared_liquidity_manager";
-  docs: [
-    "Developers can implement their own heap by defining their own",
-    "`#[global_allocator]`.  The following implements a dummy for test purposes",
-    "but can be flushed out with whatever the developer sees fit."
-  ];
   instructions: [
     {
-      name: "initializePool";
+      name: "initializeSharedLiquidityPool";
       accounts: [
         {
-          name: "pool";
+          name: "slPool";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "token0Mint";
+          name: "baseMint";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "token1Mint";
+          name: "quoteMint";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "spotPoolState";
+          name: "spotPool";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "lpTokenVault";
+          name: "slPoolSpotLpVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "token0Vault";
+          name: "slPoolBaseVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "token1Vault";
+          name: "slPoolQuoteVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "lpMint";
+          name: "spotPoolLpMint";
           isMut: false;
           isSigner: false;
         },
@@ -89,59 +84,55 @@ export type SharedLiquidityManager = {
       args: [];
     },
     {
-      name: "deposit";
+      name: "depositSharedLiquidity";
       accounts: [
         {
-          name: "pool";
+          name: "slPool";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "spotPoolState";
+          name: "spotPool";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "userTokenA";
-          isMut: true;
-          isSigner: false;
-          docs: ["The user's token accounts for the pool tokens"];
-        },
-        {
-          name: "userTokenB";
+          name: "slPoolSpotLpVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "token0Vault";
-          isMut: true;
-          isSigner: false;
-          docs: ["The pool's token accounts"];
-        },
-        {
-          name: "token1Vault";
+          name: "userQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "vault0Mint";
-          isMut: false;
+          name: "userBaseTokenAccount";
+          isMut: true;
           isSigner: false;
-          docs: ["The vault mints"];
         },
         {
-          name: "vault1Mint";
+          name: "spotPoolBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "spotPoolQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "lpMint";
-          isMut: true;
+          name: "quoteMint";
+          isMut: false;
           isSigner: false;
-          docs: ["The LP token mint and destination"];
         },
         {
-          name: "lpTokenVault";
+          name: "spotPoolLpMint";
           isMut: true;
           isSigner: false;
         },
@@ -151,10 +142,9 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
-          name: "position";
+          name: "userSlPoolPosition";
           isMut: true;
           isSigner: false;
-          docs: ["The user's liquidity position"];
         },
         {
           name: "user";
@@ -201,13 +191,13 @@ export type SharedLiquidityManager = {
         {
           name: "args";
           type: {
-            defined: "DepositArgs";
+            defined: "DepositSharedLiquidityArgs";
           };
         }
       ];
     },
     {
-      name: "withdraw";
+      name: "withdrawSharedLiquidity";
       accounts: [
         {
           name: "pool";
@@ -232,7 +222,7 @@ export type SharedLiquidityManager = {
       accounts: [
         {
           name: "pool";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -246,12 +236,12 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
-          name: "token0Vault";
+          name: "poolBaseVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "token1Vault";
+          name: "poolQuoteVault";
           isMut: true;
           isSigner: false;
         },
@@ -582,26 +572,61 @@ export type SharedLiquidityManager = {
         kind: "struct";
         fields: [
           {
-            name: "pdaBump";
-            docs: ["The PDA bump."];
-            type: "u8";
-          },
-          {
-            name: "spotPoolState";
-            docs: ["The Raydium spot pool state."];
-            type: "publicKey";
-          },
-          {
             name: "dao";
             docs: ["The DAO."];
             type: "publicKey";
           },
           {
-            name: "isActiveProposal";
+            name: "baseMint";
+            docs: ["The base mint."];
+            type: "publicKey";
+          },
+          {
+            name: "quoteMint";
+            docs: ["The quote mint."];
+            type: "publicKey";
+          },
+          {
+            name: "spotPool";
+            docs: ["The Raydium spot pool state."];
+            type: "publicKey";
+          },
+          {
+            name: "isBaseToken0";
+            docs: [
+              "Whether the base token is token0 in the Raydium spot pool (otherwise it's token1)."
+            ];
+            type: "bool";
+          },
+          {
+            name: "activeProposal";
             docs: [
               "Whether there's an active proposal using liquidity from this pool."
             ];
-            type: "bool";
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "slPoolSpotLpVault";
+            docs: [
+              "Holds the Raydium LP tokens for the shared liquidity pool."
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "slPoolBaseVault";
+            docs: [
+              "Holds the base tokens for the shared liquidity pool when it's moving liquidity to/from proposals."
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "slPoolQuoteVault";
+            docs: [
+              "Holds the quote tokens for the shared liquidity pool when it's moving liquidity to/from proposals."
+            ];
+            type: "publicKey";
           },
           {
             name: "seqNum";
@@ -611,19 +636,9 @@ export type SharedLiquidityManager = {
             type: "u64";
           },
           {
-            name: "lpTokenVault";
-            docs: ["Holds the Raydium LP tokens for this pool."];
-            type: "publicKey";
-          },
-          {
-            name: "token0Vault";
-            docs: ["Holds the token0s for this pool."];
-            type: "publicKey";
-          },
-          {
-            name: "token1Vault";
-            docs: ["Holds the token1s for this pool."];
-            type: "publicKey";
+            name: "pdaBump";
+            docs: ["The PDA bump."];
+            type: "u8";
           }
         ];
       };
@@ -631,7 +646,7 @@ export type SharedLiquidityManager = {
   ];
   types: [
     {
-      name: "DepositArgs";
+      name: "DepositSharedLiquidityArgs";
       type: {
         kind: "struct";
         fields: [
@@ -641,13 +656,13 @@ export type SharedLiquidityManager = {
             type: "u64";
           },
           {
-            name: "maximumToken0Amount";
-            docs: ["The maximum amount of token 0 to deposit"];
+            name: "maxQuoteTokenAmount";
+            docs: ["The maximum amount of quote tokens to deposit"];
             type: "u64";
           },
           {
-            name: "maximumToken1Amount";
-            docs: ["The maximum amount of token 1 to deposit"];
+            name: "maxBaseTokenAmount";
+            docs: ["The maximum amount of base tokens to deposit"];
             type: "u64";
           }
         ];
@@ -680,52 +695,47 @@ export type SharedLiquidityManager = {
 export const IDL: SharedLiquidityManager = {
   version: "0.1.0",
   name: "shared_liquidity_manager",
-  docs: [
-    "Developers can implement their own heap by defining their own",
-    "`#[global_allocator]`.  The following implements a dummy for test purposes",
-    "but can be flushed out with whatever the developer sees fit.",
-  ],
   instructions: [
     {
-      name: "initializePool",
+      name: "initializeSharedLiquidityPool",
       accounts: [
         {
-          name: "pool",
+          name: "slPool",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "token0Mint",
+          name: "baseMint",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "token1Mint",
+          name: "quoteMint",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "spotPoolState",
+          name: "spotPool",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "lpTokenVault",
+          name: "slPoolSpotLpVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "token0Vault",
+          name: "slPoolBaseVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "token1Vault",
+          name: "slPoolQuoteVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "lpMint",
+          name: "spotPoolLpMint",
           isMut: false,
           isSigner: false,
         },
@@ -768,59 +778,55 @@ export const IDL: SharedLiquidityManager = {
       args: [],
     },
     {
-      name: "deposit",
+      name: "depositSharedLiquidity",
       accounts: [
         {
-          name: "pool",
+          name: "slPool",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "spotPoolState",
+          name: "spotPool",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "userTokenA",
-          isMut: true,
-          isSigner: false,
-          docs: ["The user's token accounts for the pool tokens"],
-        },
-        {
-          name: "userTokenB",
+          name: "slPoolSpotLpVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "token0Vault",
-          isMut: true,
-          isSigner: false,
-          docs: ["The pool's token accounts"],
-        },
-        {
-          name: "token1Vault",
+          name: "userQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "vault0Mint",
-          isMut: false,
+          name: "userBaseTokenAccount",
+          isMut: true,
           isSigner: false,
-          docs: ["The vault mints"],
         },
         {
-          name: "vault1Mint",
+          name: "spotPoolBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "spotPoolQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "lpMint",
-          isMut: true,
+          name: "quoteMint",
+          isMut: false,
           isSigner: false,
-          docs: ["The LP token mint and destination"],
         },
         {
-          name: "lpTokenVault",
+          name: "spotPoolLpMint",
           isMut: true,
           isSigner: false,
         },
@@ -830,10 +836,9 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
         {
-          name: "position",
+          name: "userSlPoolPosition",
           isMut: true,
           isSigner: false,
-          docs: ["The user's liquidity position"],
         },
         {
           name: "user",
@@ -880,13 +885,13 @@ export const IDL: SharedLiquidityManager = {
         {
           name: "args",
           type: {
-            defined: "DepositArgs",
+            defined: "DepositSharedLiquidityArgs",
           },
         },
       ],
     },
     {
-      name: "withdraw",
+      name: "withdrawSharedLiquidity",
       accounts: [
         {
           name: "pool",
@@ -911,7 +916,7 @@ export const IDL: SharedLiquidityManager = {
       accounts: [
         {
           name: "pool",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -925,12 +930,12 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
         {
-          name: "token0Vault",
+          name: "poolBaseVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "token1Vault",
+          name: "poolQuoteVault",
           isMut: true,
           isSigner: false,
         },
@@ -1261,26 +1266,61 @@ export const IDL: SharedLiquidityManager = {
         kind: "struct",
         fields: [
           {
-            name: "pdaBump",
-            docs: ["The PDA bump."],
-            type: "u8",
-          },
-          {
-            name: "spotPoolState",
-            docs: ["The Raydium spot pool state."],
-            type: "publicKey",
-          },
-          {
             name: "dao",
             docs: ["The DAO."],
             type: "publicKey",
           },
           {
-            name: "isActiveProposal",
+            name: "baseMint",
+            docs: ["The base mint."],
+            type: "publicKey",
+          },
+          {
+            name: "quoteMint",
+            docs: ["The quote mint."],
+            type: "publicKey",
+          },
+          {
+            name: "spotPool",
+            docs: ["The Raydium spot pool state."],
+            type: "publicKey",
+          },
+          {
+            name: "isBaseToken0",
+            docs: [
+              "Whether the base token is token0 in the Raydium spot pool (otherwise it's token1).",
+            ],
+            type: "bool",
+          },
+          {
+            name: "activeProposal",
             docs: [
               "Whether there's an active proposal using liquidity from this pool.",
             ],
-            type: "bool",
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "slPoolSpotLpVault",
+            docs: [
+              "Holds the Raydium LP tokens for the shared liquidity pool.",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "slPoolBaseVault",
+            docs: [
+              "Holds the base tokens for the shared liquidity pool when it's moving liquidity to/from proposals.",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "slPoolQuoteVault",
+            docs: [
+              "Holds the quote tokens for the shared liquidity pool when it's moving liquidity to/from proposals.",
+            ],
+            type: "publicKey",
           },
           {
             name: "seqNum",
@@ -1290,19 +1330,9 @@ export const IDL: SharedLiquidityManager = {
             type: "u64",
           },
           {
-            name: "lpTokenVault",
-            docs: ["Holds the Raydium LP tokens for this pool."],
-            type: "publicKey",
-          },
-          {
-            name: "token0Vault",
-            docs: ["Holds the token0s for this pool."],
-            type: "publicKey",
-          },
-          {
-            name: "token1Vault",
-            docs: ["Holds the token1s for this pool."],
-            type: "publicKey",
+            name: "pdaBump",
+            docs: ["The PDA bump."],
+            type: "u8",
           },
         ],
       },
@@ -1310,7 +1340,7 @@ export const IDL: SharedLiquidityManager = {
   ],
   types: [
     {
-      name: "DepositArgs",
+      name: "DepositSharedLiquidityArgs",
       type: {
         kind: "struct",
         fields: [
@@ -1320,13 +1350,13 @@ export const IDL: SharedLiquidityManager = {
             type: "u64",
           },
           {
-            name: "maximumToken0Amount",
-            docs: ["The maximum amount of token 0 to deposit"],
+            name: "maxQuoteTokenAmount",
+            docs: ["The maximum amount of quote tokens to deposit"],
             type: "u64",
           },
           {
-            name: "maximumToken1Amount",
-            docs: ["The maximum amount of token 1 to deposit"],
+            name: "maxBaseTokenAmount",
+            docs: ["The maximum amount of base tokens to deposit"],
             type: "u64",
           },
         ],

@@ -210,7 +210,7 @@ export const getSharedLiquidityPoolAddr = (
   spotPool: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("pool"), spotPool.toBuffer(), dao.toBuffer()],
+    [Buffer.from("sl_pool"), dao.toBuffer(), spotPool.toBuffer()],
     programId
   );
 };

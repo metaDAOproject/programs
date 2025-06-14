@@ -5,17 +5,17 @@ use raydium_cpmm_cpi::states::PoolState;
 
 #[event_cpi]
 #[derive(Accounts)]
-pub struct Withdraw<'info> {
+pub struct WithdrawSharedLiquidity<'info> {
     #[account(
         mut,
     )]
     pub pool: Account<'info, SharedLiquidityPool>,
 }
 
-impl Withdraw<'_> {
+impl WithdrawSharedLiquidity<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         // Ensure the pool is not being used by an active proposal
-        require!(!ctx.accounts.pool.is_active_proposal, CustomError::PoolInUse);
+        require!(ctx.accounts.pool.active_proposal.is_none(), CustomError::PoolInUse);
         
         // TODO: Implement withdraw logic using Raydium's RemoveLiquidity instruction
         // This will involve:
