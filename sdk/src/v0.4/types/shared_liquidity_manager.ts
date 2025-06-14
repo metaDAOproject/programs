@@ -11,7 +11,37 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
+          name: "token0Mint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "token1Mint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "spotPoolState";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "lpTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "token0Vault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "token1Vault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "lpMint";
           isMut: false;
           isSigner: false;
         },
@@ -24,6 +54,16 @@ export type SharedLiquidityManager = {
           name: "payer";
           isMut: true;
           isSigner: true;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
         },
         {
           name: "systemProgram";
@@ -54,11 +94,6 @@ export type SharedLiquidityManager = {
         {
           name: "spotPoolState";
           isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: false;
           isSigner: false;
         },
         {
@@ -101,7 +136,12 @@ export type SharedLiquidityManager = {
           docs: ["The LP token mint and destination"];
         },
         {
-          name: "userLpToken";
+          name: "lpTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "userLpTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -188,6 +228,106 @@ export type SharedLiquidityManager = {
         {
           name: "pool";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "proposalCreator";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "proposal";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "token0Vault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "token1Vault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "token0Mint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "token1Mint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "raydium";
+          accounts: [
+            {
+              name: "spotPoolState";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "token0Vault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "token1Vault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "lpMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "poolLpTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "raydiumAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenProgram2022";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "cpSwapProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "memoProgram";
+              isMut: false;
+              isSigner: false;
+            }
+          ];
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "autocratProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -289,6 +429,21 @@ export type SharedLiquidityManager = {
               "The sequence number of this shared liquidity pool. Useful for sorting events."
             ];
             type: "u64";
+          },
+          {
+            name: "lpTokenVault";
+            docs: ["Holds the Raydium LP tokens for this pool."];
+            type: "publicKey";
+          },
+          {
+            name: "token0Vault";
+            docs: ["Holds the token0s for this pool."];
+            type: "publicKey";
+          },
+          {
+            name: "token1Vault";
+            docs: ["Holds the token1s for this pool."];
+            type: "publicKey";
           }
         ];
       };
@@ -317,6 +472,20 @@ export type SharedLiquidityManager = {
           }
         ];
       };
+    },
+    {
+      name: "ErrorCode";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "NoLpTokensInPool";
+          },
+          {
+            name: "NotEnoughLpTokens";
+          }
+        ];
+      };
     }
   ];
   errors: [
@@ -341,7 +510,37 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
         {
+          name: "token0Mint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "token1Mint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "spotPoolState",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "lpTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "token0Vault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "token1Vault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "lpMint",
           isMut: false,
           isSigner: false,
         },
@@ -354,6 +553,16 @@ export const IDL: SharedLiquidityManager = {
           name: "payer",
           isMut: true,
           isSigner: true,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
         },
         {
           name: "systemProgram",
@@ -384,11 +593,6 @@ export const IDL: SharedLiquidityManager = {
         {
           name: "spotPoolState",
           isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: false,
           isSigner: false,
         },
         {
@@ -431,7 +635,12 @@ export const IDL: SharedLiquidityManager = {
           docs: ["The LP token mint and destination"],
         },
         {
-          name: "userLpToken",
+          name: "lpTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "userLpTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -518,6 +727,106 @@ export const IDL: SharedLiquidityManager = {
         {
           name: "pool",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "proposalCreator",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "proposal",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "token0Vault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "token1Vault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "token0Mint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "token1Mint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "raydium",
+          accounts: [
+            {
+              name: "spotPoolState",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "token0Vault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "token1Vault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "lpMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "poolLpTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "raydiumAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenProgram2022",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "cpSwapProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "memoProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "autocratProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -620,6 +929,21 @@ export const IDL: SharedLiquidityManager = {
             ],
             type: "u64",
           },
+          {
+            name: "lpTokenVault",
+            docs: ["Holds the Raydium LP tokens for this pool."],
+            type: "publicKey",
+          },
+          {
+            name: "token0Vault",
+            docs: ["Holds the token0s for this pool."],
+            type: "publicKey",
+          },
+          {
+            name: "token1Vault",
+            docs: ["Holds the token1s for this pool."],
+            type: "publicKey",
+          },
         ],
       },
     },
@@ -644,6 +968,20 @@ export const IDL: SharedLiquidityManager = {
             name: "maximumToken1Amount",
             docs: ["The maximum amount of token 1 to deposit"],
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "ErrorCode",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "NoLpTokensInPool",
+          },
+          {
+            name: "NotEnoughLpTokens",
           },
         ],
       },

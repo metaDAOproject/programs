@@ -13,8 +13,14 @@ import {
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SharedLiquidityManagerClient,
   getSharedLiquidityPoolAddr,
+  CONDITIONAL_VAULT_PROGRAM_ID,
+  AMM_PROGRAM_ID,
+  AUTOCRAT_PROGRAM_ID,
+  getProposalAddr,
+  ConditionalVaultClient,
+  InstructionUtils,
 } from "@metadaoproject/futarchy/v0.4";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { AddressLookupTableAccount, AddressLookupTableProgram, ComputeBudgetProgram, Keypair, PublicKey, Transaction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   createMint,
@@ -28,11 +34,13 @@ import * as token from "@solana/spl-token";
 import { DAY_IN_SLOTS, expectError, toBN } from "../../utils.js";
 import { BN } from "bn.js";
 import { IDL } from "../../fixtures/raydium_cpmm.js";
+import { sha256 } from "@metadaoproject/futarchy";
 
 export default async function () {
   let ammClient: AmmClient;
   let autocratClient: AutocratClient;
   let sharedLiquidityManagerClient: SharedLiquidityManagerClient;
+  let vaultClient: ConditionalVaultClient;
   let META: PublicKey;
   let USDC: PublicKey;
   let amm: PublicKey;
@@ -41,6 +49,7 @@ export default async function () {
 
   ammClient = this.ammClient;
   autocratClient = this.autocratClient;
+  vaultClient = this.vaultClient;
   sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
 
   META = await createMint(
@@ -108,7 +117,7 @@ export default async function () {
 
   // Third, initialize a SharedLiquidityManager for the DAO / Raydium spot pool
 
-  await sharedLiquidityManagerClient.initializePoolIx(dao, poolStateKp.publicKey).rpc();
+  await sharedLiquidityManagerClient.initializePoolIx(dao, poolStateKp.publicKey, token0Mint, token1Mint).rpc();
 
   // Fourth, we provide liquidity to the pool
   const [pool] = getSharedLiquidityPoolAddr(
@@ -138,11 +147,160 @@ export default async function () {
   console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
 
   console.log("lp balance", await this.getTokenBalance(lpMint, this.payer.publicKey));
+
   // Fifth, have a proposer come along and create a proposal through the SharedLiquidityManager
+
+    const nonce = new BN(Math.random() * 2 ** 50);
+
+    let [proposal] = getProposalAddr(
+      AUTOCRAT_PROGRAM_ID,
+      pool,
+      nonce
+    );
+
+    await vaultClient.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2
+    );
+
+    const {
+      baseVault,
+      quoteVault,
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      passLp,
+      failLp,
+      question,
+    } = autocratClient.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao
+    );
+
+    const storedDao = await autocratClient.fetchDao(dao);
+
+  await vaultClient
+      .initializeVaultIx(question, META, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          vaultClient.initializeVaultIx(question, USDC, 2),
+          ammClient.initializeAmmIx(
+            passBaseMint,
+            passQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          ),
+          ammClient.initializeAmmIx(
+            failBaseMint,
+            failQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          )
+        )
+      )
+      .rpc();
+
+  const [vault0, vault1] = META.toBase58() < USDC.toBase58()
+    ? [baseVault, quoteVault]
+    : [quoteVault, baseVault];
+
+  let initProposalWithLiquidityTx = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
+    dao,
+    poolStateKp.publicKey,
+    proposal,
+    question,
+    vault0,
+    vault1,
+    token0Mint,
+    token1Mint,
+    passAmm,
+    failAmm,
+    passLp,
+    failLp,
+  ).transaction();
+
+  const slot = await this.banksClient.getSlot();
+  const [createTableIx, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
+    authority: this.payer.publicKey,
+    payer: this.payer.publicKey,
+    recentSlot: slot - 1n,
+  });
+
+  const accountsToAdd = initProposalWithLiquidityTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
+  const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
+
+
+  const extendTableIx = AddressLookupTableProgram.extendLookupTable({
+    authority: this.payer.publicKey,
+    payer: this.payer.publicKey,
+    lookupTable: lookupTableAddress,
+    addresses: uniqueAccounts.slice(0, 20),
+  });
+
+  let lutTx = new Transaction().add(createTableIx, extendTableIx);
+  lutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  lutTx.feePayer = this.payer.publicKey;
+  lutTx.sign(this.payer);
+
+  await this.banksClient.processTransaction(lutTx);
+
+  await this.advanceBySlots(1n);
+
+  // Create and process second extension transaction
+  const extendTableIx2 = AddressLookupTableProgram.extendLookupTable({
+    authority: this.payer.publicKey,
+    payer: this.payer.publicKey,
+    lookupTable: lookupTableAddress,
+    addresses: [ComputeBudgetProgram.programId],
+  });
+
+  let lutTx2 = new Transaction().add(extendTableIx2);
+  lutTx2.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  lutTx2.feePayer = this.payer.publicKey;
+  lutTx2.sign(this.payer);
+
+  await this.banksClient.processTransaction(lutTx2);
+
+  await this.advanceBySlots(1n);
+
+  let rawStoredLookupTable = await this.banksClient.getAccount(lookupTableAddress);
+
+  let storedLookupTable = new AddressLookupTableAccount({
+    key: lookupTableAddress,
+    state: AddressLookupTableAccount.deserialize(rawStoredLookupTable.data),
+  });
+
+
+  const messageV0 = new TransactionMessage({
+    payerKey: this.payer.publicKey,
+    recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+    instructions: initProposalWithLiquidityTx.instructions,
+  }).compileToV0Message([storedLookupTable]);
+
+  console.log("messageV0", messageV0);
+
+  let tx = new VersionedTransaction(messageV0);
+  tx.sign([this.payer]);
+
+  console.log("tx size", tx.serialize().length);
+
+  await this.banksClient.processTransaction(tx);
+
+  console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
+  console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
 
   // Sixth, someone bids in pass market
 
   // Seventh, proposal is finalized and passes
+
 
   // Eighth, we merge liquidity back into main pool. Check that k has increased
 }

@@ -1824,9 +1824,11 @@ name = "shared_liquidity_manager"
 version = "0.1.0"
 dependencies = [
  "ahash 0.8.6",
+ "amm",
  "anchor-lang",
  "anchor-spl",
  "autocrat",
+ "conditional_vault",
  "raydium-cpmm-cpi",
  "solana-program",
  "solana-security-txt",

@@ -12,4 +12,10 @@ pub struct SharedLiquidityPool {
     pub is_active_proposal: bool,
     /// The sequence number of this shared liquidity pool. Useful for sorting events.
     pub seq_num: u64,
+    /// Holds the Raydium LP tokens for this pool.
+    pub lp_token_vault: Pubkey,
+    /// Holds the token0s for this pool.
+    pub token_0_vault: Pubkey,
+    /// Holds the token1s for this pool.
+    pub token_1_vault: Pubkey,
 }

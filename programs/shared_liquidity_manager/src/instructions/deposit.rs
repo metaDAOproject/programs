@@ -1,7 +1,8 @@
 use anchor_lang::{accounts::interface_account::InterfaceAccount, prelude::*};
 use anchor_spl::{
     token::Token,
-    token_interface::{Mint, Token2022, TokenAccount},
+    token_interface::{Mint, Token2022, TokenAccount, TransferChecked},
+    token_interface::transfer_checked,
 };
 
 use crate::state::{SharedLiquidityPool, LiquidityPosition};
@@ -23,15 +24,13 @@ pub struct DepositArgs {
 pub struct Deposit<'info> {
     #[account(
         mut,
-        seeds = [b"pool", spot_pool_state.key().as_ref(), dao.key().as_ref()],
-        bump = pool.pda_bump,
+        has_one = spot_pool_state,
+        has_one = lp_token_vault,
     )]
     pub pool: Account<'info, SharedLiquidityPool>,
     
     #[account(mut)]
     pub spot_pool_state: AccountLoader<'info, PoolState>,
-    
-    pub dao: Account<'info, autocrat::state::Dao>,
     
     /// The user's token accounts for the pool tokens
     #[account(
@@ -75,12 +74,15 @@ pub struct Deposit<'info> {
         address = spot_pool_state.load()?.lp_mint
     )]
     pub lp_mint: Box<InterfaceAccount<'info, Mint>>,
+    #[account(mut)]
+    pub lp_token_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+
     #[account(
         mut,
-        token::mint = lp_mint,
-        constraint = user_lp_token.to_account_info().owner == &token_program.key()
+        associated_token::mint = lp_mint,
+        associated_token::authority = user,
     )]
-    pub user_lp_token: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub user_lp_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     
     /// The user's liquidity position
     #[account(
@@ -123,7 +125,7 @@ impl Deposit<'_> {
             owner: ctx.accounts.user.to_account_info(),
             authority: ctx.accounts.raydium_authority.to_account_info(),
             pool_state: ctx.accounts.spot_pool_state.to_account_info(),
-            owner_lp_token: ctx.accounts.user_lp_token.to_account_info(),
+            owner_lp_token: ctx.accounts.user_lp_token_account.to_account_info(),
             token_0_account: ctx.accounts.user_token_a.to_account_info(),
             token_1_account: ctx.accounts.user_token_b.to_account_info(),
             token_0_vault: ctx.accounts.token_0_vault.to_account_info(),
@@ -145,6 +147,22 @@ impl Deposit<'_> {
             args.lp_token_amount,
             args.maximum_token_0_amount,
             args.maximum_token_1_amount,
+        )?;
+
+        // Transfer LP tokens from user to pool vault
+        let transfer_ctx = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            TransferChecked {
+                from: ctx.accounts.user_lp_token_account.to_account_info(),
+                mint: ctx.accounts.lp_mint.to_account_info(),
+                to: ctx.accounts.lp_token_vault.to_account_info(),
+                authority: ctx.accounts.user.to_account_info(),
+            },
+        );
+        transfer_checked(
+            transfer_ctx,
+            args.lp_token_amount,
+            ctx.accounts.lp_mint.decimals,
         )?;
         
         // Initialize the position
