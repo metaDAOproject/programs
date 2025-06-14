@@ -5,7 +5,7 @@ import {
   getAmmAddr,
   getAmmLpMintAddr,
 } from "@metadaoproject/futarchy/v0.4";
-import { Keypair, PublicKey, AddressLookupTableProgram, Transaction, AddressLookupTableAccount, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { Keypair, PublicKey, AddressLookupTableProgram, Transaction, AddressLookupTableAccount, TransactionMessage, VersionedTransaction, SystemProgram } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   createMint,
@@ -23,6 +23,8 @@ import { StreamflowEscrow, IDL as StreamflowEscrowIDL } from "../../fixtures/str
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { STREAMFLOW_VESTING_PROGRAM_ID } from "../../main.test.js";
 import { Clock } from "solana-bankrun";
+import { ComputeBudgetProgram } from "@solana/web3.js";
+import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.4";
 // import { IDL as StreamflowEscrowIDL } from "../../fixtures/streamflow_escrow.json";
 
 
@@ -62,9 +64,10 @@ export const deriveEscrowPDA = (
 };
 
 
-export default async function() {
+export default async function () {
   let ammClient: AmmClient;
   let autocratClient: AutocratClient;
+  let vaultClient: ConditionalVaultClient;
   let RAY: PublicKey;
   let USDC: PublicKey;
   let amm: PublicKey;
@@ -92,6 +95,7 @@ export default async function() {
 
   autocratClient = this.autocratClient;
   ammClient = this.ammClient;
+  vaultClient = this.vaultClient;
 
   const STREAMFLOW_ESCROW_PROGRAM_ID = new PublicKey("ESCRoWj8QUJ5cTXCBWbGpW6AzaaEAtRbZuwKp8c4YYGs");
   const escrow = new anchor.Program(StreamflowEscrowIDL as anchor.Idl, STREAMFLOW_ESCROW_PROGRAM_ID);
@@ -153,16 +157,12 @@ export default async function() {
     })
     .rpc();
 
-    const fillNonce = 0;
+  const fillNonce = 0;
 
   // await this.createTokenAccount(RAY, treasury.publicKey);
   // await this.createTokenAccount(USDC, treasury.publicKey);
   // await this.mintTo(USDC, treasury.publicKey, this.payer, 1000000 * 10 ** 6);
 
-  const contractKeypair = Keypair.generate();
-  const contractKey = contractKeypair.publicKey;
-  const escrowKey = deriveEscrowPDA(STREAMFLOW_VESTING_PROGRAM_ID, contractKey);
-  const recordKey = deriveExecutionRecordPDA(STREAMFLOW_ESCROW_PROGRAM_ID, orderKey, authority, fillNonce);
 
   // Create a lookup table for the accounts
   const slot = await this.banksClient.getSlot();
@@ -175,7 +175,7 @@ export default async function() {
   const daoKeypair = Keypair.generate();
   const dao = await autocratClient.initializeDao(
     RAY,
-    400, // tokenPriceUiAmount
+    1000, // tokenPriceUiAmount
     5, // minBaseFutarchicLiquidity
     5000, // minQuoteFutarchicLiquidity
     USDC,
@@ -247,14 +247,27 @@ export default async function() {
 
   // Create a DAO if it doesn't exist
 
+  const daoTreasury = await autocratClient.getDao(dao).then(dao => dao.treasury);
+
+  await this.createTokenAccount(RAY, daoTreasury);
+  await this.createTokenAccount(USDC, daoTreasury);
+  await this.mintTo(USDC, daoTreasury, this.payer, 10000000000 * 10 ** 6);
+
+
+  const contractKeypair = Keypair.generate();
+  const contractKey = contractKeypair.publicKey;
+  const escrowKey = deriveEscrowPDA(STREAMFLOW_VESTING_PROGRAM_ID, contractKey);
+  const recordKey = deriveExecutionRecordPDA(STREAMFLOW_ESCROW_PROGRAM_ID, orderKey, daoTreasury, fillNonce);
+
+
   // Create the fillOrderVested instruction
   const fillOrderIx = await escrow.methods
     .fillOrderVested(fillNonce, amount, price, false)
     .accounts({
       common: {
-        executor: authority,
-        from: token.getAssociatedTokenAddressSync(USDC, authority),
-        toBase: token.getAssociatedTokenAddressSync(RAY, authority),
+        executor: daoTreasury,
+        from: token.getAssociatedTokenAddressSync(USDC, daoTreasury, true),
+        toBase: token.getAssociatedTokenAddressSync(RAY, daoTreasury, true),
         order: orderKey,
         toQuote: token.getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
         baseTokenProgram: token.TOKEN_PROGRAM_ID,
@@ -277,9 +290,9 @@ export default async function() {
   fillOrderIx.feePayer = this.payer.publicKey;
   fillOrderIx.sign(this.payer, contractKeypair);
 
-  console.log(fillOrderIx.serialize().length)
+  // console.log(fillOrderIx.serialize().length)
 
-  
+
   // console.log(fillOrderIx.keys.length)
   // console.log(fillOrderIx.data.length)
 
@@ -288,7 +301,7 @@ export default async function() {
   // const lookupTableAddresses = lookupTableAccount.value?.state.addresses || [];
 
   // Create a proposal with the fillOrderVested instruction using lookup table addresses
-  const {proposal, tx: proposalTx} = await autocratClient.initializeProposal(
+  const { proposal, tx: proposalTx } = await autocratClient.initializeProposal(
     dao,
     "",
     {
@@ -303,11 +316,27 @@ export default async function() {
     new BN(5 * 10 ** 9), // baseTokensToLP
     new BN(5000 * 10 ** 6),  // quoteTokensToLP
     acc
-  ) as any as {tx: Transaction, proposal: PublicKey};
+  ) as any as { tx: Transaction, proposal: PublicKey };
+
+  const transferIx = SystemProgram.transfer({
+    fromPubkey: this.payer.publicKey,
+    toPubkey: daoTreasury,
+    lamports: 2282880 + 8574720,
+  });
+
+
+  const transferTx = new Transaction().add(transferIx);
+  transferTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  transferTx.feePayer = this.payer.publicKey;
+  transferTx.sign(this.payer);
+  await this.banksClient.processTransaction(transferTx);
+
+  await this.advanceBySlots(1n)
+
 
   console.log(proposalTx);
   // Extract unique accounts from the instruction to add to lookup table
-  const accountsToAdd = proposalTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey)  );
+  const accountsToAdd = proposalTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
   // accountsToAdd.push(proposal.instructions[0].programId);
 
   // Remove duplicates
@@ -316,7 +345,7 @@ export default async function() {
   // Create extend instruction
   const extendInstruction3 = AddressLookupTableProgram.extendLookupTable({
     payer: this.payer.publicKey,
-    authority: this.payer.publicKey, 
+    authority: this.payer.publicKey,
     lookupTable: acc.key,
     addresses: uniqueAccounts
   });
@@ -332,7 +361,7 @@ export default async function() {
 
   const extendInstruction4 = AddressLookupTableProgram.extendLookupTable({
     payer: this.payer.publicKey,
-    authority: this.payer.publicKey, 
+    authority: this.payer.publicKey,
     lookupTable: acc.key,
     addresses: uniqueAccounts
   });
@@ -389,13 +418,73 @@ export default async function() {
 
   console.log(await autocratClient.getProposal(proposal));
 
+  // Wait for proposal to be old enough
+  const storedProposal = await autocratClient.getProposal(proposal);
+  const storedDao = await autocratClient.getDao(dao);
+  const slotsToWait = Number(storedDao.slotsPerProposal) + 1;
+  await this.advanceBySlots(BigInt(slotsToWait + 100));
+
+  // Get the AMMs and vaults for the proposal
+  const { passAmm, failAmm, passBaseMint, passQuoteMint, baseVault, quoteVault, question } = autocratClient.getProposalPdas(
+    proposal,
+    RAY,
+    USDC,
+    dao
+  );
+
+  // Split tokens in the vaults
+  await vaultClient
+    .splitTokensIx(question, baseVault, RAY, new BN(10 * 10 ** 9), 2)
+    .rpc();
+  await vaultClient
+    .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
+    .rpc();
+
+  // Swap in the pass market to make it pass
+  await ammClient
+    .swapIx(
+      passAmm,
+      passBaseMint,
+      passQuoteMint,
+      { buy: {} },
+      new BN(1000).muln(1_000_000), // Swap $1 worth
+      new BN(0)
+    )
+    .rpc();
+
+  // Crank the TWAP multiple times to ensure good price data
+  for (let i = 0; i < 50; i++) {
+    await this.advanceBySlots(20_000n);
+
+    await ammClient
+      .crankThatTwapIx(passAmm)
+      .preInstructions([
+        // this is to get around bankrun thinking we've processed the same transaction multiple times
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: i,
+        }),
+        await ammClient.crankThatTwapIx(failAmm).instruction(),
+      ])
+      .rpc();
+  }
+
+  // Finalize the proposal
+  await autocratClient.finalizeProposal(proposal);
+
+  // Check if proposal passed and execute if it did
+  const updatedProposal = await autocratClient.getProposal(proposal);
+  console.log(updatedProposal);
+  // if (updatedProposal.state.passed) {
+  await autocratClient.executeProposalIx(proposal, dao, updatedProposal.instruction).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).signers([contractKeypair]).rpc();
+  // }
+
   // transactionV0.sign([(this.payer as any).payer as any]);
 
   // this.banksClient.sendRawTransaction(transactionV0.serialize());
 
   // console.log(transactionV0.serialize().length);
 
-  
+
 
   // Execute the proposal
   // await autocratClient.executeProposal(proposal);
