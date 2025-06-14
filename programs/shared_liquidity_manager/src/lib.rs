@@ -12,7 +12,6 @@ use state::SharedLiquidityPool;
 use instructions::*;
 
 // TODO:
-// - initialize_pool
 // - provide_liquidity
 // - remove_my_liquidity
 // - initialize_proposal_with_liquidity
@@ -24,5 +23,21 @@ pub mod shared_liquidity_manager {
 
     pub fn initialize_pool(ctx: Context<InitializePool>) -> Result<()> {
         InitializePool::handle(ctx)
+    }
+
+    pub fn deposit(ctx: Context<Deposit>, args: DepositArgs) -> Result<()> {
+        Deposit::handle(ctx, args)
+    }
+
+    pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
+        Withdraw::handle(ctx)
+    }
+
+    pub fn initialize_proposal_with_liquidity(ctx: Context<InitializeProposalWithLiquidity>) -> Result<()> {
+        InitializeProposalWithLiquidity::handle(ctx)
+    }
+
+    pub fn remove_proposal_liquidity(ctx: Context<RemoveProposalLiquidity>) -> Result<()> {
+        RemoveProposalLiquidity::handle(ctx)
     }
 }

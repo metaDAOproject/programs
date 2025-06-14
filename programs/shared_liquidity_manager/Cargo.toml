@@ -24,5 +24,6 @@ solana-program = "=1.17.14"
 spl-token = "=4.0.0"
 ahash = "=0.8.6"
 solana-security-txt = "1.1.1"
+anchor-spl = "^0.29.0"
 
 

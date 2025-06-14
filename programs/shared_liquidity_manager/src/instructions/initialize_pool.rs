@@ -29,6 +29,7 @@ impl InitializePool<'_> {
             pda_bump: ctx.bumps.pool,
             spot_pool_state: ctx.accounts.spot_pool_state.key(),
             dao: ctx.accounts.dao.key(),
+            is_active_proposal: false,
             seq_num: 0,
         });
 

@@ -12,6 +12,7 @@ import {
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SharedLiquidityManagerClient,
+  getSharedLiquidityPoolAddr,
 } from "@metadaoproject/futarchy/v0.4";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
@@ -109,11 +110,34 @@ export default async function () {
 
   await sharedLiquidityManagerClient.initializePoolIx(dao, poolStateKp.publicKey).rpc();
 
+  // Fourth, we provide liquidity to the pool
+  const [pool] = getSharedLiquidityPoolAddr(
+    sharedLiquidityManagerClient.getProgramId(),
+    dao,
+    poolStateKp.publicKey
+  );
 
+  // Deposit 10 META and 10,000 USDC
+  const [depositAmount0, depositAmount1] = META.toBase58() < USDC.toBase58()
+    ? [new BN(10 * 10 ** 9), new BN(10_000 * 10 ** 6)]  // META is token0
+    : [new BN(10_000 * 10 ** 6), new BN(10 * 10 ** 9)]; // USDC is token0
 
+  await sharedLiquidityManagerClient.depositIx(
+    dao,
+    poolStateKp.publicKey,
+    token0Mint,
+    token1Mint,
+    new BN(3162258560), // Let Raydium calculate the LP token amount
+    depositAmount0,
+    depositAmount1
+  ).rpc();
 
-  // Fourth, have the DAO provide liquidity to the pool
+  const storedUnderlyingPool = await cpSwap.account.poolState.fetch(poolStateKp.publicKey);
+  console.log("storedUnderlyingPool", storedUnderlyingPool);
+  console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
+  console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
 
+  console.log("lp balance", await this.getTokenBalance(lpMint, this.payer.publicKey));
   // Fifth, have a proposer come along and create a proposal through the SharedLiquidityManager
 
   // Sixth, someone bids in pass market
@@ -121,5 +145,4 @@ export default async function () {
   // Seventh, proposal is finalized and passes
 
   // Eighth, we merge liquidity back into main pool. Check that k has increased
-
 }
