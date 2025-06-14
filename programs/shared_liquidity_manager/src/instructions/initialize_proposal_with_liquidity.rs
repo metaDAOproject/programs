@@ -2,6 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use raydium_cpmm_cpi::cpi::accounts::Withdraw;
 use raydium_cpmm_cpi::cpi::withdraw;
+use conditional_vault::cpi::accounts::InteractWithVault;
+use conditional_vault::cpi::split_tokens;
 
 use crate::state::SharedLiquidityPool;
 
@@ -44,6 +46,28 @@ pub struct ConditionalVaultAccounts<'info> {
     #[account(mut)]
     pub pool_token_1_account: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
     pub conditional_vault_program: Program<'info, conditional_vault::program::ConditionalVault>,
+    #[account(mut)]
+    pub token_0_pass_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
+    #[account(mut)]
+    pub token_0_fail_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
+    #[account(mut)]
+    pub token_1_pass_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
+    #[account(mut)]
+    pub token_1_fail_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
+    #[account(init, payer = payer, token::mint = token_0_pass_mint, token::authority = token_0_pass_vault)]
+    pub token_0_pass_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    #[account(init, payer = payer, token::mint = token_0_fail_mint, token::authority = token_0_fail_vault)]
+    pub token_0_fail_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    #[account(init, payer = payer, token::mint = token_1_pass_mint, token::authority = token_1_pass_vault)]
+    pub token_1_pass_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    #[account(init, payer = payer, token::mint = token_1_fail_mint, token::authority = token_1_fail_vault)]
+    pub token_1_fail_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    /// CHECK: verified by conditional_vault
+    pub vault_event_authority: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    pub token_program: Program<'info, anchor_spl::token::Token>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -105,7 +129,7 @@ pub struct InitializeProposalWithLiquidity<'info> {
     pub raydium: RaydiumAccounts<'info>,
 
     // Conditional vault accounts
-    // pub conditional_vault: ConditionalVaultAccounts<'info>,
+    pub conditional_vault: ConditionalVaultAccounts<'info>,
 
     // Conditional token accounts
     // pub conditional_tokens: ConditionalTokenAccounts<'info>,
@@ -167,7 +191,59 @@ impl InitializeProposalWithLiquidity<'_> {
             0,
         )?;
 
-        // TODO: Step 2: Split withdrawn tokens into conditional variants using conditional_vault
+        // msg!("{:?}", ctx.accounts.conditional_vault.token_0_pass_vault);
+        // msg!("{:?}", ctx.accounts.conditional_vault.token_0_pass_mint);
+        conditional_vault::cpi::split_tokens(
+            CpiContext::new_with_signer(
+                ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
+                conditional_vault::cpi::accounts::InteractWithVault {
+                    question: ctx.accounts.conditional_vault.question.to_account_info(),
+                    vault: ctx.accounts.conditional_vault.vault_0.to_account_info(),
+                    vault_underlying_token_account: ctx.accounts.conditional_vault.vault_0_underlying_token_account.to_account_info(),
+                    authority: ctx.accounts.pool.to_account_info(),
+                    user_underlying_token_account: ctx.accounts.token_0_vault.to_account_info(),
+                    event_authority: ctx.accounts.conditional_vault.vault_event_authority.to_account_info(),
+                    program: ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
+                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                },
+                signer,
+            ).with_remaining_accounts(vec![
+                ctx.accounts.conditional_vault.token_0_fail_mint.to_account_info(),
+                ctx.accounts.conditional_vault.token_0_pass_mint.to_account_info(),
+                ctx.accounts.conditional_vault.token_0_fail_vault.to_account_info(),
+                ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info(),
+            ]),
+            1,
+        )?;
+
+        // // 2. Split withdrawn tokens into conditional variants
+        // // Split token_0
+        // let split_token_0_accounts = InteractWithVault {
+        //     question: ctx.accounts.conditional_vault.question.to_account_info(),
+        //     vault: ctx.accounts.conditional_vault.vault_0.to_account_info(),
+        //     token_program: ctx.accounts.raydium.token_program.to_account_info(),
+        // };
+        // let cpi_ctx = CpiContext::new(
+        //     ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
+        //     split_token_0_accounts,
+        // );
+        // split(cpi_ctx)?;
+
+        // Split token_1
+        // let split_token_1_accounts = Split {
+        //     question: ctx.accounts.conditional_vault.question.to_account_info(),
+        //     vault: ctx.accounts.conditional_vault.vault_1.to_account_info(),
+        //     underlying_token_account: ctx.accounts.conditional_vault.vault_1_underlying_token_account.to_account_info(),
+        //     conditional_token_account: ctx.accounts.conditional_vault.pool_token_1_account.to_account_info(),
+        //     token_program: ctx.accounts.raydium.token_program.to_account_info(),
+        //     token_program_2022: ctx.accounts.raydium.token_program_2022.to_account_info(),
+        // };
+        // let cpi_ctx = CpiContext::new(
+        //     ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
+        //     split_token_1_accounts,
+        // );
+        // split(cpi_ctx)?;
+
         // TODO: Step 3: Provide liquidity to pass_amm and fail_amm using conditional tokens
         // TODO: Step 4: Lock all received LP tokens into autocrat proposal
 

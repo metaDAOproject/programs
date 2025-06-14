@@ -316,6 +316,111 @@ export type SharedLiquidityManager = {
           ];
         },
         {
+          name: "conditionalVault";
+          accounts: [
+            {
+              name: "question";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "vault0";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "vault1";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "vault0UnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "vault1UnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "poolToken0Account";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "poolToken1Account";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "conditionalVaultProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "token0PassMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "token0FailMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "token1PassMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "token1FailMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "token0PassVault";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "token0FailVault";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "token1PassVault";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "token1FailVault";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "vaultEventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            }
+          ];
+        },
+        {
           name: "dao";
           isMut: true;
           isSigner: false;
@@ -809,6 +914,111 @@ export const IDL: SharedLiquidityManager = {
             },
             {
               name: "memoProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "conditionalVault",
+          accounts: [
+            {
+              name: "question",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "vault0",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "vault1",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "vault0UnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "vault1UnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "poolToken0Account",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "poolToken1Account",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "conditionalVaultProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "token0PassMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "token0FailMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "token1PassMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "token1FailMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "token0PassVault",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "token0FailVault",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "token1PassVault",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "token1FailVault",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "vaultEventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
               isMut: false,
               isSigner: false,
             },

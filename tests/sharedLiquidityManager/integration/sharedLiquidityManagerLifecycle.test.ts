@@ -212,6 +212,15 @@ export default async function () {
     ? [baseVault, quoteVault]
     : [quoteVault, baseVault];
 
+  const [token0PassMint, token0FailMint] = META.toBase58() < USDC.toBase58()
+    ? [passBaseMint, failBaseMint]
+    : [passQuoteMint, failQuoteMint];
+
+  const [token1PassMint, token1FailMint] = META.toBase58() < USDC.toBase58()
+    ? [passQuoteMint, failQuoteMint]
+    : [passBaseMint, failBaseMint];
+
+
   let initProposalWithLiquidityTx = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
     dao,
     poolStateKp.publicKey,
@@ -225,6 +234,14 @@ export default async function () {
     failAmm,
     passLp,
     failLp,
+    token0PassMint,
+    token0FailMint,
+    token.getAssociatedTokenAddressSync(token0PassMint, pool, true),
+    token.getAssociatedTokenAddressSync(token0FailMint, pool, true),
+    token1PassMint,
+    token1FailMint,
+    token.getAssociatedTokenAddressSync(token1PassMint, pool, true),
+    token.getAssociatedTokenAddressSync(token1FailMint, pool, true)
   ).transaction();
 
   const slot = await this.banksClient.getSlot();
@@ -282,7 +299,7 @@ export default async function () {
   const messageV0 = new TransactionMessage({
     payerKey: this.payer.publicKey,
     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-    instructions: initProposalWithLiquidityTx.instructions,
+    instructions: initProposalWithLiquidityTx.instructions.concat(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })),
   }).compileToV0Message([storedLookupTable]);
 
   console.log("messageV0", messageV0);
@@ -296,6 +313,8 @@ export default async function () {
 
   console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
   console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
+  console.log("token0PassMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0PassMint, pool, true)));
+  console.log("token0FailMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0FailMint, pool, true)));
 
   // Sixth, someone bids in pass market
 

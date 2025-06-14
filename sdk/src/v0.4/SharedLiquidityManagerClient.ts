@@ -28,6 +28,7 @@ import {
   getSharedLiquidityPoolAddr,
   getRaydiumCpmmPoolVaultAddr,
   getRaydiumCpmmLpMintAddr,
+  getEventAuthorityAddr,
 } from "./utils/pda.js";
 
 export type CreateSharedLiquidityManagerClientParams = {
@@ -182,7 +183,15 @@ export class SharedLiquidityManagerClient {
     passAmm: PublicKey,
     failAmm: PublicKey,
     passLpMint: PublicKey,
-    failLpMint: PublicKey
+    failLpMint: PublicKey,
+    token0PassMint: PublicKey,
+    token0FailMint: PublicKey,
+    token0PassVault: PublicKey,
+    token0FailVault: PublicKey,
+    token1PassMint: PublicKey,
+    token1FailMint: PublicKey,
+    token1PassVault: PublicKey,
+    token1FailVault: PublicKey
   ) {
     const [pool] = getSharedLiquidityPoolAddr(
       this.program.programId,
@@ -225,32 +234,43 @@ export class SharedLiquidityManagerClient {
         cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
         memoProgram: MEMO_PROGRAM_ID,
       },
-      // conditionalVault: {
-      //   question,
-      //   vault0,
-      //   vault1,
-      //   vault0UnderlyingTokenAccount: getAssociatedTokenAddressSync(
-      //     token0Mint,
-      //     vault0,
-      //     true
-      //   ),
-      //   vault1UnderlyingTokenAccount: getAssociatedTokenAddressSync(
-      //     token1Mint,
-      //     vault1,
-      //     true
-      //   ),
-      //   poolToken0Account: getAssociatedTokenAddressSync(
-      //     token0Mint,
-      //     pool,
-      //     true
-      //   ),
-      //   poolToken1Account: getAssociatedTokenAddressSync(
-      //     token1Mint,
-      //     pool,
-      //     true
-      //   ),
-      //   conditionalVaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
-      // },
+      conditionalVault: {
+        question,
+        vault0,
+        vault1,
+        vault0UnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          token0Mint,
+          vault0,
+          true
+        ),
+        vault1UnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          token1Mint,
+          vault1,
+          true
+        ),
+        poolToken0Account: getAssociatedTokenAddressSync(
+          token0Mint,
+          pool,
+          true
+        ),
+        poolToken1Account: getAssociatedTokenAddressSync(
+          token1Mint,
+          pool,
+          true
+        ),
+        conditionalVaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
+        token0PassMint,
+        token0FailMint,
+        token0PassVault,
+        token0FailVault,
+        token1PassMint,
+        token1FailMint,
+        token1PassVault,
+        token1FailVault,
+        vaultEventAuthority: getEventAuthorityAddr(
+          CONDITIONAL_VAULT_PROGRAM_ID
+        )[0],
+      },
       // conditionalTokens: {
       //   poolPToken0Account: getAssociatedTokenAddressSync(
       //     token0Mint,
