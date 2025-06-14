@@ -19,6 +19,7 @@ import {
   getProposalAddr,
   ConditionalVaultClient,
   InstructionUtils,
+  getDaoTreasuryAddr,
 } from "@metadaoproject/futarchy/v0.4";
 import { AddressLookupTableAccount, AddressLookupTableProgram, ComputeBudgetProgram, Keypair, PublicKey, Transaction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { assert } from "chai";
@@ -72,7 +73,7 @@ export default async function () {
   await this.createTokenAccount(USDC, this.payer.publicKey);
 
   await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-  await this.mintTo(USDC, this.payer.publicKey, this.payer, 10_000 * 10 ** 6);
+  await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
 
   // First, set up a DAO
 
@@ -94,9 +95,9 @@ export default async function () {
     ? [META, USDC] 
     : [USDC, META];
 
-  const [amount0, amount1] = META.toBuffer() < USDC.toBuffer()
-    ? [new BN(10 * 10 ** 9), new BN(1000 * 10 ** 6)]  // META is token0
-    : [new BN(1000 * 10 ** 6), new BN(10 * 10 ** 9)]; // USDC is token0
+  const [amount0, amount1] = META.equals(token0Mint)
+    ? [new BN(10 * 10 ** 9), new BN(10_000 * 10 ** 6)]  // META is token0
+    : [new BN(10_000 * 10 ** 6), new BN(10 * 10 ** 9)]; // USDC is token0
 
   // Proph3t: I changed the RaydiumCpmm type to have poolState to be a signer so
   // anchor doesn't complain about passing poolStateKp as a signer
@@ -123,12 +124,14 @@ export default async function () {
   await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, poolStateKp.publicKey, META, USDC).rpc();
 
   // Fourth, we provide liquidity to the pool
-  const [pool] = getSharedLiquidityPoolAddr(
+  const [slPool] = getSharedLiquidityPoolAddr(
     sharedLiquidityManagerClient.getProgramId(),
     dao,
     poolStateKp.publicKey
   );
 
+  const spotPoolLpSupply = await getMint(this.banksClient, lpMint);
+  console.log("spotPoolLpSupply", spotPoolLpSupply);
 
   // Deposit 10 META and 10,000 USDC
   await sharedLiquidityManagerClient.depositSharedLiquidityIx(
@@ -136,10 +139,11 @@ export default async function () {
     poolStateKp.publicKey,
     META,
     USDC,
-    new BN(3162258560), // Let Raydium calculate the LP token amount
-    new BN(10 * 10 ** 9), // 10 META
-    new BN(10_000 * 10 ** 6) // 10,000 USDC
+    new BN(30_000_000_000), // Let Raydium calculate the LP token amount
+    new BN(30 * 10 ** 9), // 30 META
+    new BN(30_000 * 10 ** 6) // 30,000 USDC
   ).preInstructions([ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 256 })]).rpc();
+
 
 
   const storedUnderlyingPool = await cpSwap.account.poolState.fetch(poolStateKp.publicKey);
@@ -151,11 +155,12 @@ export default async function () {
 
   // Fifth, have a proposer come along and create a proposal through the SharedLiquidityManager
 
-    const nonce = new BN(Math.random() * 2 ** 50);
+    // const nonce = new BN(Math.random() * 2 ** 50);
+    const nonce = new BN(0);
 
     let [proposal] = getProposalAddr(
       AUTOCRAT_PROGRAM_ID,
-      pool,
+      slPool,
       nonce
     );
 
@@ -222,8 +227,8 @@ export default async function () {
     : [passBaseMint, failBaseMint];
 
   // Initialize pool pass and fail LP accounts
-  await this.createTokenAccount(passLp, pool, true);
-  await this.createTokenAccount(failLp, pool, true);
+  await this.createTokenAccount(passLp, slPool, true);
+  await this.createTokenAccount(failLp, slPool, true);
 
   // Initialize AMM vault accounts
   await this.createTokenAccount(token0Mint, passAmm, true);
@@ -249,22 +254,40 @@ export default async function () {
   const accountsToAdd = initProposalWithLiquidityTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
   const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
 
+  // Create the lookup table first
+  let createLutTx = new Transaction().add(createTableIx);
+  createLutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  createLutTx.feePayer = this.payer.publicKey;
+  createLutTx.sign(this.payer);
 
-  const extendTableIx = AddressLookupTableProgram.extendLookupTable({
-    authority: this.payer.publicKey,
-    payer: this.payer.publicKey,
-    lookupTable: lookupTableAddress,
-    addresses: uniqueAccounts.slice(0, 20),
-  });
-
-  let lutTx = new Transaction().add(createTableIx, extendTableIx);
-  lutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
-  lutTx.feePayer = this.payer.publicKey;
-  lutTx.sign(this.payer);
-
-  await this.banksClient.processTransaction(lutTx);
+  await this.banksClient.processTransaction(createLutTx);
 
   await this.advanceBySlots(1n);
+
+  // Extend the lookup table with all unique accounts
+  // Raydium allows up to 20 addresses per extend instruction
+  const addressesPerExtend = 20;
+  for (let i = 0; i < uniqueAccounts.length; i += addressesPerExtend) {
+    const batch = uniqueAccounts.slice(i, i + addressesPerExtend);
+    
+    const extendTableIx = AddressLookupTableProgram.extendLookupTable({
+      authority: this.payer.publicKey,
+      payer: this.payer.publicKey,
+      lookupTable: lookupTableAddress,
+      addresses: batch,
+    });
+
+    let extendLutTx = new Transaction().add(extendTableIx);
+    extendLutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    extendLutTx.feePayer = this.payer.publicKey;
+    extendLutTx.sign(this.payer);
+
+    await this.banksClient.processTransaction(extendLutTx);
+    await this.advanceBySlots(1n);
+  }
+
+  console.log("UNIQUE ACCOUNTS", uniqueAccounts.length);
+
 
   // Create and process second extension transaction
   const extendTableIx2 = AddressLookupTableProgram.extendLookupTable({
@@ -296,7 +319,7 @@ export default async function () {
     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
     instructions: [
       ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
-      ComputeBudgetProgram.requestHeapFrame({ bytes: 32 * 1024 }),
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
     ].concat(initProposalWithLiquidityTx.instructions)
   }).compileToV0Message([storedLookupTable]);
 
@@ -305,6 +328,11 @@ export default async function () {
 
   let tx = new VersionedTransaction(messageV0);
   tx.sign([this.payer]);
+
+  const [daoTreasury] = getDaoTreasuryAddr(AUTOCRAT_PROGRAM_ID, dao);
+
+  await this.createTokenAccount(passLp, daoTreasury, true);
+  await this.createTokenAccount(failLp, daoTreasury, true);
 
 
 
@@ -315,8 +343,8 @@ export default async function () {
 
   console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
   console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
-  console.log("token0PassMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0PassMint, pool, true)));
-  console.log("token0FailMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0FailMint, pool, true)));
+  console.log("token0PassMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0PassMint, slPool, true)));
+  console.log("token0FailMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0FailMint, slPool, true)));
 
   // Sixth, someone bids in pass market
 

@@ -232,7 +232,7 @@ export type SharedLiquidityManager = {
         },
         {
           name: "proposal";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -439,7 +439,7 @@ export type SharedLiquidityManager = {
               isSigner: false;
             },
             {
-              name: "poolFailLpAccount";
+              name: "slPoolFailLpAccount";
               isMut: true;
               isSigner: false;
             },
@@ -460,6 +460,16 @@ export type SharedLiquidityManager = {
             },
             {
               name: "failAmmVaultAtaQuote";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "proposalPassLpVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "proposalFailLpVault";
               isMut: true;
               isSigner: false;
             },
@@ -487,6 +497,11 @@ export type SharedLiquidityManager = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "autocratEventAuthority";
           isMut: false;
           isSigner: false;
         },
@@ -916,7 +931,7 @@ export const IDL: SharedLiquidityManager = {
         },
         {
           name: "proposal",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1123,7 +1138,7 @@ export const IDL: SharedLiquidityManager = {
               isSigner: false,
             },
             {
-              name: "poolFailLpAccount",
+              name: "slPoolFailLpAccount",
               isMut: true,
               isSigner: false,
             },
@@ -1144,6 +1159,16 @@ export const IDL: SharedLiquidityManager = {
             },
             {
               name: "failAmmVaultAtaQuote",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "proposalPassLpVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "proposalFailLpVault",
               isMut: true,
               isSigner: false,
             },
@@ -1171,6 +1196,11 @@ export const IDL: SharedLiquidityManager = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "autocratEventAuthority",
           isMut: false,
           isSigner: false,
         },

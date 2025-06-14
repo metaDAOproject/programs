@@ -77,7 +77,7 @@ pub struct AmmAccounts<'info> {
     #[account(mut)]
     pub sl_pool_pass_lp_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub pool_fail_lp_account: Box<Account<'info, anchor_spl::token::TokenAccount>>,
+    pub sl_pool_fail_lp_account: Box<Account<'info, anchor_spl::token::TokenAccount>>,
     #[account(mut)]
     pub pass_amm_vault_ata_base: Box<Account<'info, anchor_spl::token::TokenAccount>>,
     #[account(mut)]
@@ -86,6 +86,10 @@ pub struct AmmAccounts<'info> {
     pub fail_amm_vault_ata_base: Box<Account<'info, anchor_spl::token::TokenAccount>>,
     #[account(mut)]
     pub fail_amm_vault_ata_quote: Box<Account<'info, anchor_spl::token::TokenAccount>>,
+    #[account(mut)]
+    pub proposal_pass_lp_vault: Box<Account<'info, anchor_spl::token::TokenAccount>>,
+    #[account(mut)]
+    pub proposal_fail_lp_vault: Box<Account<'info, anchor_spl::token::TokenAccount>>,
     pub amm_program: Program<'info, amm::program::Amm>,
     /// CHECK: verified by amm
     pub event_authority: UncheckedAccount<'info>,
@@ -106,6 +110,7 @@ pub struct InitializeProposalWithLiquidity<'info> {
     pub sl_pool: Account<'info, SharedLiquidityPool>,
     pub proposal_creator: Signer<'info>,
     /// CHECK: initialized by autocrat
+    #[account(mut)]
     pub proposal: UncheckedAccount<'info>,
 
     #[account(mut)]
@@ -129,9 +134,11 @@ pub struct InitializeProposalWithLiquidity<'info> {
 
     // Autocrat accounts
     #[account(mut)]
-    pub dao: Account<'info, autocrat::state::Dao>,
+    pub dao: Box<Account<'info, autocrat::state::Dao>>,
     pub autocrat_program: Program<'info, autocrat::program::Autocrat>,
     pub system_program: Program<'info, System>,
+    /// CHECK: verified by autocrat
+    pub autocrat_event_authority: UncheckedAccount<'info>,
 }
 
 impl InitializeProposalWithLiquidity<'_> {
@@ -361,38 +368,71 @@ impl InitializeProposalWithLiquidity<'_> {
             }
         )?;
 
-        // TODO: Step 4: Lock all received LP tokens into autocrat proposal
-        // autocrat::cpi::initialize_proposal(
-        //     CpiContext::new(
-        //         ctx.accounts.autocrat_program.to_account_info(),
-        //         autocrat::cpi::accounts::InitializeProposal {
-        //             proposal: ctx.accounts.proposal.to_account_info(),
-        //             dao: ctx.accounts.dao.to_account_info(),
-        //             question: ctx.accounts.conditional_vault.question.to_account_info(),
-        //             quote_vault: ctx.accounts.conditional_vault.quote_vault.to_account_info(),
-        //             base_vault: ctx.accounts.conditional_vault.base_vault.to_account_info(),
-        //             pass_amm: ctx.accounts.amm.pass_amm.to_account_info(),
-        //             pass_lp_mint: ctx.accounts.amm.pass_lp_mint.to_account_info(),
-        //             fail_amm: ctx.accounts.amm.fail_amm.to_account_info(),
-        //             fail_lp_mint: ctx.accounts.amm.fail_lp_mint.to_account_info(),
-        //             pass_lp_user_account: ctx.accounts.amm.pool_pass_lp_account.to_account_info(),
-        //             fail_lp_user_account: ctx.accounts.amm.pool_fail_lp_account.to_account_info(),
-        //             pass_lp_vault_account: ctx.accounts.amm.pass_amm_vault_ata_base.to_account_info(),
-        //             fail_lp_vault_account: ctx.accounts.amm.fail_amm_vault_ata_base.to_account_info(),
-        //         },
-        //     ),
-        //     autocrat::instructions::InitializeProposalParams {
-        //         description_url: "".to_string(),
-        //         instruction: ProposalInstruction {
-        //             program_id: ctx.accounts.autocrat_program.key(),
-        //             accounts: vec![],
-        //             data: vec![],
-        //         },
-        //         pass_lp_tokens_to_lock: half_lp,
-        //         fail_lp_tokens_to_lock: half_lp,
-        //         nonce: 0,
-        //     }
-        // )?;
+        amm::cpi::add_liquidity(
+            CpiContext::new_with_signer(
+                ctx.accounts.amm.amm_program.to_account_info(),
+                amm::cpi::accounts::AddOrRemoveLiquidity {
+                    amm: ctx.accounts.amm.fail_amm.to_account_info(),
+                    user: ctx.accounts.sl_pool.to_account_info(),
+                    user_lp_account: ctx.accounts.amm.sl_pool_fail_lp_account.to_account_info(),
+                    user_base_account: ctx.accounts.conditional_vault.sl_pool_fail_base_vault.to_account_info(),
+                    user_quote_account: ctx.accounts.conditional_vault.sl_pool_fail_quote_vault.to_account_info(),
+                    vault_ata_base: ctx.accounts.amm.fail_amm_vault_ata_base.to_account_info(),
+                    vault_ata_quote: ctx.accounts.amm.fail_amm_vault_ata_quote.to_account_info(),
+                    event_authority: ctx.accounts.amm.event_authority.to_account_info(),
+                    program: ctx.accounts.amm.amm_program.to_account_info(),
+                    lp_mint: ctx.accounts.amm.fail_lp_mint.to_account_info(),
+                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                },
+                signer,
+            ),
+            amm::instructions::AddLiquidityArgs {
+                max_base_amount: base_withdrawn,
+                quote_amount: quote_withdrawn,
+                min_lp_tokens: quote_withdrawn,
+            }
+        )?;
+
+        // Initialize proposal
+
+        autocrat::cpi::initialize_proposal(
+            CpiContext::new_with_signer(
+                ctx.accounts.autocrat_program.to_account_info(),
+                autocrat::cpi::accounts::InitializeProposal {
+                    proposal: ctx.accounts.proposal.to_account_info(),
+                    dao: ctx.accounts.dao.to_account_info(),
+                    question: ctx.accounts.conditional_vault.question.to_account_info(),
+                    quote_vault: ctx.accounts.conditional_vault.quote_vault.to_account_info(),
+                    base_vault: ctx.accounts.conditional_vault.base_vault.to_account_info(),
+                    pass_amm: ctx.accounts.amm.pass_amm.to_account_info(),
+                    pass_lp_mint: ctx.accounts.amm.pass_lp_mint.to_account_info(),
+                    fail_amm: ctx.accounts.amm.fail_amm.to_account_info(),
+                    fail_lp_mint: ctx.accounts.amm.fail_lp_mint.to_account_info(),
+                    pass_lp_user_account: ctx.accounts.amm.sl_pool_pass_lp_account.to_account_info(),
+                    fail_lp_user_account: ctx.accounts.amm.sl_pool_fail_lp_account.to_account_info(),
+                    pass_lp_vault_account: ctx.accounts.amm.proposal_pass_lp_vault.to_account_info(),
+                    fail_lp_vault_account: ctx.accounts.amm.proposal_fail_lp_vault.to_account_info(),
+                    proposer: ctx.accounts.sl_pool.to_account_info(),
+                    payer: ctx.accounts.proposal_creator.to_account_info(),
+                    event_authority: ctx.accounts.autocrat_event_authority.to_account_info(),
+                    program: ctx.accounts.autocrat_program.to_account_info(),
+                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                },
+                signer,
+            ),
+            autocrat::instructions::InitializeProposalParams {
+                description_url: "".to_string(),
+                instruction: ProposalInstruction {
+                    program_id: ctx.accounts.autocrat_program.key(),
+                    accounts: vec![],
+                    data: vec![],
+                },
+                pass_lp_tokens_to_lock: quote_withdrawn,
+                fail_lp_tokens_to_lock: quote_withdrawn,
+                nonce: 0,
+            }
+        )?;
 
         Ok(())
     }

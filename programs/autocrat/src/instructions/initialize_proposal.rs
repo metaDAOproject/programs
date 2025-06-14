@@ -18,7 +18,7 @@ pub struct InitializeProposalParams {
 pub struct InitializeProposal<'info> {
     #[account(
         init,
-        payer = proposer,
+        payer = payer,
         space = 2000,
         seeds = [b"proposal", proposer.key().as_ref(), &args.nonce.to_le_bytes()],
         bump
@@ -78,8 +78,9 @@ pub struct InitializeProposal<'info> {
         associated_token::authority = dao.treasury,
     )]
     pub fail_lp_vault_account: Account<'info, TokenAccount>,
-    #[account(mut)]
     pub proposer: Signer<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
@@ -136,6 +137,7 @@ impl InitializeProposal<'_> {
             pass_lp_vault_account,
             fail_lp_vault_account,
             proposer,
+            payer: _,
             token_program,
             system_program: _,
             event_authority: _,

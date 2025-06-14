@@ -29,6 +29,7 @@ import {
   getRaydiumCpmmPoolVaultAddr,
   getRaydiumCpmmLpMintAddr,
   getEventAuthorityAddr,
+  getDaoTreasuryAddr,
 } from "./utils/pda.js";
 import { AutocratClient } from "./AutocratClient.js";
 
@@ -201,6 +202,11 @@ export class SharedLiquidityManagerClient {
       failLp: failLpMint,
     } = this.autocratClient.getProposalPdas(proposal, baseMint, quoteMint, dao);
 
+    const [daoTreasury] = getDaoTreasuryAddr(
+      this.autocratClient.getProgramId(),
+      dao
+    );
+
     return this.program.methods.initializeProposalWithLiquidity().accounts({
       slPool,
       proposalCreator: this.provider.wallet.publicKey,
@@ -287,7 +293,7 @@ export class SharedLiquidityManagerClient {
           slPool,
           true
         ),
-        poolFailLpAccount: getAssociatedTokenAddressSync(
+        slPoolFailLpAccount: getAssociatedTokenAddressSync(
           failLpMint,
           slPool,
           true
@@ -312,9 +318,20 @@ export class SharedLiquidityManagerClient {
           failAmm,
           true
         ),
+        proposalPassLpVault: getAssociatedTokenAddressSync(
+          passLpMint,
+          daoTreasury,
+          true
+        ),
+        proposalFailLpVault: getAssociatedTokenAddressSync(
+          failLpMint,
+          daoTreasury,
+          true
+        ),
         ammProgram: AMM_PROGRAM_ID,
         eventAuthority: getEventAuthorityAddr(AMM_PROGRAM_ID)[0],
       },
+      autocratEventAuthority: getEventAuthorityAddr(AUTOCRAT_PROGRAM_ID)[0],
       dao,
       autocratProgram: AUTOCRAT_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
