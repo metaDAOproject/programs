@@ -1,10 +1,11 @@
 import {
   AmmClient,
+  AUTOCRAT_PROGRAM_ID,
   AutocratClient,
   getAmmAddr,
   getAmmLpMintAddr,
 } from "@metadaoproject/futarchy/v0.4";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey, AddressLookupTableProgram, Transaction, AddressLookupTableAccount } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   createMint,
@@ -85,8 +86,8 @@ export default async function() {
   await this.createTokenAccount(RAY, this.payer.publicKey);
   await this.createTokenAccount(USDC, this.payer.publicKey);
 
-  await this.mintTo(RAY, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-  await this.mintTo(USDC, this.payer.publicKey, this.payer, 1000000 * 10 ** 6);
+  await this.mintTo(RAY, this.payer.publicKey, this.payer, 10000000 * 10 ** 9);
+  await this.mintTo(USDC, this.payer.publicKey, this.payer, 100000000000 * 10 ** 6);
 
   autocratClient = this.autocratClient;
   ammClient = this.ammClient;
@@ -159,11 +160,92 @@ export default async function() {
 
   const contractKeypair = Keypair.generate();
   const contractKey = contractKeypair.publicKey;
-  const escrowKey = deriveEscrowPDA(STREAMFLOW_ESCROW_PROGRAM_ID, contractKey);
+  const escrowKey = deriveEscrowPDA(STREAMFLOW_VESTING_PROGRAM_ID, contractKey);
   const recordKey = deriveExecutionRecordPDA(STREAMFLOW_ESCROW_PROGRAM_ID, orderKey, authority, fillNonce);
 
-  console.log('Filling order vested:', recordKey.toBase58());
-  await escrow.methods
+  // Create a lookup table for the accounts
+  const slot = await this.banksClient.getSlot();
+  const [lookupTableInst, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
+    authority: this.payer.publicKey,
+    payer: this.payer.publicKey,
+    recentSlot: slot - 1n,
+  });
+
+  // Add all the accounts needed for fillOrderVested to the lookup table
+  const extendInstruction = AddressLookupTableProgram.extendLookupTable({
+    payer: this.payer.publicKey,
+    authority: this.payer.publicKey,
+    lookupTable: lookupTableAddress,
+    addresses: [
+      // authority,
+      token.getAssociatedTokenAddressSync(USDC, authority),
+      token.getAssociatedTokenAddressSync(RAY, authority),
+      // orderKey,
+      token.getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+      token.TOKEN_PROGRAM_ID,
+      // vaultKey,
+      // RAY,
+      // USDC,
+      this.payer.publicKey,
+      // contractKey,
+      // new PublicKey("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"),
+      // new PublicKey("B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT"),
+      // escrowKey,
+      // recordKey,
+      // STREAMFLOW_VESTING_PROGRAM_ID,
+      // AUTOCRAT_PROGRAM_ID,
+    ],
+  });
+
+  await this.advanceBySlots(1n)
+
+  // Create and extend the lookup table
+  let tx = new Transaction().add(lookupTableInst, extendInstruction);
+  tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  tx.feePayer = this.payer.publicKey;
+  tx.sign(this.payer);
+  await this.banksClient.processTransaction(tx);
+
+  await this.advanceBySlots(1n)
+
+  const extentIx2 = AddressLookupTableProgram.extendLookupTable({
+    payer: this.payer.publicKey,
+    authority: this.payer.publicKey,
+    lookupTable: lookupTableAddress,
+    addresses: [
+      this.payer.publicKey,
+    ],
+  });
+
+  tx = new Transaction().add(extentIx2);
+  tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  tx.feePayer = this.payer.publicKey;
+  tx.sign(this.payer);
+  await this.banksClient.processTransaction(tx);
+
+
+  const lookupTable = await this.banksClient.getAccount(lookupTableAddress);
+
+  console.log(lookupTable);
+  let acc = new AddressLookupTableAccount({
+    key: lookupTableAddress,
+    state: AddressLookupTableAccount.deserialize(lookupTable.data),
+  });
+
+  // Create a DAO if it doesn't exist
+  const daoKeypair = Keypair.generate();
+  const dao = await autocratClient.initializeDao(
+    RAY,
+    400, // tokenPriceUiAmount
+    5, // minBaseFutarchicLiquidity
+    5000, // minQuoteFutarchicLiquidity
+    USDC,
+    daoKeypair,
+    new BN(Number(DAY_IN_SLOTS))
+  );
+
+  // Create the fillOrderVested instruction
+  const fillOrderIx = await escrow.methods
     .fillOrderVested(fillNonce, amount, price, false)
     .accounts({
       common: {
@@ -183,14 +265,37 @@ export default async function() {
       withdrawor: new PublicKey("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"),
       feeOracle: new PublicKey("B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT"),
       escrowTokens: escrowKey,
+      executionRecord: recordKey,
+      streamflowProgram: STREAMFLOW_VESTING_PROGRAM_ID,
     })
-    .accounts({ executionRecord: recordKey, streamflowProgram: STREAMFLOW_VESTING_PROGRAM_ID })
-    .signers([contractKeypair])
-    .rpc();
+    .instruction();
+  
+  console.log(fillOrderIx.keys.length)
+  console.log(fillOrderIx.data.length)
 
+  // Create a new transaction that uses the lookup table
+  // const lookupTableAccount = await this.banksClient.getAddressLookupTable(lookupTableAddress);
+  // const lookupTableAddresses = lookupTableAccount.value?.state.addresses || [];
 
+  // Create a proposal with the fillOrderVested instruction using lookup table addresses
+  const proposal = await autocratClient.initializeProposal(
+    dao,
+    "",
+    {
+      programId: fillOrderIx.programId,
+      accounts: fillOrderIx.keys.map(key => ({
+        pubkey: key.pubkey,
+        isSigner: key.isSigner,
+        isWritable: key.isWritable
+      })),
+      data: fillOrderIx.data,
+    },
+    new BN(5 * 10 ** 9), // baseTokensToLP
+    new BN(5000 * 10 ** 6),  // quoteTokensToLP
+    acc
+  );
 
-  // let dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC, undefined, new BN(DAY_IN_SLOTS.toString()));
-  // console.log(dao);
+  // Execute the proposal
+  // await autocratClient.executeProposal(proposal);
 }
 

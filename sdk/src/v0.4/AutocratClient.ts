@@ -7,8 +7,11 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  Signer,
   Transaction,
   TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import { PriceMath } from "./utils/priceMath.js";
 import { ProposalInstruction, InitializeDaoParams } from "./types/index.js";
@@ -311,7 +314,8 @@ export class AutocratClient {
     descriptionUrl: string,
     instruction: ProposalInstruction,
     baseTokensToLP: BN,
-    quoteTokensToLP: BN
+    quoteTokensToLP: BN,
+    lookupTableAccount?: AddressLookupTableAccount
   ): Promise<PublicKey> {
     const storedDao = await this.getDao(dao);
 
@@ -417,7 +421,7 @@ export class AutocratClient {
     // this is how many original tokens are created
     const lpTokens = quoteTokensToLP;
 
-    await this.initializeProposalIx(
+    const builder = this.initializeProposalIx(
       descriptionUrl,
       instruction,
       dao,
@@ -427,7 +431,42 @@ export class AutocratClient {
       lpTokens,
       nonce,
       question
-    ).rpc();
+    );
+
+    if (!lookupTableAccount) {
+      await builder.rpc();
+    } else {
+      const tx = await builder.transaction();
+
+      const banksClient = (this.provider.connection as any).banksClient;
+
+      // console.log((this.provider.connection as any).banksClient);
+
+      console.log(tx.instructions);
+
+      const messageV0 = new TransactionMessage({
+        payerKey: this.provider.publicKey,
+        recentBlockhash: (await banksClient.getLatestBlockhash())[0],
+        instructions: tx.instructions.slice(0, 2),
+      }).compileToV0Message([lookupTableAccount]);
+
+      console.log(messageV0.addressTableLookups);
+
+      const transactionV0 = new VersionedTransaction(messageV0);
+
+      console.log((this.provider.wallet as any).payer);
+
+      transactionV0.sign([(this.provider.wallet as any).payer as any]);
+
+      console.log(transactionV0.serialize().length);
+
+      tx.instructions = tx.instructions.slice(2);
+      console.log(tx.instructions[0].data.length);
+
+      // await this.provider.connection.sendRawTransaction(
+      //   transactionV0.serialize()
+      // );
+    }
 
     return proposal;
   }
