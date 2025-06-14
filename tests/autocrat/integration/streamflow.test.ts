@@ -103,16 +103,17 @@ export default async function () {
   const authority = this.payer.publicKey;
   // const baseMint = new PublicKey(baseAddr);
   // const quoteMint = new PublicKey(quoteAddr);
-  const amount = new BN(1000000);
-  const price = new BN(5000000);
+  const amount = new BN(684_208_000_000);
+  const price = new BN(1_000_000_000_000);
   const orderNonce = 0;
   const vestingStartTs = new BN(Math.floor(Date.now() / 1000) + 3600);
   const vestingPeriod = new BN(30);
-  const vestingAmountPerPeriod = new BN(1);
-  const vestingCliffAmount = new BN(500000);
+  const vestingAmountPerPeriod = new BN(3_759_384_615);
+  const vestingCliffAmount = new BN(0);
 
   const orderKey = deriveOrderPDA(STREAMFLOW_ESCROW_PROGRAM_ID, authority, RAY, orderNonce);
   const vaultKey = token.getAssociatedTokenAddressSync(RAY, orderKey, true);
+
 
   // const treasury = Keypair.generate();
 
@@ -130,6 +131,18 @@ export default async function () {
   // tx.feePayer = this.payer.publicKey;
   // tx.sign(this.payer);
   // await this.banksClient.processTransaction(tx);
+
+  const daoKeypair = Keypair.generate();
+  const dao = await autocratClient.initializeDao(
+    RAY,
+    1000, // tokenPriceUiAmount
+    5, // minBaseFutarchicLiquidity
+    5000, // minQuoteFutarchicLiquidity
+    USDC,
+    daoKeypair,
+    new BN(Number(DAY_IN_SLOTS))
+  );
+  const daoTreasury = await autocratClient.getDao(dao).then(dao => dao.treasury);
 
   console.log('Creating vested order:', orderKey.toBase58());
   await escrow.methods
@@ -152,7 +165,7 @@ export default async function () {
       order: orderKey,
       vault: vaultKey,
       from: token.getAssociatedTokenAddressSync(RAY, authority),
-      executor: null,
+      executor: daoTreasury,
       partner: null,
     })
     .rpc();
@@ -172,16 +185,7 @@ export default async function () {
     recentSlot: slot - 1n,
   });
 
-  const daoKeypair = Keypair.generate();
-  const dao = await autocratClient.initializeDao(
-    RAY,
-    1000, // tokenPriceUiAmount
-    5, // minBaseFutarchicLiquidity
-    5000, // minQuoteFutarchicLiquidity
-    USDC,
-    daoKeypair,
-    new BN(Number(DAY_IN_SLOTS))
-  );
+  
 
   // Add all the accounts needed for fillOrderVested to the lookup table
   const extendInstruction = AddressLookupTableProgram.extendLookupTable({
@@ -247,11 +251,11 @@ export default async function () {
 
   // Create a DAO if it doesn't exist
 
-  const daoTreasury = await autocratClient.getDao(dao).then(dao => dao.treasury);
 
   await this.createTokenAccount(RAY, daoTreasury);
   await this.createTokenAccount(USDC, daoTreasury);
-  await this.mintTo(USDC, daoTreasury, this.payer, 10000000000 * 10 ** 6);
+  await this.mintTo(USDC, daoTreasury, this.payer, 1000000000000 * 10 ** 6);
+  // await this.mintTo(USDC, this.payer.publicKey, this.payer, 100000000000 * 10 ** 6);
 
 
   const contractKeypair = Keypair.generate();
@@ -321,7 +325,7 @@ export default async function () {
   const transferIx = SystemProgram.transfer({
     fromPubkey: this.payer.publicKey,
     toPubkey: daoTreasury,
-    lamports: 2282880 + 8574720,
+    lamports:  1_000_000_000,
   });
 
 
