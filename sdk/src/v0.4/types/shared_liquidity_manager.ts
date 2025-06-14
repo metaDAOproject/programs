@@ -200,8 +200,98 @@ export type SharedLiquidityManager = {
       name: "withdrawSharedLiquidity";
       accounts: [
         {
-          name: "pool";
+          name: "slPool";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "spotPool";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "slPoolSpotLpVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "userQuoteTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "userBaseTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "spotPoolBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "spotPoolQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "spotPoolLpMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "userLpTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "userSlPoolPosition";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "user";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "feeReceiver";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "raydiumAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram2022";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "cpSwapProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "memoProgram";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -215,7 +305,14 @@ export type SharedLiquidityManager = {
           isSigner: false;
         }
       ];
-      args: [];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "WithdrawSharedLiquidityParams";
+          };
+        }
+      ];
     },
     {
       name: "initializeProposalWithLiquidity";
@@ -743,6 +840,29 @@ export type SharedLiquidityManager = {
       };
     },
     {
+      name: "WithdrawSharedLiquidityParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "lpTokenAmount";
+            docs: ["The amount of LP tokens to withdraw"];
+            type: "u64";
+          },
+          {
+            name: "minimumToken0Amount";
+            docs: ["The minimum amount of token0 to receive"];
+            type: "u64";
+          },
+          {
+            name: "minimumToken1Amount";
+            docs: ["The minimum amount of token1 to receive"];
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
       name: "ErrorCode";
       type: {
         kind: "enum";
@@ -968,8 +1088,98 @@ export const IDL: SharedLiquidityManager = {
       name: "withdrawSharedLiquidity",
       accounts: [
         {
-          name: "pool",
+          name: "slPool",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "spotPool",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "slPoolSpotLpVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "userQuoteTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "userBaseTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "spotPoolBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "spotPoolQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "spotPoolLpMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "userLpTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "userSlPoolPosition",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "user",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "feeReceiver",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "raydiumAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram2022",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "cpSwapProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "memoProgram",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -983,7 +1193,14 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
       ],
-      args: [],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "WithdrawSharedLiquidityParams",
+          },
+        },
+      ],
     },
     {
       name: "initializeProposalWithLiquidity",
@@ -1505,6 +1722,29 @@ export const IDL: SharedLiquidityManager = {
           },
           {
             name: "nonce",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawSharedLiquidityParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "lpTokenAmount",
+            docs: ["The amount of LP tokens to withdraw"],
+            type: "u64",
+          },
+          {
+            name: "minimumToken0Amount",
+            docs: ["The minimum amount of token0 to receive"],
+            type: "u64",
+          },
+          {
+            name: "minimumToken1Amount",
+            docs: ["The minimum amount of token1 to receive"],
             type: "u64",
           },
         ],

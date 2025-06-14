@@ -15,7 +15,6 @@ use instructions::*;
 // - add a proposer fee
 // - implement withdraw
 // - implement remove_proposal_liquidity
-// - add a proposal instruction
 
 #[program]
 pub mod shared_liquidity_manager {
@@ -29,8 +28,8 @@ pub mod shared_liquidity_manager {
         DepositSharedLiquidity::handle(ctx, params)
     }
 
-    pub fn withdraw_shared_liquidity(ctx: Context<WithdrawSharedLiquidity>) -> Result<()> {
-        WithdrawSharedLiquidity::handle(ctx)
+    pub fn withdraw_shared_liquidity(ctx: Context<WithdrawSharedLiquidity>, params: WithdrawSharedLiquidityParams) -> Result<()> {
+        WithdrawSharedLiquidity::handle(ctx, params)
     }
 
     pub fn initialize_proposal_with_liquidity(ctx: Context<InitializeProposalWithLiquidity>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
