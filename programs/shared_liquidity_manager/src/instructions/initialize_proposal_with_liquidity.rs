@@ -272,15 +272,13 @@ impl InitializeProposalWithLiquidity<'_> {
         };
 
         // Provide liquidity to pass_amm
-        let pass_user_base_account = user_base_account.clone();
-        let pass_user_quote_account = user_quote_account.clone();
         let pass_amm_cpi_accounts = amm::cpi::accounts::AddOrRemoveLiquidity {
             amm: ctx.accounts.amm.pass_amm.to_account_info(),
             user: ctx.accounts.pool.to_account_info(),
             lp_mint: ctx.accounts.amm.pass_lp_mint.to_account_info(),
             user_lp_account: ctx.accounts.amm.pool_pass_lp_account.to_account_info(),
-            user_base_account: pass_user_base_account,
-            user_quote_account: pass_user_quote_account,
+            user_base_account,
+            user_quote_account,
             vault_ata_base: ctx.accounts.amm.pass_amm_vault_ata_base.to_account_info(),
             vault_ata_quote: ctx.accounts.amm.pass_amm_vault_ata_quote.to_account_info(),
             token_program: ctx.accounts.raydium.token_program.to_account_info(),
@@ -307,16 +305,19 @@ impl InitializeProposalWithLiquidity<'_> {
             },
         )?;
 
+        let (user_base_account, user_quote_account) = if ctx.accounts.amm.pass_amm.base_mint.key() == ctx.accounts.token_0_mint.key() {
+            (ctx.accounts.conditional_vault.token_0_fail_vault.to_account_info(), ctx.accounts.conditional_vault.token_1_fail_vault.to_account_info())
+        } else {
+            (ctx.accounts.conditional_vault.token_1_fail_vault.to_account_info(), ctx.accounts.conditional_vault.token_0_fail_vault.to_account_info())
+        };
         // Provide liquidity to fail_amm
-        let fail_user_base_account = user_base_account.clone();
-        let fail_user_quote_account = user_quote_account.clone();
         let fail_amm_cpi_accounts = amm::cpi::accounts::AddOrRemoveLiquidity {
             amm: ctx.accounts.amm.fail_amm.to_account_info(),
             user: ctx.accounts.pool.to_account_info(),
             lp_mint: ctx.accounts.amm.fail_lp_mint.to_account_info(),
             user_lp_account: ctx.accounts.amm.pool_fail_lp_account.to_account_info(),
-            user_base_account: fail_user_base_account,
-            user_quote_account: fail_user_quote_account,
+            user_base_account,
+            user_quote_account,
             vault_ata_base: ctx.accounts.amm.fail_amm_vault_ata_base.to_account_info(),
             vault_ata_quote: ctx.accounts.amm.fail_amm_vault_ata_quote.to_account_info(),
             token_program: ctx.accounts.raydium.token_program.to_account_info(),

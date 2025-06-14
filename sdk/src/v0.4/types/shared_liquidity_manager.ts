@@ -1,6 +1,11 @@
 export type SharedLiquidityManager = {
   version: "0.1.0";
   name: "shared_liquidity_manager";
+  docs: [
+    "Developers can implement their own heap by defining their own",
+    "`#[global_allocator]`.  The following implements a dummy for test purposes",
+    "but can be flushed out with whatever the developer sees fit."
+  ];
   instructions: [
     {
       name: "initializePool";
@@ -675,6 +680,11 @@ export type SharedLiquidityManager = {
 export const IDL: SharedLiquidityManager = {
   version: "0.1.0",
   name: "shared_liquidity_manager",
+  docs: [
+    "Developers can implement their own heap by defining their own",
+    "`#[global_allocator]`.  The following implements a dummy for test purposes",
+    "but can be flushed out with whatever the developer sees fit.",
+  ],
   instructions: [
     {
       name: "initializePool",

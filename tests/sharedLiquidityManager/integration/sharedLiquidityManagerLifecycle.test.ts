@@ -117,7 +117,7 @@ export default async function () {
 
   // Third, initialize a SharedLiquidityManager for the DAO / Raydium spot pool
 
-  await sharedLiquidityManagerClient.initializePoolIx(dao, poolStateKp.publicKey, token0Mint, token1Mint).rpc();
+  await sharedLiquidityManagerClient.initializePoolIx(dao, poolStateKp.publicKey, token0Mint, token1Mint).preInstructions([ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 256 })]).rpc();
 
   // Fourth, we provide liquidity to the pool
   const [pool] = getSharedLiquidityPoolAddr(
@@ -139,7 +139,7 @@ export default async function () {
     new BN(3162258560), // Let Raydium calculate the LP token amount
     depositAmount0,
     depositAmount1
-  ).rpc();
+  ).preInstructions([ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 256 })]).rpc();
 
   const storedUnderlyingPool = await cpSwap.account.poolState.fetch(poolStateKp.publicKey);
   console.log("storedUnderlyingPool", storedUnderlyingPool);
@@ -320,13 +320,18 @@ export default async function () {
   const messageV0 = new TransactionMessage({
     payerKey: this.payer.publicKey,
     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-    instructions: initProposalWithLiquidityTx.instructions.concat(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })),
+    instructions: [
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+    ].concat(initProposalWithLiquidityTx.instructions)
   }).compileToV0Message([storedLookupTable]);
+
 
   console.log("messageV0", messageV0);
 
   let tx = new VersionedTransaction(messageV0);
   tx.sign([this.payer]);
+
 
   console.log("tx size", tx.serialize().length);
 
