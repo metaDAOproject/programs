@@ -293,43 +293,43 @@ export class SharedLiquidityManagerClient {
       //     true
       //   ),
       // },
-      // amm: {
-      //   passAmm,
-      //   failAmm,
-      //   passLpMint,
-      //   failLpMint,
-      //   poolPassLpAccount: getAssociatedTokenAddressSync(
-      //     passLpMint,
-      //     pool,
-      //     true
-      //   ),
-      //   poolFailLpAccount: getAssociatedTokenAddressSync(
-      //     failLpMint,
-      //     pool,
-      //     true
-      //   ),
-      //   passAmmVaultAtaBase: getAssociatedTokenAddressSync(
-      //     token0Mint,
-      //     passAmm,
-      //     true
-      //   ),
-      //   passAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-      //     token1Mint,
-      //     passAmm,
-      //     true
-      //   ),
-      //   failAmmVaultAtaBase: getAssociatedTokenAddressSync(
-      //     token0Mint,
-      //     failAmm,
-      //     true
-      //   ),
-      //   failAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-      //     token1Mint,
-      //     failAmm,
-      //     true
-      //   ),
-      //   ammProgram: AMM_PROGRAM_ID,
-      // },
+      amm: {
+        passAmm,
+        failAmm,
+        passLpMint,
+        failLpMint,
+        poolPassLpAccount: getAssociatedTokenAddressSync(
+          passLpMint,
+          pool,
+          true
+        ),
+        poolFailLpAccount: getAssociatedTokenAddressSync(
+          failLpMint,
+          pool,
+          true
+        ),
+        passAmmVaultAtaBase: getAssociatedTokenAddressSync(
+          token0Mint,
+          passAmm,
+          true
+        ),
+        passAmmVaultAtaQuote: getAssociatedTokenAddressSync(
+          token1Mint,
+          passAmm,
+          true
+        ),
+        failAmmVaultAtaBase: getAssociatedTokenAddressSync(
+          token0Mint,
+          failAmm,
+          true
+        ),
+        failAmmVaultAtaQuote: getAssociatedTokenAddressSync(
+          token1Mint,
+          failAmm,
+          true
+        ),
+        ammProgram: AMM_PROGRAM_ID,
+      },
       dao,
       autocratProgram: AUTOCRAT_PROGRAM_ID,
       systemProgram: SystemProgram.programId,

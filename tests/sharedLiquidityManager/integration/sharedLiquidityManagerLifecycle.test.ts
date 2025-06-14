@@ -220,6 +220,21 @@ export default async function () {
     ? [passQuoteMint, failQuoteMint]
     : [passBaseMint, failBaseMint];
 
+  // Initialize pool pass and fail LP accounts
+  await this.createTokenAccount(passLp, pool, true);
+  await this.createTokenAccount(failLp, pool, true);
+
+  // Initialize AMM vault accounts
+  await this.createTokenAccount(token0Mint, passAmm, true);
+  await this.createTokenAccount(token1Mint, passAmm, true);
+  await this.createTokenAccount(token0Mint, failAmm, true);
+  await this.createTokenAccount(token1Mint, failAmm, true);
+
+  // Initialize conditional token accounts
+  // await this.createTokenAccount(token0PassMint, pool, true);
+  // await this.createTokenAccount(token0FailMint, pool, true);
+  // await this.createTokenAccount(token1PassMint, pool, true);
+  // await this.createTokenAccount(token1FailMint, pool, true);
 
   let initProposalWithLiquidityTx = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
     dao,

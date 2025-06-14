@@ -421,6 +421,66 @@ export type SharedLiquidityManager = {
           ];
         },
         {
+          name: "amm";
+          accounts: [
+            {
+              name: "passAmm";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failAmm";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passLpMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failLpMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "poolPassLpAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "poolFailLpAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passAmmVaultAtaBase";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passAmmVaultAtaQuote";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failAmmVaultAtaBase";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failAmmVaultAtaQuote";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "ammProgram";
+              isMut: false;
+              isSigner: false;
+            }
+          ];
+        },
+        {
           name: "dao";
           isMut: true;
           isSigner: false;
@@ -1019,6 +1079,66 @@ export const IDL: SharedLiquidityManager = {
             },
             {
               name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "amm",
+          accounts: [
+            {
+              name: "passAmm",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failAmm",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passLpMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failLpMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "poolPassLpAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "poolFailLpAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passAmmVaultAtaBase",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passAmmVaultAtaQuote",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failAmmVaultAtaBase",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failAmmVaultAtaQuote",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "ammProgram",
               isMut: false,
               isSigner: false,
             },
