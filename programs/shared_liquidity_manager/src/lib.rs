@@ -9,7 +9,6 @@ declare_id!("EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d");
 mod state;
 mod instructions;
 
-use state::SharedLiquidityPool;
 use instructions::*;
 
 // TODO:

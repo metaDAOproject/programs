@@ -231,35 +231,12 @@ export default async function () {
   await this.createTokenAccount(token0Mint, failAmm, true);
   await this.createTokenAccount(token1Mint, failAmm, true);
 
-  return;
-
   let initProposalWithLiquidityTx = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
     dao,
     poolStateKp.publicKey,
-    proposal,
-    question,
-    vault0,
-    vault1,
-    token0Mint,
-    token1Mint,
-    passAmm,
-    failAmm,
-    passLp,
-    failLp,
-    token0PassMint,
-    token0FailMint,
-    token.getAssociatedTokenAddressSync(token0PassMint, pool, true),
-    token.getAssociatedTokenAddressSync(token0FailMint, pool, true),
-    token1PassMint,
-    token1FailMint,
-    token.getAssociatedTokenAddressSync(token1PassMint, pool, true),
-    token.getAssociatedTokenAddressSync(token1FailMint, pool, true),
     META,
     USDC,
-    passBaseMint,
-    passQuoteMint,
-    failBaseMint,
-    failQuoteMint
+    proposal,
   ).transaction();
 
   const slot = await this.banksClient.getSlot();

@@ -1,25 +1,20 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount};
-use conditional_vault::cpi::accounts::InteractWithVault;
-use conditional_vault::cpi::split_tokens;
-use raydium_cpmm_cpi::cpi::accounts::Withdraw;
-use raydium_cpmm_cpi::cpi::withdraw;
+
+use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 
 use crate::state::SharedLiquidityPool;
 
 #[derive(Accounts)]
 pub struct RaydiumAccounts<'info> {
     #[account(mut)]
-    pub spot_pool_state: AccountLoader<'info, raydium_cpmm_cpi::states::PoolState>,
+    pub spot_pool: AccountLoader<'info, raydium_cpmm_cpi::states::PoolState>,
     #[account(mut)]
-    pub token_0_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    pub spot_pool_base_vault: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub token_1_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    pub spot_pool_quote_vault: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub lp_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
-    #[account(mut)]
-    pub pool_lp_token_account:
-        Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
     /// CHECK: Raydium authority PDA
     pub raydium_authority: UncheckedAccount<'info>,
     pub token_program: Program<'info, anchor_spl::token::Token>,
@@ -105,6 +100,7 @@ pub struct InitializeProposalWithLiquidity<'info> {
         has_one = sl_pool_spot_lp_vault,
         has_one = base_mint,
         has_one = quote_mint,
+        constraint = sl_pool.spot_pool == raydium.spot_pool.key()
     )]
     pub sl_pool: Account<'info, SharedLiquidityPool>,
     pub proposal_creator: Signer<'info>,
@@ -125,10 +121,10 @@ pub struct InitializeProposalWithLiquidity<'info> {
     pub raydium: RaydiumAccounts<'info>,
 
     // Conditional vault accounts
-    pub conditional_vault: ConditionalVaultAccounts<'info>,
+    // pub conditional_vault: ConditionalVaultAccounts<'info>,
 
     // AMM accounts
-    pub amm: AmmAccounts<'info>,
+    // pub amm: AmmAccounts<'info>,
 
     // Autocrat accounts
     #[account(mut)]
@@ -140,16 +136,56 @@ pub struct InitializeProposalWithLiquidity<'info> {
 impl InitializeProposalWithLiquidity<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         // 1. Withdraw half of the pool's LP tokens from Raydium
-        let pool_lp_balance = ctx.accounts.raydium.pool_lp_token_account.amount;
+        let pool_lp_balance = ctx.accounts.sl_pool_spot_lp_vault.amount;
         require!(pool_lp_balance > 0, ErrorCode::NoLpTokensInPool);
         let half_lp = pool_lp_balance / 2;
         require!(half_lp > 0, ErrorCode::NotEnoughLpTokens);
 
-        // // Get initial token balances
-        // let initial_token0_balance = ctx.accounts.token_0_vault.amount;
-        // let initial_token1_balance = ctx.accounts.token_1_vault.amount;
+        // Get initial token balances
+        let initial_base_balance = ctx.accounts.sl_pool_base_vault.amount;
+        let initial_quote_balance = ctx.accounts.sl_pool_quote_vault.amount;
 
-        // // Prepare Raydium Withdraw CPI accounts
+        let (token_0_account, token_1_account, vault_0_mint, vault_1_mint, token_0_vault, token_1_vault) = if ctx.accounts.sl_pool.is_base_token_0 {
+            (ctx.accounts.sl_pool_base_vault.to_account_info(), ctx.accounts.sl_pool_quote_vault.to_account_info(), ctx.accounts.base_mint.to_account_info(), ctx.accounts.quote_mint.to_account_info(), ctx.accounts.raydium.spot_pool_base_vault.to_account_info(), ctx.accounts.raydium.spot_pool_quote_vault.to_account_info())
+        } else {
+            (ctx.accounts.sl_pool_quote_vault.to_account_info(), ctx.accounts.sl_pool_base_vault.to_account_info(), ctx.accounts.quote_mint.to_account_info(), ctx.accounts.base_mint.to_account_info(), ctx.accounts.raydium.spot_pool_quote_vault.to_account_info(), ctx.accounts.raydium.spot_pool_base_vault.to_account_info())
+        };
+
+        let spot_pool_key = ctx.accounts.raydium.spot_pool.key();
+        let dao_key = ctx.accounts.dao.key();
+        let seeds = &[
+            b"sl_pool".as_ref(),
+            dao_key.as_ref(),
+            spot_pool_key.as_ref(),
+            &[ctx.accounts.sl_pool.pda_bump],
+        ];
+        let signer = &[&seeds[..]];
+
+        // Withdraw half from Raydium
+        raydium_cpmm_cpi::cpi::withdraw(
+            CpiContext::new_with_signer(
+                ctx.accounts.raydium.cp_swap_program.to_account_info(),
+                RaydiumWithdraw {
+                    owner: ctx.accounts.sl_pool.to_account_info(),
+                    authority: ctx.accounts.raydium.raydium_authority.to_account_info(),
+                    pool_state: ctx.accounts.raydium.spot_pool.to_account_info(),
+                    lp_mint: ctx.accounts.raydium.lp_mint.to_account_info(),
+                    memo_program: ctx.accounts.raydium.memo_program.to_account_info(),
+                    owner_lp_token: ctx.accounts.sl_pool_spot_lp_vault.to_account_info(),
+                    token_0_account,
+                    token_1_account,
+                    vault_0_mint,
+                    vault_1_mint,
+                    token_0_vault,
+                    token_1_vault,
+                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                    token_program_2022: ctx.accounts.raydium.token_program_2022.to_account_info(),
+                },
+                signer,
+            ),
+            half_lp, 0, 0
+        )?;
+
         // let cpi_accounts = Withdraw {
         //     owner: ctx.accounts.pool.to_account_info(),
         //     authority: ctx.accounts.raydium.raydium_authority.to_account_info(),
@@ -166,15 +202,7 @@ impl InitializeProposalWithLiquidity<'_> {
         //     lp_mint: ctx.accounts.raydium.lp_mint.to_account_info(),
         //     memo_program: ctx.accounts.raydium.memo_program.to_account_info(),
         // };
-        // let spot_pool_state = ctx.accounts.raydium.spot_pool_state.key();
-        // let dao = ctx.accounts.dao.key();
-        // let seeds = &[
-        //     b"pool".as_ref(),
-        //     spot_pool_state.as_ref(),
-        //     dao.as_ref(),
-        //     &[ctx.accounts.pool.pda_bump],
-        // ];
-        // let signer = &[&seeds[..]];
+        
         // let cpi_ctx = CpiContext::new_with_signer(
         //     ctx.accounts.raydium.cp_swap_program.to_account_info(),
         //     cpi_accounts,

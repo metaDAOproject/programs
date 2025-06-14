@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 
 use crate::state::SharedLiquidityPool;
-use raydium_cpmm_cpi::states::PoolState;
 
 #[event_cpi]
 #[derive(Accounts)]
