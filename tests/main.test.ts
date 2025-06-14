@@ -21,7 +21,7 @@ import {
 //   getVersion,
 //   VersionKey
 // } from "@metadaoproject/futarchy";
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -46,6 +46,9 @@ const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
 );
 const STREAMFLOW_ESCROW_PROGRAM_ID = new PublicKey(
   "ESCRoWj8QUJ5cTXCBWbGpW6AzaaEAtRbZuwKp8c4YYGs"
+);
+export const STREAMFLOW_VESTING_PROGRAM_ID = new PublicKey(
+  "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m"
 );
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
@@ -74,6 +77,10 @@ before(async function () {
         name: "streamflow_escrow",
         programId: STREAMFLOW_ESCROW_PROGRAM_ID,
       },
+      {
+        name: "streamflow_vesting",
+        programId: STREAMFLOW_VESTING_PROGRAM_ID,
+      }
     ],
     [
       {
@@ -104,6 +111,24 @@ before(async function () {
           owner: token.TOKEN_PROGRAM_ID,
           lamports: 377_950_832_219,
         },
+      },
+      {
+        address: new PublicKey("B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT"),
+        info: {
+          data: fs.readFileSync("./tests/fixtures/fee-oracle"),
+          executable: false,
+          owner: new PublicKey("pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa"),
+          lamports: 1_000_000_000,
+        }
+      },
+      {
+        address: new PublicKey("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"),
+        info: {
+          data: Buffer.alloc(0),
+          executable: false,
+          owner: SystemProgram.programId,
+          lamports: 32_000_000_000,
+        }
       },
     ]
   );

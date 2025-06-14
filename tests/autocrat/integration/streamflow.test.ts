@@ -20,6 +20,7 @@ import { BN } from "bn.js";
 
 import { StreamflowEscrow, IDL as StreamflowEscrowIDL } from "../../fixtures/streamflow_escrow.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { STREAMFLOW_VESTING_PROGRAM_ID } from "../../main.test.js";
 // import { IDL as StreamflowEscrowIDL } from "../../fixtures/streamflow_escrow.json";
 
 
@@ -62,11 +63,11 @@ export const deriveEscrowPDA = (
 export default async function() {
   let ammClient: AmmClient;
   let autocratClient: AutocratClient;
-  let META: PublicKey;
+  let RAY: PublicKey;
   let USDC: PublicKey;
   let amm: PublicKey;
 
-  META = await createMint(
+  RAY = await createMint(
     this.banksClient,
     this.payer,
     this.payer.publicKey,
@@ -81,9 +82,11 @@ export default async function() {
     6
   );
 
-  await this.createTokenAccount(META, this.payer.publicKey);
+  await this.createTokenAccount(RAY, this.payer.publicKey);
+  await this.createTokenAccount(USDC, this.payer.publicKey);
 
-  await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+  await this.mintTo(RAY, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+  await this.mintTo(USDC, this.payer.publicKey, this.payer, 1000000 * 10 ** 6);
 
   autocratClient = this.autocratClient;
   ammClient = this.ammClient;
@@ -102,10 +105,25 @@ export default async function() {
   const vestingAmountPerPeriod = new BN(1);
   const vestingCliffAmount = new BN(500000);
 
-  const orderKey = deriveOrderPDA(STREAMFLOW_ESCROW_PROGRAM_ID, authority, META, orderNonce);
-  const vaultKey = token.getAssociatedTokenAddressSync(META, orderKey, true);
+  const orderKey = deriveOrderPDA(STREAMFLOW_ESCROW_PROGRAM_ID, authority, RAY, orderNonce);
+  const vaultKey = token.getAssociatedTokenAddressSync(RAY, orderKey, true);
 
-  
+  // const treasury = Keypair.generate();
+
+  // // Send 1 SOL to treasury
+  // const tx = new anchor.web3.Transaction();
+  // tx.add(
+  //   anchor.web3.SystemProgram.transfer({
+  //     fromPubkey: this.payer.publicKey,
+  //     toPubkey: treasury.publicKey,
+  //     lamports: 1_000_000_000, // 1 SOL = 1 billion lamports
+  //   })
+  // );
+  // tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  // console.log('recentBlockhash', tx.recentBlockhash);
+  // tx.feePayer = this.payer.publicKey;
+  // tx.sign(this.payer);
+  // await this.banksClient.processTransaction(tx);
 
   console.log('Creating vested order:', orderKey.toBase58());
   await escrow.methods
@@ -123,20 +141,22 @@ export default async function() {
     })
     .accounts({
       creator: authority,
-      baseMint: META,
+      baseMint: RAY,
       quoteMint: USDC,
       order: orderKey,
       vault: vaultKey,
-      from: token.getAssociatedTokenAddressSync(META, authority),
+      from: token.getAssociatedTokenAddressSync(RAY, authority),
       executor: null,
       partner: null,
     })
     .rpc();
 
     const fillNonce = 0;
-  const fromKey = getAssociatedTokenAddressSync(USDC, authority, true);
-  const toBaseKey = getAssociatedTokenAddressSync(META, authority, true);
-  const toQuoteKey = getAssociatedTokenAddressSync(USDC, authority, true);
+
+  // await this.createTokenAccount(RAY, treasury.publicKey);
+  // await this.createTokenAccount(USDC, treasury.publicKey);
+  // await this.mintTo(USDC, treasury.publicKey, this.payer, 1000000 * 10 ** 6);
+
   const contractKeypair = Keypair.generate();
   const contractKey = contractKeypair.publicKey;
   const escrowKey = deriveEscrowPDA(STREAMFLOW_ESCROW_PROGRAM_ID, contractKey);
@@ -148,22 +168,23 @@ export default async function() {
     .accounts({
       common: {
         executor: authority,
-        from: fromKey,
-        toBase: toBaseKey,
+        from: token.getAssociatedTokenAddressSync(USDC, authority),
+        toBase: token.getAssociatedTokenAddressSync(RAY, authority),
         order: orderKey,
-        toQuote: toQuoteKey,
+        toQuote: token.getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
         baseTokenProgram: token.TOKEN_PROGRAM_ID,
         quotaTokenProgram: token.TOKEN_PROGRAM_ID,
         vault: vaultKey,
         creator: authority,
-        baseMint: META,
+        baseMint: RAY,
         quoteMint: USDC,
       },
       streamMetadata: contractKey,
+      withdrawor: new PublicKey("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"),
+      feeOracle: new PublicKey("B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT"),
       escrowTokens: escrowKey,
-
     })
-    .accounts({ executionRecord: recordKey, streamflowProgram: STREAMFLOW_ESCROW_PROGRAM_ID })
+    .accounts({ executionRecord: recordKey, streamflowProgram: STREAMFLOW_VESTING_PROGRAM_ID })
     .signers([contractKeypair])
     .rpc();
 
