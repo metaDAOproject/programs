@@ -156,7 +156,7 @@ export default async function () {
   // Fifth, have a proposer come along and create a proposal through the SharedLiquidityManager
 
     // const nonce = new BN(Math.random() * 2 ** 50);
-    const nonce = new BN(0);
+    const nonce = new BN(12329);
 
     let [proposal] = getProposalAddr(
       AUTOCRAT_PROGRAM_ID,
@@ -241,7 +241,12 @@ export default async function () {
     poolStateKp.publicKey,
     META,
     USDC,
-    proposal,
+    nonce,
+    {
+      programId: META,
+      accounts: [],
+      data: Buffer.from([])
+    }
   ).transaction();
 
   const slot = await this.banksClient.getSlot();
@@ -313,7 +318,6 @@ export default async function () {
     state: AddressLookupTableAccount.deserialize(rawStoredLookupTable.data),
   });
 
-
   const messageV0 = new TransactionMessage({
     payerKey: this.payer.publicKey,
     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
@@ -334,8 +338,6 @@ export default async function () {
   await this.createTokenAccount(passLp, daoTreasury, true);
   await this.createTokenAccount(failLp, daoTreasury, true);
 
-
-
   console.log("tx size", tx.serialize().length);
 
   await this.banksClient.processTransaction(tx);
@@ -345,6 +347,8 @@ export default async function () {
   console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
   console.log("token0PassMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0PassMint, slPool, true)));
   console.log("token0FailMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0FailMint, slPool, true)));
+
+  console.log(await autocratClient.getProposal(proposal));
 
   // Sixth, someone bids in pass market
 

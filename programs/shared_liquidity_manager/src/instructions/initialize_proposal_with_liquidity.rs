@@ -1,10 +1,43 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount};
 
-use autocrat::ProposalInstruction;
 use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 
 use crate::state::SharedLiquidityPool;
+
+#[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq)]
+pub struct ProposalAccount {
+    pub pubkey: Pubkey,
+    pub is_signer: bool,
+    pub is_writable: bool,
+}
+
+#[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq)]
+pub struct ProposalInstruction {
+    pub program_id: Pubkey,
+    pub accounts: Vec<ProposalAccount>,
+    pub data: Vec<u8>,
+}
+
+impl From<ProposalInstruction> for autocrat::ProposalInstruction {
+    fn from(instruction: ProposalInstruction) -> Self {
+        Self {
+            program_id: instruction.program_id,
+            accounts: instruction.accounts.into_iter().map(|acc| autocrat::ProposalAccount {
+                pubkey: acc.pubkey,
+                is_signer: acc.is_signer,
+                is_writable: acc.is_writable,
+            }).collect(),
+            data: instruction.data,
+        }
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct InitializeProposalWithLiquidityParams {
+    pub instruction: ProposalInstruction,
+    pub nonce: u64,
+}
 
 #[derive(Accounts)]
 pub struct RaydiumAccounts<'info> {
@@ -142,7 +175,7 @@ pub struct InitializeProposalWithLiquidity<'info> {
 }
 
 impl InitializeProposalWithLiquidity<'_> {
-    pub fn handle(ctx: Context<Self>) -> Result<()> {
+    pub fn handle(ctx: Context<Self>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
         // 1. Withdraw half of the pool's LP tokens from Raydium
         let pool_lp_balance = ctx.accounts.sl_pool_spot_lp_vault.amount;
         require!(pool_lp_balance > 0, ErrorCode::NoLpTokensInPool);
@@ -393,8 +426,6 @@ impl InitializeProposalWithLiquidity<'_> {
             }
         )?;
 
-        // Initialize proposal
-
         autocrat::cpi::initialize_proposal(
             CpiContext::new_with_signer(
                 ctx.accounts.autocrat_program.to_account_info(),
@@ -423,14 +454,10 @@ impl InitializeProposalWithLiquidity<'_> {
             ),
             autocrat::instructions::InitializeProposalParams {
                 description_url: "".to_string(),
-                instruction: ProposalInstruction {
-                    program_id: ctx.accounts.autocrat_program.key(),
-                    accounts: vec![],
-                    data: vec![],
-                },
+                instruction: params.instruction.into(),
                 pass_lp_tokens_to_lock: quote_withdrawn,
                 fail_lp_tokens_to_lock: quote_withdrawn,
-                nonce: 0,
+                nonce: params.nonce,
             }
         )?;
 

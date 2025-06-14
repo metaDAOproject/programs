@@ -189,9 +189,9 @@ export type SharedLiquidityManager = {
       ];
       args: [
         {
-          name: "args";
+          name: "params";
           type: {
-            defined: "DepositSharedLiquidityArgs";
+            defined: "DepositSharedLiquidityParams";
           };
         }
       ];
@@ -516,7 +516,14 @@ export type SharedLiquidityManager = {
           isSigner: false;
         }
       ];
-      args: [];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "InitializeProposalWithLiquidityParams";
+          };
+        }
+      ];
     },
     {
       name: "removeProposalLiquidity";
@@ -651,7 +658,7 @@ export type SharedLiquidityManager = {
   ];
   types: [
     {
-      name: "DepositSharedLiquidityArgs";
+      name: "DepositSharedLiquidityParams";
       type: {
         kind: "struct";
         fields: [
@@ -668,6 +675,68 @@ export type SharedLiquidityManager = {
           {
             name: "maxBaseTokenAmount";
             docs: ["The maximum amount of base tokens to deposit"];
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "ProposalAccount";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "pubkey";
+            type: "publicKey";
+          },
+          {
+            name: "isSigner";
+            type: "bool";
+          },
+          {
+            name: "isWritable";
+            type: "bool";
+          }
+        ];
+      };
+    },
+    {
+      name: "ProposalInstruction";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "programId";
+            type: "publicKey";
+          },
+          {
+            name: "accounts";
+            type: {
+              vec: {
+                defined: "ProposalAccount";
+              };
+            };
+          },
+          {
+            name: "data";
+            type: "bytes";
+          }
+        ];
+      };
+    },
+    {
+      name: "InitializeProposalWithLiquidityParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "instruction";
+            type: {
+              defined: "ProposalInstruction";
+            };
+          },
+          {
+            name: "nonce";
             type: "u64";
           }
         ];
@@ -888,9 +957,9 @@ export const IDL: SharedLiquidityManager = {
       ],
       args: [
         {
-          name: "args",
+          name: "params",
           type: {
-            defined: "DepositSharedLiquidityArgs",
+            defined: "DepositSharedLiquidityParams",
           },
         },
       ],
@@ -1215,7 +1284,14 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
       ],
-      args: [],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "InitializeProposalWithLiquidityParams",
+          },
+        },
+      ],
     },
     {
       name: "removeProposalLiquidity",
@@ -1350,7 +1426,7 @@ export const IDL: SharedLiquidityManager = {
   ],
   types: [
     {
-      name: "DepositSharedLiquidityArgs",
+      name: "DepositSharedLiquidityParams",
       type: {
         kind: "struct",
         fields: [
@@ -1367,6 +1443,68 @@ export const IDL: SharedLiquidityManager = {
           {
             name: "maxBaseTokenAmount",
             docs: ["The maximum amount of base tokens to deposit"],
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "ProposalAccount",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pubkey",
+            type: "publicKey",
+          },
+          {
+            name: "isSigner",
+            type: "bool",
+          },
+          {
+            name: "isWritable",
+            type: "bool",
+          },
+        ],
+      },
+    },
+    {
+      name: "ProposalInstruction",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "programId",
+            type: "publicKey",
+          },
+          {
+            name: "accounts",
+            type: {
+              vec: {
+                defined: "ProposalAccount",
+              },
+            },
+          },
+          {
+            name: "data",
+            type: "bytes",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeProposalWithLiquidityParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "instruction",
+            type: {
+              defined: "ProposalInstruction",
+            },
+          },
+          {
+            name: "nonce",
             type: "u64",
           },
         ],

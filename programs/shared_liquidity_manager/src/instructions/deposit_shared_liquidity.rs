@@ -9,7 +9,7 @@ use raydium_cpmm_cpi::cpi::accounts::Deposit as RaydiumDeposit;
 use raydium_cpmm_cpi::states::PoolState as RaydiumPoolState;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct DepositSharedLiquidityArgs {
+pub struct DepositSharedLiquidityParams {
     /// The amount of LP tokens to mint
     pub lp_token_amount: u64,
     /// The maximum amount of quote tokens to deposit
@@ -111,7 +111,7 @@ impl DepositSharedLiquidity<'_> {
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>, args: DepositSharedLiquidityArgs) -> Result<()> {
+    pub fn handle(ctx: Context<Self>, params: DepositSharedLiquidityParams) -> Result<()> {
         // Ensure the pool is not being used by an active proposal
         require!(
             ctx.accounts.sl_pool.active_proposal.is_none(),
@@ -141,8 +141,8 @@ impl DepositSharedLiquidity<'_> {
                 ctx.accounts.spot_pool_quote_vault.to_account_info(),
                 ctx.accounts.base_mint.to_account_info(),
                 ctx.accounts.quote_mint.to_account_info(),
-                args.max_base_token_amount,
-                args.max_quote_token_amount,
+                params.max_base_token_amount,
+                params.max_quote_token_amount,
             )
         } else {
             (
@@ -152,8 +152,8 @@ impl DepositSharedLiquidity<'_> {
                 ctx.accounts.spot_pool_base_vault.to_account_info(),
                 ctx.accounts.quote_mint.to_account_info(),
                 ctx.accounts.base_mint.to_account_info(),
-                args.max_quote_token_amount,
-                args.max_base_token_amount,
+                params.max_quote_token_amount,
+                params.max_base_token_amount,
             )
         };
 
@@ -176,7 +176,7 @@ impl DepositSharedLiquidity<'_> {
                     lp_mint: ctx.accounts.spot_pool_lp_mint.to_account_info(),
                 },
             ),
-            args.lp_token_amount,
+            params.lp_token_amount,
             maximum_token_0_amount,
             maximum_token_1_amount,
         )?;
@@ -192,7 +192,7 @@ impl DepositSharedLiquidity<'_> {
                     authority: ctx.accounts.user.to_account_info(),
                 },
             ),
-            args.lp_token_amount,
+            params.lp_token_amount,
             ctx.accounts.spot_pool_lp_mint.decimals,
         )?;
 
@@ -200,7 +200,7 @@ impl DepositSharedLiquidity<'_> {
         ctx.accounts.user_sl_pool_position.set_inner(LiquidityPosition {
             owner: ctx.accounts.user.key(),
             pool: ctx.accounts.sl_pool.key(),
-            underlying_spot_lp_shares: args.lp_token_amount,
+            underlying_spot_lp_shares: params.lp_token_amount,
             bump: ctx.bumps.user_sl_pool_position,
         });
 

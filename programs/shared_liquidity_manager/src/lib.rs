@@ -12,12 +12,10 @@ mod instructions;
 use instructions::*;
 
 // TODO:
-// - provide_liquidity
-// - remove_my_liquidity
-// - initialize_proposal_with_liquidity
-// - remove_proposal_liquidity
-
-
+// - add a proposer fee
+// - implement withdraw
+// - implement remove_proposal_liquidity
+// - add a proposal instruction
 
 #[program]
 pub mod shared_liquidity_manager {
@@ -27,16 +25,16 @@ pub mod shared_liquidity_manager {
         InitializeSharedLiquidityPool::handle(ctx)
     }
 
-    pub fn deposit_shared_liquidity(ctx: Context<DepositSharedLiquidity>, args: DepositSharedLiquidityArgs) -> Result<()> {
-        DepositSharedLiquidity::handle(ctx, args)
+    pub fn deposit_shared_liquidity(ctx: Context<DepositSharedLiquidity>, params: DepositSharedLiquidityParams) -> Result<()> {
+        DepositSharedLiquidity::handle(ctx, params)
     }
 
     pub fn withdraw_shared_liquidity(ctx: Context<WithdrawSharedLiquidity>) -> Result<()> {
         WithdrawSharedLiquidity::handle(ctx)
     }
 
-    pub fn initialize_proposal_with_liquidity(ctx: Context<InitializeProposalWithLiquidity>) -> Result<()> {
-        InitializeProposalWithLiquidity::handle(ctx)
+    pub fn initialize_proposal_with_liquidity(ctx: Context<InitializeProposalWithLiquidity>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
+        InitializeProposalWithLiquidity::handle(ctx, params)
     }
 
     pub fn remove_proposal_liquidity(ctx: Context<RemoveProposalLiquidity>) -> Result<()> {
