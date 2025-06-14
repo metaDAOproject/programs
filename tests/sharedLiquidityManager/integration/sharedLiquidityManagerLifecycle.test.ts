@@ -85,12 +85,12 @@ export default async function () {
 
   const [lpMint] = getRaydiumCpmmLpMintAddr(poolStateKp.publicKey, false);
 
-  console.log("META", META.toBuffer().toString("hex"));
-  console.log("USDC", USDC.toBuffer().toString("hex"));
+  console.log("META", META.toBuffer());
+  console.log("USDC", USDC.toBuffer());
   console.log("META < USDC", META.toBuffer() < USDC.toBuffer());
 
   // Determine which token should be token0 (smaller address)
-  const [token0Mint, token1Mint] = META.toBuffer() < USDC.toBuffer() 
+  const [token0Mint, token1Mint] = META.toBuffer().compare(USDC.toBuffer()) < 0
     ? [META, USDC] 
     : [USDC, META];
 
@@ -311,6 +311,7 @@ export default async function () {
   console.log("tx size", tx.serialize().length);
 
   await this.banksClient.processTransaction(tx);
+
 
   console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
   console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));

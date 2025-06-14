@@ -311,6 +311,171 @@ export type SharedLiquidityManager = {
           ];
         },
         {
+          name: "conditionalVault";
+          accounts: [
+            {
+              name: "question";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseVaultUnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quoteVaultUnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "conditionalVaultProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "passBaseMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failBaseMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passQuoteMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failQuoteMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "slPoolPassBaseVault";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "slPoolFailBaseVault";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "slPoolPassQuoteVault";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "slPoolFailQuoteVault";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "vaultEventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "slPool";
+              isMut: false;
+              isSigner: false;
+            }
+          ];
+        },
+        {
+          name: "amm";
+          accounts: [
+            {
+              name: "passAmm";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failAmm";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passLpMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failLpMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "slPoolPassLpAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "poolFailLpAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passAmmVaultAtaBase";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passAmmVaultAtaQuote";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failAmmVaultAtaBase";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failAmmVaultAtaQuote";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "ammProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "eventAuthority";
+              isMut: false;
+              isSigner: false;
+            }
+          ];
+        },
+        {
           name: "dao";
           isMut: true;
           isSigner: false;
@@ -824,6 +989,171 @@ export const IDL: SharedLiquidityManager = {
             },
             {
               name: "memoProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "conditionalVault",
+          accounts: [
+            {
+              name: "question",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseVaultUnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quoteVaultUnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "conditionalVaultProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "passBaseMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failBaseMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passQuoteMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failQuoteMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "slPoolPassBaseVault",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "slPoolFailBaseVault",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "slPoolPassQuoteVault",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "slPoolFailQuoteVault",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "vaultEventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "slPool",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "amm",
+          accounts: [
+            {
+              name: "passAmm",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failAmm",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passLpMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failLpMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "slPoolPassLpAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "poolFailLpAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passAmmVaultAtaBase",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passAmmVaultAtaQuote",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failAmmVaultAtaBase",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failAmmVaultAtaQuote",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "ammProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "eventAuthority",
               isMut: false,
               isSigner: false,
             },

@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount};
 
+use autocrat::ProposalInstruction;
 use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 
 use crate::state::SharedLiquidityPool;
@@ -33,34 +34,34 @@ pub struct ConditionalVaultAccounts<'info> {
     pub base_vault: Account<'info, conditional_vault::state::ConditionalVault>,
     #[account(mut)]
     pub quote_vault: Account<'info, conditional_vault::state::ConditionalVault>,
-    #[account(mut)]
-    pub base_underlying_token_account: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
-    pub quote_underlying_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut, address = base_vault.underlying_token_account)]
+    pub base_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut, address = quote_vault.underlying_token_account)]
+    pub quote_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
     pub conditional_vault_program: Program<'info, conditional_vault::program::ConditionalVault>,
     #[account(mut)]
-    pub token_0_pass_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
+    pub pass_base_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
-    pub token_0_fail_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
+    pub fail_base_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
-    pub token_1_pass_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
+    pub pass_quote_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
-    pub token_1_fail_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
-    #[account(init, payer = payer, token::mint = token_0_pass_mint, token::authority = pool)]
-    pub token_0_pass_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(init, payer = payer, token::mint = token_0_fail_mint, token::authority = pool)]
-    pub token_0_fail_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(init, payer = payer, token::mint = token_1_pass_mint, token::authority = pool)]
-    pub token_1_pass_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(init, payer = payer, token::mint = token_1_fail_mint, token::authority = pool)]
-    pub token_1_fail_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
+    pub fail_quote_mint: Box<Account<'info, Mint>>,
+    #[account(init, payer = payer, token::mint = pass_base_mint, token::authority = sl_pool)]
+    pub sl_pool_pass_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(init, payer = payer, token::mint = fail_base_mint, token::authority = sl_pool)]
+    pub sl_pool_fail_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(init, payer = payer, token::mint = pass_quote_mint, token::authority = sl_pool)]
+    pub sl_pool_pass_quote_vault: Box<Account<'info, TokenAccount>>,
+    #[account(init, payer = payer, token::mint = fail_quote_mint, token::authority = sl_pool)]
+    pub sl_pool_fail_quote_vault: Box<Account<'info, TokenAccount>>,
     /// CHECK: verified by conditional_vault
     pub vault_event_authority: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub token_program: Program<'info, anchor_spl::token::Token>,
     pub system_program: Program<'info, System>,
-    pub pool: Account<'info, SharedLiquidityPool>,
+    pub sl_pool: Account<'info, SharedLiquidityPool>,
 }
 
 #[derive(Accounts)]
@@ -74,7 +75,7 @@ pub struct AmmAccounts<'info> {
     #[account(mut)]
     pub fail_lp_mint: Box<Account<'info, anchor_spl::token::Mint>>,
     #[account(mut)]
-    pub pool_pass_lp_account: Box<Account<'info, anchor_spl::token::TokenAccount>>,
+    pub sl_pool_pass_lp_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub pool_fail_lp_account: Box<Account<'info, anchor_spl::token::TokenAccount>>,
     #[account(mut)]
@@ -121,10 +122,10 @@ pub struct InitializeProposalWithLiquidity<'info> {
     pub raydium: RaydiumAccounts<'info>,
 
     // Conditional vault accounts
-    // pub conditional_vault: ConditionalVaultAccounts<'info>,
+    pub conditional_vault: ConditionalVaultAccounts<'info>,
 
     // AMM accounts
-    // pub amm: AmmAccounts<'info>,
+    pub amm: AmmAccounts<'info>,
 
     // Autocrat accounts
     #[account(mut)]
@@ -145,10 +146,31 @@ impl InitializeProposalWithLiquidity<'_> {
         let initial_base_balance = ctx.accounts.sl_pool_base_vault.amount;
         let initial_quote_balance = ctx.accounts.sl_pool_quote_vault.amount;
 
-        let (token_0_account, token_1_account, vault_0_mint, vault_1_mint, token_0_vault, token_1_vault) = if ctx.accounts.sl_pool.is_base_token_0 {
-            (ctx.accounts.sl_pool_base_vault.to_account_info(), ctx.accounts.sl_pool_quote_vault.to_account_info(), ctx.accounts.base_mint.to_account_info(), ctx.accounts.quote_mint.to_account_info(), ctx.accounts.raydium.spot_pool_base_vault.to_account_info(), ctx.accounts.raydium.spot_pool_quote_vault.to_account_info())
+        let (
+            token_0_account,
+            token_1_account,
+            vault_0_mint,
+            vault_1_mint,
+            token_0_vault,
+            token_1_vault,
+        ) = if ctx.accounts.sl_pool.is_base_token_0 {
+            (
+                ctx.accounts.sl_pool_base_vault.to_account_info(),
+                ctx.accounts.sl_pool_quote_vault.to_account_info(),
+                ctx.accounts.base_mint.to_account_info(),
+                ctx.accounts.quote_mint.to_account_info(),
+                ctx.accounts.raydium.spot_pool_base_vault.to_account_info(),
+                ctx.accounts.raydium.spot_pool_quote_vault.to_account_info(),
+            )
         } else {
-            (ctx.accounts.sl_pool_quote_vault.to_account_info(), ctx.accounts.sl_pool_base_vault.to_account_info(), ctx.accounts.quote_mint.to_account_info(), ctx.accounts.base_mint.to_account_info(), ctx.accounts.raydium.spot_pool_quote_vault.to_account_info(), ctx.accounts.raydium.spot_pool_base_vault.to_account_info())
+            (
+                ctx.accounts.sl_pool_quote_vault.to_account_info(),
+                ctx.accounts.sl_pool_base_vault.to_account_info(),
+                ctx.accounts.quote_mint.to_account_info(),
+                ctx.accounts.base_mint.to_account_info(),
+                ctx.accounts.raydium.spot_pool_quote_vault.to_account_info(),
+                ctx.accounts.raydium.spot_pool_base_vault.to_account_info(),
+            )
         };
 
         let spot_pool_key = ctx.accounts.raydium.spot_pool.key();
@@ -183,185 +205,194 @@ impl InitializeProposalWithLiquidity<'_> {
                 },
                 signer,
             ),
-            half_lp, 0, 0
+            half_lp,
+            0,
+            0,
         )?;
 
-        // let cpi_accounts = Withdraw {
-        //     owner: ctx.accounts.pool.to_account_info(),
-        //     authority: ctx.accounts.raydium.raydium_authority.to_account_info(),
-        //     pool_state: ctx.accounts.raydium.spot_pool_state.to_account_info(),
-        //     owner_lp_token: ctx.accounts.raydium.pool_lp_token_account.to_account_info(),
-        //     token_0_account: ctx.accounts.token_0_vault.to_account_info(),
-        //     token_1_account: ctx.accounts.token_1_vault.to_account_info(),
-        //     token_0_vault: ctx.accounts.raydium.token_0_vault.to_account_info(),
-        //     token_1_vault: ctx.accounts.raydium.token_1_vault.to_account_info(),
-        //     token_program: ctx.accounts.raydium.token_program.to_account_info(),
-        //     token_program_2022: ctx.accounts.raydium.token_program_2022.to_account_info(),
-        //     vault_0_mint: ctx.accounts.token_0_mint.to_account_info(),
-        //     vault_1_mint: ctx.accounts.token_1_mint.to_account_info(),
-        //     lp_mint: ctx.accounts.raydium.lp_mint.to_account_info(),
-        //     memo_program: ctx.accounts.raydium.memo_program.to_account_info(),
-        // };
-        
-        // let cpi_ctx = CpiContext::new_with_signer(
-        //     ctx.accounts.raydium.cp_swap_program.to_account_info(),
-        //     cpi_accounts,
-        //     signer,
-        // );
-        // // 0 minimums as per user request
-        // withdraw(
-        //     cpi_ctx,
-        //     half_lp,
-        //     0,
-        //     0,
-        // )?;
+        // Calculate how many tokens we got from the withdraw
 
-        // // Calculate how many tokens we got from the withdraw
+        ctx.accounts.sl_pool_base_vault.reload()?;
+        ctx.accounts.sl_pool_quote_vault.reload()?;
 
-        // ctx.accounts.token_0_vault.reload()?;
-        // ctx.accounts.token_1_vault.reload()?;
+        let base_withdrawn = ctx.accounts.sl_pool_base_vault.amount - initial_base_balance;
+        let quote_withdrawn = ctx.accounts.sl_pool_quote_vault.amount - initial_quote_balance;
 
-        // let token0_withdrawn = ctx.accounts.token_0_vault.amount - initial_token0_balance;
-        // let token1_withdrawn = ctx.accounts.token_1_vault.amount - initial_token1_balance;
+        require!(base_withdrawn > 0, ErrorCode::NotEnoughLpTokens);
+        require!(quote_withdrawn > 0, ErrorCode::NotEnoughLpTokens);
 
-        // require!(token0_withdrawn > 0, ErrorCode::NotEnoughLpTokens);
-        // require!(token1_withdrawn > 0, ErrorCode::NotEnoughLpTokens);
+        // Split base
+        conditional_vault::cpi::split_tokens(
+            CpiContext::new_with_signer(
+                ctx.accounts
+                    .conditional_vault
+                    .conditional_vault_program
+                    .to_account_info(),
+                conditional_vault::cpi::accounts::InteractWithVault {
+                    question: ctx.accounts.conditional_vault.question.to_account_info(),
+                    vault: ctx.accounts.conditional_vault.base_vault.to_account_info(),
+                    vault_underlying_token_account: ctx
+                        .accounts
+                        .conditional_vault
+                        .base_vault_underlying_token_account
+                        .to_account_info(),
+                    authority: ctx.accounts.sl_pool.to_account_info(),
+                    user_underlying_token_account: ctx
+                        .accounts
+                        .sl_pool_base_vault
+                        .to_account_info(),
+                    event_authority: ctx
+                        .accounts
+                        .conditional_vault
+                        .vault_event_authority
+                        .to_account_info(),
+                    program: ctx
+                        .accounts
+                        .conditional_vault
+                        .conditional_vault_program
+                        .to_account_info(),
+                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                },
+                signer,
+            )
+            .with_remaining_accounts(vec![
+                ctx.accounts
+                    .conditional_vault
+                    .fail_base_mint
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .pass_base_mint
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .sl_pool_fail_base_vault
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .sl_pool_pass_base_vault
+                    .to_account_info(),
+            ]),
+            base_withdrawn,
+        )?;
 
-        // // Split token_0
-        // conditional_vault::cpi::split_tokens(
-        //     CpiContext::new_with_signer(
-        //         ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
-        //         conditional_vault::cpi::accounts::InteractWithVault {
-        //             question: ctx.accounts.conditional_vault.question.to_account_info(),
-        //             vault: ctx.accounts.conditional_vault.vault_0.to_account_info(),
-        //             vault_underlying_token_account: ctx.accounts.conditional_vault.vault_0_underlying_token_account.to_account_info(),
-        //             authority: ctx.accounts.pool.to_account_info(),
-        //             user_underlying_token_account: ctx.accounts.token_0_vault.to_account_info(),
-        //             event_authority: ctx.accounts.conditional_vault.vault_event_authority.to_account_info(),
-        //             program: ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
-        //             token_program: ctx.accounts.raydium.token_program.to_account_info(),
-        //         },
-        //         signer,
-        //     ).with_remaining_accounts(vec![
-        //         ctx.accounts.conditional_vault.token_0_fail_mint.to_account_info(),
-        //         ctx.accounts.conditional_vault.token_0_pass_mint.to_account_info(),
-        //         ctx.accounts.conditional_vault.token_0_fail_vault.to_account_info(),
-        //         ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info(),
-        //     ]),
-        //     token0_withdrawn,
-        // )?;
+        // Split quote
+        conditional_vault::cpi::split_tokens(
+            CpiContext::new_with_signer(
+                ctx.accounts
+                    .conditional_vault
+                    .conditional_vault_program
+                    .to_account_info(),
+                conditional_vault::cpi::accounts::InteractWithVault {
+                    question: ctx.accounts.conditional_vault.question.to_account_info(),
+                    vault: ctx.accounts.conditional_vault.quote_vault.to_account_info(),
+                    vault_underlying_token_account: ctx
+                        .accounts
+                        .conditional_vault
+                        .quote_vault_underlying_token_account
+                        .to_account_info(),
+                    authority: ctx.accounts.sl_pool.to_account_info(),
+                    user_underlying_token_account: ctx
+                        .accounts
+                        .sl_pool_quote_vault
+                        .to_account_info(),
+                    event_authority: ctx
+                        .accounts
+                        .conditional_vault
+                        .vault_event_authority
+                        .to_account_info(),
+                    program: ctx
+                        .accounts
+                        .conditional_vault
+                        .conditional_vault_program
+                        .to_account_info(),
+                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                },
+                signer,
+            )
+            .with_remaining_accounts(vec![
+                ctx.accounts
+                    .conditional_vault
+                    .fail_quote_mint
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .pass_quote_mint
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .sl_pool_fail_quote_vault
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .sl_pool_pass_quote_vault
+                    .to_account_info(),
+            ]),
+            quote_withdrawn,
+        )?;
 
-        // // Split token_1
-        // conditional_vault::cpi::split_tokens(
-        //     CpiContext::new_with_signer(
-        //         ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
-        //         conditional_vault::cpi::accounts::InteractWithVault {
-        //             question: ctx.accounts.conditional_vault.question.to_account_info(),
-        //             vault: ctx.accounts.conditional_vault.vault_1.to_account_info(),
-        //             vault_underlying_token_account: ctx.accounts.conditional_vault.vault_1_underlying_token_account.to_account_info(),
-        //             authority: ctx.accounts.pool.to_account_info(),
-        //             user_underlying_token_account: ctx.accounts.token_1_vault.to_account_info(),
-        //             event_authority: ctx.accounts.conditional_vault.vault_event_authority.to_account_info(),
-        //             program: ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
-        //             token_program: ctx.accounts.raydium.token_program.to_account_info(),
-        //         },
-        //         signer,
-        //     ).with_remaining_accounts(vec![
-        //         ctx.accounts.conditional_vault.token_1_fail_mint.to_account_info(),
-        //         ctx.accounts.conditional_vault.token_1_pass_mint.to_account_info(),
-        //         ctx.accounts.conditional_vault.token_1_fail_vault.to_account_info(),
-        //         ctx.accounts.conditional_vault.token_1_pass_vault.to_account_info(),
-        //     ]),
-        //     token1_withdrawn,
-        // )?;
+        // LP into the pass and fail AMMs
 
-        // // let (user_base_account, user_quote_account) = if ctx.accounts.token_0_mint.key() < ctx.accounts.token_1_mint.key() {
-        // //     (ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info(), ctx.accounts.conditional_vault.token_1_pass_vault.to_account_info())
-        // // } else {
-        // //     (ctx.accounts.conditional_vault.token_1_pass_vault.to_account_info(), ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info())
-        // // };
+        require_eq!(ctx.accounts.amm.pass_lp_mint.supply, 0);
+        require_eq!(ctx.accounts.amm.fail_lp_mint.supply, 0);
 
-        // // msg!("user_base_account: {:?}", );
-
-        // let (user_base_account, user_quote_account, quote_amount, max_base_amount) = if ctx.accounts.amm.pass_amm.base_mint.key() == ctx.accounts.token_0_mint.key() {
-        //     (ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info(), ctx.accounts.conditional_vault.token_1_pass_vault.to_account_info(), token1_withdrawn, token0_withdrawn)
-        // } else {
-        //     (ctx.accounts.conditional_vault.token_1_pass_vault.to_account_info(), ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info(), token0_withdrawn, token1_withdrawn)
-        // };
-
-        // // Provide liquidity to pass_amm
-        // let pass_amm_cpi_accounts = amm::cpi::accounts::AddOrRemoveLiquidity {
-        //     amm: ctx.accounts.amm.pass_amm.to_account_info(),
-        //     user: ctx.accounts.pool.to_account_info(),
-        //     lp_mint: ctx.accounts.amm.pass_lp_mint.to_account_info(),
-        //     user_lp_account: ctx.accounts.amm.pool_pass_lp_account.to_account_info(),
-        //     user_base_account,
-        //     user_quote_account,
-        //     vault_ata_base: ctx.accounts.amm.pass_amm_vault_ata_base.to_account_info(),
-        //     vault_ata_quote: ctx.accounts.amm.pass_amm_vault_ata_quote.to_account_info(),
-        //     token_program: ctx.accounts.raydium.token_program.to_account_info(),
-        //     program: ctx.accounts.amm.amm_program.to_account_info(),
-        //     event_authority: ctx.accounts.amm.event_authority.to_account_info(),
-        // };
-
-        // let pass_amm_cpi_ctx = CpiContext::new_with_signer(
-        //     ctx.accounts.amm.amm_program.to_account_info(),
-        //     pass_amm_cpi_accounts,
-        //     signer,
-        // );
-
-        // require_eq!(ctx.accounts.amm.pass_lp_mint.supply, 0);
-        // require_eq!(ctx.accounts.amm.fail_lp_mint.supply, 0);
-
-        // // Add liquidity to pass_amm with the withdrawn amounts
-        // amm::cpi::add_liquidity(
-        //     pass_amm_cpi_ctx,
-        //     amm::instructions::AddLiquidityArgs {
-        //         quote_amount,
-        //         max_base_amount,
-        //         min_lp_tokens: 0, // We're okay with any amount of LP tokens since this is the first deposit
-        //     },
-        // )?;
-
-        // let (user_base_account, user_quote_account) = if ctx.accounts.amm.pass_amm.base_mint.key() == ctx.accounts.token_0_mint.key() {
-        //     (ctx.accounts.conditional_vault.token_0_fail_vault.to_account_info(), ctx.accounts.conditional_vault.token_1_fail_vault.to_account_info())
-        // } else {
-        //     (ctx.accounts.conditional_vault.token_1_fail_vault.to_account_info(), ctx.accounts.conditional_vault.token_0_fail_vault.to_account_info())
-        // };
-        // // Provide liquidity to fail_amm
-        // let fail_amm_cpi_accounts = amm::cpi::accounts::AddOrRemoveLiquidity {
-        //     amm: ctx.accounts.amm.fail_amm.to_account_info(),
-        //     user: ctx.accounts.pool.to_account_info(),
-        //     lp_mint: ctx.accounts.amm.fail_lp_mint.to_account_info(),
-        //     user_lp_account: ctx.accounts.amm.pool_fail_lp_account.to_account_info(),
-        //     user_base_account,
-        //     user_quote_account,
-        //     vault_ata_base: ctx.accounts.amm.fail_amm_vault_ata_base.to_account_info(),
-        //     vault_ata_quote: ctx.accounts.amm.fail_amm_vault_ata_quote.to_account_info(),
-        //     token_program: ctx.accounts.raydium.token_program.to_account_info(),
-        //     program: ctx.accounts.amm.amm_program.to_account_info(),
-        //     event_authority: ctx.accounts.amm.event_authority.to_account_info(),
-        // };
-
-        // let fail_amm_cpi_ctx = CpiContext::new_with_signer(
-        //     ctx.accounts.amm.amm_program.to_account_info(),
-        //     fail_amm_cpi_accounts,
-        //     signer,
-        // );
-
-        // require_eq!(ctx.accounts.amm.fail_lp_mint.supply, 0);
-
-        // // Add liquidity to fail_amm with the withdrawn amounts
-        // amm::cpi::add_liquidity(
-        //     fail_amm_cpi_ctx,
-        //     amm::instructions::AddLiquidityArgs {
-        //         quote_amount,
-        //         max_base_amount,
-        //         min_lp_tokens: 0, // We're okay with any amount of LP tokens since this is the first deposit
-        //     },
-        // )?;
+        amm::cpi::add_liquidity(
+            CpiContext::new_with_signer(
+                ctx.accounts.amm.amm_program.to_account_info(),
+                amm::cpi::accounts::AddOrRemoveLiquidity {
+                    amm: ctx.accounts.amm.pass_amm.to_account_info(),
+                    user: ctx.accounts.sl_pool.to_account_info(),
+                    user_lp_account: ctx.accounts.amm.sl_pool_pass_lp_account.to_account_info(),
+                    user_base_account: ctx.accounts.conditional_vault.sl_pool_pass_base_vault.to_account_info(),
+                    user_quote_account: ctx.accounts.conditional_vault.sl_pool_pass_quote_vault.to_account_info(),
+                    vault_ata_base: ctx.accounts.amm.pass_amm_vault_ata_base.to_account_info(),
+                    vault_ata_quote: ctx.accounts.amm.pass_amm_vault_ata_quote.to_account_info(),
+                    event_authority: ctx.accounts.amm.event_authority.to_account_info(),
+                    program: ctx.accounts.amm.amm_program.to_account_info(),
+                    lp_mint: ctx.accounts.amm.pass_lp_mint.to_account_info(),
+                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                },
+                signer,
+            ),
+            amm::instructions::AddLiquidityArgs {
+                max_base_amount: base_withdrawn,
+                quote_amount: quote_withdrawn,
+                min_lp_tokens: quote_withdrawn,
+            }
+        )?;
 
         // TODO: Step 4: Lock all received LP tokens into autocrat proposal
+        // autocrat::cpi::initialize_proposal(
+        //     CpiContext::new(
+        //         ctx.accounts.autocrat_program.to_account_info(),
+        //         autocrat::cpi::accounts::InitializeProposal {
+        //             proposal: ctx.accounts.proposal.to_account_info(),
+        //             dao: ctx.accounts.dao.to_account_info(),
+        //             question: ctx.accounts.conditional_vault.question.to_account_info(),
+        //             quote_vault: ctx.accounts.conditional_vault.quote_vault.to_account_info(),
+        //             base_vault: ctx.accounts.conditional_vault.base_vault.to_account_info(),
+        //             pass_amm: ctx.accounts.amm.pass_amm.to_account_info(),
+        //             pass_lp_mint: ctx.accounts.amm.pass_lp_mint.to_account_info(),
+        //             fail_amm: ctx.accounts.amm.fail_amm.to_account_info(),
+        //             fail_lp_mint: ctx.accounts.amm.fail_lp_mint.to_account_info(),
+        //             pass_lp_user_account: ctx.accounts.amm.pool_pass_lp_account.to_account_info(),
+        //             fail_lp_user_account: ctx.accounts.amm.pool_fail_lp_account.to_account_info(),
+        //             pass_lp_vault_account: ctx.accounts.amm.pass_amm_vault_ata_base.to_account_info(),
+        //             fail_lp_vault_account: ctx.accounts.amm.fail_amm_vault_ata_base.to_account_info(),
+        //         },
+        //     ),
+        //     autocrat::instructions::InitializeProposalParams {
+        //         description_url: "".to_string(),
+        //         instruction: ProposalInstruction {
+        //             program_id: ctx.accounts.autocrat_program.key(),
+        //             accounts: vec![],
+        //             data: vec![],
+        //         },
+        //         pass_lp_tokens_to_lock: half_lp,
+        //         fail_lp_tokens_to_lock: half_lp,
+        //         nonce: 0,
+        //     }
+        // )?;
 
         Ok(())
     }
