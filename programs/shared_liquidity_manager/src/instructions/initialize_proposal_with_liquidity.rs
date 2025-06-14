@@ -54,13 +54,13 @@ pub struct ConditionalVaultAccounts<'info> {
     pub token_1_pass_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
     #[account(mut)]
     pub token_1_fail_mint: Box<InterfaceAccount<'info, anchor_spl::token_interface::Mint>>,
-    #[account(init, payer = payer, token::mint = token_0_pass_mint, token::authority = token_0_pass_vault)]
+    #[account(init, payer = payer, token::mint = token_0_pass_mint, token::authority = pool)]
     pub token_0_pass_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(init, payer = payer, token::mint = token_0_fail_mint, token::authority = token_0_fail_vault)]
+    #[account(init, payer = payer, token::mint = token_0_fail_mint, token::authority = pool)]
     pub token_0_fail_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(init, payer = payer, token::mint = token_1_pass_mint, token::authority = token_1_pass_vault)]
+    #[account(init, payer = payer, token::mint = token_1_pass_mint, token::authority = pool)]
     pub token_1_pass_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
-    #[account(init, payer = payer, token::mint = token_1_fail_mint, token::authority = token_1_fail_vault)]
+    #[account(init, payer = payer, token::mint = token_1_fail_mint, token::authority = pool)]
     pub token_1_fail_vault: Box<InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>>,
     /// CHECK: verified by conditional_vault
     pub vault_event_authority: UncheckedAccount<'info>,
@@ -68,6 +68,7 @@ pub struct ConditionalVaultAccounts<'info> {
     pub payer: Signer<'info>,
     pub token_program: Program<'info, anchor_spl::token::Token>,
     pub system_program: Program<'info, System>,
+    pub pool: Account<'info, SharedLiquidityPool>,
 }
 
 #[derive(Accounts)]
@@ -105,6 +106,8 @@ pub struct AmmAccounts<'info> {
     #[account(mut)]
     pub fail_amm_vault_ata_quote: Box<Account<'info, anchor_spl::token::TokenAccount>>,
     pub amm_program: Program<'info, amm::program::Amm>,
+    /// CHECK: verified by amm
+    pub event_authority: UncheckedAccount<'info>,
 }
 
 #[event_cpi]
@@ -254,7 +257,91 @@ impl InitializeProposalWithLiquidity<'_> {
             token1_withdrawn,
         )?;
 
-        // TODO: Step 3: Provide liquidity to pass_amm and fail_amm using conditional tokens
+        // let (user_base_account, user_quote_account) = if ctx.accounts.token_0_mint.key() < ctx.accounts.token_1_mint.key() {
+        //     (ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info(), ctx.accounts.conditional_vault.token_1_pass_vault.to_account_info())
+        // } else {
+        //     (ctx.accounts.conditional_vault.token_1_pass_vault.to_account_info(), ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info())
+        // };
+
+        // msg!("user_base_account: {:?}", );
+
+        let (user_base_account, user_quote_account, quote_amount, max_base_amount) = if ctx.accounts.amm.pass_amm.base_mint.key() == ctx.accounts.token_0_mint.key() {
+            (ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info(), ctx.accounts.conditional_vault.token_1_pass_vault.to_account_info(), token1_withdrawn, token0_withdrawn)
+        } else {
+            (ctx.accounts.conditional_vault.token_1_pass_vault.to_account_info(), ctx.accounts.conditional_vault.token_0_pass_vault.to_account_info(), token0_withdrawn, token1_withdrawn)
+        };
+
+        // Provide liquidity to pass_amm
+        let pass_user_base_account = user_base_account.clone();
+        let pass_user_quote_account = user_quote_account.clone();
+        let pass_amm_cpi_accounts = amm::cpi::accounts::AddOrRemoveLiquidity {
+            amm: ctx.accounts.amm.pass_amm.to_account_info(),
+            user: ctx.accounts.pool.to_account_info(),
+            lp_mint: ctx.accounts.amm.pass_lp_mint.to_account_info(),
+            user_lp_account: ctx.accounts.amm.pool_pass_lp_account.to_account_info(),
+            user_base_account: pass_user_base_account,
+            user_quote_account: pass_user_quote_account,
+            vault_ata_base: ctx.accounts.amm.pass_amm_vault_ata_base.to_account_info(),
+            vault_ata_quote: ctx.accounts.amm.pass_amm_vault_ata_quote.to_account_info(),
+            token_program: ctx.accounts.raydium.token_program.to_account_info(),
+            program: ctx.accounts.amm.amm_program.to_account_info(),
+            event_authority: ctx.accounts.amm.event_authority.to_account_info(),
+        };
+
+        let pass_amm_cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.amm.amm_program.to_account_info(),
+            pass_amm_cpi_accounts,
+            signer,
+        );
+
+        require_eq!(ctx.accounts.amm.pass_lp_mint.supply, 0);
+        require_eq!(ctx.accounts.amm.fail_lp_mint.supply, 0);
+
+        // Add liquidity to pass_amm with the withdrawn amounts
+        amm::cpi::add_liquidity(
+            pass_amm_cpi_ctx,
+            amm::instructions::AddLiquidityArgs {
+                quote_amount,
+                max_base_amount,
+                min_lp_tokens: 0, // We're okay with any amount of LP tokens since this is the first deposit
+            },
+        )?;
+
+        // Provide liquidity to fail_amm
+        let fail_user_base_account = user_base_account.clone();
+        let fail_user_quote_account = user_quote_account.clone();
+        let fail_amm_cpi_accounts = amm::cpi::accounts::AddOrRemoveLiquidity {
+            amm: ctx.accounts.amm.fail_amm.to_account_info(),
+            user: ctx.accounts.pool.to_account_info(),
+            lp_mint: ctx.accounts.amm.fail_lp_mint.to_account_info(),
+            user_lp_account: ctx.accounts.amm.pool_fail_lp_account.to_account_info(),
+            user_base_account: fail_user_base_account,
+            user_quote_account: fail_user_quote_account,
+            vault_ata_base: ctx.accounts.amm.fail_amm_vault_ata_base.to_account_info(),
+            vault_ata_quote: ctx.accounts.amm.fail_amm_vault_ata_quote.to_account_info(),
+            token_program: ctx.accounts.raydium.token_program.to_account_info(),
+            program: ctx.accounts.amm.amm_program.to_account_info(),
+            event_authority: ctx.accounts.amm.event_authority.to_account_info(),
+        };
+
+        let fail_amm_cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.amm.amm_program.to_account_info(),
+            fail_amm_cpi_accounts,
+            signer,
+        );
+
+        require_eq!(ctx.accounts.amm.fail_lp_mint.supply, 0);
+
+        // Add liquidity to fail_amm with the withdrawn amounts
+        amm::cpi::add_liquidity(
+            fail_amm_cpi_ctx,
+            amm::instructions::AddLiquidityArgs {
+                quote_amount,
+                max_base_amount,
+                min_lp_tokens: 0, // We're okay with any amount of LP tokens since this is the first deposit
+            },
+        )?;
+
         // TODO: Step 4: Lock all received LP tokens into autocrat proposal
 
         Ok(())

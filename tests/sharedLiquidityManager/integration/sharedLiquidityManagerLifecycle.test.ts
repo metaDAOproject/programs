@@ -256,7 +256,13 @@ export default async function () {
     token1PassMint,
     token1FailMint,
     token.getAssociatedTokenAddressSync(token1PassMint, pool, true),
-    token.getAssociatedTokenAddressSync(token1FailMint, pool, true)
+    token.getAssociatedTokenAddressSync(token1FailMint, pool, true),
+    META,
+    USDC,
+    passBaseMint,
+    passQuoteMint,
+    failBaseMint,
+    failQuoteMint
   ).transaction();
 
   const slot = await this.banksClient.getSlot();

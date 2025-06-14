@@ -417,6 +417,11 @@ export type SharedLiquidityManager = {
               name: "systemProgram";
               isMut: false;
               isSigner: false;
+            },
+            {
+              name: "pool";
+              isMut: false;
+              isSigner: false;
             }
           ];
         },
@@ -475,6 +480,11 @@ export type SharedLiquidityManager = {
             },
             {
               name: "ammProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "eventAuthority";
               isMut: false;
               isSigner: false;
             }
@@ -1082,6 +1092,11 @@ export const IDL: SharedLiquidityManager = {
               isMut: false,
               isSigner: false,
             },
+            {
+              name: "pool",
+              isMut: false,
+              isSigner: false,
+            },
           ],
         },
         {
@@ -1139,6 +1154,11 @@ export const IDL: SharedLiquidityManager = {
             },
             {
               name: "ammProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "eventAuthority",
               isMut: false,
               isSigner: false,
             },

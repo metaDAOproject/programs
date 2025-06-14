@@ -191,7 +191,13 @@ export class SharedLiquidityManagerClient {
     token1PassMint: PublicKey,
     token1FailMint: PublicKey,
     token1PassVault: PublicKey,
-    token1FailVault: PublicKey
+    token1FailVault: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    passBaseMint: PublicKey,
+    passQuoteMint: PublicKey,
+    failBaseMint: PublicKey,
+    failQuoteMint: PublicKey
   ) {
     const [pool] = getSharedLiquidityPoolAddr(
       this.program.programId,
@@ -270,6 +276,7 @@ export class SharedLiquidityManagerClient {
         vaultEventAuthority: getEventAuthorityAddr(
           CONDITIONAL_VAULT_PROGRAM_ID
         )[0],
+        pool,
       },
       // conditionalTokens: {
       //   poolPToken0Account: getAssociatedTokenAddressSync(
@@ -309,26 +316,27 @@ export class SharedLiquidityManagerClient {
           true
         ),
         passAmmVaultAtaBase: getAssociatedTokenAddressSync(
-          token0Mint,
+          passBaseMint,
           passAmm,
           true
         ),
         passAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-          token1Mint,
+          passQuoteMint,
           passAmm,
           true
         ),
         failAmmVaultAtaBase: getAssociatedTokenAddressSync(
-          token0Mint,
+          token0FailMint,
           failAmm,
           true
         ),
         failAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-          token1Mint,
+          token1FailMint,
           failAmm,
           true
         ),
         ammProgram: AMM_PROGRAM_ID,
+        eventAuthority: getEventAuthorityAddr(AMM_PROGRAM_ID)[0],
       },
       dao,
       autocratProgram: AUTOCRAT_PROGRAM_ID,
