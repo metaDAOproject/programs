@@ -99,8 +99,25 @@ export default async function () {
     sharedLiquidityManagerClient.getProgramId()
   );
 
-  const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
-  console.log("storedDraftProposal", storedDraftProposal);
+  let storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+  assert.equal(storedDraftProposal.stakedTokenAmount.toString(), "0");
+
+  await sharedLiquidityManagerClient.stakeToDraftProposalIx(draftProposal, META, new BN(100)).rpc();
+
+  storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+
+  const [stakeRecord] = PublicKey.findProgramAddressSync(
+    [Buffer.from("stake_record"), draftProposal.toBuffer(), this.payer.publicKey.toBuffer()],
+    sharedLiquidityManagerClient.getProgramId()
+  );
+  const storedStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(stakeRecord);
+
+  assert.equal(storedStakeRecord.staker.toString(), this.payer.publicKey.toString());
+  assert.equal(storedStakeRecord.amount.toString(), "100");
+  assert.equal(storedDraftProposal.stakedTokenAmount.toString(), "100");
+
+  console.log("storedStakeRecord", storedStakeRecord);
+
   return;
 
   // Third, initialize a proposal with liquidity

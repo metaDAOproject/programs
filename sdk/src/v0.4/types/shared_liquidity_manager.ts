@@ -219,6 +219,69 @@ export type SharedLiquidityManager = {
       ];
     },
     {
+      name: "stakeToDraftProposal";
+      accounts: [
+        {
+          name: "draftProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "staker";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "stakerTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "stakedTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "stakeRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "StakeToDraftProposalParams";
+          };
+        }
+      ];
+    },
+    {
       name: "initializeProposalWithLiquidity";
       accounts: [
         {
@@ -927,6 +990,10 @@ export type SharedLiquidityManager = {
             type: "publicKey";
           },
           {
+            name: "baseMint";
+            type: "publicKey";
+          },
+          {
             name: "instruction";
             type: {
               defined: "ProposalInstruction";
@@ -1080,6 +1147,22 @@ export type SharedLiquidityManager = {
           }
         ];
       };
+    },
+    {
+      name: "stakeRecord";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "staker";
+            type: "publicKey";
+          },
+          {
+            name: "amount";
+            type: "u64";
+          }
+        ];
+      };
     }
   ];
   types: [
@@ -1133,6 +1216,18 @@ export type SharedLiquidityManager = {
           },
           {
             name: "quoteAmount";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "StakeToDraftProposalParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
             type: "u64";
           }
         ];
@@ -1427,6 +1522,69 @@ export const IDL: SharedLiquidityManager = {
           name: "params",
           type: {
             defined: "InitializeDraftProposalParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "stakeToDraftProposal",
+      accounts: [
+        {
+          name: "draftProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "staker",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "stakerTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "stakedTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "stakeRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "StakeToDraftProposalParams",
           },
         },
       ],
@@ -2140,6 +2298,10 @@ export const IDL: SharedLiquidityManager = {
             type: "publicKey",
           },
           {
+            name: "baseMint",
+            type: "publicKey",
+          },
+          {
             name: "instruction",
             type: {
               defined: "ProposalInstruction",
@@ -2294,6 +2456,22 @@ export const IDL: SharedLiquidityManager = {
         ],
       },
     },
+    {
+      name: "stakeRecord",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "staker",
+            type: "publicKey",
+          },
+          {
+            name: "amount",
+            type: "u64",
+          },
+        ],
+      },
+    },
   ],
   types: [
     {
@@ -2346,6 +2524,18 @@ export const IDL: SharedLiquidityManager = {
           },
           {
             name: "quoteAmount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "StakeToDraftProposalParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
             type: "u64",
           },
         ],

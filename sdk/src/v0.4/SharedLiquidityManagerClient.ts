@@ -565,6 +565,41 @@ export class SharedLiquidityManagerClient {
       });
   }
 
+  stakeToDraftProposalIx(
+    draftProposal: PublicKey,
+    baseMint: PublicKey,
+    amount: BN
+  ) {
+    const [stakeRecord] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("stake_record"),
+        draftProposal.toBuffer(),
+        this.provider.wallet.publicKey.toBuffer(),
+      ],
+      this.program.programId
+    );
+
+    return this.program.methods
+      .stakeToDraftProposal({
+        amount,
+      })
+      .accounts({
+        draftProposal,
+        staker: this.provider.wallet.publicKey,
+        stakerTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          this.provider.wallet.publicKey,
+          true
+        ),
+        stakedTokenVault: getAssociatedTokenAddressSync(
+          baseMint,
+          draftProposal,
+          true
+        ),
+        stakeRecord,
+      });
+  }
+
   removeProposalLiquidityIx(
     dao: PublicKey,
     spotPool: PublicKey,

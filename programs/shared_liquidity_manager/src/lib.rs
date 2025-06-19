@@ -37,6 +37,10 @@ pub mod shared_liquidity_manager {
         InitializeDraftProposal::handle(ctx, params)
     }
 
+    pub fn stake_to_draft_proposal(ctx: Context<StakeToDraftProposal>, params: StakeToDraftProposalParams) -> Result<()> {
+        StakeToDraftProposal::handle(ctx, params)
+    }
+
 
     // pub fn deposit_shared_liquidity(ctx: Context<DepositSharedLiquidity>, params: DepositSharedLiquidityParams) -> Result<()> {
     //     DepositSharedLiquidity::handle(ctx, params)

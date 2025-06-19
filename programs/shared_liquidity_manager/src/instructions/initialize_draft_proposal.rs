@@ -46,6 +46,7 @@ pub struct InitializeDraftProposal<'info> {
 impl InitializeDraftProposal<'_> {
     pub fn handle(ctx: Context<Self>, params: InitializeDraftProposalParams) -> Result<()> {
         ctx.accounts.draft_proposal.set_inner(DraftProposal {
+            base_mint: ctx.accounts.base_mint.key(),
             instruction: params.instruction,
             staked_token_amount: 0,
             status: DraftProposalStatus::Draft,

@@ -37,6 +37,7 @@ pub enum DraftProposalStatus {
 #[account]
 pub struct DraftProposal {
     pub shared_liquidity_pool: Pubkey,
+    pub base_mint: Pubkey,
     pub instruction: ProposalInstruction,
     pub status: DraftProposalStatus,
     /// The amount of tokens that have been staked on this draft proposal
