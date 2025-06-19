@@ -351,9 +351,112 @@ export default async function () {
   console.log(await autocratClient.getProposal(proposal));
 
   // Sixth, someone bids in pass market
+  // Add some trading activity to make the proposal pass
+  // await ammClient
+  //   .swapIx(
+  //     passAmm,
+  //     passBaseMint,
+  //     passQuoteMint,
+  //     { buy: {} },
+  //     new BN(100).muln(1_000_000), // $100 worth of USDC
+  //     new BN(0)
+  //   )
+  //   .rpc();
 
   // Seventh, proposal is finalized and passes
+  // Need to advance time to meet the proposal timing requirements
+  // The proposal needs to be at least dao.slots_per_proposal old (which is DAY_IN_SLOTS)
+  // and the markets need to be mature enough (duration_in_slots, which is also DAY_IN_SLOTS)
+  
+  // Advance time by DAY_IN_SLOTS to meet the proposal timing requirement
+  await this.advanceBySlots(DAY_IN_SLOTS);
+  
+  // Crank TWAPs multiple times to ensure markets are mature enough
+  // The markets need to have been updated for at least proposal.duration_in_slots
+  for (let i = 0; i < 50; i++) {
+    await this.advanceBySlots(20_000n);
+    
+    await ammClient
+      .crankThatTwapIx(passAmm)
+      .preInstructions([
+        // Add compute unit price to avoid bankrun thinking we've processed the same transaction multiple times
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: i,
+        }),
+        await ammClient.crankThatTwapIx(failAmm).instruction(),
+      ])
+      .rpc();
+  }
 
+  // Finalize the proposal with a pass outcome
+  await autocratClient.finalizeProposal(proposal);
 
   // Eighth, we merge liquidity back into main pool. Check that k has increased
+  // Get initial balances before removing proposal liquidity
+  const initialSpotPoolBaseBalance = await getAccount(this.banksClient, storedUnderlyingPool.token0Vault);
+  const initialSpotPoolQuoteBalance = await getAccount(this.banksClient, storedUnderlyingPool.token1Vault);
+  const initialSlPoolSpotLpBalance = await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(getRaydiumCpmmLpMintAddr(poolStateKp.publicKey, false)[0], slPool, true));
+
+  console.log("Initial spot pool base balance:", initialSpotPoolBaseBalance.amount.toString());
+  console.log("Initial spot pool quote balance:", initialSpotPoolQuoteBalance.amount.toString());
+  console.log("Initial SL pool spot LP balance:", initialSlPoolSpotLpBalance.amount.toString());
+
+  // Remove proposal liquidity using the existing lookup table
+  let removeProposalLiquidityTx = await sharedLiquidityManagerClient.removeProposalLiquidityIx(
+    dao,
+    poolStateKp.publicKey,
+    META,
+    USDC,
+    nonce
+  ).transaction();
+
+  const messageV0Remove = new TransactionMessage({
+    payerKey: this.payer.publicKey,
+    recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+    instructions: [
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+    ].concat(removeProposalLiquidityTx.instructions)
+  }).compileToV0Message([storedLookupTable]);
+
+  let removeTx = new VersionedTransaction(messageV0Remove);
+  removeTx.sign([this.payer]);
+
+  await this.banksClient.processTransaction(removeTx);
+
+  // Verify that the spot pool has more liquidity than before (k has increased)
+  const finalSpotPoolBaseBalance = await getAccount(this.banksClient, storedUnderlyingPool.token0Vault);
+  const finalSpotPoolQuoteBalance = await getAccount(this.banksClient, storedUnderlyingPool.token1Vault);
+  const finalSlPoolSpotLpBalance = await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(getRaydiumCpmmLpMintAddr(poolStateKp.publicKey, false)[0], slPool, true));
+
+  console.log("Final spot pool base balance:", finalSpotPoolBaseBalance.amount.toString());
+  console.log("Final spot pool quote balance:", finalSpotPoolQuoteBalance.amount.toString());
+  console.log("Final SL pool spot LP balance:", finalSlPoolSpotLpBalance.amount.toString());
+
+  // Verify that the spot pool has more liquidity than before (k has increased)
+  const baseIncrease = finalSpotPoolBaseBalance.amount.sub(initialSpotPoolBaseBalance.amount);
+  const quoteIncrease = finalSpotPoolQuoteBalance.amount.sub(initialSpotPoolQuoteBalance.amount);
+  const lpIncrease = finalSlPoolSpotLpBalance.amount.sub(initialSlPoolSpotLpBalance.amount);
+
+  console.log("Base token increase:", baseIncrease.toString());
+  console.log("Quote token increase:", quoteIncrease.toString());
+  console.log("LP token increase:", lpIncrease.toString());
+
+  // Assert that we got back at least 99.5% of the original liquidity
+  const totalOriginalReserves = initialSpotPoolBaseBalance.amount.add(initialSpotPoolQuoteBalance.amount);
+  const totalFinalReserves = finalSpotPoolBaseBalance.amount.add(finalSpotPoolQuoteBalance.amount);
+  const percentageReturned = totalFinalReserves.mul(new BN(10000)).div(totalOriginalReserves).toNumber() / 100;
+
+  console.log("Percentage of reserves returned:", percentageReturned + "%");
+
+  assert(percentageReturned >= 99.5, "Should return at least 99.5% of original reserves");
+  assert(baseIncrease.gt(new BN(0)), "Should have increased base token reserves");
+  assert(quoteIncrease.gt(new BN(0)), "Should have increased quote token reserves");
+  assert(lpIncrease.gt(new BN(0)), "Should have increased LP token supply");
+
+  // Verify that the proposal is no longer active
+  const finalSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);
+  assert(finalSlPool.activeProposal === null, "Active proposal should be cleared");
+
+  console.log("✅ Remove proposal liquidity test passed!");
 }
