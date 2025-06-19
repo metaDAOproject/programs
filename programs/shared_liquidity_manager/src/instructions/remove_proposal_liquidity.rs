@@ -245,13 +245,16 @@ pub struct RemoveProposalLiquidity<'info> {
 }
 
 impl RemoveProposalLiquidity<'_> {
-    pub fn handle(ctx: Context<Self>) -> Result<()> {
-        // Check that the proposal is finalized
+    pub fn validate(&self) -> Result<()> {
         require!(
-            ctx.accounts.cond.question.is_resolved(),
+            self.cond.question.is_resolved(),
             ErrorCode::ProposalNotFinalized
         );
 
+        Ok(())
+    }
+
+    pub fn handle(ctx: Context<Self>) -> Result<()> {
         // Get the proposal outcome to determine which AMM to remove liquidity from
         let question = &ctx.accounts.cond.question;
         let payout_numerators = &question.payout_numerators;

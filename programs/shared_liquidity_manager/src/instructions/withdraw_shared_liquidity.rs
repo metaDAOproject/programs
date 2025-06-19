@@ -23,7 +23,7 @@ pub struct WithdrawSharedLiquidityParams {
 pub struct WithdrawSharedLiquidity<'info> {
     #[account(
         mut,
-        has_one = spot_pool,
+        has_one = active_spot_pool,
         has_one = sl_pool_spot_lp_vault,
         has_one = base_mint,
         has_one = quote_mint,
@@ -31,7 +31,7 @@ pub struct WithdrawSharedLiquidity<'info> {
     pub sl_pool: Account<'info, SharedLiquidityPool>,
 
     #[account(mut)]
-    pub spot_pool: AccountLoader<'info, RaydiumPoolState>,
+    pub active_spot_pool: AccountLoader<'info, RaydiumPoolState>,
 
     #[account(mut)]
     pub sl_pool_spot_lp_vault: Box<Account<'info, TokenAccount>>,
@@ -99,43 +99,33 @@ pub struct WithdrawSharedLiquidity<'info> {
 }
 
 impl WithdrawSharedLiquidity<'_> {
-    pub fn validate(&self) -> Result<()> {
-        let (token_0, token_1) = if self.sl_pool.is_base_token_0 {
-            (self.base_mint.key(), self.quote_mint.key())
-        } else {
-            (self.quote_mint.key(), self.base_mint.key())
-        };
-
-        let spot_pool = self.spot_pool.load()?;
-
-        require_eq!(token_0, spot_pool.token_0_mint);
-        require_eq!(token_1, spot_pool.token_1_mint);
-
+    pub fn validate(&self, params: &WithdrawSharedLiquidityParams) -> Result<()> {
         // Ensure the pool is not being used by an active proposal
         require!(
             self.sl_pool.active_proposal.is_none(),
             CustomError::PoolInUse
         );
 
+        // Validate the position belongs to the user and pool
+        require!(
+            self.user_sl_pool_position.owner == self.user.key(),
+            CustomError::Unauthorized
+        );
+        require!(
+            self.user_sl_pool_position.pool == self.sl_pool.key(),
+            CustomError::InvalidPool
+        );
+
+        require!(
+            self.user_sl_pool_position.underlying_spot_lp_shares >= params.lp_token_amount,
+            CustomError::InsufficientLpShares
+        );
+
         Ok(())
     }
 
     pub fn handle(ctx: Context<Self>, params: WithdrawSharedLiquidityParams) -> Result<()> {
-        // Validate the position belongs to the user and pool
-        require!(
-            ctx.accounts.user_sl_pool_position.owner == ctx.accounts.user.key(),
-            CustomError::Unauthorized
-        );
-        require!(
-            ctx.accounts.user_sl_pool_position.pool == ctx.accounts.sl_pool.key(),
-            CustomError::InvalidPool
-        );
-
-        // Ensure user has enough LP shares to withdraw
-        require!(
-            ctx.accounts.user_sl_pool_position.underlying_spot_lp_shares >= params.lp_token_amount,
-            CustomError::InsufficientLpShares
-        );
+        
 
         // Get initial token balances to calculate how much was withdrawn
         let initial_base_balance = ctx.accounts.user_base_token_account.amount;
@@ -172,7 +162,7 @@ impl WithdrawSharedLiquidity<'_> {
         let seeds = &[
             b"sl_pool".as_ref(),
             ctx.accounts.sl_pool.dao.as_ref(),
-            ctx.accounts.sl_pool.spot_pool.as_ref(),
+            ctx.accounts.sl_pool.active_spot_pool.as_ref(),
             &[ctx.accounts.sl_pool.pda_bump],
         ];
         let signer = &[&seeds[..]];
@@ -184,7 +174,7 @@ impl WithdrawSharedLiquidity<'_> {
                 RaydiumWithdraw {
                     owner: ctx.accounts.sl_pool.to_account_info(),
                     authority: ctx.accounts.raydium_authority.to_account_info(),
-                    pool_state: ctx.accounts.spot_pool.to_account_info(),
+                    pool_state: ctx.accounts.active_spot_pool.to_account_info(),
                     lp_mint: ctx.accounts.spot_pool_lp_mint.to_account_info(),
                     memo_program: ctx.accounts.memo_program.to_account_info(),
                     owner_lp_token: ctx.accounts.sl_pool_spot_lp_vault.to_account_info(),

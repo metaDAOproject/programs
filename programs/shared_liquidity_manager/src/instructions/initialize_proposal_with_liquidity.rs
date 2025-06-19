@@ -3,7 +3,7 @@ use anchor_spl::token::{Mint, TokenAccount};
 
 use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 
-use crate::state::{DraftProposal, ProposalInstruction, SharedLiquidityPool};
+use crate::state::{DraftProposal, DraftProposalStatus, ProposalInstruction, SharedLiquidityPool};
 
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -163,6 +163,8 @@ impl InitializeProposalWithLiquidity<'_> {
         let total_supply = self.base_mint.supply;
         let stake_threshold = (total_supply * self.shared_liquidity_pool.proposal_stake_rate_threshold_bps as u64) / 10_000;
         require_gte!(self.draft_proposal.staked_token_amount, stake_threshold);
+
+        require_eq!(self.draft_proposal.status, DraftProposalStatus::Draft);
 
         Ok(())
     }
@@ -450,6 +452,8 @@ impl InitializeProposalWithLiquidity<'_> {
                 nonce: params.nonce,
             }
         )?;
+
+        ctx.accounts.draft_proposal.status = DraftProposalStatus::Initialized;
 
         Ok(())
     }

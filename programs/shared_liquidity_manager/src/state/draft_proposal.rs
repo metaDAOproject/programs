@@ -28,10 +28,16 @@ impl From<ProposalInstruction> for autocrat::ProposalInstruction {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone, Copy)]
 pub enum DraftProposalStatus {
     Draft,
     Initialized,
+}
+
+impl std::fmt::Display for DraftProposalStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[account]
