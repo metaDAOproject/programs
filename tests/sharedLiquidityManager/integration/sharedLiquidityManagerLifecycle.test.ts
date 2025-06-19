@@ -87,49 +87,31 @@ export default async function () {
 
   const [lpMint] = getRaydiumCpmmLpMintAddr(poolStateKp.publicKey, false);
 
-  console.log("META", META.toBuffer());
-  console.log("USDC", USDC.toBuffer());
-  console.log("META < USDC", META.toBuffer() < USDC.toBuffer());
-
   // Determine which token should be token0 (smaller address)
   const [token0Mint, token1Mint] = META.toBuffer().compare(USDC.toBuffer()) < 0
-    ? [META, USDC] 
+    ? [META, USDC]
     : [USDC, META];
 
-  const [amount0, amount1] = META.equals(token0Mint)
-    ? [new BN(10 * 10 ** 9), new BN(10_000 * 10 ** 6)]  // META is token0
-    : [new BN(10_000 * 10 ** 6), new BN(10 * 10 ** 9)]; // USDC is token0
+  
+  await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, META, USDC, new BN(10 * 10 ** 9), new BN(10_000 * 10 ** 6)).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
 
-  // Proph3t: I changed the RaydiumCpmm type to have poolState to be a signer so
-  // anchor doesn't complain about passing poolStateKp as a signer
-  await cpSwap.methods.initialize(amount0, amount1, new BN(0)).accounts({
-    creator: this.payer.publicKey,
-    ammConfig: LOW_FEE_RAYDIUM_CONFIG,
-    authority: RAYDIUM_AUTHORITY,
-    createPoolFee: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
-    token0Mint,
-    token1Mint,
-    poolState: poolStateKp.publicKey,
-    token0Vault: getRaydiumCpmmPoolVaultAddr(poolStateKp.publicKey, token0Mint, false)[0],
-    token1Vault: getRaydiumCpmmPoolVaultAddr(poolStateKp.publicKey, token1Mint, false)[0],
-    lpMint,
-    creatorToken0: token.getAssociatedTokenAddressSync(token0Mint, this.payer.publicKey),
-    creatorToken1: token.getAssociatedTokenAddressSync(token1Mint, this.payer.publicKey),
-    creatorLpToken: token.getAssociatedTokenAddressSync(lpMint, this.payer.publicKey),
-    observationState: getRaydiumCpmmObservationStateAddr(poolStateKp.publicKey, false)[0],
-    token0Program: token.TOKEN_PROGRAM_ID,
-    token1Program: token.TOKEN_PROGRAM_ID
-  }).signers([poolStateKp]).rpc({ skipPreflight: true });
+  const slPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(PublicKey.findProgramAddressSync(
+    [Buffer.from("sl_pool"), dao.toBuffer(), this.payer.publicKey.toBuffer()],
+    sharedLiquidityManagerClient.getProgramId()
+  )[0]);
 
+  console.log("slPool", slPool);
 
-  await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, poolStateKp.publicKey, META, USDC).rpc();
+  // console.log("")
+
+  return;
 
   // Fourth, we provide liquidity to the pool
-  const [slPool] = getSharedLiquidityPoolAddr(
-    sharedLiquidityManagerClient.getProgramId(),
-    dao,
-    poolStateKp.publicKey
-  );
+  // const [slPool] = getSharedLiquidityPoolAddr(
+  //   sharedLiquidityManagerClient.getProgramId(),
+  //   dao,
+  //   poolStateKp.publicKey
+  // );
 
   const spotPoolLpSupply = await getMint(this.banksClient, lpMint);
   console.log("spotPoolLpSupply", spotPoolLpSupply);
@@ -156,64 +138,64 @@ export default async function () {
 
   // Fifth, have a proposer come along and create a proposal through the SharedLiquidityManager
 
-    // const nonce = new BN(Math.random() * 2 ** 50);
-    const nonce = new BN(12329);
+  // const nonce = new BN(Math.random() * 2 ** 50);
+  const nonce = new BN(12329);
 
-    let [proposal] = getProposalAddr(
-      AUTOCRAT_PROGRAM_ID,
-      slPool,
-      nonce
-    );
+  let [proposal] = getProposalAddr(
+    AUTOCRAT_PROGRAM_ID,
+    slPool,
+    nonce
+  );
 
-    await vaultClient.initializeQuestion(
-      sha256(`Will ${proposal} pass?/FAIL/PASS`),
-      proposal,
-      2
-    );
+  await vaultClient.initializeQuestion(
+    sha256(`Will ${proposal} pass?/FAIL/PASS`),
+    proposal,
+    2
+  );
 
-    const {
-      baseVault,
-      quoteVault,
-      passAmm,
-      failAmm,
-      passBaseMint,
-      passQuoteMint,
-      failBaseMint,
-      failQuoteMint,
-      passLp,
-      failLp,
-      question,
-    } = autocratClient.getProposalPdas(
-      proposal,
-      META,
-      USDC,
-      dao
-    );
+  const {
+    baseVault,
+    quoteVault,
+    passAmm,
+    failAmm,
+    passBaseMint,
+    passQuoteMint,
+    failBaseMint,
+    failQuoteMint,
+    passLp,
+    failLp,
+    question,
+  } = autocratClient.getProposalPdas(
+    proposal,
+    META,
+    USDC,
+    dao
+  );
 
-    const storedDao = await autocratClient.fetchDao(dao);
+  const storedDao = await autocratClient.fetchDao(dao);
 
   await vaultClient
-      .initializeVaultIx(question, META, 2)
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          vaultClient.initializeVaultIx(question, USDC, 2),
-          ammClient.initializeAmmIx(
-            passBaseMint,
-            passQuoteMint,
-            storedDao.twapStartDelaySlots,
-            storedDao.twapInitialObservation,
-            storedDao.twapMaxObservationChangePerUpdate
-          ),
-          ammClient.initializeAmmIx(
-            failBaseMint,
-            failQuoteMint,
-            storedDao.twapStartDelaySlots,
-            storedDao.twapInitialObservation,
-            storedDao.twapMaxObservationChangePerUpdate
-          )
+    .initializeVaultIx(question, META, 2)
+    .postInstructions(
+      await InstructionUtils.getInstructions(
+        vaultClient.initializeVaultIx(question, USDC, 2),
+        ammClient.initializeAmmIx(
+          passBaseMint,
+          passQuoteMint,
+          storedDao.twapStartDelaySlots,
+          storedDao.twapInitialObservation,
+          storedDao.twapMaxObservationChangePerUpdate
+        ),
+        ammClient.initializeAmmIx(
+          failBaseMint,
+          failQuoteMint,
+          storedDao.twapStartDelaySlots,
+          storedDao.twapInitialObservation,
+          storedDao.twapMaxObservationChangePerUpdate
         )
       )
-      .rpc();
+    )
+    .rpc();
 
   const [vault0, vault1] = META.toBase58() < USDC.toBase58()
     ? [baseVault, quoteVault]
@@ -275,7 +257,7 @@ export default async function () {
   const addressesPerExtend = 20;
   for (let i = 0; i < uniqueAccounts.length; i += addressesPerExtend) {
     const batch = uniqueAccounts.slice(i, i + addressesPerExtend);
-    
+
     const extendTableIx = AddressLookupTableProgram.extendLookupTable({
       authority: this.payer.publicKey,
       payer: this.payer.publicKey,
@@ -368,15 +350,15 @@ export default async function () {
   // Need to advance time to meet the proposal timing requirements
   // The proposal needs to be at least dao.slots_per_proposal old (which is DAY_IN_SLOTS)
   // and the markets need to be mature enough (duration_in_slots, which is also DAY_IN_SLOTS)
-  
+
   // Advance time by DAY_IN_SLOTS to meet the proposal timing requirement
   await this.advanceBySlots(DAY_IN_SLOTS);
-  
+
   // Crank TWAPs multiple times to ensure markets are mature enough
   // The markets need to have been updated for at least proposal.duration_in_slots
   for (let i = 0; i < 50; i++) {
     await this.advanceBySlots(20_000n);
-    
+
     await ammClient
       .crankThatTwapIx(passAmm)
       .preInstructions([
@@ -422,7 +404,10 @@ export default async function () {
 
   let removeTx = new VersionedTransaction(messageV0Remove);
   removeTx.sign([this.payer]);
+  console.log("removeTx size", removeTx.serialize().length);
   await this.banksClient.processTransaction(removeTx);
+
+  return;
 
   // Get final balances after removing proposal liquidity
   const finalSpotPoolBaseBalance = await getAccount(this.banksClient, storedUnderlyingPool.token0Vault);
@@ -438,12 +423,12 @@ export default async function () {
 
   // Ninth, test withdrawing shared liquidity from the AMM
   console.log("\n=== Testing Shared Liquidity Withdrawal ===");
-  
+
   // Get initial balances before withdrawal
   const initialUserMETA = await this.getTokenBalance(META, this.payer.publicKey);
   const initialUserUSDC = await this.getTokenBalance(USDC, this.payer.publicKey);
   const initialUserLp = await this.getTokenBalance(lpMint, this.payer.publicKey);
-  
+
   console.log("Initial user META balance:", initialUserMETA.toString());
   console.log("Initial user USDC balance:", initialUserUSDC.toString());
   console.log("Initial user LP balance:", initialUserLp.toString());
@@ -459,95 +444,95 @@ export default async function () {
   );
 
   // Check if user has a position
-    const userPosition = await sharedLiquidityManagerClient.program.account.liquidityPosition.fetch(userSlPoolPosition);
-    console.log("User position LP shares:", userPosition.underlyingSpotLpShares.toString());
-    
-    if (userPosition.underlyingSpotLpShares.gt(new BN(0))) {
-      // Withdraw some liquidity (50% of user's shares)
-      const withdrawAmount = userPosition.underlyingSpotLpShares.div(new BN(2));
-      // const withdrawAmount = userPosition.underlyingSpotLpShares;
-      
-      console.log("Withdrawing", withdrawAmount.toString(), "LP tokens");
-      
-      // Create lookup table for withdrawal transaction
-      let withdrawTx = await sharedLiquidityManagerClient.withdrawSharedLiquidityIx(
-        dao,
-        poolStateKp.publicKey,
-        META,
-        USDC,
-        withdrawAmount,
-        new BN(0), // minimum token0 amount
-        new BN(0)  // minimum token1 amount
-      ).transaction();
+  const userPosition = await sharedLiquidityManagerClient.program.account.liquidityPosition.fetch(userSlPoolPosition);
+  console.log("User position LP shares:", userPosition.underlyingSpotLpShares.toString());
 
-      const withdrawAccountsToAdd = withdrawTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
-      const withdrawUniqueAccounts = [...new Set(withdrawAccountsToAdd.flat())] as PublicKey[];
+  if (userPosition.underlyingSpotLpShares.gt(new BN(0))) {
+    // Withdraw some liquidity (50% of user's shares)
+    const withdrawAmount = userPosition.underlyingSpotLpShares.div(new BN(2));
+    // const withdrawAmount = userPosition.underlyingSpotLpShares;
 
-      // Extend the existing lookup table with withdrawal accounts
-      for (let i = 0; i < withdrawUniqueAccounts.length; i += 20) {
-        const batch = withdrawUniqueAccounts.slice(i, i + 20);
-        
-        const extendTableIx = AddressLookupTableProgram.extendLookupTable({
-          authority: this.payer.publicKey,
-          payer: this.payer.publicKey,
-          lookupTable: lookupTableAddress,
-          addresses: batch,
-        });
+    console.log("Withdrawing", withdrawAmount.toString(), "LP tokens");
 
-        let extendLutTx = new Transaction().add(extendTableIx);
-        extendLutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
-        extendLutTx.feePayer = this.payer.publicKey;
-        extendLutTx.sign(this.payer);
+    // Create lookup table for withdrawal transaction
+    let withdrawTx = await sharedLiquidityManagerClient.withdrawSharedLiquidityIx(
+      dao,
+      poolStateKp.publicKey,
+      META,
+      USDC,
+      withdrawAmount,
+      new BN(0), // minimum token0 amount
+      new BN(0)  // minimum token1 amount
+    ).transaction();
 
-        await this.banksClient.processTransaction(extendLutTx);
-        await this.advanceBySlots(1n);
-      }
+    const withdrawAccountsToAdd = withdrawTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
+    const withdrawUniqueAccounts = [...new Set(withdrawAccountsToAdd.flat())] as PublicKey[];
 
-      const messageV0Withdraw = new TransactionMessage({
-        payerKey: this.payer.publicKey,
-        recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-        instructions: [
-          ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
-          ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-        ].concat(withdrawTx.instructions)
-      }).compileToV0Message([storedLookupTable]);
+    // Extend the existing lookup table with withdrawal accounts
+    for (let i = 0; i < withdrawUniqueAccounts.length; i += 20) {
+      const batch = withdrawUniqueAccounts.slice(i, i + 20);
 
-      let withdrawVersionedTx = new VersionedTransaction(messageV0Withdraw);
-      withdrawVersionedTx.sign([this.payer]);
-      
-      console.log("Withdrawal transaction size:", withdrawVersionedTx.serialize().length);
-      
-      await this.banksClient.processTransaction(withdrawVersionedTx);
+      const extendTableIx = AddressLookupTableProgram.extendLookupTable({
+        authority: this.payer.publicKey,
+        payer: this.payer.publicKey,
+        lookupTable: lookupTableAddress,
+        addresses: batch,
+      });
 
-      // Get final balances after withdrawal
-      const finalUserMETA = await this.getTokenBalance(META, this.payer.publicKey);
-      const finalUserUSDC = await this.getTokenBalance(USDC, this.payer.publicKey);
-      
-      console.log("Final user META balance:", finalUserMETA.toString());
-      console.log("Final user USDC balance:", finalUserUSDC.toString());
+      let extendLutTx = new Transaction().add(extendTableIx);
+      extendLutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+      extendLutTx.feePayer = this.payer.publicKey;
+      extendLutTx.sign(this.payer);
 
-      // Calculate received amounts
-      const metaReceived = finalUserMETA - initialUserMETA;
-      const usdcReceived = finalUserUSDC - initialUserUSDC;
-      
-      console.log("META received:", metaReceived.toString());
-      console.log("USDC received:", usdcReceived.toString());
-
-
-      // Verify that the user received tokens
-      assert(metaReceived > 0, "Should have received META tokens");
-      assert(usdcReceived > 0, "Should have received USDC tokens");
-
-      // Check updated position
-      const updatedPosition = await sharedLiquidityManagerClient.program.account.liquidityPosition.fetch(userSlPoolPosition);
-      console.log("Updated user position LP shares:", updatedPosition.underlyingSpotLpShares.toString());
-      
-      // Verify position was updated correctly
-      const expectedRemainingShares = userPosition.underlyingSpotLpShares.sub(withdrawAmount);
-      assert(updatedPosition.underlyingSpotLpShares.eq(expectedRemainingShares), "Position should be updated correctly");
-    } else {
-      console.log("User has no LP shares to withdraw");
+      await this.banksClient.processTransaction(extendLutTx);
+      await this.advanceBySlots(1n);
     }
+
+    const messageV0Withdraw = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+        ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+      ].concat(withdrawTx.instructions)
+    }).compileToV0Message([storedLookupTable]);
+
+    let withdrawVersionedTx = new VersionedTransaction(messageV0Withdraw);
+    withdrawVersionedTx.sign([this.payer]);
+
+    console.log("Withdrawal transaction size:", withdrawVersionedTx.serialize().length);
+
+    await this.banksClient.processTransaction(withdrawVersionedTx);
+
+    // Get final balances after withdrawal
+    const finalUserMETA = await this.getTokenBalance(META, this.payer.publicKey);
+    const finalUserUSDC = await this.getTokenBalance(USDC, this.payer.publicKey);
+
+    console.log("Final user META balance:", finalUserMETA.toString());
+    console.log("Final user USDC balance:", finalUserUSDC.toString());
+
+    // Calculate received amounts
+    const metaReceived = finalUserMETA - initialUserMETA;
+    const usdcReceived = finalUserUSDC - initialUserUSDC;
+
+    console.log("META received:", metaReceived.toString());
+    console.log("USDC received:", usdcReceived.toString());
+
+
+    // Verify that the user received tokens
+    assert(metaReceived > 0, "Should have received META tokens");
+    assert(usdcReceived > 0, "Should have received USDC tokens");
+
+    // Check updated position
+    const updatedPosition = await sharedLiquidityManagerClient.program.account.liquidityPosition.fetch(userSlPoolPosition);
+    console.log("Updated user position LP shares:", updatedPosition.underlyingSpotLpShares.toString());
+
+    // Verify position was updated correctly
+    const expectedRemainingShares = userPosition.underlyingSpotLpShares.sub(withdrawAmount);
+    assert(updatedPosition.underlyingSpotLpShares.eq(expectedRemainingShares), "Position should be updated correctly");
+  } else {
+    console.log("User has no LP shares to withdraw");
+  }
 
   console.log(await this.getTokenBalance(lpMint, slPool));
   // console.log(await this.getTokenBalance(META, poolStateKp.publicKey));
