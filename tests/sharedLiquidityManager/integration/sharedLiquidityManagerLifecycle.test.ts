@@ -465,6 +465,7 @@ export default async function () {
     if (userPosition.underlyingSpotLpShares.gt(new BN(0))) {
       // Withdraw some liquidity (50% of user's shares)
       const withdrawAmount = userPosition.underlyingSpotLpShares.div(new BN(2));
+      // const withdrawAmount = userPosition.underlyingSpotLpShares;
       
       console.log("Withdrawing", withdrawAmount.toString(), "LP tokens");
       
@@ -547,6 +548,12 @@ export default async function () {
     } else {
       console.log("User has no LP shares to withdraw");
     }
+
+  console.log(await this.getTokenBalance(lpMint, slPool));
+  // console.log(await this.getTokenBalance(META, poolStateKp.publicKey));
+  // console.log(await this.getTokenBalance(USDC, poolStateKp.publicKey));
+  console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
+  console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
 
   // Verify that the proposal is no longer active
   const finalSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);

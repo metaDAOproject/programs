@@ -343,9 +343,8 @@ impl RemoveProposalLiquidity<'_> {
 
         // TODO: figure out why this is underreporting the number of LP tokens to mint
         let lp_tokens_to_mint = {
-            let lp_supply = ctx.accounts.ray.lp_mint.supply as u128;
-
             let spot_pool = ctx.accounts.ray.spot_pool.load_mut()?;
+            let lp_supply = spot_pool.lp_supply as u128;
 
             let (token_0_reserves, token_1_reserves, token_0_balance, token_1_balance) = if ctx.accounts.sl_pool.is_base_token_0 {
                 (ctx.accounts.ray.spot_pool_base_vault.amount, ctx.accounts.ray.spot_pool_quote_vault.amount, base_redeemed, quote_redeemed)

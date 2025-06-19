@@ -13,7 +13,7 @@ use instructions::*;
 
 // TODO:
 // - add native token staking
-// - implement withdraw
+// - take a deeper look at why LP math isn't mathing
 
 #[program]
 pub mod shared_liquidity_manager {
