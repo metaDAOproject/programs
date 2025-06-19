@@ -80,13 +80,13 @@ pub struct ConditionalVaultAccounts<'info> {
     pub pass_quote_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub fail_quote_mint: Box<Account<'info, Mint>>,
-    #[account(init, payer = payer, token::mint = pass_base_mint, token::authority = sl_pool)]
+    #[account(init, payer = payer, token::mint = pass_base_mint, token::authority = sl_pool_signer)]
     pub sl_pool_pass_base_vault: Box<Account<'info, TokenAccount>>,
-    #[account(init, payer = payer, token::mint = fail_base_mint, token::authority = sl_pool)]
+    #[account(init, payer = payer, token::mint = fail_base_mint, token::authority = sl_pool_signer)]
     pub sl_pool_fail_base_vault: Box<Account<'info, TokenAccount>>,
-    #[account(init, payer = payer, token::mint = pass_quote_mint, token::authority = sl_pool)]
+    #[account(init, payer = payer, token::mint = pass_quote_mint, token::authority = sl_pool_signer)]
     pub sl_pool_pass_quote_vault: Box<Account<'info, TokenAccount>>,
-    #[account(init, payer = payer, token::mint = fail_quote_mint, token::authority = sl_pool)]
+    #[account(init, payer = payer, token::mint = fail_quote_mint, token::authority = sl_pool_signer)]
     pub sl_pool_fail_quote_vault: Box<Account<'info, TokenAccount>>,
     /// CHECK: verified by conditional_vault
     pub vault_event_authority: UncheckedAccount<'info>,
@@ -94,7 +94,9 @@ pub struct ConditionalVaultAccounts<'info> {
     pub payer: Signer<'info>,
     pub token_program: Program<'info, anchor_spl::token::Token>,
     pub system_program: Program<'info, System>,
-    pub sl_pool: Account<'info, SharedLiquidityPool>,
+    /// CHECK: the signer
+    #[account(mut)]
+    pub sl_pool_signer: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]
@@ -138,7 +140,7 @@ pub struct InitializeProposalWithLiquidity<'info> {
         has_one = sl_pool_spot_lp_vault,
         has_one = base_mint,
         has_one = quote_mint,
-        constraint = sl_pool.spot_pool == raydium.spot_pool.key()
+        constraint = sl_pool.active_spot_pool == raydium.spot_pool.key()
     )]
     pub sl_pool: Account<'info, SharedLiquidityPool>,
     pub proposal_creator: Signer<'info>,
@@ -176,6 +178,7 @@ pub struct InitializeProposalWithLiquidity<'info> {
 
 impl InitializeProposalWithLiquidity<'_> {
     pub fn handle(ctx: Context<Self>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
+        msg!("Initializing proposal with liquidity");
         // 1. Withdraw half of the pool's LP tokens from Raydium
         let pool_lp_balance = ctx.accounts.sl_pool_spot_lp_vault.amount;
         require!(pool_lp_balance > 0, ErrorCode::NoLpTokensInPool);
@@ -213,13 +216,11 @@ impl InitializeProposalWithLiquidity<'_> {
             )
         };
 
-        let spot_pool_key = ctx.accounts.raydium.spot_pool.key();
-        let dao_key = ctx.accounts.dao.key();
+        let sl_pool_key = ctx.accounts.sl_pool.key();
         let seeds = &[
-            b"sl_pool".as_ref(),
-            dao_key.as_ref(),
-            spot_pool_key.as_ref(),
-            &[ctx.accounts.sl_pool.pda_bump],
+            b"sl_pool_signer".as_ref(),
+            sl_pool_key.as_ref(),
+            &[ctx.accounts.sl_pool.sl_pool_signer_bump],
         ];
         let signer = &[&seeds[..]];
 
@@ -228,7 +229,7 @@ impl InitializeProposalWithLiquidity<'_> {
             CpiContext::new_with_signer(
                 ctx.accounts.raydium.cp_swap_program.to_account_info(),
                 RaydiumWithdraw {
-                    owner: ctx.accounts.sl_pool.to_account_info(),
+                    owner: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
                     authority: ctx.accounts.raydium.raydium_authority.to_account_info(),
                     pool_state: ctx.accounts.raydium.spot_pool.to_account_info(),
                     lp_mint: ctx.accounts.raydium.lp_mint.to_account_info(),
@@ -276,7 +277,7 @@ impl InitializeProposalWithLiquidity<'_> {
                         .conditional_vault
                         .base_vault_underlying_token_account
                         .to_account_info(),
-                    authority: ctx.accounts.sl_pool.to_account_info(),
+                    authority: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
                     user_underlying_token_account: ctx
                         .accounts
                         .sl_pool_base_vault
@@ -331,7 +332,7 @@ impl InitializeProposalWithLiquidity<'_> {
                         .conditional_vault
                         .quote_vault_underlying_token_account
                         .to_account_info(),
-                    authority: ctx.accounts.sl_pool.to_account_info(),
+                    authority: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
                     user_underlying_token_account: ctx
                         .accounts
                         .sl_pool_quote_vault
@@ -381,7 +382,7 @@ impl InitializeProposalWithLiquidity<'_> {
                 ctx.accounts.amm.amm_program.to_account_info(),
                 amm::cpi::accounts::AddOrRemoveLiquidity {
                     amm: ctx.accounts.amm.pass_amm.to_account_info(),
-                    user: ctx.accounts.sl_pool.to_account_info(),
+                    user: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
                     user_lp_account: ctx.accounts.amm.sl_pool_pass_lp_account.to_account_info(),
                     user_base_account: ctx.accounts.conditional_vault.sl_pool_pass_base_vault.to_account_info(),
                     user_quote_account: ctx.accounts.conditional_vault.sl_pool_pass_quote_vault.to_account_info(),
@@ -406,7 +407,7 @@ impl InitializeProposalWithLiquidity<'_> {
                 ctx.accounts.amm.amm_program.to_account_info(),
                 amm::cpi::accounts::AddOrRemoveLiquidity {
                     amm: ctx.accounts.amm.fail_amm.to_account_info(),
-                    user: ctx.accounts.sl_pool.to_account_info(),
+                    user: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
                     user_lp_account: ctx.accounts.amm.sl_pool_fail_lp_account.to_account_info(),
                     user_base_account: ctx.accounts.conditional_vault.sl_pool_fail_base_vault.to_account_info(),
                     user_quote_account: ctx.accounts.conditional_vault.sl_pool_fail_quote_vault.to_account_info(),
@@ -443,7 +444,7 @@ impl InitializeProposalWithLiquidity<'_> {
                     fail_lp_user_account: ctx.accounts.amm.sl_pool_fail_lp_account.to_account_info(),
                     pass_lp_vault_account: ctx.accounts.amm.proposal_pass_lp_vault.to_account_info(),
                     fail_lp_vault_account: ctx.accounts.amm.proposal_fail_lp_vault.to_account_info(),
-                    proposer: ctx.accounts.sl_pool.to_account_info(),
+                    proposer: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
                     payer: ctx.accounts.proposal_creator.to_account_info(),
                     event_authority: ctx.accounts.autocrat_event_authority.to_account_info(),
                     program: ctx.accounts.autocrat_program.to_account_info(),

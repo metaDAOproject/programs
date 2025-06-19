@@ -12,6 +12,8 @@ pub struct SharedLiquidityPool {
     pub quote_mint: Pubkey,
     /// The signer of this pool, used because Raydium pools need a SOL payer and this PDA can't hold SOL.
     pub sl_pool_signer: Pubkey,
+    /// The pda bump of the signer.
+    pub sl_pool_signer_bump: u8,
     /// Holds the base tokens for the shared liquidity pool when it's moving liquidity around.
     pub sl_pool_base_vault: Pubkey,
     /// Holds the quote tokens for the shared liquidity pool when it's moving liquidity around.

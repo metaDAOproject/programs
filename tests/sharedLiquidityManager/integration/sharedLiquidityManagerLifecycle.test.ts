@@ -93,18 +93,21 @@ export default async function () {
     : [USDC, META];
 
   
-  await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, META, USDC, new BN(10 * 10 ** 9), new BN(10_000 * 10 ** 6)).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
+  await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, META, USDC, new BN(25 * 10 ** 9), new BN(25_000 * 10 ** 6)).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
 
-  const slPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(PublicKey.findProgramAddressSync(
+  const [slPool] = PublicKey.findProgramAddressSync(
     [Buffer.from("sl_pool"), dao.toBuffer(), this.payer.publicKey.toBuffer()],
     sharedLiquidityManagerClient.getProgramId()
-  )[0]);
+  );
 
-  console.log("slPool", slPool);
+  const [slPoolSigner] = PublicKey.findProgramAddressSync(
+    [Buffer.from("sl_pool_signer"), slPool.toBuffer()],
+    sharedLiquidityManagerClient.getProgramId()
+  );
 
-  // console.log("")
+  const storedSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);
 
-  return;
+  console.log("slPool", storedSlPool);
 
   // Fourth, we provide liquidity to the pool
   // const [slPool] = getSharedLiquidityPoolAddr(
@@ -113,28 +116,28 @@ export default async function () {
   //   poolStateKp.publicKey
   // );
 
-  const spotPoolLpSupply = await getMint(this.banksClient, lpMint);
-  console.log("spotPoolLpSupply", spotPoolLpSupply);
+  // const spotPoolLpSupply = await getMint(this.banksClient, lpMint);
+  // console.log("spotPoolLpSupply", spotPoolLpSupply);
 
-  // Deposit 10 META and 10,000 USDC
-  await sharedLiquidityManagerClient.depositSharedLiquidityIx(
-    dao,
-    poolStateKp.publicKey,
-    META,
-    USDC,
-    new BN(30_000_000_000), // Let Raydium calculate the LP token amount
-    new BN(30 * 10 ** 9), // 30 META
-    new BN(30_000 * 10 ** 6) // 30,000 USDC
-  ).preInstructions([ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 256 })]).rpc();
+  // // Deposit 10 META and 10,000 USDC
+  // await sharedLiquidityManagerClient.depositSharedLiquidityIx(
+  //   dao,
+  //   poolStateKp.publicKey,
+  //   META,
+  //   USDC,
+  //   new BN(30_000_000_000), // Let Raydium calculate the LP token amount
+  //   new BN(30 * 10 ** 9), // 30 META
+  //   new BN(30_000 * 10 ** 6) // 30,000 USDC
+  // ).preInstructions([ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 256 })]).rpc();
 
 
 
-  const storedUnderlyingPool = await cpSwap.account.poolState.fetch(poolStateKp.publicKey);
-  console.log("storedUnderlyingPool", storedUnderlyingPool);
-  console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
-  console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
+  // const storedUnderlyingPool = await cpSwap.account.poolState.fetch(poolStateKp.publicKey);
+  // console.log("storedUnderlyingPool", storedUnderlyingPool);
+  // console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
+  // console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
 
-  console.log("lp balance", await this.getTokenBalance(lpMint, this.payer.publicKey));
+  // console.log("lp balance", await this.getTokenBalance(lpMint, this.payer.publicKey));
 
   // Fifth, have a proposer come along and create a proposal through the SharedLiquidityManager
 
@@ -143,7 +146,7 @@ export default async function () {
 
   let [proposal] = getProposalAddr(
     AUTOCRAT_PROGRAM_ID,
-    slPool,
+    slPoolSigner,
     nonce
   );
 
@@ -210,8 +213,8 @@ export default async function () {
     : [passBaseMint, failBaseMint];
 
   // Initialize pool pass and fail LP accounts
-  await this.createTokenAccount(passLp, slPool, true);
-  await this.createTokenAccount(failLp, slPool, true);
+  await this.createTokenAccount(passLp, slPoolSigner, true);
+  await this.createTokenAccount(failLp, slPoolSigner, true);
 
   // Initialize AMM vault accounts
   await this.createTokenAccount(token0Mint, passAmm, true);
@@ -221,7 +224,6 @@ export default async function () {
 
   let initProposalWithLiquidityTx = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
     dao,
-    poolStateKp.publicKey,
     META,
     USDC,
     nonce,
@@ -326,12 +328,13 @@ export default async function () {
   await this.banksClient.processTransaction(tx);
 
 
-  console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
-  console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
-  console.log("token0PassMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0PassMint, slPool, true)));
-  console.log("token0FailMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0FailMint, slPool, true)));
+  // console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
+  // console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
+  // console.log("token0PassMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0PassMint, storedSlPool, true)));
+  // console.log("token0FailMint balance", await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(token0FailMint, storedSlPool, true)));
 
   console.log(await autocratClient.getProposal(proposal));
+
 
   // Sixth, someone bids in pass market
   // Add some trading activity to make the proposal pass
@@ -376,22 +379,91 @@ export default async function () {
 
   // Eighth, we merge liquidity back into main pool. Check that k has increased
   // Get initial balances before removing proposal liquidity
-  const initialSpotPoolBaseBalance = await getAccount(this.banksClient, storedUnderlyingPool.token0Vault);
-  const initialSpotPoolQuoteBalance = await getAccount(this.banksClient, storedUnderlyingPool.token1Vault);
-  const initialSlPoolSpotLpBalance = await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(getRaydiumCpmmLpMintAddr(poolStateKp.publicKey, false)[0], slPool, true));
+  // const initialSpotPoolBaseBalance = await getAccount(this.banksClient, storedUnderlyingPool.token0Vault);
+  // const initialSpotPoolQuoteBalance = await getAccount(this.banksClient, storedUnderlyingPool.token1Vault);
+  // const initialSlPoolSpotLpBalance = await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(getRaydiumCpmmLpMintAddr(poolStateKp.publicKey, false)[0], storedSlPool, true));
 
-  console.log("Initial spot pool base balance:", initialSpotPoolBaseBalance.amount.toString());
-  console.log("Initial spot pool quote balance:", initialSpotPoolQuoteBalance.amount.toString());
-  console.log("Initial SL pool spot LP balance:", initialSlPoolSpotLpBalance.amount.toString());
+  // console.log("Initial spot pool base balance:", initialSpotPoolBaseBalance.amount.toString());
+  // console.log("Initial spot pool quote balance:", initialSpotPoolQuoteBalance.amount.toString());
+  // console.log("Initial SL pool spot LP balance:", initialSlPoolSpotLpBalance.amount.toString());
 
   // Remove proposal liquidity
   let removeProposalLiquidityTx = await sharedLiquidityManagerClient.removeProposalLiquidityIx(
     dao,
-    poolStateKp.publicKey,
+    storedSlPool.activeSpotPool,
     META,
     USDC,
     nonce
   ).transaction();
+
+  // Create a new lookup table for the remove liquidity transaction
+  const slot2 = await this.banksClient.getSlot();
+  const [createTableIx2, lookupTableAddress2] = AddressLookupTableProgram.createLookupTable({
+    authority: this.payer.publicKey,
+    payer: this.payer.publicKey,
+    recentSlot: slot2 - 1n,
+  });
+
+  const removeAccountsToAdd = removeProposalLiquidityTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
+  const removeUniqueAccounts = [...new Set(removeAccountsToAdd.flat())] as PublicKey[];
+
+  // Create the lookup table first
+  let createLutTx2 = new Transaction().add(createTableIx2);
+  createLutTx2.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  createLutTx2.feePayer = this.payer.publicKey;
+  createLutTx2.sign(this.payer);
+
+  await this.banksClient.processTransaction(createLutTx2);
+
+  await this.advanceBySlots(1n);
+
+  // Extend the lookup table with all unique accounts
+  // Raydium allows up to 20 addresses per extend instruction
+  const addressesPerExtend2 = 20;
+  for (let i = 0; i < removeUniqueAccounts.length; i += addressesPerExtend2) {
+    const batch = removeUniqueAccounts.slice(i, i + addressesPerExtend2);
+
+    const extendTableIx = AddressLookupTableProgram.extendLookupTable({
+      authority: this.payer.publicKey,
+      payer: this.payer.publicKey,
+      lookupTable: lookupTableAddress2,
+      addresses: batch,
+    });
+
+    let extendLutTx = new Transaction().add(extendTableIx);
+    extendLutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    extendLutTx.feePayer = this.payer.publicKey;
+    extendLutTx.sign(this.payer);
+
+    await this.banksClient.processTransaction(extendLutTx);
+    await this.advanceBySlots(1n);
+  }
+
+  console.log("REMOVE UNIQUE ACCOUNTS", removeUniqueAccounts.length);
+
+  // Create and process second extension transaction for ComputeBudgetProgram
+  const extendTableIx3 = AddressLookupTableProgram.extendLookupTable({
+    authority: this.payer.publicKey,
+    payer: this.payer.publicKey,
+    lookupTable: lookupTableAddress2,
+    addresses: [ComputeBudgetProgram.programId],
+  });
+
+  let lutTx3 = new Transaction().add(extendTableIx3);
+  lutTx3.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  lutTx3.feePayer = this.payer.publicKey;
+  lutTx3.sign(this.payer);
+
+  await this.banksClient.processTransaction(lutTx3);
+
+  await this.advanceBySlots(1n);
+
+  let rawStoredLookupTable2 = await this.banksClient.getAccount(lookupTableAddress2);
+
+  let storedLookupTable2 = new AddressLookupTableAccount({
+    key: lookupTableAddress2,
+    state: AddressLookupTableAccount.deserialize(rawStoredLookupTable2.data),
+  });
 
   const messageV0Remove = new TransactionMessage({
     payerKey: this.payer.publicKey,
@@ -400,16 +472,31 @@ export default async function () {
       ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
     ].concat(removeProposalLiquidityTx.instructions)
-  }).compileToV0Message([storedLookupTable]);
+  }).compileToV0Message([storedLookupTable2]);
 
   let removeTx = new VersionedTransaction(messageV0Remove);
   removeTx.sign([this.payer]);
   console.log("removeTx size", removeTx.serialize().length);
   await this.banksClient.processTransaction(removeTx);
 
+  const spotPool1 = PublicKey.findProgramAddressSync(
+    [Buffer.from("spot_pool"), new BN(1).toArrayLike(Buffer, "le", 4)],
+    sharedLiquidityManagerClient.getProgramId()
+  )[0];
+
+
+  const storedSpotPool1 = await cpSwap.account.poolState.fetch(spotPool1);
+  console.log(storedSpotPool1);
+
+  console.log(await getAccount(this.banksClient, storedSpotPool1.token0Vault));
+  console.log(await getAccount(this.banksClient, storedSpotPool1.token1Vault));
+
+
+
   return;
 
   // Get final balances after removing proposal liquidity
+  const storedUnderlyingPool = await cpSwap.account.poolState.fetch(poolStateKp.publicKey);
   const finalSpotPoolBaseBalance = await getAccount(this.banksClient, storedUnderlyingPool.token0Vault);
   const finalSpotPoolQuoteBalance = await getAccount(this.banksClient, storedUnderlyingPool.token1Vault);
   const finalSlPoolSpotLpBalance = await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(getRaydiumCpmmLpMintAddr(poolStateKp.publicKey, false)[0], slPool, true));
@@ -468,14 +555,30 @@ export default async function () {
     const withdrawAccountsToAdd = withdrawTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
     const withdrawUniqueAccounts = [...new Set(withdrawAccountsToAdd.flat())] as PublicKey[];
 
-    // Extend the existing lookup table with withdrawal accounts
+    // Create a new lookup table for withdrawal
+    const slot3 = await this.banksClient.getSlot();
+    const [createTableIx3, lookupTableAddress3] = AddressLookupTableProgram.createLookupTable({
+      authority: this.payer.publicKey,
+      payer: this.payer.publicKey,
+      recentSlot: slot3 - 1n,
+    });
+
+    let createLutTx3 = new Transaction().add(createTableIx3);
+    createLutTx3.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    createLutTx3.feePayer = this.payer.publicKey;
+    createLutTx3.sign(this.payer);
+
+    await this.banksClient.processTransaction(createLutTx3);
+    await this.advanceBySlots(1n);
+
+    // Extend the lookup table with withdrawal accounts
     for (let i = 0; i < withdrawUniqueAccounts.length; i += 20) {
       const batch = withdrawUniqueAccounts.slice(i, i + 20);
 
       const extendTableIx = AddressLookupTableProgram.extendLookupTable({
         authority: this.payer.publicKey,
         payer: this.payer.publicKey,
-        lookupTable: lookupTableAddress,
+        lookupTable: lookupTableAddress3,
         addresses: batch,
       });
 
@@ -488,6 +591,29 @@ export default async function () {
       await this.advanceBySlots(1n);
     }
 
+    // Add ComputeBudgetProgram to the lookup table
+    const extendTableIx4 = AddressLookupTableProgram.extendLookupTable({
+      authority: this.payer.publicKey,
+      payer: this.payer.publicKey,
+      lookupTable: lookupTableAddress3,
+      addresses: [ComputeBudgetProgram.programId],
+    });
+
+    let lutTx4 = new Transaction().add(extendTableIx4);
+    lutTx4.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    lutTx4.feePayer = this.payer.publicKey;
+    lutTx4.sign(this.payer);
+
+    await this.banksClient.processTransaction(lutTx4);
+    await this.advanceBySlots(1n);
+
+    let rawStoredLookupTable3 = await this.banksClient.getAccount(lookupTableAddress3);
+
+    let storedLookupTable3 = new AddressLookupTableAccount({
+      key: lookupTableAddress3,
+      state: AddressLookupTableAccount.deserialize(rawStoredLookupTable3.data),
+    });
+
     const messageV0Withdraw = new TransactionMessage({
       payerKey: this.payer.publicKey,
       recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
@@ -495,7 +621,7 @@ export default async function () {
         ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
         ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
       ].concat(withdrawTx.instructions)
-    }).compileToV0Message([storedLookupTable]);
+    }).compileToV0Message([storedLookupTable3]);
 
     let withdrawVersionedTx = new VersionedTransaction(messageV0Withdraw);
     withdrawVersionedTx.sign([this.payer]);

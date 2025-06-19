@@ -341,6 +341,7 @@ impl InitializeSharedLiquidityPool<'_> {
             quote_mint: ctx.accounts.quote_mint.key(),
             is_base_token_0: ctx.accounts.base_mint.key() < ctx.accounts.quote_mint.key(),
             sl_pool_signer: ctx.accounts.sl_pool_signer.key(),
+            sl_pool_signer_bump: ctx.bumps.sl_pool_signer,
             sl_pool_base_vault: ctx.accounts.sl_pool_base_vault.key(),
             sl_pool_quote_vault: ctx.accounts.sl_pool_quote_vault.key(),
             sl_pool_spot_lp_vault: ctx.accounts.sl_pool_spot_lp_vault.key(),

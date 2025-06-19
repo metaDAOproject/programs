@@ -32,11 +32,11 @@ pub mod shared_liquidity_manager {
     //     WithdrawSharedLiquidity::handle(ctx, params)
     // }
 
-    // pub fn initialize_proposal_with_liquidity(ctx: Context<InitializeProposalWithLiquidity>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
-    //     InitializeProposalWithLiquidity::handle(ctx, params)
-    // }
+    pub fn initialize_proposal_with_liquidity(ctx: Context<InitializeProposalWithLiquidity>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
+        InitializeProposalWithLiquidity::handle(ctx, params)
+    }
 
-    // pub fn remove_proposal_liquidity(ctx: Context<RemoveProposalLiquidity>) -> Result<()> {
-    //     RemoveProposalLiquidity::handle(ctx)
-    // }
+    pub fn remove_proposal_liquidity(ctx: Context<RemoveProposalLiquidity>) -> Result<()> {
+        RemoveProposalLiquidity::handle(ctx)
+    }
 }

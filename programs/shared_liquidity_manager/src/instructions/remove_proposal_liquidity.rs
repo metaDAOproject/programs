@@ -1,15 +1,14 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount};
 use anchor_spl::associated_token::get_associated_token_address;
+use anchor_spl::token::{Mint, TokenAccount};
 
 use raydium_cpmm_cpi::cpi::accounts::Deposit as RaydiumDeposit;
 use raydium_cpmm_cpi::{
     cpi, instruction,
     program::RaydiumCpmm,
-    states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED, AMM_CONFIG_SEED},
+    states::{AmmConfig, AMM_CONFIG_SEED, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
 };
-
-
+use anchor_lang::Discriminator;
 
 use crate::state::SharedLiquidityPool;
 
@@ -32,7 +31,7 @@ pub struct RaydiumAccounts2<'info> {
     #[account(address = spl_memo::id())]
     pub memo_program: UncheckedAccount<'info>,
 
-    /// CHECK: this is the next spot pool, init by cp-swap, 
+    /// CHECK: this is the next spot pool, init by cp-swap,
     #[account(
         mut,
         seeds = [
@@ -73,7 +72,7 @@ pub struct RaydiumAccounts2<'info> {
         seeds = [
             POOL_VAULT_SEED.as_bytes(),
             next_spot_pool.key().as_ref(),
-            // base_mint.key().as_ref(),
+            base_mint.key().as_ref(),
         ],
         seeds::program = cp_swap_program,
         bump,
@@ -86,7 +85,7 @@ pub struct RaydiumAccounts2<'info> {
         seeds = [
             POOL_VAULT_SEED.as_bytes(),
             next_spot_pool.key().as_ref(),
-            // quote_mint.key().as_ref(),
+            quote_mint.key().as_ref(),
         ],
         seeds::program = cp_swap_program,
         bump,
@@ -124,8 +123,8 @@ pub struct RaydiumAccounts2<'info> {
 
     /// CHECK: This is the shared liquidity pool signer
     pub sl_pool_signer: UncheckedAccount<'info>,
-
-
+    pub base_mint: Box<Account<'info, Mint>>,
+    pub quote_mint: Box<Account<'info, Mint>>,
 }
 
 #[derive(Accounts)]
@@ -149,18 +148,20 @@ pub struct ConditionalVaultAccounts2<'info> {
     pub pass_quote_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub fail_quote_mint: Box<Account<'info, Mint>>,
-    #[account(mut, token::mint = pass_base_mint, token::authority = sl_pool)]
+    #[account(mut, token::mint = pass_base_mint, token::authority = sl_pool_signer)]
     pub sl_pool_pass_base_vault: Box<Account<'info, TokenAccount>>,
-    #[account(mut, token::mint = fail_base_mint, token::authority = sl_pool)]
+    #[account(mut, token::mint = fail_base_mint, token::authority = sl_pool_signer)]
     pub sl_pool_fail_base_vault: Box<Account<'info, TokenAccount>>,
-    #[account(mut, token::mint = pass_quote_mint, token::authority = sl_pool)]
+    #[account(mut, token::mint = pass_quote_mint, token::authority = sl_pool_signer)]
     pub sl_pool_pass_quote_vault: Box<Account<'info, TokenAccount>>,
-    #[account(mut, token::mint = fail_quote_mint, token::authority = sl_pool)]
+    #[account(mut, token::mint = fail_quote_mint, token::authority = sl_pool_signer)]
     pub sl_pool_fail_quote_vault: Box<Account<'info, TokenAccount>>,
     /// CHECK: verified by conditional_vault
     pub vault_event_authority: UncheckedAccount<'info>,
     pub token_program: Program<'info, anchor_spl::token::Token>,
-    pub sl_pool: Account<'info, SharedLiquidityPool>,
+    /// CHECK: This is the shared liquidity pool signer
+    #[account(mut)]
+    pub sl_pool_signer: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]
@@ -277,7 +278,10 @@ impl RemoveProposalLiquidity<'_> {
                 ctx.accounts.cond.sl_pool_pass_quote_vault.to_account_info(),
                 ctx.accounts.ammm2.pass_lp_mint.to_account_info(),
                 ctx.accounts.ammm2.pass_amm_vault_ata_base.to_account_info(),
-                ctx.accounts.ammm2.pass_amm_vault_ata_quote.to_account_info(),
+                ctx.accounts
+                    .ammm2
+                    .pass_amm_vault_ata_quote
+                    .to_account_info(),
             )
         } else {
             (
@@ -287,20 +291,24 @@ impl RemoveProposalLiquidity<'_> {
                 ctx.accounts.cond.sl_pool_fail_quote_vault.to_account_info(),
                 ctx.accounts.ammm2.fail_lp_mint.to_account_info(),
                 ctx.accounts.ammm2.fail_amm_vault_ata_base.to_account_info(),
-                ctx.accounts.ammm2.fail_amm_vault_ata_quote.to_account_info(),
+                ctx.accounts
+                    .ammm2
+                    .fail_amm_vault_ata_quote
+                    .to_account_info(),
             )
         };
 
-        require!(lp_account_to_remove_from.amount > 0, ErrorCode::NoLpTokensToRemove);
+        require!(
+            lp_account_to_remove_from.amount > 0,
+            ErrorCode::NoLpTokensToRemove
+        );
 
         // Generate PDA seeds for signing
-        let spot_pool_key = ctx.accounts.ray.active_spot_pool.key();
-        let dao_key = ctx.accounts.dao.key();
+        let sl_pool_key = ctx.accounts.sl_pool.to_account_info().key;
         let seeds = &[
-            b"sl_pool".as_ref(),
-            dao_key.as_ref(),
-            spot_pool_key.as_ref(),
-            &[ctx.accounts.sl_pool.pda_bump],
+            b"sl_pool_signer".as_ref(),
+            sl_pool_key.as_ref(),
+            &[ctx.accounts.sl_pool.sl_pool_signer_bump],
         ];
         let signer = &[&seeds[..]];
 
@@ -310,7 +318,7 @@ impl RemoveProposalLiquidity<'_> {
                 ctx.accounts.ammm2.amm_program.to_account_info(),
                 amm::cpi::accounts::AddOrRemoveLiquidity {
                     amm: amm_to_remove_from,
-                    user: ctx.accounts.sl_pool.to_account_info(),
+                    user: ctx.accounts.cond.sl_pool_signer.to_account_info(),
                     user_lp_account: lp_account_to_remove_from.to_account_info(),
                     user_base_account: base_vault_to_redeem,
                     user_quote_account: quote_vault_to_redeem,
@@ -345,7 +353,7 @@ impl RemoveProposalLiquidity<'_> {
                         .cond
                         .base_vault_underlying_token_account
                         .to_account_info(),
-                    authority: ctx.accounts.sl_pool.to_account_info(),
+                    authority: ctx.accounts.cond.sl_pool_signer.to_account_info(),
                     user_underlying_token_account: ctx
                         .accounts
                         .sl_pool_base_vault
@@ -371,6 +379,19 @@ impl RemoveProposalLiquidity<'_> {
         let pre_redeem_quote_balance = ctx.accounts.sl_pool_quote_vault.amount;
         let pre_redeem_base_balance = ctx.accounts.sl_pool_base_vault.amount;
 
+        anchor_lang::system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                anchor_lang::system_program::Transfer {
+                    from: ctx.accounts.payer.to_account_info(),
+                    to: ctx.accounts.cond.sl_pool_signer.to_account_info(),
+                },
+            ),
+            // pool fee + 0.1 SOL for rent, we only need 0.05 now but Raydium
+            // is upgradeable so I'd rather leave buffer
+            ctx.accounts.ray.amm_config.create_pool_fee + 100_000_000,
+        )?;
+
         // Redeem quote tokens
         conditional_vault::cpi::redeem_tokens(
             CpiContext::new_with_signer(
@@ -386,7 +407,7 @@ impl RemoveProposalLiquidity<'_> {
                         .cond
                         .quote_vault_underlying_token_account
                         .to_account_info(),
-                    authority: ctx.accounts.sl_pool.to_account_info(),
+                    authority: ctx.accounts.cond.sl_pool_signer.to_account_info(),
                     user_underlying_token_account: ctx
                         .accounts
                         .sl_pool_quote_vault
@@ -410,7 +431,38 @@ impl RemoveProposalLiquidity<'_> {
         )?;
 
         // Reload accounts to get final balances
-        ctx.accounts.sl_pool_base_vault.reload()?;
+                let (vault_0_mint, vault_1_mint, token_0_vault, token_1_vault, token_0_account, token_1_account) = if ctx.accounts.sl_pool.is_base_token_0 {
+            (ctx.accounts.base_mint.to_account_info(), ctx.accounts.quote_mint.to_account_info(), ctx.accounts.ray.active_spot_pool_base_vault.to_account_info(), ctx.accounts.ray.active_spot_pool_quote_vault.to_account_info(), ctx.accounts.sl_pool_base_vault.to_account_info(), ctx.accounts.sl_pool_quote_vault.to_account_info())
+        } else {
+            (ctx.accounts.quote_mint.to_account_info(), ctx.accounts.base_mint.to_account_info(), ctx.accounts.ray.active_spot_pool_quote_vault.to_account_info(), ctx.accounts.ray.active_spot_pool_base_vault.to_account_info(), ctx.accounts.sl_pool_quote_vault.to_account_info(), ctx.accounts.sl_pool_base_vault.to_account_info())
+        };
+
+        raydium_cpmm_cpi::cpi::withdraw(
+            CpiContext::new_with_signer(
+                ctx.accounts.ray.cp_swap_program.to_account_info(),
+                raydium_cpmm_cpi::cpi::accounts::Withdraw {
+                    owner: ctx.accounts.ray.sl_pool_signer.to_account_info(),
+                    authority: ctx.accounts.ray.raydium_authority.to_account_info(),
+                    pool_state: ctx.accounts.ray.active_spot_pool.to_account_info(),
+                    lp_mint: ctx.accounts.ray.active_spot_pool_lp_mint.to_account_info(),
+                    memo_program: ctx.accounts.ray.memo_program.to_account_info(),
+                    owner_lp_token: ctx.accounts.sl_pool_spot_lp_vault.to_account_info(),
+                    token_0_account,
+                    token_1_account,
+                    vault_0_mint,
+                    vault_1_mint,
+                    token_0_vault,
+                    token_1_vault,
+                    token_program: ctx.accounts.ray.token_program.to_account_info(),
+                    token_program_2022: ctx.accounts.ray.token_program_2022.to_account_info(),
+                },
+                signer,
+            ),
+            ctx.accounts.sl_pool_spot_lp_vault.amount,
+            0,
+            0,
+        )?;
+ctx.accounts.sl_pool_base_vault.reload()?;
         ctx.accounts.sl_pool_quote_vault.reload()?;
 
         let post_redeem_base_balance = ctx.accounts.sl_pool_base_vault.amount;
@@ -422,65 +474,194 @@ impl RemoveProposalLiquidity<'_> {
         require!(base_redeemed > 0, ErrorCode::NoTokensFromAmm);
         require!(quote_redeemed > 0, ErrorCode::NoTokensFromAmm);
 
+
+
         // // Provide the redeemed tokens back to Raydium
+        // let (
+        //     token_0_account,
+        //     token_1_account,
+        //     token_0_vault,
+        //     token_1_vault,
+        //     vault_0_mint,
+        //     vault_1_mint,
+        // ) = if ctx.accounts.sl_pool.is_base_token_0 {
+        //     (
+        //         ctx.accounts.sl_pool_base_vault.to_account_info(),
+        //         ctx.accounts.sl_pool_quote_vault.to_account_info(),
+        //         ctx.accounts
+        //             .ray
+        //             .active_spot_pool_base_vault
+        //             .to_account_info(),
+        //         ctx.accounts
+        //             .ray
+        //             .active_spot_pool_quote_vault
+        //             .to_account_info(),
+        //         ctx.accounts.base_mint.to_account_info(),
+        //         ctx.accounts.quote_mint.to_account_info(),
+        //     )
+        // } else {
+        //     (
+        //         ctx.accounts.sl_pool_quote_vault.to_account_info(),
+        //         ctx.accounts.sl_pool_base_vault.to_account_info(),
+        //         ctx.accounts
+        //             .ray
+        //             .active_spot_pool_quote_vault
+        //             .to_account_info(),
+        //         ctx.accounts
+        //             .ray
+        //             .active_spot_pool_base_vault
+        //             .to_account_info(),
+        //         ctx.accounts.quote_mint.to_account_info(),
+        //         ctx.accounts.base_mint.to_account_info(),
+        //     )
+        // };
+
         let (
-            token_0_account,
-            token_1_account,
+            init_amount_0,
+            init_amount_1,
+            token_0_mint,
+            token_1_mint,
+            creator_token_0,
+            creator_token_1,
             token_0_vault,
             token_1_vault,
-            vault_0_mint,
-            vault_1_mint,
         ) = if ctx.accounts.sl_pool.is_base_token_0 {
             (
-                ctx.accounts.sl_pool_base_vault.to_account_info(),
-                ctx.accounts.sl_pool_quote_vault.to_account_info(),
-                ctx.accounts.ray.active_spot_pool_base_vault.to_account_info(),
-                ctx.accounts.ray.active_spot_pool_quote_vault.to_account_info(),
+                base_redeemed,
+                quote_redeemed,
                 ctx.accounts.base_mint.to_account_info(),
                 ctx.accounts.quote_mint.to_account_info(),
+                ctx.accounts.sl_pool_base_vault.to_account_info(),
+                ctx.accounts.sl_pool_quote_vault.to_account_info(),
+                ctx.accounts.ray.next_spot_pool_base_vault.to_account_info(),
+                ctx.accounts
+                    .ray
+                    .next_spot_pool_quote_vault
+                    .to_account_info(),
             )
         } else {
             (
-                ctx.accounts.sl_pool_quote_vault.to_account_info(),
-                ctx.accounts.sl_pool_base_vault.to_account_info(),
-                ctx.accounts.ray.active_spot_pool_quote_vault.to_account_info(),
-                ctx.accounts.ray.active_spot_pool_base_vault.to_account_info(),
+                quote_redeemed,
+                base_redeemed,
                 ctx.accounts.quote_mint.to_account_info(),
                 ctx.accounts.base_mint.to_account_info(),
+                ctx.accounts.sl_pool_quote_vault.to_account_info(),
+                ctx.accounts.sl_pool_base_vault.to_account_info(),
+                ctx.accounts
+                    .ray
+                    .next_spot_pool_quote_vault
+                    .to_account_info(),
+                ctx.accounts.ray.next_spot_pool_base_vault.to_account_info(),
             )
         };
 
-        let (init_amount_0, init_amount_1, token_0_mint, token_1_mint, creator_token_0, creator_token_1, token_0_vault, token_1_vault) = if ctx.accounts.sl_pool.is_base_token_0 {
-            (base_redeemed, quote_redeemed, ctx.accounts.base_mint.to_account_info(), ctx.accounts.quote_mint.to_account_info(), ctx.accounts.sl_pool_base_vault.to_account_info(), ctx.accounts.sl_pool_quote_vault.to_account_info(), ctx.accounts.ray.next_spot_pool_base_vault.to_account_info(), ctx.accounts.ray.next_spot_pool_quote_vault.to_account_info())
-        } else {
-            (quote_redeemed, base_redeemed, ctx.accounts.quote_mint.to_account_info(), ctx.accounts.base_mint.to_account_info(), ctx.accounts.sl_pool_quote_vault.to_account_info(), ctx.accounts.sl_pool_base_vault.to_account_info(), ctx.accounts.ray.next_spot_pool_quote_vault.to_account_info(), ctx.accounts.ray.next_spot_pool_base_vault.to_account_info())
+        let cpi_accounts = raydium_cpmm_cpi::cpi::accounts::Initialize {
+            creator: ctx.accounts.cond.sl_pool_signer.to_account_info(),
+            authority: ctx.accounts.ray.raydium_authority.to_account_info(),
+            pool_state: ctx.accounts.ray.next_spot_pool.to_account_info(),
+            amm_config: ctx.accounts.ray.amm_config.to_account_info(),
+            token_0_mint,
+            token_1_mint,
+            lp_mint: ctx.accounts.ray.next_spot_pool_lp_mint.to_account_info(),
+            creator_token_0,
+            creator_token_1,
+            creator_lp_token: ctx
+                .accounts
+                .ray
+                .sl_pool_next_spot_lp_vault
+                .to_account_info(),
+            token_0_program: ctx.accounts.ray.token_program.to_account_info(),
+            token_1_program: ctx.accounts.ray.token_program.to_account_info(),
+            token_program: ctx.accounts.ray.token_program.to_account_info(),
+            observation_state: ctx
+                .accounts
+                .ray
+                .next_spot_pool_observation_state
+                .to_account_info(),
+            create_pool_fee: ctx.accounts.ray.create_pool_fee_receiver.to_account_info(),
+            rent: ctx.accounts.rent.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
+            token_0_vault,
+            token_1_vault,
+            associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
         };
 
-        raydium_cpmm_cpi::cpi::initialize(CpiContext::new_with_signer(
-            ctx.accounts.ray.cp_swap_program.to_account_info(),
-            raydium_cpmm_cpi::cpi::accounts::Initialize {
-                creator: ctx.accounts.sl_pool.to_account_info(),
-                authority: ctx.accounts.ray.raydium_authority.to_account_info(),
-                pool_state: ctx.accounts.ray.next_spot_pool.to_account_info(),
-                amm_config: ctx.accounts.ray.amm_config.to_account_info(),
-                token_0_mint,
-                token_1_mint,
-                lp_mint: ctx.accounts.ray.next_spot_pool_lp_mint.to_account_info(),
-                creator_token_0,
-                creator_token_1,
-                creator_lp_token: ctx.accounts.ray.sl_pool_next_spot_lp_vault.to_account_info(),
-                token_0_program: ctx.accounts.ray.token_program.to_account_info(),
-                token_1_program: ctx.accounts.ray.token_program.to_account_info(),
-                token_program: ctx.accounts.ray.token_program.to_account_info(),
-                observation_state: ctx.accounts.ray.next_spot_pool_observation_state.to_account_info(),
-                create_pool_fee: ctx.accounts.ray.create_pool_fee_receiver.to_account_info(),
-                rent: ctx.accounts.rent.to_account_info(),
-                system_program: ctx.accounts.system_program.to_account_info(),
-                token_0_vault,
-                token_1_vault,
-                associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-            },
-            signer), init_amount_0, init_amount_1, 0)?;
+        let ix = instruction::Initialize {
+            init_amount_0,
+            init_amount_1,
+            open_time: 0,
+        };
+        let mut ix_data = Vec::with_capacity(256);
+        ix_data.extend_from_slice(&instruction::Initialize::discriminator());
+        AnchorSerialize::serialize(&ix, &mut ix_data)?;
+
+        let ix = solana_program::instruction::Instruction {
+            program_id: ctx.accounts.ray.cp_swap_program.key(),
+            accounts: cpi_accounts
+                .to_account_metas(None)
+                .into_iter()
+                .zip(cpi_accounts.to_account_infos())
+                .map(|mut pair| {
+                    pair.0.is_signer = pair.1.is_signer;
+                    if pair.0.pubkey == ctx.accounts.cond.sl_pool_signer.key()
+                        || pair.0.pubkey == ctx.accounts.ray.next_spot_pool.key()
+                    {
+                        pair.0.is_signer = true;
+                    }
+                    pair.0
+                })
+                .collect(),
+            data: ix_data,
+        };
+
+        let spot_pool_index = 1_u32.to_le_bytes();
+        let pool_seeds = &[b"spot_pool", &spot_pool_index[..], &[ctx.bumps.ray.next_spot_pool]];
+        let raydium_signer = &[&pool_seeds[..], &seeds[..]];
+
+        solana_program::program::invoke_signed(&ix, &cpi_accounts.to_account_infos(), raydium_signer)?;
+
+        // raydium_cpmm_cpi::cpi::initialize(
+        //     CpiContext::new_with_signer(
+        //         ctx.accounts.ray.cp_swap_program.to_account_info(),
+        //         raydium_cpmm_cpi::cpi::accounts::Initialize {
+        //             creator: ctx.accounts.cond.sl_pool_signer.to_account_info(),
+        //             authority: ctx.accounts.ray.raydium_authority.to_account_info(),
+        //             pool_state: ctx.accounts.ray.next_spot_pool.to_account_info(),
+        //             amm_config: ctx.accounts.ray.amm_config.to_account_info(),
+        //             token_0_mint,
+        //             token_1_mint,
+        //             lp_mint: ctx.accounts.ray.next_spot_pool_lp_mint.to_account_info(),
+        //             creator_token_0,
+        //             creator_token_1,
+        //             creator_lp_token: ctx
+        //                 .accounts
+        //                 .ray
+        //                 .sl_pool_next_spot_lp_vault
+        //                 .to_account_info(),
+        //             token_0_program: ctx.accounts.ray.token_program.to_account_info(),
+        //             token_1_program: ctx.accounts.ray.token_program.to_account_info(),
+        //             token_program: ctx.accounts.ray.token_program.to_account_info(),
+        //             observation_state: ctx
+        //                 .accounts
+        //                 .ray
+        //                 .next_spot_pool_observation_state
+        //                 .to_account_info(),
+        //             create_pool_fee: ctx.accounts.ray.create_pool_fee_receiver.to_account_info(),
+        //             rent: ctx.accounts.rent.to_account_info(),
+        //             system_program: ctx.accounts.system_program.to_account_info(),
+        //             token_0_vault,
+        //             token_1_vault,
+        //             associated_token_program: ctx
+        //                 .accounts
+        //                 .associated_token_program
+        //                 .to_account_info(),
+        //         },
+        //         signer,
+        //     ),
+        //     init_amount_0,
+        //     init_amount_1,
+        //     0,
+        // )?;
 
         // TODO: figure out why this is underreporting the number of LP tokens to mint
         // let lp_tokens_to_mint = {

@@ -338,362 +338,423 @@ export class SharedLiquidityManagerClient {
   //     });
   // }
 
-  // initializeProposalWithLiquidityIx(
-  //   dao: PublicKey,
-  //   spotPool: PublicKey,
-  //   baseMint: PublicKey,
-  //   quoteMint: PublicKey,
-  //   nonce: BN,
-  //   instruction: ProposalInstruction
-  // ) {
-  //   const [slPool] = getSharedLiquidityPoolAddr(
-  //     this.program.programId,
-  //     dao,
-  //     spotPool
-  //   );
+  initializeProposalWithLiquidityIx(
+    dao: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    nonce: BN,
+    instruction: ProposalInstruction
+  ) {
+    const [slPool] = getSharedLiquidityPoolAddr(
+      this.program.programId,
+      dao,
+      this.provider.wallet.publicKey
+    );
 
-  //   const [proposal] = getProposalAddr(
-  //     this.autocratClient.getProgramId(),
-  //     slPool,
-  //     nonce
-  //   );
+    const [slPoolSigner] = PublicKey.findProgramAddressSync(
+      [Buffer.from("sl_pool_signer"), slPool.toBuffer()],
+      this.program.programId
+    );
 
-  //   const {
-  //     passAmm,
-  //     failAmm,
-  //     question,
-  //     baseVault,
-  //     quoteVault,
-  //     passBaseMint,
-  //     failBaseMint,
-  //     passQuoteMint,
-  //     failQuoteMint,
-  //     passLp: passLpMint,
-  //     failLp: failLpMint,
-  //   } = this.autocratClient.getProposalPdas(proposal, baseMint, quoteMint, dao);
+    const [spotPool] = PublicKey.findProgramAddressSync(
+      [
+        anchor.utils.bytes.utf8.encode("spot_pool"),
+        new BN(0).toArrayLike(Buffer, "le", 4),
+      ],
+      this.program.programId
+    );
 
-  //   const [daoTreasury] = getDaoTreasuryAddr(
-  //     this.autocratClient.getProgramId(),
-  //     dao
-  //   );
+    const [proposal] = getProposalAddr(
+      this.autocratClient.getProgramId(),
+      slPoolSigner,
+      nonce
+    );
 
-  //   return this.program.methods
-  //     .initializeProposalWithLiquidity({
-  //       instruction,
-  //       nonce,
-  //     })
-  //     .accounts({
-  //       slPool,
-  //       proposalCreator: this.provider.wallet.publicKey,
-  //       proposal,
-  //       baseMint,
-  //       quoteMint,
-  //       slPoolBaseVault: getAssociatedTokenAddressSync(baseMint, slPool, true),
-  //       slPoolQuoteVault: getAssociatedTokenAddressSync(
-  //         quoteMint,
-  //         slPool,
-  //         true
-  //       ),
-  //       slPoolSpotLpVault: getAssociatedTokenAddressSync(
-  //         getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //         slPool,
-  //         true
-  //       ),
-  //       raydium: {
-  //         spotPool: spotPool,
-  //         spotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
-  //           spotPool,
-  //           baseMint,
-  //           false
-  //         )[0],
-  //         spotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
-  //           spotPool,
-  //           quoteMint,
-  //           false
-  //         )[0],
-  //         lpMint: getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //         raydiumAuthority: RAYDIUM_AUTHORITY,
-  //         tokenProgram: TOKEN_PROGRAM_ID,
-  //         tokenProgram2022: TOKEN_2022_PROGRAM_ID,
-  //         cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
-  //         memoProgram: MEMO_PROGRAM_ID,
-  //       },
-  //       conditionalVault: {
-  //         slPool,
-  //         question,
-  //         baseVault,
-  //         quoteVault,
-  //         baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
-  //           baseMint,
-  //           baseVault,
-  //           true
-  //         ),
-  //         quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
-  //           quoteMint,
-  //           quoteVault,
-  //           true
-  //         ),
-  //         conditionalVaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
-  //         passBaseMint,
-  //         failBaseMint,
-  //         passQuoteMint,
-  //         failQuoteMint,
-  //         slPoolPassBaseVault: getAssociatedTokenAddressSync(
-  //           passBaseMint,
-  //           slPool,
-  //           true
-  //         ),
-  //         slPoolFailBaseVault: getAssociatedTokenAddressSync(
-  //           failBaseMint,
-  //           slPool,
-  //           true
-  //         ),
-  //         slPoolPassQuoteVault: getAssociatedTokenAddressSync(
-  //           passQuoteMint,
-  //           slPool,
-  //           true
-  //         ),
-  //         slPoolFailQuoteVault: getAssociatedTokenAddressSync(
-  //           failQuoteMint,
-  //           slPool,
-  //           true
-  //         ),
-  //         vaultEventAuthority: getEventAuthorityAddr(
-  //           CONDITIONAL_VAULT_PROGRAM_ID
-  //         )[0],
-  //       },
-  //       amm: {
-  //         passAmm,
-  //         failAmm,
-  //         passLpMint,
-  //         failLpMint,
-  //         slPoolPassLpAccount: getAssociatedTokenAddressSync(
-  //           passLpMint,
-  //           slPool,
-  //           true
-  //         ),
-  //         slPoolFailLpAccount: getAssociatedTokenAddressSync(
-  //           failLpMint,
-  //           slPool,
-  //           true
-  //         ),
-  //         passAmmVaultAtaBase: getAssociatedTokenAddressSync(
-  //           passBaseMint,
-  //           passAmm,
-  //           true
-  //         ),
-  //         passAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-  //           passQuoteMint,
-  //           passAmm,
-  //           true
-  //         ),
-  //         failAmmVaultAtaBase: getAssociatedTokenAddressSync(
-  //           failBaseMint,
-  //           failAmm,
-  //           true
-  //         ),
-  //         failAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-  //           failQuoteMint,
-  //           failAmm,
-  //           true
-  //         ),
-  //         proposalPassLpVault: getAssociatedTokenAddressSync(
-  //           passLpMint,
-  //           daoTreasury,
-  //           true
-  //         ),
-  //         proposalFailLpVault: getAssociatedTokenAddressSync(
-  //           failLpMint,
-  //           daoTreasury,
-  //           true
-  //         ),
-  //         ammProgram: AMM_PROGRAM_ID,
-  //         eventAuthority: getEventAuthorityAddr(AMM_PROGRAM_ID)[0],
-  //       },
-  //       autocratEventAuthority: getEventAuthorityAddr(AUTOCRAT_PROGRAM_ID)[0],
-  //       dao,
-  //       autocratProgram: AUTOCRAT_PROGRAM_ID,
-  //       systemProgram: SystemProgram.programId,
-  //     });
-  // }
+    const {
+      passAmm,
+      failAmm,
+      question,
+      baseVault,
+      quoteVault,
+      passBaseMint,
+      failBaseMint,
+      passQuoteMint,
+      failQuoteMint,
+      passLp: passLpMint,
+      failLp: failLpMint,
+    } = this.autocratClient.getProposalPdas(proposal, baseMint, quoteMint, dao);
 
-  // removeProposalLiquidityIx(
-  //   dao: PublicKey,
-  //   spotPool: PublicKey,
-  //   baseMint: PublicKey,
-  //   quoteMint: PublicKey,
-  //   nonce: BN
-  // ) {
-  //   const [slPool] = getSharedLiquidityPoolAddr(
-  //     this.program.programId,
-  //     dao,
-  //     spotPool
-  //   );
+    const [daoTreasury] = getDaoTreasuryAddr(
+      this.autocratClient.getProgramId(),
+      dao
+    );
 
-  //   const [proposal] = getProposalAddr(
-  //     this.autocratClient.getProgramId(),
-  //     slPool,
-  //     nonce
-  //   );
+    return this.program.methods
+      .initializeProposalWithLiquidity({
+        instruction,
+        nonce,
+      })
+      .accounts({
+        slPool,
+        proposalCreator: this.provider.wallet.publicKey,
+        proposal,
+        baseMint,
+        quoteMint,
+        slPoolBaseVault: getAssociatedTokenAddressSync(
+          baseMint,
+          slPoolSigner,
+          true
+        ),
+        slPoolQuoteVault: getAssociatedTokenAddressSync(
+          quoteMint,
+          slPoolSigner,
+          true
+        ),
+        slPoolSpotLpVault: getAssociatedTokenAddressSync(
+          getRaydiumCpmmLpMintAddr(spotPool, false)[0],
+          slPoolSigner,
+          true
+        ),
+        raydium: {
+          spotPool: spotPool,
+          spotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
+            spotPool,
+            baseMint,
+            false
+          )[0],
+          spotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
+            spotPool,
+            quoteMint,
+            false
+          )[0],
+          lpMint: getRaydiumCpmmLpMintAddr(spotPool, false)[0],
+          raydiumAuthority: RAYDIUM_AUTHORITY,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+          cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
+          memoProgram: MEMO_PROGRAM_ID,
+        },
+        conditionalVault: {
+          slPoolSigner,
+          question,
+          baseVault,
+          quoteVault,
+          baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+            baseMint,
+            baseVault,
+            true
+          ),
+          quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+            quoteMint,
+            quoteVault,
+            true
+          ),
+          conditionalVaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
+          passBaseMint,
+          failBaseMint,
+          passQuoteMint,
+          failQuoteMint,
+          slPoolPassBaseVault: getAssociatedTokenAddressSync(
+            passBaseMint,
+            slPoolSigner,
+            true
+          ),
+          slPoolFailBaseVault: getAssociatedTokenAddressSync(
+            failBaseMint,
+            slPoolSigner,
+            true
+          ),
+          slPoolPassQuoteVault: getAssociatedTokenAddressSync(
+            passQuoteMint,
+            slPoolSigner,
+            true
+          ),
+          slPoolFailQuoteVault: getAssociatedTokenAddressSync(
+            failQuoteMint,
+            slPoolSigner,
+            true
+          ),
+          vaultEventAuthority: getEventAuthorityAddr(
+            CONDITIONAL_VAULT_PROGRAM_ID
+          )[0],
+        },
+        amm: {
+          passAmm,
+          failAmm,
+          passLpMint,
+          failLpMint,
+          slPoolPassLpAccount: getAssociatedTokenAddressSync(
+            passLpMint,
+            slPoolSigner,
+            true
+          ),
+          slPoolFailLpAccount: getAssociatedTokenAddressSync(
+            failLpMint,
+            slPoolSigner,
+            true
+          ),
+          passAmmVaultAtaBase: getAssociatedTokenAddressSync(
+            passBaseMint,
+            passAmm,
+            true
+          ),
+          passAmmVaultAtaQuote: getAssociatedTokenAddressSync(
+            passQuoteMint,
+            passAmm,
+            true
+          ),
+          failAmmVaultAtaBase: getAssociatedTokenAddressSync(
+            failBaseMint,
+            failAmm,
+            true
+          ),
+          failAmmVaultAtaQuote: getAssociatedTokenAddressSync(
+            failQuoteMint,
+            failAmm,
+            true
+          ),
+          proposalPassLpVault: getAssociatedTokenAddressSync(
+            passLpMint,
+            daoTreasury,
+            true
+          ),
+          proposalFailLpVault: getAssociatedTokenAddressSync(
+            failLpMint,
+            daoTreasury,
+            true
+          ),
+          ammProgram: AMM_PROGRAM_ID,
+          eventAuthority: getEventAuthorityAddr(AMM_PROGRAM_ID)[0],
+        },
+        autocratEventAuthority: getEventAuthorityAddr(AUTOCRAT_PROGRAM_ID)[0],
+        dao,
+        autocratProgram: AUTOCRAT_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      });
+  }
 
-  //   const {
-  //     passAmm,
-  //     failAmm,
-  //     question,
-  //     baseVault,
-  //     quoteVault,
-  //     passBaseMint,
-  //     failBaseMint,
-  //     passQuoteMint,
-  //     failQuoteMint,
-  //     passLp: passLpMint,
-  //     failLp: failLpMint,
-  //   } = this.autocratClient.getProposalPdas(proposal, baseMint, quoteMint, dao);
+  removeProposalLiquidityIx(
+    dao: PublicKey,
+    spotPool: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    nonce: BN
+  ) {
+    const [slPool] = getSharedLiquidityPoolAddr(
+      this.program.programId,
+      dao,
+      this.provider.wallet.publicKey
+    );
 
-  //   const [daoTreasury] = getDaoTreasuryAddr(
-  //     this.autocratClient.getProgramId(),
-  //     dao
-  //   );
+    const [slPoolSigner] = PublicKey.findProgramAddressSync(
+      [Buffer.from("sl_pool_signer"), slPool.toBuffer()],
+      this.program.programId
+    );
 
-  //   const poolStateKp = Keypair.generate();
-  //   const poolState = poolStateKp.publicKey;
+    const [proposal] = getProposalAddr(
+      this.autocratClient.getProgramId(),
+      slPoolSigner,
+      nonce
+    );
 
-  //   const [observationState] = PublicKey.findProgramAddressSync(
-  //     [anchor.utils.bytes.utf8.encode("observation"), poolState.toBuffer()],
-  //     RAYDIUM_CP_SWAP_PROGRAM_ID
-  //   );
+    const {
+      passAmm,
+      failAmm,
+      question,
+      baseVault,
+      quoteVault,
+      passBaseMint,
+      failBaseMint,
+      passQuoteMint,
+      failQuoteMint,
+      passLp: passLpMint,
+      failLp: failLpMint,
+    } = this.autocratClient.getProposalPdas(proposal, baseMint, quoteMint, dao);
 
-  //   return this.program.methods.removeProposalLiquidity().accounts({
-  //     slPool,
-  //     proposal,
-  //     baseMint,
-  //     quoteMint,
-  //     slPoolBaseVault: getAssociatedTokenAddressSync(baseMint, slPool, true),
-  //     slPoolQuoteVault: getAssociatedTokenAddressSync(quoteMint, slPool, true),
-  //     slPoolSpotLpVault: getAssociatedTokenAddressSync(
-  //       getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //       slPool,
-  //       true
-  //     ),
-  //     ray: {
-  //       spotPool: spotPool,
-  //       spotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
-  //         spotPool,
-  //         baseMint,
-  //         false
-  //       )[0],
-  //       spotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
-  //         spotPool,
-  //         quoteMint,
-  //         false
-  //       )[0],
-  //       lpMint: getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //       raydiumAuthority: RAYDIUM_AUTHORITY,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenProgram2022: TOKEN_2022_PROGRAM_ID,
-  //       cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
-  //       memoProgram: MEMO_PROGRAM_ID,
-  //       ammConfig: LOW_FEE_RAYDIUM_CONFIG,
-  //       createPoolFeeReceiver: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
-  //       observationState,
-  //     },
-  //     cond: {
-  //       question,
-  //       baseVault,
-  //       quoteVault,
-  //       baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
-  //         baseMint,
-  //         baseVault,
-  //         true
-  //       ),
-  //       quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
-  //         quoteMint,
-  //         quoteVault,
-  //         true
-  //       ),
-  //       conditionalVaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
-  //       passBaseMint,
-  //       failBaseMint,
-  //       passQuoteMint,
-  //       failQuoteMint,
-  //       slPoolPassBaseVault: getAssociatedTokenAddressSync(
-  //         passBaseMint,
-  //         slPool,
-  //         true
-  //       ),
-  //       slPoolFailBaseVault: getAssociatedTokenAddressSync(
-  //         failBaseMint,
-  //         slPool,
-  //         true
-  //       ),
-  //       slPoolPassQuoteVault: getAssociatedTokenAddressSync(
-  //         passQuoteMint,
-  //         slPool,
-  //         true
-  //       ),
-  //       slPoolFailQuoteVault: getAssociatedTokenAddressSync(
-  //         failQuoteMint,
-  //         slPool,
-  //         true
-  //       ),
-  //       vaultEventAuthority: getEventAuthorityAddr(
-  //         CONDITIONAL_VAULT_PROGRAM_ID
-  //       )[0],
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       slPool,
-  //     },
-  //     ammm2: {
-  //       passAmm,
-  //       failAmm,
-  //       passLpMint,
-  //       failLpMint,
-  //       slPoolPassLpAccount: getAssociatedTokenAddressSync(
-  //         passLpMint,
-  //         slPool,
-  //         true
-  //       ),
-  //       slPoolFailLpAccount: getAssociatedTokenAddressSync(
-  //         failLpMint,
-  //         slPool,
-  //         true
-  //       ),
-  //       passAmmVaultAtaBase: getAssociatedTokenAddressSync(
-  //         passBaseMint,
-  //         passAmm,
-  //         true
-  //       ),
-  //       passAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-  //         passQuoteMint,
-  //         passAmm,
-  //         true
-  //       ),
-  //       failAmmVaultAtaBase: getAssociatedTokenAddressSync(
-  //         failBaseMint,
-  //         failAmm,
-  //         true
-  //       ),
-  //       failAmmVaultAtaQuote: getAssociatedTokenAddressSync(
-  //         failQuoteMint,
-  //         failAmm,
-  //         true
-  //       ),
-  //       proposalPassLpVault: getAssociatedTokenAddressSync(
-  //         passLpMint,
-  //         daoTreasury,
-  //         true
-  //       ),
-  //       proposalFailLpVault: getAssociatedTokenAddressSync(
-  //         failLpMint,
-  //         daoTreasury,
-  //         true
-  //       ),
-  //       ammProgram: AMM_PROGRAM_ID,
-  //       eventAuthority: getEventAuthorityAddr(AMM_PROGRAM_ID)[0],
-  //     },
-  //     autocratEventAuthority: getEventAuthorityAddr(AUTOCRAT_PROGRAM_ID)[0],
-  //     dao,
-  //     autocratProgram: AUTOCRAT_PROGRAM_ID,
-  //     systemProgram: SystemProgram.programId,
-  //   });
-  // }
+    const [daoTreasury] = getDaoTreasuryAddr(
+      this.autocratClient.getProgramId(),
+      dao
+    );
+
+    const poolStateKp = Keypair.generate();
+    const poolState = poolStateKp.publicKey;
+
+    const [observationState] = PublicKey.findProgramAddressSync(
+      [anchor.utils.bytes.utf8.encode("observation"), poolState.toBuffer()],
+      RAYDIUM_CP_SWAP_PROGRAM_ID
+    );
+
+    const [nextSpotPool] = PublicKey.findProgramAddressSync(
+      [
+        anchor.utils.bytes.utf8.encode("spot_pool"),
+        new BN(1).toArrayLike(Buffer, "le", 4),
+      ],
+      this.program.programId
+    );
+
+    return this.program.methods.removeProposalLiquidity().accounts({
+      slPool,
+      proposal,
+      baseMint,
+      quoteMint,
+      slPoolBaseVault: getAssociatedTokenAddressSync(
+        baseMint,
+        slPoolSigner,
+        true
+      ),
+      slPoolQuoteVault: getAssociatedTokenAddressSync(
+        quoteMint,
+        slPoolSigner,
+        true
+      ),
+      slPoolSpotLpVault: getAssociatedTokenAddressSync(
+        getRaydiumCpmmLpMintAddr(spotPool, false)[0],
+        slPoolSigner,
+        true
+      ),
+      ray: {
+        activeSpotPool: spotPool,
+        activeSpotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
+          spotPool,
+          baseMint,
+          false
+        )[0],
+        activeSpotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
+          spotPool,
+          quoteMint,
+          false
+        )[0],
+        nextSpotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
+          nextSpotPool,
+          quoteMint,
+          false
+        )[0],
+        slPoolSigner,
+        nextSpotPoolLpMint: getRaydiumCpmmLpMintAddr(nextSpotPool, false)[0],
+        nextSpotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
+          nextSpotPool,
+          baseMint,
+          false
+        )[0],
+        nextSpotPool,
+        nextSpotPoolObservationState: getRaydiumCpmmObservationStateAddr(
+          nextSpotPool,
+          false
+        )[0],
+        slPoolNextSpotLpVault: getAssociatedTokenAddressSync(
+          getRaydiumCpmmLpMintAddr(nextSpotPool, false)[0],
+          slPoolSigner,
+          true
+        ),
+        activeSpotPoolLpMint: getRaydiumCpmmLpMintAddr(spotPool, false)[0],
+        raydiumAuthority: RAYDIUM_AUTHORITY,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+        cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
+        memoProgram: MEMO_PROGRAM_ID,
+        ammConfig: LOW_FEE_RAYDIUM_CONFIG,
+        createPoolFeeReceiver: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+        observationState,
+        baseMint,
+        quoteMint,
+      },
+      cond: {
+        question,
+        baseVault,
+        quoteVault,
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          baseVault,
+          true
+        ),
+        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          quoteVault,
+          true
+        ),
+        conditionalVaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
+        passBaseMint,
+        failBaseMint,
+        passQuoteMint,
+        failQuoteMint,
+        slPoolPassBaseVault: getAssociatedTokenAddressSync(
+          passBaseMint,
+          slPoolSigner,
+          true
+        ),
+        slPoolFailBaseVault: getAssociatedTokenAddressSync(
+          failBaseMint,
+          slPoolSigner,
+          true
+        ),
+        slPoolPassQuoteVault: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          slPoolSigner,
+          true
+        ),
+        slPoolFailQuoteVault: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          slPoolSigner,
+          true
+        ),
+        vaultEventAuthority: getEventAuthorityAddr(
+          CONDITIONAL_VAULT_PROGRAM_ID
+        )[0],
+        tokenProgram: TOKEN_PROGRAM_ID,
+        slPoolSigner,
+      },
+      ammm2: {
+        passAmm,
+        failAmm,
+        passLpMint,
+        failLpMint,
+        slPoolPassLpAccount: getAssociatedTokenAddressSync(
+          passLpMint,
+          slPoolSigner,
+          true
+        ),
+        slPoolFailLpAccount: getAssociatedTokenAddressSync(
+          failLpMint,
+          slPoolSigner,
+          true
+        ),
+        passAmmVaultAtaBase: getAssociatedTokenAddressSync(
+          passBaseMint,
+          passAmm,
+          true
+        ),
+        passAmmVaultAtaQuote: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          passAmm,
+          true
+        ),
+        failAmmVaultAtaBase: getAssociatedTokenAddressSync(
+          failBaseMint,
+          failAmm,
+          true
+        ),
+        failAmmVaultAtaQuote: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          failAmm,
+          true
+        ),
+        proposalPassLpVault: getAssociatedTokenAddressSync(
+          passLpMint,
+          daoTreasury,
+          true
+        ),
+        proposalFailLpVault: getAssociatedTokenAddressSync(
+          failLpMint,
+          daoTreasury,
+          true
+        ),
+        ammProgram: AMM_PROGRAM_ID,
+        eventAuthority: getEventAuthorityAddr(AMM_PROGRAM_ID)[0],
+      },
+      autocratEventAuthority: getEventAuthorityAddr(AUTOCRAT_PROGRAM_ID)[0],
+      dao,
+      autocratProgram: AUTOCRAT_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    });
+  }
 }
