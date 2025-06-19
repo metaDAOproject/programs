@@ -396,7 +396,6 @@ export class SharedLiquidityManagerClient {
 
     return this.program.methods.removeProposalLiquidity().accounts({
       slPool,
-      proposalRemover: this.provider.wallet.publicKey,
       proposal,
       baseMint,
       quoteMint,

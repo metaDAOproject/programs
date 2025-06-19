@@ -631,11 +631,6 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
-          name: "proposalRemover";
-          isMut: false;
-          isSigner: true;
-        },
-        {
           name: "proposal";
           isMut: true;
           isSigner: false;
@@ -1807,11 +1802,6 @@ export const IDL: SharedLiquidityManager = {
           name: "slPool",
           isMut: true,
           isSigner: false,
-        },
-        {
-          name: "proposalRemover",
-          isMut: false,
-          isSigner: true,
         },
         {
           name: "proposal",

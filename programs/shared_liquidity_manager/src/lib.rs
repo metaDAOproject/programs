@@ -12,9 +12,8 @@ mod instructions;
 use instructions::*;
 
 // TODO:
-// - add a proposer fee
+// - add native token staking
 // - implement withdraw
-// - implement remove_proposal_liquidity
 
 #[program]
 pub mod shared_liquidity_manager {
