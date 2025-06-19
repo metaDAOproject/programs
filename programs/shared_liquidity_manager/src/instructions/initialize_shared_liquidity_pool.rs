@@ -23,16 +23,18 @@ use raydium_cpmm_cpi::{
 pub struct InitializeSharedLiquidityPoolParams {
     pub base_amount: u64,
     pub quote_amount: u64,
+    pub proposal_stake_rate_threshold_bps: u16,
 }
 
 #[event_cpi]
 #[derive(Accounts)]
+#[instruction(params: InitializeSharedLiquidityPoolParams)]
 pub struct InitializeSharedLiquidityPool<'info> {
     #[account(
         init,
         payer = creator,
         space = 8 + std::mem::size_of::<SharedLiquidityPool>(),
-        seeds = [b"sl_pool", dao.key().as_ref(), creator.key().as_ref()],
+        seeds = [b"sl_pool", dao.key().as_ref(), creator.key().as_ref(), &params.proposal_stake_rate_threshold_bps.to_le_bytes()],
         bump
     )]
     pub sl_pool: Box<Account<'info, SharedLiquidityPool>>,
@@ -339,6 +341,7 @@ impl InitializeSharedLiquidityPool<'_> {
             dao: ctx.accounts.dao.key(),
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),
+            proposal_stake_rate_threshold_bps: params.proposal_stake_rate_threshold_bps,
             is_base_token_0: ctx.accounts.base_mint.key() < ctx.accounts.quote_mint.key(),
             sl_pool_signer: ctx.accounts.sl_pool_signer.key(),
             sl_pool_signer_bump: ctx.bumps.sl_pool_signer,

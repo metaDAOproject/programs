@@ -22,6 +22,9 @@ pub struct SharedLiquidityPool {
     pub sl_pool_spot_lp_vault: Pubkey,
     /// The proposal that's using liquidity from this pool.
     pub active_proposal: Option<Pubkey>,
+    /// The percentage of a token's supply, in basis points, that needs to be
+    /// staked to a draft proposal before it can be initialized.
+    pub proposal_stake_rate_threshold_bps: u16,
     /// The sequence number of this shared liquidity pool. Useful for sorting events.
     pub seq_num: u64,
     /// The current Raydium spot pool. Changes when a proposal is removed.

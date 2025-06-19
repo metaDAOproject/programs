@@ -50,6 +50,7 @@ pub mod shared_liquidity_manager {
     //     WithdrawSharedLiquidity::handle(ctx, params)
     // }
 
+    #[access_control(ctx.accounts.validate())]
     pub fn initialize_proposal_with_liquidity(ctx: Context<InitializeProposalWithLiquidity>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
         InitializeProposalWithLiquidity::handle(ctx, params)
     }

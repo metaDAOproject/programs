@@ -285,7 +285,7 @@ export type SharedLiquidityManager = {
       name: "initializeProposalWithLiquidity";
       accounts: [
         {
-          name: "slPool";
+          name: "sharedLiquidityPool";
           isMut: true;
           isSigner: false;
         },
@@ -573,6 +573,11 @@ export type SharedLiquidityManager = {
               isSigner: false;
             }
           ];
+        },
+        {
+          name: "draftProposal";
+          isMut: true;
+          isSigner: false;
         },
         {
           name: "dao";
@@ -1118,6 +1123,14 @@ export type SharedLiquidityManager = {
             };
           },
           {
+            name: "proposalStakeRateThresholdBps";
+            docs: [
+              "The percentage of a token's supply, in basis points, that needs to be",
+              "staked to a draft proposal before it can be initialized."
+            ];
+            type: "u16";
+          },
+          {
             name: "seqNum";
             docs: [
               "The sequence number of this shared liquidity pool. Useful for sorting events."
@@ -1193,12 +1206,6 @@ export type SharedLiquidityManager = {
         kind: "struct";
         fields: [
           {
-            name: "instruction";
-            type: {
-              defined: "ProposalInstruction";
-            };
-          },
-          {
             name: "nonce";
             type: "u64";
           }
@@ -1217,6 +1224,10 @@ export type SharedLiquidityManager = {
           {
             name: "quoteAmount";
             type: "u64";
+          },
+          {
+            name: "proposalStakeRateThresholdBps";
+            type: "u16";
           }
         ];
       };
@@ -1593,7 +1604,7 @@ export const IDL: SharedLiquidityManager = {
       name: "initializeProposalWithLiquidity",
       accounts: [
         {
-          name: "slPool",
+          name: "sharedLiquidityPool",
           isMut: true,
           isSigner: false,
         },
@@ -1881,6 +1892,11 @@ export const IDL: SharedLiquidityManager = {
               isSigner: false,
             },
           ],
+        },
+        {
+          name: "draftProposal",
+          isMut: true,
+          isSigner: false,
         },
         {
           name: "dao",
@@ -2426,6 +2442,14 @@ export const IDL: SharedLiquidityManager = {
             },
           },
           {
+            name: "proposalStakeRateThresholdBps",
+            docs: [
+              "The percentage of a token's supply, in basis points, that needs to be",
+              "staked to a draft proposal before it can be initialized.",
+            ],
+            type: "u16",
+          },
+          {
             name: "seqNum",
             docs: [
               "The sequence number of this shared liquidity pool. Useful for sorting events.",
@@ -2501,12 +2525,6 @@ export const IDL: SharedLiquidityManager = {
         kind: "struct",
         fields: [
           {
-            name: "instruction",
-            type: {
-              defined: "ProposalInstruction",
-            },
-          },
-          {
             name: "nonce",
             type: "u64",
           },
@@ -2525,6 +2543,10 @@ export const IDL: SharedLiquidityManager = {
           {
             name: "quoteAmount",
             type: "u64",
+          },
+          {
+            name: "proposalStakeRateThresholdBps",
+            type: "u16",
           },
         ],
       },

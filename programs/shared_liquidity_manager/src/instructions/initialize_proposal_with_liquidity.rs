@@ -8,7 +8,6 @@ use crate::state::{DraftProposal, ProposalInstruction, SharedLiquidityPool};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeProposalWithLiquidityParams {
-    pub instruction: ProposalInstruction,
     pub nonce: u64,
 }
 
@@ -120,9 +119,9 @@ pub struct InitializeProposalWithLiquidity<'info> {
         has_one = sl_pool_spot_lp_vault,
         has_one = base_mint,
         has_one = quote_mint,
-        constraint = sl_pool.active_spot_pool == raydium.spot_pool.key()
+        constraint = shared_liquidity_pool.active_spot_pool == raydium.spot_pool.key()
     )]
-    pub sl_pool: Account<'info, SharedLiquidityPool>,
+    pub shared_liquidity_pool: Account<'info, SharedLiquidityPool>,
     pub proposal_creator: Signer<'info>,
     /// CHECK: initialized by autocrat
     #[account(mut)]
@@ -147,6 +146,9 @@ pub struct InitializeProposalWithLiquidity<'info> {
     // AMM accounts
     pub amm: AmmAccounts<'info>,
 
+    #[account(mut, has_one = shared_liquidity_pool)]
+    pub draft_proposal: Box<Account<'info, DraftProposal>>,
+
     // Autocrat accounts
     #[account(mut)]
     pub dao: Box<Account<'info, autocrat::state::Dao>>,
@@ -157,8 +159,15 @@ pub struct InitializeProposalWithLiquidity<'info> {
 }
 
 impl InitializeProposalWithLiquidity<'_> {
+    pub fn validate(&self) -> Result<()> {
+        let total_supply = self.base_mint.supply;
+        let stake_threshold = (total_supply * self.shared_liquidity_pool.proposal_stake_rate_threshold_bps as u64) / 10_000;
+        require_gte!(self.draft_proposal.staked_token_amount, stake_threshold);
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
-        msg!("Initializing proposal with liquidity");
         // 1. Withdraw half of the pool's LP tokens from Raydium
         let pool_lp_balance = ctx.accounts.sl_pool_spot_lp_vault.amount;
         require!(pool_lp_balance > 0, ErrorCode::NoLpTokensInPool);
@@ -176,7 +185,7 @@ impl InitializeProposalWithLiquidity<'_> {
             vault_1_mint,
             token_0_vault,
             token_1_vault,
-        ) = if ctx.accounts.sl_pool.is_base_token_0 {
+        ) = if ctx.accounts.shared_liquidity_pool.is_base_token_0 {
             (
                 ctx.accounts.sl_pool_base_vault.to_account_info(),
                 ctx.accounts.sl_pool_quote_vault.to_account_info(),
@@ -196,11 +205,11 @@ impl InitializeProposalWithLiquidity<'_> {
             )
         };
 
-        let sl_pool_key = ctx.accounts.sl_pool.key();
+        let sl_pool_key = ctx.accounts.shared_liquidity_pool.key();
         let seeds = &[
             b"sl_pool_signer".as_ref(),
             sl_pool_key.as_ref(),
-            &[ctx.accounts.sl_pool.sl_pool_signer_bump],
+            &[ctx.accounts.shared_liquidity_pool.sl_pool_signer_bump],
         ];
         let signer = &[&seeds[..]];
 
@@ -435,7 +444,7 @@ impl InitializeProposalWithLiquidity<'_> {
             ),
             autocrat::instructions::InitializeProposalParams {
                 description_url: "".to_string(),
-                instruction: params.instruction.into(),
+                instruction: ctx.accounts.draft_proposal.instruction.clone().into(),
                 pass_lp_tokens_to_lock: quote_withdrawn,
                 fail_lp_tokens_to_lock: quote_withdrawn,
                 nonce: params.nonce,

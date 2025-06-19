@@ -87,12 +87,14 @@ export class SharedLiquidityManagerClient {
     baseMint: PublicKey,
     quoteMint: PublicKey,
     baseAmount: BN,
-    quoteAmount: BN
+    quoteAmount: BN,
+    proposalStakeRateThresholdBps: number = 100
   ) {
     let slPool = getSharedLiquidityPoolAddr(
       this.program.programId,
       dao,
-      this.provider.wallet.publicKey
+      this.provider.wallet.publicKey,
+      proposalStakeRateThresholdBps
     )[0];
 
     let spotPool = PublicKey.findProgramAddressSync(
@@ -112,6 +114,7 @@ export class SharedLiquidityManagerClient {
       .initializeSharedLiquidityPool({
         baseAmount,
         quoteAmount,
+        proposalStakeRateThresholdBps,
       })
       .accounts({
         slPool,
@@ -343,12 +346,14 @@ export class SharedLiquidityManagerClient {
     baseMint: PublicKey,
     quoteMint: PublicKey,
     nonce: BN,
-    instruction: ProposalInstruction
+    draftProposal: PublicKey,
+    proposalStakeRateThresholdBps: number = 100
   ) {
     const [slPool] = getSharedLiquidityPoolAddr(
       this.program.programId,
       dao,
-      this.provider.wallet.publicKey
+      this.provider.wallet.publicKey,
+      proposalStakeRateThresholdBps
     );
 
     const [slPoolSigner] = PublicKey.findProgramAddressSync(
@@ -391,11 +396,11 @@ export class SharedLiquidityManagerClient {
 
     return this.program.methods
       .initializeProposalWithLiquidity({
-        instruction,
         nonce,
       })
       .accounts({
-        slPool,
+        sharedLiquidityPool: slPool,
+        draftProposal,
         proposalCreator: this.provider.wallet.publicKey,
         proposal,
         baseMint,
@@ -605,12 +610,14 @@ export class SharedLiquidityManagerClient {
     spotPool: PublicKey,
     baseMint: PublicKey,
     quoteMint: PublicKey,
-    draftProposalNonce: BN
+    draftProposalNonce: BN,
+    proposalStakeRateThresholdBps: number = 100
   ) {
     const [slPool] = getSharedLiquidityPoolAddr(
       this.program.programId,
       dao,
-      this.provider.wallet.publicKey
+      this.provider.wallet.publicKey,
+      proposalStakeRateThresholdBps
     );
 
     const [slPoolSigner] = PublicKey.findProgramAddressSync(

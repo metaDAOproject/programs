@@ -74,10 +74,17 @@ export default async function () {
 
   await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, META, USDC, new BN(25 * 10 ** 9), new BN(25_000 * 10 ** 6)).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
 
-  const [slPool] = PublicKey.findProgramAddressSync(
-    [Buffer.from("sl_pool"), dao.toBuffer(), this.payer.publicKey.toBuffer()],
-    sharedLiquidityManagerClient.getProgramId()
+  const [slPool] = getSharedLiquidityPoolAddr(
+    sharedLiquidityManagerClient.getProgramId(),
+    dao,
+    this.payer.publicKey,
+    100
   );
+
+  // const [slPool] = PublicKey.findProgramAddressSync(
+  //   [Buffer.from("sl_pool"), dao.toBuffer(), this.payer.publicKey.toBuffer()],
+  //   sharedLiquidityManagerClient.getProgramId()
+  // );
 
   const [slPoolSigner] = PublicKey.findProgramAddressSync(
     [Buffer.from("sl_pool_signer"), slPool.toBuffer()],
@@ -102,7 +109,7 @@ export default async function () {
   let storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
   assert.equal(storedDraftProposal.stakedTokenAmount.toString(), "0");
 
-  await sharedLiquidityManagerClient.stakeToDraftProposalIx(draftProposal, META, new BN(100)).rpc();
+  await sharedLiquidityManagerClient.stakeToDraftProposalIx(draftProposal, META, new BN(1_000_000_000)).rpc();
 
   storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
 
@@ -113,12 +120,10 @@ export default async function () {
   const storedStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(stakeRecord);
 
   assert.equal(storedStakeRecord.staker.toString(), this.payer.publicKey.toString());
-  assert.equal(storedStakeRecord.amount.toString(), "100");
-  assert.equal(storedDraftProposal.stakedTokenAmount.toString(), "100");
+  assert.equal(storedStakeRecord.amount.toString(), 1_000_000_000n.toString());
+  assert.equal(storedDraftProposal.stakedTokenAmount.toString(), 1_000_000_000n.toString());
 
   console.log("storedStakeRecord", storedStakeRecord);
-
-  return;
 
   // Third, initialize a proposal with liquidity
 
@@ -183,11 +188,7 @@ export default async function () {
     META,
     USDC,
     nonce,
-    {
-      programId: META,
-      accounts: [],
-      data: Buffer.from([])
-    }
+    draftProposal
   ).transaction();
 
   const slot = await this.banksClient.getSlot();

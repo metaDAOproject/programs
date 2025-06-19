@@ -207,10 +207,16 @@ export const getLiquidityPoolAddr = (
 export const getSharedLiquidityPoolAddr = (
   programId: PublicKey = SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
   dao: PublicKey,
-  spotPool: PublicKey
+  spotPool: PublicKey,
+  proposalStakeRateThresholdBps: number
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("sl_pool"), dao.toBuffer(), spotPool.toBuffer()],
+    [
+      Buffer.from("sl_pool"),
+      dao.toBuffer(),
+      spotPool.toBuffer(),
+      new BN(proposalStakeRateThresholdBps).toArrayLike(Buffer, "le", 2),
+    ],
     programId
   );
 };
