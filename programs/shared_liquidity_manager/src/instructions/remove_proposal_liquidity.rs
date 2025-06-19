@@ -2,10 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{Mint, TokenAccount};
 
-use raydium_cpmm_cpi::cpi::accounts::Deposit as RaydiumDeposit;
 use raydium_cpmm_cpi::{
-    cpi, instruction,
-    program::RaydiumCpmm,
+    instruction,
     states::{AmmConfig, AMM_CONFIG_SEED, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
 };
 use anchor_lang::Discriminator;

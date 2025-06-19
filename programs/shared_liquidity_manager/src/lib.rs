@@ -1,6 +1,20 @@
 //! Enables LPs to provide liquidity that is by default stored in a Raydium
 //! constant-product pool, but that can be rented for the purpose of decision
 //! markets.
+//! 
+//! How it works:
+//! - A DAO creates a shared liquidity pool with some protocol-owned-liquidity and
+//!   sets the % of the token supply that needs to be staked on a proposal for it
+//!   to go to a DAO proposal. By default, all the liquidity is in a Raydium spot pool.
+//! - Anyone can create draft proposals.
+//! - Anyone can stake/unstake their DAO tokens on draft proposals.
+//! - When a proposal receives enough staked DAO tokens, anyone can call
+//!   `initialize_proposal_with_liquidity` to initialize the proposal with the
+//!   shared liquidity pool. While this proposal is active, noone else can initialize
+//!   proposals through this shared liquidity pool.
+//! - When a proposal is finalized, anyone can call `remove_proposal_liquidity` to
+//!   remove the liquidity from both the proposal and the current Raydium pool and
+//!   provide it all to a new Raydium spot pool.
 use anchor_lang::prelude::*;
 
 declare_id!("EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d");
@@ -11,18 +25,18 @@ mod instructions;
 
 use instructions::*;
 
-// TODO:
-// - add native token staking
-// - take a deeper look at why LP math isn't mathing
-
 #[program]
 pub mod shared_liquidity_manager {
     use super::*;
 
     pub fn initialize_shared_liquidity_pool(ctx: Context<InitializeSharedLiquidityPool>, params: InitializeSharedLiquidityPoolParams) -> Result<()> {
-        ctx.accounts.validate(&params)?;
         InitializeSharedLiquidityPool::handle(ctx, params)
     }
+
+    pub fn initialize_draft_proposal(ctx: Context<InitializeDraftProposal>, params: InitializeDraftProposalParams) -> Result<()> {
+        InitializeDraftProposal::handle(ctx, params)
+    }
+
 
     // pub fn deposit_shared_liquidity(ctx: Context<DepositSharedLiquidity>, params: DepositSharedLiquidityParams) -> Result<()> {
     //     DepositSharedLiquidity::handle(ctx, params)

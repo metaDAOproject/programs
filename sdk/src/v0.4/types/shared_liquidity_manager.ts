@@ -156,6 +156,69 @@ export type SharedLiquidityManager = {
       ];
     },
     {
+      name: "initializeDraftProposal";
+      accounts: [
+        {
+          name: "draftProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sharedLiquidityPool";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "stakedTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "InitializeDraftProposalParams";
+          };
+        }
+      ];
+    },
+    {
       name: "initializeProposalWithLiquidity";
       accounts: [
         {
@@ -855,6 +918,46 @@ export type SharedLiquidityManager = {
   ];
   accounts: [
     {
+      name: "draftProposal";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "sharedLiquidityPool";
+            type: "publicKey";
+          },
+          {
+            name: "instruction";
+            type: {
+              defined: "ProposalInstruction";
+            };
+          },
+          {
+            name: "status";
+            type: {
+              defined: "DraftProposalStatus";
+            };
+          },
+          {
+            name: "stakedTokenAmount";
+            docs: [
+              "The amount of tokens that have been staked on this draft proposal"
+            ];
+            type: "u64";
+          },
+          {
+            name: "stakedTokenVault";
+            docs: ["The vault that holds the staked tokens"];
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          }
+        ];
+      };
+    },
+    {
       name: "liquidityPosition";
       type: {
         kind: "struct";
@@ -981,6 +1084,61 @@ export type SharedLiquidityManager = {
   ];
   types: [
     {
+      name: "InitializeDraftProposalParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "instruction";
+            type: {
+              defined: "ProposalInstruction";
+            };
+          },
+          {
+            name: "draftProposalNonce";
+            docs: [
+              "The nonce for the draft proposal, not used for anything aside from the PDA"
+            ];
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "InitializeProposalWithLiquidityParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "instruction";
+            type: {
+              defined: "ProposalInstruction";
+            };
+          },
+          {
+            name: "nonce";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "InitializeSharedLiquidityPoolParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "baseAmount";
+            type: "u64";
+          },
+          {
+            name: "quoteAmount";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
       name: "ProposalAccount";
       type: {
         kind: "struct";
@@ -1025,35 +1183,15 @@ export type SharedLiquidityManager = {
       };
     },
     {
-      name: "InitializeProposalWithLiquidityParams";
+      name: "DraftProposalStatus";
       type: {
-        kind: "struct";
-        fields: [
+        kind: "enum";
+        variants: [
           {
-            name: "instruction";
-            type: {
-              defined: "ProposalInstruction";
-            };
+            name: "Draft";
           },
           {
-            name: "nonce";
-            type: "u64";
-          }
-        ];
-      };
-    },
-    {
-      name: "InitializeSharedLiquidityPoolParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "baseAmount";
-            type: "u64";
-          },
-          {
-            name: "quoteAmount";
-            type: "u64";
+            name: "Initialized";
           }
         ];
       };
@@ -1226,6 +1364,69 @@ export const IDL: SharedLiquidityManager = {
           name: "params",
           type: {
             defined: "InitializeSharedLiquidityPoolParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "initializeDraftProposal",
+      accounts: [
+        {
+          name: "draftProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sharedLiquidityPool",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "stakedTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "InitializeDraftProposalParams",
           },
         },
       ],
@@ -1930,6 +2131,46 @@ export const IDL: SharedLiquidityManager = {
   ],
   accounts: [
     {
+      name: "draftProposal",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "sharedLiquidityPool",
+            type: "publicKey",
+          },
+          {
+            name: "instruction",
+            type: {
+              defined: "ProposalInstruction",
+            },
+          },
+          {
+            name: "status",
+            type: {
+              defined: "DraftProposalStatus",
+            },
+          },
+          {
+            name: "stakedTokenAmount",
+            docs: [
+              "The amount of tokens that have been staked on this draft proposal",
+            ],
+            type: "u64",
+          },
+          {
+            name: "stakedTokenVault",
+            docs: ["The vault that holds the staked tokens"],
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
       name: "liquidityPosition",
       type: {
         kind: "struct",
@@ -2056,6 +2297,61 @@ export const IDL: SharedLiquidityManager = {
   ],
   types: [
     {
+      name: "InitializeDraftProposalParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "instruction",
+            type: {
+              defined: "ProposalInstruction",
+            },
+          },
+          {
+            name: "draftProposalNonce",
+            docs: [
+              "The nonce for the draft proposal, not used for anything aside from the PDA",
+            ],
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeProposalWithLiquidityParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "instruction",
+            type: {
+              defined: "ProposalInstruction",
+            },
+          },
+          {
+            name: "nonce",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeSharedLiquidityPoolParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "baseAmount",
+            type: "u64",
+          },
+          {
+            name: "quoteAmount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "ProposalAccount",
       type: {
         kind: "struct",
@@ -2100,35 +2396,15 @@ export const IDL: SharedLiquidityManager = {
       },
     },
     {
-      name: "InitializeProposalWithLiquidityParams",
+      name: "DraftProposalStatus",
       type: {
-        kind: "struct",
-        fields: [
+        kind: "enum",
+        variants: [
           {
-            name: "instruction",
-            type: {
-              defined: "ProposalInstruction",
-            },
+            name: "Draft",
           },
           {
-            name: "nonce",
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "InitializeSharedLiquidityPoolParams",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "baseAmount",
-            type: "u64",
-          },
-          {
-            name: "quoteAmount",
-            type: "u64",
+            name: "Initialized",
           },
         ],
       },

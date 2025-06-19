@@ -3,35 +3,8 @@ use anchor_spl::token::{Mint, TokenAccount};
 
 use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 
-use crate::state::SharedLiquidityPool;
+use crate::state::{DraftProposal, ProposalInstruction, SharedLiquidityPool};
 
-#[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq)]
-pub struct ProposalAccount {
-    pub pubkey: Pubkey,
-    pub is_signer: bool,
-    pub is_writable: bool,
-}
-
-#[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq)]
-pub struct ProposalInstruction {
-    pub program_id: Pubkey,
-    pub accounts: Vec<ProposalAccount>,
-    pub data: Vec<u8>,
-}
-
-impl From<ProposalInstruction> for autocrat::ProposalInstruction {
-    fn from(instruction: ProposalInstruction) -> Self {
-        Self {
-            program_id: instruction.program_id,
-            accounts: instruction.accounts.into_iter().map(|acc| autocrat::ProposalAccount {
-                pubkey: acc.pubkey,
-                is_signer: acc.is_signer,
-                is_writable: acc.is_writable,
-            }).collect(),
-            data: instruction.data,
-        }
-    }
-}
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeProposalWithLiquidityParams {

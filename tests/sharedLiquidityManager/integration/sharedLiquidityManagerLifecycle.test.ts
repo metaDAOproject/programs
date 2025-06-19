@@ -86,6 +86,23 @@ export default async function () {
 
   const storedSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);
 
+  // Third, initialize a draft proposal
+
+  await sharedLiquidityManagerClient.initializeDraftProposalIx(slPool, META, {
+    programId: META,
+    accounts: [],
+    data: Buffer.from([])
+  }, new BN(1338)).rpc();
+
+  const [draftProposal] = PublicKey.findProgramAddressSync(
+    [Buffer.from("draft_proposal"), new BN(1338).toArrayLike(Buffer, "le", 8)],
+    sharedLiquidityManagerClient.getProgramId()
+  );
+
+  const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+  console.log("storedDraftProposal", storedDraftProposal);
+  return;
+
   // Third, initialize a proposal with liquidity
 
   const nonce = new BN(12329);
@@ -143,10 +160,6 @@ export default async function () {
       )
     )
     .rpc();
-
-  // Initialize pool pass and fail LP accounts
-  // await this.createTokenAccount(passLp, slPoolSigner, true);
-  // await this.createTokenAccount(failLp, slPoolSigner, true);
 
   let initProposalWithLiquidityTx = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
     dao,

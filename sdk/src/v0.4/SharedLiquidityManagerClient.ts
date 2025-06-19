@@ -534,12 +534,43 @@ export class SharedLiquidityManagerClient {
       });
   }
 
+  initializeDraftProposalIx(
+    sharedLiquidityPool: PublicKey,
+    baseMint: PublicKey,
+    instruction: ProposalInstruction,
+    draftProposalNonce: BN = new BN(Math.floor(Math.random() * 1000000))
+  ) {
+    let [draftProposal] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("draft_proposal"),
+        draftProposalNonce.toArrayLike(Buffer, "le", 8),
+      ],
+      this.program.programId
+    );
+
+    return this.program.methods
+      .initializeDraftProposal({
+        instruction,
+        draftProposalNonce,
+      })
+      .accounts({
+        draftProposal,
+        sharedLiquidityPool,
+        baseMint,
+        stakedTokenVault: getAssociatedTokenAddressSync(
+          baseMint,
+          draftProposal,
+          true
+        ),
+      });
+  }
+
   removeProposalLiquidityIx(
     dao: PublicKey,
     spotPool: PublicKey,
     baseMint: PublicKey,
     quoteMint: PublicKey,
-    nonce: BN
+    draftProposalNonce: BN
   ) {
     const [slPool] = getSharedLiquidityPoolAddr(
       this.program.programId,
@@ -555,7 +586,7 @@ export class SharedLiquidityManagerClient {
     const [proposal] = getProposalAddr(
       this.autocratClient.getProgramId(),
       slPoolSigner,
-      nonce
+      draftProposalNonce
     );
 
     const {
