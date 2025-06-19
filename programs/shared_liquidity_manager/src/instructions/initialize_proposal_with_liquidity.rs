@@ -109,9 +109,9 @@ pub struct AmmAccounts<'info> {
     pub pass_lp_mint: Box<Account<'info, anchor_spl::token::Mint>>,
     #[account(mut)]
     pub fail_lp_mint: Box<Account<'info, anchor_spl::token::Mint>>,
-    #[account(mut)]
+    #[account(init_if_needed, payer = payer, associated_token::mint = pass_lp_mint, associated_token::authority = sl_pool_signer)]
     pub sl_pool_pass_lp_account: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    #[account(init_if_needed, payer = payer, associated_token::mint = fail_lp_mint, associated_token::authority = sl_pool_signer)]
     pub sl_pool_fail_lp_account: Box<Account<'info, anchor_spl::token::TokenAccount>>,
     #[account(mut)]
     pub pass_amm_vault_ata_base: Box<Account<'info, anchor_spl::token::TokenAccount>>,
@@ -128,6 +128,13 @@ pub struct AmmAccounts<'info> {
     pub amm_program: Program<'info, amm::program::Amm>,
     /// CHECK: verified by amm
     pub event_authority: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, anchor_spl::token::Token>,
+    pub associated_token_program: Program<'info, anchor_spl::associated_token::AssociatedToken>,
+    /// CHECK: the signer
+    pub sl_pool_signer: UncheckedAccount<'info>,
 }
 
 #[event_cpi]

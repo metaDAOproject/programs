@@ -39,29 +39,22 @@ import { IDL } from "../../fixtures/raydium_cpmm.js";
 import { sha256 } from "@metadaoproject/futarchy";
 
 export default async function () {
-  let ammClient: AmmClient;
-  let autocratClient: AutocratClient;
-  let sharedLiquidityManagerClient: SharedLiquidityManagerClient;
-  let vaultClient: ConditionalVaultClient;
-  let META: PublicKey;
-  let USDC: PublicKey;
-  let amm: PublicKey;
+  const ammClient = this.ammClient;
+  const autocratClient = this.autocratClient;
+  const vaultClient = this.vaultClient;
+  const sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
+  const cpSwap = new anchor.Program(IDL, new PublicKey(RAYDIUM_CP_SWAP_PROGRAM_ID));
 
-  let cpSwap = new anchor.Program(IDL, new PublicKey(RAYDIUM_CP_SWAP_PROGRAM_ID));
+  // First, set up tokens and a DAO
 
-  ammClient = this.ammClient;
-  autocratClient = this.autocratClient;
-  vaultClient = this.vaultClient;
-  sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
-
-  META = await createMint(
+  const META = await createMint(
     this.banksClient,
     this.payer,
     this.payer.publicKey,
     this.payer.publicKey,
     9
   );
-  USDC = await createMint(
+  const USDC = await createMint(
     this.banksClient,
     this.payer,
     this.payer.publicKey,
@@ -69,30 +62,16 @@ export default async function () {
     6
   );
 
-
   await this.createTokenAccount(META, this.payer.publicKey);
   await this.createTokenAccount(USDC, this.payer.publicKey);
 
   await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
   await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
 
-  // First, set up a DAO
+  const dao = await autocratClient.initializeDao(META, 1000, 10, 10_000, USDC, undefined, new BN(DAY_IN_SLOTS.toString()));
 
-  let dao = await autocratClient.initializeDao(META, 1000, 10, 10_000, USDC, undefined, new BN(DAY_IN_SLOTS.toString()));
-  console.log("DAO", dao.toBase58());
+  // Second, set up a shared liquidity pool
 
-  // Second, set up a Raydium spot pool
-
-  const poolStateKp = Keypair.generate();
-
-  const [lpMint] = getRaydiumCpmmLpMintAddr(poolStateKp.publicKey, false);
-
-  // Determine which token should be token0 (smaller address)
-  const [token0Mint, token1Mint] = META.toBuffer().compare(USDC.toBuffer()) < 0
-    ? [META, USDC]
-    : [USDC, META];
-
-  
   await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, META, USDC, new BN(25 * 10 ** 9), new BN(25_000 * 10 ** 6)).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
 
   const [slPool] = PublicKey.findProgramAddressSync(
@@ -107,41 +86,8 @@ export default async function () {
 
   const storedSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);
 
-  console.log("slPool", storedSlPool);
+  // Third, initialize a proposal with liquidity
 
-  // Fourth, we provide liquidity to the pool
-  // const [slPool] = getSharedLiquidityPoolAddr(
-  //   sharedLiquidityManagerClient.getProgramId(),
-  //   dao,
-  //   poolStateKp.publicKey
-  // );
-
-  // const spotPoolLpSupply = await getMint(this.banksClient, lpMint);
-  // console.log("spotPoolLpSupply", spotPoolLpSupply);
-
-  // // Deposit 10 META and 10,000 USDC
-  // await sharedLiquidityManagerClient.depositSharedLiquidityIx(
-  //   dao,
-  //   poolStateKp.publicKey,
-  //   META,
-  //   USDC,
-  //   new BN(30_000_000_000), // Let Raydium calculate the LP token amount
-  //   new BN(30 * 10 ** 9), // 30 META
-  //   new BN(30_000 * 10 ** 6) // 30,000 USDC
-  // ).preInstructions([ComputeBudgetProgram.requestHeapFrame({ bytes: 1024 * 256 })]).rpc();
-
-
-
-  // const storedUnderlyingPool = await cpSwap.account.poolState.fetch(poolStateKp.publicKey);
-  // console.log("storedUnderlyingPool", storedUnderlyingPool);
-  // console.log("token0Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token0Vault));
-  // console.log("token1Vault balance", await getAccount(this.banksClient, storedUnderlyingPool.token1Vault));
-
-  // console.log("lp balance", await this.getTokenBalance(lpMint, this.payer.publicKey));
-
-  // Fifth, have a proposer come along and create a proposal through the SharedLiquidityManager
-
-  // const nonce = new BN(Math.random() * 2 ** 50);
   const nonce = new BN(12329);
 
   let [proposal] = getProposalAddr(
@@ -157,8 +103,6 @@ export default async function () {
   );
 
   const {
-    baseVault,
-    quoteVault,
     passAmm,
     failAmm,
     passBaseMint,
@@ -200,27 +144,9 @@ export default async function () {
     )
     .rpc();
 
-  const [vault0, vault1] = META.toBase58() < USDC.toBase58()
-    ? [baseVault, quoteVault]
-    : [quoteVault, baseVault];
-
-  const [token0PassMint, token0FailMint] = META.toBase58() < USDC.toBase58()
-    ? [passBaseMint, failBaseMint]
-    : [passQuoteMint, failQuoteMint];
-
-  const [token1PassMint, token1FailMint] = META.toBase58() < USDC.toBase58()
-    ? [passQuoteMint, failQuoteMint]
-    : [passBaseMint, failBaseMint];
-
   // Initialize pool pass and fail LP accounts
-  await this.createTokenAccount(passLp, slPoolSigner, true);
-  await this.createTokenAccount(failLp, slPoolSigner, true);
-
-  // Initialize AMM vault accounts
-  await this.createTokenAccount(token0Mint, passAmm, true);
-  await this.createTokenAccount(token1Mint, passAmm, true);
-  await this.createTokenAccount(token0Mint, failAmm, true);
-  await this.createTokenAccount(token1Mint, failAmm, true);
+  // await this.createTokenAccount(passLp, slPoolSigner, true);
+  // await this.createTokenAccount(failLp, slPoolSigner, true);
 
   let initProposalWithLiquidityTx = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
     dao,

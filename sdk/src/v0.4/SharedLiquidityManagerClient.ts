@@ -525,6 +525,7 @@ export class SharedLiquidityManagerClient {
           ),
           ammProgram: AMM_PROGRAM_ID,
           eventAuthority: getEventAuthorityAddr(AMM_PROGRAM_ID)[0],
+          slPoolSigner,
         },
         autocratEventAuthority: getEventAuthorityAddr(AUTOCRAT_PROGRAM_ID)[0],
         dao,

@@ -420,6 +420,31 @@ export type SharedLiquidityManager = {
               name: "eventAuthority";
               isMut: false;
               isSigner: false;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "associatedTokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "slPoolSigner";
+              isMut: false;
+              isSigner: false;
             }
           ];
         },
@@ -1468,6 +1493,31 @@ export const IDL: SharedLiquidityManager = {
             },
             {
               name: "eventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "associatedTokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "slPoolSigner",
               isMut: false,
               isSigner: false,
             },
