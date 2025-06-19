@@ -26,4 +26,6 @@ pub enum SharedLiquidityManagerError {
     NoLpTokensInPool,
     #[msg("Not enough LP tokens to withdraw half")]
     NotEnoughLpTokens,
+    #[msg("Insufficient funds")]
+    InsufficientFunds,
 }

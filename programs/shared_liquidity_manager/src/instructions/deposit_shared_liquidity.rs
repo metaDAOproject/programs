@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
+    associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount, TransferChecked},
     token_interface::Token2022,
 };
@@ -63,7 +64,8 @@ pub struct DepositSharedLiquidity<'info> {
     pub spot_pool_lp_mint: Box<Account<'info, Mint>>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = payer,
         associated_token::mint = spot_pool_lp_mint,
         associated_token::authority = user,
     )]
@@ -91,6 +93,7 @@ pub struct DepositSharedLiquidity<'info> {
         bump,
     )]
     pub raydium_authority: UncheckedAccount<'info>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Program<'info, Token>,
     pub token_program_2022: Program<'info, Token2022>,
     pub cp_swap_program: Program<'info, raydium_cpmm_cpi::program::RaydiumCpmm>,
@@ -104,16 +107,6 @@ impl DepositSharedLiquidity<'_> {
             self.sl_pool.active_proposal.is_none(),
             SharedLiquidityManagerError::PoolInUse
         );
-        // let (token_0, token_1) = if self.sl_pool.is_base_token_0 {
-        //     (self.base_mint.key(), self.quote_mint.key())
-        // } else {
-        //     (self.quote_mint.key(), self.base_mint.key())
-        // };
-
-        // let spot_pool = self.active_spot_pool.load()?;
-
-        // require_eq!(token_0, spot_pool.token_0_mint);
-        // require_eq!(token_1, spot_pool.token_1_mint);
 
         Ok(())
     }

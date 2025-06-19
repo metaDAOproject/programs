@@ -35,6 +35,7 @@ use instructions::*;
 pub mod shared_liquidity_manager {
     use super::*;
 
+    #[access_control(ctx.accounts.validate(&params))]
     pub fn initialize_shared_liquidity_pool(ctx: Context<InitializeSharedLiquidityPool>, params: InitializeSharedLiquidityPoolParams) -> Result<()> {
         InitializeSharedLiquidityPool::handle(ctx, params)
     }
@@ -43,6 +44,7 @@ pub mod shared_liquidity_manager {
         InitializeDraftProposal::handle(ctx, params)
     }
 
+    #[access_control(ctx.accounts.validate(&params))]
     pub fn stake_to_draft_proposal(ctx: Context<StakeToDraftProposal>, params: StakeToDraftProposalParams) -> Result<()> {
         StakeToDraftProposal::handle(ctx, params)
     }

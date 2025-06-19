@@ -6,6 +6,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
 use anchor_spl::associated_token;
 
+use crate::error::SharedLiquidityManagerError;
 use crate::state::SharedLiquidityPool;
 
 use anchor_spl::associated_token::AssociatedToken;
@@ -100,6 +101,7 @@ pub struct InitializeSharedLiquidityPool<'info> {
         mut,
         seeds = [
             b"spot_pool",
+            sl_pool.key().as_ref(),
             &0_u32.to_le_bytes()
         ],
         bump,
@@ -198,8 +200,8 @@ impl InitializeSharedLiquidityPool<'_> {
         require_neq!(self.base_mint.key(), self.quote_mint.key());
 
         // Ensure pool creator has enough tokens
-        require_gte!(self.creator_base_token_account.amount, params.base_amount);
-        require_gte!(self.creator_quote_token_account.amount, params.quote_amount);
+        require_gte!(self.creator_base_token_account.amount, params.base_amount, SharedLiquidityManagerError::InsufficientFunds);
+        require_gte!(self.creator_quote_token_account.amount, params.quote_amount, SharedLiquidityManagerError::InsufficientFunds);
 
         Ok(())
     }
@@ -291,7 +293,8 @@ impl InitializeSharedLiquidityPool<'_> {
         };
 
         let spot_pool_index = 0_u32.to_le_bytes();
-        let pool_seeds = &[b"spot_pool", &spot_pool_index[..], &[ctx.bumps.spot_pool]];
+        let sl_pool_key = ctx.accounts.sl_pool.key();
+        let pool_seeds = &[b"spot_pool", sl_pool_key.as_ref(), &spot_pool_index[..], &[ctx.bumps.spot_pool]];
         let raydium_signer = &[&pool_seeds[..]];
 
         solana_program::program::invoke_signed(

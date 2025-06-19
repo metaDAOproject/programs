@@ -411,15 +411,18 @@ export default async function () {
   console.log("removeTx size", removeTx.serialize().length);
   await this.banksClient.processTransaction(removeTx);
 
+  console.log("slPool", slPool);
+  console.log("slPoolSigner", slPoolSigner);
+  console.log("spotPool", storedSlPool.activeSpotPool);
   const spotPool1 = getSpotPoolAddr(
     sharedLiquidityManagerClient.getProgramId(),
+    slPool,
     1
   )[0];
-
-
-  const storedSpotPool1 = await cpSwap.account.poolState.fetch(spotPool1);
+  console.log("spotPool1", spotPool1);
+  
+  const storedSpotPool1 = await cpSwap.account.poolState.fetchNullable(spotPool1);
   console.log(storedSpotPool1);
-
-  console.log(await getAccount(this.banksClient, storedSpotPool1.token0Vault));
-  console.log(await getAccount(this.banksClient, storedSpotPool1.token1Vault));
+  console.log(await this.banksClient.getAccount(storedSpotPool1.token0Vault));
+  console.log(await this.banksClient.getAccount(storedSpotPool1.token1Vault));
 }

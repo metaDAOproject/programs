@@ -19,6 +19,10 @@ import {
   SharedLiquidityManager as SharedLiquidityManagerIDLType,
   IDL as SharedLiquidityManagerIDL,
 } from "./types/shared_liquidity_manager.js";
+import {
+  SharedLiquidityPool,
+  SharedLiquidityPoolPosition,
+} from "./types/index.js";
 
 import BN from "bn.js";
 import {
@@ -43,6 +47,7 @@ import {
   getSpotPoolAddr,
   getDraftProposalAddr,
   getStakeRecordAddr,
+  getSlPoolPositionAddr,
 } from "./utils/pda.js";
 import { AutocratClient } from "./AutocratClient.js";
 import { ProposalInstruction } from "./types/index.js";
@@ -86,6 +91,16 @@ export class SharedLiquidityManagerClient {
     return this.program.programId;
   }
 
+  async getSlPool(slPool: PublicKey): Promise<SharedLiquidityPool> {
+    return await this.program.account.sharedLiquidityPool.fetch(slPool);
+  }
+
+  async getSlPoolPosition(
+    position: PublicKey
+  ): Promise<SharedLiquidityPoolPosition> {
+    return await this.program.account.liquidityPosition.fetch(position);
+  }
+
   initializeSharedLiquidityPoolIx(
     dao: PublicKey,
     baseMint: PublicKey,
@@ -101,7 +116,7 @@ export class SharedLiquidityManagerClient {
       proposalStakeRateThresholdBps
     )[0];
 
-    let spotPool = getSpotPoolAddr(this.program.programId, 0)[0];
+    let spotPool = getSpotPoolAddr(this.program.programId, slPool, 0)[0];
 
     let [slPoolSigner] = getSharedLiquidityPoolSignerAddr(
       this.program.programId,
@@ -188,156 +203,149 @@ export class SharedLiquidityManagerClient {
       ]);
   }
 
-  // depositSharedLiquidityIx(
-  //   dao: PublicKey,
-  //   spotPool: PublicKey,
-  //   baseMint: PublicKey,
-  //   quoteMint: PublicKey,
-  //   lpTokenAmount: BN,
-  //   maxBaseTokenAmount: BN,
-  //   maxQuoteTokenAmount: BN
-  // ) {
-  //   const [slPool] = getSharedLiquidityPoolAddr(
-  //     this.program.programId,
-  //     dao,
-  //     spotPool
-  //   );
+  depositSharedLiquidityIx(
+    slPool: PublicKey,
+    activeSpotPool: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    lpTokenAmount: BN,
+    maxBaseTokenAmount: BN,
+    maxQuoteTokenAmount: BN,
+    user: PublicKey = this.provider.wallet.publicKey
+  ) {
+    const [slPoolSigner] = getSharedLiquidityPoolSignerAddr(
+      this.program.programId,
+      slPool
+    );
 
-  //   const [userSlPoolPosition] = PublicKey.findProgramAddressSync(
-  //     [
-  //       Buffer.from("sl_pool_position"),
-  //       slPool.toBuffer(),
-  //       this.provider.wallet.publicKey.toBuffer(),
-  //     ],
-  //     this.program.programId
-  //   );
+    const [userSlPoolPosition] = getSlPoolPositionAddr(
+      this.program.programId,
+      slPool,
+      user
+    );
 
-  //   return this.program.methods
-  //     .depositSharedLiquidity({
-  //       lpTokenAmount,
-  //       maxBaseTokenAmount,
-  //       maxQuoteTokenAmount,
-  //     })
-  //     .accounts({
-  //       slPool,
-  //       spotPool,
-  //       user: this.provider.wallet.publicKey,
-  //       userBaseTokenAccount: getAssociatedTokenAddressSync(
-  //         baseMint,
-  //         this.provider.wallet.publicKey
-  //       ),
-  //       userQuoteTokenAccount: getAssociatedTokenAddressSync(
-  //         quoteMint,
-  //         this.provider.wallet.publicKey
-  //       ),
-  //       spotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
-  //         spotPool,
-  //         baseMint,
-  //         false
-  //       )[0],
-  //       spotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
-  //         spotPool,
-  //         quoteMint,
-  //         false
-  //       )[0],
-  //       baseMint,
-  //       quoteMint,
-  //       spotPoolLpMint: getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //       slPoolSpotLpVault: getAssociatedTokenAddressSync(
-  //         getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //         slPool,
-  //         true
-  //       ),
-  //       userLpTokenAccount: getAssociatedTokenAddressSync(
-  //         getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //         this.provider.wallet.publicKey,
-  //         true
-  //       ),
-  //       userSlPoolPosition,
-  //       raydiumAuthority: RAYDIUM_AUTHORITY,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenProgram2022: TOKEN_2022_PROGRAM_ID,
-  //       cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
-  //       systemProgram: SystemProgram.programId,
-  //     });
-  // }
+    return this.program.methods
+      .depositSharedLiquidity({
+        lpTokenAmount,
+        maxBaseTokenAmount,
+        maxQuoteTokenAmount,
+      })
+      .accounts({
+        slPool,
+        activeSpotPool,
+        user,
+        userBaseTokenAccount: getAssociatedTokenAddressSync(baseMint, user),
+        userQuoteTokenAccount: getAssociatedTokenAddressSync(quoteMint, user),
+        spotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
+          activeSpotPool,
+          baseMint,
+          false
+        )[0],
+        spotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
+          activeSpotPool,
+          quoteMint,
+          false
+        )[0],
+        baseMint,
+        quoteMint,
+        spotPoolLpMint: getRaydiumCpmmLpMintAddr(activeSpotPool, false)[0],
+        slPoolSpotLpVault: getAssociatedTokenAddressSync(
+          getRaydiumCpmmLpMintAddr(activeSpotPool, false)[0],
+          slPoolSigner,
+          true
+        ),
+        userLpTokenAccount: getAssociatedTokenAddressSync(
+          getRaydiumCpmmLpMintAddr(activeSpotPool, false)[0],
+          user,
+          true
+        ),
+        userSlPoolPosition,
+        raydiumAuthority: RAYDIUM_AUTHORITY,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+        cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      });
+  }
 
-  // withdrawSharedLiquidityIx(
-  //   dao: PublicKey,
-  //   spotPool: PublicKey,
-  //   baseMint: PublicKey,
-  //   quoteMint: PublicKey,
-  //   lpTokenAmount: BN,
-  //   minimumToken0Amount: BN,
-  //   minimumToken1Amount: BN
-  // ) {
-  //   const [slPool] = getSharedLiquidityPoolAddr(
-  //     this.program.programId,
-  //     dao,
-  //     spotPool
-  //   );
+  withdrawSharedLiquidityIx(
+    dao: PublicKey,
+    activeSpotPool: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    lpTokenAmount: BN,
+    minimumToken0Amount: BN,
+    minimumToken1Amount: BN,
+    proposalStakeRateThresholdBps: number = 100
+  ) {
+    const [slPool] = getSharedLiquidityPoolAddr(
+      this.program.programId,
+      dao,
+      activeSpotPool,
+      proposalStakeRateThresholdBps
+    );
 
-  //   const [userSlPoolPosition] = PublicKey.findProgramAddressSync(
-  //     [
-  //       Buffer.from("sl_pool_position"),
-  //       slPool.toBuffer(),
-  //       this.provider.wallet.publicKey.toBuffer(),
-  //     ],
-  //     this.program.programId
-  //   );
+    const [userSlPoolPosition] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("sl_pool_position"),
+        slPool.toBuffer(),
+        this.provider.wallet.publicKey.toBuffer(),
+      ],
+      this.program.programId
+    );
 
-  //   return this.program.methods
-  //     .withdrawSharedLiquidity({
-  //       lpTokenAmount,
-  //       minimumToken0Amount,
-  //       minimumToken1Amount,
-  //     })
-  //     .accounts({
-  //       slPool,
-  //       spotPool,
-  //       slPoolSpotLpVault: getAssociatedTokenAddressSync(
-  //         getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //         slPool,
-  //         true
-  //       ),
-  //       userQuoteTokenAccount: getAssociatedTokenAddressSync(
-  //         quoteMint,
-  //         this.provider.wallet.publicKey
-  //       ),
-  //       userBaseTokenAccount: getAssociatedTokenAddressSync(
-  //         baseMint,
-  //         this.provider.wallet.publicKey
-  //       ),
-  //       spotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
-  //         spotPool,
-  //         baseMint,
-  //         false
-  //       )[0],
-  //       spotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
-  //         spotPool,
-  //         quoteMint,
-  //         false
-  //       )[0],
-  //       baseMint,
-  //       quoteMint,
-  //       spotPoolLpMint: getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //       userLpTokenAccount: getAssociatedTokenAddressSync(
-  //         getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-  //         this.provider.wallet.publicKey,
-  //         true
-  //       ),
-  //       userSlPoolPosition,
-  //       user: this.provider.wallet.publicKey,
-  //       feeReceiver: this.provider.wallet.publicKey,
-  //       raydiumAuthority: RAYDIUM_AUTHORITY,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenProgram2022: TOKEN_2022_PROGRAM_ID,
-  //       cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
-  //       memoProgram: MEMO_PROGRAM_ID,
-  //       eventAuthority: getEventAuthorityAddr(this.program.programId)[0],
-  //       program: this.program.programId,
-  //     });
-  // }
+    return this.program.methods
+      .withdrawSharedLiquidity({
+        lpTokenAmount,
+        minimumToken0Amount,
+        minimumToken1Amount,
+      })
+      .accounts({
+        slPool,
+        activeSpotPool,
+        slPoolSpotLpVault: getAssociatedTokenAddressSync(
+          getRaydiumCpmmLpMintAddr(activeSpotPool, false)[0],
+          slPool,
+          true
+        ),
+        userQuoteTokenAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          this.provider.wallet.publicKey
+        ),
+        userBaseTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          this.provider.wallet.publicKey
+        ),
+        spotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
+          activeSpotPool,
+          baseMint,
+          false
+        )[0],
+        spotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
+          activeSpotPool,
+          quoteMint,
+          false
+        )[0],
+        baseMint,
+        quoteMint,
+        spotPoolLpMint: getRaydiumCpmmLpMintAddr(activeSpotPool, false)[0],
+        userLpTokenAccount: getAssociatedTokenAddressSync(
+          getRaydiumCpmmLpMintAddr(activeSpotPool, false)[0],
+          this.provider.wallet.publicKey,
+          true
+        ),
+        userSlPoolPosition,
+        user: this.provider.wallet.publicKey,
+        feeReceiver: this.provider.wallet.publicKey,
+        raydiumAuthority: RAYDIUM_AUTHORITY,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+        cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
+        memoProgram: MEMO_PROGRAM_ID,
+        eventAuthority: getEventAuthorityAddr(this.program.programId)[0],
+        program: this.program.programId,
+      });
+  }
 
   initializeProposalWithLiquidityIx(
     dao: PublicKey,
@@ -359,7 +367,7 @@ export class SharedLiquidityManagerClient {
       slPool
     );
 
-    const [spotPool] = getSpotPoolAddr(this.program.programId, 0);
+    const [spotPool] = getSpotPoolAddr(this.program.programId, slPool, 0);
 
     const [proposal] = getProposalAddr(
       this.autocratClient.getProgramId(),
@@ -562,12 +570,13 @@ export class SharedLiquidityManagerClient {
   stakeToDraftProposalIx(
     draftProposal: PublicKey,
     baseMint: PublicKey,
-    amount: BN
+    amount: BN,
+    staker: PublicKey = this.provider.wallet.publicKey
   ) {
     const [stakeRecord] = getStakeRecordAddr(
       this.program.programId,
       draftProposal,
-      this.provider.wallet.publicKey
+      staker
     );
 
     return this.program.methods
@@ -576,10 +585,10 @@ export class SharedLiquidityManagerClient {
       })
       .accounts({
         draftProposal,
-        staker: this.provider.wallet.publicKey,
+        staker,
         stakerTokenAccount: getAssociatedTokenAddressSync(
           baseMint,
-          this.provider.wallet.publicKey,
+          staker,
           true
         ),
         stakedTokenVault: getAssociatedTokenAddressSync(
@@ -594,12 +603,13 @@ export class SharedLiquidityManagerClient {
   unstakeFromDraftProposalIx(
     draftProposal: PublicKey,
     baseMint: PublicKey,
-    amount: BN
+    amount: BN,
+    staker: PublicKey = this.provider.wallet.publicKey
   ) {
     const [stakeRecord] = getStakeRecordAddr(
       this.program.programId,
       draftProposal,
-      this.provider.wallet.publicKey
+      staker
     );
 
     return this.program.methods
@@ -608,10 +618,10 @@ export class SharedLiquidityManagerClient {
       })
       .accounts({
         draftProposal,
-        staker: this.provider.wallet.publicKey,
+        staker,
         stakerTokenAccount: getAssociatedTokenAddressSync(
           baseMint,
-          this.provider.wallet.publicKey,
+          staker,
           true
         ),
         stakedTokenVault: getAssociatedTokenAddressSync(
@@ -676,7 +686,7 @@ export class SharedLiquidityManagerClient {
       false
     );
 
-    const [nextSpotPool] = getSpotPoolAddr(this.program.programId, 1);
+    const [nextSpotPool] = getSpotPoolAddr(this.program.programId, slPool, 1);
 
     return this.program.methods.removeProposalLiquidity().accounts({
       slPool,
@@ -743,6 +753,7 @@ export class SharedLiquidityManagerClient {
         observationState,
         baseMint,
         quoteMint,
+        slPool,
       },
       cond: {
         question,

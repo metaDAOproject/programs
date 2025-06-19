@@ -35,6 +35,7 @@ pub struct RaydiumAccounts2<'info> {
         mut,
         seeds = [
             b"spot_pool",
+            sl_pool.key().as_ref(),
             &1_u32.to_le_bytes()
         ],
         bump,
@@ -120,6 +121,7 @@ pub struct RaydiumAccounts2<'info> {
     )]
     pub amm_config: Box<Account<'info, AmmConfig>>,
 
+    pub sl_pool: Box<Account<'info, SharedLiquidityPool>>,
     /// CHECK: This is the shared liquidity pool signer
     pub sl_pool_signer: UncheckedAccount<'info>,
     pub base_mint: Box<Account<'info, Mint>>,
@@ -432,7 +434,6 @@ impl RemoveProposalLiquidity<'_> {
             ]),
         )?;
 
-        // Reload accounts to get final balances
                 let (vault_0_mint, vault_1_mint, token_0_vault, token_1_vault, token_0_account, token_1_account) = if ctx.accounts.sl_pool.is_base_token_0 {
             (ctx.accounts.base_mint.to_account_info(), ctx.accounts.quote_mint.to_account_info(), ctx.accounts.ray.active_spot_pool_base_vault.to_account_info(), ctx.accounts.ray.active_spot_pool_quote_vault.to_account_info(), ctx.accounts.sl_pool_base_vault.to_account_info(), ctx.accounts.sl_pool_quote_vault.to_account_info())
         } else {
@@ -475,48 +476,6 @@ ctx.accounts.sl_pool_base_vault.reload()?;
 
         require!(base_redeemed > 0, SharedLiquidityManagerError::NoTokensFromAmm);
         require!(quote_redeemed > 0, SharedLiquidityManagerError::NoTokensFromAmm);
-
-
-
-        // // Provide the redeemed tokens back to Raydium
-        // let (
-        //     token_0_account,
-        //     token_1_account,
-        //     token_0_vault,
-        //     token_1_vault,
-        //     vault_0_mint,
-        //     vault_1_mint,
-        // ) = if ctx.accounts.sl_pool.is_base_token_0 {
-        //     (
-        //         ctx.accounts.sl_pool_base_vault.to_account_info(),
-        //         ctx.accounts.sl_pool_quote_vault.to_account_info(),
-        //         ctx.accounts
-        //             .ray
-        //             .active_spot_pool_base_vault
-        //             .to_account_info(),
-        //         ctx.accounts
-        //             .ray
-        //             .active_spot_pool_quote_vault
-        //             .to_account_info(),
-        //         ctx.accounts.base_mint.to_account_info(),
-        //         ctx.accounts.quote_mint.to_account_info(),
-        //     )
-        // } else {
-        //     (
-        //         ctx.accounts.sl_pool_quote_vault.to_account_info(),
-        //         ctx.accounts.sl_pool_base_vault.to_account_info(),
-        //         ctx.accounts
-        //             .ray
-        //             .active_spot_pool_quote_vault
-        //             .to_account_info(),
-        //         ctx.accounts
-        //             .ray
-        //             .active_spot_pool_base_vault
-        //             .to_account_info(),
-        //         ctx.accounts.quote_mint.to_account_info(),
-        //         ctx.accounts.base_mint.to_account_info(),
-        //     )
-        // };
 
         let (
             init_amount_0,
@@ -617,7 +576,8 @@ ctx.accounts.sl_pool_base_vault.reload()?;
         };
 
         let spot_pool_index = 1_u32.to_le_bytes();
-        let pool_seeds = &[b"spot_pool", &spot_pool_index[..], &[ctx.bumps.ray.next_spot_pool]];
+        let sl_pool_key = ctx.accounts.sl_pool.key();
+        let pool_seeds = &[b"spot_pool", sl_pool_key.as_ref(), &spot_pool_index[..], &[ctx.bumps.ray.next_spot_pool]];
         let raydium_signer = &[&pool_seeds[..], &seeds[..]];
 
         solana_program::program::invoke_signed(&ix, &cpi_accounts.to_account_infos(), raydium_signer)?;

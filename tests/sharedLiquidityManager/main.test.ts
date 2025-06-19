@@ -1,6 +1,15 @@
+import initializeSharedLiquidityPool from "./unit/initializeSharedLiquidityPool.test.js";
+import initializeDraftProposal from "./unit/initializeDraftProposal.test.js";
+import stakeToDraftProposal from "./unit/stakeToDraftProposal.test.js";
+import unstakeFromDraftProposal from "./unit/unstakeFromDraftProposal.test.js";
+import depositSharedLiquidity from "./unit/depositSharedLiquidity.test.js";
 import sharedLiquidityManagerLifecycle from "./integration/sharedLiquidityManagerLifecycle.test.js";
 
-// TODO add a many-outcome integration test
 export default function suite() {
-  it.only("shared liquidity manager lifecycle", sharedLiquidityManagerLifecycle);
+  describe("#initialize_shared_liquidity_pool", initializeSharedLiquidityPool);
+  describe("#initialize_draft_proposal", initializeDraftProposal);
+  describe("#stake_to_draft_proposal", stakeToDraftProposal);
+  describe("#unstake_from_draft_proposal", unstakeFromDraftProposal);
+  describe("#deposit_shared_liquidity", depositSharedLiquidity);
+  it("shared liquidity manager lifecycle", sharedLiquidityManagerLifecycle);
 }

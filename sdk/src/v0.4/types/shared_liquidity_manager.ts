@@ -414,6 +414,11 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
@@ -1042,6 +1047,11 @@ export type SharedLiquidityManager = {
               docs: [
                 "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config"
               ];
+            },
+            {
+              name: "slPool";
+              isMut: false;
+              isSigner: false;
             },
             {
               name: "slPoolSigner";
@@ -1716,6 +1726,11 @@ export type SharedLiquidityManager = {
       code: 6011;
       name: "NotEnoughLpTokens";
       msg: "Not enough LP tokens to withdraw half";
+    },
+    {
+      code: 6012;
+      name: "InsufficientFunds";
+      msg: "Insufficient funds";
     }
   ];
 };
@@ -2132,6 +2147,11 @@ export const IDL: SharedLiquidityManager = {
         },
         {
           name: "raydiumAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -2764,6 +2784,11 @@ export const IDL: SharedLiquidityManager = {
               docs: [
                 "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config",
               ],
+            },
+            {
+              name: "slPool",
+              isMut: false,
+              isSigner: false,
             },
             {
               name: "slPoolSigner",
@@ -3438,6 +3463,11 @@ export const IDL: SharedLiquidityManager = {
       code: 6011,
       name: "NotEnoughLpTokens",
       msg: "Not enough LP tokens to withdraw half",
+    },
+    {
+      code: 6012,
+      name: "InsufficientFunds",
+      msg: "Insufficient funds",
     },
   ],
 };

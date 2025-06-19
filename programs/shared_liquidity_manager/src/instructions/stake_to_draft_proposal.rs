@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
 
-use crate::state::{DraftProposal, StakeRecord};
+use crate::{error::SharedLiquidityManagerError, state::{DraftProposal, StakeRecord}};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct StakeToDraftProposalParams {
@@ -27,12 +27,16 @@ pub struct StakeToDraftProposal<'info> {
 }
 
 impl StakeToDraftProposal<'_> {
-    pub fn handle(ctx: Context<Self>, params: StakeToDraftProposalParams) -> Result<()> {
+    pub fn validate(&self, params: &StakeToDraftProposalParams) -> Result<()> {
         require_gte!(
-            ctx.accounts.staker_token_account.amount,
-            params.amount
+            self.staker_token_account.amount,
+            params.amount,
+            SharedLiquidityManagerError::InsufficientFunds
         );
+        Ok(())
+    }
 
+    pub fn handle(ctx: Context<Self>, params: StakeToDraftProposalParams) -> Result<()> {
         anchor_spl::token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
