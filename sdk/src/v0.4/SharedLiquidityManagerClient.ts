@@ -39,6 +39,10 @@ import {
   getDaoTreasuryAddr,
   getProposalAddr,
   getRaydiumCpmmObservationStateAddr,
+  getSharedLiquidityPoolSignerAddr,
+  getSpotPoolAddr,
+  getDraftProposalAddr,
+  getStakeRecordAddr,
 } from "./utils/pda.js";
 import { AutocratClient } from "./AutocratClient.js";
 import { ProposalInstruction } from "./types/index.js";
@@ -97,17 +101,11 @@ export class SharedLiquidityManagerClient {
       proposalStakeRateThresholdBps
     )[0];
 
-    let spotPool = PublicKey.findProgramAddressSync(
-      [
-        anchor.utils.bytes.utf8.encode("spot_pool"),
-        new BN(0).toArrayLike(Buffer, "le", 4),
-      ],
-      this.program.programId
-    )[0];
+    let spotPool = getSpotPoolAddr(this.program.programId, 0)[0];
 
-    let [slPoolSigner] = PublicKey.findProgramAddressSync(
-      [Buffer.from("sl_pool_signer"), slPool.toBuffer()],
-      this.program.programId
+    let [slPoolSigner] = getSharedLiquidityPoolSignerAddr(
+      this.program.programId,
+      slPool
     );
 
     return this.program.methods
@@ -356,18 +354,12 @@ export class SharedLiquidityManagerClient {
       proposalStakeRateThresholdBps
     );
 
-    const [slPoolSigner] = PublicKey.findProgramAddressSync(
-      [Buffer.from("sl_pool_signer"), slPool.toBuffer()],
-      this.program.programId
+    const [slPoolSigner] = getSharedLiquidityPoolSignerAddr(
+      this.program.programId,
+      slPool
     );
 
-    const [spotPool] = PublicKey.findProgramAddressSync(
-      [
-        anchor.utils.bytes.utf8.encode("spot_pool"),
-        new BN(0).toArrayLike(Buffer, "le", 4),
-      ],
-      this.program.programId
-    );
+    const [spotPool] = getSpotPoolAddr(this.program.programId, 0);
 
     const [proposal] = getProposalAddr(
       this.autocratClient.getProgramId(),
@@ -545,12 +537,9 @@ export class SharedLiquidityManagerClient {
     instruction: ProposalInstruction,
     draftProposalNonce: BN = new BN(Math.floor(Math.random() * 1000000))
   ) {
-    let [draftProposal] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("draft_proposal"),
-        draftProposalNonce.toArrayLike(Buffer, "le", 8),
-      ],
-      this.program.programId
+    let [draftProposal] = getDraftProposalAddr(
+      this.program.programId,
+      draftProposalNonce
     );
 
     return this.program.methods
@@ -575,17 +564,46 @@ export class SharedLiquidityManagerClient {
     baseMint: PublicKey,
     amount: BN
   ) {
-    const [stakeRecord] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("stake_record"),
-        draftProposal.toBuffer(),
-        this.provider.wallet.publicKey.toBuffer(),
-      ],
-      this.program.programId
+    const [stakeRecord] = getStakeRecordAddr(
+      this.program.programId,
+      draftProposal,
+      this.provider.wallet.publicKey
     );
 
     return this.program.methods
       .stakeToDraftProposal({
+        amount,
+      })
+      .accounts({
+        draftProposal,
+        staker: this.provider.wallet.publicKey,
+        stakerTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          this.provider.wallet.publicKey,
+          true
+        ),
+        stakedTokenVault: getAssociatedTokenAddressSync(
+          baseMint,
+          draftProposal,
+          true
+        ),
+        stakeRecord,
+      });
+  }
+
+  unstakeFromDraftProposalIx(
+    draftProposal: PublicKey,
+    baseMint: PublicKey,
+    amount: BN
+  ) {
+    const [stakeRecord] = getStakeRecordAddr(
+      this.program.programId,
+      draftProposal,
+      this.provider.wallet.publicKey
+    );
+
+    return this.program.methods
+      .unstakeFromDraftProposal({
         amount,
       })
       .accounts({
@@ -620,9 +638,9 @@ export class SharedLiquidityManagerClient {
       proposalStakeRateThresholdBps
     );
 
-    const [slPoolSigner] = PublicKey.findProgramAddressSync(
-      [Buffer.from("sl_pool_signer"), slPool.toBuffer()],
-      this.program.programId
+    const [slPoolSigner] = getSharedLiquidityPoolSignerAddr(
+      this.program.programId,
+      slPool
     );
 
     const [proposal] = getProposalAddr(
@@ -653,18 +671,12 @@ export class SharedLiquidityManagerClient {
     const poolStateKp = Keypair.generate();
     const poolState = poolStateKp.publicKey;
 
-    const [observationState] = PublicKey.findProgramAddressSync(
-      [anchor.utils.bytes.utf8.encode("observation"), poolState.toBuffer()],
-      RAYDIUM_CP_SWAP_PROGRAM_ID
+    const [observationState] = getRaydiumCpmmObservationStateAddr(
+      poolState,
+      false
     );
 
-    const [nextSpotPool] = PublicKey.findProgramAddressSync(
-      [
-        anchor.utils.bytes.utf8.encode("spot_pool"),
-        new BN(1).toArrayLike(Buffer, "le", 4),
-      ],
-      this.program.programId
-    );
+    const [nextSpotPool] = getSpotPoolAddr(this.program.programId, 1);
 
     return this.program.methods.removeProposalLiquidity().accounts({
       slPool,

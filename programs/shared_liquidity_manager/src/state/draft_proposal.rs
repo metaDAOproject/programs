@@ -50,5 +50,7 @@ pub struct DraftProposal {
     pub staked_token_amount: u64,
     /// The vault that holds the staked tokens
     pub staked_token_vault: Pubkey,
+    /// The nonce used to create this draft proposal PDA
+    pub nonce: u64,
     pub pda_bump: u8,
 }

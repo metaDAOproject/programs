@@ -52,6 +52,7 @@ impl InitializeDraftProposal<'_> {
             status: DraftProposalStatus::Draft,
             staked_token_vault: ctx.accounts.staked_token_vault.key(),
             shared_liquidity_pool: ctx.accounts.shared_liquidity_pool.key(),
+            nonce: params.draft_proposal_nonce,
             pda_bump: ctx.bumps.draft_proposal,
         });
 

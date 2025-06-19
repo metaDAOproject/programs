@@ -25,6 +25,11 @@ mod instructions;
 
 use instructions::*;
 
+
+/// TODO:
+/// - add unstake
+/// - add unit tests
+
 #[program]
 pub mod shared_liquidity_manager {
     use super::*;
@@ -39,6 +44,11 @@ pub mod shared_liquidity_manager {
 
     pub fn stake_to_draft_proposal(ctx: Context<StakeToDraftProposal>, params: StakeToDraftProposalParams) -> Result<()> {
         StakeToDraftProposal::handle(ctx, params)
+    }
+
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn unstake_from_draft_proposal(ctx: Context<UnstakeFromDraftProposal>, params: UnstakeFromDraftProposalParams) -> Result<()> {
+        UnstakeFromDraftProposal::handle(ctx, params)
     }
 
     #[access_control(ctx.accounts.validate())]
