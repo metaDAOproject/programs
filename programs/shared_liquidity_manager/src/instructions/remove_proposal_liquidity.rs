@@ -6,7 +6,7 @@ use raydium_cpmm_cpi::cpi::accounts::Deposit as RaydiumDeposit;
 use crate::state::SharedLiquidityPool;
 
 #[derive(Accounts)]
-pub struct RaydiumAccounts<'info> {
+pub struct RaydiumAccounts2<'info> {
     #[account(mut)]
     pub spot_pool: AccountLoader<'info, raydium_cpmm_cpi::states::PoolState>,
     #[account(mut)]
@@ -26,7 +26,7 @@ pub struct RaydiumAccounts<'info> {
 }
 
 #[derive(Accounts)]
-pub struct ConditionalVaultAccounts<'info> {
+pub struct ConditionalVaultAccounts2<'info> {
     #[account(mut)]
     pub question: Account<'info, conditional_vault::state::Question>,
     #[account(mut)]
@@ -61,7 +61,7 @@ pub struct ConditionalVaultAccounts<'info> {
 }
 
 #[derive(Accounts)]
-pub struct AmmAccounts<'info> {
+pub struct AmmAccounts2<'info> {
     #[account(mut)]
     pub pass_amm: Account<'info, amm::state::Amm>,
     #[account(mut)]
@@ -101,7 +101,7 @@ pub struct RemoveProposalLiquidity<'info> {
         has_one = sl_pool_spot_lp_vault,
         has_one = base_mint,
         has_one = quote_mint,
-        constraint = sl_pool.spot_pool == raydium.spot_pool.key()
+        constraint = sl_pool.spot_pool == ray.spot_pool.key()
     )]
     pub sl_pool: Account<'info, SharedLiquidityPool>,
     pub proposal_remover: Signer<'info>,
@@ -120,13 +120,13 @@ pub struct RemoveProposalLiquidity<'info> {
     pub quote_mint: Box<Account<'info, Mint>>,
 
     // Raydium accounts
-    pub raydium: RaydiumAccounts<'info>,
+    pub ray: RaydiumAccounts2<'info>,
 
     // Conditional vault accounts
-    pub conditional_vault: ConditionalVaultAccounts<'info>,
+    pub cond: ConditionalVaultAccounts2<'info>,
 
     // AMM accounts
-    pub amm: AmmAccounts<'info>,
+    pub ammm2: AmmAccounts2<'info>,
 
     // Autocrat accounts
     #[account(mut)]
@@ -141,7 +141,7 @@ impl RemoveProposalLiquidity<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         // Check that the proposal is finalized
         require!(
-            ctx.accounts.conditional_vault.question.is_resolved(),
+            ctx.accounts.cond.question.is_resolved(),
             ErrorCode::ProposalNotFinalized
         );
 
@@ -150,7 +150,7 @@ impl RemoveProposalLiquidity<'_> {
         let initial_sl_pool_quote_balance = ctx.accounts.sl_pool_quote_vault.amount;
 
         // Get the proposal outcome to determine which AMM to remove liquidity from
-        let question = &ctx.accounts.conditional_vault.question;
+        let question = &ctx.accounts.cond.question;
         let payout_numerators = &question.payout_numerators;
         
         // Determine if the proposal passed (outcome 0) or failed (outcome 1)
@@ -159,30 +159,30 @@ impl RemoveProposalLiquidity<'_> {
         
         let (amm_to_remove_from, lp_account_to_remove_from, base_vault_to_redeem, quote_vault_to_redeem) = if proposal_passed {
             (
-                ctx.accounts.amm.pass_amm.to_account_info(),
-                ctx.accounts.amm.sl_pool_pass_lp_account.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_pass_base_vault.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_pass_quote_vault.to_account_info(),
+                ctx.accounts.ammm2.pass_amm.to_account_info(),
+                ctx.accounts.ammm2.sl_pool_pass_lp_account.to_account_info(),
+                ctx.accounts.cond.sl_pool_pass_base_vault.to_account_info(),
+                ctx.accounts.cond.sl_pool_pass_quote_vault.to_account_info(),
             )
         } else {
             (
-                ctx.accounts.amm.fail_amm.to_account_info(),
-                ctx.accounts.amm.sl_pool_fail_lp_account.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_fail_base_vault.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_fail_quote_vault.to_account_info(),
+                ctx.accounts.ammm2.fail_amm.to_account_info(),
+                ctx.accounts.ammm2.sl_pool_fail_lp_account.to_account_info(),
+                ctx.accounts.cond.sl_pool_fail_base_vault.to_account_info(),
+                ctx.accounts.cond.sl_pool_fail_quote_vault.to_account_info(),
             )
         };
 
         // Get the LP token balance to remove
-        let mut lp_balance_to_remove = ctx.accounts.amm.sl_pool_pass_lp_account.amount;
+        let mut lp_balance_to_remove = ctx.accounts.ammm2.sl_pool_pass_lp_account.amount;
         if !proposal_passed {
-            lp_balance_to_remove = ctx.accounts.amm.sl_pool_fail_lp_account.amount;
+            lp_balance_to_remove = ctx.accounts.ammm2.sl_pool_fail_lp_account.amount;
         }
         
         require!(lp_balance_to_remove > 0, ErrorCode::NoLpTokensToRemove);
 
         // Generate PDA seeds for signing
-        let spot_pool_key = ctx.accounts.raydium.spot_pool.key();
+        let spot_pool_key = ctx.accounts.ray.spot_pool.key();
         let dao_key = ctx.accounts.dao.key();
         let seeds = &[
             b"sl_pool".as_ref(),
@@ -195,7 +195,7 @@ impl RemoveProposalLiquidity<'_> {
         // Remove liquidity from the winning AMM
         amm::cpi::remove_liquidity(
             CpiContext::new_with_signer(
-                ctx.accounts.amm.amm_program.to_account_info(),
+                ctx.accounts.ammm2.amm_program.to_account_info(),
                 amm::cpi::accounts::AddOrRemoveLiquidity {
                     amm: amm_to_remove_from,
                     user: ctx.accounts.sl_pool.to_account_info(),
@@ -203,23 +203,23 @@ impl RemoveProposalLiquidity<'_> {
                     user_base_account: base_vault_to_redeem,
                     user_quote_account: quote_vault_to_redeem,
                     vault_ata_base: if proposal_passed {
-                        ctx.accounts.amm.pass_amm_vault_ata_base.to_account_info()
+                        ctx.accounts.ammm2.pass_amm_vault_ata_base.to_account_info()
                     } else {
-                        ctx.accounts.amm.fail_amm_vault_ata_base.to_account_info()
+                        ctx.accounts.ammm2.fail_amm_vault_ata_base.to_account_info()
                     },
                     vault_ata_quote: if proposal_passed {
-                        ctx.accounts.amm.pass_amm_vault_ata_quote.to_account_info()
+                        ctx.accounts.ammm2.pass_amm_vault_ata_quote.to_account_info()
                     } else {
-                        ctx.accounts.amm.fail_amm_vault_ata_quote.to_account_info()
+                        ctx.accounts.ammm2.fail_amm_vault_ata_quote.to_account_info()
                     },
-                    event_authority: ctx.accounts.amm.event_authority.to_account_info(),
-                    program: ctx.accounts.amm.amm_program.to_account_info(),
+                    event_authority: ctx.accounts.ammm2.event_authority.to_account_info(),
+                    program: ctx.accounts.ammm2.amm_program.to_account_info(),
                     lp_mint: if proposal_passed {
-                        ctx.accounts.amm.pass_lp_mint.to_account_info()
+                        ctx.accounts.ammm2.pass_lp_mint.to_account_info()
                     } else {
-                        ctx.accounts.amm.fail_lp_mint.to_account_info()
+                        ctx.accounts.ammm2.fail_lp_mint.to_account_info()
                     },
-                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                    token_program: ctx.accounts.ray.token_program.to_account_info(),
                 },
                 signer,
             ),
@@ -245,48 +245,48 @@ impl RemoveProposalLiquidity<'_> {
         // Redeem base tokens
         conditional_vault::cpi::redeem_tokens(
             CpiContext::new_with_signer(
-                ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
+                ctx.accounts.cond.conditional_vault_program.to_account_info(),
                 conditional_vault::cpi::accounts::InteractWithVault {
-                    question: ctx.accounts.conditional_vault.question.to_account_info(),
-                    vault: ctx.accounts.conditional_vault.base_vault.to_account_info(),
-                    vault_underlying_token_account: ctx.accounts.conditional_vault.base_vault_underlying_token_account.to_account_info(),
+                    question: ctx.accounts.cond.question.to_account_info(),
+                    vault: ctx.accounts.cond.base_vault.to_account_info(),
+                    vault_underlying_token_account: ctx.accounts.cond.base_vault_underlying_token_account.to_account_info(),
                     authority: ctx.accounts.sl_pool.to_account_info(),
                     user_underlying_token_account: ctx.accounts.sl_pool_base_vault.to_account_info(),
-                    event_authority: ctx.accounts.conditional_vault.vault_event_authority.to_account_info(),
-                    program: ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
-                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                    event_authority: ctx.accounts.cond.vault_event_authority.to_account_info(),
+                    program: ctx.accounts.cond.conditional_vault_program.to_account_info(),
+                    token_program: ctx.accounts.ray.token_program.to_account_info(),
                 },
                 signer,
             )
             .with_remaining_accounts(vec![
-                ctx.accounts.conditional_vault.pass_base_mint.to_account_info(),
-                ctx.accounts.conditional_vault.fail_base_mint.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_pass_base_vault.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_fail_base_vault.to_account_info(),
+                ctx.accounts.cond.pass_base_mint.to_account_info(),
+                ctx.accounts.cond.fail_base_mint.to_account_info(),
+                ctx.accounts.cond.sl_pool_pass_base_vault.to_account_info(),
+                ctx.accounts.cond.sl_pool_fail_base_vault.to_account_info(),
             ]),
         )?;
 
         // Redeem quote tokens
         conditional_vault::cpi::redeem_tokens(
             CpiContext::new_with_signer(
-                ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
+                ctx.accounts.cond.conditional_vault_program.to_account_info(),
                 conditional_vault::cpi::accounts::InteractWithVault {
-                    question: ctx.accounts.conditional_vault.question.to_account_info(),
-                    vault: ctx.accounts.conditional_vault.quote_vault.to_account_info(),
-                    vault_underlying_token_account: ctx.accounts.conditional_vault.quote_vault_underlying_token_account.to_account_info(),
+                    question: ctx.accounts.cond.question.to_account_info(),
+                    vault: ctx.accounts.cond.quote_vault.to_account_info(),
+                    vault_underlying_token_account: ctx.accounts.cond.quote_vault_underlying_token_account.to_account_info(),
                     authority: ctx.accounts.sl_pool.to_account_info(),
                     user_underlying_token_account: ctx.accounts.sl_pool_quote_vault.to_account_info(),
-                    event_authority: ctx.accounts.conditional_vault.vault_event_authority.to_account_info(),
-                    program: ctx.accounts.conditional_vault.conditional_vault_program.to_account_info(),
-                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
+                    event_authority: ctx.accounts.cond.vault_event_authority.to_account_info(),
+                    program: ctx.accounts.cond.conditional_vault_program.to_account_info(),
+                    token_program: ctx.accounts.ray.token_program.to_account_info(),
                 },
                 signer,
             )
             .with_remaining_accounts(vec![
-                ctx.accounts.conditional_vault.pass_quote_mint.to_account_info(),
-                ctx.accounts.conditional_vault.fail_quote_mint.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_pass_quote_vault.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_fail_quote_vault.to_account_info(),
+                ctx.accounts.cond.pass_quote_mint.to_account_info(),
+                ctx.accounts.cond.fail_quote_mint.to_account_info(),
+                ctx.accounts.cond.sl_pool_pass_quote_vault.to_account_info(),
+                ctx.accounts.cond.sl_pool_fail_quote_vault.to_account_info(),
             ]),
         )?;
 
@@ -309,8 +309,8 @@ impl RemoveProposalLiquidity<'_> {
             (
                 ctx.accounts.sl_pool_base_vault.to_account_info(),
                 ctx.accounts.sl_pool_quote_vault.to_account_info(),
-                ctx.accounts.raydium.spot_pool_base_vault.to_account_info(),
-                ctx.accounts.raydium.spot_pool_quote_vault.to_account_info(),
+                ctx.accounts.ray.spot_pool_base_vault.to_account_info(),
+                ctx.accounts.ray.spot_pool_quote_vault.to_account_info(),
                 ctx.accounts.base_mint.to_account_info(),
                 ctx.accounts.quote_mint.to_account_info(),
             )
@@ -318,8 +318,8 @@ impl RemoveProposalLiquidity<'_> {
             (
                 ctx.accounts.sl_pool_quote_vault.to_account_info(),
                 ctx.accounts.sl_pool_base_vault.to_account_info(),
-                ctx.accounts.raydium.spot_pool_quote_vault.to_account_info(),
-                ctx.accounts.raydium.spot_pool_base_vault.to_account_info(),
+                ctx.accounts.ray.spot_pool_quote_vault.to_account_info(),
+                ctx.accounts.ray.spot_pool_base_vault.to_account_info(),
                 ctx.accounts.quote_mint.to_account_info(),
                 ctx.accounts.base_mint.to_account_info(),
             )
@@ -334,21 +334,21 @@ impl RemoveProposalLiquidity<'_> {
 
         raydium_cpmm_cpi::cpi::deposit(
             CpiContext::new_with_signer(
-                ctx.accounts.raydium.cp_swap_program.to_account_info(),
+                ctx.accounts.ray.cp_swap_program.to_account_info(),
                 RaydiumDeposit {
                     owner: ctx.accounts.sl_pool.to_account_info(),
-                    authority: ctx.accounts.raydium.raydium_authority.to_account_info(),
-                    pool_state: ctx.accounts.raydium.spot_pool.to_account_info(),
+                    authority: ctx.accounts.ray.raydium_authority.to_account_info(),
+                    pool_state: ctx.accounts.ray.spot_pool.to_account_info(),
                     owner_lp_token: ctx.accounts.sl_pool_spot_lp_vault.to_account_info(),
                     token_0_account,
                     token_1_account,
                     token_0_vault,
                     token_1_vault,
-                    token_program: ctx.accounts.raydium.token_program.to_account_info(),
-                    token_program_2022: ctx.accounts.raydium.token_program_2022.to_account_info(),
+                    token_program: ctx.accounts.ray.token_program.to_account_info(),
+                    token_program_2022: ctx.accounts.ray.token_program_2022.to_account_info(),
                     vault_0_mint,
                     vault_1_mint,
-                    lp_mint: ctx.accounts.raydium.lp_mint.to_account_info(),
+                    lp_mint: ctx.accounts.ray.lp_mint.to_account_info(),
                 },
                 signer,
             ),

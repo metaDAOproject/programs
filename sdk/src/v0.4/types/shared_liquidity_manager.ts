@@ -463,22 +463,22 @@ export type SharedLiquidityManager = {
             {
               name: "slPoolPassBaseVault";
               isMut: true;
-              isSigner: false;
+              isSigner: true;
             },
             {
               name: "slPoolFailBaseVault";
               isMut: true;
-              isSigner: false;
+              isSigner: true;
             },
             {
               name: "slPoolPassQuoteVault";
               isMut: true;
-              isSigner: false;
+              isSigner: true;
             },
             {
               name: "slPoolFailQuoteVault";
               isMut: true;
-              isSigner: false;
+              isSigner: true;
             },
             {
               name: "vaultEventAuthority";
@@ -486,7 +486,17 @@ export type SharedLiquidityManager = {
               isSigner: false;
             },
             {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
               name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
               isMut: false;
               isSigner: false;
             },
@@ -656,7 +666,7 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
-          name: "raydium";
+          name: "ray";
           accounts: [
             {
               name: "spotPool";
@@ -706,7 +716,7 @@ export type SharedLiquidityManager = {
           ];
         },
         {
-          name: "conditionalVault";
+          name: "cond";
           accounts: [
             {
               name: "question";
@@ -796,7 +806,7 @@ export type SharedLiquidityManager = {
           ];
         },
         {
-          name: "amm";
+          name: "ammm2";
           accounts: [
             {
               name: "passAmm";
@@ -1631,22 +1641,22 @@ export const IDL: SharedLiquidityManager = {
             {
               name: "slPoolPassBaseVault",
               isMut: true,
-              isSigner: false,
+              isSigner: true,
             },
             {
               name: "slPoolFailBaseVault",
               isMut: true,
-              isSigner: false,
+              isSigner: true,
             },
             {
               name: "slPoolPassQuoteVault",
               isMut: true,
-              isSigner: false,
+              isSigner: true,
             },
             {
               name: "slPoolFailQuoteVault",
               isMut: true,
-              isSigner: false,
+              isSigner: true,
             },
             {
               name: "vaultEventAuthority",
@@ -1654,7 +1664,17 @@ export const IDL: SharedLiquidityManager = {
               isSigner: false,
             },
             {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
               name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
               isMut: false,
               isSigner: false,
             },
@@ -1824,7 +1844,7 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
         {
-          name: "raydium",
+          name: "ray",
           accounts: [
             {
               name: "spotPool",
@@ -1874,7 +1894,7 @@ export const IDL: SharedLiquidityManager = {
           ],
         },
         {
-          name: "conditionalVault",
+          name: "cond",
           accounts: [
             {
               name: "question",
@@ -1964,7 +1984,7 @@ export const IDL: SharedLiquidityManager = {
           ],
         },
         {
-          name: "amm",
+          name: "ammm2",
           accounts: [
             {
               name: "passAmm",
