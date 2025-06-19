@@ -177,6 +177,83 @@ export class SharedLiquidityManagerClient {
       });
   }
 
+  withdrawSharedLiquidityIx(
+    dao: PublicKey,
+    spotPool: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    lpTokenAmount: BN,
+    minimumToken0Amount: BN,
+    minimumToken1Amount: BN
+  ) {
+    const [slPool] = getSharedLiquidityPoolAddr(
+      this.program.programId,
+      dao,
+      spotPool
+    );
+
+    const [userSlPoolPosition] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("sl_pool_position"),
+        slPool.toBuffer(),
+        this.provider.wallet.publicKey.toBuffer(),
+      ],
+      this.program.programId
+    );
+
+    return this.program.methods
+      .withdrawSharedLiquidity({
+        lpTokenAmount,
+        minimumToken0Amount,
+        minimumToken1Amount,
+      })
+      .accounts({
+        slPool,
+        spotPool,
+        slPoolSpotLpVault: getAssociatedTokenAddressSync(
+          getRaydiumCpmmLpMintAddr(spotPool, false)[0],
+          slPool,
+          true
+        ),
+        userQuoteTokenAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          this.provider.wallet.publicKey
+        ),
+        userBaseTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          this.provider.wallet.publicKey
+        ),
+        spotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
+          spotPool,
+          baseMint,
+          false
+        )[0],
+        spotPoolQuoteVault: getRaydiumCpmmPoolVaultAddr(
+          spotPool,
+          quoteMint,
+          false
+        )[0],
+        baseMint,
+        quoteMint,
+        spotPoolLpMint: getRaydiumCpmmLpMintAddr(spotPool, false)[0],
+        userLpTokenAccount: getAssociatedTokenAddressSync(
+          getRaydiumCpmmLpMintAddr(spotPool, false)[0],
+          this.provider.wallet.publicKey,
+          true
+        ),
+        userSlPoolPosition,
+        user: this.provider.wallet.publicKey,
+        feeReceiver: this.provider.wallet.publicKey,
+        raydiumAuthority: RAYDIUM_AUTHORITY,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+        cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
+        memoProgram: MEMO_PROGRAM_ID,
+        eventAuthority: getEventAuthorityAddr(this.program.programId)[0],
+        program: this.program.programId,
+      });
+  }
+
   initializeProposalWithLiquidityIx(
     dao: PublicKey,
     spotPool: PublicKey,
