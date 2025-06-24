@@ -27,7 +27,7 @@ pub struct InitializeLaunch<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + std::mem::size_of::<Launch>(),
+        space = 8 + Launch::INIT_SPACE,
         seeds = [b"launch", token_mint.key().as_ref()],
         bump
     )]

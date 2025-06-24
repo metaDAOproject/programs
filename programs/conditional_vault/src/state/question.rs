@@ -21,9 +21,11 @@ use super::*;
 ///
 /// Once resolved, the sum of all outcome resolutions is exactly 1.
 #[account]
+#[derive(InitSpace)]
 pub struct Question {
     pub question_id: [u8; 32],
     pub oracle: Pubkey,
+    #[max_len(0)]
     pub payout_numerators: Vec<u32>,
     pub payout_denominator: u32,
 }

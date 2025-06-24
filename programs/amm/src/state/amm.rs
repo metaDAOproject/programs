@@ -13,7 +13,7 @@ pub enum SwapType {
     Sell,
 }
 
-#[derive(Default, Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize)]
+#[derive(Default, Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, InitSpace)]
 pub struct TwapOracle {
     pub last_updated_slot: u64,
     /// A price is the number of quote units per base unit multiplied by 1e12.
@@ -68,7 +68,7 @@ impl TwapOracle {
 }
 
 #[account]
-#[derive(Default)]
+#[derive(Default, InitSpace)]
 pub struct Amm {
     pub bump: u8,
 

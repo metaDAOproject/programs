@@ -8,10 +8,12 @@ pub enum VaultStatus {
 }
 
 #[account]
+#[derive(InitSpace)]
 pub struct ConditionalVault {
     pub question: Pubkey,
     pub underlying_token_mint: Pubkey,
     pub underlying_token_account: Pubkey,
+    #[max_len(0)]
     pub conditional_token_mints: Vec<Pubkey>,
     pub pda_bump: u8,
     pub decimals: u8,

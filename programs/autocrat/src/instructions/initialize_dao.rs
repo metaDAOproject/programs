@@ -17,7 +17,7 @@ pub struct InitializeDao<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + std::mem::size_of::<Dao>()
+        space = 8 + Dao::INIT_SPACE,
     )]
     pub dao: Account<'info, Dao>,
     #[account(mut)]

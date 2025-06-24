@@ -18,7 +18,7 @@ pub struct Fund<'info> {
     #[account(
         init_if_needed,
         payer = payer,
-        space = 8 + std::mem::size_of::<FundingRecord>(),
+        space = 8 + FundingRecord::INIT_SPACE,
         seeds = [b"funding_record", launch.key().as_ref(), funder.key().as_ref()],
         bump
     )]

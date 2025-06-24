@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[account]
+#[derive(InitSpace)]
 pub struct FundingRecord {
     /// The PDA bump.
     pub pda_bump: u8,

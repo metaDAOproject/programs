@@ -9,7 +9,7 @@ pub struct InitializeConditionalVault<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + std::mem::size_of::<ConditionalVault>() + (32 * question.num_outcomes()),
+        space = 8 + ConditionalVault::INIT_SPACE + (32 * question.num_outcomes()),
         seeds = [
             b"conditional_vault", 
             question.key().as_ref(),

@@ -1,6 +1,7 @@
 pub use super::*;
 
 #[account]
+#[derive(InitSpace)]
 pub struct Dao {
     pub treasury_pda_bump: u8,
     pub treasury: Pubkey,
