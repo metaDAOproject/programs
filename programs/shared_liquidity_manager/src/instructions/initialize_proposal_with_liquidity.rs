@@ -4,7 +4,7 @@ use anchor_spl::token::{Mint, TokenAccount};
 use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 
 use crate::error::SharedLiquidityManagerError;
-use crate::state::{DraftProposal, DraftProposalStatus, ProposalInstruction, SharedLiquidityPool};
+use crate::state::{DraftProposal, DraftProposalStatus, SharedLiquidityPool};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeProposalWithLiquidityParams {

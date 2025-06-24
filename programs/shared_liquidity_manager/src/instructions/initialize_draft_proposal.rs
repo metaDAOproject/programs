@@ -1,11 +1,10 @@
 use anchor_lang::prelude::*;
 
-use anchor_spl::associated_token::{get_associated_token_address, AssociatedToken};
-use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::state::{DraftProposal, DraftProposalStatus, ProposalInstruction, SharedLiquidityPool};
 
-use autocrat::state::Dao;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeDraftProposalParams {

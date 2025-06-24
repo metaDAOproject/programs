@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{Token, TokenAccount, Transfer};
 
 use crate::{
     error::SharedLiquidityManagerError,
