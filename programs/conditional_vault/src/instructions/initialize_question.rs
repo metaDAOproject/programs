@@ -14,7 +14,7 @@ pub struct InitializeQuestion<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + 32 + 32 + 4 + (args.num_outcomes as usize * 4) + 4,
+        space = 8 + Question::INIT_SPACE + (args.num_outcomes as usize * 4),
         seeds = [
             b"question", 
             args.question_id.as_ref(),

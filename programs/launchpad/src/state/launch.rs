@@ -9,6 +9,7 @@ pub enum LaunchState {
 }
 
 #[account]
+#[derive(InitSpace)]
 pub struct Launch {
     /// The PDA bump.
     pub pda_bump: u8,
