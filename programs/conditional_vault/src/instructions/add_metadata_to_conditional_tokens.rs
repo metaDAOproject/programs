@@ -23,6 +23,7 @@ pub struct AddMetadataToConditionalTokens<'info> {
     #[account(
         mut,
         mint::authority = vault,
+        constraint = vault.conditional_token_mints.contains(&conditional_token_mint.key()),
     )]
     pub conditional_token_mint: Account<'info, Mint>,
     /// CHECK: verified via cpi into token metadata
