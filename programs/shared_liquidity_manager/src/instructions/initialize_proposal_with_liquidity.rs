@@ -3,6 +3,7 @@ use anchor_spl::token::{Mint, TokenAccount};
 
 use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 
+use crate::error::SharedLiquidityManagerError;
 use crate::state::{DraftProposal, DraftProposalStatus, ProposalInstruction, SharedLiquidityPool};
 
 
@@ -172,9 +173,9 @@ impl InitializeProposalWithLiquidity<'_> {
     pub fn handle(ctx: Context<Self>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
         // 1. Withdraw half of the pool's LP tokens from Raydium
         let pool_lp_balance = ctx.accounts.sl_pool_spot_lp_vault.amount;
-        require!(pool_lp_balance > 0, ErrorCode::NoLpTokensInPool);
+        require!(pool_lp_balance > 0, SharedLiquidityManagerError::NoLpTokensInPool);
         let half_lp = pool_lp_balance / 2;
-        require!(half_lp > 0, ErrorCode::NotEnoughLpTokens);
+        require!(half_lp > 0, SharedLiquidityManagerError::NotEnoughLpTokens);
 
         // Get initial token balances
         let initial_base_balance = ctx.accounts.sl_pool_base_vault.amount;
@@ -250,8 +251,8 @@ impl InitializeProposalWithLiquidity<'_> {
         let base_withdrawn = ctx.accounts.sl_pool_base_vault.amount - initial_base_balance;
         let quote_withdrawn = ctx.accounts.sl_pool_quote_vault.amount - initial_quote_balance;
 
-        require!(base_withdrawn > 0, ErrorCode::NotEnoughLpTokens);
-        require!(quote_withdrawn > 0, ErrorCode::NotEnoughLpTokens);
+        require!(base_withdrawn > 0, SharedLiquidityManagerError::NotEnoughLpTokens);
+        require!(quote_withdrawn > 0, SharedLiquidityManagerError::NotEnoughLpTokens);
 
         // Split base
         conditional_vault::cpi::split_tokens(
@@ -459,10 +460,3 @@ impl InitializeProposalWithLiquidity<'_> {
     }
 }
 
-#[error_code]
-pub enum ErrorCode {
-    #[msg("No LP tokens in pool's LP token account")]
-    NoLpTokensInPool,
-    #[msg("Not enough LP tokens to withdraw half")]
-    NotEnoughLpTokens,
-}

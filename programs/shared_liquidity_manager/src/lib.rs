@@ -22,6 +22,7 @@ declare_id!("EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d");
 
 mod state;
 mod instructions;
+mod error;
 
 use instructions::*;
 

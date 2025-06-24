@@ -8,6 +8,7 @@ use raydium_cpmm_cpi::{
 };
 use anchor_lang::Discriminator;
 
+use crate::error::SharedLiquidityManagerError;
 use crate::state::SharedLiquidityPool;
 
 #[derive(Accounts)]
@@ -248,7 +249,7 @@ impl RemoveProposalLiquidity<'_> {
     pub fn validate(&self) -> Result<()> {
         require!(
             self.cond.question.is_resolved(),
-            ErrorCode::ProposalNotFinalized
+            SharedLiquidityManagerError::ProposalNotFinalized
         );
 
         Ok(())
@@ -301,7 +302,7 @@ impl RemoveProposalLiquidity<'_> {
 
         require!(
             lp_account_to_remove_from.amount > 0,
-            ErrorCode::NoLpTokensToRemove
+            SharedLiquidityManagerError::NoLpTokensToRemove
         );
 
         // Generate PDA seeds for signing
@@ -472,8 +473,8 @@ ctx.accounts.sl_pool_base_vault.reload()?;
         let base_redeemed = post_redeem_base_balance - pre_redeem_base_balance;
         let quote_redeemed = post_redeem_quote_balance - pre_redeem_quote_balance;
 
-        require!(base_redeemed > 0, ErrorCode::NoTokensFromAmm);
-        require!(quote_redeemed > 0, ErrorCode::NoTokensFromAmm);
+        require!(base_redeemed > 0, SharedLiquidityManagerError::NoTokensFromAmm);
+        require!(quote_redeemed > 0, SharedLiquidityManagerError::NoTokensFromAmm);
 
 
 
@@ -737,14 +738,3 @@ ctx.accounts.sl_pool_base_vault.reload()?;
     }
 }
 
-#[error_code]
-pub enum ErrorCode {
-    #[msg("Proposal is not finalized")]
-    ProposalNotFinalized,
-    #[msg("No LP tokens to remove from AMM")]
-    NoLpTokensToRemove,
-    #[msg("No tokens received from AMM removal")]
-    NoTokensFromAmm,
-    #[msg("Insufficient reserves returned to spot AMM (less than 99.5%)")]
-    InsufficientReservesReturned,
-}

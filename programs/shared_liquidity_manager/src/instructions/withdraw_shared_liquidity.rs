@@ -4,6 +4,7 @@ use anchor_spl::{
     token_interface::Token2022,
 };
 
+use crate::error::SharedLiquidityManagerError;
 use crate::state::{LiquidityPosition, SharedLiquidityPool};
 use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 use raydium_cpmm_cpi::states::PoolState as RaydiumPoolState;
@@ -103,22 +104,22 @@ impl WithdrawSharedLiquidity<'_> {
         // Ensure the pool is not being used by an active proposal
         require!(
             self.sl_pool.active_proposal.is_none(),
-            CustomError::PoolInUse
+            SharedLiquidityManagerError::PoolInUse
         );
 
         // Validate the position belongs to the user and pool
         require!(
             self.user_sl_pool_position.owner == self.user.key(),
-            CustomError::Unauthorized
+            SharedLiquidityManagerError::Unauthorized
         );
         require!(
             self.user_sl_pool_position.pool == self.sl_pool.key(),
-            CustomError::InvalidPool
+            SharedLiquidityManagerError::InvalidPool
         );
 
         require!(
             self.user_sl_pool_position.underlying_spot_lp_shares >= params.lp_token_amount,
-            CustomError::InsufficientLpShares
+            SharedLiquidityManagerError::InsufficientLpShares
         );
 
         Ok(())
@@ -205,11 +206,11 @@ impl WithdrawSharedLiquidity<'_> {
         // Verify minimum amounts were received
         require!(
             base_received >= params.minimum_token_0_amount || base_received >= params.minimum_token_1_amount,
-            CustomError::SlippageExceeded
+            SharedLiquidityManagerError::SlippageExceeded
         );
         require!(
             quote_received >= params.minimum_token_0_amount || quote_received >= params.minimum_token_1_amount,
-            CustomError::SlippageExceeded
+            SharedLiquidityManagerError::SlippageExceeded
         );
 
         // Update the user's position
@@ -224,16 +225,4 @@ impl WithdrawSharedLiquidity<'_> {
     }
 }
 
-#[error_code]
-pub enum CustomError {
-    #[msg("Pool is currently being used by an active proposal")]
-    PoolInUse,
-    #[msg("User does not have enough LP shares to withdraw")]
-    InsufficientLpShares,
-    #[msg("Unauthorized access to position")]
-    Unauthorized,
-    #[msg("Invalid pool for this position")]
-    InvalidPool,
-    #[msg("Slippage exceeded minimum token amounts")]
-    SlippageExceeded,
-} 
+ 

@@ -4,6 +4,7 @@ use anchor_spl::{
     token_interface::Token2022,
 };
 
+use crate::error::SharedLiquidityManagerError;
 use crate::state::{LiquidityPosition, SharedLiquidityPool};
 use raydium_cpmm_cpi::cpi::accounts::Deposit as RaydiumDeposit;
 use raydium_cpmm_cpi::states::PoolState as RaydiumPoolState;
@@ -101,7 +102,7 @@ impl DepositSharedLiquidity<'_> {
         // Ensure the pool is not being used by an active proposal
         require!(
             self.sl_pool.active_proposal.is_none(),
-            CustomError::PoolInUse
+            SharedLiquidityManagerError::PoolInUse
         );
         // let (token_0, token_1) = if self.sl_pool.is_base_token_0 {
         //     (self.base_mint.key(), self.quote_mint.key())
@@ -201,8 +202,3 @@ impl DepositSharedLiquidity<'_> {
     }
 }
 
-#[error_code]
-pub enum CustomError {
-    #[msg("Pool is currently being used by an active proposal")]
-    PoolInUse,
-}

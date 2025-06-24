@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
 
 use crate::state::{DraftProposal, StakeRecord};
+use crate::error::SharedLiquidityManagerError;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct UnstakeFromDraftProposalParams {
@@ -28,7 +29,7 @@ impl UnstakeFromDraftProposal<'_> {
         require_gte!(
             self.stake_record.amount,
             params.amount,
-            ErrorCode::InsufficientStake
+            SharedLiquidityManagerError::InsufficientStake
         );
 
         Ok(())
@@ -64,8 +65,3 @@ impl UnstakeFromDraftProposal<'_> {
     }
 }
 
-#[error_code]
-pub enum ErrorCode {
-    #[msg("Insufficient stake amount")]
-    InsufficientStake,
-}
