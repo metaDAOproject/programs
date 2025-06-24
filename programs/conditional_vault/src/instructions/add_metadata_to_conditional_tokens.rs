@@ -23,7 +23,6 @@ pub struct AddMetadataToConditionalTokens<'info> {
     #[account(
         mut,
         mint::authority = vault,
-        constraint = vault.conditional_token_mints.contains(&conditional_token_mint.key()),
     )]
     pub conditional_token_mint: Account<'info, Mint>,
     /// CHECK: verified via cpi into token metadata
@@ -40,6 +39,11 @@ impl AddMetadataToConditionalTokens<'_> {
         //     self.vault.status == VaultStatus::Active,
         //     VaultError::VaultAlreadySettled
         // );
+
+        require!(
+            self.vault.conditional_token_mints.contains(&self.conditional_token_mint.key()),
+            VaultError::InvalidConditionalTokenMint
+        );
 
         require!(
             self.conditional_token_metadata.data_is_empty(),
