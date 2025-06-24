@@ -40,18 +40,21 @@ impl ConditionalVault {
         // tokens than the sum of the conditional token mint's supplies multiplied
         // by their respective payouts
 
+        
         let max_possible_liability = if !question.is_resolved() {
             // safe because conditional_token_supplies is non-empty
             *conditional_token_supplies.iter().max().unwrap()
         } else {
-            conditional_token_supplies
+            // Sum all numerators first, then divide once
+            let total_numerator: u128 = conditional_token_supplies
                 .iter()
                 .enumerate()
                 .map(|(i, supply)| {
                     *supply as u128 * question.payout_numerators[i] as u128
-                        / question.payout_denominator as u128
                 })
-                .sum::<u128>() as u64
+                .sum();
+            
+            (total_numerator / question.payout_denominator as u128) as u64
         };
 
         require_gte!(
