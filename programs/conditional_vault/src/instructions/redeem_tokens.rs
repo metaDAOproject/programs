@@ -40,7 +40,7 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
             .max()
             .unwrap();
 
-        let mut total_redeemable = 0;
+        let mut total_numerator: u128 = 0;
 
         for (conditional_mint, user_conditional_token_account) in conditional_token_mints
             .iter()
@@ -53,9 +53,8 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
                 .position(|mint| mint == &conditional_mint.key())
                 .unwrap();
 
-            total_redeemable += ((user_conditional_token_account.amount as u128
-                * question.payout_numerators[payout_index] as u128)
-                / question.payout_denominator as u128) as u64;
+            total_numerator += user_conditional_token_account.amount as u128
+                * question.payout_numerators[payout_index] as u128;
 
             token::burn(
                 CpiContext::new(
@@ -69,6 +68,8 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
                 user_conditional_token_account.amount,
             )?;
         }
+
+        let total_redeemable = (total_numerator / question.payout_denominator as u128) as u64;
 
         token::transfer(
             CpiContext::new_with_signer(
