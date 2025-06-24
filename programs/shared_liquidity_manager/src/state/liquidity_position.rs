@@ -10,4 +10,4 @@ pub struct LiquidityPosition {
     pub underlying_spot_lp_shares: u64,
     /// The PDA bump
     pub bump: u8,
-} 
+}

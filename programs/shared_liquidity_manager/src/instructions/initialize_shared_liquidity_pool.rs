@@ -1,7 +1,7 @@
 //! Initializes a shared liquidity pool.
-//! 
+//!
 //! The pool creator provides the initial liquidity and can't
-//! be frontrun 
+//! be frontrun
 use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
 use anchor_spl::associated_token;
@@ -9,15 +9,15 @@ use anchor_spl::associated_token;
 use crate::error::SharedLiquidityManagerError;
 use crate::state::SharedLiquidityPool;
 
+use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
-use anchor_spl::associated_token::get_associated_token_address;
 
 use autocrat::state::Dao;
 use raydium_cpmm_cpi::{
     cpi, instruction,
     program::RaydiumCpmm,
-    states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED, AMM_CONFIG_SEED},
+    states::{AmmConfig, AMM_CONFIG_SEED, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -200,8 +200,16 @@ impl InitializeSharedLiquidityPool<'_> {
         require_neq!(self.base_mint.key(), self.quote_mint.key());
 
         // Ensure pool creator has enough tokens
-        require_gte!(self.creator_base_token_account.amount, params.base_amount, SharedLiquidityManagerError::InsufficientFunds);
-        require_gte!(self.creator_quote_token_account.amount, params.quote_amount, SharedLiquidityManagerError::InsufficientFunds);
+        require_gte!(
+            self.creator_base_token_account.amount,
+            params.base_amount,
+            SharedLiquidityManagerError::InsufficientFunds
+        );
+        require_gte!(
+            self.creator_quote_token_account.amount,
+            params.quote_amount,
+            SharedLiquidityManagerError::InsufficientFunds
+        );
 
         Ok(())
     }
@@ -294,7 +302,12 @@ impl InitializeSharedLiquidityPool<'_> {
 
         let spot_pool_index = 0_u32.to_le_bytes();
         let sl_pool_key = ctx.accounts.sl_pool.key();
-        let pool_seeds = &[b"spot_pool", sl_pool_key.as_ref(), &spot_pool_index[..], &[ctx.bumps.spot_pool]];
+        let pool_seeds = &[
+            b"spot_pool",
+            sl_pool_key.as_ref(),
+            &spot_pool_index[..],
+            &[ctx.bumps.spot_pool],
+        ];
         let raydium_signer = &[&pool_seeds[..]];
 
         solana_program::program::invoke_signed(
@@ -303,23 +316,19 @@ impl InitializeSharedLiquidityPool<'_> {
             raydium_signer,
         )?;
 
-
         // First, initialize the shared liquidity pool's lp vault
 
-        associated_token::create(
-            CpiContext::new(
-                ctx.accounts.associated_token_program.to_account_info(),
-                associated_token::Create {
-                    payer: ctx.accounts.creator.to_account_info(),
-                    mint: ctx.accounts.spot_pool_lp_mint.to_account_info(),
-                    authority: ctx.accounts.sl_pool_signer.to_account_info(),
-                    associated_token: ctx.accounts.sl_pool_spot_lp_vault.to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    token_program: ctx.accounts.token_program.to_account_info(),
-                }
-            )
-        )?;
-
+        associated_token::create(CpiContext::new(
+            ctx.accounts.associated_token_program.to_account_info(),
+            associated_token::Create {
+                payer: ctx.accounts.creator.to_account_info(),
+                mint: ctx.accounts.spot_pool_lp_mint.to_account_info(),
+                authority: ctx.accounts.sl_pool_signer.to_account_info(),
+                associated_token: ctx.accounts.sl_pool_spot_lp_vault.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                token_program: ctx.accounts.token_program.to_account_info(),
+            },
+        ))?;
 
         // Transfer LP tokens from pool creator to shared liquidity pool. We can transfer
         // the full amount because they should have had 0 before

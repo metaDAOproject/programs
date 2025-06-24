@@ -22,7 +22,7 @@ use raydium_cpmm_cpi::{
 
 use autocrat::program::Autocrat;
 use autocrat::InitializeDaoParams;
-use autocrat::{DAY_IN_SLOTS};
+use autocrat::DAY_IN_SLOTS;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 

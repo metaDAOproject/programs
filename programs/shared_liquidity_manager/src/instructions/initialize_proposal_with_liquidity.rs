@@ -6,7 +6,6 @@ use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 use crate::error::SharedLiquidityManagerError;
 use crate::state::{DraftProposal, DraftProposalStatus, ProposalInstruction, SharedLiquidityPool};
 
-
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeProposalWithLiquidityParams {
     pub nonce: u64,
@@ -162,7 +161,9 @@ pub struct InitializeProposalWithLiquidity<'info> {
 impl InitializeProposalWithLiquidity<'_> {
     pub fn validate(&self) -> Result<()> {
         let total_supply = self.base_mint.supply;
-        let stake_threshold = (total_supply * self.shared_liquidity_pool.proposal_stake_rate_threshold_bps as u64) / 10_000;
+        let stake_threshold = (total_supply
+            * self.shared_liquidity_pool.proposal_stake_rate_threshold_bps as u64)
+            / 10_000;
         require_gte!(self.draft_proposal.staked_token_amount, stake_threshold);
 
         require_eq!(self.draft_proposal.status, DraftProposalStatus::Draft);
@@ -173,7 +174,10 @@ impl InitializeProposalWithLiquidity<'_> {
     pub fn handle(ctx: Context<Self>, params: InitializeProposalWithLiquidityParams) -> Result<()> {
         // 1. Withdraw half of the pool's LP tokens from Raydium
         let pool_lp_balance = ctx.accounts.sl_pool_spot_lp_vault.amount;
-        require!(pool_lp_balance > 0, SharedLiquidityManagerError::NoLpTokensInPool);
+        require!(
+            pool_lp_balance > 0,
+            SharedLiquidityManagerError::NoLpTokensInPool
+        );
         let half_lp = pool_lp_balance / 2;
         require!(half_lp > 0, SharedLiquidityManagerError::NotEnoughLpTokens);
 
@@ -221,7 +225,11 @@ impl InitializeProposalWithLiquidity<'_> {
             CpiContext::new_with_signer(
                 ctx.accounts.raydium.cp_swap_program.to_account_info(),
                 RaydiumWithdraw {
-                    owner: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                    owner: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_signer
+                        .to_account_info(),
                     authority: ctx.accounts.raydium.raydium_authority.to_account_info(),
                     pool_state: ctx.accounts.raydium.spot_pool.to_account_info(),
                     lp_mint: ctx.accounts.raydium.lp_mint.to_account_info(),
@@ -251,8 +259,14 @@ impl InitializeProposalWithLiquidity<'_> {
         let base_withdrawn = ctx.accounts.sl_pool_base_vault.amount - initial_base_balance;
         let quote_withdrawn = ctx.accounts.sl_pool_quote_vault.amount - initial_quote_balance;
 
-        require!(base_withdrawn > 0, SharedLiquidityManagerError::NotEnoughLpTokens);
-        require!(quote_withdrawn > 0, SharedLiquidityManagerError::NotEnoughLpTokens);
+        require!(
+            base_withdrawn > 0,
+            SharedLiquidityManagerError::NotEnoughLpTokens
+        );
+        require!(
+            quote_withdrawn > 0,
+            SharedLiquidityManagerError::NotEnoughLpTokens
+        );
 
         // Split base
         conditional_vault::cpi::split_tokens(
@@ -269,7 +283,11 @@ impl InitializeProposalWithLiquidity<'_> {
                         .conditional_vault
                         .base_vault_underlying_token_account
                         .to_account_info(),
-                    authority: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                    authority: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_signer
+                        .to_account_info(),
                     user_underlying_token_account: ctx
                         .accounts
                         .sl_pool_base_vault
@@ -324,7 +342,11 @@ impl InitializeProposalWithLiquidity<'_> {
                         .conditional_vault
                         .quote_vault_underlying_token_account
                         .to_account_info(),
-                    authority: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                    authority: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_signer
+                        .to_account_info(),
                     user_underlying_token_account: ctx
                         .accounts
                         .sl_pool_quote_vault
@@ -374,10 +396,22 @@ impl InitializeProposalWithLiquidity<'_> {
                 ctx.accounts.amm.amm_program.to_account_info(),
                 amm::cpi::accounts::AddOrRemoveLiquidity {
                     amm: ctx.accounts.amm.pass_amm.to_account_info(),
-                    user: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                    user: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_signer
+                        .to_account_info(),
                     user_lp_account: ctx.accounts.amm.sl_pool_pass_lp_account.to_account_info(),
-                    user_base_account: ctx.accounts.conditional_vault.sl_pool_pass_base_vault.to_account_info(),
-                    user_quote_account: ctx.accounts.conditional_vault.sl_pool_pass_quote_vault.to_account_info(),
+                    user_base_account: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_pass_base_vault
+                        .to_account_info(),
+                    user_quote_account: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_pass_quote_vault
+                        .to_account_info(),
                     vault_ata_base: ctx.accounts.amm.pass_amm_vault_ata_base.to_account_info(),
                     vault_ata_quote: ctx.accounts.amm.pass_amm_vault_ata_quote.to_account_info(),
                     event_authority: ctx.accounts.amm.event_authority.to_account_info(),
@@ -391,7 +425,7 @@ impl InitializeProposalWithLiquidity<'_> {
                 max_base_amount: base_withdrawn,
                 quote_amount: quote_withdrawn,
                 min_lp_tokens: quote_withdrawn,
-            }
+            },
         )?;
 
         amm::cpi::add_liquidity(
@@ -399,10 +433,22 @@ impl InitializeProposalWithLiquidity<'_> {
                 ctx.accounts.amm.amm_program.to_account_info(),
                 amm::cpi::accounts::AddOrRemoveLiquidity {
                     amm: ctx.accounts.amm.fail_amm.to_account_info(),
-                    user: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                    user: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_signer
+                        .to_account_info(),
                     user_lp_account: ctx.accounts.amm.sl_pool_fail_lp_account.to_account_info(),
-                    user_base_account: ctx.accounts.conditional_vault.sl_pool_fail_base_vault.to_account_info(),
-                    user_quote_account: ctx.accounts.conditional_vault.sl_pool_fail_quote_vault.to_account_info(),
+                    user_base_account: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_fail_base_vault
+                        .to_account_info(),
+                    user_quote_account: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_fail_quote_vault
+                        .to_account_info(),
                     vault_ata_base: ctx.accounts.amm.fail_amm_vault_ata_base.to_account_info(),
                     vault_ata_quote: ctx.accounts.amm.fail_amm_vault_ata_quote.to_account_info(),
                     event_authority: ctx.accounts.amm.event_authority.to_account_info(),
@@ -416,7 +462,7 @@ impl InitializeProposalWithLiquidity<'_> {
                 max_base_amount: base_withdrawn,
                 quote_amount: quote_withdrawn,
                 min_lp_tokens: quote_withdrawn,
-            }
+            },
         )?;
 
         autocrat::cpi::initialize_proposal(
@@ -432,11 +478,31 @@ impl InitializeProposalWithLiquidity<'_> {
                     pass_lp_mint: ctx.accounts.amm.pass_lp_mint.to_account_info(),
                     fail_amm: ctx.accounts.amm.fail_amm.to_account_info(),
                     fail_lp_mint: ctx.accounts.amm.fail_lp_mint.to_account_info(),
-                    pass_lp_user_account: ctx.accounts.amm.sl_pool_pass_lp_account.to_account_info(),
-                    fail_lp_user_account: ctx.accounts.amm.sl_pool_fail_lp_account.to_account_info(),
-                    pass_lp_vault_account: ctx.accounts.amm.proposal_pass_lp_vault.to_account_info(),
-                    fail_lp_vault_account: ctx.accounts.amm.proposal_fail_lp_vault.to_account_info(),
-                    proposer: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                    pass_lp_user_account: ctx
+                        .accounts
+                        .amm
+                        .sl_pool_pass_lp_account
+                        .to_account_info(),
+                    fail_lp_user_account: ctx
+                        .accounts
+                        .amm
+                        .sl_pool_fail_lp_account
+                        .to_account_info(),
+                    pass_lp_vault_account: ctx
+                        .accounts
+                        .amm
+                        .proposal_pass_lp_vault
+                        .to_account_info(),
+                    fail_lp_vault_account: ctx
+                        .accounts
+                        .amm
+                        .proposal_fail_lp_vault
+                        .to_account_info(),
+                    proposer: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_signer
+                        .to_account_info(),
                     payer: ctx.accounts.proposal_creator.to_account_info(),
                     event_authority: ctx.accounts.autocrat_event_authority.to_account_info(),
                     program: ctx.accounts.autocrat_program.to_account_info(),
@@ -451,7 +517,7 @@ impl InitializeProposalWithLiquidity<'_> {
                 pass_lp_tokens_to_lock: quote_withdrawn,
                 fail_lp_tokens_to_lock: quote_withdrawn,
                 nonce: params.nonce,
-            }
+            },
         )?;
 
         ctx.accounts.draft_proposal.status = DraftProposalStatus::Initialized;
@@ -459,4 +525,3 @@ impl InitializeProposalWithLiquidity<'_> {
         Ok(())
     }
 }
-

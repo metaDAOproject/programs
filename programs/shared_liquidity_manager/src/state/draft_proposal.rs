@@ -18,11 +18,15 @@ impl From<ProposalInstruction> for autocrat::ProposalInstruction {
     fn from(instruction: ProposalInstruction) -> Self {
         Self {
             program_id: instruction.program_id,
-            accounts: instruction.accounts.into_iter().map(|acc| autocrat::ProposalAccount {
-                pubkey: acc.pubkey,
-                is_signer: acc.is_signer,
-                is_writable: acc.is_writable,
-            }).collect(),
+            accounts: instruction
+                .accounts
+                .into_iter()
+                .map(|acc| autocrat::ProposalAccount {
+                    pubkey: acc.pubkey,
+                    is_signer: acc.is_signer,
+                    is_writable: acc.is_writable,
+                })
+                .collect(),
             data: instruction.data,
         }
     }
@@ -65,10 +69,13 @@ mod draft_proposal_tests {
         assert_eq!(DraftProposalStatus::Initialized.to_string(), "Initialized");
     }
 
-    #[test]  
+    #[test]
     pub fn test_draft_proposal_status_equality() {
         assert_eq!(DraftProposalStatus::Draft, DraftProposalStatus::Draft);
-        assert_eq!(DraftProposalStatus::Initialized, DraftProposalStatus::Initialized);
+        assert_eq!(
+            DraftProposalStatus::Initialized,
+            DraftProposalStatus::Initialized
+        );
         assert_ne!(DraftProposalStatus::Draft, DraftProposalStatus::Initialized);
     }
 
@@ -86,15 +93,22 @@ mod draft_proposal_tests {
                     pubkey: Pubkey::default(),
                     is_signer: false,
                     is_writable: true,
-                }
+                },
             ],
             data: vec![1, 2, 3, 4],
         };
 
-        let autocrat_instruction: autocrat::ProposalInstruction = proposal_instruction.clone().into();
-        
-        assert_eq!(autocrat_instruction.program_id, proposal_instruction.program_id);
-        assert_eq!(autocrat_instruction.accounts.len(), proposal_instruction.accounts.len());
+        let autocrat_instruction: autocrat::ProposalInstruction =
+            proposal_instruction.clone().into();
+
+        assert_eq!(
+            autocrat_instruction.program_id,
+            proposal_instruction.program_id
+        );
+        assert_eq!(
+            autocrat_instruction.accounts.len(),
+            proposal_instruction.accounts.len()
+        );
         assert_eq!(autocrat_instruction.data, proposal_instruction.data);
         assert_eq!(autocrat_instruction.accounts[0].is_signer, true);
         assert_eq!(autocrat_instruction.accounts[0].is_writable, false);

@@ -1,7 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
 
-use crate::{error::SharedLiquidityManagerError, state::{DraftProposal, StakeRecord}};
+use crate::{
+    error::SharedLiquidityManagerError,
+    state::{DraftProposal, StakeRecord},
+};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct StakeToDraftProposalParams {
@@ -44,9 +47,10 @@ impl StakeToDraftProposal<'_> {
                     from: ctx.accounts.staker_token_account.to_account_info(),
                     to: ctx.accounts.staked_token_vault.to_account_info(),
                     authority: ctx.accounts.staker.to_account_info(),
-                }
+                },
             ),
-            params.amount)?;
+            params.amount,
+        )?;
 
         ctx.accounts.stake_record.staker = ctx.accounts.staker.key();
         ctx.accounts.stake_record.amount += params.amount;

@@ -126,8 +126,6 @@ impl WithdrawSharedLiquidity<'_> {
     }
 
     pub fn handle(ctx: Context<Self>, params: WithdrawSharedLiquidityParams) -> Result<()> {
-        
-
         // Get initial token balances to calculate how much was withdrawn
         let initial_base_balance = ctx.accounts.user_base_token_account.amount;
         let initial_quote_balance = ctx.accounts.user_quote_token_account.amount;
@@ -205,11 +203,13 @@ impl WithdrawSharedLiquidity<'_> {
 
         // Verify minimum amounts were received
         require!(
-            base_received >= params.minimum_token_0_amount || base_received >= params.minimum_token_1_amount,
+            base_received >= params.minimum_token_0_amount
+                || base_received >= params.minimum_token_1_amount,
             SharedLiquidityManagerError::SlippageExceeded
         );
         require!(
-            quote_received >= params.minimum_token_0_amount || quote_received >= params.minimum_token_1_amount,
+            quote_received >= params.minimum_token_0_amount
+                || quote_received >= params.minimum_token_1_amount,
             SharedLiquidityManagerError::SlippageExceeded
         );
 
@@ -218,7 +218,9 @@ impl WithdrawSharedLiquidity<'_> {
 
         // If user has no more shares, close the position and send SOL to fee_receiver
         if ctx.accounts.user_sl_pool_position.underlying_spot_lp_shares == 0 {
-            ctx.accounts.user_sl_pool_position.close(ctx.accounts.fee_receiver.to_account_info())?;
+            ctx.accounts
+                .user_sl_pool_position
+                .close(ctx.accounts.fee_receiver.to_account_info())?;
         }
 
         Ok(())
@@ -228,7 +230,7 @@ impl WithdrawSharedLiquidity<'_> {
 #[cfg(test)]
 mod withdraw_tests {
     use super::*;
-    use crate::state::{SharedLiquidityPool, LiquidityPosition};
+    use crate::state::{LiquidityPosition, SharedLiquidityPool};
 
     fn create_mock_sl_pool(active_proposal: Option<Pubkey>) -> SharedLiquidityPool {
         SharedLiquidityPool {
@@ -264,7 +266,7 @@ mod withdraw_tests {
         let sl_pool = create_mock_sl_pool(None);
         let user = Pubkey::default();
         let position = create_mock_position(user, Pubkey::default(), 1000);
-        
+
         let mock_ctx = MockWithdrawContext {
             sl_pool,
             position,
@@ -276,17 +278,17 @@ mod withdraw_tests {
             minimum_token_0_amount: 100,
             minimum_token_1_amount: 100,
         };
-        
+
         let result = mock_ctx.validate(&params);
         assert!(result.is_ok());
     }
 
-    #[test] 
+    #[test]
     pub fn test_validate_pool_in_use() {
         let sl_pool = create_mock_sl_pool(Some(Pubkey::new_unique()));
         let user = Pubkey::default();
         let position = create_mock_position(user, Pubkey::default(), 1000);
-        
+
         let mock_ctx = MockWithdrawContext {
             sl_pool,
             position,
@@ -298,7 +300,7 @@ mod withdraw_tests {
             minimum_token_0_amount: 100,
             minimum_token_1_amount: 100,
         };
-        
+
         let result = mock_ctx.validate(&params);
         assert!(result.is_err());
         let error = result.unwrap_err();
@@ -317,7 +319,7 @@ mod withdraw_tests {
         let user = Pubkey::new_unique();
         let different_user = Pubkey::new_unique();
         let position = create_mock_position(different_user, Pubkey::default(), 1000);
-        
+
         let mock_ctx = MockWithdrawContext {
             sl_pool,
             position,
@@ -329,7 +331,7 @@ mod withdraw_tests {
             minimum_token_0_amount: 100,
             minimum_token_1_amount: 100,
         };
-        
+
         let result = mock_ctx.validate(&params);
         assert!(result.is_err());
         let error = result.unwrap_err();
@@ -348,7 +350,7 @@ mod withdraw_tests {
         let user = Pubkey::default();
         let different_pool = Pubkey::new_unique();
         let position = create_mock_position(user, different_pool, 1000);
-        
+
         let mock_ctx = MockWithdrawContext {
             sl_pool,
             position,
@@ -360,7 +362,7 @@ mod withdraw_tests {
             minimum_token_0_amount: 100,
             minimum_token_1_amount: 100,
         };
-        
+
         let result = mock_ctx.validate(&params);
         assert!(result.is_err());
         let error = result.unwrap_err();
@@ -378,7 +380,7 @@ mod withdraw_tests {
         let sl_pool = create_mock_sl_pool(None);
         let user = Pubkey::default();
         let position = create_mock_position(user, Pubkey::default(), 200);
-        
+
         let mock_ctx = MockWithdrawContext {
             sl_pool,
             position,
@@ -390,7 +392,7 @@ mod withdraw_tests {
             minimum_token_0_amount: 100,
             minimum_token_1_amount: 100,
         };
-        
+
         let result = mock_ctx.validate(&params);
         assert!(result.is_err());
         let error = result.unwrap_err();
@@ -408,7 +410,7 @@ mod withdraw_tests {
         let sl_pool = create_mock_sl_pool(None);
         let user = Pubkey::default();
         let position = create_mock_position(user, Pubkey::default(), 500);
-        
+
         let mock_ctx = MockWithdrawContext {
             sl_pool,
             position,
@@ -420,7 +422,7 @@ mod withdraw_tests {
             minimum_token_0_amount: 100,
             minimum_token_1_amount: 100,
         };
-        
+
         let result = mock_ctx.validate(&params);
         assert!(result.is_ok());
     }

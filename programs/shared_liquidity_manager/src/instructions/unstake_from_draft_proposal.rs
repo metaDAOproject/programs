@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
 
-use crate::state::{DraftProposal, StakeRecord};
 use crate::error::SharedLiquidityManagerError;
+use crate::state::{DraftProposal, StakeRecord};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct UnstakeFromDraftProposalParams {
@@ -68,7 +68,7 @@ impl UnstakeFromDraftProposal<'_> {
 #[cfg(test)]
 mod unstake_tests {
     use super::*;
-    use crate::state::{DraftProposal, StakeRecord, DraftProposalStatus};
+    use crate::state::{DraftProposal, DraftProposalStatus, StakeRecord};
 
     fn create_mock_stake_record(amount: u64) -> StakeRecord {
         StakeRecord {
@@ -98,7 +98,7 @@ mod unstake_tests {
     pub fn test_validate_sufficient_stake() {
         let stake_record = create_mock_stake_record(1000);
         let draft_proposal = create_mock_draft_proposal(1000);
-        
+
         let mock_ctx = MockUnstakeContext {
             stake_record,
             draft_proposal,
@@ -106,7 +106,7 @@ mod unstake_tests {
 
         let params = UnstakeFromDraftProposalParams { amount: 500 };
         let result = mock_ctx.validate(&params);
-        
+
         assert!(result.is_ok());
     }
 
@@ -114,7 +114,7 @@ mod unstake_tests {
     pub fn test_validate_exact_stake_amount() {
         let stake_record = create_mock_stake_record(1000);
         let draft_proposal = create_mock_draft_proposal(1000);
-        
+
         let mock_ctx = MockUnstakeContext {
             stake_record,
             draft_proposal,
@@ -122,7 +122,7 @@ mod unstake_tests {
 
         let params = UnstakeFromDraftProposalParams { amount: 1000 };
         let result = mock_ctx.validate(&params);
-        
+
         assert!(result.is_ok());
     }
 
@@ -130,7 +130,7 @@ mod unstake_tests {
     pub fn test_validate_insufficient_stake() {
         let stake_record = create_mock_stake_record(500);
         let draft_proposal = create_mock_draft_proposal(500);
-        
+
         let mock_ctx = MockUnstakeContext {
             stake_record,
             draft_proposal,
@@ -138,7 +138,7 @@ mod unstake_tests {
 
         let params = UnstakeFromDraftProposalParams { amount: 1000 };
         let result = mock_ctx.validate(&params);
-        
+
         assert!(result.is_err());
         let error = result.unwrap_err();
         match error {
@@ -154,7 +154,7 @@ mod unstake_tests {
     pub fn test_validate_zero_unstake_amount() {
         let stake_record = create_mock_stake_record(1000);
         let draft_proposal = create_mock_draft_proposal(1000);
-        
+
         let mock_ctx = MockUnstakeContext {
             stake_record,
             draft_proposal,
@@ -162,7 +162,7 @@ mod unstake_tests {
 
         let params = UnstakeFromDraftProposalParams { amount: 0 };
         let result = mock_ctx.validate(&params);
-        
+
         assert!(result.is_ok());
     }
 
@@ -183,4 +183,3 @@ mod unstake_tests {
         }
     }
 }
-

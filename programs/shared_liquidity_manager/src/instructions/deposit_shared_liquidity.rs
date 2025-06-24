@@ -224,7 +224,7 @@ mod deposit_tests {
     pub fn test_validate_pool_not_in_use() {
         let sl_pool = create_mock_sl_pool(None);
         let mock_ctx = MockDepositContext { sl_pool };
-        
+
         let result = mock_ctx.validate();
         assert!(result.is_ok());
     }
@@ -233,7 +233,7 @@ mod deposit_tests {
     pub fn test_validate_pool_in_use() {
         let sl_pool = create_mock_sl_pool(Some(Pubkey::new_unique()));
         let mock_ctx = MockDepositContext { sl_pool };
-        
+
         let result = mock_ctx.validate();
         assert!(result.is_err());
         let error = result.unwrap_err();
