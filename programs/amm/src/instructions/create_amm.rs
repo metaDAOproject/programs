@@ -23,7 +23,7 @@ pub struct CreateAmm<'info> {
     #[account(
         init,
         payer = user,
-        space = 8 + std::mem::size_of::<Amm>(),
+        space = 8 + Amm::INIT_SPACE,
         seeds = [
             AMM_SEED_PREFIX,
             base_mint.key().as_ref(),
