@@ -225,4 +225,235 @@ impl WithdrawSharedLiquidity<'_> {
     }
 }
 
- 
+#[cfg(test)]
+mod withdraw_tests {
+    use super::*;
+    use crate::state::{SharedLiquidityPool, LiquidityPosition};
+
+    fn create_mock_sl_pool(active_proposal: Option<Pubkey>) -> SharedLiquidityPool {
+        SharedLiquidityPool {
+            pda_bump: 0,
+            dao: Pubkey::default(),
+            base_mint: Pubkey::default(),
+            quote_mint: Pubkey::default(),
+            sl_pool_signer: Pubkey::default(),
+            sl_pool_signer_bump: 0,
+            sl_pool_base_vault: Pubkey::default(),
+            sl_pool_quote_vault: Pubkey::default(),
+            sl_pool_spot_lp_vault: Pubkey::default(),
+            active_proposal,
+            proposal_stake_rate_threshold_bps: 1000,
+            seq_num: 0,
+            active_spot_pool: Pubkey::default(),
+            active_spot_pool_index: 0,
+            is_base_token_0: true,
+        }
+    }
+
+    fn create_mock_position(owner: Pubkey, pool: Pubkey, shares: u64) -> LiquidityPosition {
+        LiquidityPosition {
+            owner,
+            pool,
+            underlying_spot_lp_shares: shares,
+            bump: 0,
+        }
+    }
+
+    #[test]
+    pub fn test_validate_pool_not_in_use() {
+        let sl_pool = create_mock_sl_pool(None);
+        let user = Pubkey::default();
+        let position = create_mock_position(user, Pubkey::default(), 1000);
+        
+        let mock_ctx = MockWithdrawContext {
+            sl_pool,
+            position,
+            user,
+        };
+
+        let params = WithdrawSharedLiquidityParams {
+            lp_token_amount: 500,
+            minimum_token_0_amount: 100,
+            minimum_token_1_amount: 100,
+        };
+        
+        let result = mock_ctx.validate(&params);
+        assert!(result.is_ok());
+    }
+
+    #[test] 
+    pub fn test_validate_pool_in_use() {
+        let sl_pool = create_mock_sl_pool(Some(Pubkey::new_unique()));
+        let user = Pubkey::default();
+        let position = create_mock_position(user, Pubkey::default(), 1000);
+        
+        let mock_ctx = MockWithdrawContext {
+            sl_pool,
+            position,
+            user,
+        };
+
+        let params = WithdrawSharedLiquidityParams {
+            lp_token_amount: 500,
+            minimum_token_0_amount: 100,
+            minimum_token_1_amount: 100,
+        };
+        
+        let result = mock_ctx.validate(&params);
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        match error {
+            anchor_lang::error::Error::AnchorError(anchor_error) => {
+                assert_eq!(anchor_error.error_code_number, 6005); // PoolInUse error code
+                assert_eq!(anchor_error.error_name, "PoolInUse");
+            }
+            _ => panic!("Expected AnchorError"),
+        }
+    }
+
+    #[test]
+    pub fn test_validate_unauthorized_user() {
+        let sl_pool = create_mock_sl_pool(None);
+        let user = Pubkey::new_unique();
+        let different_user = Pubkey::new_unique();
+        let position = create_mock_position(different_user, Pubkey::default(), 1000);
+        
+        let mock_ctx = MockWithdrawContext {
+            sl_pool,
+            position,
+            user,
+        };
+
+        let params = WithdrawSharedLiquidityParams {
+            lp_token_amount: 500,
+            minimum_token_0_amount: 100,
+            minimum_token_1_amount: 100,
+        };
+        
+        let result = mock_ctx.validate(&params);
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        match error {
+            anchor_lang::error::Error::AnchorError(anchor_error) => {
+                assert_eq!(anchor_error.error_code_number, 6007); // Unauthorized error code
+                assert_eq!(anchor_error.error_name, "Unauthorized");
+            }
+            _ => panic!("Expected AnchorError"),
+        }
+    }
+
+    #[test]
+    pub fn test_validate_invalid_pool() {
+        let sl_pool = create_mock_sl_pool(None);
+        let user = Pubkey::default();
+        let different_pool = Pubkey::new_unique();
+        let position = create_mock_position(user, different_pool, 1000);
+        
+        let mock_ctx = MockWithdrawContext {
+            sl_pool,
+            position,
+            user,
+        };
+
+        let params = WithdrawSharedLiquidityParams {
+            lp_token_amount: 500,
+            minimum_token_0_amount: 100,
+            minimum_token_1_amount: 100,
+        };
+        
+        let result = mock_ctx.validate(&params);
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        match error {
+            anchor_lang::error::Error::AnchorError(anchor_error) => {
+                assert_eq!(anchor_error.error_code_number, 6008); // InvalidPool error code
+                assert_eq!(anchor_error.error_name, "InvalidPool");
+            }
+            _ => panic!("Expected AnchorError"),
+        }
+    }
+
+    #[test]
+    pub fn test_validate_insufficient_lp_shares() {
+        let sl_pool = create_mock_sl_pool(None);
+        let user = Pubkey::default();
+        let position = create_mock_position(user, Pubkey::default(), 200);
+        
+        let mock_ctx = MockWithdrawContext {
+            sl_pool,
+            position,
+            user,
+        };
+
+        let params = WithdrawSharedLiquidityParams {
+            lp_token_amount: 500,
+            minimum_token_0_amount: 100,
+            minimum_token_1_amount: 100,
+        };
+        
+        let result = mock_ctx.validate(&params);
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        match error {
+            anchor_lang::error::Error::AnchorError(anchor_error) => {
+                assert_eq!(anchor_error.error_code_number, 6006); // InsufficientLpShares error code
+                assert_eq!(anchor_error.error_name, "InsufficientLpShares");
+            }
+            _ => panic!("Expected AnchorError"),
+        }
+    }
+
+    #[test]
+    pub fn test_validate_exact_lp_shares() {
+        let sl_pool = create_mock_sl_pool(None);
+        let user = Pubkey::default();
+        let position = create_mock_position(user, Pubkey::default(), 500);
+        
+        let mock_ctx = MockWithdrawContext {
+            sl_pool,
+            position,
+            user,
+        };
+
+        let params = WithdrawSharedLiquidityParams {
+            lp_token_amount: 500,
+            minimum_token_0_amount: 100,
+            minimum_token_1_amount: 100,
+        };
+        
+        let result = mock_ctx.validate(&params);
+        assert!(result.is_ok());
+    }
+
+    // Mock context struct for testing validation logic
+    struct MockWithdrawContext {
+        sl_pool: SharedLiquidityPool,
+        position: LiquidityPosition,
+        user: Pubkey,
+    }
+
+    impl MockWithdrawContext {
+        fn validate(&self, params: &WithdrawSharedLiquidityParams) -> Result<()> {
+            require!(
+                self.sl_pool.active_proposal.is_none(),
+                SharedLiquidityManagerError::PoolInUse
+            );
+
+            require!(
+                self.position.owner == self.user,
+                SharedLiquidityManagerError::Unauthorized
+            );
+            require!(
+                self.position.pool == Pubkey::default(), // Mock pool key
+                SharedLiquidityManagerError::InvalidPool
+            );
+
+            require!(
+                self.position.underlying_spot_lp_shares >= params.lp_token_amount,
+                SharedLiquidityManagerError::InsufficientLpShares
+            );
+
+            Ok(())
+        }
+    }
+}

@@ -54,3 +54,73 @@ pub struct DraftProposal {
     pub nonce: u64,
     pub pda_bump: u8,
 }
+
+#[cfg(test)]
+mod draft_proposal_tests {
+    use super::*;
+
+    #[test]
+    pub fn test_draft_proposal_status_display() {
+        assert_eq!(DraftProposalStatus::Draft.to_string(), "Draft");
+        assert_eq!(DraftProposalStatus::Initialized.to_string(), "Initialized");
+    }
+
+    #[test]  
+    pub fn test_draft_proposal_status_equality() {
+        assert_eq!(DraftProposalStatus::Draft, DraftProposalStatus::Draft);
+        assert_eq!(DraftProposalStatus::Initialized, DraftProposalStatus::Initialized);
+        assert_ne!(DraftProposalStatus::Draft, DraftProposalStatus::Initialized);
+    }
+
+    #[test]
+    pub fn test_proposal_instruction_conversion() {
+        let proposal_instruction = ProposalInstruction {
+            program_id: Pubkey::default(),
+            accounts: vec![
+                ProposalAccount {
+                    pubkey: Pubkey::default(),
+                    is_signer: true,
+                    is_writable: false,
+                },
+                ProposalAccount {
+                    pubkey: Pubkey::default(),
+                    is_signer: false,
+                    is_writable: true,
+                }
+            ],
+            data: vec![1, 2, 3, 4],
+        };
+
+        let autocrat_instruction: autocrat::ProposalInstruction = proposal_instruction.clone().into();
+        
+        assert_eq!(autocrat_instruction.program_id, proposal_instruction.program_id);
+        assert_eq!(autocrat_instruction.accounts.len(), proposal_instruction.accounts.len());
+        assert_eq!(autocrat_instruction.data, proposal_instruction.data);
+        assert_eq!(autocrat_instruction.accounts[0].is_signer, true);
+        assert_eq!(autocrat_instruction.accounts[0].is_writable, false);
+        assert_eq!(autocrat_instruction.accounts[1].is_signer, false);
+        assert_eq!(autocrat_instruction.accounts[1].is_writable, true);
+    }
+
+    #[test]
+    pub fn test_proposal_account_equality() {
+        let account1 = ProposalAccount {
+            pubkey: Pubkey::default(),
+            is_signer: true,
+            is_writable: false,
+        };
+        let account2 = ProposalAccount {
+            pubkey: Pubkey::default(),
+            is_signer: true,
+            is_writable: false,
+        };
+        let account3 = ProposalAccount {
+            pubkey: Pubkey::default(),
+            is_signer: false,
+            is_writable: false,
+        };
+
+        assert_eq!(account1, account2);
+        assert_ne!(account1, account3);
+    }
+}

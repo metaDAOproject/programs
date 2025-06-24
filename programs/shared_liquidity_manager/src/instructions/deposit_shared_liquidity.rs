@@ -202,3 +202,69 @@ impl DepositSharedLiquidity<'_> {
     }
 }
 
+#[cfg(test)]
+mod deposit_tests {
+    use super::*;
+    use crate::state::SharedLiquidityPool;
+
+    fn create_mock_sl_pool(active_proposal: Option<Pubkey>) -> SharedLiquidityPool {
+        SharedLiquidityPool {
+            pda_bump: 0,
+            dao: Pubkey::default(),
+            base_mint: Pubkey::default(),
+            quote_mint: Pubkey::default(),
+            sl_pool_signer: Pubkey::default(),
+            sl_pool_signer_bump: 0,
+            sl_pool_base_vault: Pubkey::default(),
+            sl_pool_quote_vault: Pubkey::default(),
+            sl_pool_spot_lp_vault: Pubkey::default(),
+            active_proposal,
+            proposal_stake_rate_threshold_bps: 1000,
+            seq_num: 0,
+            active_spot_pool: Pubkey::default(),
+            active_spot_pool_index: 0,
+            is_base_token_0: true,
+        }
+    }
+
+    #[test]
+    pub fn test_validate_pool_not_in_use() {
+        let sl_pool = create_mock_sl_pool(None);
+        let mock_ctx = MockDepositContext { sl_pool };
+        
+        let result = mock_ctx.validate();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    pub fn test_validate_pool_in_use() {
+        let sl_pool = create_mock_sl_pool(Some(Pubkey::new_unique()));
+        let mock_ctx = MockDepositContext { sl_pool };
+        
+        let result = mock_ctx.validate();
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        match error {
+            anchor_lang::error::Error::AnchorError(anchor_error) => {
+                assert_eq!(anchor_error.error_code_number, 6005); // PoolInUse error code
+                assert_eq!(anchor_error.error_name, "PoolInUse");
+            }
+            _ => panic!("Expected AnchorError"),
+        }
+    }
+
+    // Mock context struct for testing validation logic
+    struct MockDepositContext {
+        sl_pool: SharedLiquidityPool,
+    }
+
+    impl MockDepositContext {
+        fn validate(&self) -> Result<()> {
+            require!(
+                self.sl_pool.active_proposal.is_none(),
+                SharedLiquidityManagerError::PoolInUse
+            );
+            Ok(())
+        }
+    }
+}
