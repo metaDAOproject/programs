@@ -1729,6 +1729,11 @@ export type SharedLiquidityManager = {
       code: 6011;
       name: "NoActiveProposal";
       msg: "No active proposal";
+    },
+    {
+      code: 6012;
+      name: "ProposalNotInDraftStatus";
+      msg: "Proposal is not in draft status";
     }
   ];
 };
@@ -3464,6 +3469,11 @@ export const IDL: SharedLiquidityManager = {
       code: 6011,
       name: "NoActiveProposal",
       msg: "No active proposal",
+    },
+    {
+      code: 6012,
+      name: "ProposalNotInDraftStatus",
+      msg: "Proposal is not in draft status",
     },
   ],
 };

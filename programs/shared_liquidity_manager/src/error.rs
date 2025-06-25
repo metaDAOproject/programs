@@ -26,6 +26,8 @@ pub enum SharedLiquidityManagerError {
     InsufficientFunds,
     #[msg("No active proposal")]
     NoActiveProposal,
+    #[msg("Proposal is not in draft status")]
+    ProposalNotInDraftStatus,
 }
 
 

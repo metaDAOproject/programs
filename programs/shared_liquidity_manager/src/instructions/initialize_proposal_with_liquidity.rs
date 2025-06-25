@@ -166,7 +166,7 @@ impl InitializeProposalWithLiquidity<'_> {
             / 10_000;
         require_gte!(self.draft_proposal.staked_token_amount, stake_threshold, SharedLiquidityManagerError::InsufficientStake);
 
-        require_eq!(self.draft_proposal.status, DraftProposalStatus::Draft);
+        require_eq!(self.draft_proposal.status, DraftProposalStatus::Draft, SharedLiquidityManagerError::ProposalNotInDraftStatus);
 
         Ok(())
     }

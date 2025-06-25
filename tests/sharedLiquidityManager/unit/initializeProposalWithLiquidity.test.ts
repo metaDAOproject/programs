@@ -475,7 +475,7 @@ export default function suite() {
       .signers([proposalCreator])
       .rpc();
 
-    const initializeProposalWithLiquidityTx = await sharedLiquidityManagerClient
+    let initializeProposalWithLiquidityTx = await sharedLiquidityManagerClient
       .initializeProposalWithLiquidityIx(
         dao,
         META,
@@ -485,7 +485,7 @@ export default function suite() {
       )
       .transaction();
 
-    const lookupTable = await createLookupTableForTransaction(
+    let lookupTable = await createLookupTableForTransaction(
       initializeProposalWithLiquidityTx,
       this
     );
@@ -532,53 +532,126 @@ export default function suite() {
     // Finalize the proposal with a pass outcome
     await autocratClient.finalizeProposal(proposal);
 
-    // Then, try to re-initiate the same proposal once this one's done
+    let removeProposalLiquidityTx = await sharedLiquidityManagerClient
+      .removeProposalLiquidityIx(
+        dao,
+        spotPool,
+        META,
+        USDC,
+        proposalNonce,
+        100,
+        0
+      )
+      .transaction();
 
-    // Initialize proposal with liquidity once
-    // await sharedLiquidityManagerClient
-    //   .initializeProposalWithLiquidityIx(
-    //     dao,
-    //     META,
-    //     USDC,
-    //     proposalNonce,
-    //     draftProposal
-    //   )
-    //   .rpc();
+    lookupTable = await createLookupTableForTransaction(
+      removeProposalLiquidityTx,
+      this
+    );
 
-    return;
+    const messageV0Remove = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+        ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+      ].concat(removeProposalLiquidityTx.instructions),
+    }).compileToV0Message([lookupTable]);
 
-    // // Try to initialize again (should fail as status is no longer draft)
-    // const nonce2 = new BN(Math.floor(Math.random() * 1000000));
+    let removeTx = new VersionedTransaction(messageV0Remove);
+    removeTx.sign([this.payer]);
+    await this.banksClient.processTransaction(removeTx);
 
-    // let initializeProposalWithLiquidityTx = await sharedLiquidityManagerClient
-    //   .initializeProposalWithLiquidityIx(
-    //     dao,
-    //     META,
-    //     USDC,
-    //     nonce2,
-    //     draftProposal
-    //   )
-    //   .transaction();
+    proposalNonce = new BN(Math.floor(Math.random() * 1000000));
+    const [slPoolSigner] = getSharedLiquidityPoolSignerAddr(
+      sharedLiquidityManagerClient.getProgramId(),
+      slPool
+    );
 
-    // const lookupTable = await createLookupTableForTransaction(initializeProposalWithLiquidityTx, this);
+    [proposal] = getProposalAddr(
+      AUTOCRAT_PROGRAM_ID,
+      slPoolSigner,
+      proposalNonce
+    );
 
-    // let messageV0 = new TransactionMessage({
-    //   payerKey: this.payer.publicKey,
-    //   recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-    //   instructions: [
-    //     ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
-    //     ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-    //   ].concat(initializeProposalWithLiquidityTx.instructions),
-    // }).compileToV0Message([lookupTable]);
+    // Initialize question
+    await vaultClient.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2
+    );
 
-    // let tx = new VersionedTransaction(messageV0);
-    // tx.sign([this.payer]);
+    // Get proposal PDAs
+    const {
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      passLp,
+      failLp,
+      question,
+    } = autocratClient.getProposalPdas(proposal, META, USDC, dao);
 
-    // const result = await this.banksClient.tryProcessTransaction(tx);
-    // assert.isTrue(
-    //   result.meta.logMessages.some((log: string) => log.includes("InvalidDraftProposalStatus")),
-    //   "Expected at least one log message to contain 'InvalidDraftProposalStatus'"
-    // );
+    const storedDao = await autocratClient.fetchDao(dao);
+
+    // Initialize vaults and AMMs
+    await vaultClient
+      .initializeVaultIx(question, META, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          vaultClient.initializeVaultIx(question, USDC, 2),
+          ammClient.initializeAmmIx(
+            passBaseMint,
+            passQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          ),
+          ammClient.initializeAmmIx(
+            failBaseMint,
+            failQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          )
+        )
+      )
+      .rpc();
+
+    initializeProposalWithLiquidityTx = await sharedLiquidityManagerClient
+      .initializeProposalWithLiquidityIx(
+        dao,
+        META,
+        USDC,
+        proposalNonce,
+        draftProposal,
+        1
+      )
+      .transaction();
+
+    lookupTable = await createLookupTableForTransaction(
+      initializeProposalWithLiquidityTx,
+      this
+    );
+
+    messageV0 = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+        ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+      ].concat(initializeProposalWithLiquidityTx.instructions),
+    }).compileToV0Message([lookupTable]);
+    tx = new VersionedTransaction(messageV0);
+    tx.sign([this.payer]);
+
+    const result = await this.banksClient.tryProcessTransaction(tx);
+    assert.isTrue(
+      result.meta.logMessages.some((log: string) =>
+        log.includes("ProposalNotInDraftStatus")
+      ),
+      "Expected at least one log message to contain 'ProposalNotInDraftStatus'"
+    );
   });
 
   it("fails when no LP tokens in pool", async function () {

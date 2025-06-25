@@ -359,6 +359,7 @@ export class SharedLiquidityManagerClient {
     quoteMint: PublicKey,
     nonce: BN,
     draftProposal: PublicKey,
+    spotPoolIndex: number = 0,
     proposalStakeRateThresholdBps: number = 100
   ) {
     const [slPool] = getSharedLiquidityPoolAddr(
@@ -373,7 +374,11 @@ export class SharedLiquidityManagerClient {
       slPool
     );
 
-    const [spotPool] = getSpotPoolAddr(this.program.programId, slPool, 0);
+    const [spotPool] = getSpotPoolAddr(
+      this.program.programId,
+      slPool,
+      spotPoolIndex
+    );
 
     const [proposal] = getProposalAddr(
       this.autocratClient.getProgramId(),
