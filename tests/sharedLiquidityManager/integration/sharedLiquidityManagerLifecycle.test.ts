@@ -26,7 +26,16 @@ import {
   getStakeRecordAddr,
   getSpotPoolAddr,
 } from "@metadaoproject/futarchy/v0.4";
-import { AddressLookupTableAccount, AddressLookupTableProgram, ComputeBudgetProgram, Keypair, PublicKey, Transaction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import {
+  AddressLookupTableAccount,
+  AddressLookupTableProgram,
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  Transaction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import {
   createMint,
@@ -47,8 +56,13 @@ export default async function () {
   const ammClient: AmmClient = this.ammClient;
   const autocratClient: AutocratClient = this.autocratClient;
   const vaultClient: ConditionalVaultClient = this.vaultClient;
-  const sharedLiquidityManagerClient: SharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
-  const cpSwap = new anchor.Program(RaydiumCpmmIdl, new PublicKey(RAYDIUM_CP_SWAP_PROGRAM_ID), this.provider);
+  const sharedLiquidityManagerClient: SharedLiquidityManagerClient =
+    this.sharedLiquidityManagerClient;
+  const cpSwap = new anchor.Program(
+    RaydiumCpmmIdl,
+    new PublicKey(RAYDIUM_CP_SWAP_PROGRAM_ID),
+    this.provider
+  );
 
   // First, set up tokens and a DAO
 
@@ -73,15 +87,31 @@ export default async function () {
   await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
   await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
 
-  const dao = await autocratClient.initializeDao(META, 1000, 10, 10_000, USDC, undefined, new BN(DAY_IN_SLOTS.toString()));
+  const dao = await autocratClient.initializeDao(
+    META,
+    1000,
+    10,
+    10_000,
+    USDC,
+    undefined,
+    new BN(DAY_IN_SLOTS.toString())
+  );
 
   // Second, set up a shared liquidity pool
 
-  await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, META, USDC, new BN(25 * 10 ** 9), new BN(25_000 * 10 ** 6))
+  await sharedLiquidityManagerClient
+    .initializeSharedLiquidityPoolIx(
+      dao,
+      META,
+      USDC,
+      new BN(25 * 10 ** 9),
+      new BN(25_000 * 10 ** 6)
+    )
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-    ]).rpc();
+    ])
+    .rpc();
 
   const [slPool] = getSharedLiquidityPoolAddr(
     sharedLiquidityManagerClient.getProgramId(),
@@ -95,50 +125,73 @@ export default async function () {
     slPool
   );
 
-  let storedSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);
+  let storedSlPool =
+    await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(
+      slPool
+    );
 
   // Third, initialize a draft proposal
 
-  await sharedLiquidityManagerClient.initializeDraftProposalIx(slPool, META, {
-    programId: META,
-    accounts: [],
-    data: Buffer.from([])
-  }, new BN(1338)).rpc();
+  await sharedLiquidityManagerClient
+    .initializeDraftProposalIx(
+      slPool,
+      META,
+      {
+        programId: META,
+        accounts: [],
+        data: Buffer.from([]),
+      },
+      new BN(1338)
+    )
+    .rpc();
 
   const [draftProposal] = getDraftProposalAddr(
     sharedLiquidityManagerClient.getProgramId(),
     new BN(1338)
   );
 
-  let storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+  let storedDraftProposal =
+    await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+      draftProposal
+    );
   assert.equal(storedDraftProposal.stakedTokenAmount.toString(), "0");
 
   // Fourth, stake to the draft proposal
 
-  await sharedLiquidityManagerClient.stakeToDraftProposalIx(draftProposal, META, new BN(1_000_000_000)).rpc();
+  await sharedLiquidityManagerClient
+    .stakeToDraftProposalIx(draftProposal, META, new BN(1_000_000_000))
+    .rpc();
 
-  storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+  storedDraftProposal =
+    await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+      draftProposal
+    );
 
   const [stakeRecord] = getStakeRecordAddr(
     sharedLiquidityManagerClient.getProgramId(),
     draftProposal,
     this.payer.publicKey
   );
-  const storedStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(stakeRecord);
+  const storedStakeRecord =
+    await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+      stakeRecord
+    );
 
-  assert.equal(storedStakeRecord.staker.toString(), this.payer.publicKey.toString());
+  assert.equal(
+    storedStakeRecord.staker.toString(),
+    this.payer.publicKey.toString()
+  );
   assert.equal(storedStakeRecord.amount.toString(), 1_000_000_000n.toString());
-  assert.equal(storedDraftProposal.stakedTokenAmount.toString(), 1_000_000_000n.toString());
+  assert.equal(
+    storedDraftProposal.stakedTokenAmount.toString(),
+    1_000_000_000n.toString()
+  );
 
   // Fifth, initialize a proposal with liquidity
 
   const nonce = new BN(12329);
 
-  let [proposal] = getProposalAddr(
-    AUTOCRAT_PROGRAM_ID,
-    slPoolSigner,
-    nonce
-  );
+  let [proposal] = getProposalAddr(AUTOCRAT_PROGRAM_ID, slPoolSigner, nonce);
 
   await vaultClient.initializeQuestion(
     sha256(`Will ${proposal} pass?/FAIL/PASS`),
@@ -156,12 +209,7 @@ export default async function () {
     passLp,
     failLp,
     question,
-  } = autocratClient.getProposalPdas(
-    proposal,
-    META,
-    USDC,
-    dao
-  );
+  } = autocratClient.getProposalPdas(proposal, META, USDC, dao);
 
   const storedDao = await autocratClient.fetchDao(dao);
 
@@ -188,27 +236,29 @@ export default async function () {
     )
     .rpc();
 
-  let initProposalWithLiquidityTx: Transaction = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
-    dao,
-    META,
-    USDC,
-    nonce,
-    draftProposal
-  ).transaction();
+  let initProposalWithLiquidityTx: Transaction =
+    await sharedLiquidityManagerClient
+      .initializeProposalWithLiquidityIx(dao, META, USDC, nonce, draftProposal)
+      .transaction();
 
   const slot = await this.banksClient.getSlot();
-  const [createTableIx, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
-    authority: this.payer.publicKey,
-    payer: this.payer.publicKey,
-    recentSlot: slot - 1n,
-  });
+  const [createTableIx, lookupTableAddress] =
+    AddressLookupTableProgram.createLookupTable({
+      authority: this.payer.publicKey,
+      payer: this.payer.publicKey,
+      recentSlot: slot - 1n,
+    });
 
-  const accountsToAdd = initProposalWithLiquidityTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
+  const accountsToAdd = initProposalWithLiquidityTx.instructions.map(
+    (instruction) => instruction.keys.map((key) => key.pubkey)
+  );
   const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
 
   // Create the lookup table first
   let createLutTx = new Transaction().add(createTableIx);
-  createLutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  createLutTx.recentBlockhash = (
+    await this.banksClient.getLatestBlockhash()
+  )[0];
   createLutTx.feePayer = this.payer.publicKey;
   createLutTx.sign(this.payer);
 
@@ -230,7 +280,9 @@ export default async function () {
     });
 
     let extendLutTx = new Transaction().add(extendTableIx);
-    extendLutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    extendLutTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
     extendLutTx.feePayer = this.payer.publicKey;
     extendLutTx.sign(this.payer);
 
@@ -239,7 +291,6 @@ export default async function () {
   }
 
   console.log("UNIQUE ACCOUNTS", uniqueAccounts.length);
-
 
   // Create and process second extension transaction
   const extendTableIx2 = AddressLookupTableProgram.extendLookupTable({
@@ -258,7 +309,9 @@ export default async function () {
 
   await this.advanceBySlots(1n);
 
-  let rawStoredLookupTable = await this.banksClient.getAccount(lookupTableAddress);
+  let rawStoredLookupTable = await this.banksClient.getAccount(
+    lookupTableAddress
+  );
 
   let storedLookupTable = new AddressLookupTableAccount({
     key: lookupTableAddress,
@@ -271,10 +324,8 @@ export default async function () {
     instructions: [
       ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-    ].concat(initProposalWithLiquidityTx.instructions)
+    ].concat(initProposalWithLiquidityTx.instructions),
   }).compileToV0Message([storedLookupTable]);
-
-
 
   console.log("messageV0", messageV0);
 
@@ -313,41 +364,71 @@ export default async function () {
   await autocratClient.finalizeProposal(proposal);
 
   // Test unstaking from the draft proposal
-  const initialStakerBalance = (await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(META, this.payer.publicKey))).amount;
-  
-  await sharedLiquidityManagerClient.unstakeFromDraftProposalIx(draftProposal, META, new BN(500_000_000)).rpc();
+  const initialStakerBalance = (
+    await getAccount(
+      this.banksClient,
+      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+    )
+  ).amount;
 
-  const updatedStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(stakeRecord);
-  const updatedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
-  const finalStakerBalance = (await getAccount(this.banksClient, token.getAssociatedTokenAddressSync(META, this.payer.publicKey))).amount;
+  await sharedLiquidityManagerClient
+    .unstakeFromDraftProposalIx(draftProposal, META, new BN(500_000_000))
+    .rpc();
+
+  const updatedStakeRecord =
+    await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+      stakeRecord
+    );
+  const updatedDraftProposal =
+    await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+      draftProposal
+    );
+  const finalStakerBalance = (
+    await getAccount(
+      this.banksClient,
+      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+    )
+  ).amount;
 
   assert.equal(updatedStakeRecord.amount.toString(), 500_000_000n.toString());
-  assert.equal(updatedDraftProposal.stakedTokenAmount.toString(), 500_000_000n.toString());
+  assert.equal(
+    updatedDraftProposal.stakedTokenAmount.toString(),
+    500_000_000n.toString()
+  );
   assert.equal(finalStakerBalance, initialStakerBalance + 500_000_000n);
 
   // Remove proposal liquidity
-  let removeProposalLiquidityTx = await sharedLiquidityManagerClient.removeProposalLiquidityIx(
-    dao,
-    storedSlPool.activeSpotPool,
-    META,
-    USDC,
-    nonce
-  ).transaction();
+  let removeProposalLiquidityTx = await sharedLiquidityManagerClient
+    .removeProposalLiquidityIx(
+      dao,
+      storedSlPool.activeSpotPool,
+      META,
+      USDC,
+      nonce
+    )
+    .transaction();
 
   // Create a new lookup table for the remove liquidity transaction
   const slot2 = await this.banksClient.getSlot();
-  const [createTableIx2, lookupTableAddress2] = AddressLookupTableProgram.createLookupTable({
-    authority: this.payer.publicKey,
-    payer: this.payer.publicKey,
-    recentSlot: slot2 - 1n,
-  });
+  const [createTableIx2, lookupTableAddress2] =
+    AddressLookupTableProgram.createLookupTable({
+      authority: this.payer.publicKey,
+      payer: this.payer.publicKey,
+      recentSlot: slot2 - 1n,
+    });
 
-  const removeAccountsToAdd = removeProposalLiquidityTx.instructions.map(instruction => instruction.keys.map(key => key.pubkey));
-  const removeUniqueAccounts = [...new Set(removeAccountsToAdd.flat())] as PublicKey[];
+  const removeAccountsToAdd = removeProposalLiquidityTx.instructions.map(
+    (instruction) => instruction.keys.map((key) => key.pubkey)
+  );
+  const removeUniqueAccounts = [
+    ...new Set(removeAccountsToAdd.flat()),
+  ] as PublicKey[];
 
   // Create the lookup table first
   let createLutTx2 = new Transaction().add(createTableIx2);
-  createLutTx2.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  createLutTx2.recentBlockhash = (
+    await this.banksClient.getLatestBlockhash()
+  )[0];
   createLutTx2.feePayer = this.payer.publicKey;
   createLutTx2.sign(this.payer);
 
@@ -369,7 +450,9 @@ export default async function () {
     });
 
     let extendLutTx = new Transaction().add(extendTableIx);
-    extendLutTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    extendLutTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
     extendLutTx.feePayer = this.payer.publicKey;
     extendLutTx.sign(this.payer);
 
@@ -396,7 +479,9 @@ export default async function () {
 
   await this.advanceBySlots(1n);
 
-  let rawStoredLookupTable2 = await this.banksClient.getAccount(lookupTableAddress2);
+  let rawStoredLookupTable2 = await this.banksClient.getAccount(
+    lookupTableAddress2
+  );
 
   let storedLookupTable2 = new AddressLookupTableAccount({
     key: lookupTableAddress2,
@@ -409,7 +494,7 @@ export default async function () {
     instructions: [
       ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-    ].concat(removeProposalLiquidityTx.instructions)
+    ].concat(removeProposalLiquidityTx.instructions),
   }).compileToV0Message([storedLookupTable2]);
 
   let removeTx = new VersionedTransaction(messageV0Remove);
@@ -417,39 +502,43 @@ export default async function () {
   console.log("removeTx size", removeTx.serialize().length);
   await this.banksClient.processTransaction(removeTx);
 
-
   storedSlPool = await sharedLiquidityManagerClient.getSlPool(slPool);
 
-  const activeSpotPool = await cpSwap.account.poolState.fetch(storedSlPool.activeSpotPool);
+  const activeSpotPool = await cpSwap.account.poolState.fetch(
+    storedSlPool.activeSpotPool
+  );
   console.log("activeSpotPool", activeSpotPool);
   return;
-
-
-
 
   let banksClient = this.banksClient as BanksClient;
 
   // console.log(await banksClient.getAccount(cpSwap.programId));
 
-
   console.log("storedSlPool", storedSlPool);
-  console.log("storedSlPool.activeSpotPool", await banksClient.getAccount(storedSlPool.activeSpotPool));
-  const activeSpotPoolRaw = await banksClient.getAccount(storedSlPool.activeSpotPool);
+  console.log(
+    "storedSlPool.activeSpotPool",
+    await banksClient.getAccount(storedSlPool.activeSpotPool)
+  );
+  const activeSpotPoolRaw = await banksClient.getAccount(
+    storedSlPool.activeSpotPool
+  );
   console.log(typeof activeSpotPoolRaw);
   // anchor.accounts
   // const activeSpotPool = cpSwap.account.poolState.coder.accounts.decode("poolState", activeSpotPoolRaw.data);
   console.log("activeSpotPool", activeSpotPool);
   return;
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-  const storedSpotPool1 = await cpSwap.account.poolState.fetch(storedSlPool.activeSpotPool);
+  await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
+  const storedSpotPool1 = await cpSwap.account.poolState.fetch(
+    storedSlPool.activeSpotPool
+  );
   return;
   console.log(storedSpotPool1);
   storedSlPool = await sharedLiquidityManagerClient.getSlPool(slPool);
 
-  const storedSpotPool2 = await cpSwap.account.poolState.fetch(storedSlPool.activeSpotPool);
+  const storedSpotPool2 = await cpSwap.account.poolState.fetch(
+    storedSlPool.activeSpotPool
+  );
   console.log(storedSpotPool2);
-
-
 
   return;
 
@@ -462,7 +551,7 @@ export default async function () {
     1
   )[0];
   console.log("spotPool1", spotPool1);
-  
+
   // const storedSpotPool1 = await cpSwap.account.poolState.fetchNullable(spotPool1);
   // console.log(storedSpotPool1);
   // console.log(await this.banksClient.getAccount(storedSpotPool1.token0Vault));

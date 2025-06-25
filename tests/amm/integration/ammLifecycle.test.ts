@@ -46,7 +46,13 @@ export default async function () {
   await this.mintTo(USDC, this.payer.publicKey, this.payer, 10_000 * 10 ** 6);
 
   let proposal = Keypair.generate().publicKey;
-  amm = await ammClient.createAmm(proposal, META, USDC, toBN(DAY_IN_SLOTS), 500);
+  amm = await ammClient.createAmm(
+    proposal,
+    META,
+    USDC,
+    toBN(DAY_IN_SLOTS),
+    500
+  );
 
   // 1. Initialize AMM
   const initialAmm = await ammClient.getAmm(amm);

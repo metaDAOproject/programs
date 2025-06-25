@@ -228,7 +228,7 @@ export default function suite() {
       .splitTokensIx(question, vault, underlyingTokenMint, new BN(1000), 2)
       .preInstructions([
         // To prevent the test from failing due to thinking it has already processed the instruction
-        ComputeBudgetProgram.setComputeUnitPrice({microLamports: 1})
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
       ])
       .rpc();
 

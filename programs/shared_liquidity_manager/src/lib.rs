@@ -64,7 +64,7 @@ pub mod shared_liquidity_manager {
         UnstakeFromDraftProposal::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
+    #[access_control(ctx.accounts.validate(&params))]
     pub fn deposit_shared_liquidity(
         ctx: Context<DepositSharedLiquidity>,
         params: DepositSharedLiquidityParams,

@@ -101,11 +101,22 @@ pub struct DepositSharedLiquidity<'info> {
 }
 
 impl DepositSharedLiquidity<'_> {
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self, params: &DepositSharedLiquidityParams) -> Result<()> {
         // Ensure the pool is not being used by an active proposal
         require!(
             self.sl_pool.active_proposal.is_none(),
             SharedLiquidityManagerError::PoolInUse
+        );
+
+        require_gte!(
+            self.user_base_token_account.amount,
+            params.max_base_token_amount,
+            SharedLiquidityManagerError::InsufficientFunds
+        );
+        require_gte!(
+            self.user_quote_token_account.amount,
+            params.max_quote_token_amount,
+            SharedLiquidityManagerError::InsufficientFunds
         );
 
         Ok(())

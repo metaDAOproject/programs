@@ -10,7 +10,7 @@ import { assert } from "chai";
 import { createMint, getAccount } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import * as token from "@solana/spl-token";
-import { DAY_IN_SLOTS } from "../../utils.js";
+import { DAY_IN_SLOTS, expectError } from "../../utils.js";
 
 export default function suite() {
   let sharedLiquidityManagerClient: SharedLiquidityManagerClient;
@@ -47,7 +47,12 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
     await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
+    await this.mintTo(
+      USDC,
+      this.payer.publicKey,
+      this.payer,
+      100_000 * 10 ** 6
+    );
 
     dao = await autocratClient.initializeDao(
       META,
@@ -68,7 +73,9 @@ export default function suite() {
         new BN(25 * 10 ** 9),
         new BN(25_000 * 10 ** 6)
       )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
       .rpc();
 
     // Calculate pool addresses
@@ -98,7 +105,10 @@ export default function suite() {
     const maxQuoteAmount = new BN(1_000 * 10 ** 6); // 1,000 USDC max
 
     const initialBaseBalance = await this.getTokenBalance(META, user.publicKey);
-    const initialQuoteBalance = await this.getTokenBalance(USDC, user.publicKey);
+    const initialQuoteBalance = await this.getTokenBalance(
+      USDC,
+      user.publicKey
+    );
 
     await sharedLiquidityManagerClient
       .depositSharedLiquidityIx(
@@ -116,14 +126,19 @@ export default function suite() {
 
     // Check user position was created/updated
     // const storedSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);
-    const position = await sharedLiquidityManagerClient.getSlPoolPosition(getSlPoolPositionAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      slPool,
-      user.publicKey
-    )[0]);
+    const position = await sharedLiquidityManagerClient.getSlPoolPosition(
+      getSlPoolPositionAddr(
+        sharedLiquidityManagerClient.getProgramId(),
+        slPool,
+        user.publicKey
+      )[0]
+    );
 
-    assert.equal(position.underlyingSpotLpShares.toString(), lpTokenAmount.toString());
-    
+    assert.equal(
+      position.underlyingSpotLpShares.toString(),
+      lpTokenAmount.toString()
+    );
+
     // Verify some tokens were spent (exact amounts depend on pool ratios)
     const finalBaseBalance = await this.getTokenBalance(META, user.publicKey);
     const finalQuoteBalance = await this.getTokenBalance(USDC, user.publicKey);
@@ -133,49 +148,71 @@ export default function suite() {
   });
 
   it("fails with insufficient base tokens", async function () {
-    const lpTokenAmount = new BN(1_000_000);
+    const user = Keypair.generate();
+    await this.createTokenAccount(META, user.publicKey);
+    await this.createTokenAccount(USDC, user.publicKey);
+    // Give user only 1 META but try to deposit 200 META worth
+    await this.mintTo(META, user.publicKey, this.payer, 1 * 10 ** 9);
+    await this.mintTo(USDC, user.publicKey, this.payer, 100_000 * 10 ** 6);
+
+    // Request a large amount of LP tokens that would require more than 1 META
+    const lpTokenAmount = new BN(500000000_000_000); // 50 LP tokens (much more than user can afford)
     const maxBaseAmount = new BN(200 * 10 ** 9); // More than user has
     const maxQuoteAmount = new BN(1_000 * 10 ** 6);
 
-    try {
-      await sharedLiquidityManagerClient
-        .depositSharedLiquidityIx(
-          dao,
-          spotPool,
-          META,
-          USDC,
-          lpTokenAmount,
-          maxBaseAmount,
-          maxQuoteAmount
-        )
-        .rpc();
-      assert.fail("Should have thrown error");
-    } catch (e) {
-      assert.exists(e);
-    }
+    const callbacks = expectError(
+      "InsufficientFunds",
+      "Should have thrown error for insufficient base tokens"
+    );
+
+    await sharedLiquidityManagerClient
+      .depositSharedLiquidityIx(
+        slPool,
+        spotPool,
+        META,
+        USDC,
+        lpTokenAmount,
+        maxBaseAmount,
+        maxQuoteAmount,
+        user.publicKey
+      )
+      .signers([user])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("fails with insufficient quote tokens", async function () {
-    const lpTokenAmount = new BN(1_000_000);
+    const user = Keypair.generate();
+    await this.createTokenAccount(META, user.publicKey);
+    await this.createTokenAccount(USDC, user.publicKey);
+    await this.mintTo(META, user.publicKey, this.payer, 100 * 10 ** 9);
+    // Give user only 1,000 USDC but try to deposit 200,000 USDC worth
+    await this.mintTo(USDC, user.publicKey, this.payer, 1_000 * 10 ** 6);
+
+    // Request a large amount of LP tokens that would require more than 1,000 USDC
+    const lpTokenAmount = new BN(50_000_000); // 50 LP tokens (much more than user can afford)
     const maxBaseAmount = new BN(1 * 10 ** 9);
     const maxQuoteAmount = new BN(200_000 * 10 ** 6); // More than user has
 
-    try {
-      await sharedLiquidityManagerClient
-        .depositSharedLiquidityIx(
-          slPool,
-          spotPool,
-          META,
-          USDC, 
-          lpTokenAmount,
-          maxBaseAmount,
-          maxQuoteAmount
-        )
-        .rpc();
-      assert.fail("Should have thrown error");
-    } catch (e) {
-      assert.exists(e);
-    }
+    const callbacks = expectError(
+      "InsufficientFunds",
+      "Should have thrown error for insufficient quote tokens"
+    );
+
+    await sharedLiquidityManagerClient
+      .depositSharedLiquidityIx(
+        slPool,
+        spotPool,
+        META,
+        USDC,
+        lpTokenAmount,
+        maxBaseAmount,
+        maxQuoteAmount,
+        user.publicKey
+      )
+      .signers([user])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("allows multiple deposits from same user", async function () {

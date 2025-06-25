@@ -1,4 +1,9 @@
-import { PublicKey, Keypair, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -39,7 +44,7 @@ export default function suite() {
       this.launchpadClient,
       this.payer
     );
-    
+
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
@@ -120,7 +125,12 @@ export default function suite() {
         space: token.MINT_SIZE,
         programId: token.TOKEN_PROGRAM_ID,
       }),
-      token.createInitializeMint2Instruction(META, 6, fakeLaunchSigner.publicKey, null)
+      token.createInitializeMint2Instruction(
+        META,
+        6,
+        fakeLaunchSigner.publicKey,
+        null
+      )
     );
     tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     tx.feePayer = this.payer.publicKey;

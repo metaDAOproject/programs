@@ -21,7 +21,10 @@ const rpcUrl = await input({
 
 const walletPath = await input({
   message: "Enter the path (relative to home directory) to your wallet file",
-  default: join(homedir(), process.env.WALLET_PATH || "/.config/solana/id.json"),
+  default: join(
+    homedir(),
+    process.env.WALLET_PATH || "/.config/solana/id.json"
+  ),
 });
 process.env.ANCHOR_WALLET = walletPath;
 const provider = anchor.AnchorProvider.local(rpcUrl, {
@@ -41,52 +44,55 @@ const autocrat: AutocratClient = AutocratClient.createClient({ provider });
 
 async function main() {
   const launch = await launchpad.getLaunch(launchAddr);
-  
+
   // Get all funding records
-  const allFundingRecords = await launchpad.launchpad.account.fundingRecord.all();
+  const allFundingRecords =
+    await launchpad.launchpad.account.fundingRecord.all();
 
   // Filter funding records for this specific launch
   const launchFundingRecords = allFundingRecords.filter(
-    record => record.account.launch.toString() === launchAddr.toString()
+    (record) => record.account.launch.toString() === launchAddr.toString()
   );
-  
-  console.log(`Found ${launchFundingRecords.length} funding records for this launch`);
-  
+
+  console.log(
+    `Found ${launchFundingRecords.length} funding records for this launch`
+  );
+
   if (launchFundingRecords.length === 0) {
     console.log("No funding records found for this launch");
     return;
   }
-  
+
   // Process in batches of 5 claims per transaction
   const batchSize = 5;
   for (let i = 0; i < launchFundingRecords.length; i += batchSize) {
     const batch = launchFundingRecords.slice(i, i + batchSize);
 
     console.log(batch);
-    
-    console.log(`Processing batch ${i/batchSize + 1} with ${batch.length} records`);
-    
-    const tx = new Transaction();
-    
-    // Add compute budget instruction to handle multiple claims
-    tx.add(
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })
+
+    console.log(
+      `Processing batch ${i / batchSize + 1} with ${batch.length} records`
     );
-    
+
+    const tx = new Transaction();
+
+    // Add compute budget instruction to handle multiple claims
+    tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }));
+
     // Add claim instructions for each record in the batch
     for (const record of batch) {
       const claimIx = await launchpad
         .claimIx(launchAddr, launch.tokenMint, record.account.funder)
         .transaction();
-      
+
       tx.add(claimIx);
     }
-    
-    await sendAndConfirmTransaction(tx, `Claim batch ${i/batchSize + 1}`);
+
+    await sendAndConfirmTransaction(tx, `Claim batch ${i / batchSize + 1}`);
   }
-  
+
   console.log("All claims processed successfully!");
-  
+
   // Uncomment if you want to see DAO details
   /*
   const dao = await autocrat.getDao(launch.dao);

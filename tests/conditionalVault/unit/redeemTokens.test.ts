@@ -127,7 +127,7 @@ export default function suite() {
       .redeemTokensIx(question, vault, underlyingTokenMint, 2)
       .preInstructions([
         // To prevent the test from failing due to thinking it has already processed the instruction
-        ComputeBudgetProgram.setComputeUnitPrice({microLamports: 1})
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
       ])
       .rpc();
 

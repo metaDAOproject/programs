@@ -47,7 +47,12 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
     await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
+    await this.mintTo(
+      USDC,
+      this.payer.publicKey,
+      this.payer,
+      100_000 * 10 ** 6
+    );
 
     // Initialize common components
     dao = await autocratClient.initializeDao(
@@ -68,7 +73,9 @@ export default function suite() {
         new BN(25 * 10 ** 9),
         new BN(25_000 * 10 ** 6)
       )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
       .rpc();
 
     [slPool] = getSharedLiquidityPoolAddr(
@@ -80,11 +87,16 @@ export default function suite() {
 
     const nonce = new BN(Math.floor(Math.random() * 1000000));
     await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(slPool, META, {
-        programId: META,
-        accounts: [],
-        data: Buffer.from([]),
-      }, nonce)
+      .initializeDraftProposalIx(
+        slPool,
+        META,
+        {
+          programId: META,
+          accounts: [],
+          data: Buffer.from([]),
+        },
+        nonce
+      )
       .rpc();
 
     [draftProposal] = getDraftProposalAddr(
@@ -102,10 +114,12 @@ export default function suite() {
     const unstakeAmount = new BN(2_000_000_000); // 2 META
     const remainingStake = new BN(3_000_000_000); // 3 META
 
-    const initialBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
+    const initialBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+      )
+    ).amount;
 
     await sharedLiquidityManagerClient
       .unstakeFromDraftProposalIx(draftProposal, META, unstakeAmount)
@@ -118,22 +132,33 @@ export default function suite() {
       this.payer.publicKey
     );
 
-    const storedStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(stakeRecord);
-    assert.equal(storedStakeRecord.amount.toString(), remainingStake.toString());
+    const storedStakeRecord =
+      await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+        stakeRecord
+      );
+    assert.equal(
+      storedStakeRecord.amount.toString(),
+      remainingStake.toString()
+    );
 
     // Check draft proposal updated
-    const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+    const storedDraftProposal =
+      await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+        draftProposal
+      );
     assert.equal(
       storedDraftProposal.stakedTokenAmount.toString(),
       remainingStake.toString()
     );
 
     // Check user balance increased
-    const finalBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
-    
+    const finalBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+      )
+    ).amount;
+
     assert.equal(
       Number(finalBalance),
       Number(initialBalance) + Number(unstakeAmount)
@@ -148,10 +173,12 @@ export default function suite() {
 
     const unstakeAmount = new BN(5_000_000_000); // All 5 META
 
-    const initialBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
+    const initialBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+      )
+    ).amount;
 
     await sharedLiquidityManagerClient
       .unstakeFromDraftProposalIx(draftProposal, META, unstakeAmount)
@@ -164,19 +191,27 @@ export default function suite() {
       this.payer.publicKey
     );
 
-    const storedStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(stakeRecord);
+    const storedStakeRecord =
+      await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+        stakeRecord
+      );
     assert.equal(storedStakeRecord.amount.toString(), "0");
 
     // Check draft proposal updated to zero
-    const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+    const storedDraftProposal =
+      await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+        draftProposal
+      );
     assert.equal(storedDraftProposal.stakedTokenAmount.toString(), "0");
 
     // Check user balance increased by full amount
-    const finalBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
-    
+    const finalBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+      )
+    ).amount;
+
     assert.equal(
       Number(finalBalance),
       Number(initialBalance) + Number(unstakeAmount)
@@ -216,20 +251,29 @@ export default function suite() {
 
     const secondUserStake = new BN(3_000_000_000); // 3 META
     await sharedLiquidityManagerClient
-      .stakeToDraftProposalIx(draftProposal, META, secondUserStake, secondUser.publicKey)
+      .stakeToDraftProposalIx(
+        draftProposal,
+        META,
+        secondUserStake,
+        secondUser.publicKey
+      )
       .signers([secondUser])
       .rpc();
 
     // Record initial balances
-    const firstUserInitialBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
+    const firstUserInitialBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+      )
+    ).amount;
 
-    const secondUserInitialBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, secondUser.publicKey)
-    )).amount;
+    const secondUserInitialBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, secondUser.publicKey)
+      )
+    ).amount;
 
     // First user unstakes partially
     const firstUserUnstakeAmount = new BN(2_000_000_000); // 2 META
@@ -240,7 +284,12 @@ export default function suite() {
     // Second user unstakes partially
     const secondUserUnstakeAmount = new BN(1_000_000_000); // 1 META
     await sharedLiquidityManagerClient
-      .unstakeFromDraftProposalIx(draftProposal, META, secondUserUnstakeAmount, secondUser.publicKey)
+      .unstakeFromDraftProposalIx(
+        draftProposal,
+        META,
+        secondUserUnstakeAmount,
+        secondUser.publicKey
+      )
       .signers([secondUser])
       .rpc();
 
@@ -251,7 +300,10 @@ export default function suite() {
       this.payer.publicKey
     );
 
-    const storedFirstStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(firstStakeRecord);
+    const storedFirstStakeRecord =
+      await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+        firstStakeRecord
+      );
     assert.equal(storedFirstStakeRecord.amount.toString(), "3000000000"); // 3 META remaining (5 - 2)
 
     // Check second user's stake record
@@ -261,33 +313,43 @@ export default function suite() {
       secondUser.publicKey
     );
 
-    const storedSecondStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(secondStakeRecord);
+    const storedSecondStakeRecord =
+      await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+        secondStakeRecord
+      );
     assert.equal(storedSecondStakeRecord.amount.toString(), "2000000000"); // 2 META remaining (3 - 1)
 
     // Check total in draft proposal (3 + 2 = 5 META)
-    const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+    const storedDraftProposal =
+      await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+        draftProposal
+      );
     assert.equal(
       storedDraftProposal.stakedTokenAmount.toString(),
       "5000000000"
     );
 
     // Check first user's balance increased
-    const firstUserFinalBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
-    
+    const firstUserFinalBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+      )
+    ).amount;
+
     assert.equal(
       Number(firstUserFinalBalance),
       Number(firstUserInitialBalance) + Number(firstUserUnstakeAmount)
     );
 
     // Check second user's balance increased
-    const secondUserFinalBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, secondUser.publicKey)
-    )).amount;
-    
+    const secondUserFinalBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, secondUser.publicKey)
+      )
+    ).amount;
+
     assert.equal(
       Number(secondUserFinalBalance),
       Number(secondUserInitialBalance) + Number(secondUserUnstakeAmount)

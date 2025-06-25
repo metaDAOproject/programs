@@ -17,6 +17,8 @@ export default function suite() {
   let autocratClient: AutocratClient;
   let META: PublicKey;
   let USDC: PublicKey;
+  let dao: PublicKey;
+  let slPool: PublicKey;
 
   before(async function () {
     sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
@@ -44,12 +46,15 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
     await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
-  });
+    await this.mintTo(
+      USDC,
+      this.payer.publicKey,
+      this.payer,
+      100_000 * 10 ** 6
+    );
 
-  it("stakes tokens to draft proposal", async function () {
-    // Initialize DAO, shared liquidity pool, and draft proposal
-    const dao = await autocratClient.initializeDao(
+    // Initialize DAO
+    dao = await autocratClient.initializeDao(
       META,
       1000,
       10,
@@ -59,6 +64,7 @@ export default function suite() {
       new BN(DAY_IN_SLOTS.toString())
     );
 
+    // Initialize shared liquidity pool
     await sharedLiquidityManagerClient
       .initializeSharedLiquidityPoolIx(
         dao,
@@ -67,23 +73,32 @@ export default function suite() {
         new BN(25 * 10 ** 9),
         new BN(25_000 * 10 ** 6)
       )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
       .rpc();
 
-    const [slPool] = getSharedLiquidityPoolAddr(
+    [slPool] = getSharedLiquidityPoolAddr(
       sharedLiquidityManagerClient.getProgramId(),
       dao,
       this.payer.publicKey,
       100
     );
+  });
 
+  it("stakes tokens to draft proposal", async function () {
     const nonce = new BN(5001);
     await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(slPool, META, {
-        programId: META,
-        accounts: [],
-        data: Buffer.from([]),
-      }, nonce)
+      .initializeDraftProposalIx(
+        slPool,
+        META,
+        {
+          programId: META,
+          accounts: [],
+          data: Buffer.from([]),
+        },
+        nonce
+      )
       .rpc();
 
     const [draftProposal] = getDraftProposalAddr(
@@ -93,10 +108,12 @@ export default function suite() {
 
     const stakeAmount = new BN(1_000_000_000); // 1 META
 
-    const initialBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
+    const initialBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+      )
+    ).amount;
 
     await sharedLiquidityManagerClient
       .stakeToDraftProposalIx(draftProposal, META, stakeAmount)
@@ -109,23 +126,31 @@ export default function suite() {
       this.payer.publicKey
     );
 
-    const storedStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(stakeRecord);
+    const storedStakeRecord =
+      await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+        stakeRecord
+      );
     assert.ok(storedStakeRecord.staker.equals(this.payer.publicKey));
     assert.equal(storedStakeRecord.amount.toString(), stakeAmount.toString());
 
     // Check draft proposal updated
-    const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+    const storedDraftProposal =
+      await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+        draftProposal
+      );
     assert.equal(
       storedDraftProposal.stakedTokenAmount.toString(),
       stakeAmount.toString()
     );
 
     // Check user balance decreased
-    const finalBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
-    
+    const finalBalance = (
+      await getAccount(
+        this.banksClient,
+        token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
+      )
+    ).amount;
+
     assert.equal(
       Number(finalBalance),
       Number(initialBalance) - Number(stakeAmount)
@@ -133,41 +158,18 @@ export default function suite() {
   });
 
   it("allows multiple stakes from same user", async function () {
-    const dao = await autocratClient.initializeDao(
-      META,
-      1000,
-      10,
-      10_000,
-      USDC,
-      undefined,
-      new BN(DAY_IN_SLOTS.toString())
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeSharedLiquidityPoolIx(
-        dao,
-        META,
-        USDC,
-        new BN(25 * 10 ** 9),
-        new BN(25_000 * 10 ** 6)
-      )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
-      .rpc();
-
-    const [slPool] = getSharedLiquidityPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      dao,
-      this.payer.publicKey,
-      100
-    );
-
     const nonce = new BN(5002);
     await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(slPool, META, {
-        programId: META,
-        accounts: [],
-        data: Buffer.from([]),
-      }, nonce)
+      .initializeDraftProposalIx(
+        slPool,
+        META,
+        {
+          programId: META,
+          accounts: [],
+          data: Buffer.from([]),
+        },
+        nonce
+      )
       .rpc();
 
     const [draftProposal] = getDraftProposalAddr(
@@ -196,11 +198,17 @@ export default function suite() {
       this.payer.publicKey
     );
 
-    const storedStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(stakeRecord);
+    const storedStakeRecord =
+      await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+        stakeRecord
+      );
     assert.equal(storedStakeRecord.amount.toString(), totalStake.toString());
 
     // Check draft proposal total
-    const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+    const storedDraftProposal =
+      await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+        draftProposal
+      );
     assert.equal(
       storedDraftProposal.stakedTokenAmount.toString(),
       totalStake.toString()
@@ -208,41 +216,18 @@ export default function suite() {
   });
 
   it("fails with insufficient balance", async function () {
-    const dao = await autocratClient.initializeDao(
-      META,
-      1000,
-      10,
-      10_000,
-      USDC,
-      undefined,
-      new BN(DAY_IN_SLOTS.toString())
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeSharedLiquidityPoolIx(
-        dao,
-        META,
-        USDC,
-        new BN(25 * 10 ** 9),
-        new BN(25_000 * 10 ** 6)
-      )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
-      .rpc();
-
-    const [slPool] = getSharedLiquidityPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      dao,
-      this.payer.publicKey,
-      100
-    );
-
     const nonce = new BN(5003);
     await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(slPool, META, {
-        programId: META,
-        accounts: [],
-        data: Buffer.from([]),
-      }, nonce)
+      .initializeDraftProposalIx(
+        slPool,
+        META,
+        {
+          programId: META,
+          accounts: [],
+          data: Buffer.from([]),
+        },
+        nonce
+      )
       .rpc();
 
     const [draftProposal] = getDraftProposalAddr(
@@ -264,41 +249,18 @@ export default function suite() {
   });
 
   it("allows stakes from multiple users", async function () {
-    const dao = await autocratClient.initializeDao(
-      META,
-      1000,
-      10,
-      10_000,
-      USDC,
-      undefined,
-      new BN(DAY_IN_SLOTS.toString())
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeSharedLiquidityPoolIx(
-        dao,
-        META,
-        USDC,
-        new BN(25 * 10 ** 9),
-        new BN(25_000 * 10 ** 6)
-      )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
-      .rpc();
-
-    const [slPool] = getSharedLiquidityPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      dao,
-      this.payer.publicKey,
-      100
-    );
-
     const nonce = new BN(5004);
     await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(slPool, META, {
-        programId: META,
-        accounts: [],
-        data: Buffer.from([]),
-      }, nonce)
+      .initializeDraftProposalIx(
+        slPool,
+        META,
+        {
+          programId: META,
+          accounts: [],
+          data: Buffer.from([]),
+        },
+        nonce
+      )
       .rpc();
 
     const [draftProposal] = getDraftProposalAddr(
@@ -321,7 +283,12 @@ export default function suite() {
 
     // Second user stakes
     await sharedLiquidityManagerClient
-      .stakeToDraftProposalIx(draftProposal, META, secondUserStake, secondUser.publicKey)
+      .stakeToDraftProposalIx(
+        draftProposal,
+        META,
+        secondUserStake,
+        secondUser.publicKey
+      )
       .signers([secondUser])
       .rpc();
 
@@ -338,14 +305,29 @@ export default function suite() {
       secondUser.publicKey
     );
 
-    const storedFirstStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(firstStakeRecord);
-    const storedSecondStakeRecord = await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(secondStakeRecord);
+    const storedFirstStakeRecord =
+      await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+        firstStakeRecord
+      );
+    const storedSecondStakeRecord =
+      await sharedLiquidityManagerClient.program.account.stakeRecord.fetch(
+        secondStakeRecord
+      );
 
-    assert.equal(storedFirstStakeRecord.amount.toString(), firstUserStake.toString());
-    assert.equal(storedSecondStakeRecord.amount.toString(), secondUserStake.toString());
+    assert.equal(
+      storedFirstStakeRecord.amount.toString(),
+      firstUserStake.toString()
+    );
+    assert.equal(
+      storedSecondStakeRecord.amount.toString(),
+      secondUserStake.toString()
+    );
 
     // Check total in draft proposal
-    const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+    const storedDraftProposal =
+      await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+        draftProposal
+      );
     assert.equal(
       storedDraftProposal.stakedTokenAmount.toString(),
       firstUserStake.add(secondUserStake).toString()

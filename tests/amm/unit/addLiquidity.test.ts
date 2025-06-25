@@ -40,7 +40,13 @@ export default function suite() {
     );
 
     let proposal = Keypair.generate().publicKey;
-    amm = await ammClient.createAmm(proposal, META, USDC, toBN(DAY_IN_SLOTS), 500);
+    amm = await ammClient.createAmm(
+      proposal,
+      META,
+      USDC,
+      toBN(DAY_IN_SLOTS),
+      500
+    );
 
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);

@@ -15,6 +15,8 @@ export default function suite() {
   let autocratClient: AutocratClient;
   let META: PublicKey;
   let USDC: PublicKey;
+  let dao: PublicKey;
+  let slPool: PublicKey;
 
   before(async function () {
     sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
@@ -42,12 +44,15 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
     await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
-  });
+    await this.mintTo(
+      USDC,
+      this.payer.publicKey,
+      this.payer,
+      100_000 * 10 ** 6
+    );
 
-  it("initializes draft proposal with simple instruction", async function () {
-    // Initialize DAO and shared liquidity pool for this test
-    const dao = await autocratClient.initializeDao(
+    // Initialize DAO and shared liquidity pool
+    dao = await autocratClient.initializeDao(
       META,
       1000,
       10,
@@ -65,23 +70,32 @@ export default function suite() {
         new BN(25 * 10 ** 9),
         new BN(25_000 * 10 ** 6)
       )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
       .rpc();
 
-    const [slPool] = getSharedLiquidityPoolAddr(
+    [slPool] = getSharedLiquidityPoolAddr(
       sharedLiquidityManagerClient.getProgramId(),
       dao,
       this.payer.publicKey,
       100
     );
+  });
 
+  it("initializes draft proposal with simple instruction", async function () {
     const nonce = new BN(1337);
     await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(slPool, META, {
-        programId: META,
-        accounts: [],
-        data: Buffer.from([]),
-      }, nonce)
+      .initializeDraftProposalIx(
+        slPool,
+        META,
+        {
+          programId: META,
+          accounts: [],
+          data: Buffer.from([]),
+        },
+        nonce
+      )
       .rpc();
 
     const [draftProposal] = getDraftProposalAddr(
@@ -89,7 +103,10 @@ export default function suite() {
       nonce
     );
 
-    const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+    const storedDraftProposal =
+      await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+        draftProposal
+      );
 
     assert.ok(storedDraftProposal.sharedLiquidityPool.equals(slPool));
     assert.ok(storedDraftProposal.baseMint.equals(META));
@@ -99,34 +116,6 @@ export default function suite() {
   });
 
   it("initializes draft proposal with complex instruction", async function () {
-    const dao = await autocratClient.initializeDao(
-      META,
-      1000,
-      10,
-      10_000,
-      USDC,
-      undefined,
-      new BN(DAY_IN_SLOTS.toString())
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeSharedLiquidityPoolIx(
-        dao,
-        META,
-        USDC,
-        new BN(25 * 10 ** 9),
-        new BN(25_000 * 10 ** 6)
-      )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
-      .rpc();
-
-    const [slPool] = getSharedLiquidityPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      dao,
-      this.payer.publicKey,
-      100
-    );
-
     const complexInstruction = {
       programId: META,
       accounts: [
@@ -146,61 +135,49 @@ export default function suite() {
       nonce
     );
 
-    const storedDraftProposal = await sharedLiquidityManagerClient.program.account.draftProposal.fetch(draftProposal);
+    const storedDraftProposal =
+      await sharedLiquidityManagerClient.program.account.draftProposal.fetch(
+        draftProposal
+      );
 
     assert.ok(storedDraftProposal.instruction.programId.equals(META));
     assert.equal(storedDraftProposal.instruction.accounts.length, 2);
-    assert.deepEqual(Array.from(storedDraftProposal.instruction.data), [1, 2, 3, 4, 5]);
+    assert.deepEqual(
+      Array.from(storedDraftProposal.instruction.data),
+      [1, 2, 3, 4, 5]
+    );
   });
 
   it("fails with duplicate nonce", async function () {
-    const dao = await autocratClient.initializeDao(
-      META,
-      1000,
-      10,
-      10_000,
-      USDC,
-      undefined,
-      new BN(DAY_IN_SLOTS.toString())
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeSharedLiquidityPoolIx(
-        dao,
-        META,
-        USDC,
-        new BN(25 * 10 ** 9),
-        new BN(25_000 * 10 ** 6)
-      )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
-      .rpc();
-
-    const [slPool] = getSharedLiquidityPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      dao,
-      this.payer.publicKey,
-      100
-    );
-
     const nonce = new BN(3691);
-    
+
     // First proposal should succeed
     await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(slPool, META, {
-        programId: META,
-        accounts: [],
-        data: Buffer.from([]),
-      }, nonce)
+      .initializeDraftProposalIx(
+        slPool,
+        META,
+        {
+          programId: META,
+          accounts: [],
+          data: Buffer.from([]),
+        },
+        nonce
+      )
       .rpc();
 
     // Second proposal with same nonce should fail
     try {
       await sharedLiquidityManagerClient
-        .initializeDraftProposalIx(slPool, META, {
-          programId: META,
-          accounts: [],
-          data: Buffer.from([1]),
-        }, nonce)
+        .initializeDraftProposalIx(
+          slPool,
+          META,
+          {
+            programId: META,
+            accounts: [],
+            data: Buffer.from([1]),
+          },
+          nonce
+        )
         .rpc();
       assert.fail("Should have thrown error");
     } catch (e) {

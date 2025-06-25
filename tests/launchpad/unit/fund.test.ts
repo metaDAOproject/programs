@@ -49,8 +49,14 @@ export default function suite() {
 
     tokenVault = getAssociatedTokenAddressSync(META, launchSigner, true);
     usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
-    funderTokenAccount = getAssociatedTokenAddressSync(META, this.payer.publicKey);
-    funderUsdcAccount = getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey);
+    funderTokenAccount = getAssociatedTokenAddressSync(
+      META,
+      this.payer.publicKey
+    );
+    funderUsdcAccount = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      this.payer.publicKey
+    );
 
     // Initialize launch
     await launchpadClient

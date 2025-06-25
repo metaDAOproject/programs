@@ -63,13 +63,33 @@ declare module "mocha" {
     ammClient: AmmClient;
     sharedLiquidityManagerClient: SharedLiquidityManagerClient;
     payer: Keypair;
-    createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
-    createMint: (mintAuthority: PublicKey, decimals: number) => Promise<PublicKey>;
-    mintTo: (mint: PublicKey, to: PublicKey, mintAuthority: Keypair, amount: number) => Promise<any>;
+    createTokenAccount: (
+      mint: PublicKey,
+      owner: PublicKey
+    ) => Promise<PublicKey>;
+    createMint: (
+      mintAuthority: PublicKey,
+      decimals: number
+    ) => Promise<PublicKey>;
+    mintTo: (
+      mint: PublicKey,
+      to: PublicKey,
+      mintAuthority: Keypair,
+      amount: number
+    ) => Promise<any>;
     getTokenBalance: (mint: PublicKey, owner: PublicKey) => Promise<bigint>;
     getMint: (mint: PublicKey) => Promise<any>;
-    assertBalance: (mint: PublicKey, owner: PublicKey, amount: number) => Promise<void>;
-    transfer: (mint: PublicKey, from: Keypair, to: PublicKey, amount: number) => Promise<any>;
+    assertBalance: (
+      mint: PublicKey,
+      owner: PublicKey,
+      amount: number
+    ) => Promise<void>;
+    transfer: (
+      mint: PublicKey,
+      from: Keypair,
+      to: PublicKey,
+      amount: number
+    ) => Promise<any>;
     advanceBySlots: (slots: bigint) => Promise<void>;
     advanceBySeconds: (seconds: number) => Promise<void>;
   }
@@ -142,7 +162,9 @@ before(async function () {
   });
   this.provider = provider;
   this.ammClient = AmmClient.createClient({ provider: provider as any });
-  this.sharedLiquidityManagerClient = SharedLiquidityManagerClient.createClient({ provider: provider as any });
+  this.sharedLiquidityManagerClient = SharedLiquidityManagerClient.createClient(
+    { provider: provider as any }
+  );
   this.payer = provider.wallet.payer;
 
   this.createTokenAccount = async (mint: PublicKey, owner: PublicKey) => {
@@ -257,10 +279,13 @@ describe("conditional_vault", conditionalVault);
 describe("amm", amm);
 describe("autocrat", autocrat);
 describe("launchpad", launchpad);
-describe("shared_liquidity_manager", sharedLiquidityManager)
+describe("shared_liquidity_manager", sharedLiquidityManager);
 describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
-  it("tests scalar markets (mint, split, swap, redeem) with some fuzzing", scalarMarkets);
+  it(
+    "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
+    scalarMarkets
+  );
   it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
   it("full launch", fullLaunch);
 });

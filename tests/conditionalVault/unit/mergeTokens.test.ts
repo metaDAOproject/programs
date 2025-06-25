@@ -135,7 +135,9 @@ export default function suite() {
     ).then((acc) => acc.amount);
     await vaultClient
       .mergeTokensIx(question, vault, underlyingTokenMint, new BN(500), 2)
-      .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })])
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .rpc();
     balanceAfter = await getAccount(
       this.banksClient,

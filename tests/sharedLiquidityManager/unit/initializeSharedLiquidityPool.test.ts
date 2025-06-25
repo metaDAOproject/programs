@@ -41,14 +41,18 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
     await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
+    await this.mintTo(
+      USDC,
+      this.payer.publicKey,
+      this.payer,
+      100_000 * 10 ** 6
+    );
   });
 
   it("initializes shared liquidity pool with valid parameters", async function () {
     const baseAmount = new BN(25 * 10 ** 9); // 25 META
     const quoteAmount = new BN(25_000 * 10 ** 6); // 25,000 USDC
 
-    // Initialize DAO for this test
     const dao = await autocratClient.initializeDao(
       META,
       1000,
@@ -61,7 +65,9 @@ export default function suite() {
 
     await sharedLiquidityManagerClient
       .initializeSharedLiquidityPoolIx(dao, META, USDC, baseAmount, quoteAmount)
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
       .rpc();
 
     const [slPool] = getSharedLiquidityPoolAddr(
@@ -71,7 +77,10 @@ export default function suite() {
       100
     );
 
-    const storedSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);
+    const storedSlPool =
+      await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(
+        slPool
+      );
 
     // Verify basic pool properties
     assert.ok(storedSlPool.dao.equals(dao));
@@ -148,7 +157,13 @@ export default function suite() {
 
     try {
       await sharedLiquidityManagerClient
-        .initializeSharedLiquidityPoolIx(dao, META, USDC, baseAmount, quoteAmount)
+        .initializeSharedLiquidityPoolIx(
+          dao,
+          META,
+          USDC,
+          baseAmount,
+          quoteAmount
+        )
         .rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
@@ -173,7 +188,13 @@ export default function suite() {
 
     try {
       await sharedLiquidityManagerClient
-        .initializeSharedLiquidityPoolIx(dao, META, USDC, baseAmount, quoteAmount)
+        .initializeSharedLiquidityPoolIx(
+          dao,
+          META,
+          USDC,
+          baseAmount,
+          quoteAmount
+        )
         .rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
