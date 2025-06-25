@@ -43,7 +43,11 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
-    quoteVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    quoteVault = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      launchSigner,
+      true
+    );
     funderQuoteAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       this.payer.publicKey
@@ -72,7 +76,9 @@ export default function suite() {
     // Fund the launch with less than minimum raise
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient.fundIx(launch, partialAmount, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, partialAmount, undefined, MAINNET_USDC)
+      .rpc();
 
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 7);
@@ -115,7 +121,9 @@ export default function suite() {
   it("fails when launch is not in refunding state", async function () {
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient.fundIx(launch, partialAmount, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, partialAmount, undefined, MAINNET_USDC)
+      .rpc();
 
     try {
       await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();

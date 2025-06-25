@@ -117,7 +117,7 @@ before(async function () {
       {
         name: "squads_multisig",
         programId: SQUADS_PROGRAM_ID,
-      }
+      },
     ],
     [
       {
@@ -157,7 +157,7 @@ before(async function () {
           owner: SQUADS_PROGRAM_ID,
           lamports: 1_000_000_000,
         },
-      }
+      },
     ]
   );
   this.banksClient = this.context.banksClient;

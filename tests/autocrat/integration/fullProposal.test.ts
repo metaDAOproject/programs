@@ -1,5 +1,12 @@
 import { AutocratClient, getDaoAddr } from "@metadaoproject/futarchy/v0.5";
-import { ComputeBudgetProgram, Keypair, PublicKey, SystemProgram, Transaction, TransactionMessage } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  TransactionMessage,
+} from "@solana/web3.js";
 import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
@@ -8,7 +15,7 @@ import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
 
 export default function suite() {
-it("works", async function () {
+  it("should enable creation, passing, and execution of a proposal", async function () {
     const META = await this.createMint(this.payer.publicKey, 9);
     const USDC = await this.createMint(this.payer.publicKey, 6);
 
@@ -16,26 +23,33 @@ it("works", async function () {
     await this.createTokenAccount(USDC, this.payer.publicKey);
 
     await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 1_000_000);
+    await this.mintTo(
+      USDC,
+      this.payer.publicKey,
+      this.payer,
+      100_000 * 1_000_000
+    );
 
     const nonce = new BN(Math.random() * 2 ** 50);
 
     const [dao] = getDaoAddr(this.autocratClient.getProgramId(), nonce);
 
-    await this.autocratClient.initializeDaoIx({
+    await this.autocratClient
+      .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,
         params: {
-            nonce,
-            twapStartDelaySlots: new BN(0),
-            twapInitialObservation: new BN(0),
-            twapMaxObservationChangePerUpdate: new BN(1000000000000000000n),
-            minQuoteFutarchicLiquidity: new BN(0),
-            slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS * 60n * 24n),
-            passThresholdBps: 300,
-            minBaseFutarchicLiquidity: new BN(0),
-        }
-    }).rpc();
+          nonce,
+          twapStartDelaySlots: new BN(0),
+          twapInitialObservation: new BN(0),
+          twapMaxObservationChangePerUpdate: new BN(1000000000000000000n),
+          minQuoteFutarchicLiquidity: new BN(0),
+          slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS * 60n * 24n),
+          passThresholdBps: 300,
+          minBaseFutarchicLiquidity: new BN(0),
+        },
+      })
+      .rpc();
 
     const storedDao = await this.autocratClient.getDao(dao);
 
@@ -46,46 +60,38 @@ it("works", async function () {
       index: 0,
     });
 
-    const tx0 = new Transaction().add(SystemProgram.transfer({ fromPubkey: this.payer.publicKey, toPubkey: vaultPda, lamports: 1_000_000_000 }));
+    const tx0 = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: vaultPda,
+        lamports: 1_000_000_000,
+      })
+    );
     tx0.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     tx0.feePayer = this.payer.publicKey;
     tx0.sign(this.payer);
 
     await this.banksClient.processTransaction(tx0);
 
-
-
-
-    const updateDaoIx = await this.autocratClient.updateDaoIx({
-      dao,
-      params: {
-        passThresholdBps: 500,
-        slotsPerProposal: null,
-        twapInitialObservation: null,
-        twapMaxObservationChangePerUpdate: null,
-        minQuoteFutarchicLiquidity: null,
-        minBaseFutarchicLiquidity: null,
-      }
-    }).instruction();
+    const updateDaoIx = await this.autocratClient
+      .updateDaoIx({
+        dao,
+        params: {
+          passThresholdBps: 500,
+          slotsPerProposal: null,
+          twapInitialObservation: null,
+          twapMaxObservationChangePerUpdate: null,
+          minQuoteFutarchicLiquidity: null,
+          minBaseFutarchicLiquidity: null,
+        },
+      })
+      .instruction();
 
     const updateDaoMessage = new TransactionMessage({
       payerKey: vaultPda,
       recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
       instructions: [updateDaoIx],
     });
-
-
-    // const transferInstruction = SystemProgram.transfer({
-    //   fromPubkey: vaultPda,
-    //   toPubkey: this.payer.publicKey,
-    //   lamports: 1,
-    // });
-
-    // const testTransferMessage = new TransactionMessage({
-    //   payerKey: vaultPda,
-    //   recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-    //   instructions: [transferInstruction],
-    // });
 
     const vaultTxCreate = multisig.instructions.vaultTransactionCreate({
       multisigPda,
@@ -121,85 +127,85 @@ it("works", async function () {
       "",
       squadsProposalPda,
       new BN(1_000_000_000),
-      new BN(1_000_000_000),
+      new BN(1_000_000_000)
     );
 
-    const { passAmm, failAmm, passBaseMint, passQuoteMint, question, baseVault, quoteVault } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+    const {
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+      question,
+      baseVault,
+      quoteVault,
+    } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
 
-await this.vaultClient
-        .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
-        .rpc();
-      await this.vaultClient
-        .splitTokensIx(
-          question,
-          quoteVault,
-          USDC,
-          new BN(10_000 * 1_000_000),
-          2
-        )
-        .rpc();
+    await this.vaultClient
+      .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
+      .rpc();
+    await this.vaultClient
+      .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
+      .rpc();
 
     // swap $500 in the pass market, make it pass
-      await this.ammClient
-        .swapIx(
-          passAmm,
-          passBaseMint,
-          passQuoteMint,
-          { buy: {} },
-          new BN(10000).muln(1_000_000),
-          new BN(0)
-        )
-        .rpc();
+    await this.ammClient
+      .swapIx(
+        passAmm,
+        passBaseMint,
+        passQuoteMint,
+        { buy: {} },
+        new BN(10000).muln(1_000_000),
+        new BN(0)
+      )
+      .rpc();
 
     for (let i = 0; i < 100; i++) {
-        await this.advanceBySlots(20_000n);
+      await this.advanceBySlots(20_000n);
 
-        await this.ammClient
-          .crankThatTwapIx(passAmm)
-          .preInstructions([
-            // this is to get around bankrun thinking we've processed the same transaction multiple times
-            ComputeBudgetProgram.setComputeUnitPrice({
-              microLamports: i,
-            }),
-            await this.ammClient.crankThatTwapIx(failAmm).instruction(),
-          ])
-          .rpc();
-      }
+      await this.ammClient
+        .crankThatTwapIx(passAmm)
+        .preInstructions([
+          // this is to get around bankrun thinking we've processed the same transaction multiple times
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: i,
+          }),
+          await this.ammClient.crankThatTwapIx(failAmm).instruction(),
+        ])
+        .rpc();
+    }
 
-      await this.autocratClient.finalizeProposal(proposal);
+    await this.autocratClient.finalizeProposal(proposal);
 
-      const connection = {
-        getAccountInfo: async (address: PublicKey) => {
-          let rawAccount = await this.banksClient.getAccount(address);
-          let accountInfo: AccountInfo<Buffer> = {
-            executable: false,
-            owner: rawAccount.owner,
-            lamports: rawAccount.lamports,
-            data: Buffer.from(rawAccount.data),
-          }
-          return accountInfo;
-        }
-      } as Connection;
+    const connection = {
+      getAccountInfo: async (address: PublicKey) => {
+        let rawAccount = await this.banksClient.getAccount(address);
+        let accountInfo: AccountInfo<Buffer> = {
+          executable: false,
+          owner: rawAccount.owner,
+          lamports: rawAccount.lamports,
+          data: Buffer.from(rawAccount.data),
+        };
+        return accountInfo;
+      },
+    } as Connection;
 
-      const txExecuteIx = await multisig.instructions.vaultTransactionExecute({
-        connection,
-        multisigPda,
-        transactionIndex: 1n,
-        member: PERMISSIONLESS_ACCOUNT.publicKey,
-      });
+    const txExecuteIx = await multisig.instructions.vaultTransactionExecute({
+      connection,
+      multisigPda,
+      transactionIndex: 1n,
+      member: PERMISSIONLESS_ACCOUNT.publicKey,
+    });
 
-      const txExecute = new Transaction().add(txExecuteIx.instruction);
-      txExecute.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
-      txExecute.feePayer = this.payer.publicKey;
-      txExecute.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+    const txExecute = new Transaction().add(txExecuteIx.instruction);
+    txExecute.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    txExecute.feePayer = this.payer.publicKey;
+    txExecute.sign(this.payer, PERMISSIONLESS_ACCOUNT);
 
-      await this.banksClient.processTransaction(txExecute);
+    await this.banksClient.processTransaction(txExecute);
 
-      const storedDao2 = await this.autocratClient.getDao(dao);
-      console.log("post update", storedDao2.passThresholdBps);
-
-
-    
-});
-
+    const storedDao2 = await this.autocratClient.getDao(dao);
+    console.log("post update", storedDao2.passThresholdBps);
+  });
 }

@@ -103,8 +103,8 @@ export default function suite() {
 
         const resolvedQuestion = await vaultClient.fetchQuestion(question);
         assert.notEqual(
-          resolvedQuestion.payoutDenominator.toString(), 
-          "0", 
+          resolvedQuestion.payoutDenominator.toString(),
+          "0",
           "Question should be resolved"
         );
 

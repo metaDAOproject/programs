@@ -68,7 +68,7 @@ export default function suite() {
         minRaise,
         secondsForLaunch,
         META,
-        MAINNET_USDC,
+        MAINNET_USDC
       )
       .rpc();
 

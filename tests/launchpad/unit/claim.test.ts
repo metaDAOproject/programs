@@ -42,7 +42,11 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
-    quoteVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    quoteVault = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      launchSigner,
+      true
+    );
     funderUsdcAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       this.payer.publicKey
@@ -68,7 +72,9 @@ export default function suite() {
     const fundAmount = new BN(1000_000000); // 1000 USDC
 
     // Fund the launch
-    await launchpadClient.fundIx(launch, fundAmount, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, fundAmount, undefined, MAINNET_USDC)
+      .rpc();
   });
 
   it("successfully claims tokens after launch completion", async function () {

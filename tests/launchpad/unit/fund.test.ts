@@ -48,7 +48,11 @@ export default function suite() {
     launchSigner = result.launchSigner;
 
     baseVault = getAssociatedTokenAddressSync(META, launchSigner, true);
-    quoteVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    quoteVault = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      launchSigner,
+      true
+    );
     funderBaseAccount = getAssociatedTokenAddressSync(
       META,
       this.payer.publicKey
@@ -77,7 +81,9 @@ export default function suite() {
     const fundAmount = new BN(100_000000); // 100 USDC
 
     try {
-      await launchpadClient.fundIx(launch, fundAmount, undefined, MAINNET_USDC).rpc();
+      await launchpadClient
+        .fundIx(launch, fundAmount, undefined, MAINNET_USDC)
+        .rpc();
       assert.fail("Expected fund instruction to fail");
     } catch (e) {
       assert.include(e.message, "InvalidLaunchState");
@@ -90,7 +96,9 @@ export default function suite() {
 
     const fundAmount = new BN(100_000000); // 100 USDC
 
-    await launchpadClient.fundIx(launch, fundAmount, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, fundAmount, undefined, MAINNET_USDC)
+      .rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     assert.equal(
@@ -128,10 +136,14 @@ export default function suite() {
     const totalAmount = fundAmount1.add(fundAmount2);
 
     // First funding
-    await launchpadClient.fundIx(launch, fundAmount1, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, fundAmount1, undefined, MAINNET_USDC)
+      .rpc();
 
     // Second funding
-    await launchpadClient.fundIx(launch, fundAmount2, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, fundAmount2, undefined, MAINNET_USDC)
+      .rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     assert.equal(
@@ -168,7 +180,9 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 2);
 
     try {
-      await launchpadClient.fundIx(launch, fundAmount, undefined, MAINNET_USDC).rpc();
+      await launchpadClient
+        .fundIx(launch, fundAmount, undefined, MAINNET_USDC)
+        .rpc();
       assert.fail("Expected fund instruction to fail");
     } catch (e) {
       assert.include(e.message, "LaunchExpired");

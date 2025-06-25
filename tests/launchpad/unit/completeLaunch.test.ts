@@ -68,7 +68,9 @@ export default function suite() {
   it("completes launch successfully when minimum raise is met and time has passed", async function () {
     // Fund the launch with exactly minimum raise
 
-    await launchpadClient.fundIx(launch, minRaise, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, minRaise, undefined, MAINNET_USDC)
+      .rpc();
 
     const [tokenMetadata] = getMetadataAddr(META);
 
@@ -133,7 +135,9 @@ export default function suite() {
   it("fails when launch period has not passed", async function () {
     // Fund the launch with exactly minimum raise
 
-    await launchpadClient.fundIx(launch, minRaise, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, minRaise, undefined, MAINNET_USDC)
+      .rpc();
 
     // Try to complete immediately (should fail)
     try {
@@ -163,7 +167,9 @@ export default function suite() {
     // Fund the launch with less than minimum raise
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient.fundIx(launch, partialAmount, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, partialAmount, undefined, MAINNET_USDC)
+      .rpc();
 
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
