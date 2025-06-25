@@ -914,6 +914,11 @@ export type ConditionalVault = {
       code: 6015;
       name: "ConditionalTokenMetadataAlreadySet";
       msg: "Conditional token metadata already set";
+    },
+    {
+      code: 6016;
+      name: "UnauthorizedConditionalTokenAccount";
+      msg: "Conditional token account is not owned by the authority";
     }
   ];
 };
@@ -1834,6 +1839,11 @@ export const IDL: ConditionalVault = {
       code: 6015,
       name: "ConditionalTokenMetadataAlreadySet",
       msg: "Conditional token metadata already set",
+    },
+    {
+      code: 6016,
+      name: "UnauthorizedConditionalTokenAccount",
+      msg: "Conditional token account is not owned by the authority",
     },
   ],
 };
