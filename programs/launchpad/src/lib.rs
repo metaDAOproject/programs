@@ -3,10 +3,10 @@ use anchor_lang::prelude::*;
 
 pub mod error;
 pub mod events;
-pub mod instructions;
+// pub mod instructions;
 pub mod state;
 
-use instructions::*;
+// use instructions::*;
 
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
@@ -42,36 +42,36 @@ pub mod usdc_mint {
 pub mod launchpad {
     use super::*;
 
-    #[access_control(ctx.accounts.validate(&args))]
-    pub fn initialize_launch(
-        ctx: Context<InitializeLaunch>,
-        args: InitializeLaunchArgs,
-    ) -> Result<()> {
-        InitializeLaunch::handle(ctx, args)
-    }
+    // #[access_control(ctx.accounts.validate(&args))]
+    // pub fn initialize_launch(
+    //     ctx: Context<InitializeLaunch>,
+    //     args: InitializeLaunchArgs,
+    // ) -> Result<()> {
+    //     InitializeLaunch::handle(ctx, args)
+    // }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn start_launch(ctx: Context<StartLaunch>) -> Result<()> {
-        StartLaunch::handle(ctx)
-    }
+    // #[access_control(ctx.accounts.validate())]
+    // pub fn start_launch(ctx: Context<StartLaunch>) -> Result<()> {
+    //     StartLaunch::handle(ctx)
+    // }
 
-    #[access_control(ctx.accounts.validate(amount))]
-    pub fn fund(ctx: Context<Fund>, amount: u64) -> Result<()> {
-        Fund::handle(ctx, amount)
-    }
+    // #[access_control(ctx.accounts.validate(amount))]
+    // pub fn fund(ctx: Context<Fund>, amount: u64) -> Result<()> {
+    //     Fund::handle(ctx, amount)
+    // }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn complete_launch(ctx: Context<CompleteLaunch>) -> Result<()> {
-        CompleteLaunch::handle(ctx)
-    }
+    // #[access_control(ctx.accounts.validate())]
+    // pub fn complete_launch(ctx: Context<CompleteLaunch>) -> Result<()> {
+    //     CompleteLaunch::handle(ctx)
+    // }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn refund(ctx: Context<Refund>) -> Result<()> {
-        Refund::handle(ctx)
-    }
+    // #[access_control(ctx.accounts.validate())]
+    // pub fn refund(ctx: Context<Refund>) -> Result<()> {
+    //     Refund::handle(ctx)
+    // }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn claim(ctx: Context<Claim>) -> Result<()> {
-        Claim::handle(ctx)
-    }
+    // #[access_control(ctx.accounts.validate())]
+    // pub fn claim(ctx: Context<Claim>) -> Result<()> {
+    //     Claim::handle(ctx)
+    // }
 }
