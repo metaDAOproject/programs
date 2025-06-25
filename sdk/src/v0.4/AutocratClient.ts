@@ -18,6 +18,7 @@ import {
   ConditionalVault,
   IDL as ConditionalVaultIDL,
 } from "./types/conditional_vault.js";
+import * as multisig from "@sqds/multisig";
 
 import BN from "bn.js";
 import {
@@ -25,6 +26,7 @@ import {
   AUTOCRAT_PROGRAM_ID,
   CONDITIONAL_VAULT_PROGRAM_ID,
   MAINNET_USDC,
+  SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_ID,
   USDC_DECIMALS,
 } from "./constants.js";
@@ -236,75 +238,81 @@ export class AutocratClient {
     };
   }
 
-  async initializeDao(
-    tokenMint: PublicKey,
-    tokenPriceUiAmount: number,
-    minBaseFutarchicLiquidity: number,
-    minQuoteFutarchicLiquidity: number,
-    usdcMint: PublicKey = MAINNET_USDC,
-    dao: PublicKey,
-    twapStartDelaySlots: BN
-  ): Promise<PublicKey> {
-    let tokenDecimals = unpackMint(
-      tokenMint,
-      await this.provider.connection.getAccountInfo(tokenMint)
-    ).decimals;
+  // async initializeDao(
+  //   tokenMint: PublicKey,
+  //   tokenPriceUiAmount: number,
+  //   minBaseFutarchicLiquidity: number,
+  //   minQuoteFutarchicLiquidity: number,
+  //   usdcMint: PublicKey = MAINNET_USDC,
+  //   dao: PublicKey,
+  //   twapStartDelaySlots: BN
+  // ): Promise<PublicKey> {
+  //   let tokenDecimals = unpackMint(
+  //     tokenMint,
+  //     await this.provider.connection.getAccountInfo(tokenMint)
+  //   ).decimals;
 
-    let scaledPrice = PriceMath.getAmmPrice(
-      tokenPriceUiAmount,
-      tokenDecimals,
-      USDC_DECIMALS
-    );
+  //   let scaledPrice = PriceMath.getAmmPrice(
+  //     tokenPriceUiAmount,
+  //     tokenDecimals,
+  //     USDC_DECIMALS
+  //   );
 
-    // console.log(
-    //   PriceMath.getHumanPrice(scaledPrice, tokenDecimals, USDC_DECIMALS)
-    // );
+  //   // console.log(
+  //   //   PriceMath.getHumanPrice(scaledPrice, tokenDecimals, USDC_DECIMALS)
+  //   // );
 
-    await this.initializeDaoIx(
-      dao,
-      tokenMint,
-      {
-        twapStartDelaySlots,
-        twapInitialObservation: scaledPrice,
-        twapMaxObservationChangePerUpdate: scaledPrice.divn(50),
-        minQuoteFutarchicLiquidity: new BN(minQuoteFutarchicLiquidity).mul(
-          new BN(10).pow(new BN(USDC_DECIMALS))
-        ),
-        minBaseFutarchicLiquidity: new BN(minBaseFutarchicLiquidity).mul(
-          new BN(10).pow(new BN(tokenDecimals))
-        ),
-        passThresholdBps: null,
-        slotsPerProposal: null,
-        nonce: new BN(Math.random() * 2 ** 50),
-      },
-      usdcMint,
-      dao
-    )
-      .postInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: MaxCUs.initializeDao,
-        }),
-        ComputeBudgetProgram.setComputeUnitPrice({
-          microLamports: DEFAULT_CU_PRICE,
-        }),
-      ])
-      .rpc({ maxRetries: 5 });
+  //   await this.initializeDaoIx(
+  //     dao,
+  //     tokenMint,
+  //     {
+  //       twapStartDelaySlots,
+  //       twapInitialObservation: scaledPrice,
+  //       twapMaxObservationChangePerUpdate: scaledPrice.divn(50),
+  //       minQuoteFutarchicLiquidity: new BN(minQuoteFutarchicLiquidity).mul(
+  //         new BN(10).pow(new BN(USDC_DECIMALS))
+  //       ),
+  //       minBaseFutarchicLiquidity: new BN(minBaseFutarchicLiquidity).mul(
+  //         new BN(10).pow(new BN(tokenDecimals))
+  //       ),
+  //       passThresholdBps: null,
+  //       slotsPerProposal: null,
+  //       nonce: new BN(Math.random() * 2 ** 50),
+  //     },
+  //     usdcMint,
+  //     dao
+  //   )
+  //     .postInstructions([
+  //       ComputeBudgetProgram.setComputeUnitLimit({
+  //         units: MaxCUs.initializeDao,
+  //       }),
+  //       ComputeBudgetProgram.setComputeUnitPrice({
+  //         microLamports: DEFAULT_CU_PRICE,
+  //       }),
+  //     ])
+  //     .rpc({ maxRetries: 5 });
 
-    return dao;
-  }
+  //   return dao;
+  // }
 
   initializeDaoIx(
     dao: PublicKey,
     tokenMint: PublicKey,
     params: InitializeDaoParams,
     usdcMint: PublicKey = MAINNET_USDC,
-    multisig: PublicKey
+    // multisig: PublicKey,
+    squadsTreasury: PublicKey
   ) {
+    // const [multisig] =
+    const [multisigPda] = multisig.getMultisigPda({ createKey: dao });
     return this.autocrat.methods.initializeDao(params).accounts({
       dao,
       tokenMint,
       usdcMint,
-      multisig,
+      multisig: multisigPda,
+      squadsMultisigProgram: SQUADS_PROGRAM_ID,
+      squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+      squadsProgramConfigTreasury: squadsTreasury,
     });
   }
 

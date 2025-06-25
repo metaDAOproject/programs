@@ -32,7 +32,22 @@ export type Autocrat = {
         },
         {
           name: "multisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
           isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgramConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgramConfigTreasury";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -389,12 +404,12 @@ export type Autocrat = {
             type: "u64";
           },
           {
-            name: "pdaBump";
-            type: "u8";
-          },
-          {
             name: "squadsMultisig";
             type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
           }
         ];
       };
@@ -1067,7 +1082,22 @@ export const IDL: Autocrat = {
         },
         {
           name: "multisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
           isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgramConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgramConfigTreasury",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1424,12 +1454,12 @@ export const IDL: Autocrat = {
             type: "u64",
           },
           {
-            name: "pdaBump",
-            type: "u8",
-          },
-          {
             name: "squadsMultisig",
             type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
           },
         ],
       },

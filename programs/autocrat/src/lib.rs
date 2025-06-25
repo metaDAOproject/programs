@@ -47,7 +47,6 @@ use amm::state::Amm;
 use solana_program::instruction::Instruction;
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
-use std::borrow::Borrow;
 
 #[cfg(not(feature = "no-entrypoint"))]
 security_txt! {

@@ -216,7 +216,8 @@ export default function suite() {
         nonce,
       },
       USDC,
-      multisigPda
+      // multisigPda,
+      configTreasury
     ).rpc();
 
     const multisigCreateV2Ix = multisig.instructions.multisigCreateV2({
