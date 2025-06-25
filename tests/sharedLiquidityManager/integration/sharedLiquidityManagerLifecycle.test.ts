@@ -39,15 +39,16 @@ import * as anchor from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
 import { DAY_IN_SLOTS, expectError, toBN } from "../../utils.js";
 import { BN } from "bn.js";
-import { IDL } from "../../fixtures/raydium_cpmm.js";
+import { IDL as RaydiumCpmmIdl } from "../../fixtures/raydium_cpmm.js";
 import { sha256 } from "@metadaoproject/futarchy";
+import { BanksClient } from "solana-bankrun";
 
 export default async function () {
-  const ammClient = this.ammClient;
-  const autocratClient = this.autocratClient;
-  const vaultClient = this.vaultClient;
-  const sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
-  const cpSwap = new anchor.Program(IDL, new PublicKey(RAYDIUM_CP_SWAP_PROGRAM_ID));
+  const ammClient: AmmClient = this.ammClient;
+  const autocratClient: AutocratClient = this.autocratClient;
+  const vaultClient: ConditionalVaultClient = this.vaultClient;
+  const sharedLiquidityManagerClient: SharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
+  const cpSwap = new anchor.Program(RaydiumCpmmIdl, new PublicKey(RAYDIUM_CP_SWAP_PROGRAM_ID), this.provider);
 
   // First, set up tokens and a DAO
 
@@ -76,7 +77,11 @@ export default async function () {
 
   // Second, set up a shared liquidity pool
 
-  await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, META, USDC, new BN(25 * 10 ** 9), new BN(25_000 * 10 ** 6)).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
+  await sharedLiquidityManagerClient.initializeSharedLiquidityPoolIx(dao, META, USDC, new BN(25 * 10 ** 9), new BN(25_000 * 10 ** 6))
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+    ]).rpc();
 
   const [slPool] = getSharedLiquidityPoolAddr(
     sharedLiquidityManagerClient.getProgramId(),
@@ -90,7 +95,7 @@ export default async function () {
     slPool
   );
 
-  const storedSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);
+  let storedSlPool = await sharedLiquidityManagerClient.program.account.sharedLiquidityPool.fetch(slPool);
 
   // Third, initialize a draft proposal
 
@@ -183,7 +188,7 @@ export default async function () {
     )
     .rpc();
 
-  let initProposalWithLiquidityTx = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
+  let initProposalWithLiquidityTx: Transaction = await sharedLiquidityManagerClient.initializeProposalWithLiquidityIx(
     dao,
     META,
     USDC,
@@ -268,6 +273,7 @@ export default async function () {
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
     ].concat(initProposalWithLiquidityTx.instructions)
   }).compileToV0Message([storedLookupTable]);
+
 
 
   console.log("messageV0", messageV0);
@@ -411,6 +417,42 @@ export default async function () {
   console.log("removeTx size", removeTx.serialize().length);
   await this.banksClient.processTransaction(removeTx);
 
+
+  storedSlPool = await sharedLiquidityManagerClient.getSlPool(slPool);
+
+  const activeSpotPool = await cpSwap.account.poolState.fetch(storedSlPool.activeSpotPool);
+  console.log("activeSpotPool", activeSpotPool);
+  return;
+
+
+
+
+  let banksClient = this.banksClient as BanksClient;
+
+  // console.log(await banksClient.getAccount(cpSwap.programId));
+
+
+  console.log("storedSlPool", storedSlPool);
+  console.log("storedSlPool.activeSpotPool", await banksClient.getAccount(storedSlPool.activeSpotPool));
+  const activeSpotPoolRaw = await banksClient.getAccount(storedSlPool.activeSpotPool);
+  console.log(typeof activeSpotPoolRaw);
+  // anchor.accounts
+  // const activeSpotPool = cpSwap.account.poolState.coder.accounts.decode("poolState", activeSpotPoolRaw.data);
+  console.log("activeSpotPool", activeSpotPool);
+  return;
+  await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+  const storedSpotPool1 = await cpSwap.account.poolState.fetch(storedSlPool.activeSpotPool);
+  return;
+  console.log(storedSpotPool1);
+  storedSlPool = await sharedLiquidityManagerClient.getSlPool(slPool);
+
+  const storedSpotPool2 = await cpSwap.account.poolState.fetch(storedSlPool.activeSpotPool);
+  console.log(storedSpotPool2);
+
+
+
+  return;
+
   console.log("slPool", slPool);
   console.log("slPoolSigner", slPoolSigner);
   console.log("spotPool", storedSlPool.activeSpotPool);
@@ -421,8 +463,8 @@ export default async function () {
   )[0];
   console.log("spotPool1", spotPool1);
   
-  const storedSpotPool1 = await cpSwap.account.poolState.fetchNullable(spotPool1);
-  console.log(storedSpotPool1);
-  console.log(await this.banksClient.getAccount(storedSpotPool1.token0Vault));
-  console.log(await this.banksClient.getAccount(storedSpotPool1.token1Vault));
+  // const storedSpotPool1 = await cpSwap.account.poolState.fetchNullable(spotPool1);
+  // console.log(storedSpotPool1);
+  // console.log(await this.banksClient.getAccount(storedSpotPool1.token0Vault));
+  // console.log(await this.banksClient.getAccount(storedSpotPool1.token1Vault));
 }

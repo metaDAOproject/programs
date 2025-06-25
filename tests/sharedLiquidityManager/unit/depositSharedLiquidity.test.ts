@@ -18,6 +18,8 @@ export default function suite() {
   let META: PublicKey;
   let USDC: PublicKey;
   let dao: PublicKey;
+  let slPool: PublicKey;
+  let spotPool: PublicKey;
 
   before(async function () {
     sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
@@ -57,9 +59,7 @@ export default function suite() {
       new BN(DAY_IN_SLOTS.toString())
     );
 
-  });
-
-  it("deposits liquidity to shared pool", async function () {
+    // Initialize shared liquidity pool
     await sharedLiquidityManagerClient
       .initializeSharedLiquidityPoolIx(
         dao,
@@ -71,33 +71,34 @@ export default function suite() {
       .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
       .rpc();
 
-
-    const [slPool] = getSharedLiquidityPoolAddr(
+    // Calculate pool addresses
+    [slPool] = getSharedLiquidityPoolAddr(
       sharedLiquidityManagerClient.getProgramId(),
       dao,
       this.payer.publicKey,
       100
     );
 
-    const [spotPool] = getSpotPoolAddr(
+    [spotPool] = getSpotPoolAddr(
       sharedLiquidityManagerClient.getProgramId(),
       slPool,
       0
     );
+  });
+
+  it("deposits liquidity to shared pool", async function () {
+    const user = Keypair.generate();
+    await this.createTokenAccount(META, user.publicKey);
+    await this.createTokenAccount(USDC, user.publicKey);
+    await this.mintTo(META, user.publicKey, this.payer, 100 * 10 ** 9);
+    await this.mintTo(USDC, user.publicKey, this.payer, 100_000 * 10 ** 6);
 
     const lpTokenAmount = new BN(1_000_000); // 1 LP token
     const maxBaseAmount = new BN(1 * 10 ** 9); // 1 META max
     const maxQuoteAmount = new BN(1_000 * 10 ** 6); // 1,000 USDC max
 
-    const initialBaseBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
-
-    const initialQuoteBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(USDC, this.payer.publicKey)
-    )).amount;
+    const initialBaseBalance = await this.getTokenBalance(META, user.publicKey);
+    const initialQuoteBalance = await this.getTokenBalance(USDC, user.publicKey);
 
     await sharedLiquidityManagerClient
       .depositSharedLiquidityIx(
@@ -107,8 +108,10 @@ export default function suite() {
         USDC,
         lpTokenAmount,
         maxBaseAmount,
-        maxQuoteAmount
+        maxQuoteAmount,
+        user.publicKey
       )
+      .signers([user])
       .rpc();
 
     // Check user position was created/updated
@@ -116,51 +119,20 @@ export default function suite() {
     const position = await sharedLiquidityManagerClient.getSlPoolPosition(getSlPoolPositionAddr(
       sharedLiquidityManagerClient.getProgramId(),
       slPool,
-      this.payer.publicKey
+      user.publicKey
     )[0]);
 
     assert.equal(position.underlyingSpotLpShares.toString(), lpTokenAmount.toString());
     
     // Verify some tokens were spent (exact amounts depend on pool ratios)
-    const finalBaseBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(META, this.payer.publicKey)
-    )).amount;
-
-    const finalQuoteBalance = (await getAccount(
-      this.banksClient,
-      token.getAssociatedTokenAddressSync(USDC, this.payer.publicKey)
-    )).amount;
+    const finalBaseBalance = await this.getTokenBalance(META, user.publicKey);
+    const finalQuoteBalance = await this.getTokenBalance(USDC, user.publicKey);
 
     assert.isBelow(Number(finalBaseBalance), Number(initialBaseBalance));
     assert.isBelow(Number(finalQuoteBalance), Number(initialQuoteBalance));
   });
 
   it("fails with insufficient base tokens", async function () {
-    await sharedLiquidityManagerClient
-      .initializeSharedLiquidityPoolIx(
-        dao,
-        META,
-        USDC,
-        new BN(25 * 10 ** 9),
-        new BN(25_000 * 10 ** 6)
-      )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
-      .rpc();
-
-    const [slPool] = getSharedLiquidityPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      dao,
-      this.payer.publicKey,
-      100
-    );
-
-    const [spotPool] = getSpotPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      slPool,
-      0
-    );
-
     const lpTokenAmount = new BN(1_000_000);
     const maxBaseAmount = new BN(200 * 10 ** 9); // More than user has
     const maxQuoteAmount = new BN(1_000 * 10 ** 6);
@@ -184,40 +156,6 @@ export default function suite() {
   });
 
   it("fails with insufficient quote tokens", async function () {
-    const dao = await autocratClient.initializeDao(
-      META,
-      1000,
-      10,
-      10_000,
-      USDC,
-      undefined,
-      new BN(DAY_IN_SLOTS.toString())
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeSharedLiquidityPoolIx(
-        dao,
-        META,
-        USDC,
-        new BN(25 * 10 ** 9),
-        new BN(25_000 * 10 ** 6)
-      )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
-      .rpc();
-
-    const [slPool] = getSharedLiquidityPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      dao,
-      this.payer.publicKey,
-      100
-    );
-
-    const [spotPool] = getSpotPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      slPool,
-      0
-    );
-
     const lpTokenAmount = new BN(1_000_000);
     const maxBaseAmount = new BN(1 * 10 ** 9);
     const maxQuoteAmount = new BN(200_000 * 10 ** 6); // More than user has
@@ -241,40 +179,6 @@ export default function suite() {
   });
 
   it("allows multiple deposits from same user", async function () {
-    const dao = await autocratClient.initializeDao(
-      META,
-      1000,
-      10,
-      10_000,
-      USDC,
-      undefined,
-      new BN(DAY_IN_SLOTS.toString())
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeSharedLiquidityPoolIx(
-        dao,
-        META,
-        USDC,
-        new BN(25 * 10 ** 9),
-        new BN(25_000 * 10 ** 6)
-      )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
-      .rpc();
-
-    const [slPool] = getSharedLiquidityPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      dao,
-      this.payer.publicKey,
-      100
-    );
-
-    const [spotPool] = getSpotPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      slPool,
-      0
-    );
-
     const lpTokenAmount = new BN(500_000); // 0.5 LP token
     const maxBaseAmount = new BN(1 * 10 ** 9);
     const maxQuoteAmount = new BN(1_000 * 10 ** 6);
@@ -309,40 +213,6 @@ export default function suite() {
   });
 
   it("allows deposits from multiple users", async function () {
-    const dao = await autocratClient.initializeDao(
-      META,
-      1000,
-      10,
-      10_000,
-      USDC,
-      undefined,
-      new BN(DAY_IN_SLOTS.toString())
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeSharedLiquidityPoolIx(
-        dao,
-        META,
-        USDC,
-        new BN(25 * 10 ** 9),
-        new BN(25_000 * 10 ** 6)
-      )
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })])
-      .rpc();
-
-    const [slPool] = getSharedLiquidityPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      dao,
-      this.payer.publicKey,
-      100
-    );
-
-    const [spotPool] = getSpotPoolAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      slPool,
-      0
-    );
-
     const secondUser = Keypair.generate();
     await this.createTokenAccount(META, secondUser.publicKey);
     await this.createTokenAccount(USDC, secondUser.publicKey);

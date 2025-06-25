@@ -4,7 +4,7 @@ import autocrat from "./autocrat/autocrat.js";
 import launchpad from "./launchpad/main.test.js";
 import sharedLiquidityManager from "./sharedLiquidityManager/main.test.js";
 
-import { Clock, startAnchor } from "solana-bankrun";
+import { BanksClient, Clock, startAnchor } from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
@@ -51,6 +51,29 @@ import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
 import twap from "./integration/twap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
+
+// Extend the Mocha context to include our test properties
+declare module "mocha" {
+  interface Context {
+    context: any;
+    banksClient: BanksClient;
+    vaultClient: ConditionalVaultClient;
+    autocratClient: AutocratClient;
+    launchpadClient: LaunchpadClient;
+    ammClient: AmmClient;
+    sharedLiquidityManagerClient: SharedLiquidityManagerClient;
+    payer: Keypair;
+    createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
+    createMint: (mintAuthority: PublicKey, decimals: number) => Promise<PublicKey>;
+    mintTo: (mint: PublicKey, to: PublicKey, mintAuthority: Keypair, amount: number) => Promise<any>;
+    getTokenBalance: (mint: PublicKey, owner: PublicKey) => Promise<bigint>;
+    getMint: (mint: PublicKey) => Promise<any>;
+    assertBalance: (mint: PublicKey, owner: PublicKey, amount: number) => Promise<void>;
+    transfer: (mint: PublicKey, from: Keypair, to: PublicKey, amount: number) => Promise<any>;
+    advanceBySlots: (slots: bigint) => Promise<void>;
+    advanceBySeconds: (seconds: number) => Promise<void>;
+  }
+}
 
 before(async function () {
   // const version: VersionKey = "0.4";
@@ -117,6 +140,7 @@ before(async function () {
   this.launchpadClient = LaunchpadClient.createClient({
     provider: provider as any,
   });
+  this.provider = provider;
   this.ammClient = AmmClient.createClient({ provider: provider as any });
   this.sharedLiquidityManagerClient = SharedLiquidityManagerClient.createClient({ provider: provider as any });
   this.payer = provider.wallet.payer;

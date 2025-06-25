@@ -60,6 +60,13 @@ export type CreateSharedLiquidityManagerClientParams = {
   ammProgramId?: PublicKey;
 };
 
+export const RAYDIUM_INIT_POOL_STATIC_ACCOUNTS = {
+  raydiumAuthority: RAYDIUM_AUTHORITY,
+  ammConfig: LOW_FEE_RAYDIUM_CONFIG,
+  cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
+  createPoolFee: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+};
+
 export class SharedLiquidityManagerClient {
   public readonly provider: AnchorProvider;
   public readonly program: Program<SharedLiquidityManagerIDLType>;
@@ -107,14 +114,21 @@ export class SharedLiquidityManagerClient {
     quoteMint: PublicKey,
     baseAmount: BN,
     quoteAmount: BN,
-    proposalStakeRateThresholdBps: number = 100
+    proposalStakeRateThresholdBps: number = 100,
+    creator: PublicKey = this.provider.wallet.publicKey
   ) {
     let slPool = getSharedLiquidityPoolAddr(
       this.program.programId,
       dao,
-      this.provider.wallet.publicKey,
+      creator,
       proposalStakeRateThresholdBps
     )[0];
+
+    const [creatorSlPoolPosition] = getSlPoolPositionAddr(
+      this.program.programId,
+      slPool,
+      creator
+    );
 
     let spotPool = getSpotPoolAddr(this.program.programId, slPool, 0)[0];
 
@@ -136,7 +150,8 @@ export class SharedLiquidityManagerClient {
         dao,
         spotPool,
         spotPoolLpMint: getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-        creator: this.provider.wallet.publicKey,
+        creator,
+        creatorSlPoolPosition,
         creatorLpAccount: getAssociatedTokenAddressSync(
           getRaydiumCpmmLpMintAddr(spotPool, false)[0],
           this.provider.wallet.publicKey,
@@ -144,7 +159,7 @@ export class SharedLiquidityManagerClient {
         ),
         creatorBaseTokenAccount: getAssociatedTokenAddressSync(
           baseMint,
-          this.provider.wallet.publicKey,
+          creator,
           true
         ),
         creatorQuoteTokenAccount: getAssociatedTokenAddressSync(
@@ -177,9 +192,7 @@ export class SharedLiquidityManagerClient {
           slPoolSigner,
           true
         ),
-        raydiumAuthority: RAYDIUM_AUTHORITY,
-        ammConfig: LOW_FEE_RAYDIUM_CONFIG,
-        createPoolFee: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+        raydiumInitPoolStatic: RAYDIUM_INIT_POOL_STATIC_ACCOUNTS,
         spotPoolObservationState: getRaydiumCpmmObservationStateAddr(
           spotPool,
           false
@@ -261,10 +274,8 @@ export class SharedLiquidityManagerClient {
         ),
         userSlPoolPosition,
         raydiumAuthority: RAYDIUM_AUTHORITY,
-        tokenProgram: TOKEN_PROGRAM_ID,
         tokenProgram2022: TOKEN_2022_PROGRAM_ID,
         cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
       });
   }
 
@@ -743,18 +754,15 @@ export class SharedLiquidityManagerClient {
           true
         ),
         activeSpotPoolLpMint: getRaydiumCpmmLpMintAddr(spotPool, false)[0],
-        raydiumAuthority: RAYDIUM_AUTHORITY,
-        tokenProgram: TOKEN_PROGRAM_ID,
         tokenProgram2022: TOKEN_2022_PROGRAM_ID,
         cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
         memoProgram: MEMO_PROGRAM_ID,
-        ammConfig: LOW_FEE_RAYDIUM_CONFIG,
-        createPoolFeeReceiver: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
         observationState,
         baseMint,
         quoteMint,
         slPool,
       },
+      raydiumInitPoolStatic: RAYDIUM_INIT_POOL_STATIC_ACCOUNTS,
       cond: {
         question,
         baseVault,

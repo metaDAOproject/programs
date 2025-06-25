@@ -22,6 +22,11 @@ export type SharedLiquidityManager = {
           isSigner: true;
         },
         {
+          name: "creatorSlPoolPosition";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "baseMint";
           isMut: false;
           isSigner: false;
@@ -53,16 +58,43 @@ export type SharedLiquidityManager = {
           docs: ["so Raydium will create it"];
         },
         {
-          name: "raydiumAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "ammConfig";
-          isMut: true;
-          isSigner: false;
-          docs: [
-            "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config"
+          name: "raydiumInitPoolStatic";
+          accounts: [
+            {
+              name: "raydiumAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "createPoolFee";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "ammConfig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "cpSwapProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "rent";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "associatedTokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            }
           ];
         },
         {
@@ -86,12 +118,6 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
-          name: "createPoolFee";
-          isMut: true;
-          isSigner: false;
-          docs: ["create pool fee account"];
-        },
-        {
           name: "spotPoolObservationState";
           isMut: true;
           isSigner: false;
@@ -112,27 +138,12 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
         {
           name: "cpSwapProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "rent";
           isMut: false;
           isSigner: false;
         },
@@ -953,6 +964,46 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
+          name: "raydiumInitPoolStatic";
+          accounts: [
+            {
+              name: "raydiumAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "createPoolFee";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "ammConfig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "cpSwapProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "rent";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "associatedTokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            }
+          ];
+        },
+        {
           name: "ray";
           accounts: [
             {
@@ -973,16 +1024,6 @@ export type SharedLiquidityManager = {
             {
               name: "activeSpotPoolLpMint";
               isMut: true;
-              isSigner: false;
-            },
-            {
-              name: "raydiumAuthority";
-              isMut: false;
-              isSigner: false;
-            },
-            {
-              name: "tokenProgram";
-              isMut: false;
               isSigner: false;
             },
             {
@@ -1031,22 +1072,9 @@ export type SharedLiquidityManager = {
               isSigner: false;
             },
             {
-              name: "createPoolFeeReceiver";
-              isMut: true;
-              isSigner: false;
-            },
-            {
               name: "observationState";
               isMut: false;
               isSigner: false;
-            },
-            {
-              name: "ammConfig";
-              isMut: true;
-              isSigner: false;
-              docs: [
-                "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config"
-              ];
             },
             {
               name: "slPool";
@@ -1251,6 +1279,11 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "autocratEventAuthority";
           isMut: false;
           isSigner: false;
@@ -1259,16 +1292,6 @@ export type SharedLiquidityManager = {
           name: "payer";
           isMut: true;
           isSigner: true;
-        },
-        {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "rent";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "eventAuthority";
@@ -1759,6 +1782,11 @@ export const IDL: SharedLiquidityManager = {
           isSigner: true,
         },
         {
+          name: "creatorSlPoolPosition",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "baseMint",
           isMut: false,
           isSigner: false,
@@ -1790,16 +1818,43 @@ export const IDL: SharedLiquidityManager = {
           docs: ["so Raydium will create it"],
         },
         {
-          name: "raydiumAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "ammConfig",
-          isMut: true,
-          isSigner: false,
-          docs: [
-            "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config",
+          name: "raydiumInitPoolStatic",
+          accounts: [
+            {
+              name: "raydiumAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "createPoolFee",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "ammConfig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "cpSwapProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "rent",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "associatedTokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
           ],
         },
         {
@@ -1823,12 +1878,6 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
         {
-          name: "createPoolFee",
-          isMut: true,
-          isSigner: false,
-          docs: ["create pool fee account"],
-        },
-        {
           name: "spotPoolObservationState",
           isMut: true,
           isSigner: false,
@@ -1849,27 +1898,12 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
         {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
         {
           name: "cpSwapProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "rent",
           isMut: false,
           isSigner: false,
         },
@@ -2690,6 +2724,46 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
         {
+          name: "raydiumInitPoolStatic",
+          accounts: [
+            {
+              name: "raydiumAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "createPoolFee",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "ammConfig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "cpSwapProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "rent",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "associatedTokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
           name: "ray",
           accounts: [
             {
@@ -2710,16 +2784,6 @@ export const IDL: SharedLiquidityManager = {
             {
               name: "activeSpotPoolLpMint",
               isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "raydiumAuthority",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "tokenProgram",
-              isMut: false,
               isSigner: false,
             },
             {
@@ -2768,22 +2832,9 @@ export const IDL: SharedLiquidityManager = {
               isSigner: false,
             },
             {
-              name: "createPoolFeeReceiver",
-              isMut: true,
-              isSigner: false,
-            },
-            {
               name: "observationState",
               isMut: false,
               isSigner: false,
-            },
-            {
-              name: "ammConfig",
-              isMut: true,
-              isSigner: false,
-              docs: [
-                "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config",
-              ],
             },
             {
               name: "slPool",
@@ -2988,6 +3039,11 @@ export const IDL: SharedLiquidityManager = {
           isSigner: false,
         },
         {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "autocratEventAuthority",
           isMut: false,
           isSigner: false,
@@ -2996,16 +3052,6 @@ export const IDL: SharedLiquidityManager = {
           name: "payer",
           isMut: true,
           isSigner: true,
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "rent",
-          isMut: false,
-          isSigner: false,
         },
         {
           name: "eventAuthority",

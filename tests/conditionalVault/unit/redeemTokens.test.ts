@@ -1,6 +1,6 @@
 import { sha256 } from "@metadaoproject/futarchy";
 import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.4";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   createAssociatedTokenAccount,
@@ -125,6 +125,10 @@ export default function suite() {
 
     await vaultClient
       .redeemTokensIx(question, vault, underlyingTokenMint, 2)
+      .preInstructions([
+        // To prevent the test from failing due to thinking it has already processed the instruction
+        ComputeBudgetProgram.setComputeUnitPrice({microLamports: 1})
+      ])
       .rpc();
 
     let balanceAfter = await getAccount(
