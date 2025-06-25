@@ -3,6 +3,7 @@ pub use super::*;
 #[account]
 #[derive(InitSpace)]
 pub struct Dao {
+    pub nonce: u64,
     pub treasury_pda_bump: u8,
     pub treasury: Pubkey,
     pub base_mint: Pubkey,

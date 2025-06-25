@@ -8,7 +8,7 @@ export type Autocrat = {
         {
           name: "dao";
           isMut: true;
-          isSigner: true;
+          isSigner: false;
         },
         {
           name: "payer";
@@ -306,6 +306,10 @@ export type Autocrat = {
         kind: "struct";
         fields: [
           {
+            name: "nonce";
+            type: "u64";
+          },
+          {
             name: "treasuryPdaBump";
             type: "u8";
           },
@@ -527,6 +531,10 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
+          },
+          {
+            name: "nonce";
+            type: "u64";
           }
         ];
       };
@@ -1030,7 +1038,7 @@ export const IDL: Autocrat = {
         {
           name: "dao",
           isMut: true,
-          isSigner: true,
+          isSigner: false,
         },
         {
           name: "payer",
@@ -1328,6 +1336,10 @@ export const IDL: Autocrat = {
         kind: "struct",
         fields: [
           {
+            name: "nonce",
+            type: "u64",
+          },
+          {
             name: "treasuryPdaBump",
             type: "u8",
           },
@@ -1549,6 +1561,10 @@ export const IDL: Autocrat = {
             type: {
               option: "u64",
             },
+          },
+          {
+            name: "nonce",
+            type: "u64",
           },
         ],
       },

@@ -9,14 +9,18 @@ pub struct InitializeDaoParams {
     pub min_base_futarchic_liquidity: u64,
     pub pass_threshold_bps: Option<u16>,
     pub slots_per_proposal: Option<u64>,
+    pub nonce: u64,
 }
 
 #[derive(Accounts)]
 #[event_cpi]
+#[instruction(params: InitializeDaoParams)]
 pub struct InitializeDao<'info> {
     #[account(
         init,
         payer = payer,
+        seeds = [b"dao", params.nonce.to_le_bytes().as_ref()],
+        bump,
         space = 8 + Dao::INIT_SPACE,
     )]
     pub dao: Account<'info, Dao>,
@@ -39,6 +43,7 @@ impl InitializeDao<'_> {
             min_quote_futarchic_liquidity,
             pass_threshold_bps,
             slots_per_proposal,
+            nonce,
         } = params;
 
         let dao = &mut ctx.accounts.dao;
@@ -54,6 +59,7 @@ impl InitializeDao<'_> {
         );
 
         dao.set_inner(Dao {
+            nonce,
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),
             treasury_pda_bump,

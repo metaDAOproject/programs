@@ -34,6 +34,7 @@ import {
   getAmmAddr,
   getAmmLpMintAddr,
   getConditionalTokenMintAddr,
+  getDaoAddr,
   getDaoTreasuryAddr,
   getEventAuthorityAddr,
   getProposalAddr,
@@ -235,75 +236,78 @@ export class AutocratClient {
     };
   }
 
-  async initializeDao(
-    tokenMint: PublicKey,
-    tokenPriceUiAmount: number,
-    minBaseFutarchicLiquidity: number,
-    minQuoteFutarchicLiquidity: number,
-    usdcMint: PublicKey = MAINNET_USDC,
-    daoKeypair: Keypair = Keypair.generate(),
-    twapStartDelaySlots: BN
-  ): Promise<PublicKey> {
-    let tokenDecimals = unpackMint(
-      tokenMint,
-      await this.provider.connection.getAccountInfo(tokenMint)
-    ).decimals;
+  // async initializeDao(
+  //   tokenMint: PublicKey,
+  //   tokenPriceUiAmount: number,
+  //   minBaseFutarchicLiquidity: number,
+  //   minQuoteFutarchicLiquidity: number,
+  //   usdcMint: PublicKey = MAINNET_USDC,
+  //   daoKeypair: Keypair = Keypair.generate(),
+  //   twapStartDelaySlots: BN
+  // ): Promise<PublicKey> {
+  //   let tokenDecimals = unpackMint(
+  //     tokenMint,
+  //     await this.provider.connection.getAccountInfo(tokenMint)
+  //   ).decimals;
 
-    let scaledPrice = PriceMath.getAmmPrice(
-      tokenPriceUiAmount,
-      tokenDecimals,
-      USDC_DECIMALS
-    );
+  //   let scaledPrice = PriceMath.getAmmPrice(
+  //     tokenPriceUiAmount,
+  //     tokenDecimals,
+  //     USDC_DECIMALS
+  //   );
 
-    // console.log(
-    //   PriceMath.getHumanPrice(scaledPrice, tokenDecimals, USDC_DECIMALS)
-    // );
+  //   // console.log(
+  //   //   PriceMath.getHumanPrice(scaledPrice, tokenDecimals, USDC_DECIMALS)
+  //   // );
 
-    await this.initializeDaoIx(
-      daoKeypair,
-      tokenMint,
-      {
-        twapStartDelaySlots,
-        twapInitialObservation: scaledPrice,
-        twapMaxObservationChangePerUpdate: scaledPrice.divn(50),
-        minQuoteFutarchicLiquidity: new BN(minQuoteFutarchicLiquidity).mul(
-          new BN(10).pow(new BN(USDC_DECIMALS))
-        ),
-        minBaseFutarchicLiquidity: new BN(minBaseFutarchicLiquidity).mul(
-          new BN(10).pow(new BN(tokenDecimals))
-        ),
-        passThresholdBps: null,
-        slotsPerProposal: null,
-      },
-      usdcMint
-    )
-      .postInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: MaxCUs.initializeDao,
-        }),
-        ComputeBudgetProgram.setComputeUnitPrice({
-          microLamports: DEFAULT_CU_PRICE,
-        }),
-      ])
-      .rpc({ maxRetries: 5 });
+  //   await this.initializeDaoIx({
+  //     daoKeypair,
+  //     baseMint: tokenMint,
+  //     params: {
+  //       twapStartDelaySlots,
+  //       twapInitialObservation: scaledPrice,
+  //       twapMaxObservationChangePerUpdate: scaledPrice.divn(50),
+  //       minQuoteFutarchicLiquidity: new BN(minQuoteFutarchicLiquidity).mul(
+  //         new BN(10).pow(new BN(USDC_DECIMALS))
+  //       ),
+  //       minBaseFutarchicLiquidity: new BN(minBaseFutarchicLiquidity).mul(
+  //         new BN(10).pow(new BN(tokenDecimals))
+  //       ),
+  //       passThresholdBps: null,
+  //       slotsPerProposal: null,
+  //     },
+  //     quoteMint: usdcMint,
+  //   })
+  //     .postInstructions([
+  //       ComputeBudgetProgram.setComputeUnitLimit({
+  //         units: MaxCUs.initializeDao,
+  //       }),
+  //       ComputeBudgetProgram.setComputeUnitPrice({
+  //         microLamports: DEFAULT_CU_PRICE,
+  //       }),
+  //     ])
+  //     .rpc({ maxRetries: 5 });
 
-    return daoKeypair.publicKey;
-  }
+  //   return daoKeypair.publicKey;
+  // }
 
-  initializeDaoIx(
-    daoKeypair: Keypair,
-    baseMint: PublicKey,
-    params: InitializeDaoParams,
-    quoteMint: PublicKey = MAINNET_USDC
-  ) {
-    return this.autocrat.methods
-      .initializeDao(params)
-      .accounts({
-        dao: daoKeypair.publicKey,
-        baseMint,
-        quoteMint,
-      })
-      .signers([daoKeypair]);
+  initializeDaoIx({
+    baseMint,
+    params,
+    quoteMint = MAINNET_USDC,
+  }: {
+    baseMint: PublicKey;
+    params: InitializeDaoParams;
+    quoteMint?: PublicKey;
+  }) {
+    console.log(this.autocrat);
+    const [dao] = getDaoAddr(this.autocrat.programId, params.nonce);
+
+    return this.autocrat.methods.initializeDao(params).accounts({
+      dao,
+      baseMint,
+      quoteMint,
+    });
   }
 
   async initializeProposal(

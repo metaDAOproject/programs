@@ -1,6 +1,6 @@
 import conditionalVault from "./conditionalVault/main.test.js";
 import amm from "./amm/main.test.js";
-import autocrat from "./autocrat/autocrat.js";
+import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 import sharedLiquidityManager from "./sharedLiquidityManager/main.test.js";
 

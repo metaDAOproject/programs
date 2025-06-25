@@ -106,6 +106,16 @@ export const getMetadataAddr = (mint: PublicKey) => {
   );
 };
 
+export const getDaoAddr = (
+  programId: PublicKey,
+  nonce: BN
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("dao"), nonce.toArrayLike(Buffer, "le", 8)],
+    programId
+  );
+};
+
 export const getDaoTreasuryAddr = (
   programId: PublicKey,
   dao: PublicKey
