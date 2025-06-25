@@ -542,7 +542,21 @@ export class SharedLiquidityManagerClient {
         dao,
         autocratProgram: AUTOCRAT_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-      });
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.wallet.publicKey,
+          getAssociatedTokenAddressSync(passLpMint, daoTreasury, true),
+          daoTreasury,
+          passLpMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.wallet.publicKey,
+          getAssociatedTokenAddressSync(failLpMint, daoTreasury, true),
+          daoTreasury,
+          failLpMint
+        ),
+      ]);
   }
 
   initializeDraftProposalIx(

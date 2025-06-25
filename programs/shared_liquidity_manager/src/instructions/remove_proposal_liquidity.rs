@@ -34,7 +34,7 @@ pub struct RaydiumAccounts2<'info> {
         seeds = [
             b"spot_pool",
             sl_pool.key().as_ref(),
-            &1_u32.to_le_bytes()
+            &(sl_pool.active_spot_pool_index + 1).to_le_bytes()
         ],
         bump,
     )]
@@ -610,7 +610,7 @@ impl RemoveProposalLiquidity<'_> {
         )?;
 
         ctx.accounts.sl_pool.active_spot_pool = ctx.accounts.ray.next_spot_pool.key();
-        ctx.accounts.sl_pool.active_spot_pool_index = 1;
+        ctx.accounts.sl_pool.active_spot_pool_index += 1;
         ctx.accounts.sl_pool.sl_pool_spot_lp_vault = ctx.accounts.ray.sl_pool_next_spot_lp_vault.key();
         ctx.accounts.sl_pool.active_proposal = None;
 

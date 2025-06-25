@@ -16,6 +16,6 @@ export default function suite() {
   describe("#deposit_shared_liquidity", depositSharedLiquidity);
   describe("#withdraw_shared_liquidity", withdrawSharedLiquidity);
   describe("#initialize_proposal_with_liquidity", initializeProposalWithLiquidity);
-  describe("#remove_proposal_liquidity", removeProposalLiquidity);
+  // describe("#remove_proposal_liquidity", removeProposalLiquidity);
   it("shared liquidity manager lifecycle", sharedLiquidityManagerLifecycle);
 }

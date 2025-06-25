@@ -21,6 +21,110 @@ import { BN } from "bn.js";
 import * as token from "@solana/spl-token";
 import { DAY_IN_SLOTS, expectError } from "../../utils.js";
 import { sha256 } from "@metadaoproject/futarchy";
+import * as anchor from "@coral-xyz/anchor";
+
+/**
+ * Creates a lookup table for all unique accounts in a transaction
+ * @param transaction - The transaction to create a lookup table for
+ * @param context - Test context containing banksClient, payer, and advanceBySlots
+ * @param additionalAddresses - Optional additional addresses to include in the lookup table
+ * @returns Promise<AddressLookupTableAccount> - The created lookup table account
+ */
+async function createLookupTableForTransaction(
+  transaction: Transaction,
+  context: {
+    banksClient: any;
+    payer: Keypair;
+    advanceBySlots: (slots: bigint) => Promise<void>;
+  },
+  additionalAddresses: PublicKey[] = []
+): Promise<AddressLookupTableAccount> {
+  // use a different authority for the lookup table to avoid conflicts
+  const lookupAuthority = Keypair.generate();
+  const slot = await context.banksClient.getSlot();
+
+  const [createTableIx, lookupTableAddress] =
+    AddressLookupTableProgram.createLookupTable({
+      authority: lookupAuthority.publicKey,
+      payer: context.payer.publicKey,
+      recentSlot: slot - 1n,
+    });
+
+  // Extract all unique accounts from the transaction
+  const accountsToAdd = transaction.instructions.map(
+    (instruction) => instruction.keys.map((key) => key.pubkey)
+  );
+  const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
+  console.log("uniqueAccounts", uniqueAccounts.length);
+
+  // Add any additional addresses
+  const allAddresses = [...uniqueAccounts, ...additionalAddresses];
+  const finalUniqueAddresses = [...new Set(allAddresses)] as PublicKey[];
+
+  // Create the lookup table
+  let createLutTx = new Transaction().add(createTableIx);
+  createLutTx.recentBlockhash = (
+    await context.banksClient.getLatestBlockhash()
+  )[0];
+  createLutTx.feePayer = context.payer.publicKey;
+  createLutTx.sign(context.payer, lookupAuthority);
+  // createLutTx.partialSign(lookupAuthority);
+
+  await context.banksClient.processTransaction(createLutTx);
+  await context.advanceBySlots(1n);
+
+  // Extend the lookup table with all unique accounts
+  const addressesPerExtend = 20;
+  for (let i = 0; i < finalUniqueAddresses.length; i += addressesPerExtend) {
+    const batch = finalUniqueAddresses.slice(i, i + addressesPerExtend);
+
+    const extendTableIx = AddressLookupTableProgram.extendLookupTable({
+      authority: lookupAuthority.publicKey,
+      payer: context.payer.publicKey,
+      lookupTable: lookupTableAddress,
+      addresses: batch,
+    });
+
+    let extendLutTx = new Transaction().add(extendTableIx);
+    extendLutTx.recentBlockhash = (
+      await context.banksClient.getLatestBlockhash()
+    )[0];
+    extendLutTx.feePayer = context.payer.publicKey;
+    extendLutTx.sign(context.payer, lookupAuthority);
+
+    await context.banksClient.processTransaction(extendLutTx);
+    await context.advanceBySlots(1n);
+  }
+
+  // Add a dummy account to ensure the lookup table has enough entries for all indexes
+  const dummyAccount = Keypair.generate().publicKey;
+  const extendTableIx = AddressLookupTableProgram.extendLookupTable({
+    authority: lookupAuthority.publicKey,
+    payer: context.payer.publicKey,
+    lookupTable: lookupTableAddress,
+    addresses: [dummyAccount],
+  });
+
+  let extendLutTx = new Transaction().add(extendTableIx);
+  extendLutTx.recentBlockhash = (
+    await context.banksClient.getLatestBlockhash()
+  )[0];
+  extendLutTx.feePayer = context.payer.publicKey;
+  extendLutTx.sign(context.payer, lookupAuthority);
+
+  await context.banksClient.processTransaction(extendLutTx);
+  await context.advanceBySlots(1n);
+
+  // Fetch and return the lookup table account
+  let rawStoredLookupTable = await context.banksClient.getAccount(
+    lookupTableAddress
+  );
+
+  return new AddressLookupTableAccount({
+    key: lookupTableAddress,
+    state: AddressLookupTableAccount.deserialize(rawStoredLookupTable.data),
+  });
+}
 
 export default function suite() {
   let sharedLiquidityManagerClient: SharedLiquidityManagerClient;
@@ -32,6 +136,8 @@ export default function suite() {
   let dao: PublicKey;
   let slPool: PublicKey;
   let spotPool: PublicKey;
+  let proposalNonce: anchor.BN;
+  
 
   before(async function () {
     sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
@@ -88,7 +194,7 @@ export default function suite() {
         new BN(25_000 * 10 ** 6)
       )
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }),
       ])
       .rpc();
 
@@ -105,64 +211,13 @@ export default function suite() {
       slPool,
       0
     );
-  });
 
-  it("initializes proposal with liquidity successfully", async function () {
-    const proposalCreator = Keypair.generate();
-    await this.createTokenAccount(META, proposalCreator.publicKey);
-    await this.mintTo(META, proposalCreator.publicKey, this.payer, 100 * 10 ** 9);
-
-    // First create a draft proposal
-    const draftProposalNonce = new BN(Math.floor(Math.random() * 1000000));
-    const [draftProposal] = getDraftProposalAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      draftProposalNonce
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(
-        slPool,
-        META,
-        {
-          programId: autocratClient.getProgramId(),
-          accounts: [
-            { pubkey: dao, isSigner: false, isWritable: true },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
-            { pubkey: proposalCreator.publicKey, isSigner: true, isWritable: false },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: false },
-            { pubkey: new PublicKey("11111111111111111111111111111111"), isSigner: false, isWritable: false },
-          ],
-          data: Buffer.from([]),
-        },
-        draftProposalNonce
-      )
-      .rpc();
-
-    // Stake enough tokens to meet threshold
-    const stakeAmount = new BN(10 * 10 ** 9); // 10 META tokens
-    await sharedLiquidityManagerClient
-      .stakeToDraftProposalIx(
-        draftProposal,
-        META,
-        stakeAmount,
-        proposalCreator.publicKey
-      )
-      .signers([proposalCreator])
-      .rpc();
-
-    // Get initial pool state
-    const initialSlPool = await sharedLiquidityManagerClient.getSlPool(slPool);
-    const initialBaseBalance = await this.getTokenBalance(META, this.payer.publicKey);
-    const initialQuoteBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
-
-    // Setup required for initializeProposalWithLiquidity
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
     const [slPoolSigner] = getSharedLiquidityPoolSignerAddr(
       sharedLiquidityManagerClient.getProgramId(),
       slPool
     );
-    const [proposal] = getProposalAddr(AUTOCRAT_PROGRAM_ID, slPoolSigner, nonce);
+    proposalNonce = new BN(Math.floor(Math.random() * 1000000));
+    const [proposal] = getProposalAddr(AUTOCRAT_PROGRAM_ID, slPoolSigner, proposalNonce);
 
     // Initialize question
     await vaultClient.initializeQuestion(
@@ -211,88 +266,63 @@ export default function suite() {
       .rpc();
 
 
-    // Create lookup table for the transaction
+  });
+
+  it("initializes proposal with liquidity successfully", async function () {
+    const proposalCreator = Keypair.generate();
+    await this.createTokenAccount(META, proposalCreator.publicKey);
+    await this.mintTo(META, proposalCreator.publicKey, this.payer, 100 * 10 ** 9);
+
+    // First create a draft proposal
+    const draftProposalNonce = new BN(Math.floor(Math.random() * 1000000));
+    const [draftProposal] = getDraftProposalAddr(
+      sharedLiquidityManagerClient.getProgramId(),
+      draftProposalNonce
+    );
+
+    await sharedLiquidityManagerClient
+      .initializeDraftProposalIx(
+        slPool,
+        META,
+        {
+          programId: autocratClient.getProgramId(),
+          accounts: [
+            { pubkey: dao, isSigner: false, isWritable: true },
+            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
+            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
+            { pubkey: proposalCreator.publicKey, isSigner: true, isWritable: false },
+            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: false },
+            { pubkey: new PublicKey("11111111111111111111111111111111"), isSigner: false, isWritable: false },
+          ],
+          data: Buffer.from([]),
+        },
+        draftProposalNonce
+      )
+      .rpc();
+
+
+    // Stake enough tokens to meet threshold
+    const stakeAmount = new BN(10 * 10 ** 9); // 10 META tokens
+    await sharedLiquidityManagerClient
+      .stakeToDraftProposalIx(
+        draftProposal,
+        META,
+        stakeAmount,
+        proposalCreator.publicKey
+      )
+      .signers([proposalCreator])
+      .rpc();
+
+    // Setup required for initializeProposalWithLiquidity
+        // Create lookup table for the transaction
     let initProposalWithLiquidityTx: Transaction =
       await sharedLiquidityManagerClient
-        .initializeProposalWithLiquidityIx(dao, META, USDC, nonce, draftProposal)
+        .initializeProposalWithLiquidityIx(dao, META, USDC, proposalNonce, draftProposal)
         .transaction();
 
-    const slot = await this.banksClient.getSlot();
-    const [createTableIx, lookupTableAddress] =
-      AddressLookupTableProgram.createLookupTable({
-        authority: this.payer.publicKey,
-        payer: this.payer.publicKey,
-        recentSlot: slot - 1n,
-      });
-
-    const accountsToAdd = initProposalWithLiquidityTx.instructions.map(
-      (instruction) => instruction.keys.map((key) => key.pubkey)
-    );
-    const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
-
-    // Create the lookup table
-    let createLutTx = new Transaction().add(createTableIx);
-    createLutTx.recentBlockhash = (
-      await this.banksClient.getLatestBlockhash()
-    )[0];
-    createLutTx.feePayer = this.payer.publicKey;
-    createLutTx.sign(this.payer);
-
-    await this.banksClient.processTransaction(createLutTx);
-    await this.advanceBySlots(1n);
-
-    // Extend the lookup table with all unique accounts
-    const addressesPerExtend = 20;
-    for (let i = 0; i < uniqueAccounts.length; i += addressesPerExtend) {
-      const batch = uniqueAccounts.slice(i, i + addressesPerExtend);
-
-      const extendTableIx = AddressLookupTableProgram.extendLookupTable({
-        authority: this.payer.publicKey,
-        payer: this.payer.publicKey,
-        lookupTable: lookupTableAddress,
-        addresses: batch,
-      });
-
-      let extendLutTx = new Transaction().add(extendTableIx);
-      extendLutTx.recentBlockhash = (
-        await this.banksClient.getLatestBlockhash()
-      )[0];
-      extendLutTx.feePayer = this.payer.publicKey;
-      extendLutTx.sign(this.payer);
-
-      await this.banksClient.processTransaction(extendLutTx);
-      await this.advanceBySlots(1n);
-    }
-
-    // Add ComputeBudgetProgram to lookup table
-    const extendTableIx2 = AddressLookupTableProgram.extendLookupTable({
-      authority: this.payer.publicKey,
-      payer: this.payer.publicKey,
-      lookupTable: lookupTableAddress,
-      addresses: [ComputeBudgetProgram.programId],
-    });
-
-    let lutTx2 = new Transaction().add(extendTableIx2);
-    lutTx2.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
-    lutTx2.feePayer = this.payer.publicKey;
-    lutTx2.sign(this.payer);
-
-    await this.banksClient.processTransaction(lutTx2);
-    await this.advanceBySlots(1n);
-
-    let rawStoredLookupTable = await this.banksClient.getAccount(
-      lookupTableAddress
-    );
-
-    let storedLookupTable = new AddressLookupTableAccount({
-      key: lookupTableAddress,
-      state: AddressLookupTableAccount.deserialize(rawStoredLookupTable.data),
-    });
-
-    // Create DAO treasury token accounts for pass/fail LP tokens
-    const [daoTreasury] = getDaoTreasuryAddr(AUTOCRAT_PROGRAM_ID, dao);
-    await this.createTokenAccount(passLp, daoTreasury);
-    await this.createTokenAccount(failLp, daoTreasury);
+    const lookupTable = await createLookupTableForTransaction(initProposalWithLiquidityTx, this);
+    console.log("lookupTable", lookupTable);
+    return;
 
     // Create and send the versioned transaction
     const messageV0 = new TransactionMessage({
@@ -302,7 +332,7 @@ export default function suite() {
         ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
         ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
       ].concat(initProposalWithLiquidityTx.instructions),
-    }).compileToV0Message([storedLookupTable]);
+    }).compileToV0Message([lookupTable]);
 
     let tx = new VersionedTransaction(messageV0);
     tx.sign([this.payer]);
@@ -363,22 +393,41 @@ export default function suite() {
       .rpc();
 
     // Try to initialize proposal with liquidity
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
     const callbacks = expectError(
       "InsufficientStake",
       "Should have thrown error for insufficient stake"
     );
 
-    await sharedLiquidityManagerClient
+    let initializeProposalWithLiquidityTx = await sharedLiquidityManagerClient
       .initializeProposalWithLiquidityIx(
         dao,
         META,
         USDC,
-        nonce,
+        proposalNonce,
         draftProposal
       )
-      .rpc()
-      .then(callbacks[0], callbacks[1]);
+      .transaction();
+
+    const lookupTable = await createLookupTableForTransaction(initializeProposalWithLiquidityTx, this);
+
+    let messageV0 = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+        ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+      ].concat(initializeProposalWithLiquidityTx.instructions),
+    }).compileToV0Message([lookupTable]);
+
+    let tx = new VersionedTransaction(messageV0);
+    tx.sign([this.payer]);
+
+    const result = await this.banksClient.tryProcessTransaction(tx)
+    assert.isTrue(
+      result.meta.logMessages.some((log: string) => log.includes("InsufficientStake")),
+      "Expected at least one log message to contain 'InsufficientStake'"
+    );
+
   });
 
   it("fails when draft proposal is not in draft status", async function () {

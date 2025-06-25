@@ -164,7 +164,7 @@ impl InitializeProposalWithLiquidity<'_> {
         let stake_threshold = (total_supply
             * self.shared_liquidity_pool.proposal_stake_rate_threshold_bps as u64)
             / 10_000;
-        require_gte!(self.draft_proposal.staked_token_amount, stake_threshold);
+        require_gte!(self.draft_proposal.staked_token_amount, stake_threshold, SharedLiquidityManagerError::InsufficientStake);
 
         require_eq!(self.draft_proposal.status, DraftProposalStatus::Draft);
 
