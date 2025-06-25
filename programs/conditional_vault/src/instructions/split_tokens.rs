@@ -57,6 +57,8 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
             )?;
         }
 
+        ctx.accounts.user_underlying_token_account.reload()?;
+
         ctx.accounts.vault_underlying_token_account.reload()?;
         require_eq!(
             ctx.accounts.vault_underlying_token_account.amount,
