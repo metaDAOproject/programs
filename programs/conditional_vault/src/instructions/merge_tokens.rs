@@ -2,10 +2,6 @@ use super::*;
 
 impl<'info, 'c: 'info> InteractWithVault<'info> {
     pub fn handle_merge_tokens(ctx: Context<'_, '_, 'c, 'info, Self>, amount: u64) -> Result<()> {
-        require!(
-            !ctx.accounts.question.is_resolved(),
-            VaultError::QuestionAlreadyResolved
-        );
         
         let accs = &ctx.accounts;
 
