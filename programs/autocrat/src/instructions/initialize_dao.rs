@@ -36,6 +36,9 @@ pub struct InitializeDao<'info> {
     /// CHECK: initialized by squads
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig: UncheckedAccount<'info>,
+    /// CHECK: just a signer
+    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
+    pub squads_multisig_vault: UncheckedAccount<'info>,
     pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_PROGRAM_CONFIG], bump, seeds::program = squads_program)]
     pub squads_program_config: Account<'info, squads_multisig_program::state::ProgramConfig>,
@@ -65,8 +68,6 @@ impl InitializeDao<'_> {
 
         let dao = &mut ctx.accounts.dao;
 
-        let (treasury, treasury_pda_bump) =
-            Pubkey::find_program_address(&[dao.key().as_ref()], ctx.program_id);
 
         let slots_per_proposal = slots_per_proposal.unwrap_or(THREE_DAYS_IN_SLOTS);
 
@@ -111,12 +112,11 @@ impl InitializeDao<'_> {
 
         dao.set_inner(Dao {
             nonce,
-            dao_pda_bump: ctx.bumps.dao,
-            squads_treasury: ctx.accounts.squads_multisig.key(),
+            pda_bump: ctx.bumps.dao,
+            squads_multisig: ctx.accounts.squads_multisig.key(),
+            squads_multisig_vault: ctx.accounts.squads_multisig_vault.key(),
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),
-            treasury_pda_bump,
-            treasury,
             proposal_count: 0,
             pass_threshold_bps: pass_threshold_bps.unwrap_or(DEFAULT_PASS_THRESHOLD_BPS),
             slots_per_proposal,
@@ -134,7 +134,6 @@ impl InitializeDao<'_> {
             dao: dao.key(),
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),
-            treasury,
             pass_threshold_bps: dao.pass_threshold_bps,
             slots_per_proposal: dao.slots_per_proposal,
             twap_initial_observation: dao.twap_initial_observation,

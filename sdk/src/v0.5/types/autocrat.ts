@@ -36,6 +36,11 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "squadsProgram";
           isMut: false;
           isSigner: false;
@@ -76,6 +81,11 @@ export type Autocrat = {
         {
           name: "proposal";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -192,6 +202,21 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "passAmm";
           isMut: false;
           isSigner: false;
@@ -203,7 +228,7 @@ export type Autocrat = {
         },
         {
           name: "dao";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -260,32 +285,6 @@ export type Autocrat = {
       args: [];
     },
     {
-      name: "executeProposal";
-      accounts: [
-        {
-          name: "proposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
       name: "updateDao";
       accounts: [
         {
@@ -294,7 +293,7 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "treasury";
+          name: "squadsMultisigVault";
           isMut: false;
           isSigner: true;
         },
@@ -330,19 +329,15 @@ export type Autocrat = {
             type: "u64";
           },
           {
-            name: "daoPdaBump";
+            name: "pdaBump";
             type: "u8";
           },
           {
-            name: "squadsTreasury";
+            name: "squadsMultisig";
             type: "publicKey";
           },
           {
-            name: "treasuryPdaBump";
-            type: "u8";
-          },
-          {
-            name: "treasury";
+            name: "squadsMultisigVault";
             type: "publicKey";
           },
           {
@@ -447,12 +442,6 @@ export type Autocrat = {
             };
           },
           {
-            name: "instruction";
-            type: {
-              defined: "ProposalInstruction";
-            };
-          },
-          {
             name: "passAmm";
             type: "publicKey";
           },
@@ -501,6 +490,10 @@ export type Autocrat = {
           {
             name: "durationInSlots";
             type: "u64";
+          },
+          {
+            name: "squadsProposal";
+            type: "publicKey";
           }
         ];
       };
@@ -577,12 +570,6 @@ export type Autocrat = {
             type: "string";
           },
           {
-            name: "instruction";
-            type: {
-              defined: "ProposalInstruction";
-            };
-          },
-          {
             name: "passLpTokensToLock";
             type: "u64";
           },
@@ -642,50 +629,6 @@ export type Autocrat = {
       };
     },
     {
-      name: "ProposalAccount";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "pubkey";
-            type: "publicKey";
-          },
-          {
-            name: "isSigner";
-            type: "bool";
-          },
-          {
-            name: "isWritable";
-            type: "bool";
-          }
-        ];
-      };
-    },
-    {
-      name: "ProposalInstruction";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "programId";
-            type: "publicKey";
-          },
-          {
-            name: "accounts";
-            type: {
-              vec: {
-                defined: "ProposalAccount";
-              };
-            };
-          },
-          {
-            name: "data";
-            type: "bytes";
-          }
-        ];
-      };
-    },
-    {
       name: "ProposalState";
       type: {
         kind: "enum";
@@ -729,11 +672,6 @@ export type Autocrat = {
         },
         {
           name: "quoteMint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "treasury";
           type: "publicKey";
           index: false;
         },
@@ -899,13 +837,6 @@ export type Autocrat = {
         {
           name: "pdaBump";
           type: "u8";
-          index: false;
-        },
-        {
-          name: "instruction";
-          type: {
-            defined: "ProposalInstruction";
-          };
           index: false;
         },
         {
@@ -1094,6 +1025,11 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "squadsProgram",
           isMut: false,
           isSigner: false,
@@ -1134,6 +1070,11 @@ export const IDL: Autocrat = {
         {
           name: "proposal",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1250,6 +1191,21 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "passAmm",
           isMut: false,
           isSigner: false,
@@ -1261,7 +1217,7 @@ export const IDL: Autocrat = {
         },
         {
           name: "dao",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1318,32 +1274,6 @@ export const IDL: Autocrat = {
       args: [],
     },
     {
-      name: "executeProposal",
-      accounts: [
-        {
-          name: "proposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "updateDao",
       accounts: [
         {
@@ -1352,7 +1282,7 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "treasury",
+          name: "squadsMultisigVault",
           isMut: false,
           isSigner: true,
         },
@@ -1388,19 +1318,15 @@ export const IDL: Autocrat = {
             type: "u64",
           },
           {
-            name: "daoPdaBump",
+            name: "pdaBump",
             type: "u8",
           },
           {
-            name: "squadsTreasury",
+            name: "squadsMultisig",
             type: "publicKey",
           },
           {
-            name: "treasuryPdaBump",
-            type: "u8",
-          },
-          {
-            name: "treasury",
+            name: "squadsMultisigVault",
             type: "publicKey",
           },
           {
@@ -1505,12 +1431,6 @@ export const IDL: Autocrat = {
             },
           },
           {
-            name: "instruction",
-            type: {
-              defined: "ProposalInstruction",
-            },
-          },
-          {
             name: "passAmm",
             type: "publicKey",
           },
@@ -1559,6 +1479,10 @@ export const IDL: Autocrat = {
           {
             name: "durationInSlots",
             type: "u64",
+          },
+          {
+            name: "squadsProposal",
+            type: "publicKey",
           },
         ],
       },
@@ -1635,12 +1559,6 @@ export const IDL: Autocrat = {
             type: "string",
           },
           {
-            name: "instruction",
-            type: {
-              defined: "ProposalInstruction",
-            },
-          },
-          {
             name: "passLpTokensToLock",
             type: "u64",
           },
@@ -1700,50 +1618,6 @@ export const IDL: Autocrat = {
       },
     },
     {
-      name: "ProposalAccount",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "pubkey",
-            type: "publicKey",
-          },
-          {
-            name: "isSigner",
-            type: "bool",
-          },
-          {
-            name: "isWritable",
-            type: "bool",
-          },
-        ],
-      },
-    },
-    {
-      name: "ProposalInstruction",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "programId",
-            type: "publicKey",
-          },
-          {
-            name: "accounts",
-            type: {
-              vec: {
-                defined: "ProposalAccount",
-              },
-            },
-          },
-          {
-            name: "data",
-            type: "bytes",
-          },
-        ],
-      },
-    },
-    {
       name: "ProposalState",
       type: {
         kind: "enum",
@@ -1787,11 +1661,6 @@ export const IDL: Autocrat = {
         },
         {
           name: "quoteMint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "treasury",
           type: "publicKey",
           index: false,
         },
@@ -1957,13 +1826,6 @@ export const IDL: Autocrat = {
         {
           name: "pdaBump",
           type: "u8",
-          index: false,
-        },
-        {
-          name: "instruction",
-          type: {
-            defined: "ProposalInstruction",
-          },
           index: false,
         },
         {

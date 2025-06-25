@@ -13,9 +13,9 @@ pub struct UpdateDaoParams {
 #[derive(Accounts)]
 #[event_cpi]
 pub struct UpdateDao<'info> {
-    #[account(mut, has_one = treasury)]
+    #[account(mut, has_one = squads_multisig_vault)]
     pub dao: Account<'info, Dao>,
-    pub treasury: Signer<'info>,
+    pub squads_multisig_vault: Signer<'info>,
 }
 
 impl UpdateDao<'_> {

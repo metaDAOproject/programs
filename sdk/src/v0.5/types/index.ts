@@ -34,8 +34,6 @@ export type ConditionalVault =
 export type InitializeDaoParams =
   IdlTypes<AutocratProgram>["InitializeDaoParams"];
 export type UpdateDaoParams = IdlTypes<AutocratProgram>["UpdateDaoParams"];
-export type ProposalInstruction =
-  IdlTypes<AutocratProgram>["ProposalInstruction"];
 
 export type Dao = IdlAccounts<AutocratProgram>["dao"];
 export type Proposal = IdlAccounts<AutocratProgram>["proposal"];

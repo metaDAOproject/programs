@@ -10,10 +10,18 @@ pub struct FinalizeProposal<'info> {
         has_one = pass_amm,
         has_one = fail_amm,
         has_one = dao,
+        has_one = squads_proposal,
     )]
     pub proposal: Account<'info, Proposal>,
+    /// CHECK: checked by the has_one
+    #[account(mut)]
+    pub squads_proposal: UncheckedAccount<'info>,
+    pub squads_multisig_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
+    /// CHECK: checked by the has_one
+    pub squads_multisig: UncheckedAccount<'info>,
     pub pass_amm: Account<'info, Amm>,
     pub fail_amm: Account<'info, Amm>,
+    #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut)]
     pub question: Account<'info, Question>,
@@ -67,6 +75,9 @@ impl FinalizeProposal<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let FinalizeProposal {
             proposal,
+            squads_proposal,
+            squads_multisig_program,
+            squads_multisig,
             pass_amm,
             fail_amm,
             dao,
@@ -163,6 +174,25 @@ impl FinalizeProposal<'_> {
             cpi_ctx,
             ResolveQuestionArgs { payout_numerators },
         )?;
+
+        let dao_nonce = &dao.nonce.to_le_bytes();
+        let dao_seeds = &[b"dao".as_ref(), dao_nonce, &[dao.pda_bump]];
+        let dao_signer = &[&dao_seeds[..]];
+
+        if new_proposal_state == ProposalState::Passed {
+            squads_multisig_program::cpi::proposal_approve(
+                CpiContext::new_with_signer(
+                    squads_multisig_program.to_account_info(),
+                    squads_multisig_program::cpi::accounts::ProposalVote {
+                        proposal: squads_proposal.to_account_info(),
+                        multisig: squads_multisig.to_account_info(),
+                        member: dao.to_account_info(),
+                    },
+                    dao_signer,
+                ),
+                squads_multisig_program::ProposalVoteArgs { memo: None },
+            )?;
+        }
 
         let clock = Clock::get()?;
 

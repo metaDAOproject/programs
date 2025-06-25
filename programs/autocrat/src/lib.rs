@@ -24,13 +24,10 @@
 //! - Executed: if a proposal passes, anyone can make autocrat execute its SVM
 //!   instruction by calling `execute_proposal`.
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
-// use conditional_vault::cpi::accounts::SettleConditionalVault;
 use conditional_vault::program::ConditionalVault as ConditionalVaultProgram;
 use conditional_vault::ConditionalVault as ConditionalVaultAccount;
 use conditional_vault::Question;
-// use conditional_vault::VaultStatus;
 
 pub mod error;
 pub mod events;
@@ -44,10 +41,8 @@ pub use state::*;
 
 use amm::state::Amm;
 
-use solana_program::instruction::Instruction;
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
-use std::borrow::Borrow;
 
 #[cfg(not(feature = "no-entrypoint"))]
 security_txt! {
@@ -101,11 +96,6 @@ pub mod autocrat {
     #[access_control(ctx.accounts.validate())]
     pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
         FinalizeProposal::handle(ctx)
-    }
-
-    #[access_control(ctx.accounts.validate())]
-    pub fn execute_proposal(ctx: Context<ExecuteProposal>) -> Result<()> {
-        ExecuteProposal::handle(ctx)
     }
 
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {

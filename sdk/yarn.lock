@@ -855,7 +855,7 @@
     "@wallet-standard/base" "^1.0.1"
     "@wallet-standard/features" "^1.0.3"
 
-"@solana/web3.js@^1.32.0", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.74.0":
+"@solana/web3.js@^1.32.0", "@solana/web3.js@^1.68.0":
   version "1.90.1"
   resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.90.1.tgz#1cebb50dd770a8bbec9b4d9b55515b51b2bef694"
   integrity sha512-BaopDf3TN54N9/T1iILu+Fz2gthIZzi+6X2A7bb0FWvGlwI/78iKRb2WjSnCfrHmMbWVLJR5n/pmXteezMXgVw==
@@ -897,7 +897,7 @@
     rpc-websockets "^9.0.2"
     superstruct "^2.0.2"
 
-"@solana/web3.js@^1.56.2", "@solana/web3.js@^1.70.3":
+"@solana/web3.js@^1.56.2", "@solana/web3.js@^1.70.3", "@solana/web3.js@^1.90.0":
   version "1.98.2"
   resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.98.2.tgz#45167a5cfb64436944bf4dc1e8be8482bd6d4c14"
   integrity sha512-BqVwEG+TaG2yCkBMbD3C4hdpustR4FpuUFRPUmqRZYYlPI9Hg4XMWxHWOWRzHE9Lkc9NDjzXFX7lDXSgzC7R1A==

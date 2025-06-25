@@ -51,7 +51,6 @@ import {
   getSlPoolPositionAddr,
 } from "./utils/pda.js";
 import { AutocratClient } from "./AutocratClient.js";
-import { ProposalInstruction } from "./types/index.js";
 
 export type CreateSharedLiquidityManagerClientParams = {
   provider: AnchorProvider;
@@ -554,7 +553,7 @@ export class SharedLiquidityManagerClient {
   initializeDraftProposalIx(
     sharedLiquidityPool: PublicKey,
     baseMint: PublicKey,
-    instruction: ProposalInstruction,
+    instruction: any,
     draftProposalNonce: BN = new BN(Math.floor(Math.random() * 1000000))
   ) {
     let [draftProposal] = getDraftProposalAddr(
