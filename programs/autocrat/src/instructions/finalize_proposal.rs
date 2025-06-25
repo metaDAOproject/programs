@@ -55,7 +55,7 @@ impl FinalizeProposal<'_> {
         let clock = Clock::get()?;
 
         require!(
-            clock.slot >= self.proposal.slot_enqueued + self.dao.slots_per_proposal,
+            clock.slot >= self.proposal.slot_enqueued + self.proposal.duration_in_slots,
             AutocratError::ProposalTooYoung
         );
 
