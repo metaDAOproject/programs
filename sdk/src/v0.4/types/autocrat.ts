@@ -8,7 +8,7 @@ export type Autocrat = {
         {
           name: "dao";
           isMut: true;
-          isSigner: true;
+          isSigner: false;
         },
         {
           name: "payer";
@@ -188,7 +188,7 @@ export type Autocrat = {
         },
         {
           name: "dao";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -233,6 +233,21 @@ export type Autocrat = {
         },
         {
           name: "vaultEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
           isMut: false;
           isSigner: false;
         },
@@ -369,6 +384,15 @@ export type Autocrat = {
             type: "u64";
           },
           {
+            name: "nonce";
+            docs: ["Nonce of the DAO, used to create a unique PDA for the DAO"];
+            type: "u64";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
             name: "squadsMultisig";
             type: "publicKey";
           }
@@ -451,6 +475,22 @@ export type Autocrat = {
           {
             name: "durationInSlots";
             type: "u64";
+          },
+          {
+            name: "squadsProposal";
+            type: "publicKey";
+          },
+          {
+            name: "finalPassTwap";
+            type: {
+              option: "u128";
+            };
+          },
+          {
+            name: "finalFailTwap";
+            type: {
+              option: "u128";
+            };
           }
         ];
       };
@@ -509,6 +549,10 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
+          },
+          {
+            name: "nonce";
+            type: "u64";
           }
         ];
       };
@@ -999,7 +1043,7 @@ export const IDL: Autocrat = {
         {
           name: "dao",
           isMut: true,
-          isSigner: true,
+          isSigner: false,
         },
         {
           name: "payer",
@@ -1179,7 +1223,7 @@ export const IDL: Autocrat = {
         },
         {
           name: "dao",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1224,6 +1268,21 @@ export const IDL: Autocrat = {
         },
         {
           name: "vaultEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
           isMut: false,
           isSigner: false,
         },
@@ -1360,6 +1419,15 @@ export const IDL: Autocrat = {
             type: "u64",
           },
           {
+            name: "nonce",
+            docs: ["Nonce of the DAO, used to create a unique PDA for the DAO"],
+            type: "u64",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
             name: "squadsMultisig",
             type: "publicKey",
           },
@@ -1443,6 +1511,22 @@ export const IDL: Autocrat = {
             name: "durationInSlots",
             type: "u64",
           },
+          {
+            name: "squadsProposal",
+            type: "publicKey",
+          },
+          {
+            name: "finalPassTwap",
+            type: {
+              option: "u128",
+            },
+          },
+          {
+            name: "finalFailTwap",
+            type: {
+              option: "u128",
+            },
+          },
         ],
       },
     },
@@ -1500,6 +1584,10 @@ export const IDL: Autocrat = {
             type: {
               option: "u64",
             },
+          },
+          {
+            name: "nonce",
+            type: "u64",
           },
         ],
       },

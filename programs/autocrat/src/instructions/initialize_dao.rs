@@ -11,13 +11,17 @@ pub struct InitializeDaoParams {
     pub min_base_futarchic_liquidity: u64,
     pub pass_threshold_bps: Option<u16>,
     pub slots_per_proposal: Option<u64>,
+    pub nonce: u64,
 }
 
 #[derive(Accounts)]
 #[event_cpi]
+#[instruction(args: InitializeDaoParams)]
 pub struct InitializeDao<'info> {
     #[account(
         init,
+        seeds = [b"dao", args.nonce.to_le_bytes().as_ref()],
+        bump,
         payer = payer,
         space = 8 + Dao::INIT_SPACE,
     )]
@@ -29,7 +33,8 @@ pub struct InitializeDao<'info> {
     // todo: statically check that this is USDC given a feature flag
     #[account(mint::decimals = 6)]
     pub usdc_mint: Account<'info, Mint>,
-    pub multisig: Account<'info, Multisig>,
+    /// CHECK: fix this later
+    pub multisig: UncheckedAccount<'info>,
 }
 
 impl InitializeDao<'_> {
@@ -42,6 +47,7 @@ impl InitializeDao<'_> {
             min_quote_futarchic_liquidity,
             pass_threshold_bps,
             slots_per_proposal,
+            nonce,
         } = params;
 
         let dao = &mut ctx.accounts.dao;
@@ -71,6 +77,8 @@ impl InitializeDao<'_> {
             min_quote_futarchic_liquidity,
             seq_num: 0,
             squads_multisig: ctx.accounts.multisig.key(),
+            nonce,
+            pda_bump: ctx.bumps.dao,
         });
 
         let clock = Clock::get()?;

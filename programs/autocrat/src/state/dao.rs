@@ -39,5 +39,8 @@ pub struct Dao {
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
     pub seq_num: u64,
+    /// Nonce of the DAO, used to create a unique PDA for the DAO
+    pub nonce: u64,
+    pub pda_bump: u8,
     pub squads_multisig: Pubkey,
 }

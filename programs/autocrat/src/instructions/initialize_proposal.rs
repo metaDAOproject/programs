@@ -129,7 +129,7 @@ impl InitializeProposal<'_> {
 
     pub fn handle(ctx: Context<Self>, params: InitializeProposalParams) -> Result<()> {
         let Self {
-            squads_proposal: _,
+            squads_proposal,
             base_vault,
             quote_vault,
             question,
@@ -236,6 +236,9 @@ impl InitializeProposal<'_> {
             pda_bump: ctx.bumps.proposal,
             question: question.key(),
             duration_in_slots: dao.slots_per_proposal,
+            squads_proposal: squads_proposal.key(),
+            final_pass_twap: None,
+            final_fail_twap: None,
         });
 
         emit_cpi!(InitializeProposalEvent {

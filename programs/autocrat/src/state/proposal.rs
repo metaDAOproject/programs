@@ -52,6 +52,9 @@ pub struct Proposal {
     pub pda_bump: u8,
     pub question: Pubkey,
     pub duration_in_slots: u64,
+    pub squads_proposal: Pubkey,
+    pub final_pass_twap: Option<u128>,
+    pub final_fail_twap: Option<u128>,
 }
 
 impl From<&ProposalInstruction> for Instruction {

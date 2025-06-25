@@ -10,11 +10,12 @@ pub struct FinalizeProposal<'info> {
         has_one = pass_amm,
         has_one = fail_amm,
         has_one = dao,
+        has_one = squads_proposal,
     )]
     pub proposal: Account<'info, Proposal>,
     pub pass_amm: Account<'info, Amm>,
     pub fail_amm: Account<'info, Amm>,
-    #[account(has_one = treasury)]
+    #[account(mut, has_one = treasury, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut)]
     pub question: Account<'info, Question>,
@@ -48,6 +49,12 @@ pub struct FinalizeProposal<'info> {
     pub vault_program: Program<'info, ConditionalVaultProgram>,
     /// CHECK: checked by vault program
     pub vault_event_authority: UncheckedAccount<'info>,
+    /// CHECK: checked by squads multisig program
+    #[account(mut)]
+    pub squads_proposal: UncheckedAccount<'info>,
+    pub squads_multisig_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
+    /// CHECK: checked by squads multisig program
+    pub squads_multisig: UncheckedAccount<'info>,
 }
 
 impl FinalizeProposal<'_> {
@@ -84,6 +91,9 @@ impl FinalizeProposal<'_> {
             vault_event_authority,
             event_authority: _,
             program: _,
+            squads_proposal,
+            squads_multisig_program,
+            squads_multisig,
         } = ctx.accounts;
 
         let proposer_key = proposal.proposer;
@@ -158,6 +168,8 @@ impl FinalizeProposal<'_> {
         };
 
         proposal.state = new_proposal_state;
+        proposal.final_pass_twap = Some(pass_market_twap);
+        proposal.final_fail_twap = Some(fail_market_twap);
 
         let vault_program = vault_program.to_account_info();
         let cpi_accounts = ResolveQuestion {
@@ -171,6 +183,25 @@ impl FinalizeProposal<'_> {
             cpi_ctx,
             ResolveQuestionArgs { payout_numerators },
         )?;
+
+        let dao_nonce = &dao.nonce.to_le_bytes();
+        let dao_seeds = &[b"dao".as_ref(), dao_nonce, &[dao.pda_bump]];
+        let dao_signer = &[&dao_seeds[..]];
+
+        if new_proposal_state == ProposalState::Passed {
+            squads_multisig_program::cpi::proposal_approve(
+                CpiContext::new_with_signer(
+                    squads_multisig_program.to_account_info(),
+                    squads_multisig_program::cpi::accounts::ProposalVote {
+                        proposal: squads_proposal.to_account_info(),
+                        multisig: squads_multisig.to_account_info(),
+                        member: dao.to_account_info(),
+                    },
+                    dao_signer,
+                ),
+                squads_multisig_program::ProposalVoteArgs { memo: None },
+            )?;
+        }
 
         let clock = Clock::get()?;
 

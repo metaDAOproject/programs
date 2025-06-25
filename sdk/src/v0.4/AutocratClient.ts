@@ -25,6 +25,7 @@ import {
   AUTOCRAT_PROGRAM_ID,
   CONDITIONAL_VAULT_PROGRAM_ID,
   MAINNET_USDC,
+  SQUADS_PROGRAM_ID,
   USDC_DECIMALS,
 } from "./constants.js";
 import {
@@ -241,7 +242,7 @@ export class AutocratClient {
     minBaseFutarchicLiquidity: number,
     minQuoteFutarchicLiquidity: number,
     usdcMint: PublicKey = MAINNET_USDC,
-    daoKeypair: Keypair = Keypair.generate(),
+    dao: PublicKey,
     twapStartDelaySlots: BN
   ): Promise<PublicKey> {
     let tokenDecimals = unpackMint(
@@ -260,7 +261,7 @@ export class AutocratClient {
     // );
 
     await this.initializeDaoIx(
-      daoKeypair,
+      dao,
       tokenMint,
       {
         twapStartDelaySlots,
@@ -274,9 +275,10 @@ export class AutocratClient {
         ),
         passThresholdBps: null,
         slotsPerProposal: null,
+        nonce: new BN(Math.random() * 2 ** 50),
       },
       usdcMint,
-      daoKeypair.publicKey
+      dao
     )
       .postInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({
@@ -288,25 +290,22 @@ export class AutocratClient {
       ])
       .rpc({ maxRetries: 5 });
 
-    return daoKeypair.publicKey;
+    return dao;
   }
 
   initializeDaoIx(
-    daoKeypair: Keypair,
+    dao: PublicKey,
     tokenMint: PublicKey,
     params: InitializeDaoParams,
     usdcMint: PublicKey = MAINNET_USDC,
     multisig: PublicKey
   ) {
-    return this.autocrat.methods
-      .initializeDao(params)
-      .accounts({
-        dao: daoKeypair.publicKey,
-        tokenMint,
-        usdcMint,
-        multisig,
-      })
-      .signers([daoKeypair]);
+    return this.autocrat.methods.initializeDao(params).accounts({
+      dao,
+      tokenMint,
+      usdcMint,
+      multisig,
+    });
   }
 
   async initializeProposal(
@@ -659,7 +658,8 @@ export class AutocratClient {
 
     return this.finalizeProposalIx(
       proposal,
-      // storedProposal.instruction,
+      storedProposal.squadsProposal,
+      storedDao.squadsMultisig,
       storedProposal.dao,
       storedDao.tokenMint,
       storedDao.usdcMint,
@@ -669,7 +669,8 @@ export class AutocratClient {
 
   finalizeProposalIx(
     proposal: PublicKey,
-    // instruction: any,
+    squadsProposal: PublicKey,
+    squadsMultisig: PublicKey,
     dao: PublicKey,
     daoToken: PublicKey,
     usdc: PublicKey,
@@ -719,6 +720,9 @@ export class AutocratClient {
       vaultProgram: this.vaultClient.vaultProgram.programId,
       treasury: daoTreasury,
       vaultEventAuthority,
+      squadsProposal,
+      squadsMultisigProgram: SQUADS_PROGRAM_ID,
+      squadsMultisig,
     });
   }
 

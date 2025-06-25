@@ -839,6 +839,11 @@ export type SharedLiquidityManager = {
               isSigner: false;
             },
             {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
               name: "proposalPassLpVault";
               isMut: true;
               isSigner: false;
@@ -902,6 +907,11 @@ export type SharedLiquidityManager = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -2594,6 +2604,11 @@ export const IDL: SharedLiquidityManager = {
               isSigner: false,
             },
             {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
               name: "proposalPassLpVault",
               isMut: true,
               isSigner: false,
@@ -2657,6 +2672,11 @@ export const IDL: SharedLiquidityManager = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },

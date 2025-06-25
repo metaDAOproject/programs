@@ -197,6 +197,28 @@ export default function suite() {
 
     const configTreasury = storedProgramConfig.treasury;
 
+    let nonce = new BN(Math.random() * 2 ** 50);
+
+    let dao = PublicKey.findProgramAddressSync([Buffer.from("dao"), nonce.toArrayLike(Buffer, "le", 8)], this.autocratClient.getProgramId())[0];
+
+
+    await this.autocratClient.initializeDaoIx(
+      dao,
+      META,
+      {
+        twapInitialObservation: new BN(0),
+        twapMaxObservationChangePerUpdate: new BN(100 * 1e12),
+        twapStartDelaySlots: new BN(10000),
+        minQuoteFutarchicLiquidity: new BN(10),
+        minBaseFutarchicLiquidity: new BN(100),
+        passThresholdBps: 300,
+        slotsPerProposal: new BN(50000),
+        nonce,
+      },
+      USDC,
+      multisigPda
+    ).rpc();
+
     const multisigCreateV2Ix = multisig.instructions.multisigCreateV2({
       createKey: createKey.publicKey,
       creator: this.payer.publicKey,
@@ -206,7 +228,12 @@ export default function suite() {
       members: [{
         key: this.payer.publicKey,
         permissions: Permissions.all(),
-      }],
+      },
+      {
+        key: dao,
+        permissions: Permissions.fromPermissions([Permission.Vote]),
+      }
+    ],
       timeLock: 0,
       rentCollector: null,
       treasury: configTreasury,
@@ -218,24 +245,6 @@ export default function suite() {
     tx.sign(this.payer, createKey);
 
     await this.banksClient.processTransaction(tx);
-
-    let daoKeypair = Keypair.generate();
-
-    await this.autocratClient.initializeDaoIx(
-      daoKeypair,
-      META,
-      {
-        twapInitialObservation: new BN(1),
-        twapMaxObservationChangePerUpdate: new BN(1000),
-        twapStartDelaySlots: new BN(10000),
-        minQuoteFutarchicLiquidity: new BN(10),
-        minBaseFutarchicLiquidity: new BN(100),
-        passThresholdBps: 300,
-        slotsPerProposal: new BN(50000),
-      },
-      USDC,
-      multisigPda
-    ).rpc();
 
     const multisigAccountInfo = await this.banksClient.getAccount(multisigPda);
     const transformedMultisigAccountInfo = {
@@ -252,8 +261,6 @@ export default function suite() {
     });
 
     console.log(LOW_FEE_RAYDIUM_CONFIG);
-
-    return;
 
     const transferInstruction = SystemProgram.transfer({
       fromPubkey: vaultPda,
@@ -294,13 +301,57 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx2);
 
-    await this.autocratClient.initializeProposal(
-      daoKeypair.publicKey,
+    const proposal = await this.autocratClient.initializeProposal(
+      dao,
       "",
       squadsProposalPda,
       new BN(1_000_000_000),
       new BN(1_000_000_000),
     );
+
+    const { passAmm, failAmm, passBaseMint, passQuoteMint, question, baseVault, quoteVault } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+
+await this.vaultClient
+        .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
+        .rpc();
+      await this.vaultClient
+        .splitTokensIx(
+          question,
+          quoteVault,
+          USDC,
+          new BN(10_000 * 1_000_000),
+          2
+        )
+        .rpc();
+
+    // swap $500 in the pass market, make it pass
+      await this.ammClient
+        .swapIx(
+          passAmm,
+          passBaseMint,
+          passQuoteMint,
+          { buy: {} },
+          new BN(10000).muln(1_000_000),
+          new BN(0)
+        )
+        .rpc();
+
+    for (let i = 0; i < 100; i++) {
+        await advanceBySlots(this.context, 20_000n);
+
+        await this.ammClient
+          .crankThatTwapIx(passAmm)
+          .preInstructions([
+            // this is to get around bankrun thinking we've processed the same transaction multiple times
+            ComputeBudgetProgram.setComputeUnitPrice({
+              microLamports: i,
+            }),
+            await this.ammClient.crankThatTwapIx(failAmm).instruction(),
+          ])
+          .rpc();
+      }
+
+      await this.autocratClient.finalizeProposal(proposal);
 
 
 
