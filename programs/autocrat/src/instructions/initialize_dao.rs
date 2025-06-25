@@ -46,6 +46,13 @@ impl InitializeDao<'_> {
         let (treasury, treasury_pda_bump) =
             Pubkey::find_program_address(&[dao.key().as_ref()], ctx.program_id);
 
+        let slots_per_proposal = slots_per_proposal.unwrap_or(THREE_DAYS_IN_SLOTS);
+
+        require!(
+            slots_per_proposal > twap_start_delay_slots,
+            AutocratError::ProposalDurationTooShort
+        );
+
         dao.set_inner(Dao {
             token_mint: ctx.accounts.token_mint.key(),
             usdc_mint: ctx.accounts.usdc_mint.key(),
@@ -53,7 +60,7 @@ impl InitializeDao<'_> {
             treasury,
             proposal_count: 0,
             pass_threshold_bps: pass_threshold_bps.unwrap_or(DEFAULT_PASS_THRESHOLD_BPS),
-            slots_per_proposal: slots_per_proposal.unwrap_or(THREE_DAYS_IN_SLOTS),
+            slots_per_proposal,
             twap_initial_observation,
             twap_max_observation_change_per_update,
             twap_start_delay_slots,

@@ -236,6 +236,34 @@ export default function suite() {
     });
   });
 
+    it("doesn't allow DAOs with proposal duration less than TWAP start delay", async function () {
+      const callbacks = expectError(
+        "ProposalDurationTooShort",
+        "DAO initialized despite slots_per_proposal being less than twap_start_delay_slots"
+      );
+
+      const daoKeypair = Keypair.generate();
+      
+      await autocratClient
+        .initializeDaoIx(
+          daoKeypair,
+          META,
+          {
+            twapInitialObservation: new BN(1),
+            twapMaxObservationChangePerUpdate: new BN(1000),
+            twapStartDelaySlots: new BN(10000),
+            minQuoteFutarchicLiquidity: new BN(5),
+            minBaseFutarchicLiquidity: new BN(5000),
+            passThresholdBps: 300,
+            slotsPerProposal: new BN(5000),
+          },
+          USDC
+        )
+        .signers([payer])
+        .rpc()
+        .then(callbacks[0], callbacks[1]);
+    });
+
   describe("#initialize_proposal", async function () {
     it("initializes proposals", async function () {
       const accounts = [
