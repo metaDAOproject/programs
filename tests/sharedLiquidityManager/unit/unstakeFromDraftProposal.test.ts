@@ -74,7 +74,7 @@ export default function suite() {
         new BN(25_000 * 10 ** 6)
       )
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }),
       ])
       .rpc();
 

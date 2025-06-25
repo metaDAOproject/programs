@@ -260,11 +260,11 @@ impl InitializeProposalWithLiquidity<'_> {
         let quote_withdrawn = ctx.accounts.sl_pool_quote_vault.amount - initial_quote_balance;
 
         require!(
-            base_withdrawn > 0,
+            base_withdrawn > ctx.accounts.dao.min_base_futarchic_liquidity,
             SharedLiquidityManagerError::NotEnoughLpTokens
         );
         require!(
-            quote_withdrawn > 0,
+            quote_withdrawn > ctx.accounts.dao.min_quote_futarchic_liquidity,
             SharedLiquidityManagerError::NotEnoughLpTokens
         );
 

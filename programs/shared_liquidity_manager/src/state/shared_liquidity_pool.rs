@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[account]
+#[derive(Debug)]
 pub struct SharedLiquidityPool {
     /// The PDA bump.
     pub pda_bump: u8,

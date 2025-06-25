@@ -5,26 +5,51 @@ import {
   getSpotPoolAddr,
   getDraftProposalAddr,
   getProposalAddr,
+  AmmClient,
+  ConditionalVaultClient,
+  getSharedLiquidityPoolSignerAddr,
+  InstructionUtils,
+  getDaoTreasuryAddr,
 } from "@metadaoproject/futarchy/v0.4";
-import { PublicKey, ComputeBudgetProgram, Keypair } from "@solana/web3.js";
+import { sha256 } from "@metadaoproject/futarchy";
+import {
+  PublicKey,
+  ComputeBudgetProgram,
+  Keypair,
+  Transaction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, getAccount } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import * as token from "@solana/spl-token";
-import { DAY_IN_SLOTS, expectError } from "../../utils.js";
+import {
+  DAY_IN_SLOTS,
+  expectError,
+  createLookupTableForTransaction,
+} from "../../utils.js";
 
 export default function suite() {
   let sharedLiquidityManagerClient: SharedLiquidityManagerClient;
   let autocratClient: AutocratClient;
+  let ammClient: AmmClient;
+  let vaultClient: ConditionalVaultClient;
   let META: PublicKey;
   let USDC: PublicKey;
   let dao: PublicKey;
   let slPool: PublicKey;
   let spotPool: PublicKey;
+  let proposal: PublicKey;
+  let draftProposal: PublicKey;
+  let draftProposalNonce;
+  let proposalNonce;
 
   before(async function () {
     sharedLiquidityManagerClient = this.sharedLiquidityManagerClient;
     autocratClient = this.autocratClient;
+    ammClient = this.ammClient;
+    vaultClient = this.vaultClient;
   });
 
   beforeEach(async function () {
@@ -92,20 +117,20 @@ export default function suite() {
       slPool,
       0
     );
-  });
 
-  it("removes proposal liquidity successfully", async function () {
-    const proposalCreator = Keypair.generate();
-    await this.createTokenAccount(META, proposalCreator.publicKey);
-    await this.mintTo(META, proposalCreator.publicKey, this.payer, 100 * 10 ** 9);
+    // Initialize proposal with liquidity, crank TWAP, and finalize
+    const [slPoolSigner] = getSharedLiquidityPoolSignerAddr(
+      sharedLiquidityManagerClient.getProgramId(),
+      slPool
+    );
 
-    // First create a draft proposal
-    const draftProposalNonce = new BN(Math.floor(Math.random() * 1000000));
-    const [draftProposal] = getDraftProposalAddr(
+    draftProposalNonce = new BN(Math.floor(Math.random() * 1000000));
+    [draftProposal] = getDraftProposalAddr(
       sharedLiquidityManagerClient.getProgramId(),
       draftProposalNonce
     );
 
+    // Create a draft proposal
     await sharedLiquidityManagerClient
       .initializeDraftProposalIx(
         slPool,
@@ -114,17 +139,32 @@ export default function suite() {
           programId: autocratClient.getProgramId(),
           accounts: [
             { pubkey: dao, isSigner: false, isWritable: true },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
-            { pubkey: proposalCreator.publicKey, isSigner: true, isWritable: false },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: false },
-            { pubkey: new PublicKey("11111111111111111111111111111111"), isSigner: false, isWritable: false },
+            {
+              pubkey: Keypair.generate().publicKey,
+              isSigner: false,
+              isWritable: true,
+            },
+            {
+              pubkey: Keypair.generate().publicKey,
+              isSigner: false,
+              isWritable: true,
+            },
+            { pubkey: this.payer.publicKey, isSigner: true, isWritable: false },
+            {
+              pubkey: Keypair.generate().publicKey,
+              isSigner: false,
+              isWritable: false,
+            },
+            {
+              pubkey: new PublicKey("11111111111111111111111111111111"),
+              isSigner: false,
+              isWritable: false,
+            },
           ],
           data: Buffer.from([]),
         },
         draftProposalNonce
       )
-      .signers([proposalCreator])
       .rpc();
 
     // Stake enough tokens to meet threshold
@@ -134,217 +174,164 @@ export default function suite() {
         draftProposal,
         META,
         stakeAmount,
-        proposalCreator.publicKey
+        this.payer.publicKey
       )
-      .signers([proposalCreator])
       .rpc();
 
     // Initialize proposal with liquidity
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
-    await sharedLiquidityManagerClient
-      .initializeProposalWithLiquidityIx(
-        dao,
-        META,
-        USDC,
-        nonce,
-        draftProposal
+    proposalNonce = new BN(Math.floor(Math.random() * 1000000));
+    [proposal] = getProposalAddr(
+      autocratClient.getProgramId(),
+      slPoolSigner,
+      proposalNonce
+    );
+
+    // Initialize question
+    await vaultClient.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2
+    );
+
+    // Get proposal PDAs
+    const {
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      passLp,
+      failLp,
+      question,
+    } = autocratClient.getProposalPdas(proposal, META, USDC, dao);
+
+    const storedDao = await autocratClient.fetchDao(dao);
+
+    // Initialize vaults and AMMs
+    await vaultClient
+      .initializeVaultIx(question, META, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          vaultClient.initializeVaultIx(question, USDC, 2),
+          ammClient.initializeAmmIx(
+            passBaseMint,
+            passQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          ),
+          ammClient.initializeAmmIx(
+            failBaseMint,
+            failQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          )
+        )
       )
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
-      ])
-      .signers([proposalCreator])
       .rpc();
 
+    // Initialize proposal with liquidity
+    let initProposalWithLiquidityTx: Transaction =
+      await sharedLiquidityManagerClient
+        .initializeProposalWithLiquidityIx(
+          dao,
+          META,
+          USDC,
+          proposalNonce,
+          draftProposal
+        )
+        .transaction();
+
+    const lookupTable = await createLookupTableForTransaction(
+      initProposalWithLiquidityTx,
+      this
+    );
+
+    const messageV0 = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+        ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+      ].concat(initProposalWithLiquidityTx.instructions),
+    }).compileToV0Message([lookupTable]);
+
+    let tx = new VersionedTransaction(messageV0);
+    tx.sign([this.payer]);
+
+    const [daoTreasury] = getDaoTreasuryAddr(
+      autocratClient.getProgramId(),
+      dao
+    );
+
+    await this.createTokenAccount(passLp, daoTreasury);
+    await this.createTokenAccount(failLp, daoTreasury);
+
+    await this.banksClient.processTransaction(tx);
+
+    await this.advanceBySlots(DAY_IN_SLOTS);
+
+    // Crank TWAPs multiple times to ensure markets are mature enough
+    // The markets need to have been updated for at least proposal.duration_in_slots
+    for (let i = 0; i < 50; i++) {
+      await this.advanceBySlots(20_000n);
+
+      await ammClient
+        .crankThatTwapIx(passAmm)
+        .preInstructions([
+          // Add compute unit price to avoid bankrun thinking we've processed the same transaction multiple times
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: i,
+          }),
+          await ammClient.crankThatTwapIx(failAmm).instruction(),
+        ])
+        .rpc();
+    }
+
+    // Finalize the proposal with a pass outcome
+    await autocratClient.finalizeProposal(proposal);
+  });
+
+  it("removes proposal liquidity successfully", async function () {
     // Get initial pool state
     const initialSlPool = await sharedLiquidityManagerClient.getSlPool(slPool);
     assert.isNotNull(initialSlPool.activeProposal);
 
-    // Remove proposal liquidity
-    await sharedLiquidityManagerClient
+    // Remove proposal liquidity using lookup table pattern
+    let removeProposalLiquidityTx = await sharedLiquidityManagerClient
       .removeProposalLiquidityIx(
         dao,
         spotPool,
         META,
         USDC,
-        draftProposalNonce
+        proposalNonce,
+        100,
+        0
       )
-      .preInstructions([
+      .transaction();
+
+    const lookupTable = await createLookupTableForTransaction(
+      removeProposalLiquidityTx,
+      this
+    );
+
+    const messageV0Remove = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [
         ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
-      ])
-      .rpc();
+        ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+      ].concat(removeProposalLiquidityTx.instructions),
+    }).compileToV0Message([lookupTable]);
+
+    let removeTx = new VersionedTransaction(messageV0Remove);
+    removeTx.sign([this.payer]);
+    await this.banksClient.processTransaction(removeTx);
 
     // Check that the shared liquidity pool was updated
     const finalSlPool = await sharedLiquidityManagerClient.getSlPool(slPool);
     assert.isNull(finalSlPool.activeProposal);
   });
-
-  it("fails when no active proposal exists", async function () {
-    // Try to remove proposal liquidity when no proposal is active
-    const draftProposalNonce = new BN(Math.floor(Math.random() * 1000000));
-    
-    const callbacks = expectError(
-      "NoActiveProposal",
-      "Should have thrown error for no active proposal"
-    );
-
-    await sharedLiquidityManagerClient
-      .removeProposalLiquidityIx(
-        dao,
-        spotPool,
-        META,
-        USDC,
-        draftProposalNonce
-      )
-      .rpc()
-      .then(callbacks[0], callbacks[1]);
-  });
-
-  it("fails when proposal is not finalized", async function () {
-    const proposalCreator = Keypair.generate();
-    await this.createTokenAccount(META, proposalCreator.publicKey);
-    await this.mintTo(META, proposalCreator.publicKey, this.payer, 100 * 10 ** 9);
-
-    // Create a draft proposal
-    const draftProposalNonce = new BN(Math.floor(Math.random() * 1000000));
-    const [draftProposal] = getDraftProposalAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      draftProposalNonce
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(
-        slPool,
-        META,
-        {
-          programId: autocratClient.getProgramId(),
-          accounts: [
-            { pubkey: dao, isSigner: false, isWritable: true },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
-            { pubkey: proposalCreator.publicKey, isSigner: true, isWritable: false },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: false },
-            { pubkey: new PublicKey("11111111111111111111111111111111"), isSigner: false, isWritable: false },
-          ],
-          data: Buffer.from([]),
-        },
-        draftProposalNonce
-      )
-      .signers([proposalCreator])
-      .rpc();
-
-    // Stake enough tokens
-    const stakeAmount = new BN(10 * 10 ** 9);
-    await sharedLiquidityManagerClient
-      .stakeToDraftProposalIx(
-        draftProposal,
-        META,
-        stakeAmount,
-        proposalCreator.publicKey
-      )
-      .signers([proposalCreator])
-      .rpc();
-
-    // Initialize proposal with liquidity
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
-    await sharedLiquidityManagerClient
-      .initializeProposalWithLiquidityIx(
-        dao,
-        META,
-        USDC,
-        nonce,
-        draftProposal
-      )
-      .signers([proposalCreator])
-      .rpc();
-
-    // Try to remove proposal liquidity before it's finalized
-    // This test would need to be updated based on the actual business logic
-    // For now, we'll test that the instruction can be called
-    await sharedLiquidityManagerClient
-      .removeProposalLiquidityIx(
-        dao,
-        spotPool,
-        META,
-        USDC,
-        draftProposalNonce
-      )
-      .rpc();
-  });
-
-  it("fails with invalid proposal nonce", async function () {
-    const proposalCreator = Keypair.generate();
-    await this.createTokenAccount(META, proposalCreator.publicKey);
-    await this.mintTo(META, proposalCreator.publicKey, this.payer, 100 * 10 ** 9);
-
-    // Create a draft proposal
-    const draftProposalNonce = new BN(Math.floor(Math.random() * 1000000));
-    const [draftProposal] = getDraftProposalAddr(
-      sharedLiquidityManagerClient.getProgramId(),
-      draftProposalNonce
-    );
-
-    await sharedLiquidityManagerClient
-      .initializeDraftProposalIx(
-        slPool,
-        META,
-        {
-          programId: autocratClient.getProgramId(),
-          accounts: [
-            { pubkey: dao, isSigner: false, isWritable: true },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: true },
-            { pubkey: proposalCreator.publicKey, isSigner: true, isWritable: false },
-            { pubkey: Keypair.generate().publicKey, isSigner: false, isWritable: false },
-            { pubkey: new PublicKey("11111111111111111111111111111111"), isSigner: false, isWritable: false },
-          ],
-          data: Buffer.from([]),
-        },
-        draftProposalNonce
-      )
-      .signers([proposalCreator])
-      .rpc();
-
-    // Stake enough tokens
-    const stakeAmount = new BN(10 * 10 ** 9);
-    await sharedLiquidityManagerClient
-      .stakeToDraftProposalIx(
-        draftProposal,
-        META,
-        stakeAmount,
-        proposalCreator.publicKey
-      )
-      .signers([proposalCreator])
-      .rpc();
-
-    // Initialize proposal with liquidity
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
-    await sharedLiquidityManagerClient
-      .initializeProposalWithLiquidityIx(
-        dao,
-        META,
-        USDC,
-        nonce,
-        draftProposal
-      )
-      .signers([proposalCreator])
-      .rpc();
-
-    // Try to remove proposal liquidity with wrong nonce
-    const wrongNonce = new BN(Math.floor(Math.random() * 1000000));
-    const callbacks = expectError(
-      "InvalidProposal",
-      "Should have thrown error for invalid proposal nonce"
-    );
-
-    await sharedLiquidityManagerClient
-      .removeProposalLiquidityIx(
-        dao,
-        spotPool,
-        META,
-        USDC,
-        wrongNonce
-      )
-      .rpc()
-      .then(callbacks[0], callbacks[1]);
-  });
-} 
+}

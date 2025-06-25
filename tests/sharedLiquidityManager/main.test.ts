@@ -15,7 +15,10 @@ export default function suite() {
   describe("#unstake_from_draft_proposal", unstakeFromDraftProposal);
   describe("#deposit_shared_liquidity", depositSharedLiquidity);
   describe("#withdraw_shared_liquidity", withdrawSharedLiquidity);
-  describe("#initialize_proposal_with_liquidity", initializeProposalWithLiquidity);
-  // describe("#remove_proposal_liquidity", removeProposalLiquidity);
+  describe(
+    "#initialize_proposal_with_liquidity",
+    initializeProposalWithLiquidity
+  );
+  describe("#remove_proposal_liquidity", removeProposalLiquidity);
   it("shared liquidity manager lifecycle", sharedLiquidityManagerLifecycle);
 }

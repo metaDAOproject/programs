@@ -88,6 +88,9 @@ pub struct Amm {
     pub oracle: TwapOracle,
 
     pub seq_num: u64,
+
+    pub vault_ata_base: Pubkey,
+    pub vault_ata_quote: Pubkey,
 }
 
 impl Amm {

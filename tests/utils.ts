@@ -1,6 +1,13 @@
 import { assert } from "chai";
 import { Clock, ProgramTestContext } from "solana-bankrun";
 import { BN } from "bn.js";
+import {
+  AddressLookupTableAccount,
+  AddressLookupTableProgram,
+  Keypair,
+  PublicKey,
+  Transaction,
+} from "@solana/web3.js";
 
 export const TEN_SECONDS_IN_SLOTS = 25n;
 export const ONE_MINUTE_IN_SLOTS = TEN_SECONDS_IN_SLOTS * 6n;
@@ -9,6 +16,109 @@ export const DAY_IN_SLOTS = HOUR_IN_SLOTS * 24n;
 
 export const toBN = (val: bigint): typeof BN.prototype =>
   new BN(val.toString());
+
+/**
+ * Creates a lookup table for all unique accounts in a transaction
+ * @param transaction - The transaction to create a lookup table for
+ * @param context - Test context containing banksClient, payer, and advanceBySlots
+ * @param additionalAddresses - Optional additional addresses to include in the lookup table
+ * @returns Promise<AddressLookupTableAccount> - The created lookup table account
+ */
+export async function createLookupTableForTransaction(
+  transaction: Transaction,
+  context: {
+    banksClient: any;
+    payer: Keypair;
+    advanceBySlots: (slots: bigint) => Promise<void>;
+  },
+  additionalAddresses: PublicKey[] = []
+): Promise<AddressLookupTableAccount> {
+  // use a different authority for the lookup table to avoid conflicts
+  const lookupAuthority = Keypair.generate();
+  const slot = await context.banksClient.getSlot();
+
+  const [createTableIx, lookupTableAddress] =
+    AddressLookupTableProgram.createLookupTable({
+      authority: lookupAuthority.publicKey,
+      payer: context.payer.publicKey,
+      recentSlot: slot - 1n,
+    });
+
+  // Extract all unique accounts from the transaction
+  const accountsToAdd = transaction.instructions.map((instruction) =>
+    instruction.keys.map((key) => key.pubkey)
+  );
+  const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
+  console.log("uniqueAccounts", uniqueAccounts.length);
+
+  // Add any additional addresses
+  const allAddresses = [...uniqueAccounts, ...additionalAddresses];
+  const finalUniqueAddresses = [...new Set(allAddresses)] as PublicKey[];
+
+  // Create the lookup table
+  let createLutTx = new Transaction().add(createTableIx);
+  createLutTx.recentBlockhash = (
+    await context.banksClient.getLatestBlockhash()
+  )[0];
+  createLutTx.feePayer = context.payer.publicKey;
+  createLutTx.sign(context.payer, lookupAuthority);
+  // createLutTx.partialSign(lookupAuthority);
+
+  await context.banksClient.processTransaction(createLutTx);
+  await context.advanceBySlots(1n);
+
+  // Extend the lookup table with all unique accounts
+  const addressesPerExtend = 20;
+  for (let i = 0; i < finalUniqueAddresses.length; i += addressesPerExtend) {
+    const batch = finalUniqueAddresses.slice(i, i + addressesPerExtend);
+
+    const extendTableIx = AddressLookupTableProgram.extendLookupTable({
+      authority: lookupAuthority.publicKey,
+      payer: context.payer.publicKey,
+      lookupTable: lookupTableAddress,
+      addresses: batch,
+    });
+
+    let extendLutTx = new Transaction().add(extendTableIx);
+    extendLutTx.recentBlockhash = (
+      await context.banksClient.getLatestBlockhash()
+    )[0];
+    extendLutTx.feePayer = context.payer.publicKey;
+    extendLutTx.sign(context.payer, lookupAuthority);
+
+    await context.banksClient.processTransaction(extendLutTx);
+    await context.advanceBySlots(1n);
+  }
+
+  // Add a dummy account to ensure the lookup table has enough entries for all indexes
+  const dummyAccount = Keypair.generate().publicKey;
+  const extendTableIx = AddressLookupTableProgram.extendLookupTable({
+    authority: lookupAuthority.publicKey,
+    payer: context.payer.publicKey,
+    lookupTable: lookupTableAddress,
+    addresses: [dummyAccount],
+  });
+
+  let extendLutTx = new Transaction().add(extendTableIx);
+  extendLutTx.recentBlockhash = (
+    await context.banksClient.getLatestBlockhash()
+  )[0];
+  extendLutTx.feePayer = context.payer.publicKey;
+  extendLutTx.sign(context.payer, lookupAuthority);
+
+  await context.banksClient.processTransaction(extendLutTx);
+  await context.advanceBySlots(1n);
+
+  // Fetch and return the lookup table account
+  let rawStoredLookupTable = await context.banksClient.getAccount(
+    lookupTableAddress
+  );
+
+  return new AddressLookupTableAccount({
+    key: lookupTableAddress,
+    state: AddressLookupTableAccount.deserialize(rawStoredLookupTable.data),
+  });
+}
 
 export const expectError = (
   expectedError: string,

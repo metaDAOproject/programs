@@ -1,11 +1,17 @@
 use super::*;
 
-#[derive(Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug)]
 pub enum ProposalState {
     Pending,
     Passed,
     Failed,
     Executed,
+}
+
+impl std::fmt::Display for ProposalState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Clone, AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq)]

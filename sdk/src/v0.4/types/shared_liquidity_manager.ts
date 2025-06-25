@@ -940,7 +940,7 @@ export type SharedLiquidityManager = {
         },
         {
           name: "proposal";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -1009,10 +1009,15 @@ export type SharedLiquidityManager = {
           ];
         },
         {
-          name: "ray";
+          name: "raydium";
           accounts: [
             {
               name: "activeSpotPool";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "activeSpotPoolLpMint";
               isMut: true;
               isSigner: false;
             },
@@ -1023,11 +1028,6 @@ export type SharedLiquidityManager = {
             },
             {
               name: "activeSpotPoolQuoteVault";
-              isMut: true;
-              isSigner: false;
-            },
-            {
-              name: "activeSpotPoolLpMint";
               isMut: true;
               isSigner: false;
             },
@@ -1057,11 +1057,6 @@ export type SharedLiquidityManager = {
               isSigner: false;
             },
             {
-              name: "nextSpotPoolObservationState";
-              isMut: true;
-              isSigner: false;
-            },
-            {
               name: "nextSpotPoolBaseVault";
               isMut: true;
               isSigner: false;
@@ -1072,13 +1067,13 @@ export type SharedLiquidityManager = {
               isSigner: false;
             },
             {
-              name: "slPoolNextSpotLpVault";
+              name: "nextSpotPoolObservationState";
               isMut: true;
               isSigner: false;
             },
             {
-              name: "observationState";
-              isMut: false;
+              name: "slPoolNextSpotLpVault";
+              isMut: true;
               isSigner: false;
             },
             {
@@ -1104,7 +1099,7 @@ export type SharedLiquidityManager = {
           ];
         },
         {
-          name: "cond";
+          name: "conditionalVault";
           accounts: [
             {
               name: "question";
@@ -1194,7 +1189,7 @@ export type SharedLiquidityManager = {
           ];
         },
         {
-          name: "ammm2";
+          name: "ammm";
           accounts: [
             {
               name: "passAmm";
@@ -1247,16 +1242,6 @@ export type SharedLiquidityManager = {
               isSigner: false;
             },
             {
-              name: "proposalPassLpVault";
-              isMut: true;
-              isSigner: false;
-            },
-            {
-              name: "proposalFailLpVault";
-              isMut: true;
-              isSigner: false;
-            },
-            {
               name: "ammProgram";
               isMut: false;
               isSigner: false;
@@ -1265,18 +1250,13 @@ export type SharedLiquidityManager = {
               name: "eventAuthority";
               isMut: false;
               isSigner: false;
+            },
+            {
+              name: "slPoolSigner";
+              isMut: false;
+              isSigner: false;
             }
           ];
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "autocratProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "systemProgram";
@@ -1285,11 +1265,6 @@ export type SharedLiquidityManager = {
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "autocratEventAuthority";
           isMut: false;
           isSigner: false;
         },
@@ -1743,12 +1718,17 @@ export type SharedLiquidityManager = {
     {
       code: 6009;
       name: "NotEnoughLpTokens";
-      msg: "Not enough LP tokens to withdraw half";
+      msg: "Not enough LP tokens to provide liquidity to proposal";
     },
     {
       code: 6010;
       name: "InsufficientFunds";
       msg: "Insufficient funds";
+    },
+    {
+      code: 6011;
+      name: "NoActiveProposal";
+      msg: "No active proposal";
     }
   ];
 };
@@ -2695,7 +2675,7 @@ export const IDL: SharedLiquidityManager = {
         },
         {
           name: "proposal",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2764,10 +2744,15 @@ export const IDL: SharedLiquidityManager = {
           ],
         },
         {
-          name: "ray",
+          name: "raydium",
           accounts: [
             {
               name: "activeSpotPool",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "activeSpotPoolLpMint",
               isMut: true,
               isSigner: false,
             },
@@ -2778,11 +2763,6 @@ export const IDL: SharedLiquidityManager = {
             },
             {
               name: "activeSpotPoolQuoteVault",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "activeSpotPoolLpMint",
               isMut: true,
               isSigner: false,
             },
@@ -2812,11 +2792,6 @@ export const IDL: SharedLiquidityManager = {
               isSigner: false,
             },
             {
-              name: "nextSpotPoolObservationState",
-              isMut: true,
-              isSigner: false,
-            },
-            {
               name: "nextSpotPoolBaseVault",
               isMut: true,
               isSigner: false,
@@ -2827,13 +2802,13 @@ export const IDL: SharedLiquidityManager = {
               isSigner: false,
             },
             {
-              name: "slPoolNextSpotLpVault",
+              name: "nextSpotPoolObservationState",
               isMut: true,
               isSigner: false,
             },
             {
-              name: "observationState",
-              isMut: false,
+              name: "slPoolNextSpotLpVault",
+              isMut: true,
               isSigner: false,
             },
             {
@@ -2859,7 +2834,7 @@ export const IDL: SharedLiquidityManager = {
           ],
         },
         {
-          name: "cond",
+          name: "conditionalVault",
           accounts: [
             {
               name: "question",
@@ -2949,7 +2924,7 @@ export const IDL: SharedLiquidityManager = {
           ],
         },
         {
-          name: "ammm2",
+          name: "ammm",
           accounts: [
             {
               name: "passAmm",
@@ -3002,16 +2977,6 @@ export const IDL: SharedLiquidityManager = {
               isSigner: false,
             },
             {
-              name: "proposalPassLpVault",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "proposalFailLpVault",
-              isMut: true,
-              isSigner: false,
-            },
-            {
               name: "ammProgram",
               isMut: false,
               isSigner: false,
@@ -3021,17 +2986,12 @@ export const IDL: SharedLiquidityManager = {
               isMut: false,
               isSigner: false,
             },
+            {
+              name: "slPoolSigner",
+              isMut: false,
+              isSigner: false,
+            },
           ],
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "autocratProgram",
-          isMut: false,
-          isSigner: false,
         },
         {
           name: "systemProgram",
@@ -3040,11 +3000,6 @@ export const IDL: SharedLiquidityManager = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "autocratEventAuthority",
           isMut: false,
           isSigner: false,
         },
@@ -3498,12 +3453,17 @@ export const IDL: SharedLiquidityManager = {
     {
       code: 6009,
       name: "NotEnoughLpTokens",
-      msg: "Not enough LP tokens to withdraw half",
+      msg: "Not enough LP tokens to provide liquidity to proposal",
     },
     {
       code: 6010,
       name: "InsufficientFunds",
       msg: "Insufficient funds",
+    },
+    {
+      code: 6011,
+      name: "NoActiveProposal",
+      msg: "No active proposal",
     },
   ],
 };

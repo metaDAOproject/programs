@@ -120,10 +120,12 @@ export default function suite() {
       .signers([user])
       .rpc();
 
-
     // Get initial balances
     const initialBaseBalance = await this.getTokenBalance(META, user.publicKey);
-    const initialQuoteBalance = await this.getTokenBalance(USDC, user.publicKey);
+    const initialQuoteBalance = await this.getTokenBalance(
+      USDC,
+      user.publicKey
+    );
 
     // Now withdraw some liquidity
     const withdrawLpTokenAmount = new BN(500_000); // 0.5 LP tokens
@@ -160,7 +162,9 @@ export default function suite() {
       )[0]
     );
 
-    const expectedRemainingShares = depositLpTokenAmount.sub(withdrawLpTokenAmount);
+    const expectedRemainingShares = depositLpTokenAmount.sub(
+      withdrawLpTokenAmount
+    );
     assert.equal(
       position.underlyingSpotLpShares.toString(),
       expectedRemainingShares.toString()
@@ -274,12 +278,12 @@ export default function suite() {
   it("fails when user is not position owner", async function () {
     const user1 = Keypair.generate();
     const user2 = Keypair.generate();
-    
+
     await this.createTokenAccount(META, user1.publicKey);
     await this.createTokenAccount(USDC, user1.publicKey);
     await this.createTokenAccount(META, user2.publicKey);
     await this.createTokenAccount(USDC, user2.publicKey);
-    
+
     await this.mintTo(META, user1.publicKey, this.payer, 100 * 10 ** 9);
     await this.mintTo(USDC, user1.publicKey, this.payer, 100_000 * 10 ** 6);
     await this.mintTo(META, user2.publicKey, this.payer, 100 * 10 ** 9);
@@ -340,4 +344,4 @@ export default function suite() {
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
-} 
+}

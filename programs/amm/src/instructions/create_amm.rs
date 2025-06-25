@@ -121,6 +121,9 @@ impl CreateAmm<'_> {
             ),
 
             seq_num: 0,
+
+            vault_ata_base: vault_ata_base.key(),
+            vault_ata_quote: vault_ata_quote.key(),
         });
 
         let clock = Clock::get()?;
