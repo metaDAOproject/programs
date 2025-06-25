@@ -93,6 +93,7 @@ impl InitializeProposal<'_> {
             2,
             AutocratError::QuestionMustBeBinary
         );
+        
 
         for amm in [&self.pass_amm, &self.fail_amm] {
             // an attacker is able to crank 5 observations before a proposal starts
