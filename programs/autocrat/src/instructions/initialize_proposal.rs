@@ -88,6 +88,12 @@ impl InitializeProposal<'_> {
     pub fn validate(&self) -> Result<()> {
         let clock = Clock::get()?;
 
+        require_eq!(
+            self.question.num_outcomes(),
+            2,
+            AutocratError::QuestionMustBeBinary
+        );
+
         for amm in [&self.pass_amm, &self.fail_amm] {
             // an attacker is able to crank 5 observations before a proposal starts
             require!(
