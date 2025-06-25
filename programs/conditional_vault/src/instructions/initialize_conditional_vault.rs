@@ -34,6 +34,11 @@ pub struct InitializeConditionalVault<'info> {
 
 impl<'info, 'c: 'info> InitializeConditionalVault<'info> {
     pub fn handle(ctx: Context<'_, '_, 'c, 'info, Self>) -> Result<()> {
+        require!(
+            !ctx.accounts.question.is_resolved(),
+            VaultError::QuestionAlreadyResolved
+        );
+
         let vault = &mut ctx.accounts.vault;
 
         let decimals = ctx.accounts.underlying_token_mint.decimals;
