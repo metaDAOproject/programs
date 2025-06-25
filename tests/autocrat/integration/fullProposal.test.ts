@@ -32,7 +32,7 @@ export default function suite() {
 
     const nonce = new BN(Math.random() * 2 ** 50);
 
-    const [dao] = getDaoAddr(this.autocratClient.getProgramId(), nonce);
+    const [dao] = getDaoAddr({ nonce });
 
     await this.autocratClient
       .initializeDaoIx({
@@ -176,21 +176,8 @@ export default function suite() {
 
     await this.autocratClient.finalizeProposal(proposal);
 
-    const connection = {
-      getAccountInfo: async (address: PublicKey) => {
-        let rawAccount = await this.banksClient.getAccount(address);
-        let accountInfo: AccountInfo<Buffer> = {
-          executable: false,
-          owner: rawAccount.owner,
-          lamports: rawAccount.lamports,
-          data: Buffer.from(rawAccount.data),
-        };
-        return accountInfo;
-      },
-    } as Connection;
-
     const txExecuteIx = await multisig.instructions.vaultTransactionExecute({
-      connection,
+      connection: this.squadsConnection,
       multisigPda,
       transactionIndex: 1n,
       member: PERMISSIONLESS_ACCOUNT.publicKey,

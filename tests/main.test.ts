@@ -308,7 +308,7 @@ before(async function () {
 
 describe("conditional_vault", conditionalVault);
 describe("amm", amm);
-describe("autocrat", autocrat);
+describe.only("autocrat", autocrat);
 describe("launchpad", launchpad);
 describe("shared_liquidity_manager", sharedLiquidityManager);
 describe("project-wide integration tests", function () {

@@ -637,9 +637,6 @@ export type Autocrat = {
           },
           {
             name: "Failed";
-          },
-          {
-            name: "Executed";
           }
         ];
       };
@@ -1622,9 +1619,6 @@ export const IDL: Autocrat = {
           },
           {
             name: "Failed",
-          },
-          {
-            name: "Executed",
           },
         ],
       },

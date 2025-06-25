@@ -16,7 +16,7 @@ export default function suite() {
     USDC = await this.createMint(this.payer.publicKey, 6);
   });
 
-  it.only("should initialize a DAO", async function () {
+  it("should initialize a DAO", async function () {
     await this.autocratClient.initializeDaoIx({
       baseMint: META,
       quoteMint: USDC,
