@@ -786,16 +786,17 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@metadaoproject/futarchy@0.4.0-alpha.73":
-  version "0.4.0-alpha.73"
-  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.4.0-alpha.73.tgz#c422acf5bc0c45ff1c95183354bc04a87ee59c6e"
-  integrity sha512-erQ+jahuKy14wmTRza0YtVdKoEv/oYBo4QnHF4hZq0tAlJeJyszWZLNn8ItdHHtuKBypN+R3+bdy6kCvVCyllg==
+"@metadaoproject/futarchy@0.4.0-alpha.74":
+  version "0.4.0-alpha.74"
+  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.4.0-alpha.74.tgz#f43d7fa41f9d49a6283ad3723b5db0d16d4cc8a9"
+  integrity sha512-CckorrrtCAAe4EyYdSD049CwNEkPpXkJdNyFJZwpbghjtgJ6dwHNpEZ7npa2yTNA+dng3rFz9KiriNHqa4H4eQ==
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@metaplex-foundation/umi" "^0.9.2"
     "@metaplex-foundation/umi-bundle-defaults" "^0.9.2"
     "@metaplex-foundation/umi-uploader-bundlr" "^0.9.2"
     "@noble/hashes" "^1.4.0"
+    "@solana/spl-memo" "^0.2.5"
     "@solana/spl-token" "^0.3.7"
     "@solana/web3.js" "^1.74.0"
     bn.js "^5.2.1"
@@ -1156,6 +1157,13 @@
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/@solana/spl-memo/-/spl-memo-0.2.3.tgz#594a28c37b40c0e22143f38f71b4f56d1f5b24fd"
   integrity sha512-CNsKSsl85ebuVoeGq1LDYi5M/PMs1Pxv2/UsyTgS6b30qrYqZOXha5ouZzgGKtJtZ3C3dxfOAEw6caJPN1N63w==
+  dependencies:
+    buffer "^6.0.3"
+
+"@solana/spl-memo@^0.2.5":
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/@solana/spl-memo/-/spl-memo-0.2.5.tgz#a7828cdd1e810ff77c7c015ac97dfa166d0651fe"
+  integrity sha512-0Zx5t3gAdcHlRTt2O3RgGlni1x7vV7Xq7j4z9q8kKOMgU03PyoTbFQ/BSYCcICHzkaqD7ZxAiaJ6dlXolg01oA==
   dependencies:
     buffer "^6.0.3"
 
