@@ -65,6 +65,12 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
                 VaultError::ConditionalTokenMintMismatch
             );
 
+            require_eq!(
+                user_conditional_token_account.owner,
+                ctx.accounts.authority.key(),
+                VaultError::UnauthorizedConditionalTokenAccount
+            );
+
             user_conditional_token_accounts.push(user_conditional_token_account);
         }
 
