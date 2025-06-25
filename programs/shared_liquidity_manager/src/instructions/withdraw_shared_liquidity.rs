@@ -28,8 +28,12 @@ pub struct WithdrawSharedLiquidity<'info> {
         has_one = sl_pool_spot_lp_vault,
         has_one = base_mint,
         has_one = quote_mint,
+        has_one = sl_pool_signer,
     )]
     pub sl_pool: Account<'info, SharedLiquidityPool>,
+
+    /// CHECK: sl_pool_signer is a PDA
+    pub sl_pool_signer: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub active_spot_pool: AccountLoader<'info, RaydiumPoolState>,
@@ -107,19 +111,19 @@ impl WithdrawSharedLiquidity<'_> {
             SharedLiquidityManagerError::PoolInUse
         );
 
-        // Validate the position belongs to the user and pool
-        require!(
-            self.user_sl_pool_position.owner == self.user.key(),
-            SharedLiquidityManagerError::Unauthorized
-        );
-        require!(
-            self.user_sl_pool_position.pool == self.sl_pool.key(),
-            SharedLiquidityManagerError::InvalidPool
-        );
-
         require!(
             self.user_sl_pool_position.underlying_spot_lp_shares >= params.lp_token_amount,
             SharedLiquidityManagerError::InsufficientLpShares
+        );
+
+        // Neither of these should get triggered because of the PDA derivation, but we'll keep them here for safety
+        require_eq!(
+            self.user_sl_pool_position.owner,
+            self.user.key(),
+        );
+        require_eq!(
+            self.user_sl_pool_position.pool,
+            self.sl_pool.key(),
         );
 
         Ok(())
@@ -158,11 +162,11 @@ impl WithdrawSharedLiquidity<'_> {
         };
 
         // Generate PDA seeds for signing
+        let sl_pool_key = ctx.accounts.sl_pool.key();
         let seeds = &[
-            b"sl_pool".as_ref(),
-            ctx.accounts.sl_pool.dao.as_ref(),
-            ctx.accounts.sl_pool.active_spot_pool.as_ref(),
-            &[ctx.accounts.sl_pool.pda_bump],
+            b"sl_pool_signer".as_ref(),
+            sl_pool_key.as_ref(),
+            &[ctx.accounts.sl_pool.sl_pool_signer_bump],
         ];
         let signer = &[&seeds[..]];
 
@@ -171,7 +175,7 @@ impl WithdrawSharedLiquidity<'_> {
             CpiContext::new_with_signer(
                 ctx.accounts.cp_swap_program.to_account_info(),
                 RaydiumWithdraw {
-                    owner: ctx.accounts.sl_pool.to_account_info(),
+                    owner: ctx.accounts.sl_pool_signer.to_account_info(),
                     authority: ctx.accounts.raydium_authority.to_account_info(),
                     pool_state: ctx.accounts.active_spot_pool.to_account_info(),
                     lp_mint: ctx.accounts.spot_pool_lp_mint.to_account_info(),

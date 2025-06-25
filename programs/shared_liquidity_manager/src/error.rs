@@ -16,10 +16,6 @@ pub enum SharedLiquidityManagerError {
     PoolInUse,
     #[msg("User does not have enough LP shares to withdraw")]
     InsufficientLpShares,
-    #[msg("Unauthorized access to position")]
-    Unauthorized,
-    #[msg("Invalid pool for this position")]
-    InvalidPool,
     #[msg("Slippage exceeded minimum token amounts")]
     SlippageExceeded,
     #[msg("No LP tokens in pool's LP token account")]

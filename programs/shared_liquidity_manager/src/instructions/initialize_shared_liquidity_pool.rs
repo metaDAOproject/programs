@@ -230,7 +230,6 @@ impl InitializeSharedLiquidityPool<'_> {
                 params.base_amount,
             )
         };
-        msg!("Initializing shared liquidity pool");
 
         let cpi_accounts = cpi::accounts::Initialize {
             creator: ctx.accounts.creator.to_account_info(),
@@ -254,7 +253,6 @@ impl InitializeSharedLiquidityPool<'_> {
             creator_token_0,
             creator_token_1,
         };
-        msg!("Initializing shared liquidity pool 1");
 
         let ix = instruction::Initialize {
             init_amount_0,

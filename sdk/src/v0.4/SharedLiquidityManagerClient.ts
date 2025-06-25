@@ -2,6 +2,7 @@ import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
 import {
   AccountInfo,
   AddressLookupTableAccount,
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -276,32 +277,31 @@ export class SharedLiquidityManagerClient {
         raydiumAuthority: RAYDIUM_AUTHORITY,
         tokenProgram2022: TOKEN_2022_PROGRAM_ID,
         cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
-      });
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({
+          units: 300_000,
+        }),
+      ]);
   }
 
   withdrawSharedLiquidityIx(
-    dao: PublicKey,
+    slPool: PublicKey,
     activeSpotPool: PublicKey,
     baseMint: PublicKey,
     quoteMint: PublicKey,
     lpTokenAmount: BN,
     minimumToken0Amount: BN,
     minimumToken1Amount: BN,
-    proposalStakeRateThresholdBps: number = 100
+    user: PublicKey = this.provider.wallet.publicKey
   ) {
-    const [slPool] = getSharedLiquidityPoolAddr(
+    const [slPoolSigner] = getSharedLiquidityPoolSignerAddr(
       this.program.programId,
-      dao,
-      activeSpotPool,
-      proposalStakeRateThresholdBps
+      slPool
     );
 
     const [userSlPoolPosition] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("sl_pool_position"),
-        slPool.toBuffer(),
-        this.provider.wallet.publicKey.toBuffer(),
-      ],
+      [Buffer.from("sl_pool_position"), slPool.toBuffer(), user.toBuffer()],
       this.program.programId
     );
 
@@ -313,20 +313,15 @@ export class SharedLiquidityManagerClient {
       })
       .accounts({
         slPool,
+        slPoolSigner,
         activeSpotPool,
         slPoolSpotLpVault: getAssociatedTokenAddressSync(
           getRaydiumCpmmLpMintAddr(activeSpotPool, false)[0],
-          slPool,
+          slPoolSigner,
           true
         ),
-        userQuoteTokenAccount: getAssociatedTokenAddressSync(
-          quoteMint,
-          this.provider.wallet.publicKey
-        ),
-        userBaseTokenAccount: getAssociatedTokenAddressSync(
-          baseMint,
-          this.provider.wallet.publicKey
-        ),
+        userQuoteTokenAccount: getAssociatedTokenAddressSync(quoteMint, user),
+        userBaseTokenAccount: getAssociatedTokenAddressSync(baseMint, user),
         spotPoolBaseVault: getRaydiumCpmmPoolVaultAddr(
           activeSpotPool,
           baseMint,
@@ -342,11 +337,11 @@ export class SharedLiquidityManagerClient {
         spotPoolLpMint: getRaydiumCpmmLpMintAddr(activeSpotPool, false)[0],
         userLpTokenAccount: getAssociatedTokenAddressSync(
           getRaydiumCpmmLpMintAddr(activeSpotPool, false)[0],
-          this.provider.wallet.publicKey,
+          user,
           true
         ),
         userSlPoolPosition,
-        user: this.provider.wallet.publicKey,
+        user,
         feeReceiver: this.provider.wallet.publicKey,
         raydiumAuthority: RAYDIUM_AUTHORITY,
         tokenProgram: TOKEN_PROGRAM_ID,

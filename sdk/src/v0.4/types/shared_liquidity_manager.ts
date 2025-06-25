@@ -478,6 +478,11 @@ export type SharedLiquidityManager = {
           isSigner: false;
         },
         {
+          name: "slPoolSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "activeSpotPool";
           isMut: true;
           isSigner: false;
@@ -1727,31 +1732,21 @@ export type SharedLiquidityManager = {
     },
     {
       code: 6007;
-      name: "Unauthorized";
-      msg: "Unauthorized access to position";
-    },
-    {
-      code: 6008;
-      name: "InvalidPool";
-      msg: "Invalid pool for this position";
-    },
-    {
-      code: 6009;
       name: "SlippageExceeded";
       msg: "Slippage exceeded minimum token amounts";
     },
     {
-      code: 6010;
+      code: 6008;
       name: "NoLpTokensInPool";
       msg: "No LP tokens in pool's LP token account";
     },
     {
-      code: 6011;
+      code: 6009;
       name: "NotEnoughLpTokens";
       msg: "Not enough LP tokens to withdraw half";
     },
     {
-      code: 6012;
+      code: 6010;
       name: "InsufficientFunds";
       msg: "Insufficient funds";
     }
@@ -2235,6 +2230,11 @@ export const IDL: SharedLiquidityManager = {
         {
           name: "slPool",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "slPoolSigner",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -3487,31 +3487,21 @@ export const IDL: SharedLiquidityManager = {
     },
     {
       code: 6007,
-      name: "Unauthorized",
-      msg: "Unauthorized access to position",
-    },
-    {
-      code: 6008,
-      name: "InvalidPool",
-      msg: "Invalid pool for this position",
-    },
-    {
-      code: 6009,
       name: "SlippageExceeded",
       msg: "Slippage exceeded minimum token amounts",
     },
     {
-      code: 6010,
+      code: 6008,
       name: "NoLpTokensInPool",
       msg: "No LP tokens in pool's LP token account",
     },
     {
-      code: 6011,
+      code: 6009,
       name: "NotEnoughLpTokens",
       msg: "Not enough LP tokens to withdraw half",
     },
     {
-      code: 6012,
+      code: 6010,
       name: "InsufficientFunds",
       msg: "Insufficient funds",
     },

@@ -522,6 +522,8 @@ impl InitializeProposalWithLiquidity<'_> {
 
         ctx.accounts.draft_proposal.status = DraftProposalStatus::Initialized;
 
+        ctx.accounts.shared_liquidity_pool.active_proposal = Some(ctx.accounts.proposal.key());
+
         Ok(())
     }
 }

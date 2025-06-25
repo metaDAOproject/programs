@@ -243,6 +243,11 @@ export default function suite() {
         maxBaseAmount,
         maxQuoteAmount
       )
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 1000,
+        }),
+      ])
       .rpc();
 
     // Both should succeed
@@ -287,8 +292,5 @@ export default function suite() {
       )
       .signers([secondUser])
       .rpc();
-
-    // Both should succeed
-    assert.ok(true);
   });
 }
