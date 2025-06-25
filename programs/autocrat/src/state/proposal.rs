@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, InitSpace)]
 pub enum ProposalState {
     Pending,
     Passed,
@@ -29,13 +29,14 @@ pub struct ProposalInstruction {
 }
 
 #[account]
+#[derive(InitSpace)]
 pub struct Proposal {
     pub number: u32,
     pub proposer: Pubkey,
+    #[max_len(40)]
     pub description_url: String,
     pub slot_enqueued: u64,
     pub state: ProposalState,
-    pub instruction: ProposalInstruction,
     pub pass_amm: Pubkey,
     pub fail_amm: Pubkey,
     pub base_vault: Pubkey,

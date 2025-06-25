@@ -15,6 +15,7 @@ import {
   SharedLiquidityManagerClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+  SQUADS_PROGRAM_CONFIG,
 } from "@metadaoproject/futarchy/v0.4";
 // import {
 //   // AmmClient,
@@ -51,6 +52,7 @@ import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
 import twap from "./integration/twap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
+import { SQUADS_PROGRAM_ID } from "../sdk/src/v0.4/constants.js";
 
 // Extend the Mocha context to include our test properties
 declare module "mocha" {
@@ -112,6 +114,10 @@ before(async function () {
         name: "raydium_cp_swap",
         programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
       },
+      {
+        name: "squads_multisig",
+        programId: SQUADS_PROGRAM_ID,
+      }
     ],
     [
       {
@@ -143,6 +149,15 @@ before(async function () {
           lamports: 377_950_832_219,
         },
       },
+      {
+        address: SQUADS_PROGRAM_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/squads-program-config"),
+          executable: false,
+          owner: SQUADS_PROGRAM_ID,
+          lamports: 1_000_000_000,
+        },
+      }
     ]
   );
   this.banksClient = this.context.banksClient;

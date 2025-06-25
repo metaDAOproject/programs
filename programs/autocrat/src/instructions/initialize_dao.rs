@@ -1,5 +1,7 @@
 use super::*;
 
+use squads_multisig_program::Multisig;
+
 #[derive(Debug, Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub struct InitializeDaoParams {
     pub twap_initial_observation: u128,
@@ -27,6 +29,7 @@ pub struct InitializeDao<'info> {
     // todo: statically check that this is USDC given a feature flag
     #[account(mint::decimals = 6)]
     pub usdc_mint: Account<'info, Mint>,
+    pub multisig: Account<'info, Multisig>,
 }
 
 impl InitializeDao<'_> {
@@ -67,6 +70,7 @@ impl InitializeDao<'_> {
             min_base_futarchic_liquidity,
             min_quote_futarchic_liquidity,
             seq_num: 0,
+            squads_multisig: ctx.accounts.multisig.key(),
         });
 
         let clock = Clock::get()?;

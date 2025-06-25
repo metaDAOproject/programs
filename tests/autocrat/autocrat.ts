@@ -20,6 +20,8 @@ import {
   getMint,
   getAccount,
 } from "spl-token-bankrun";
+import * as multisig from "@sqds/multisig";
+const { Permission, Permissions } = multisig.types;
 
 import { advanceBySlots, DAY_IN_SLOTS, expectError } from "../utils.js";
 import { Autocrat, IDL as AutocratIDL } from "../../target/types/autocrat.js";
@@ -43,6 +45,9 @@ import {
   getVaultAddr,
   AmmMath,
   getEventAuthorityAddr,
+  MAINNET_USDC,
+  RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+  LOW_FEE_RAYDIUM_CONFIG,
 } from "@metadaoproject/futarchy/v0.4";
 import { PriceMath } from "@metadaoproject/futarchy/v0.4";
 import {
@@ -55,6 +60,7 @@ import {
   SystemProgram,
   Transaction,
   TransactionInstruction,
+  TransactionMessage,
 } from "@solana/web3.js";
 
 // const AutocratIDL: Autocrat = require("../target/idl/autocrat.json");
@@ -78,11 +84,8 @@ const ONE_USDC = new BN(1_000_000);
 
 // describe("autocrat", async function () {
 export default function suite() {
-  let provider,
+  let 
     autocrat,
-    payer,
-    context: ProgramTestContext,
-    banksClient: BanksClient,
     dao,
     mertdDao,
     daoTreasury,
@@ -101,82 +104,207 @@ export default function suite() {
     mertdTreasuryUsdcAccount;
 
   before(async function () {
-    context = await startAnchor("./", [], []);
-    banksClient = context.banksClient;
-    provider = new BankrunProvider(context);
-    anchor.setProvider(provider);
+    // context = await startAnchor("./", [], []);
+    // banksClient = context.banksClient;
+    // provider = new BankrunProvider(context);
+    // anchor.setProvider(provider);
 
-    ammClient = AmmClient.createClient({ provider });
-    vaultClient = ConditionalVaultClient.createClient({ provider });
-    autocratClient = AutocratClient.createClient({ provider });
+    // ammClient = AmmClient.createClient({ provider });
+    // vaultClient = ConditionalVaultClient.createClient({ provider });
+    // autocratClient = AutocratClient.createClient({ provider });
 
-    autocrat = new anchor.Program<Autocrat>(
-      AutocratIDL,
-      AUTOCRAT_PROGRAM_ID,
-      provider
-    );
+    // autocrat = new anchor.Program<Autocrat>(
+    //   AutocratIDL,
+    //   AUTOCRAT_PROGRAM_ID,
+    //   provider
+    // );
 
-    vaultProgram = new Program<ConditionalVault>(
-      ConditionalVaultIDL,
-      CONDITIONAL_VAULT_PROGRAM_ID,
-      provider
-    );
+    // vaultProgram = new Program<ConditionalVault>(
+    //   ConditionalVaultIDL,
+    //   CONDITIONAL_VAULT_PROGRAM_ID,
+    //   provider
+    // );
 
     migrator = new anchor.Program<AutocratMigrator>(
       AutocratMigratorIDL,
       AUTOCRAT_MIGRATOR_PROGRAM_ID,
-      provider
+      this.provider
     );
-
-    payer = provider.wallet.payer;
 
     USDC = await createMint(
-      banksClient,
-      payer,
-      payer.publicKey,
-      payer.publicKey,
+      this.banksClient,
+      this.payer,
+      this.payer.publicKey,
+      this.payer.publicKey,
       6
     );
 
-    META = await createMint(banksClient, payer, dao, dao, 9);
+    META = await createMint(this.banksClient, this.payer, this.payer.publicKey, this.payer.publicKey, 9);
 
     MERTD = await createMint(
-      banksClient,
-      payer,
-      payer.publicKey,
-      payer.publicKey,
+      this.banksClient,
+      this.payer,
+      this.payer.publicKey,
+      this.payer.publicKey,
       6
     );
 
     await createAssociatedTokenAccount(
-      banksClient,
-      payer,
+      this.banksClient,
+      this.payer,
       META,
-      payer.publicKey
+      this.payer.publicKey
     );
     await createAssociatedTokenAccount(
-      banksClient,
-      payer,
+      this.banksClient,
+      this.payer,
       USDC,
-      payer.publicKey
+      this.payer.publicKey
     );
 
     // 1000 META
     await mintToOverride(
-      context,
-      getAssociatedTokenAddressSync(META, payer.publicKey),
+      this.context,
+      getAssociatedTokenAddressSync(META, this.payer.publicKey),
       1_000n * 1_000_000_000n
     );
     // 200,000 USDC
     await mintToOverride(
-      context,
-      getAssociatedTokenAddressSync(USDC, payer.publicKey),
+      this.context,
+      getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
       200_000n * 1_000_000n
     );
   });
 
   describe("#initialize_dao", async function () {
-    it("initializes the DAO", async function () {
+    it.only("initializes the DAO", async function () {
+
+      const createKey = Keypair.generate();
+
+      const [multisigPda] = multisig.getMultisigPda({ createKey: createKey.publicKey });
+
+    
+    const programConfigPda = multisig.getProgramConfigPda({})[0];
+
+    const accountInfo = await this.banksClient.getAccount(programConfigPda);
+    const transformedAccountInfo = {
+      ...accountInfo,
+      data: Buffer.from(accountInfo.data)
+    };
+    const [storedProgramConfig] = multisig.accounts.ProgramConfig.fromAccountInfo(transformedAccountInfo);
+
+    console.log("storedProgramConfig", storedProgramConfig);
+
+    const configTreasury = storedProgramConfig.treasury;
+
+    const multisigCreateV2Ix = multisig.instructions.multisigCreateV2({
+      createKey: createKey.publicKey,
+      creator: this.payer.publicKey,
+      multisigPda,
+      configAuthority: this.payer.publicKey,
+      threshold: 1,
+      members: [{
+        key: this.payer.publicKey,
+        permissions: Permissions.all(),
+      }],
+      timeLock: 0,
+      rentCollector: null,
+      treasury: configTreasury,
+    });
+
+    let tx = new Transaction().add(multisigCreateV2Ix);
+    tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = this.payer.publicKey;
+    tx.sign(this.payer, createKey);
+
+    await this.banksClient.processTransaction(tx);
+
+    let daoKeypair = Keypair.generate();
+
+    await this.autocratClient.initializeDaoIx(
+      daoKeypair,
+      META,
+      {
+        twapInitialObservation: new BN(1),
+        twapMaxObservationChangePerUpdate: new BN(1000),
+        twapStartDelaySlots: new BN(10000),
+        minQuoteFutarchicLiquidity: new BN(10),
+        minBaseFutarchicLiquidity: new BN(100),
+        passThresholdBps: 300,
+        slotsPerProposal: new BN(50000),
+      },
+      USDC,
+      multisigPda
+    ).rpc();
+
+    const multisigAccountInfo = await this.banksClient.getAccount(multisigPda);
+    const transformedMultisigAccountInfo = {
+      ...multisigAccountInfo,
+      data: Buffer.from(multisigAccountInfo.data)
+    };
+    const [storedMultisig] = multisig.accounts.Multisig.fromAccountInfo(transformedMultisigAccountInfo);
+
+    console.log("storedMultisig", storedMultisig);
+
+    const [vaultPda] = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    });
+
+    console.log(LOW_FEE_RAYDIUM_CONFIG);
+
+    return;
+
+    const transferInstruction = SystemProgram.transfer({
+      fromPubkey: vaultPda,
+      toPubkey: this.payer.publicKey,
+      lamports: 1,
+    });
+
+    const testTransferMessage = new TransactionMessage({
+      payerKey: vaultPda,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [transferInstruction],
+    });
+
+    const vaultTxCreate = multisig.instructions.vaultTransactionCreate({
+      multisigPda,
+      transactionIndex: BigInt(storedMultisig.transactionIndex.toString()) + 1n,
+      creator: this.payer.publicKey,
+      vaultIndex: 0,
+      ephemeralSigners: 0,
+      transactionMessage: testTransferMessage,
+    });
+
+    const proposalCreateIx = multisig.instructions.proposalCreate({
+      multisigPda,
+      transactionIndex: BigInt(storedMultisig.transactionIndex.toString()) + 1n,
+      creator: this.payer.publicKey,
+    });
+
+    const [squadsProposalPda] = multisig.getProposalPda({
+      multisigPda,
+      transactionIndex: BigInt(storedMultisig.transactionIndex.toString()) + 1n,
+    });
+
+    const tx2 = new Transaction().add(vaultTxCreate, proposalCreateIx);
+    tx2.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    tx2.feePayer = this.payer.publicKey;
+    tx2.sign(this.payer);
+
+    await this.banksClient.processTransaction(tx2);
+
+    await this.autocratClient.initializeProposal(
+      daoKeypair.publicKey,
+      "",
+      squadsProposalPda,
+      new BN(1_000_000_000),
+      new BN(1_000_000_000),
+    );
+
+
+
+        return;
       dao = await autocratClient.initializeDao(
         META,
         400,

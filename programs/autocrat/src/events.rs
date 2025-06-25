@@ -62,7 +62,6 @@ pub struct InitializeProposalEvent {
     pub pass_lp_tokens_locked: u64,
     pub fail_lp_tokens_locked: u64,
     pub pda_bump: u8,
-    pub instruction: ProposalInstruction,
     pub duration_in_slots: u64,
 }
 

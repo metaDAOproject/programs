@@ -67,8 +67,6 @@ pub const SLOTS_PER_10_SECS: u64 = 25;
 pub const DAY_IN_SLOTS: u64 = 24 * 60 * 6 * SLOTS_PER_10_SECS;
 pub const THREE_DAYS_IN_SLOTS: u64 = 3 * DAY_IN_SLOTS;
 
-pub const TEN_DAYS_IN_SECONDS: i64 = 10 * 24 * 60 * 60;
-
 // by default, the pass price needs to be 3% higher than the fail price
 pub const DEFAULT_PASS_THRESHOLD_BPS: u16 = 300;
 
@@ -81,6 +79,11 @@ pub const PASS_INDEX: usize = 1;
 
 // TWAP can only move by $5 per slot
 pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
+
+// When you create a DAO, it creates a 1/2 underlying multisig account
+// The 1st member is the DAO itself, the second member is a key with a public
+// private key. 
+// The DAO can approve proposals, anyone can create or execute them.
 
 #[program]
 pub mod autocrat {
@@ -101,11 +104,6 @@ pub mod autocrat {
     #[access_control(ctx.accounts.validate())]
     pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
         FinalizeProposal::handle(ctx)
-    }
-
-    #[access_control(ctx.accounts.validate())]
-    pub fn execute_proposal(ctx: Context<ExecuteProposal>) -> Result<()> {
-        ExecuteProposal::handle(ctx)
     }
 
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {

@@ -24,6 +24,7 @@
         "@noble/secp256k1": "^2.0.0",
         "@solana/spl-token": "^0.3.7",
         "@solana/web3.js": "^1.90.0",
+        "@sqds/multisig": "^2.1.4",
         "anchor-bankrun": "^0.3.0",
         "arweave": "^1.14.4",
         "solana-bankrun": "^0.3.0",

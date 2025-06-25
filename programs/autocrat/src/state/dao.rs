@@ -39,4 +39,5 @@ pub struct Dao {
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
     pub seq_num: u64,
+    pub squads_multisig: Pubkey,
 }

@@ -74,3 +74,11 @@ export const RAYDIUM_CREATE_POOL_FEE_RECEIVE = new PublicKey(
 export const DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE = new PublicKey(
   "G11FKBRaAkHAKuLCgLM6K6NUc9rTjPAznRCjZifrTQe2"
 );
+
+export const SQUADS_PROGRAM_CONFIG = new PublicKey(
+  "BSTq9w3kZwNwpBXJEvTZz2G9ZTNyKBvoSeXMvwb4cNZr"
+);
+
+export const SQUADS_PROGRAM_ID = new PublicKey(
+  "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
+);

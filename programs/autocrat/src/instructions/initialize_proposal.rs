@@ -6,7 +6,6 @@ use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeProposalParams {
     pub description_url: String,
-    pub instruction: ProposalInstruction,
     pub pass_lp_tokens_to_lock: u64,
     pub fail_lp_tokens_to_lock: u64,
     pub nonce: u64,
@@ -19,11 +18,12 @@ pub struct InitializeProposal<'info> {
     #[account(
         init,
         payer = payer,
-        space = 2000,
+        space = 8 + Proposal::INIT_SPACE,
         seeds = [b"proposal", proposer.key().as_ref(), &args.nonce.to_le_bytes()],
         bump
     )]
     pub proposal: Box<Account<'info, Proposal>>,
+    pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(
@@ -129,6 +129,7 @@ impl InitializeProposal<'_> {
 
     pub fn handle(ctx: Context<Self>, params: InitializeProposalParams) -> Result<()> {
         let Self {
+            squads_proposal: _,
             base_vault,
             quote_vault,
             question,
@@ -152,7 +153,6 @@ impl InitializeProposal<'_> {
 
         let InitializeProposalParams {
             description_url,
-            instruction,
             pass_lp_tokens_to_lock,
             fail_lp_tokens_to_lock,
             nonce,
@@ -225,7 +225,6 @@ impl InitializeProposal<'_> {
             description_url,
             slot_enqueued: clock.slot,
             state: ProposalState::Pending,
-            instruction: instruction.clone(),
             pass_amm: pass_amm.key(),
             fail_amm: fail_amm.key(),
             base_vault: base_vault.key(),
@@ -256,7 +255,6 @@ impl InitializeProposal<'_> {
             pass_lp_tokens_locked: pass_lp_tokens_to_lock,
             fail_lp_tokens_locked: fail_lp_tokens_to_lock,
             pda_bump: ctx.bumps.proposal,
-            instruction,
             duration_in_slots: proposal.duration_in_slots,
         });
 

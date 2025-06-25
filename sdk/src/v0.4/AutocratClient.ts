@@ -275,7 +275,8 @@ export class AutocratClient {
         passThresholdBps: null,
         slotsPerProposal: null,
       },
-      usdcMint
+      usdcMint,
+      daoKeypair.publicKey
     )
       .postInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({
@@ -294,7 +295,8 @@ export class AutocratClient {
     daoKeypair: Keypair,
     tokenMint: PublicKey,
     params: InitializeDaoParams,
-    usdcMint: PublicKey = MAINNET_USDC
+    usdcMint: PublicKey = MAINNET_USDC,
+    multisig: PublicKey
   ) {
     return this.autocrat.methods
       .initializeDao(params)
@@ -302,6 +304,7 @@ export class AutocratClient {
         dao: daoKeypair.publicKey,
         tokenMint,
         usdcMint,
+        multisig,
       })
       .signers([daoKeypair]);
   }
@@ -309,7 +312,7 @@ export class AutocratClient {
   async initializeProposal(
     dao: PublicKey,
     descriptionUrl: string,
-    instruction: ProposalInstruction,
+    squadsProposal: PublicKey,
     baseTokensToLP: BN,
     quoteTokensToLP: BN
   ): Promise<PublicKey> {
@@ -419,7 +422,7 @@ export class AutocratClient {
 
     await this.initializeProposalIx(
       descriptionUrl,
-      instruction,
+      squadsProposal,
       dao,
       storedDao.tokenMint,
       storedDao.usdcMint,
@@ -563,7 +566,7 @@ export class AutocratClient {
 
   initializeProposalIx(
     descriptionUrl: string,
-    instruction: ProposalInstruction,
+    squadsProposal: PublicKey,
     dao: PublicKey,
     baseMint: PublicKey,
     quoteMint: PublicKey,
@@ -605,12 +608,12 @@ export class AutocratClient {
     return this.autocrat.methods
       .initializeProposal({
         descriptionUrl,
-        instruction,
         passLpTokensToLock,
         failLpTokensToLock,
         nonce,
       })
       .accounts({
+        squadsProposal,
         question,
         proposal,
         dao,
@@ -656,7 +659,7 @@ export class AutocratClient {
 
     return this.finalizeProposalIx(
       proposal,
-      storedProposal.instruction,
+      // storedProposal.instruction,
       storedProposal.dao,
       storedDao.tokenMint,
       storedDao.usdcMint,
@@ -666,7 +669,7 @@ export class AutocratClient {
 
   finalizeProposalIx(
     proposal: PublicKey,
-    instruction: any,
+    // instruction: any,
     dao: PublicKey,
     daoToken: PublicKey,
     usdc: PublicKey,
@@ -719,39 +722,39 @@ export class AutocratClient {
     });
   }
 
-  async executeProposal(proposal: PublicKey) {
-    let storedProposal = await this.getProposal(proposal);
+  // async executeProposal(proposal: PublicKey) {
+  //   let storedProposal = await this.getProposal(proposal);
 
-    return this.executeProposalIx(
-      proposal,
-      storedProposal.dao,
-      storedProposal.instruction
-    ).rpc();
-  }
+  //   return this.executeProposalIx(
+  //     proposal,
+  //     storedProposal.dao,
+  //     storedProposal.instruction
+  //   ).rpc();
+  // }
 
-  executeProposalIx(proposal: PublicKey, dao: PublicKey, instruction: any) {
-    const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
-    return this.autocrat.methods
-      .executeProposal()
-      .accounts({
-        proposal,
-        dao,
-        // daoTreasury,
-      })
-      .remainingAccounts(
-        instruction.accounts
-          .concat({
-            pubkey: instruction.programId,
-            isWritable: false,
-            isSigner: false,
-          })
-          .map((meta: AccountMeta) =>
-            meta.pubkey.equals(daoTreasury)
-              ? { ...meta, isSigner: false }
-              : meta
-          )
-      );
-  }
+  // executeProposalIx(proposal: PublicKey, dao: PublicKey, instruction: any) {
+  //   const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
+  //   return this.autocrat.methods
+  //     .executeProposal()
+  //     .accounts({
+  //       proposal,
+  //       dao,
+  //       // daoTreasury,
+  //     })
+  //     .remainingAccounts(
+  //       instruction.accounts
+  //         .concat({
+  //           pubkey: instruction.programId,
+  //           isWritable: false,
+  //           isSigner: false,
+  //         })
+  //         .map((meta: AccountMeta) =>
+  //           meta.pubkey.equals(daoTreasury)
+  //             ? { ...meta, isSigner: false }
+  //             : meta
+  //         )
+  //     );
+  // }
 
   // cranks the TWAPs of multiple proposals' markets. there's a limit on the
   // number of proposals you can pass in, which I can't determine rn because
