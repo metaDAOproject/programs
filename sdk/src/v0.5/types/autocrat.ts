@@ -543,15 +543,11 @@ export type Autocrat = {
           },
           {
             name: "passThresholdBps";
-            type: {
-              option: "u16";
-            };
+            type: "u16";
           },
           {
             name: "slotsPerProposal";
-            type: {
-              option: "u64";
-            };
+            type: "u64";
           },
           {
             name: "nonce";
@@ -1532,15 +1528,11 @@ export const IDL: Autocrat = {
           },
           {
             name: "passThresholdBps",
-            type: {
-              option: "u16",
-            },
+            type: "u16",
           },
           {
             name: "slotsPerProposal",
-            type: {
-              option: "u64",
-            },
+            type: "u64",
           },
           {
             name: "nonce",

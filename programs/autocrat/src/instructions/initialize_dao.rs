@@ -9,8 +9,8 @@ pub struct InitializeDaoParams {
     pub twap_start_delay_slots: u64,
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
-    pub pass_threshold_bps: Option<u16>,
-    pub slots_per_proposal: Option<u64>,
+    pub pass_threshold_bps: u16,
+    pub slots_per_proposal: u64,
     pub nonce: u64,
 }
 
@@ -68,9 +68,6 @@ impl InitializeDao<'_> {
 
         let dao = &mut ctx.accounts.dao;
 
-
-        let slots_per_proposal = slots_per_proposal.unwrap_or(THREE_DAYS_IN_SLOTS);
-
         require!(
             slots_per_proposal > twap_start_delay_slots,
             AutocratError::ProposalDurationTooShort
@@ -85,12 +82,15 @@ impl InitializeDao<'_> {
                     program_config: ctx.accounts.squads_program_config.to_account_info(),
                     multisig: ctx.accounts.squads_multisig.to_account_info(),
                     system_program: ctx.accounts.system_program.to_account_info(),
-                    treasury: ctx.accounts.squads_program_config_treasury.to_account_info(),
+                    treasury: ctx
+                        .accounts
+                        .squads_program_config_treasury
+                        .to_account_info(),
                     create_key: dao.to_account_info(),
                     creator: ctx.accounts.payer.to_account_info(),
                 },
                 &[&dao_seeds[..]],
-            ), 
+            ),
             squads_multisig_program::MultisigCreateArgsV2 {
                 config_authority: Some(dao.key()),
                 threshold: 1,
@@ -101,13 +101,16 @@ impl InitializeDao<'_> {
                     },
                     Member {
                         key: permissionless_account::id(),
-                        permissions: Permissions::from_vec(&[Permission::Initiate, Permission::Execute]),
-                    }
+                        permissions: Permissions::from_vec(&[
+                            Permission::Initiate,
+                            Permission::Execute,
+                        ]),
+                    },
                 ],
                 time_lock: 0,
                 rent_collector: None,
                 memo: None,
-            }
+            },
         )?;
 
         dao.set_inner(Dao {
@@ -118,7 +121,7 @@ impl InitializeDao<'_> {
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),
             proposal_count: 0,
-            pass_threshold_bps: pass_threshold_bps.unwrap_or(DEFAULT_PASS_THRESHOLD_BPS),
+            pass_threshold_bps,
             slots_per_proposal,
             twap_initial_observation,
             twap_max_observation_change_per_update,

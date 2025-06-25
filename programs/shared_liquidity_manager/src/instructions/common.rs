@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
-use raydium_cpmm_cpi::program::RaydiumCpmm;
-use raydium_cpmm_cpi::states::AMM_CONFIG_SEED;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Token, TokenAccount};
+use raydium_cpmm_cpi::program::RaydiumCpmm;
+use raydium_cpmm_cpi::states::AMM_CONFIG_SEED;
 
 /// Static accounts for initializing a Raydium pool, used as a common struct
 /// to reduce code duplication and conserve stack space.

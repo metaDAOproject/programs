@@ -306,7 +306,7 @@ export class AutocratClient {
     quoteMint?: PublicKey;
     squadsProgramConfigTreasury?: PublicKey;
   }) {
-    const [dao] = getDaoAddr(this.autocrat.programId, params.nonce);
+    const [dao] = getDaoAddr({ nonce: params.nonce });
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
       multisigPda,

@@ -1,8 +1,8 @@
 use super::*;
 
 use amm::state::ONE_MINUTE_IN_SLOTS;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeProposalParams {
@@ -99,7 +99,7 @@ impl InitializeProposal<'_> {
             2,
             AutocratError::QuestionMustBeBinary
         );
-        
+
         for amm in [&self.pass_amm, &self.fail_amm] {
             // an attacker is able to crank 5 observations before a proposal starts
             require!(

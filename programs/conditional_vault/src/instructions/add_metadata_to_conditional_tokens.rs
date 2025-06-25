@@ -41,7 +41,9 @@ impl AddMetadataToConditionalTokens<'_> {
         // );
 
         require!(
-            self.vault.conditional_token_mints.contains(&self.conditional_token_mint.key()),
+            self.vault
+                .conditional_token_mints
+                .contains(&self.conditional_token_mint.key()),
             VaultError::InvalidConditionalTokenMint
         );
 

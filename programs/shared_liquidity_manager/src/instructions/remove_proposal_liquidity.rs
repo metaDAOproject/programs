@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::get_associated_token_address;
-use anchor_spl::token::{Mint, TokenAccount, Token};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use anchor_lang::Discriminator;
 use raydium_cpmm_cpi::{
@@ -10,8 +10,8 @@ use raydium_cpmm_cpi::{
 
 use autocrat::state::ProposalState;
 
-use crate::instructions::common::*;
 use crate::error::SharedLiquidityManagerError;
+use crate::instructions::common::*;
 use crate::state::SharedLiquidityPool;
 
 #[derive(Accounts)]
@@ -54,7 +54,6 @@ pub struct RemoveProposalLiquidityRaydiumAccounts<'info> {
     )]
     pub active_spot_pool_quote_vault: Box<Account<'info, TokenAccount>>,
 
-
     pub token_program_2022: Program<'info, anchor_spl::token_interface::Token2022>,
 
     pub cp_swap_program: Program<'info, raydium_cpmm_cpi::program::RaydiumCpmm>,
@@ -86,7 +85,6 @@ pub struct RemoveProposalLiquidityRaydiumAccounts<'info> {
         bump,
     )]
     pub next_spot_pool_lp_mint: UncheckedAccount<'info>,
-
 
     /// CHECK: next spot pool base vault, init by cp-swap
     #[account(
@@ -260,21 +258,14 @@ impl RemoveProposalLiquidity<'_> {
             self.sl_pool.active_spot_pool
         );
 
-        require_keys_eq!(
-            self.raydium.sl_pool.key(),
-            self.sl_pool.key()
-        );
+        require_keys_eq!(self.raydium.sl_pool.key(), self.sl_pool.key());
 
         require!(
             self.sl_pool.active_proposal.is_some(),
             SharedLiquidityManagerError::NoActiveProposal
         );
 
-        require_keys_eq!(
-            self.proposal.key(),
-            self.sl_pool.active_proposal.unwrap(),
-        );
-
+        require_keys_eq!(self.proposal.key(), self.sl_pool.active_proposal.unwrap(),);
 
         require_keys_eq!(
             self.conditional_vault.question.key(),
@@ -316,25 +307,13 @@ impl RemoveProposalLiquidity<'_> {
             self.sl_pool.sl_pool_signer
         );
 
-        require_keys_eq!(
-            self.ammm.pass_amm.key(),
-            self.proposal.pass_amm
-        );
+        require_keys_eq!(self.ammm.pass_amm.key(), self.proposal.pass_amm);
 
-        require_keys_eq!(
-            self.ammm.fail_amm.key(),
-            self.proposal.fail_amm
-        );
+        require_keys_eq!(self.ammm.fail_amm.key(), self.proposal.fail_amm);
 
-        require_keys_eq!(
-            self.ammm.pass_lp_mint.key(),
-            self.ammm.pass_amm.lp_mint
-        );
+        require_keys_eq!(self.ammm.pass_lp_mint.key(), self.ammm.pass_amm.lp_mint);
 
-        require_keys_eq!(
-            self.ammm.fail_lp_mint.key(),
-            self.ammm.fail_amm.lp_mint
-        );
+        require_keys_eq!(self.ammm.fail_lp_mint.key(), self.ammm.fail_amm.lp_mint);
 
         require_keys_eq!(
             self.ammm.pass_amm_vault_ata_base.key(),
@@ -354,10 +333,7 @@ impl RemoveProposalLiquidity<'_> {
             self.ammm.fail_amm.vault_ata_quote
         );
 
-        require_keys_eq!(
-            self.ammm.sl_pool_signer.key(),
-            self.sl_pool.sl_pool_signer
-        );
+        require_keys_eq!(self.ammm.sl_pool_signer.key(), self.sl_pool.sl_pool_signer);
 
         require!(
             self.conditional_vault.question.is_resolved(),
@@ -400,27 +376,33 @@ impl RemoveProposalLiquidity<'_> {
                 (
                     ctx.accounts.ammm.pass_amm.to_account_info(),
                     &ctx.accounts.ammm.sl_pool_pass_lp_account,
-                    ctx.accounts.conditional_vault.sl_pool_pass_base_vault.to_account_info(),
-                    ctx.accounts.conditional_vault.sl_pool_pass_quote_vault.to_account_info(),
+                    ctx.accounts
+                        .conditional_vault
+                        .sl_pool_pass_base_vault
+                        .to_account_info(),
+                    ctx.accounts
+                        .conditional_vault
+                        .sl_pool_pass_quote_vault
+                        .to_account_info(),
                     ctx.accounts.ammm.pass_lp_mint.to_account_info(),
                     ctx.accounts.ammm.pass_amm_vault_ata_base.to_account_info(),
-                    ctx.accounts
-                        .ammm
-                        .pass_amm_vault_ata_quote
-                        .to_account_info(),
+                    ctx.accounts.ammm.pass_amm_vault_ata_quote.to_account_info(),
                 )
             } else {
                 (
                     ctx.accounts.ammm.fail_amm.to_account_info(),
                     &ctx.accounts.ammm.sl_pool_fail_lp_account,
-                    ctx.accounts.conditional_vault.sl_pool_fail_base_vault.to_account_info(),
-                    ctx.accounts.conditional_vault.sl_pool_fail_quote_vault.to_account_info(),
+                    ctx.accounts
+                        .conditional_vault
+                        .sl_pool_fail_base_vault
+                        .to_account_info(),
+                    ctx.accounts
+                        .conditional_vault
+                        .sl_pool_fail_quote_vault
+                        .to_account_info(),
                     ctx.accounts.ammm.fail_lp_mint.to_account_info(),
                     ctx.accounts.ammm.fail_amm_vault_ata_base.to_account_info(),
-                    ctx.accounts
-                        .ammm
-                        .fail_amm_vault_ata_quote
-                        .to_account_info(),
+                    ctx.accounts.ammm.fail_amm_vault_ata_quote.to_account_info(),
                 )
             };
 
@@ -429,14 +411,17 @@ impl RemoveProposalLiquidity<'_> {
                 SharedLiquidityManagerError::NoLpTokensToRemove
             );
 
-
             // Remove liquidity from the winning AMM
             amm::cpi::remove_liquidity(
                 CpiContext::new_with_signer(
                     ctx.accounts.ammm.amm_program.to_account_info(),
                     amm::cpi::accounts::AddOrRemoveLiquidity {
                         amm,
-                        user: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                        user: ctx
+                            .accounts
+                            .conditional_vault
+                            .sl_pool_signer
+                            .to_account_info(),
                         user_lp_account: user_lp_account.to_account_info(),
                         user_base_account,
                         user_quote_account,
@@ -472,12 +457,20 @@ impl RemoveProposalLiquidity<'_> {
                         .conditional_vault
                         .base_vault_underlying_token_account
                         .to_account_info(),
-                    authority: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                    authority: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_signer
+                        .to_account_info(),
                     user_underlying_token_account: ctx
                         .accounts
                         .sl_pool_base_vault
                         .to_account_info(),
-                    event_authority: ctx.accounts.conditional_vault.vault_event_authority.to_account_info(),
+                    event_authority: ctx
+                        .accounts
+                        .conditional_vault
+                        .vault_event_authority
+                        .to_account_info(),
                     program: ctx
                         .accounts
                         .conditional_vault
@@ -488,10 +481,22 @@ impl RemoveProposalLiquidity<'_> {
                 signer,
             )
             .with_remaining_accounts(vec![
-                ctx.accounts.conditional_vault.fail_base_mint.to_account_info(),
-                ctx.accounts.conditional_vault.pass_base_mint.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_fail_base_vault.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_pass_base_vault.to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .fail_base_mint
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .pass_base_mint
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .sl_pool_fail_base_vault
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .sl_pool_pass_base_vault
+                    .to_account_info(),
             ]),
         )?;
 
@@ -503,7 +508,11 @@ impl RemoveProposalLiquidity<'_> {
                 ctx.accounts.system_program.to_account_info(),
                 anchor_lang::system_program::Transfer {
                     from: ctx.accounts.payer.to_account_info(),
-                    to: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                    to: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_signer
+                        .to_account_info(),
                 },
             ),
             // pool fee + 0.1 SOL for rent, we only need 0.05 now but Raydium
@@ -526,12 +535,20 @@ impl RemoveProposalLiquidity<'_> {
                         .conditional_vault
                         .quote_vault_underlying_token_account
                         .to_account_info(),
-                    authority: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
+                    authority: ctx
+                        .accounts
+                        .conditional_vault
+                        .sl_pool_signer
+                        .to_account_info(),
                     user_underlying_token_account: ctx
                         .accounts
                         .sl_pool_quote_vault
                         .to_account_info(),
-                    event_authority: ctx.accounts.conditional_vault.vault_event_authority.to_account_info(),
+                    event_authority: ctx
+                        .accounts
+                        .conditional_vault
+                        .vault_event_authority
+                        .to_account_info(),
                     program: ctx
                         .accounts
                         .conditional_vault
@@ -542,10 +559,22 @@ impl RemoveProposalLiquidity<'_> {
                 signer,
             )
             .with_remaining_accounts(vec![
-                ctx.accounts.conditional_vault.fail_quote_mint.to_account_info(),
-                ctx.accounts.conditional_vault.pass_quote_mint.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_fail_quote_vault.to_account_info(),
-                ctx.accounts.conditional_vault.sl_pool_pass_quote_vault.to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .fail_quote_mint
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .pass_quote_mint
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .sl_pool_fail_quote_vault
+                    .to_account_info(),
+                ctx.accounts
+                    .conditional_vault
+                    .sl_pool_pass_quote_vault
+                    .to_account_info(),
             ]),
         )?;
 
@@ -593,9 +622,17 @@ impl RemoveProposalLiquidity<'_> {
                 ctx.accounts.raydium.cp_swap_program.to_account_info(),
                 raydium_cpmm_cpi::cpi::accounts::Withdraw {
                     owner: ctx.accounts.raydium.sl_pool_signer.to_account_info(),
-                    authority: ctx.accounts.raydium_init_pool_static.raydium_authority.to_account_info(),
+                    authority: ctx
+                        .accounts
+                        .raydium_init_pool_static
+                        .raydium_authority
+                        .to_account_info(),
                     pool_state: ctx.accounts.raydium.active_spot_pool.to_account_info(),
-                    lp_mint: ctx.accounts.raydium.active_spot_pool_lp_mint.to_account_info(),
+                    lp_mint: ctx
+                        .accounts
+                        .raydium
+                        .active_spot_pool_lp_mint
+                        .to_account_info(),
                     memo_program: ctx.accounts.raydium.memo_program.to_account_info(),
                     owner_lp_token: ctx.accounts.sl_pool_spot_lp_vault.to_account_info(),
                     token_0_account,
@@ -648,7 +685,10 @@ impl RemoveProposalLiquidity<'_> {
                 ctx.accounts.quote_mint.to_account_info(),
                 ctx.accounts.sl_pool_base_vault.to_account_info(),
                 ctx.accounts.sl_pool_quote_vault.to_account_info(),
-                ctx.accounts.raydium.next_spot_pool_base_vault.to_account_info(),
+                ctx.accounts
+                    .raydium
+                    .next_spot_pool_base_vault
+                    .to_account_info(),
                 ctx.accounts
                     .raydium
                     .next_spot_pool_quote_vault
@@ -666,18 +706,37 @@ impl RemoveProposalLiquidity<'_> {
                     .raydium
                     .next_spot_pool_quote_vault
                     .to_account_info(),
-                ctx.accounts.raydium.next_spot_pool_base_vault.to_account_info(),
+                ctx.accounts
+                    .raydium
+                    .next_spot_pool_base_vault
+                    .to_account_info(),
             )
         };
 
         let cpi_accounts = raydium_cpmm_cpi::cpi::accounts::Initialize {
-            creator: ctx.accounts.conditional_vault.sl_pool_signer.to_account_info(),
-            authority: ctx.accounts.raydium_init_pool_static.raydium_authority.to_account_info(),
+            creator: ctx
+                .accounts
+                .conditional_vault
+                .sl_pool_signer
+                .to_account_info(),
+            authority: ctx
+                .accounts
+                .raydium_init_pool_static
+                .raydium_authority
+                .to_account_info(),
             pool_state: ctx.accounts.raydium.next_spot_pool.to_account_info(),
-            amm_config: ctx.accounts.raydium_init_pool_static.amm_config.to_account_info(),
+            amm_config: ctx
+                .accounts
+                .raydium_init_pool_static
+                .amm_config
+                .to_account_info(),
             token_0_mint,
             token_1_mint,
-            lp_mint: ctx.accounts.raydium.next_spot_pool_lp_mint.to_account_info(),
+            lp_mint: ctx
+                .accounts
+                .raydium
+                .next_spot_pool_lp_mint
+                .to_account_info(),
             creator_token_0,
             creator_token_1,
             creator_lp_token: ctx
@@ -693,12 +752,20 @@ impl RemoveProposalLiquidity<'_> {
                 .raydium
                 .next_spot_pool_observation_state
                 .to_account_info(),
-            create_pool_fee: ctx.accounts.raydium_init_pool_static.create_pool_fee.to_account_info(),
+            create_pool_fee: ctx
+                .accounts
+                .raydium_init_pool_static
+                .create_pool_fee
+                .to_account_info(),
             rent: ctx.accounts.raydium_init_pool_static.rent.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
             token_0_vault,
             token_1_vault,
-            associated_token_program: ctx.accounts.raydium_init_pool_static.associated_token_program.to_account_info(),
+            associated_token_program: ctx
+                .accounts
+                .raydium_init_pool_static
+                .associated_token_program
+                .to_account_info(),
         };
 
         let ix = instruction::Initialize {
@@ -747,9 +814,9 @@ impl RemoveProposalLiquidity<'_> {
 
         ctx.accounts.sl_pool.active_spot_pool = ctx.accounts.raydium.next_spot_pool.key();
         ctx.accounts.sl_pool.active_spot_pool_index += 1;
-        ctx.accounts.sl_pool.sl_pool_spot_lp_vault = ctx.accounts.raydium.sl_pool_next_spot_lp_vault.key();
+        ctx.accounts.sl_pool.sl_pool_spot_lp_vault =
+            ctx.accounts.raydium.sl_pool_next_spot_lp_vault.key();
         ctx.accounts.sl_pool.active_proposal = None;
-
 
         Ok(())
     }

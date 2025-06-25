@@ -117,14 +117,8 @@ impl WithdrawSharedLiquidity<'_> {
         );
 
         // Neither of these should get triggered because of the PDA derivation, but we'll keep them here for safety
-        require_eq!(
-            self.user_sl_pool_position.owner,
-            self.user.key(),
-        );
-        require_eq!(
-            self.user_sl_pool_position.pool,
-            self.sl_pool.key(),
-        );
+        require_eq!(self.user_sl_pool_position.owner, self.user.key(),);
+        require_eq!(self.user_sl_pool_position.pool, self.sl_pool.key(),);
 
         Ok(())
     }

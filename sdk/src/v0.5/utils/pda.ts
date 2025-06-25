@@ -15,7 +15,7 @@ import {
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
 } from "../constants.js";
-import { LAUNCHPAD_PROGRAM_ID } from "../constants.js";
+import { LAUNCHPAD_PROGRAM_ID, AUTOCRAT_PROGRAM_ID } from "../constants.js";
 
 export const getEventAuthorityAddr = (programId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
@@ -106,10 +106,13 @@ export const getMetadataAddr = (mint: PublicKey) => {
   );
 };
 
-export const getDaoAddr = (
-  programId: PublicKey,
-  nonce: BN
-): [PublicKey, number] => {
+export const getDaoAddr = ({
+  nonce,
+  programId = AUTOCRAT_PROGRAM_ID,
+}: {
+  nonce: BN;
+  programId?: PublicKey;
+}): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("dao"), nonce.toArrayLike(Buffer, "le", 8)],
     programId

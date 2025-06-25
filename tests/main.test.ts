@@ -25,7 +25,7 @@ import {
 //   getVersion,
 //   VersionKey
 // } from "@metadaoproject/futarchy";
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { PublicKey, Keypair, Connection } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -65,6 +65,7 @@ declare module "mocha" {
     ammClient: AmmClient;
     sharedLiquidityManagerClient: SharedLiquidityManagerClient;
     payer: Keypair;
+    squadsConnection: Connection;
     createTokenAccount: (
       mint: PublicKey,
       owner: PublicKey
@@ -181,6 +182,21 @@ before(async function () {
     { provider: provider as any }
   );
   this.payer = provider.wallet.payer;
+
+
+  this.squadsConnection = {
+      getAccountInfo: async (address: PublicKey) => {
+        let rawAccount = await this.banksClient.getAccount(address);
+        let accountInfo: AccountInfo<Buffer> = {
+          executable: false,
+          owner: rawAccount.owner,
+          lamports: rawAccount.lamports,
+          data: Buffer.from(rawAccount.data),
+        };
+        return accountInfo;
+      },
+    } as Connection;
+
 
   this.createTokenAccount = async (mint: PublicKey, owner: PublicKey) => {
     return await createAssociatedTokenAccount(

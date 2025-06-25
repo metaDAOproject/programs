@@ -16,7 +16,8 @@ pub struct FinalizeProposal<'info> {
     /// CHECK: checked by the has_one
     #[account(mut)]
     pub squads_proposal: UncheckedAccount<'info>,
-    pub squads_multisig_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
+    pub squads_multisig_program:
+        Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
     /// CHECK: checked by the has_one
     pub squads_multisig: UncheckedAccount<'info>,
     pub pass_amm: Account<'info, Amm>,

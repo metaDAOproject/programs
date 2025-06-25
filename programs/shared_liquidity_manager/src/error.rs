@@ -36,7 +36,6 @@ pub enum SharedLiquidityManagerError {
     QuestionAlreadyResolved,
 }
 
-
 // 1 PLTR = 100 USDC
 // We put 1 PLTR in, & 100 USDC in
 // I get 100 PLTR-DOWN and you get 100 PLTR-UP.
