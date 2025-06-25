@@ -28,6 +28,12 @@ pub enum SharedLiquidityManagerError {
     NoActiveProposal,
     #[msg("Proposal is not in draft status")]
     ProposalNotInDraftStatus,
+    #[msg("Proposal already active")]
+    ProposalAlreadyActive,
+    #[msg("AMM already has liquidity")]
+    AmmAlreadyHasLiquidity,
+    #[msg("Question already resolved")]
+    QuestionAlreadyResolved,
 }
 
 

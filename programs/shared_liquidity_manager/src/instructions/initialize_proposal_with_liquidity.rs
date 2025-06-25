@@ -12,7 +12,7 @@ pub struct InitializeProposalWithLiquidityParams {
 }
 
 #[derive(Accounts)]
-pub struct RaydiumAccounts<'info> {
+pub struct InitializeProposalRaydiumAccounts<'info> {
     #[account(mut)]
     pub spot_pool: AccountLoader<'info, raydium_cpmm_cpi::states::PoolState>,
     #[account(mut)]
@@ -32,7 +32,7 @@ pub struct RaydiumAccounts<'info> {
 }
 
 #[derive(Accounts)]
-pub struct ConditionalVaultAccounts<'info> {
+pub struct InitializeProposalConditionalVaultAccounts<'info> {
     #[account(mut)]
     pub question: Account<'info, conditional_vault::state::Question>,
     #[account(mut)]
@@ -72,7 +72,7 @@ pub struct ConditionalVaultAccounts<'info> {
 }
 
 #[derive(Accounts)]
-pub struct AmmAccounts<'info> {
+pub struct InitializeProposalAmmAccounts<'info> {
     #[account(mut)]
     pub pass_amm: Account<'info, amm::state::Amm>,
     #[account(mut)]
@@ -138,13 +138,13 @@ pub struct InitializeProposalWithLiquidity<'info> {
     pub quote_mint: Box<Account<'info, Mint>>,
 
     // Raydium accounts
-    pub raydium: RaydiumAccounts<'info>,
+    pub raydium: InitializeProposalRaydiumAccounts<'info>,
 
     // Conditional vault accounts
-    pub conditional_vault: ConditionalVaultAccounts<'info>,
+    pub conditional_vault: InitializeProposalConditionalVaultAccounts<'info>,
 
     // AMM accounts
-    pub amm: AmmAccounts<'info>,
+    pub amm: InitializeProposalAmmAccounts<'info>,
 
     #[account(mut, has_one = shared_liquidity_pool)]
     pub draft_proposal: Box<Account<'info, DraftProposal>>,
@@ -160,13 +160,110 @@ pub struct InitializeProposalWithLiquidity<'info> {
 
 impl InitializeProposalWithLiquidity<'_> {
     pub fn validate(&self) -> Result<()> {
+        // Check stake threshold
         let total_supply = self.base_mint.supply;
         let stake_threshold = (total_supply
             * self.shared_liquidity_pool.proposal_stake_rate_threshold_bps as u64)
             / 10_000;
         require_gte!(self.draft_proposal.staked_token_amount, stake_threshold, SharedLiquidityManagerError::InsufficientStake);
 
+        // Check draft proposal status
         require_eq!(self.draft_proposal.status, DraftProposalStatus::Draft, SharedLiquidityManagerError::ProposalNotInDraftStatus);
+
+        // Check that there's no active proposal
+        require!(
+            self.shared_liquidity_pool.active_proposal.is_none(),
+            SharedLiquidityManagerError::ProposalAlreadyActive
+        );
+
+        // Validate conditional vault account relationships
+        require_keys_eq!(
+            self.conditional_vault.fail_base_mint.key(),
+            self.conditional_vault.base_vault.conditional_token_mints[0]
+        );
+
+        require_keys_eq!(
+            self.conditional_vault.pass_base_mint.key(),
+            self.conditional_vault.base_vault.conditional_token_mints[1]
+        );
+
+        require_keys_eq!(
+            self.conditional_vault.fail_quote_mint.key(),
+            self.conditional_vault.quote_vault.conditional_token_mints[0]
+        );
+
+        require_keys_eq!(
+            self.conditional_vault.pass_quote_mint.key(),
+            self.conditional_vault.quote_vault.conditional_token_mints[1]
+        );
+
+        require_keys_eq!(
+            self.conditional_vault.sl_pool_signer.key(),
+            self.shared_liquidity_pool.sl_pool_signer
+        );
+
+        // Validate AMM account relationships
+        require_keys_eq!(
+            self.amm.pass_lp_mint.key(),
+            self.amm.pass_amm.lp_mint
+        );
+
+        require_keys_eq!(
+            self.amm.fail_lp_mint.key(),
+            self.amm.fail_amm.lp_mint
+        );
+
+        require_keys_eq!(
+            self.amm.pass_amm_vault_ata_base.key(),
+            self.amm.pass_amm.vault_ata_base
+        );
+
+        require_keys_eq!(
+            self.amm.pass_amm_vault_ata_quote.key(),
+            self.amm.pass_amm.vault_ata_quote
+        );
+
+        require_keys_eq!(
+            self.amm.fail_amm_vault_ata_base.key(),
+            self.amm.fail_amm.vault_ata_base
+        );
+
+        require_keys_eq!(
+            self.amm.fail_amm_vault_ata_quote.key(),
+            self.amm.fail_amm.vault_ata_quote
+        );
+
+        require_keys_eq!(
+            self.amm.sl_pool_signer.key(),
+            self.shared_liquidity_pool.sl_pool_signer
+        );
+
+        // Validate that AMMs are empty (no existing liquidity)
+        require_eq!(self.amm.pass_lp_mint.supply, 0, SharedLiquidityManagerError::AmmAlreadyHasLiquidity);
+        require_eq!(self.amm.fail_lp_mint.supply, 0, SharedLiquidityManagerError::AmmAlreadyHasLiquidity);
+
+        // Validate that the question is not resolved yet
+        require!(
+            !self.conditional_vault.question.is_resolved(),
+            SharedLiquidityManagerError::QuestionAlreadyResolved
+        );
+
+        // Validate draft proposal belongs to this shared liquidity pool
+        require_keys_eq!(
+            self.draft_proposal.shared_liquidity_pool,
+            self.shared_liquidity_pool.key()
+        );
+
+        // Validate that the question belongs to the conditional vaults
+        require_keys_eq!(
+            self.conditional_vault.question.key(),
+            self.conditional_vault.base_vault.question
+        );
+
+        require_keys_eq!(
+            self.conditional_vault.question.key(),
+            self.conditional_vault.quote_vault.question
+        );
 
         Ok(())
     }

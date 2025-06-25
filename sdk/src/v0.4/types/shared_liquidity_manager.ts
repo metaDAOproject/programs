@@ -1734,6 +1734,21 @@ export type SharedLiquidityManager = {
       code: 6012;
       name: "ProposalNotInDraftStatus";
       msg: "Proposal is not in draft status";
+    },
+    {
+      code: 6013;
+      name: "ProposalAlreadyActive";
+      msg: "Proposal already active";
+    },
+    {
+      code: 6014;
+      name: "AmmAlreadyHasLiquidity";
+      msg: "AMM already has liquidity";
+    },
+    {
+      code: 6015;
+      name: "QuestionAlreadyResolved";
+      msg: "Question already resolved";
     }
   ];
 };
@@ -3474,6 +3489,21 @@ export const IDL: SharedLiquidityManager = {
       code: 6012,
       name: "ProposalNotInDraftStatus",
       msg: "Proposal is not in draft status",
+    },
+    {
+      code: 6013,
+      name: "ProposalAlreadyActive",
+      msg: "Proposal already active",
+    },
+    {
+      code: 6014,
+      name: "AmmAlreadyHasLiquidity",
+      msg: "AMM already has liquidity",
+    },
+    {
+      code: 6015,
+      name: "QuestionAlreadyResolved",
+      msg: "Question already resolved",
     },
   ],
 };
