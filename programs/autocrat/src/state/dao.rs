@@ -4,6 +4,8 @@ pub use super::*;
 #[derive(InitSpace)]
 pub struct Dao {
     pub nonce: u64,
+    pub dao_pda_bump: u8,
+    pub squads_treasury: Pubkey,
     pub treasury_pda_bump: u8,
     pub treasury: Pubkey,
     pub base_mint: Pubkey,

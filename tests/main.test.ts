@@ -15,6 +15,8 @@ import {
   SharedLiquidityManagerClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+  SQUADS_PROGRAM_CONFIG,
+  SQUADS_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.5";
 // import {
 //   // AmmClient,
@@ -38,7 +40,7 @@ import { assert } from "chai";
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import * as fs from "fs";
-import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.5";
+import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
@@ -112,6 +114,10 @@ before(async function () {
         name: "raydium_cp_swap",
         programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
       },
+      {
+        name: "squads_multisig",
+        programId: SQUADS_PROGRAM_ID,
+      }
     ],
     [
       {
@@ -143,6 +149,15 @@ before(async function () {
           lamports: 377_950_832_219,
         },
       },
+      {
+        address: SQUADS_PROGRAM_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/squads-program-config"),
+          executable: false,
+          owner: SQUADS_PROGRAM_ID,
+          lamports: 1_000_000_000,
+        },
+      }
     ]
   );
   this.banksClient = this.context.banksClient;

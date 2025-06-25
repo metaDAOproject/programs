@@ -31,6 +31,26 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgramConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgramConfigTreasury";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -308,6 +328,14 @@ export type Autocrat = {
           {
             name: "nonce";
             type: "u64";
+          },
+          {
+            name: "daoPdaBump";
+            type: "u8";
+          },
+          {
+            name: "squadsTreasury";
+            type: "publicKey";
           },
           {
             name: "treasuryPdaBump";
@@ -1061,6 +1089,26 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgramConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgramConfigTreasury",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -1338,6 +1386,14 @@ export const IDL: Autocrat = {
           {
             name: "nonce",
             type: "u64",
+          },
+          {
+            name: "daoPdaBump",
+            type: "u8",
+          },
+          {
+            name: "squadsTreasury",
+            type: "publicKey",
           },
           {
             name: "treasuryPdaBump",

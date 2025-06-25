@@ -25,6 +25,9 @@ import {
   AUTOCRAT_PROGRAM_ID,
   CONDITIONAL_VAULT_PROGRAM_ID,
   MAINNET_USDC,
+  SQUADS_PROGRAM_CONFIG,
+  SQUADS_PROGRAM_CONFIG_TREASURY,
+  SQUADS_PROGRAM_ID,
   USDC_DECIMALS,
 } from "./constants.js";
 import {
@@ -50,6 +53,8 @@ import {
 } from "@solana/spl-token";
 import { sha256 } from "@noble/hashes/sha256";
 import { Dao, Proposal } from "./types/index.js";
+
+import * as multisig from "@sqds/multisig";
 
 export type CreateClientParams = {
   provider: AnchorProvider;
@@ -295,18 +300,24 @@ export class AutocratClient {
     baseMint,
     params,
     quoteMint = MAINNET_USDC,
+    squadsProgramConfigTreasury = SQUADS_PROGRAM_CONFIG_TREASURY,
   }: {
     baseMint: PublicKey;
     params: InitializeDaoParams;
     quoteMint?: PublicKey;
+    squadsProgramConfigTreasury?: PublicKey;
   }) {
-    console.log(this.autocrat);
     const [dao] = getDaoAddr(this.autocrat.programId, params.nonce);
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
     return this.autocrat.methods.initializeDao(params).accounts({
       dao,
       baseMint,
       quoteMint,
+      squadsMultisig: multisigPda,
+      squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+      squadsProgramConfigTreasury,
+      squadsProgram: SQUADS_PROGRAM_ID,
     });
   }
 

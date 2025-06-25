@@ -28,6 +28,7 @@
     "@noble/hashes": "^1.4.0",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.74.0",
+    "@sqds/multisig": "^2.1.4",
     "bn.js": "^5.2.1",
     "decimal.js": "^10.4.3",
     "esbuild": "^0.17.15"
