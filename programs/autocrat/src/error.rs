@@ -30,4 +30,6 @@ pub enum AutocratError {
     InsufficientLpTokenLock,
     #[msg("Proposal duration must be longer than TWAP start delay")]
     ProposalDurationTooShort,
+    #[msg("Question must have exactly 2 outcomes for binary futarchy")]
+    QuestionMustBeBinary,
 }
