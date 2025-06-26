@@ -134,12 +134,12 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "associatedTokenProgram";
+          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "systemProgram";
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -1156,12 +1156,12 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "associatedTokenProgram",
+          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "systemProgram",
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
