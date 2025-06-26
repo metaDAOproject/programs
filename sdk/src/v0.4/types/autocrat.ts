@@ -120,7 +120,7 @@ export type Autocrat = {
         },
         {
           name: "proposer";
-          isMut: false;
+          isMut: true;
           isSigner: true;
         },
         {
@@ -130,6 +130,11 @@ export type Autocrat = {
         },
         {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -184,11 +189,6 @@ export type Autocrat = {
         {
           name: "question";
           isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "treasury";
-          isMut: false;
           isSigner: false;
         },
         {
@@ -1142,7 +1142,7 @@ export const IDL: Autocrat = {
         },
         {
           name: "proposer",
-          isMut: false,
+          isMut: true,
           isSigner: true,
         },
         {
@@ -1152,6 +1152,11 @@ export const IDL: Autocrat = {
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1206,11 +1211,6 @@ export const IDL: Autocrat = {
         {
           name: "question",
           isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "treasury",
-          isMut: false,
           isSigner: false,
         },
         {

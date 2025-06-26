@@ -14,12 +14,9 @@ pub struct FinalizeProposal<'info> {
     pub proposal: Account<'info, Proposal>,
     pub pass_amm: Account<'info, Amm>,
     pub fail_amm: Account<'info, Amm>,
-    #[account(has_one = treasury)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut)]
     pub question: Account<'info, Question>,
-    /// CHECK: it's okay
-    pub treasury: UncheckedAccount<'info>,
     #[account(
         mut,
         associated_token::mint = pass_amm.lp_mint,
@@ -35,13 +32,13 @@ pub struct FinalizeProposal<'info> {
     #[account(
         mut,
         associated_token::mint = pass_amm.lp_mint,
-        associated_token::authority = dao.treasury,
+        associated_token::authority = proposal,
     )]
     pub pass_lp_vault_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         associated_token::mint = fail_amm.lp_mint,
-        associated_token::authority = dao.treasury,
+        associated_token::authority = proposal,
     )]
     pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
     pub token_program: Program<'info, Token>,
@@ -74,7 +71,6 @@ impl FinalizeProposal<'_> {
             fail_amm,
             dao,
             question,
-            treasury,
             pass_lp_user_account,
             fail_lp_user_account,
             pass_lp_vault_account,
@@ -95,10 +91,6 @@ impl FinalizeProposal<'_> {
             &[proposal.pda_bump],
         ];
         let proposal_signer = &[&proposal_seeds[..]];
-
-        let dao_key = dao.key();
-        let treasury_seeds = &[dao_key.as_ref(), &[dao.treasury_pda_bump]];
-        let treasury_signer = &[&treasury_seeds[..]];
 
         for (lp_tokens_to_unlock, from, to) in [
             (
@@ -122,10 +114,10 @@ impl FinalizeProposal<'_> {
                     Transfer {
                         from: from.to_account_info(),
                         to: to.to_account_info(),
-                        authority: treasury.to_account_info(),
+                        authority: proposal.to_account_info(),
                     },
                 )
-                .with_signer(treasury_signer),
+                .with_signer(proposal_signer),
                 lp_tokens_to_unlock,
             )?;
         }

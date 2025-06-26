@@ -2,6 +2,7 @@ use super::*;
 
 use amm::state::ONE_MINUTE_IN_SLOTS;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::associated_token::AssociatedToken;
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeProposalParams {
@@ -46,9 +47,9 @@ pub struct InitializeProposal<'info> {
     )]
     pub pass_amm: Box<Account<'info, Amm>>,
     #[account(constraint = pass_amm.lp_mint == pass_lp_mint.key())]
-    pub pass_lp_mint: Account<'info, Mint>,
+    pub pass_lp_mint: Box<Account<'info, Mint>>,
     #[account(constraint = fail_amm.lp_mint == fail_lp_mint.key())]
-    pub fail_lp_mint: Account<'info, Mint>,
+    pub fail_lp_mint: Box<Account<'info, Mint>>,
     #[account(
         constraint = fail_amm.base_mint == base_vault.conditional_token_mints[FAIL_INDEX],
         constraint = fail_amm.quote_mint == quote_vault.conditional_token_mints[FAIL_INDEX],
@@ -67,21 +68,25 @@ pub struct InitializeProposal<'info> {
     )]
     pub fail_lp_user_account: Account<'info, TokenAccount>,
     #[account(
-        mut,
-        associated_token::mint = pass_amm.lp_mint,
-        associated_token::authority = dao.treasury,
+        init_if_needed,
+        payer = proposer,
+        associated_token::mint = pass_lp_mint,
+        associated_token::authority = proposal,
     )]
-    pub pass_lp_vault_account: Account<'info, TokenAccount>,
+    pub pass_lp_vault_account: Box<Account<'info, TokenAccount>>,
     #[account(
-        mut,
-        associated_token::mint = fail_amm.lp_mint,
-        associated_token::authority = dao.treasury,
+        init_if_needed,
+        payer = proposer,
+        associated_token::mint = fail_lp_mint,
+        associated_token::authority = proposal,
     )]
-    pub fail_lp_vault_account: Account<'info, TokenAccount>,
+    pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
     pub proposer: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 
@@ -146,6 +151,7 @@ impl InitializeProposal<'_> {
             payer: _,
             token_program,
             system_program: _,
+            associated_token_program: _,
             event_authority: _,
             program: _,
         } = ctx.accounts;
