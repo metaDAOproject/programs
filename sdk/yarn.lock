@@ -751,6 +751,13 @@
     "@solana/codecs-core" "2.0.0-experimental.8618508"
     "@solana/codecs-numbers" "2.0.0-experimental.8618508"
 
+"@solana/spl-memo@^0.2.5":
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/@solana/spl-memo/-/spl-memo-0.2.5.tgz#a7828cdd1e810ff77c7c015ac97dfa166d0651fe"
+  integrity sha512-0Zx5t3gAdcHlRTt2O3RgGlni1x7vV7Xq7j4z9q8kKOMgU03PyoTbFQ/BSYCcICHzkaqD7ZxAiaJ6dlXolg01oA==
+  dependencies:
+    buffer "^6.0.3"
+
 "@solana/spl-token-metadata@^0.1.2":
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/@solana/spl-token-metadata/-/spl-token-metadata-0.1.2.tgz#876e13432bd2960bd3cac16b9b0af63e69e37719"

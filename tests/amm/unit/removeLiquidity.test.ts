@@ -48,7 +48,13 @@ export default function suite() {
     await this.mintTo(USDC, this.payer.publicKey, this.payer, 10_000 * 10 ** 6);
 
     let proposal = Keypair.generate().publicKey;
-    amm = await ammClient.createAmm(proposal, META, USDC, toBN(DAY_IN_SLOTS), 500);
+    amm = await ammClient.createAmm(
+      proposal,
+      META,
+      USDC,
+      toBN(DAY_IN_SLOTS),
+      500
+    );
 
     await ammClient.addLiquidity(amm, 1000, 2);
   });

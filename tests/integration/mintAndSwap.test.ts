@@ -42,13 +42,7 @@ export default async function test() {
 
   // Initialize AMM
   await ammClient
-    .initializeAmmIx(
-      YES,
-      NO,
-      new BN(0),
-      new BN(100), 
-      new BN(1000)
-    )
+    .initializeAmmIx(YES, NO, new BN(0), new BN(100), new BN(1000))
     .rpc();
   const amm = getAmmAddr(ammClient.getProgramId(), YES, NO)[0];
 

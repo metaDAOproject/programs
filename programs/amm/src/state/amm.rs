@@ -88,6 +88,9 @@ pub struct Amm {
     pub oracle: TwapOracle,
 
     pub seq_num: u64,
+
+    pub vault_ata_base: Pubkey,
+    pub vault_ata_quote: Pubkey,
 }
 
 impl Amm {
@@ -171,7 +174,11 @@ impl Amm {
     pub fn get_twap(&self) -> Result<u128> {
         let start_slot = self.created_at_slot + self.oracle.start_delay_slots;
 
-        require_gt!(self.oracle.last_updated_slot, start_slot, AmmError::NoSlotsPassed);
+        require_gt!(
+            self.oracle.last_updated_slot,
+            start_slot,
+            AmmError::NoSlotsPassed
+        );
         let slots_passed = (self.oracle.last_updated_slot - start_slot) as u128;
 
         require_neq!(slots_passed, 0, AmmError::NoSlotsPassed);

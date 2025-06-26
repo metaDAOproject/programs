@@ -43,7 +43,13 @@ export default function suite() {
     let amm: PublicKey;
     [amm, bump] = getAmmAddr(ammClient.program.programId, META, USDC);
 
-    await ammClient.createAmm(Keypair.generate().publicKey, META, USDC, twapStartDelaySlots, 500);
+    await ammClient.createAmm(
+      Keypair.generate().publicKey,
+      META,
+      USDC,
+      twapStartDelaySlots,
+      500
+    );
 
     const ammAcc = await ammClient.getAmm(amm);
 
@@ -66,11 +72,7 @@ export default function suite() {
       ammAcc.oracle.initialObservation.eq(expectedInitialObservation)
     );
     assert.equal(ammAcc.seqNum.toString(), "0");
-    assert.isTrue(
-      ammAcc.oracle.startDelaySlots.eq(
-        twapStartDelaySlots
-      )
-    );
+    assert.isTrue(ammAcc.oracle.startDelaySlots.eq(twapStartDelaySlots));
   });
 
   it("fails to create an amm with two identical mints", async function () {

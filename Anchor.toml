@@ -9,6 +9,7 @@ amm = "AMMyu265tkBpRW21iGQxKGLaves3gKm2JcMUqfXNSpqD"
 autocrat = "autowMzCbM29YXMgVG3T62Hkgo7RcyrvgQQkd54fDQL"
 autocrat_migrator = "MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt"
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
+shared_liquidity_manager = "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d"
 launchpad = "AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE"
 optimistic_timelock = "tiME1hz9F5C5ZecbvE5z6Msjy8PKfTqo1UuRYXfndKF"
 
@@ -20,13 +21,13 @@ cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "npx mocha --import=tsx tests/main.test.ts"
 add-v03-metadata = "yarn run tsx scripts/addV03Metadata.ts"
-initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
+add-v04-metadata = "yarn run tsx scripts/addV04Metadata.ts"
 create-proposal = "yarn run tsx scripts/createProposal.ts"
 create-v04-dao = "yarn run tsx scripts/createV04DAO.ts"
 create-v04-proposal = "yarn run tsx scripts/createV04Proposal.ts"
-add-v04-metadata = "yarn run tsx scripts/addV04Metadata.ts"
+initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
+test = "npx mocha --import=tsx --bail tests/main.test.ts"
 
 [test]
 startup_wait = 5000

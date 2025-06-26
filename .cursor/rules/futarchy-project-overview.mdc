@@ -1,0 +1,96 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Futarchy Project Overview
+
+## Project Structure
+
+This is a Solana-based futarchy platform that implements decision markets and DAO governance. The project consists of multiple Solana programs and a TypeScript SDK.
+
+### Core Programs
+- **Autocrat**: DAO governance and proposal management ([programs/autocrat/](mdc:programs/autocrat))
+- **AMM**: Automated market maker for trading conditional tokens ([programs/amm/](mdc:programs/amm))
+- **Conditional Vault**: Manages conditional tokens for prediction markets ([programs/conditional_vault/](mdc:programs/conditional_vault))
+- **Shared Liquidity Manager**: Manages shared liquidity pools for proposals ([programs/shared_liquidity_manager/](mdc:programs/shared_liquidity_manager))
+- **Launchpad**: Token launch functionality ([programs/launchpad/](mdc:programs/launchpad))
+
+### SDK Structure
+- **v0.3**: Legacy SDK version ([sdk/src/v0.3/](mdc:sdk/src/v0.3))
+- **v0.4**: Current SDK version with all latest features ([sdk/src/v0.4/](mdc:sdk/src/v0.4))
+
+### Testing
+- **Unit Tests**: Individual instruction tests ([tests/](mdc:tests))
+- **Integration Tests**: End-to-end workflow tests ([tests/integration/](mdc:tests/integration))
+- **Test Utils**: Common testing utilities ([tests/utils.ts](mdc:tests/utils.ts))
+
+## Development Patterns
+
+### Solana Program Development
+- Programs are written in Rust using Anchor framework
+- Each program has its own `Cargo.toml` and `src/` directory
+- Programs follow Anchor's instruction-based architecture
+
+### Testing Patterns
+- Tests use `bankrun` for fast, deterministic testing
+- Complex transactions use lookup tables and `TransactionMessage` for large account lists
+- Tests often require full proposal lifecycle setup (draft → stake → initialize → crank → finalize).
+  We generally do that setup in `before` and `beforeEach` blocks
+
+### SDK Development
+- TypeScript SDK provides client interfaces for all programs
+- SDK handles PDA derivation, instruction building, and transaction management
+- Versioned SDKs maintain backward compatibility
+
+## Key Concepts
+
+### Futarchy
+- Governance through markets
+- Proposals create conditional tokens (PASS/FAIL)
+- Market prices determine proposal outcomes
+
+### Conditional Tokens
+- Represent outcomes of events (e.g., "Will proposal X pass?")
+- Can be split, merged, and redeemed based on outcomes
+- Used for prediction market trading
+
+### Shared Liquidity
+- Pools that provide liquidity on both spot markets and decision markets
+- Managed through the Shared Liquidity Manager program
+
+## Common Development Tasks
+
+### Adding New Instructions
+1. Add instruction to Rust program in `programs/[program]/src/instructions/`
+2. Update client methods in SDK
+3. Add unit tests in `tests/[program]/unit/`
+4. Add integration tests if needed
+
+### Running Tests
+```bash
+# Run all tests
+anchor test
+
+# Run specific test file
+anchor test tests/sharedLiquidityManager/unit/removeProposalLiquidity.test.ts
+
+# Skip build for faster iteration, you should run this if you haven't changed a rust file
+anchor test --skip-build
+```
+
+### Building Programs
+```bash
+# Build all programs
+anchor build
+
+# Build specific program
+anchor build --program-name [program_name]
+```
+
+## File References
+- Main configuration: [Anchor.toml](mdc:Anchor.toml)
+- SDK entry point: [sdk/src/index.ts](mdc:sdk/src/index.ts)
+- Test utilities: [tests/utils.ts](mdc:tests/utils.ts)
+- Example test: @tests/launchpad/unit/refund.test.ts
+

@@ -11,6 +11,12 @@ export const AMM_PROGRAM_ID = new PublicKey(
 export const CONDITIONAL_VAULT_PROGRAM_ID = new PublicKey(
   "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 );
+export const LAUNCHPAD_PROGRAM_ID = new PublicKey(
+  "AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE"
+);
+export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
+  "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d"
+);
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
@@ -38,10 +44,6 @@ export const DEVNET_USDC = new PublicKey(
 export const USDC_DECIMALS = 6;
 
 export const AUTOCRAT_LUTS: PublicKey[] = [];
-
-export const LAUNCHPAD_PROGRAM_ID = new PublicKey(
-  "AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE"
-);
 
 export const RAYDIUM_AUTHORITY = PublicKey.findProgramAddressSync(
   [anchor.utils.bytes.utf8.encode("vault_and_lp_mint_auth_seed")],

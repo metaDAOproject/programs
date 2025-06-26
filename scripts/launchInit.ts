@@ -1,5 +1,10 @@
 import * as token from "@solana/spl-token";
-import { ComputeBudgetProgram, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  Transaction,
+} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
   getLaunchAddr,
@@ -47,8 +52,7 @@ const provider = anchor.AnchorProvider.local(rpcUrl, {
 const payer = provider.wallet["payer"];
 
 const launchAuthorityAddress = await input({
-  message:
-    "Enter the address of the launch authority",
+  message: "Enter the address of the launch authority",
   default: process.env.LAUNCH_AUTHORITY_ADDRESS,
 });
 
@@ -110,7 +114,7 @@ async function main() {
   );
 
   console.log("Creating mint...");
-  
+
   const mint = await token.createMint(
     provider.connection,
     payer,
@@ -123,7 +127,7 @@ async function main() {
       commitment: "finalized",
     }
   );
-  
+
   console.log("Mint created:", mint.toBase58());
 
   console.log("Launching...");
@@ -138,7 +142,7 @@ async function main() {
       mint,
       new PublicKey(launchAuthorityAddress),
       isDevnet,
-      payer.publicKey,
+      payer.publicKey
     )
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),

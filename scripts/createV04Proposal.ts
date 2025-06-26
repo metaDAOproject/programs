@@ -16,7 +16,7 @@ async function main() {
 
   // Use the existing DAO address
   const dao = new PublicKey("Hv7b7Kw2Xy7fGZZ8qWiciwfivay2hARmY7qC9HH4qWuS");
-  
+
   // Get the DAO's data
   const storedDao = await autocratProgram.getDao(dao);
   console.log("DAO Token Mint:", storedDao.tokenMint.toString());
@@ -49,7 +49,10 @@ async function main() {
   const requiredMeta = PriceMath.getChainAmount(10, 9); // 10 META for more liquidity
   const requiredUsdc = PriceMath.getChainAmount(10000, 6); // 10000 USDC for more liquidity
 
-  if (metaBalance < BigInt(requiredMeta.toString()) || usdcBalance < BigInt(requiredUsdc.toString())) {
+  if (
+    metaBalance < BigInt(requiredMeta.toString()) ||
+    usdcBalance < BigInt(requiredUsdc.toString())
+  ) {
     console.log("Insufficient balance for proposal creation");
     console.log("Required META:", requiredMeta.toString());
     console.log("Required USDC:", requiredUsdc.toString());

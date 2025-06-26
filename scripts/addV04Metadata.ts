@@ -48,7 +48,6 @@ async function main() {
     )
     .transaction();
 
-
   const basePass = await vaultProgram
     .addMetadataToConditionalTokensIx(
       baseVault,
@@ -59,9 +58,18 @@ async function main() {
     )
     .transaction();
 
-  const tx = new Transaction().add(ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 100 }), quoteFail, quotePass, baseFail, basePass);
+  const tx = new Transaction().add(
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 100 }),
+    quoteFail,
+    quotePass,
+    baseFail,
+    basePass
+  );
 
-  const sig = await provider.sendAndConfirm(tx, undefined, { commitment: "confirmed" });
+  const sig = await provider.sendAndConfirm(tx, undefined, {
+    commitment: "confirmed",
+  });
 
   console.log(sig);
 }

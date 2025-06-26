@@ -90,7 +90,6 @@ pub struct InitializeLaunch<'info> {
 
 impl InitializeLaunch<'_> {
     pub fn validate(&self, args: &InitializeLaunchArgs) -> Result<()> {
-        
         #[cfg(not(feature = "devnet"))]
         require_gte!(
             args.seconds_for_launch,
@@ -109,10 +108,7 @@ impl InitializeLaunch<'_> {
             LaunchpadError::FreezeAuthoritySet
         );
 
-        require!(
-            self.token_mint.supply == 0,
-            LaunchpadError::SupplyNonZero
-        );
+        require!(self.token_mint.supply == 0, LaunchpadError::SupplyNonZero);
 
         #[cfg(feature = "production")]
         {

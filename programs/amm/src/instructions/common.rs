@@ -23,13 +23,13 @@ pub struct AddOrRemoveLiquidity<'info> {
     pub user_lp_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        token::mint = amm.base_mint,
+        // token::mint = amm.base_mint,
         token::authority = user,
     )]
     pub user_base_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        token::mint = amm.quote_mint,
+        // token::mint = amm.quote_mint,
         token::authority = user,
     )]
     pub user_quote_account: Box<Account<'info, TokenAccount>>,

@@ -15,7 +15,13 @@ import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import { walletAdapterIdentity } from "@metaplex-foundation/umi-signer-wallet-adapters";
 import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
-import { ComputeBudgetProgram, Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import * as fs from "fs";
 
 // Use the RPC endpoint of your choice.
@@ -35,21 +41,26 @@ const ONE_MINUTE_IN_SECONDS = 60;
 const ONE_HOUR_IN_SECONDS = ONE_MINUTE_IN_SECONDS * 60;
 const ONE_DAY_IN_SECONDS = ONE_HOUR_IN_SECONDS * 24;
 const SEVEN_DAYS_IN_SECONDS = ONE_DAY_IN_SECONDS * 7;
-const KOLLAN_PUBKEY = new PublicKey("CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf");
+const KOLLAN_PUBKEY = new PublicKey(
+  "CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf"
+);
 
 async function main() {
   const seed = "186fMCnZjcoD8i9K";
-  const MTN = await PublicKey.createWithSeed(payer.publicKey, seed, token.TOKEN_PROGRAM_ID);
+  const MTN = await PublicKey.createWithSeed(
+    payer.publicKey,
+    seed,
+    token.TOKEN_PROGRAM_ID
+  );
 
   const [launch] = getLaunchAddr(launchpad.getProgramId(), MTN);
-  const [launchSigner] = getLaunchSignerAddr(
-    launchpad.getProgramId(),
-    launch
-  );
+  const [launchSigner] = getLaunchSignerAddr(launchpad.getProgramId(), launch);
 
   console.log(launch.toBase58());
 
-  const lamports = await provider.connection.getMinimumBalanceForRentExemption(token.MINT_SIZE);
+  const lamports = await provider.connection.getMinimumBalanceForRentExemption(
+    token.MINT_SIZE
+  );
 
   const tx = new Transaction().add(
     SystemProgram.createAccountWithSeed({
@@ -63,7 +74,9 @@ async function main() {
     }),
     token.createInitializeMint2Instruction(MTN, 6, launchSigner, null)
   );
-  tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
+  tx.recentBlockhash = (
+    await provider.connection.getLatestBlockhash()
+  ).blockhash;
   tx.feePayer = payer.publicKey;
   tx.sign(payer);
 
@@ -79,7 +92,7 @@ async function main() {
       MTN,
       KOLLAN_PUBKEY,
       false,
-      payer.publicKey,
+      payer.publicKey
     )
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
