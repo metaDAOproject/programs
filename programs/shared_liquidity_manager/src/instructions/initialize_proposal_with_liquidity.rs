@@ -163,6 +163,7 @@ pub struct InitializeProposalWithLiquidity<'info> {
     pub autocrat_event_authority: UncheckedAccount<'info>,
 }
 
+
 impl InitializeProposalWithLiquidity<'_> {
     pub fn validate(&self) -> Result<()> {
         // Check stake threshold
