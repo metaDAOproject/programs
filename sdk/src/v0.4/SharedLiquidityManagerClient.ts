@@ -529,14 +529,15 @@ export class SharedLiquidityManagerClient {
             failAmm,
             true
           ),
+          proposal,
           proposalPassLpVault: getAssociatedTokenAddressSync(
             passLpMint,
-            daoTreasury,
+            proposal,
             true
           ),
           proposalFailLpVault: getAssociatedTokenAddressSync(
             failLpMint,
-            daoTreasury,
+            proposal,
             true
           ),
           ammProgram: AMM_PROGRAM_ID,
@@ -547,21 +548,7 @@ export class SharedLiquidityManagerClient {
         dao,
         autocratProgram: AUTOCRAT_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-      })
-      .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.wallet.publicKey,
-          getAssociatedTokenAddressSync(passLpMint, daoTreasury, true),
-          daoTreasury,
-          passLpMint
-        ),
-        createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.wallet.publicKey,
-          getAssociatedTokenAddressSync(failLpMint, daoTreasury, true),
-          daoTreasury,
-          failLpMint
-        ),
-      ]);
+      });
   }
 
   initializeDraftProposalIx(

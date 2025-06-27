@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount};
+use anchor_spl::associated_token::AssociatedToken;
 
 use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 
@@ -94,8 +95,11 @@ pub struct InitializeProposalAmmAccounts<'info> {
     #[account(mut)]
     pub fail_amm_vault_ata_quote: Box<Account<'info, anchor_spl::token::TokenAccount>>,
     #[account(mut)]
+    /// CHECK: Proposal account that will be initialized by autocrat
+    pub proposal: UncheckedAccount<'info>,
+    #[account(init_if_needed, payer = payer, associated_token::mint = pass_lp_mint, associated_token::authority = proposal)]
     pub proposal_pass_lp_vault: Box<Account<'info, anchor_spl::token::TokenAccount>>,
-    #[account(mut)]
+    #[account(init_if_needed, payer = payer, associated_token::mint = fail_lp_mint, associated_token::authority = proposal)]
     pub proposal_fail_lp_vault: Box<Account<'info, anchor_spl::token::TokenAccount>>,
     pub amm_program: Program<'info, amm::program::Amm>,
     /// CHECK: verified by amm
@@ -154,9 +158,11 @@ pub struct InitializeProposalWithLiquidity<'info> {
     pub dao: Box<Account<'info, autocrat::state::Dao>>,
     pub autocrat_program: Program<'info, autocrat::program::Autocrat>,
     pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     /// CHECK: verified by autocrat
     pub autocrat_event_authority: UncheckedAccount<'info>,
 }
+
 
 impl InitializeProposalWithLiquidity<'_> {
     pub fn validate(&self) -> Result<()> {
@@ -605,6 +611,7 @@ impl InitializeProposalWithLiquidity<'_> {
                     program: ctx.accounts.autocrat_program.to_account_info(),
                     token_program: ctx.accounts.raydium.token_program.to_account_info(),
                     system_program: ctx.accounts.system_program.to_account_info(),
+                    associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
                 },
                 signer,
             ),
