@@ -1,4 +1,4 @@
-import { AmmClient, AmmMath, PriceMath } from "@metadaoproject/futarchy/v0.4";
+import { AmmClient, AmmMath, PriceMath } from "@metadaoproject/futarchy/v0.5";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, mintTo } from "spl-token-bankrun";

@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { Keypair, ComputeBudgetProgram } from "@solana/web3.js";
 import { advanceBySlots, DAY_IN_SLOTS, toBN } from "../utils.js";
-import { AmmMath } from "@metadaoproject/futarchy/v0.4";
+import { AmmMath } from "@metadaoproject/futarchy/v0.5";
 
 export default async function test() {
   // Create META and USDC mints

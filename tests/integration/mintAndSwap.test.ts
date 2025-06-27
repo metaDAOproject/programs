@@ -5,7 +5,7 @@ import {
   getAmmAddr,
   SwapType,
   InstructionUtils,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { sha256 } from "@noble/hashes/sha256";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";

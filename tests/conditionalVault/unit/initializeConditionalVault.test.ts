@@ -2,7 +2,7 @@ import {
   ConditionalVaultClient,
   getVaultAddr,
   getConditionalTokenMintAddr,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { sha256 } from "@metadaoproject/futarchy";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";

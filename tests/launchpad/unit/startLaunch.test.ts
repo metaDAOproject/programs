@@ -5,7 +5,7 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
