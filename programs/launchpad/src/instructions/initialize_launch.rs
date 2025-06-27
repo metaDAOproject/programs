@@ -112,8 +112,8 @@ impl InitializeLaunch<'_> {
 
         #[cfg(feature = "production")]
         {
-            let token_key: String = self.token_mint.key().to_string();
-            let last_4_chars = &token_key[token_key.len() - 4..];
+            let base_token_key: String = self.base_mint.key().to_string();
+            let last_4_chars = &base_token_key[base_token_key.len() - 4..];
             require_eq!("meta", last_4_chars, LaunchpadError::InvalidTokenKey);
         }
 
