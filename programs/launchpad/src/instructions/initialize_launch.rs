@@ -5,6 +5,7 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchInitializedEvent};
 use crate::state::{Launch, LaunchState};
+use crate::usdc_mint; 
 use crate::AVAILABLE_TOKENS;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
@@ -76,7 +77,7 @@ pub struct InitializeLaunch<'info> {
     /// CHECK: account not used, just for constraints
     pub launch_authority: UncheckedAccount<'info>,
 
-    #[account(mint::decimals = 6)]
+    #[account(mint::decimals = 6, address = usdc_mint::id())]
     pub quote_mint: Account<'info, Mint>,
 
     pub rent: Sysvar<'info, Rent>,
