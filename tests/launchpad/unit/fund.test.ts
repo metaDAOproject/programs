@@ -24,10 +24,10 @@ export default function suite() {
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
-  let tokenVault: PublicKey;
-  let usdcVault: PublicKey;
-  let funderTokenAccount: PublicKey;
-  let funderUsdcAccount: PublicKey;
+  let baseVault: PublicKey;
+  let quoteVault: PublicKey;
+  let funderBaseAccount: PublicKey;
+  let funderQuoteAccount: PublicKey;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
 
@@ -47,13 +47,13 @@ export default function suite() {
     launch = result.launch;
     launchSigner = result.launchSigner;
 
-    tokenVault = getAssociatedTokenAddressSync(META, launchSigner, true);
-    usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
-    funderTokenAccount = getAssociatedTokenAddressSync(
+    baseVault = getAssociatedTokenAddressSync(META, launchSigner, true);
+    quoteVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    funderBaseAccount = getAssociatedTokenAddressSync(
       META,
       this.payer.publicKey
     );
-    funderUsdcAccount = getAssociatedTokenAddressSync(
+    funderQuoteAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       this.payer.publicKey
     );
@@ -66,7 +66,8 @@ export default function suite() {
         "https://example.com",
         minRaise,
         60 * 60,
-        META
+        META,
+        MAINNET_USDC
       )
       .rpc();
   });
@@ -76,7 +77,7 @@ export default function suite() {
     const fundAmount = new BN(100_000000); // 100 USDC
 
     try {
-      await launchpadClient.fundIx(launch, fundAmount).rpc();
+      await launchpadClient.fundIx(launch, fundAmount, undefined, MAINNET_USDC).rpc();
       assert.fail("Expected fund instruction to fail");
     } catch (e) {
       assert.include(e.message, "InvalidLaunchState");
@@ -89,7 +90,7 @@ export default function suite() {
 
     const fundAmount = new BN(100_000000); // 100 USDC
 
-    await launchpadClient.fundIx(launch, fundAmount).rpc();
+    await launchpadClient.fundIx(launch, fundAmount, undefined, MAINNET_USDC).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     assert.equal(
@@ -97,7 +98,7 @@ export default function suite() {
       fundAmount.toString()
     );
 
-    const usdcVaultAccount = await getAccount(this.banksClient, usdcVault);
+    const usdcVaultAccount = await getAccount(this.banksClient, quoteVault);
     assert.equal(usdcVaultAccount.amount.toString(), fundAmount.toString());
 
     const [fundingRecord, pdaBump] = getFundingRecordAddr(
@@ -127,10 +128,10 @@ export default function suite() {
     const totalAmount = fundAmount1.add(fundAmount2);
 
     // First funding
-    await launchpadClient.fundIx(launch, fundAmount1).rpc();
+    await launchpadClient.fundIx(launch, fundAmount1, undefined, MAINNET_USDC).rpc();
 
     // Second funding
-    await launchpadClient.fundIx(launch, fundAmount2).rpc();
+    await launchpadClient.fundIx(launch, fundAmount2, undefined, MAINNET_USDC).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     assert.equal(
@@ -138,7 +139,7 @@ export default function suite() {
       totalAmount.toString()
     );
 
-    const usdcVaultAccount = await getAccount(this.banksClient, usdcVault);
+    const usdcVaultAccount = await getAccount(this.banksClient, quoteVault);
     assert.equal(usdcVaultAccount.amount.toString(), totalAmount.toString());
 
     const [fundingRecord] = getFundingRecordAddr(
@@ -167,7 +168,7 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 2);
 
     try {
-      await launchpadClient.fundIx(launch, fundAmount).rpc();
+      await launchpadClient.fundIx(launch, fundAmount, undefined, MAINNET_USDC).rpc();
       assert.fail("Expected fund instruction to fail");
     } catch (e) {
       assert.include(e.message, "LaunchExpired");

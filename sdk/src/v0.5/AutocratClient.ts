@@ -292,16 +292,16 @@ export class AutocratClient {
 
   initializeDaoIx(
     daoKeypair: Keypair,
-    tokenMint: PublicKey,
+    baseMint: PublicKey,
     params: InitializeDaoParams,
-    usdcMint: PublicKey = MAINNET_USDC
+    quoteMint: PublicKey = MAINNET_USDC
   ) {
     return this.autocrat.methods
       .initializeDao(params)
       .accounts({
         dao: daoKeypair.publicKey,
-        tokenMint,
-        usdcMint,
+        baseMint,
+        quoteMint,
       })
       .signers([daoKeypair]);
   }
@@ -341,17 +341,17 @@ export class AutocratClient {
       question,
     } = this.getProposalPdas(
       proposal,
-      storedDao.tokenMint,
-      storedDao.usdcMint,
+      storedDao.baseMint,
+      storedDao.quoteMint,
       dao
     );
 
     // it's important that these happen in a single atomic transaction
     await this.vaultClient
-      .initializeVaultIx(question, storedDao.tokenMint, 2)
+      .initializeVaultIx(question, storedDao.baseMint, 2)
       .postInstructions(
         await InstructionUtils.getInstructions(
-          this.vaultClient.initializeVaultIx(question, storedDao.usdcMint, 2),
+          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
           this.ammClient.initializeAmmIx(
             passBaseMint,
             passQuoteMint,
@@ -371,19 +371,13 @@ export class AutocratClient {
       .rpc();
 
     await this.vaultClient
-      .splitTokensIx(
-        question,
-        baseVault,
-        storedDao.tokenMint,
-        baseTokensToLP,
-        2
-      )
+      .splitTokensIx(question, baseVault, storedDao.baseMint, baseTokensToLP, 2)
       .postInstructions(
         await InstructionUtils.getInstructions(
           this.vaultClient.splitTokensIx(
             question,
             quoteVault,
-            storedDao.usdcMint,
+            storedDao.quoteMint,
             quoteTokensToLP,
             2
           )
@@ -421,8 +415,8 @@ export class AutocratClient {
       descriptionUrl,
       instruction,
       dao,
-      storedDao.tokenMint,
-      storedDao.usdcMint,
+      storedDao.baseMint,
+      storedDao.quoteMint,
       lpTokens,
       lpTokens,
       nonce,
@@ -643,8 +637,8 @@ export class AutocratClient {
       proposal,
       storedProposal.instruction,
       storedProposal.dao,
-      storedDao.tokenMint,
-      storedDao.usdcMint,
+      storedDao.baseMint,
+      storedDao.quoteMint,
       storedProposal.proposer
     ).rpc();
   }

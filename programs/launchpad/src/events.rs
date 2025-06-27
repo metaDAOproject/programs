@@ -28,8 +28,8 @@ pub struct LaunchInitializedEvent {
     pub launch_signer_pda_bump: u8,
     pub launch_usdc_vault: Pubkey,
     pub launch_token_vault: Pubkey,
-    pub token_mint: Pubkey,
-    pub usdc_mint: Pubkey,
+    pub base_mint: Pubkey,
+    pub quote_mint: Pubkey,
     pub pda_bump: u8,
     pub seconds_for_launch: u32,
 }

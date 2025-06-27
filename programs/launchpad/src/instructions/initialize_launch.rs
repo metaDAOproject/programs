@@ -5,7 +5,6 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchInitializedEvent};
 use crate::state::{Launch, LaunchState};
-use crate::usdc_mint;
 use crate::AVAILABLE_TOKENS;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
@@ -28,7 +27,7 @@ pub struct InitializeLaunch<'info> {
         init,
         payer = payer,
         space = 8 + Launch::INIT_SPACE,
-        seeds = [b"launch", token_mint.key().as_ref()],
+        seeds = [b"launch", base_mint.key().as_ref()],
         bump
     )]
     pub launch: Account<'info, Launch>,
@@ -38,12 +37,12 @@ pub struct InitializeLaunch<'info> {
         mint::decimals = 6,
         mint::authority = launch_signer,
     )]
-    pub token_mint: Account<'info, Mint>,
+    pub base_mint: Account<'info, Mint>,
 
     /// CHECK: This is the token metadata
     #[account(
         mut,
-        seeds = [b"metadata", MPL_TOKEN_METADATA_PROGRAM_ID.as_ref(), token_mint.key().as_ref()],
+        seeds = [b"metadata", MPL_TOKEN_METADATA_PROGRAM_ID.as_ref(), base_mint.key().as_ref()],
         seeds::program = MPL_TOKEN_METADATA_PROGRAM_ID,
         bump
     )]
@@ -59,26 +58,26 @@ pub struct InitializeLaunch<'info> {
     #[account(
         init_if_needed,
         payer = payer,
-        associated_token::mint = usdc_mint,
+        associated_token::mint = quote_mint,
         associated_token::authority = launch_signer
     )]
-    pub usdc_vault: Account<'info, TokenAccount>,
+    pub quote_vault: Account<'info, TokenAccount>,
 
     #[account(
         init_if_needed,
         payer = payer,
-        associated_token::mint = token_mint,
+        associated_token::mint = base_mint,
         associated_token::authority = launch_signer
     )]
-    pub token_vault: Account<'info, TokenAccount>,
+    pub base_vault: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
     /// CHECK: account not used, just for constraints
     pub launch_authority: UncheckedAccount<'info>,
 
-    #[account(mint::decimals = 6, address = usdc_mint::id())]
-    pub usdc_mint: Account<'info, Mint>,
+    #[account(mint::decimals = 6)]
+    pub quote_mint: Account<'info, Mint>,
 
     pub rent: Sysvar<'info, Rent>,
 
@@ -104,11 +103,11 @@ impl InitializeLaunch<'_> {
         );
 
         require!(
-            self.token_mint.freeze_authority.is_none(),
+            self.base_mint.freeze_authority.is_none(),
             LaunchpadError::FreezeAuthoritySet
         );
 
-        require!(self.token_mint.supply == 0, LaunchpadError::SupplyNonZero);
+        require!(self.base_mint.supply == 0, LaunchpadError::SupplyNonZero);
 
         #[cfg(feature = "production")]
         {
@@ -126,11 +125,11 @@ impl InitializeLaunch<'_> {
             launch_authority: ctx.accounts.launch_authority.key(),
             launch_signer: ctx.accounts.launch_signer.key(),
             launch_signer_pda_bump: ctx.bumps.launch_signer,
-            launch_usdc_vault: ctx.accounts.usdc_vault.key(),
-            launch_token_vault: ctx.accounts.token_vault.key(),
+            launch_quote_vault: ctx.accounts.quote_vault.key(),
+            launch_base_vault: ctx.accounts.base_vault.key(),
             total_committed_amount: 0,
-            token_mint: ctx.accounts.token_mint.key(),
-            usdc_mint: ctx.accounts.usdc_mint.key(),
+            base_mint: ctx.accounts.base_mint.key(),
+            quote_mint: ctx.accounts.quote_mint.key(),
             pda_bump: ctx.bumps.launch,
             seq_num: 0,
             state: LaunchState::Initialized,
@@ -148,10 +147,10 @@ impl InitializeLaunch<'_> {
             launch_authority: ctx.accounts.launch_authority.key(),
             launch_signer: ctx.accounts.launch_signer.key(),
             launch_signer_pda_bump: ctx.bumps.launch_signer,
-            launch_usdc_vault: ctx.accounts.usdc_vault.key(),
-            launch_token_vault: ctx.accounts.token_vault.key(),
-            token_mint: ctx.accounts.token_mint.key(),
-            usdc_mint: ctx.accounts.usdc_mint.key(),
+            launch_usdc_vault: ctx.accounts.quote_vault.key(),
+            launch_token_vault: ctx.accounts.base_vault.key(),
+            base_mint: ctx.accounts.base_mint.key(),
+            quote_mint: ctx.accounts.quote_mint.key(),
             pda_bump: ctx.bumps.launch,
             seconds_for_launch: args.seconds_for_launch,
         });
@@ -169,7 +168,7 @@ impl InitializeLaunch<'_> {
 
         let cpi_accounts = CreateMetadataAccountsV3 {
             metadata: ctx.accounts.token_metadata.to_account_info(),
-            mint: ctx.accounts.token_mint.to_account_info(),
+            mint: ctx.accounts.base_mint.to_account_info(),
             mint_authority: ctx.accounts.launch_signer.to_account_info(),
             payer: ctx.accounts.payer.to_account_info(),
             update_authority: ctx.accounts.launch_signer.to_account_info(),
@@ -198,8 +197,8 @@ impl InitializeLaunch<'_> {
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 MintTo {
-                    mint: ctx.accounts.token_mint.to_account_info(),
-                    to: ctx.accounts.token_vault.to_account_info(),
+                    mint: ctx.accounts.base_mint.to_account_info(),
+                    to: ctx.accounts.base_vault.to_account_info(),
                     authority: ctx.accounts.launch_signer.to_account_info(),
                 },
                 signer,

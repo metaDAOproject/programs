@@ -176,8 +176,8 @@ pub struct InitializeSharedLiquidityPool<'info> {
 
 impl InitializeSharedLiquidityPool<'_> {
     pub fn validate(&self, params: &InitializeSharedLiquidityPoolParams) -> Result<()> {
-        require_eq!(self.dao.token_mint, self.base_mint.key());
-        require_eq!(self.dao.usdc_mint, self.quote_mint.key());
+        require_eq!(self.dao.base_mint, self.base_mint.key());
+        require_eq!(self.dao.quote_mint, self.quote_mint.key());
 
         require_neq!(self.base_mint.key(), self.quote_mint.key());
 

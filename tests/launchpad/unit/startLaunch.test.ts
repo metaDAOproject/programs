@@ -14,6 +14,7 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
+import { MAINNET_USDC } from "@metadaoproject/futarchy/v0.3";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -49,7 +50,8 @@ export default function suite() {
         "https://example.com",
         minRaise,
         60 * 60 * 24 * 2,
-        META
+        META,
+        MAINNET_USDC
       )
       .rpc();
   });

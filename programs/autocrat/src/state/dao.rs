@@ -5,8 +5,8 @@ pub use super::*;
 pub struct Dao {
     pub treasury_pda_bump: u8,
     pub treasury: Pubkey,
-    pub token_mint: Pubkey,
-    pub usdc_mint: Pubkey,
+    pub base_mint: Pubkey,
+    pub quote_mint: Pubkey,
     pub proposal_count: u32,
     // the percentage, in basis points, the pass price needs to be above the
     // fail price in order for the proposal to pass

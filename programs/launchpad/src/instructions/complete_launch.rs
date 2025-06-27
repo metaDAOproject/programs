@@ -39,18 +39,18 @@ pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 pub struct CompleteLaunch<'info> {
     #[account(
         mut,
-        has_one = launch_usdc_vault,
-        has_one = launch_token_vault,
+        has_one = launch_quote_vault,
+        has_one = launch_base_vault,
         has_one = launch_signer,
-        has_one = token_mint,
-        has_one = usdc_mint,
+        has_one = base_mint,
+        has_one = quote_mint,
     )]
     pub launch: Box<Account<'info, Launch>>,
 
     /// CHECK: Token metadata
     #[account(
         mut,
-        seeds = [b"metadata", MPL_TOKEN_METADATA_PROGRAM_ID.as_ref(), token_mint.key().as_ref()],
+        seeds = [b"metadata", MPL_TOKEN_METADATA_PROGRAM_ID.as_ref(), base_mint.key().as_ref()],
         seeds::program = MPL_TOKEN_METADATA_PROGRAM_ID,
         bump
     )]
@@ -75,24 +75,24 @@ pub struct CompleteLaunch<'info> {
 
     #[account(
         mut,
-        associated_token::mint = usdc_mint,
+        associated_token::mint = quote_mint,
         associated_token::authority = launch_signer,
     )]
-    pub launch_usdc_vault: Box<Account<'info, TokenAccount>>,
+    pub launch_quote_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        associated_token::mint = token_mint,
+        associated_token::mint = base_mint,
         associated_token::authority = launch_signer,
     )]
-    pub launch_token_vault: Box<Account<'info, TokenAccount>>,
+    pub launch_base_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        associated_token::mint = usdc_mint,
+        associated_token::mint = quote_mint,
         associated_token::authority = dao_treasury,
     )]
-    pub treasury_usdc_account: Box<Account<'info, TokenAccount>>,
+    pub treasury_quote_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: pool lp mint not created yet so we can't initialize it before
     #[account(
@@ -128,9 +128,9 @@ pub struct CompleteLaunch<'info> {
     pub pool_state: UncheckedAccount<'info>,
 
     #[account(mut)]
-    pub token_mint: Box<Account<'info, Mint>>,
+    pub base_mint: Box<Account<'info, Mint>>,
 
-    pub usdc_mint: Box<Account<'info, Mint>>,
+    pub quote_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: pool lp mint, init by cp-swap
     #[account(
@@ -154,7 +154,7 @@ pub struct CompleteLaunch<'info> {
         seeds = [
             POOL_VAULT_SEED.as_bytes(),
             pool_state.key().as_ref(),
-            token_mint.key().as_ref()
+            base_mint.key().as_ref()
         ],
         seeds::program = cp_swap_program,
         bump,
@@ -167,7 +167,7 @@ pub struct CompleteLaunch<'info> {
         seeds = [
             POOL_VAULT_SEED.as_bytes(),
             pool_state.key().as_ref(),
-            usdc_mint.key().as_ref()
+            quote_mint.key().as_ref()
         ],
         seeds::program = cp_swap_program,
         bump,
@@ -275,8 +275,8 @@ impl CompleteLaunch<'_> {
                         dao: ctx.accounts.dao.to_account_info(),
                         payer: ctx.accounts.payer.to_account_info(),
                         system_program: ctx.accounts.system_program.to_account_info(),
-                        token_mint: ctx.accounts.token_mint.to_account_info(),
-                        usdc_mint: ctx.accounts.usdc_mint.to_account_info(),
+                        base_mint: ctx.accounts.base_mint.to_account_info(),
+                        quote_mint: ctx.accounts.quote_mint.to_account_info(),
                         event_authority: ctx.accounts.autocrat_event_authority.to_account_info(),
                         program: ctx.accounts.autocrat_program.to_account_info(),
                     },
@@ -310,8 +310,8 @@ impl CompleteLaunch<'_> {
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     MintTo {
-                        mint: ctx.accounts.token_mint.to_account_info(),
-                        to: ctx.accounts.launch_token_vault.to_account_info(),
+                        mint: ctx.accounts.base_mint.to_account_info(),
+                        to: ctx.accounts.launch_base_vault.to_account_info(),
                         authority: ctx.accounts.launch_signer.to_account_info(),
                     },
                     launch_signer,
@@ -323,7 +323,7 @@ impl CompleteLaunch<'_> {
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     SetAuthority {
-                        account_or_mint: ctx.accounts.token_mint.to_account_info(),
+                        account_or_mint: ctx.accounts.base_mint.to_account_info(),
                         current_authority: ctx.accounts.launch_signer.to_account_info(),
                     },
                     launch_signer,
@@ -355,25 +355,25 @@ impl CompleteLaunch<'_> {
                 creator_token_1,
                 init_amount_0,
                 init_amount_1,
-            ) = if ctx.accounts.token_mint.key() < ctx.accounts.usdc_mint.key() {
+            ) = if ctx.accounts.base_mint.key() < ctx.accounts.quote_mint.key() {
                 (
-                    ctx.accounts.token_mint.to_account_info(),
-                    ctx.accounts.usdc_mint.to_account_info(),
+                    ctx.accounts.base_mint.to_account_info(),
+                    ctx.accounts.quote_mint.to_account_info(),
                     ctx.accounts.pool_token_vault.to_account_info(),
                     ctx.accounts.pool_usdc_vault.to_account_info(),
-                    ctx.accounts.launch_token_vault.to_account_info(),
-                    ctx.accounts.launch_usdc_vault.to_account_info(),
+                    ctx.accounts.launch_base_vault.to_account_info(),
+                    ctx.accounts.launch_quote_vault.to_account_info(),
                     token_to_lp,
                     usdc_to_lp,
                 )
             } else {
                 (
-                    ctx.accounts.usdc_mint.to_account_info(),
-                    ctx.accounts.token_mint.to_account_info(),
+                    ctx.accounts.quote_mint.to_account_info(),
+                    ctx.accounts.base_mint.to_account_info(),
                     ctx.accounts.pool_usdc_vault.to_account_info(),
                     ctx.accounts.pool_token_vault.to_account_info(),
-                    ctx.accounts.launch_usdc_vault.to_account_info(),
-                    ctx.accounts.launch_token_vault.to_account_info(),
+                    ctx.accounts.launch_quote_vault.to_account_info(),
+                    ctx.accounts.launch_base_vault.to_account_info(),
                     usdc_to_lp,
                     token_to_lp,
                 )
@@ -444,8 +444,8 @@ impl CompleteLaunch<'_> {
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     Transfer {
-                        from: ctx.accounts.launch_usdc_vault.to_account_info(),
-                        to: ctx.accounts.treasury_usdc_account.to_account_info(),
+                        from: ctx.accounts.launch_quote_vault.to_account_info(),
+                        to: ctx.accounts.treasury_quote_account.to_account_info(),
                         authority: ctx.accounts.launch_signer.to_account_info(),
                     },
                     launch_signer,

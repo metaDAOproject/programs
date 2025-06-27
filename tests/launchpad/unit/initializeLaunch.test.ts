@@ -67,7 +67,8 @@ export default function suite() {
         "https://example.com",
         minRaise,
         secondsForLaunch,
-        META
+        META,
+        MAINNET_USDC,
       )
       .rpc();
 
@@ -81,16 +82,16 @@ export default function suite() {
     assert.ok(storedLaunch.launchSigner.equals(launchSigner));
     assert.equal(storedLaunch.launchSignerPdaBump, launchSignerPdaBump);
     assert.ok(
-      storedLaunch.launchUsdcVault.equals(
+      storedLaunch.launchQuoteVault.equals(
         token.getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true)
       )
     );
     assert.ok(
-      storedLaunch.launchTokenVault.equals(
+      storedLaunch.launchBaseVault.equals(
         token.getAssociatedTokenAddressSync(META, launchSigner, true)
       )
     );
-    assert.ok(storedLaunch.tokenMint.equals(META));
+    assert.ok(storedLaunch.baseMint.equals(META));
     assert.equal(storedLaunch.pdaBump, pdaBump);
     assert.equal(storedLaunch.totalCommittedAmount.toString(), "0");
     assert.equal(storedLaunch.seqNum.toString(), "0");
@@ -152,19 +153,19 @@ export default function suite() {
         .accounts({
           launch,
           launchSigner: fakeLaunchSigner.publicKey,
-          usdcVault: token.getAssociatedTokenAddressSync(
+          quoteVault: token.getAssociatedTokenAddressSync(
             MAINNET_USDC,
             fakeLaunchSigner.publicKey,
             true
           ),
-          tokenVault: token.getAssociatedTokenAddressSync(
+          baseVault: token.getAssociatedTokenAddressSync(
             META,
             fakeLaunchSigner.publicKey,
             true
           ),
           launchAuthority: this.payer.publicKey,
-          usdcMint: MAINNET_USDC,
-          tokenMint: META,
+          quoteMint: MAINNET_USDC,
+          baseMint: META,
           tokenMetadata,
           tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         })

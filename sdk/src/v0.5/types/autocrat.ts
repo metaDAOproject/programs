@@ -21,12 +21,12 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "tokenMint";
+          name: "baseMint";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "usdcMint";
+          name: "quoteMint";
           isMut: false;
           isSigner: false;
         },
@@ -314,11 +314,11 @@ export type Autocrat = {
             type: "publicKey";
           },
           {
-            name: "tokenMint";
+            name: "baseMint";
             type: "publicKey";
           },
           {
-            name: "usdcMint";
+            name: "quoteMint";
             type: "publicKey";
           },
           {
@@ -687,12 +687,12 @@ export type Autocrat = {
           index: false;
         },
         {
-          name: "tokenMint";
+          name: "baseMint";
           type: "publicKey";
           index: false;
         },
         {
-          name: "usdcMint";
+          name: "quoteMint";
           type: "publicKey";
           index: false;
         },
@@ -1043,12 +1043,12 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "tokenMint",
+          name: "baseMint",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "usdcMint",
+          name: "quoteMint",
           isMut: false,
           isSigner: false,
         },
@@ -1336,11 +1336,11 @@ export const IDL: Autocrat = {
             type: "publicKey",
           },
           {
-            name: "tokenMint",
+            name: "baseMint",
             type: "publicKey",
           },
           {
-            name: "usdcMint",
+            name: "quoteMint",
             type: "publicKey",
           },
           {
@@ -1709,12 +1709,12 @@ export const IDL: Autocrat = {
           index: false,
         },
         {
-          name: "tokenMint",
+          name: "baseMint",
           type: "publicKey",
           index: false,
         },
         {
-          name: "usdcMint",
+          name: "quoteMint",
           type: "publicKey",
           index: false,
         },

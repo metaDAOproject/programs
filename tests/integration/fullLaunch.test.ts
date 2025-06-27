@@ -67,7 +67,8 @@ export default async function suite() {
       "https://example.com",
       minRaise,
       launchPeriod,
-      META
+      META,
+      MAINNET_USDC
     )
     .rpc();
 
@@ -76,14 +77,16 @@ export default async function suite() {
 
   // Fund from multiple sources
   await this.launchpadClient
-    .fundIx(launch, new BN(5000_000000), funder1.publicKey)
+    .fundIx(launch, new BN(5000_000000), funder1.publicKey, MAINNET_USDC)
     .signers([funder1])
     .rpc();
 
-  await this.launchpadClient.fundIx(launch, new BN(1500_000000)).rpc();
+  await this.launchpadClient
+    .fundIx(launch, new BN(1500_000000), undefined, MAINNET_USDC)
+    .rpc();
 
   await this.launchpadClient
-    .fundIx(launch, new BN(3500_000000), funder3.publicKey)
+    .fundIx(launch, new BN(3500_000000), funder3.publicKey, MAINNET_USDC)
     .signers([funder3])
     .rpc();
 
@@ -91,7 +94,7 @@ export default async function suite() {
   await this.advanceBySeconds(launchPeriod + 3600);
 
   await this.launchpadClient
-    .completeLaunchIx(launch, META)
+    .completeLaunchIx(launch, MAINNET_USDC, META)
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
     ])

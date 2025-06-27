@@ -11,7 +11,7 @@ pub struct Fund<'info> {
     #[account(
         mut,
         has_one = launch_signer,
-        has_one = launch_usdc_vault,
+        has_one = launch_quote_vault,
     )]
     pub launch: Account<'info, Launch>,
 
@@ -28,7 +28,7 @@ pub struct Fund<'info> {
     pub launch_signer: UncheckedAccount<'info>,
 
     #[account(mut)]
-    pub launch_usdc_vault: Account<'info, TokenAccount>,
+    pub launch_quote_vault: Account<'info, TokenAccount>,
 
     pub funder: Signer<'info>,
     #[account(mut)]
@@ -36,10 +36,10 @@ pub struct Fund<'info> {
 
     #[account(
         mut,
-        token::mint = launch.usdc_mint,
+        token::mint = launch.quote_mint,
         token::authority = funder
     )]
-    pub funder_usdc_account: Account<'info, TokenAccount>,
+    pub funder_quote_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -50,7 +50,7 @@ impl Fund<'_> {
         require!(amount > 0, LaunchpadError::InvalidAmount);
 
         require_gte!(
-            self.funder_usdc_account.amount,
+            self.funder_quote_account.amount,
             amount,
             LaunchpadError::InsufficientFunds
         );
@@ -72,13 +72,13 @@ impl Fund<'_> {
     }
 
     pub fn handle(ctx: Context<Self>, amount: u64) -> Result<()> {
-        // Transfer USDC from funder to vault
+        // Transfer quote tokens from funder to vault
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.funder_usdc_account.to_account_info(),
-                    to: ctx.accounts.launch_usdc_vault.to_account_info(),
+                    from: ctx.accounts.funder_quote_account.to_account_info(),
+                    to: ctx.accounts.launch_quote_vault.to_account_info(),
                     authority: ctx.accounts.funder.to_account_info(),
                 },
             ),
