@@ -4,7 +4,7 @@ import {
   getDraftProposalAddr,
   getStakeRecordAddr,
   getSharedLiquidityPoolAddr,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { PublicKey, Keypair, ComputeBudgetProgram } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, getAccount } from "spl-token-bankrun";

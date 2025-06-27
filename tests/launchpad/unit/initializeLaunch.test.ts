@@ -11,7 +11,7 @@ import {
   getLaunchSignerAddr,
   getMetadataAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { createMint, mintTo } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
@@ -23,7 +23,7 @@ import * as token from "@solana/spl-token";
 import {
   MAINNET_USDC,
   MPL_TOKEN_METADATA_PROGRAM_ID,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {

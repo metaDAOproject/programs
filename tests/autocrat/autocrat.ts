@@ -43,12 +43,12 @@ import {
   getVaultAddr,
   AmmMath,
   getEventAuthorityAddr,
-} from "@metadaoproject/futarchy/v0.4";
-import { PriceMath } from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
+import { PriceMath } from "@metadaoproject/futarchy/v0.5";
 import {
   AutocratClient,
   ConditionalVaultClient,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import {
   ComputeBudgetInstruction,
   ComputeBudgetProgram,

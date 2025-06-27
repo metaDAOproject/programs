@@ -9,7 +9,7 @@ import {
   getRaydiumCpmmLpMintAddr,
   LaunchpadClient,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { BN } from "bn.js";
 import {
   deserializeMetadata,

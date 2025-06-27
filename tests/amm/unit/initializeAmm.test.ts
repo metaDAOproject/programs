@@ -3,7 +3,7 @@ import {
   getAmmAddr,
   getAmmLpMintAddr,
   PriceMath,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint } from "spl-token-bankrun";
