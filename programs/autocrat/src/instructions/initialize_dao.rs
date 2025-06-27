@@ -23,10 +23,10 @@ pub struct InitializeDao<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
-    pub token_mint: Account<'info, Mint>,
+    pub base_mint: Account<'info, Mint>,
     // todo: statically check that this is USDC given a feature flag
     #[account(mint::decimals = 6)]
-    pub usdc_mint: Account<'info, Mint>,
+    pub quote_mint: Account<'info, Mint>,
 }
 
 impl InitializeDao<'_> {
@@ -54,8 +54,8 @@ impl InitializeDao<'_> {
         );
 
         dao.set_inner(Dao {
-            token_mint: ctx.accounts.token_mint.key(),
-            usdc_mint: ctx.accounts.usdc_mint.key(),
+            base_mint: ctx.accounts.base_mint.key(),
+            quote_mint: ctx.accounts.quote_mint.key(),
             treasury_pda_bump,
             treasury,
             proposal_count: 0,
@@ -73,8 +73,8 @@ impl InitializeDao<'_> {
         emit_cpi!(InitializeDaoEvent {
             common: CommonFields::new(&clock),
             dao: dao.key(),
-            token_mint: ctx.accounts.token_mint.key(),
-            usdc_mint: ctx.accounts.usdc_mint.key(),
+            base_mint: ctx.accounts.base_mint.key(),
+            quote_mint: ctx.accounts.quote_mint.key(),
             treasury,
             pass_threshold_bps: dao.pass_threshold_bps,
             slots_per_proposal: dao.slots_per_proposal,

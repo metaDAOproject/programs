@@ -56,7 +56,8 @@ export default function suite() {
         "https://example.com",
         minRaise,
         60 * 60 * 24 * 10,
-        META
+        META,
+        MAINNET_USDC
       )
       .rpc();
 
@@ -67,7 +68,7 @@ export default function suite() {
   it("completes launch successfully when minimum raise is met and time has passed", async function () {
     // Fund the launch with exactly minimum raise
 
-    await launchpadClient.fundIx(launch, minRaise).rpc();
+    await launchpadClient.fundIx(launch, minRaise, undefined, MAINNET_USDC).rpc();
 
     const [tokenMetadata] = getMetadataAddr(META);
 
@@ -84,7 +85,7 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     await launchpadClient
-      .completeLaunchIx(launch, META)
+      .completeLaunchIx(launch, MAINNET_USDC, META)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }),
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
@@ -132,11 +133,11 @@ export default function suite() {
   it("fails when launch period has not passed", async function () {
     // Fund the launch with exactly minimum raise
 
-    await launchpadClient.fundIx(launch, minRaise).rpc();
+    await launchpadClient.fundIx(launch, minRaise, undefined, MAINNET_USDC).rpc();
 
     // Try to complete immediately (should fail)
     try {
-      await launchpadClient.completeLaunchIx(launch, META).rpc();
+      await launchpadClient.completeLaunchIx(launch, MAINNET_USDC, META).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "LaunchPeriodNotOver");
@@ -147,7 +148,7 @@ export default function suite() {
 
     try {
       await launchpadClient
-        .completeLaunchIx(launch, META)
+        .completeLaunchIx(launch, MAINNET_USDC, META)
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
         ])
@@ -162,14 +163,14 @@ export default function suite() {
     // Fund the launch with less than minimum raise
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient.fundIx(launch, partialAmount).rpc();
+    await launchpadClient.fundIx(launch, partialAmount, undefined, MAINNET_USDC).rpc();
 
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     // Complete the launch
     // I'm only 5 bytes under the limit, so make sure we don't go over
     await launchpadClient
-      .completeLaunchIx(launch, META)
+      .completeLaunchIx(launch, MAINNET_USDC, META)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
@@ -186,13 +187,13 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     // Complete launch first time
-    await launchpadClient.completeLaunchIx(launch, META).rpc();
+    await launchpadClient.completeLaunchIx(launch, MAINNET_USDC, META).rpc();
 
     // Try to complete again
     try {
       // CU price so that the VM doesn't think it's a duplicate tx
       await launchpadClient
-        .completeLaunchIx(launch, META)
+        .completeLaunchIx(launch, MAINNET_USDC, META)
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
           ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),

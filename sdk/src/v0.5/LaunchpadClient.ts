@@ -115,26 +115,29 @@ export class LaunchpadClient {
     tokenUri: string,
     minimumRaiseAmount: BN,
     secondsForLaunch: number,
-    tokenMint: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
     launchAuthority: PublicKey = this.provider.publicKey,
     isDevnet: boolean = false,
     payer: PublicKey = this.provider.publicKey
   ) {
-    const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
-
-    const [launch] = getLaunchAddr(this.launchpad.programId, tokenMint);
+    const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
     );
-    const usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
-
-    const tokenVault = getAssociatedTokenAddressSync(
-      tokenMint,
+    const quoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
       launchSigner,
       true
     );
-    const [tokenMetadata] = getMetadataAddr(tokenMint);
+
+    const baseVault = getAssociatedTokenAddressSync(
+      baseMint,
+      launchSigner,
+      true
+    );
+    const [tokenMetadata] = getMetadataAddr(baseMint);
 
     return this.launchpad.methods
       .initializeLaunch({
@@ -147,11 +150,11 @@ export class LaunchpadClient {
       .accounts({
         launch,
         launchSigner,
-        usdcVault,
-        tokenVault,
+        quoteVault,
+        baseVault,
         launchAuthority,
-        usdcMint: USDC,
-        tokenMint,
+        quoteMint,
+        baseMint,
         tokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         payer,
@@ -159,9 +162,9 @@ export class LaunchpadClient {
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           payer,
-          getAssociatedTokenAddressSync(USDC, launchSigner, true),
+          getAssociatedTokenAddressSync(quoteMint, launchSigner, true),
           launchSigner,
-          USDC
+          quoteMint
         ),
       ]);
     // .signers([tokenMintKp]);
@@ -181,6 +184,7 @@ export class LaunchpadClient {
     launch: PublicKey,
     amount: BN,
     funder: PublicKey = this.provider.publicKey,
+    quoteMint: PublicKey,
     isDevnet: boolean = false
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
@@ -189,12 +193,16 @@ export class LaunchpadClient {
       this.launchpad.programId,
       launch
     );
-    const launchUsdcVault = getAssociatedTokenAddressSync(
-      USDC,
+    const launchQuoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
       launchSigner,
       true
     );
-    const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder, true);
+    const funderQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      funder,
+      true
+    );
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
@@ -203,17 +211,18 @@ export class LaunchpadClient {
 
     return this.launchpad.methods.fund(amount).accounts({
       launch,
-      launchUsdcVault,
+      launchQuoteVault,
       fundingRecord,
       funder,
-      funderUsdcAccount,
+      funderQuoteAccount,
       launchSigner,
     });
   }
 
   completeLaunchIx(
     launch: PublicKey,
-    tokenMint: PublicKey,
+    quoteMint: PublicKey,
+    baseMint: PublicKey,
     isDevnet: boolean = false
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
@@ -222,13 +231,13 @@ export class LaunchpadClient {
       this.launchpad.programId,
       launch
     );
-    const launchUsdcVault = getAssociatedTokenAddressSync(
-      USDC,
+    const launchQuoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
       launchSigner,
       true
     );
-    const launchTokenVault = getAssociatedTokenAddressSync(
-      tokenMint,
+    const launchBaseVault = getAssociatedTokenAddressSync(
+      baseMint,
       launchSigner,
       true
     );
@@ -239,8 +248,8 @@ export class LaunchpadClient {
       this.autocratClient.getProgramId(),
       dao
     );
-    const treasuryUsdcAccount = getAssociatedTokenAddressSync(
-      USDC,
+    const treasuryQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
       daoTreasury,
       true
     );
@@ -259,7 +268,7 @@ export class LaunchpadClient {
       [
         anchor.utils.bytes.utf8.encode("pool_vault"),
         poolState.toBuffer(),
-        tokenMint.toBuffer(),
+        baseMint.toBuffer(),
       ],
       cpSwapProgramId
     );
@@ -282,25 +291,25 @@ export class LaunchpadClient {
       this.autocratClient.getProgramId()
     );
 
-    const [tokenMetadata] = getMetadataAddr(tokenMint);
+    const [tokenMetadata] = getMetadataAddr(baseMint);
 
     return this.launchpad.methods
       .completeLaunch()
       .accounts({
         launch,
         launchSigner,
-        launchUsdcVault,
-        launchTokenVault,
+        launchQuoteVault,
+        launchBaseVault,
         dao,
         daoTreasury,
-        treasuryUsdcAccount,
+        treasuryQuoteAccount,
         treasuryLpAccount: getAssociatedTokenAddressSync(
           lpMint,
           daoTreasury,
           true
         ),
-        usdcMint: USDC,
-        tokenMint,
+        quoteMint,
+        baseMint,
         tokenMetadata,
         lpMint,
         lpVault,
@@ -323,7 +332,7 @@ export class LaunchpadClient {
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
-          treasuryUsdcAccount,
+          treasuryQuoteAccount,
           daoTreasury,
           USDC
         ),
@@ -333,10 +342,9 @@ export class LaunchpadClient {
   refundIx(
     launch: PublicKey,
     funder: PublicKey = this.provider.publicKey,
+    quoteMint: PublicKey,
     isDevnet: boolean = false
   ) {
-    const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
-
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
@@ -348,26 +356,30 @@ export class LaunchpadClient {
       funder
     );
 
-    const launchUsdcVault = getAssociatedTokenAddressSync(
-      USDC,
+    const launchQuoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
       launchSigner,
       true
     );
-    const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder, true);
+    const funderQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      funder,
+      true
+    );
 
     return this.launchpad.methods.refund().accounts({
       launch,
       launchSigner,
-      launchUsdcVault,
+      launchQuoteVault,
       funder,
-      funderUsdcAccount,
+      funderQuoteAccount,
       fundingRecord,
     });
   }
 
   claimIx(
     launch: PublicKey,
-    tokenMint: PublicKey,
+    baseMint: PublicKey,
     funder: PublicKey = this.provider.publicKey
   ) {
     const [launchSigner] = getLaunchSignerAddr(
@@ -388,13 +400,13 @@ export class LaunchpadClient {
         launchSigner,
         funder,
         funderTokenAccount: getAssociatedTokenAddressSync(
-          tokenMint,
+          baseMint,
           funder,
           true
         ),
-        tokenMint,
-        launchTokenVault: getAssociatedTokenAddressSync(
-          tokenMint,
+        baseMint,
+        launchBaseVault: getAssociatedTokenAddressSync(
+          baseMint,
           launchSigner,
           true
         ),
@@ -402,9 +414,9 @@ export class LaunchpadClient {
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
-          getAssociatedTokenAddressSync(tokenMint, funder, true),
+          getAssociatedTokenAddressSync(baseMint, funder, true),
           funder,
-          tokenMint
+          baseMint
         ),
       ]);
   }

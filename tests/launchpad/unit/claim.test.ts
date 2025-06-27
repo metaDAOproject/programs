@@ -21,7 +21,7 @@ export default function suite() {
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
-  let usdcVault: PublicKey;
+  let quoteVault: PublicKey;
   let funderUsdcAccount: PublicKey;
 
   const minRaise = new BN(100_000000); // 1000 USDC
@@ -42,7 +42,7 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
-    usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    quoteVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
     funderUsdcAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       this.payer.publicKey
@@ -56,7 +56,8 @@ export default function suite() {
         "https://example.com",
         minRaise,
         60 * 60 * 24 * 2,
-        META
+        META,
+        MAINNET_USDC
       )
       .rpc();
 
@@ -67,14 +68,14 @@ export default function suite() {
     const fundAmount = new BN(1000_000000); // 1000 USDC
 
     // Fund the launch
-    await launchpadClient.fundIx(launch, fundAmount).rpc();
+    await launchpadClient.fundIx(launch, fundAmount, undefined, MAINNET_USDC).rpc();
   });
 
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
     await this.advanceBySeconds(60 * 60 * 24 * 3);
     await launchpadClient
-      .completeLaunchIx(launch, META)
+      .completeLaunchIx(launch, MAINNET_USDC, META)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
       ])

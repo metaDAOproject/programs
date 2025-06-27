@@ -23,13 +23,13 @@ pub struct Launch {
     /// The PDA bump for the launch signer.
     pub launch_signer_pda_bump: u8,
     /// The USDC vault that will hold the USDC raised until the launch is over.
-    pub launch_usdc_vault: Pubkey,
+    pub launch_quote_vault: Pubkey,
     /// The token vault, used to send tokens to Raydium.
-    pub launch_token_vault: Pubkey,
+    pub launch_base_vault: Pubkey,
     /// The token that will be minted to funders and that will control the DAO.
-    pub token_mint: Pubkey,
+    pub base_mint: Pubkey,
     /// The USDC mint.
-    pub usdc_mint: Pubkey,
+    pub quote_mint: Pubkey,
     /// The unix timestamp when the launch was started.
     pub unix_timestamp_started: i64,
     /// The amount of USDC that has been committed by the users.

@@ -11,7 +11,7 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "tokenMint";
+          name: "baseMint";
           isMut: true;
           isSigner: false;
         },
@@ -26,12 +26,12 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "usdcVault";
+          name: "quoteVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "tokenVault";
+          name: "baseVault";
           isMut: true;
           isSigner: false;
         },
@@ -46,7 +46,7 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "usdcMint";
+          name: "quoteMint";
           isMut: false;
           isSigner: false;
         },
@@ -140,7 +140,7 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "launchUsdcVault";
+          name: "launchQuoteVault";
           isMut: true;
           isSigner: false;
         },
@@ -155,7 +155,7 @@ export type Launchpad = {
           isSigner: true;
         },
         {
-          name: "funderUsdcAccount";
+          name: "funderQuoteAccount";
           isMut: true;
           isSigner: false;
         },
@@ -216,17 +216,17 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "launchUsdcVault";
+          name: "launchQuoteVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "launchTokenVault";
+          name: "launchBaseVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "treasuryUsdcAccount";
+          name: "treasuryQuoteAccount";
           isMut: true;
           isSigner: false;
         },
@@ -249,12 +249,12 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "tokenMint";
+          name: "baseMint";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "usdcMint";
+          name: "quoteMint";
           isMut: false;
           isSigner: false;
         },
@@ -366,7 +366,7 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "launchUsdcVault";
+          name: "launchQuoteVault";
           isMut: true;
           isSigner: false;
         },
@@ -381,7 +381,7 @@ export type Launchpad = {
           isSigner: true;
         },
         {
-          name: "funderUsdcAccount";
+          name: "funderQuoteAccount";
           isMut: true;
           isSigner: false;
         },
@@ -427,12 +427,12 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "tokenMint";
+          name: "baseMint";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "launchTokenVault";
+          name: "launchBaseVault";
           isMut: true;
           isSigner: false;
         },
@@ -547,26 +547,26 @@ export type Launchpad = {
             type: "u8";
           },
           {
-            name: "launchUsdcVault";
+            name: "launchQuoteVault";
             docs: [
               "The USDC vault that will hold the USDC raised until the launch is over."
             ];
             type: "publicKey";
           },
           {
-            name: "launchTokenVault";
+            name: "launchBaseVault";
             docs: ["The token vault, used to send tokens to Raydium."];
             type: "publicKey";
           },
           {
-            name: "tokenMint";
+            name: "baseMint";
             docs: [
               "The token that will be minted to funders and that will control the DAO."
             ];
             type: "publicKey";
           },
           {
-            name: "usdcMint";
+            name: "quoteMint";
             docs: ["The USDC mint."];
             type: "publicKey";
           },
@@ -736,12 +736,12 @@ export type Launchpad = {
           index: false;
         },
         {
-          name: "tokenMint";
+          name: "baseMint";
           type: "publicKey";
           index: false;
         },
         {
-          name: "usdcMint";
+          name: "quoteMint";
           type: "publicKey";
           index: false;
         },
@@ -1011,7 +1011,7 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "tokenMint",
+          name: "baseMint",
           isMut: true,
           isSigner: false,
         },
@@ -1026,12 +1026,12 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "usdcVault",
+          name: "quoteVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "tokenVault",
+          name: "baseVault",
           isMut: true,
           isSigner: false,
         },
@@ -1046,7 +1046,7 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "usdcMint",
+          name: "quoteMint",
           isMut: false,
           isSigner: false,
         },
@@ -1140,7 +1140,7 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "launchUsdcVault",
+          name: "launchQuoteVault",
           isMut: true,
           isSigner: false,
         },
@@ -1155,7 +1155,7 @@ export const IDL: Launchpad = {
           isSigner: true,
         },
         {
-          name: "funderUsdcAccount",
+          name: "funderQuoteAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1216,17 +1216,17 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "launchUsdcVault",
+          name: "launchQuoteVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "launchTokenVault",
+          name: "launchBaseVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "treasuryUsdcAccount",
+          name: "treasuryQuoteAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1249,12 +1249,12 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "tokenMint",
+          name: "baseMint",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "usdcMint",
+          name: "quoteMint",
           isMut: false,
           isSigner: false,
         },
@@ -1366,7 +1366,7 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "launchUsdcVault",
+          name: "launchQuoteVault",
           isMut: true,
           isSigner: false,
         },
@@ -1381,7 +1381,7 @@ export const IDL: Launchpad = {
           isSigner: true,
         },
         {
-          name: "funderUsdcAccount",
+          name: "funderQuoteAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1427,12 +1427,12 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "tokenMint",
+          name: "baseMint",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "launchTokenVault",
+          name: "launchBaseVault",
           isMut: true,
           isSigner: false,
         },
@@ -1547,26 +1547,26 @@ export const IDL: Launchpad = {
             type: "u8",
           },
           {
-            name: "launchUsdcVault",
+            name: "launchQuoteVault",
             docs: [
               "The USDC vault that will hold the USDC raised until the launch is over.",
             ],
             type: "publicKey",
           },
           {
-            name: "launchTokenVault",
+            name: "launchBaseVault",
             docs: ["The token vault, used to send tokens to Raydium."],
             type: "publicKey",
           },
           {
-            name: "tokenMint",
+            name: "baseMint",
             docs: [
               "The token that will be minted to funders and that will control the DAO.",
             ],
             type: "publicKey",
           },
           {
-            name: "usdcMint",
+            name: "quoteMint",
             docs: ["The USDC mint."],
             type: "publicKey",
           },
@@ -1736,12 +1736,12 @@ export const IDL: Launchpad = {
           index: false,
         },
         {
-          name: "tokenMint",
+          name: "baseMint",
           type: "publicKey",
           index: false,
         },
         {
-          name: "usdcMint",
+          name: "quoteMint",
           type: "publicKey",
           index: false,
         },

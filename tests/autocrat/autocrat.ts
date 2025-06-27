@@ -196,8 +196,8 @@ export default function suite() {
       const storedDao = await autocratClient.getDao(dao);
       assert(storedDao.treasury.equals(daoTreasury));
       assert.equal(storedDao.treasuryPdaBump, treasuryPdaBump);
-      assert(storedDao.tokenMint.equals(META));
-      assert(storedDao.usdcMint.equals(USDC));
+      assert(storedDao.baseMint.equals(META));
+      assert(storedDao.quoteMint.equals(USDC));
       assert.equal(storedDao.proposalCount, 0);
       assert.equal(storedDao.passThresholdBps, 300);
 

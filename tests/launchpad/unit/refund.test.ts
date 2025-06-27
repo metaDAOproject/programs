@@ -23,8 +23,8 @@ export default function suite() {
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
-  let usdcVault: PublicKey;
-  let funderUsdcAccount: PublicKey;
+  let quoteVault: PublicKey;
+  let funderQuoteAccount: PublicKey;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
 
@@ -43,8 +43,8 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
-    usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
-    funderUsdcAccount = getAssociatedTokenAddressSync(
+    quoteVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    funderQuoteAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       this.payer.publicKey
     );
@@ -57,7 +57,8 @@ export default function suite() {
         "https://example.com",
         minRaise,
         60 * 60 * 24 * 6,
-        META
+        META,
+        MAINNET_USDC
       )
       .rpc();
 
@@ -71,13 +72,13 @@ export default function suite() {
     // Fund the launch with less than minimum raise
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient.fundIx(launch, partialAmount).rpc();
+    await launchpadClient.fundIx(launch, partialAmount, undefined, MAINNET_USDC).rpc();
 
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 7);
 
     // Complete the launch (moves to refunding state)
-    await launchpadClient.completeLaunchIx(launch, META).rpc();
+    await launchpadClient.completeLaunchIx(launch, MAINNET_USDC, META).rpc();
 
     const initialUsdcBalance = await this.getTokenBalance(
       MAINNET_USDC,
@@ -89,7 +90,7 @@ export default function suite() {
     );
 
     // Get refund
-    await launchpadClient.refundIx(launch).rpc();
+    await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();
 
     const finalUsdcBalance = await this.getTokenBalance(
       MAINNET_USDC,
@@ -106,7 +107,7 @@ export default function suite() {
     );
     assert.equal(
       finalMetaBalance,
-      0,
+      BigInt(0),
       "META tokens should be burned during refund"
     );
   });
@@ -114,10 +115,10 @@ export default function suite() {
   it("fails when launch is not in refunding state", async function () {
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient.fundIx(launch, partialAmount).rpc();
+    await launchpadClient.fundIx(launch, partialAmount, undefined, MAINNET_USDC).rpc();
 
     try {
-      await launchpadClient.refundIx(launch).rpc();
+      await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "LaunchNotRefunding");
@@ -127,10 +128,10 @@ export default function suite() {
   it("fails when user has no tokens to refund", async function () {
     // Move to refunding state without any funding
     await this.advanceBySeconds(60 * 60 * 24 * 7);
-    await launchpadClient.completeLaunchIx(launch, META).rpc();
+    await launchpadClient.completeLaunchIx(launch, MAINNET_USDC, META).rpc();
 
     try {
-      await launchpadClient.refundIx(launch).rpc();
+      await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       // assert.include(e.message, "InvalidAmount");

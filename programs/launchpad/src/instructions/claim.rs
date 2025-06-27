@@ -12,8 +12,8 @@ pub struct Claim<'info> {
     #[account(
         mut,
         has_one = launch_signer,
-        has_one = token_mint,
-        has_one = launch_token_vault,
+        has_one = base_mint,
+        has_one = launch_base_vault,
     )]
     pub launch: Account<'info, Launch>,
 
@@ -30,10 +30,10 @@ pub struct Claim<'info> {
     pub launch_signer: UncheckedAccount<'info>,
 
     #[account(mut)]
-    pub token_mint: Account<'info, Mint>,
+    pub base_mint: Account<'info, Mint>,
 
     #[account(mut)]
-    pub launch_token_vault: Account<'info, TokenAccount>,
+    pub launch_base_vault: Account<'info, TokenAccount>,
 
     /// CHECK: not used, just for constraints
     pub funder: UncheckedAccount<'info>,
@@ -43,7 +43,7 @@ pub struct Claim<'info> {
 
     #[account(
         mut,
-        associated_token::mint = token_mint,
+        associated_token::mint = base_mint,
         associated_token::authority = funder
     )]
     pub funder_token_account: Account<'info, TokenAccount>,
@@ -86,7 +86,7 @@ impl Claim<'_> {
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.launch_token_vault.to_account_info(),
+                    from: ctx.accounts.launch_base_vault.to_account_info(),
                     to: ctx.accounts.funder_token_account.to_account_info(),
                     authority: ctx.accounts.launch_signer.to_account_info(),
                 },

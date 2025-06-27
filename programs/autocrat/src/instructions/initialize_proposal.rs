@@ -32,12 +32,12 @@ pub struct InitializeProposal<'info> {
     )]
     pub question: Box<Account<'info, Question>>,
     #[account(
-        constraint = quote_vault.underlying_token_mint == dao.usdc_mint,
+        constraint = quote_vault.underlying_token_mint == dao.quote_mint,
         has_one = question,
     )]
     pub quote_vault: Account<'info, ConditionalVaultAccount>,
     #[account(
-        constraint = base_vault.underlying_token_mint == dao.token_mint,
+        constraint = base_vault.underlying_token_mint == dao.base_mint,
         has_one = question,
     )]
     pub base_vault: Account<'info, ConditionalVaultAccount>,

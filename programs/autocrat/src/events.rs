@@ -21,8 +21,8 @@ impl CommonFields {
 pub struct InitializeDaoEvent {
     pub common: CommonFields,
     pub dao: Pubkey,
-    pub token_mint: Pubkey,
-    pub usdc_mint: Pubkey,
+    pub base_mint: Pubkey,
+    pub quote_mint: Pubkey,
     pub treasury: Pubkey,
     pub pass_threshold_bps: u16,
     pub slots_per_proposal: u64,
