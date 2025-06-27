@@ -5,7 +5,7 @@ import {
   getSpotPoolAddr,
   getSlPoolPositionAddr,
   getRaydiumCpmmLpMintAddr,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { PublicKey, ComputeBudgetProgram, Keypair } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, getAccount } from "spl-token-bankrun";

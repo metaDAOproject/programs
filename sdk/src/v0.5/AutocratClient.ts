@@ -574,7 +574,6 @@ export class AutocratClient {
     proposer: PublicKey = this.provider.publicKey
   ) {
     let [proposal] = getProposalAddr(this.autocrat.programId, proposer, nonce);
-    const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
       proposal,
       baseMint,
@@ -593,12 +592,12 @@ export class AutocratClient {
 
     const passLpVaultAccount = getAssociatedTokenAddressSync(
       passLp,
-      daoTreasury,
+      proposal,
       true
     );
     const failLpVaultAccount = getAssociatedTokenAddressSync(
       failLp,
-      daoTreasury,
+      proposal,
       true
     );
 
@@ -633,21 +632,7 @@ export class AutocratClient {
         passLpVaultAccount,
         failLpVaultAccount,
         proposer,
-      })
-      .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          proposer,
-          passLpVaultAccount,
-          daoTreasury,
-          passLp
-        ),
-        createAssociatedTokenAccountIdempotentInstruction(
-          proposer,
-          failLpVaultAccount,
-          daoTreasury,
-          failLp
-        ),
-      ]);
+      });
   }
 
   async finalizeProposal(proposal: PublicKey) {
@@ -703,18 +688,9 @@ export class AutocratClient {
       // quoteVault,
       passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer, true),
       failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer, true),
-      passLpVaultAccount: getAssociatedTokenAddressSync(
-        passLp,
-        daoTreasury,
-        true
-      ),
-      failLpVaultAccount: getAssociatedTokenAddressSync(
-        failLp,
-        daoTreasury,
-        true
-      ),
+      passLpVaultAccount: getAssociatedTokenAddressSync(passLp, proposal, true),
+      failLpVaultAccount: getAssociatedTokenAddressSync(failLp, proposal, true),
       vaultProgram: this.vaultClient.vaultProgram.programId,
-      treasury: daoTreasury,
       vaultEventAuthority,
     });
   }

@@ -10,7 +10,7 @@ import {
   getSharedLiquidityPoolSignerAddr,
   InstructionUtils,
   getDaoTreasuryAddr,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { sha256 } from "@metadaoproject/futarchy";
 import {
   PublicKey,

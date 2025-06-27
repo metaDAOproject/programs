@@ -342,6 +342,14 @@ export type Amm = {
           {
             name: "seqNum";
             type: "u64";
+          },
+          {
+            name: "vaultAtaBase";
+            type: "publicKey";
+          },
+          {
+            name: "vaultAtaQuote";
+            type: "publicKey";
           }
         ];
       };
@@ -1166,6 +1174,14 @@ export const IDL: Amm = {
           {
             name: "seqNum",
             type: "u64",
+          },
+          {
+            name: "vaultAtaBase",
+            type: "publicKey",
+          },
+          {
+            name: "vaultAtaQuote",
+            type: "publicKey",
           },
         ],
       },

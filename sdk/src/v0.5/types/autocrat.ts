@@ -124,12 +124,22 @@ export type Autocrat = {
           isSigner: true;
         },
         {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -179,11 +189,6 @@ export type Autocrat = {
         {
           name: "question";
           isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "treasury";
-          isMut: false;
           isSigner: false;
         },
         {
@@ -1001,6 +1006,16 @@ export type Autocrat = {
       code: 6011;
       name: "InsufficientLpTokenLock";
       msg: "The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`";
+    },
+    {
+      code: 6012;
+      name: "ProposalDurationTooShort";
+      msg: "Proposal duration must be longer than TWAP start delay";
+    },
+    {
+      code: 6013;
+      name: "QuestionMustBeBinary";
+      msg: "Question must have exactly 2 outcomes for binary futarchy";
     }
   ];
 };
@@ -1131,12 +1146,22 @@ export const IDL: Autocrat = {
           isSigner: true,
         },
         {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
           name: "tokenProgram",
           isMut: false,
           isSigner: false,
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1186,11 +1211,6 @@ export const IDL: Autocrat = {
         {
           name: "question",
           isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "treasury",
-          isMut: false,
           isSigner: false,
         },
         {
@@ -2008,6 +2028,16 @@ export const IDL: Autocrat = {
       code: 6011,
       name: "InsufficientLpTokenLock",
       msg: "The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`",
+    },
+    {
+      code: 6012,
+      name: "ProposalDurationTooShort",
+      msg: "Proposal duration must be longer than TWAP start delay",
+    },
+    {
+      code: 6013,
+      name: "QuestionMustBeBinary",
+      msg: "Question must have exactly 2 outcomes for binary futarchy",
     },
   ],
 };

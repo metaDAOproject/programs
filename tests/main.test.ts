@@ -15,7 +15,7 @@ import {
   SharedLiquidityManagerClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 // import {
 //   // AmmClient,
 //   // AutocratClient,
@@ -38,7 +38,7 @@ import { assert } from "chai";
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import * as fs from "fs";
-import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
+import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.5";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID

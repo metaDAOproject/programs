@@ -14,7 +14,7 @@ import {
   CONDITIONAL_VAULT_PROGRAM_ID,
   AUTOCRAT_PROGRAM_ID,
   getSlPoolPositionAddr,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import {
   PublicKey,
   ComputeBudgetProgram,

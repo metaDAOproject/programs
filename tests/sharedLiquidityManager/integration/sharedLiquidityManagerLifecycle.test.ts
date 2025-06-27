@@ -25,7 +25,7 @@ import {
   getDraftProposalAddr,
   getStakeRecordAddr,
   getSpotPoolAddr,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import {
   AddressLookupTableAccount,
   AddressLookupTableProgram,
