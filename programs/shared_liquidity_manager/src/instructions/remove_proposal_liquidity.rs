@@ -250,7 +250,7 @@ impl RemoveProposalLiquidity<'_> {
             ProposalState::Pending => {
                 return Err(SharedLiquidityManagerError::ProposalNotFinalized.into());
             }
-            ProposalState::Passed | ProposalState::Failed | ProposalState::Executed => {}
+            ProposalState::Passed | ProposalState::Failed => {}
         }
 
         require_keys_eq!(
@@ -358,7 +358,7 @@ impl RemoveProposalLiquidity<'_> {
         let signer = &[&seeds[..]];
 
         let is_proposal_passed = match ctx.accounts.proposal.state {
-            ProposalState::Passed | ProposalState::Executed => true,
+            ProposalState::Passed => true,
             ProposalState::Failed => false,
             ProposalState::Pending => panic!("Proposal is pending"),
         };

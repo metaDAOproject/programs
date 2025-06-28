@@ -1,7 +1,11 @@
-import { getDaoAddr, PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/futarchy/v0.5";
+import {
+  getDaoAddr,
+  PERMISSIONLESS_ACCOUNT,
+  PriceMath,
+} from "@metadaoproject/futarchy/v0.5";
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
+import { expectError, ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -17,20 +21,22 @@ export default function suite() {
   });
 
   it("should initialize a DAO", async function () {
-    await this.autocratClient.initializeDaoIx({
-      baseMint: META,
-      quoteMint: USDC,
-      params: {
-        slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3),
-        twapStartDelaySlots: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24),
-        twapInitialObservation: THOUSAND_BUCK_PRICE,
-        twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
-        minQuoteFutarchicLiquidity: new BN(1),
-        minBaseFutarchicLiquidity: new BN(1000),
-        passThresholdBps: 300,
-        nonce: new BN(1337),
-      },
-    }).rpc();
+    await this.autocratClient
+      .initializeDaoIx({
+        baseMint: META,
+        quoteMint: USDC,
+        params: {
+          slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3),
+          twapStartDelaySlots: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24),
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(1),
+          minBaseFutarchicLiquidity: new BN(1000),
+          passThresholdBps: 300,
+          nonce: new BN(1337),
+        },
+      })
+      .rpc();
 
     const [dao, daoBump] = getDaoAddr({ nonce: new BN(1337) });
 
@@ -42,10 +48,22 @@ export default function suite() {
     assert.equal(storedDao.proposalCount, 0);
 
     assert.equal(storedDao.nonce.toString(), "1337");
-    assert.equal(storedDao.slotsPerProposal.toString(), new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3).toString());
-    assert.equal(storedDao.twapStartDelaySlots.toString(), new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24).toString());
-    assert.equal(storedDao.twapInitialObservation.toString(), THOUSAND_BUCK_PRICE.toString());
-    assert.equal(storedDao.twapMaxObservationChangePerUpdate.toString(), THOUSAND_BUCK_PRICE.divn(100).toString());
+    assert.equal(
+      storedDao.slotsPerProposal.toString(),
+      new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3).toString()
+    );
+    assert.equal(
+      storedDao.twapStartDelaySlots.toString(),
+      new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24).toString()
+    );
+    assert.equal(
+      storedDao.twapInitialObservation.toString(),
+      THOUSAND_BUCK_PRICE.toString()
+    );
+    assert.equal(
+      storedDao.twapMaxObservationChangePerUpdate.toString(),
+      THOUSAND_BUCK_PRICE.divn(100).toString()
+    );
     assert.equal(storedDao.minQuoteFutarchicLiquidity.toString(), "1");
     assert.equal(storedDao.minBaseFutarchicLiquidity.toString(), "1000");
     assert.equal(storedDao.passThresholdBps, 300);
@@ -59,18 +77,57 @@ export default function suite() {
     assert.ok(storedDao.squadsMultisig.equals(multisigPda));
     assert.ok(storedDao.squadsMultisigVault.equals(squadsMultisigVault));
 
-    const storedMultisig = await multisig.accounts.Multisig.fromAccountAddress(this.squadsConnection, multisigPda);
+    const storedMultisig = await multisig.accounts.Multisig.fromAccountAddress(
+      this.squadsConnection,
+      multisigPda
+    );
     assert.ok(storedMultisig.configAuthority.equals(dao));
     assert.equal(storedMultisig.threshold, 1);
     assert.equal(storedMultisig.timeLock, 0);
     assert.equal(storedMultisig.transactionIndex.toString(), "0");
 
-    let daoMember = storedMultisig.members.find((member) => member.key.equals(dao));
+    let daoMember = storedMultisig.members.find((member) =>
+      member.key.equals(dao)
+    );
     assert.ok(daoMember);
-    assert.equal(daoMember.permissions.mask, Permissions.fromPermissions([Permission.Vote]).mask);
+    assert.equal(
+      daoMember.permissions.mask,
+      Permissions.fromPermissions([Permission.Vote]).mask
+    );
 
-    let permissionlessMember = storedMultisig.members.find((member) => member.key.equals(PERMISSIONLESS_ACCOUNT.publicKey));
+    let permissionlessMember = storedMultisig.members.find((member) =>
+      member.key.equals(PERMISSIONLESS_ACCOUNT.publicKey)
+    );
     assert.ok(permissionlessMember);
-    assert.equal(permissionlessMember.permissions.mask, Permissions.fromPermissions([Permission.Initiate, Permission.Execute]).mask);
+    assert.equal(
+      permissionlessMember.permissions.mask,
+      Permissions.fromPermissions([Permission.Initiate, Permission.Execute])
+        .mask
+    );
+  });
+
+  it("doesn't allow DAOs with proposal duration less than TWAP start delay", async function () {
+    const callbacks = expectError(
+      "ProposalDurationTooShort",
+      "DAO initialized despite slots_per_proposal being less than twap_start_delay_slots"
+    );
+
+    await this.autocratClient
+      .initializeDaoIx({
+        baseMint: META,
+        quoteMint: USDC,
+        params: {
+          twapInitialObservation: new BN(1),
+          twapMaxObservationChangePerUpdate: new BN(1000),
+          twapStartDelaySlots: new BN(10000),
+          minQuoteFutarchicLiquidity: new BN(5),
+          minBaseFutarchicLiquidity: new BN(5000),
+          passThresholdBps: 300,
+          slotsPerProposal: new BN(5000),
+          nonce: new BN(1338),
+        },
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

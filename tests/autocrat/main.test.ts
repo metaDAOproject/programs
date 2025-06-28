@@ -12,5 +12,4 @@ export default function suite() {
 
   // describe("autocrat", autocrat);
   describe("full proposal", fullProposal);
-
 }

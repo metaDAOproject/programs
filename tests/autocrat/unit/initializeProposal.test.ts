@@ -1,4 +1,8 @@
-import { getDaoAddr, PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/futarchy/v0.5";
+import {
+  getDaoAddr,
+  PERMISSIONLESS_ACCOUNT,
+  PriceMath,
+} from "@metadaoproject/futarchy/v0.5";
 import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 import BN from "bn.js";
 import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
@@ -21,31 +25,37 @@ export default function suite() {
 
     // Mint tokens to payer's accounts
     await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 1_000_000);
+    await this.mintTo(
+      USDC,
+      this.payer.publicKey,
+      this.payer,
+      100_000 * 1_000_000
+    );
 
     const nonce = new BN(Math.floor(Math.random() * 1000000));
 
     // Initialize a DAO first
-    await this.autocratClient.initializeDaoIx({
-      baseMint: META,
-      quoteMint: USDC,
-      params: {
-        slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3),
-        twapStartDelaySlots: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24),
-        twapInitialObservation: THOUSAND_BUCK_PRICE,
-        twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
-        minQuoteFutarchicLiquidity: new BN(1),
-        minBaseFutarchicLiquidity: new BN(1000),
-        passThresholdBps: 300,
-        nonce,
-      },
-    }).rpc();
+    await this.autocratClient
+      .initializeDaoIx({
+        baseMint: META,
+        quoteMint: USDC,
+        params: {
+          slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3),
+          twapStartDelaySlots: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24),
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(1),
+          minBaseFutarchicLiquidity: new BN(1000),
+          passThresholdBps: 300,
+          nonce,
+        },
+      })
+      .rpc();
 
     [dao] = getDaoAddr({ nonce });
   });
 
   it("should initialize a proposal", async function () {
-
     const descriptionUrl = "https://example.com/proposal";
     const baseTokensToLP = new BN(10 * 10 ** 9); // 10 META
     const quoteTokensToLP = new BN(5000 * 10 ** 6); // 5000 USDC
@@ -111,12 +121,8 @@ export default function suite() {
     );
 
     // Split tokens into the vaults (as in the integration test)
-    const { baseVault, quoteVault, question } = this.autocratClient.getProposalPdas(
-      proposal,
-      META,
-      USDC,
-      dao
-    );
+    const { baseVault, quoteVault, question } =
+      this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
 
     await this.vaultClient
       .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
@@ -133,11 +139,14 @@ export default function suite() {
     assert.ok(storedProposal.proposer.equals(this.payer.publicKey));
     assert.ok(storedProposal.squadsProposal.equals(squadsProposalPda));
     assert.equal(storedProposal.passLpTokensLocked.toString(), "5000000000");
-    assert.equal(storedProposal.failLpTokensLocked.toString(), quoteTokensToLP.toString());
+    assert.equal(
+      storedProposal.failLpTokensLocked.toString(),
+      quoteTokensToLP.toString()
+    );
     assert.exists(storedProposal.state.pending);
 
     // Verify the DAO proposal count was incremented
     const storedDao = await this.autocratClient.getDao(dao);
     assert.equal(storedDao.proposalCount, 1);
   });
-} 
+}
