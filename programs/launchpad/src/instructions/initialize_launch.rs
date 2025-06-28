@@ -137,7 +137,7 @@ impl InitializeLaunch<'_> {
             unix_timestamp_started: 0,
             seconds_for_launch: args.seconds_for_launch,
             dao: None,
-            dao_treasury: None,
+            dao_vault: None,
         });
 
         let clock = Clock::get()?;

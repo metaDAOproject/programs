@@ -43,5 +43,5 @@ pub struct Launch {
     /// The DAO, if the launch is complete.
     pub dao: Option<Pubkey>,
     /// The DAO treasury that USDC / LP is sent to, if the launch is complete.
-    pub dao_treasury: Option<Pubkey>,
+    pub dao_vault: Option<Pubkey>,
 }

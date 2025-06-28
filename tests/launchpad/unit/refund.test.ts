@@ -1,4 +1,4 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -15,6 +15,7 @@ import {
   AuthorityType,
 } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
+import { createLookupTableForTransaction } from "../../utils.js";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -84,7 +85,25 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 24 * 7);
 
     // Complete the launch (moves to refunding state)
-    await launchpadClient.completeLaunchIx(launch, MAINNET_USDC, META).rpc();
+    const completeLaunchTx = await launchpadClient
+      .completeLaunchIx(launch, MAINNET_USDC, META)
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer]);
+
+    await this.banksClient.processTransaction(tx);
 
     const initialUsdcBalance = await this.getTokenBalance(
       MAINNET_USDC,
@@ -136,7 +155,25 @@ export default function suite() {
   it("fails when user has no tokens to refund", async function () {
     // Move to refunding state without any funding
     await this.advanceBySeconds(60 * 60 * 24 * 7);
-    await launchpadClient.completeLaunchIx(launch, MAINNET_USDC, META).rpc();
+    const completeLaunchTx = await launchpadClient
+      .completeLaunchIx(launch, MAINNET_USDC, META)
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer]);
+
+    await this.banksClient.processTransaction(tx);
 
     try {
       await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();

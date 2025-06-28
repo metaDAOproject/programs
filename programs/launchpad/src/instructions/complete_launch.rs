@@ -26,6 +26,54 @@ use autocrat::DAY_IN_SLOTS;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
+/// Static accounts for completing a launch, used to reduce code duplication
+/// and conserve stack space.
+#[derive(Accounts)]
+pub struct StaticCompleteLaunchAccounts<'info> {
+    /// CHECK: pool vault and lp mint authority
+    #[account(
+        seeds = [
+            raydium_cpmm_cpi::AUTH_SEED.as_bytes(),
+        ],
+        seeds::program = cp_swap_program,
+        bump,
+    )]
+    pub authority: UncheckedAccount<'info>,
+
+    /// Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config
+    #[account(
+        mut,
+        seeds = [
+            AMM_CONFIG_SEED.as_bytes(),
+            &0_u16.to_be_bytes()
+        ],
+        seeds::program = cp_swap_program,
+        bump,
+    )]
+    pub amm_config: Box<Account<'info, AmmConfig>>,
+
+    /// create pool fee account
+    #[account(
+        mut,
+        address = raydium_cpmm_cpi::create_pool_fee_reveiver::id(),
+    )]
+    pub create_pool_fee: Box<Account<'info, TokenAccount>>,
+
+    pub cp_swap_program: Program<'info, RaydiumCpmm>,
+    pub autocrat_program: Program<'info, Autocrat>,
+    pub token_metadata_program: Program<'info, Metadata>,
+    /// CHECK: checked by autocrat program
+    pub autocrat_event_authority: UncheckedAccount<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
+    /// CHECK: checked by squads multisig program
+    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_PROGRAM_CONFIG], bump, seeds::program = squads_program)]
+    pub squads_program_config: UncheckedAccount<'info>,
+    /// CHECK: checked by squads multisig program
+    #[account(mut)]
+    pub squads_program_config_treasury: UncheckedAccount<'info>,
+}
+
 /// Completes a launch, which if the minimum raise is met:
 /// - Creates a DAO
 /// - Mints an additional 1M tokens
@@ -63,16 +111,6 @@ pub struct CompleteLaunch<'info> {
     #[account(mut)]
     pub launch_signer: UncheckedAccount<'info>,
 
-    /// CHECK: pool vault and lp mint authority
-    #[account(
-        seeds = [
-            raydium_cpmm_cpi::AUTH_SEED.as_bytes(),
-        ],
-        seeds::program = cp_swap_program,
-        bump,
-    )]
-    pub authority: UncheckedAccount<'info>,
-
     #[account(
         mut,
         associated_token::mint = quote_mint,
@@ -88,9 +126,10 @@ pub struct CompleteLaunch<'info> {
     pub launch_base_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = payer,
         associated_token::mint = quote_mint,
-        associated_token::authority = dao_treasury,
+        associated_token::authority = squads_multisig_vault,
     )]
     pub treasury_quote_account: Box<Account<'info, TokenAccount>>,
 
@@ -98,23 +137,11 @@ pub struct CompleteLaunch<'info> {
     #[account(
         mut,
         address = get_associated_token_address(
-            dao_treasury.key,
+            squads_multisig_vault.key,
             lp_mint.key,
         )
     )]
     pub treasury_lp_account: UncheckedAccount<'info>,
-
-    /// Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config
-    #[account(
-        mut,
-        seeds = [
-            AMM_CONFIG_SEED.as_bytes(),
-            &0_u16.to_be_bytes()
-        ],
-        seeds::program = cp_swap_program,
-        bump,
-    )]
-    pub amm_config: Box<Account<'info, AmmConfig>>,
 
     /// CHECK: Initialize an account to store the pool state, init by cp-swap
     #[account(
@@ -139,7 +166,7 @@ pub struct CompleteLaunch<'info> {
             POOL_LP_MINT_SEED.as_bytes(),
             pool_state.key().as_ref(),
         ],
-        seeds::program = cp_swap_program,
+        seeds::program = static_accounts.cp_swap_program,
         bump,
     )]
     pub lp_mint: UncheckedAccount<'info>,
@@ -156,7 +183,7 @@ pub struct CompleteLaunch<'info> {
             pool_state.key().as_ref(),
             base_mint.key().as_ref()
         ],
-        seeds::program = cp_swap_program,
+        seeds::program = static_accounts.cp_swap_program,
         bump,
     )]
     pub pool_token_vault: UncheckedAccount<'info>,
@@ -169,17 +196,10 @@ pub struct CompleteLaunch<'info> {
             pool_state.key().as_ref(),
             quote_mint.key().as_ref()
         ],
-        seeds::program = cp_swap_program,
+        seeds::program = static_accounts.cp_swap_program,
         bump,
     )]
     pub pool_usdc_vault: UncheckedAccount<'info>,
-
-    /// create pool fee account
-    #[account(
-        mut,
-        address = raydium_cpmm_cpi::create_pool_fee_reveiver::id(),
-    )]
-    pub create_pool_fee: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: an account to store oracle observations, init by cp-swap
     #[account(
@@ -188,41 +208,44 @@ pub struct CompleteLaunch<'info> {
             OBSERVATION_SEED.as_bytes(),
             pool_state.key().as_ref(),
         ],
-        seeds::program = cp_swap_program,
+        seeds::program = static_accounts.cp_swap_program,
         bump,
     )]
     pub observation_state: UncheckedAccount<'info>,
 
     /// CHECK: this is the DAO account, init by autocrat
-    #[account(
-        mut,
-        seeds = [
-            b"launch_dao",
-            launch.key().as_ref(),
-        ],
-        bump,
-    )]
+    // #[account(
+    //     mut,
+    //     seeds = [
+    //         b"launch_dao",
+    //         launch.key().as_ref(),
+    //     ],
+    //     bump,
+    // )]
+    #[account(mut)]
     pub dao: UncheckedAccount<'info>,
 
-    /// CHECK: this is the DAO treasury account
-    #[account(
-        seeds = [
-            dao.key().as_ref(),
-        ],
-        seeds::program = autocrat_program,
-        bump,
-    )]
-    pub dao_treasury: UncheckedAccount<'info>,
+    // /// CHECK: this is the DAO treasury account
+    // #[account(
+    //     seeds = [
+    //         dao.key().as_ref(),
+    //     ],
+    //     seeds::program = autocrat_program,
+    //     bump,
+    // )]
+    // pub dao_treasury: UncheckedAccount<'info>,
 
-    pub cp_swap_program: Program<'info, RaydiumCpmm>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
-    pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
-    pub autocrat_program: Program<'info, Autocrat>,
-    pub token_metadata_program: Program<'info, Metadata>,
     /// CHECK: checked by autocrat program
-    pub autocrat_event_authority: UncheckedAccount<'info>,
-    pub rent: Sysvar<'info, Rent>,
+    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
+    pub squads_multisig: UncheckedAccount<'info>,
+    /// CHECK: just a signer
+    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = static_accounts.squads_program)]
+    pub squads_multisig_vault: UncheckedAccount<'info>,
+
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub static_accounts: StaticCompleteLaunchAccounts<'info>,
 }
 
 impl CompleteLaunch<'_> {
@@ -234,12 +257,9 @@ impl CompleteLaunch<'_> {
             LaunchpadError::InvalidLaunchState
         );
 
-        require!(
-            clock.unix_timestamp
-                >= self
-                    .launch
-                    .unix_timestamp_started
-                    .saturating_add(self.launch.seconds_for_launch.try_into().unwrap()),
+        require_gte!(
+            clock.unix_timestamp,
+            self.launch.unix_timestamp_started.saturating_add(self.launch.seconds_for_launch.try_into().unwrap()),
             LaunchpadError::LaunchPeriodNotOver
         );
 
@@ -250,7 +270,7 @@ impl CompleteLaunch<'_> {
         let launch = &mut ctx.accounts.launch;
 
         launch.dao = Some(ctx.accounts.dao.key());
-        launch.dao_treasury = Some(ctx.accounts.dao_treasury.key());
+        launch.dao_vault = Some(ctx.accounts.squads_multisig_vault.key());
 
         let total_committed_amount = launch.total_committed_amount;
 
@@ -262,34 +282,34 @@ impl CompleteLaunch<'_> {
         let price_1e12 =
             ((total_committed_amount as u128) * PRICE_SCALE) / (AVAILABLE_TOKENS as u128);
 
-        let launch_key = launch.key();
-
-        let seeds = &[b"launch_dao", launch_key.as_ref(), &[ctx.bumps.dao]];
-        let signer = &[&seeds[..]];
-
         if total_committed_amount >= launch.minimum_raise_amount {
             autocrat::cpi::initialize_dao(
-                CpiContext::new_with_signer(
-                    ctx.accounts.autocrat_program.to_account_info(),
+                CpiContext::new(
+                    ctx.accounts.static_accounts.autocrat_program.to_account_info(),
                     autocrat::cpi::accounts::InitializeDao {
                         dao: ctx.accounts.dao.to_account_info(),
                         payer: ctx.accounts.payer.to_account_info(),
                         system_program: ctx.accounts.system_program.to_account_info(),
                         base_mint: ctx.accounts.base_mint.to_account_info(),
                         quote_mint: ctx.accounts.quote_mint.to_account_info(),
-                        event_authority: ctx.accounts.autocrat_event_authority.to_account_info(),
-                        program: ctx.accounts.autocrat_program.to_account_info(),
+                        event_authority: ctx.accounts.static_accounts.autocrat_event_authority.to_account_info(),
+                        program: ctx.accounts.static_accounts.autocrat_program.to_account_info(),
+                        squads_multisig: ctx.accounts.squads_multisig.to_account_info(),
+                        squads_multisig_vault: ctx.accounts.squads_multisig_vault.to_account_info(),
+                        squads_program: ctx.accounts.static_accounts.squads_program.to_account_info(),
+                        squads_program_config: ctx.accounts.static_accounts.squads_program_config.to_account_info(),
+                        squads_program_config_treasury: ctx.accounts.static_accounts.squads_program_config_treasury.to_account_info(),
                     },
-                    signer,
                 ),
                 InitializeDaoParams {
                     twap_initial_observation: price_1e12,
                     twap_max_observation_change_per_update: price_1e12 / 20,
                     min_quote_futarchic_liquidity: total_committed_amount / 100,
                     min_base_futarchic_liquidity: AVAILABLE_TOKENS / 100,
-                    pass_threshold_bps: None,
-                    slots_per_proposal: Some(3 * DAY_IN_SLOTS),
+                    pass_threshold_bps: 300,
+                    slots_per_proposal: 3 * DAY_IN_SLOTS,
                     twap_start_delay_slots: DAY_IN_SLOTS,
+                    nonce: 0,
                 },
             )?;
 
@@ -329,7 +349,7 @@ impl CompleteLaunch<'_> {
                     launch_signer,
                 ),
                 AuthorityType::MintTokens,
-                Some(ctx.accounts.dao_treasury.key()),
+                Some(ctx.accounts.squads_multisig_vault.key()),
             )?;
 
             system_program::transfer(
@@ -342,7 +362,7 @@ impl CompleteLaunch<'_> {
                 ),
                 // pool fee + 0.1 SOL for rent, we only need 0.05 now but Raydium
                 // is upgradeable so I'd rather leave buffer
-                ctx.accounts.amm_config.create_pool_fee + 100_000_000,
+                ctx.accounts.static_accounts.amm_config.create_pool_fee + 100_000_000,
             )?;
 
             // Raydium requires that token_0 < token_1
@@ -381,19 +401,19 @@ impl CompleteLaunch<'_> {
 
             let cpi_accounts = cpi::accounts::Initialize {
                 creator: ctx.accounts.launch_signer.to_account_info(),
-                amm_config: ctx.accounts.amm_config.to_account_info(),
-                authority: ctx.accounts.authority.to_account_info(),
+                amm_config: ctx.accounts.static_accounts.amm_config.to_account_info(),
+                authority: ctx.accounts.static_accounts.authority.to_account_info(),
                 pool_state: ctx.accounts.pool_state.to_account_info(),
                 lp_mint: ctx.accounts.lp_mint.to_account_info(),
                 creator_lp_token: ctx.accounts.lp_vault.to_account_info(),
-                create_pool_fee: ctx.accounts.create_pool_fee.to_account_info(),
+                create_pool_fee: ctx.accounts.static_accounts.create_pool_fee.to_account_info(),
                 observation_state: ctx.accounts.observation_state.to_account_info(),
                 token_program: ctx.accounts.token_program.to_account_info(),
                 token_0_program: ctx.accounts.token_program.to_account_info(),
                 token_1_program: ctx.accounts.token_program.to_account_info(),
                 associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
                 system_program: ctx.accounts.system_program.to_account_info(),
-                rent: ctx.accounts.rent.to_account_info(),
+                rent: ctx.accounts.static_accounts.rent.to_account_info(),
                 token_0_mint,
                 token_1_mint,
                 token_0_vault,
@@ -412,7 +432,7 @@ impl CompleteLaunch<'_> {
             AnchorSerialize::serialize(&ix, &mut ix_data)?;
 
             let ix = solana_program::instruction::Instruction {
-                program_id: ctx.accounts.cp_swap_program.key(),
+                program_id: ctx.accounts.static_accounts.cp_swap_program.key(),
                 accounts: cpi_accounts
                     .to_account_metas(None)
                     .into_iter()
@@ -461,7 +481,7 @@ impl CompleteLaunch<'_> {
                 Create {
                     payer: ctx.accounts.payer.to_account_info(),
                     associated_token: ctx.accounts.treasury_lp_account.to_account_info(),
-                    authority: ctx.accounts.dao_treasury.to_account_info(),
+                    authority: ctx.accounts.squads_multisig_vault.to_account_info(),
                     mint: ctx.accounts.lp_mint.to_account_info(),
                     system_program: ctx.accounts.system_program.to_account_info(),
                     token_program: ctx.accounts.token_program.to_account_info(),
@@ -487,14 +507,14 @@ impl CompleteLaunch<'_> {
 
             update_metadata_accounts_v2(
                 CpiContext::new_with_signer(
-                    ctx.accounts.token_metadata_program.to_account_info(),
+                    ctx.accounts.static_accounts.token_metadata_program.to_account_info(),
                     UpdateMetadataAccountsV2 {
                         metadata: ctx.accounts.token_metadata.to_account_info(),
                         update_authority: ctx.accounts.launch_signer.to_account_info(),
                     },
                     launch_signer,
                 ),
-                Some(ctx.accounts.dao_treasury.key()),
+                Some(ctx.accounts.squads_multisig_vault.key()),
                 None,
                 None,
                 None,
@@ -514,7 +534,7 @@ impl CompleteLaunch<'_> {
             final_state: launch.state,
             total_committed: launch.total_committed_amount,
             dao: launch.dao,
-            dao_treasury: launch.dao_treasury,
+            dao_treasury: launch.dao_vault,
         });
 
         Ok(())

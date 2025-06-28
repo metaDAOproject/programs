@@ -1,4 +1,4 @@
-import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -11,6 +11,7 @@ import {
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
+import { createLookupTableForTransaction } from "../../utils.js";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -80,12 +81,28 @@ export default function suite() {
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
     await this.advanceBySeconds(60 * 60 * 24 * 3);
-    await launchpadClient
+    const completeLaunchTx = await launchpadClient
       .completeLaunchIx(launch, MAINNET_USDC, META)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
       ])
-      .rpc();
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer]);
+
+    await this.banksClient.processTransaction(tx);
 
     const initialTokenBalance = await this.getTokenBalance(
       META,

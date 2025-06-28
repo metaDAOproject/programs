@@ -1164,6 +1164,7 @@ dependencies = [
  "solana-security-txt",
  "spl-memo",
  "spl-token",
+ "squads-multisig-program",
 ]
 
 [[package]]

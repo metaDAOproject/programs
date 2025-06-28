@@ -4,7 +4,7 @@ import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 import sharedLiquidityManager from "./sharedLiquidityManager/main.test.js";
 
-import { BanksClient, Clock, startAnchor } from "solana-bankrun";
+import { BanksClient, Clock, ProgramTestContext, startAnchor } from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
@@ -64,7 +64,7 @@ declare module "mocha" {
     svmAutocratClient: AutocratClient;
     svmVaultClient: ConditionalVaultClient;
     svmAmmClient: AmmClient;
-    context: any;
+    context: ProgramTestContext;
     banksClient: BanksClient;
     vaultClient: ConditionalVaultClient;
     autocratClient: AutocratClient;
@@ -285,7 +285,7 @@ before(async function () {
         currentClock.epochStartTimestamp,
         currentClock.epoch,
         currentClock.leaderScheduleEpoch,
-        50n
+        currentClock.unixTimestamp,
       )
     );
   };
@@ -314,7 +314,7 @@ before(async function () {
 describe("conditional_vault", conditionalVault);
 describe("amm", amm);
 describe("autocrat", autocrat);
-describe.skip("launchpad", launchpad);
+describe("launchpad", launchpad);
 // describe("shared_liquidity_manager", sharedLiquidityManager);
 describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
