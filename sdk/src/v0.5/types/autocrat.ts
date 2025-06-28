@@ -104,6 +104,11 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "futarchyAmm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "question";
           isMut: false;
           isSigner: false;
@@ -119,46 +124,6 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "passAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "passLpMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "failLpMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "failAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "passLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "passLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "proposer";
           isMut: false;
           isSigner: true;
@@ -169,17 +134,7 @@ export type Autocrat = {
           isSigner: true;
         },
         {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -202,97 +157,6 @@ export type Autocrat = {
           };
         }
       ];
-    },
-    {
-      name: "finalizeProposal";
-      accounts: [
-        {
-          name: "proposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsProposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisig";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "passAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "failAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "question";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "passLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "passLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "vaultProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "vaultEventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
     },
     {
       name: "updateDao";
@@ -459,6 +323,54 @@ export type Autocrat = {
           name: "params";
           type: {
             defined: "SwapParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "conditionalSwap";
+      accounts: [
+        {
+          name: "futarchyAmm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "trader";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "traderBaseAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "traderQuoteAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "ConditionalSwapParams";
           };
         }
       ];
@@ -633,10 +545,6 @@ export type Autocrat = {
             type: "publicKey";
           },
           {
-            name: "descriptionUrl";
-            type: "string";
-          },
-          {
             name: "slotEnqueued";
             type: "u64";
           },
@@ -647,14 +555,6 @@ export type Autocrat = {
             };
           },
           {
-            name: "passAmm";
-            type: "publicKey";
-          },
-          {
-            name: "failAmm";
-            type: "publicKey";
-          },
-          {
             name: "baseVault";
             type: "publicKey";
           },
@@ -663,16 +563,12 @@ export type Autocrat = {
             type: "publicKey";
           },
           {
-            name: "dao";
+            name: "futarchyAmm";
             type: "publicKey";
           },
           {
-            name: "passLpTokensLocked";
-            type: "u64";
-          },
-          {
-            name: "failLpTokensLocked";
-            type: "u64";
+            name: "dao";
+            type: "publicKey";
           },
           {
             name: "pdaBump";
@@ -707,6 +603,30 @@ export type Autocrat = {
           {
             name: "unixTimestamp";
             type: "i64";
+          }
+        ];
+      };
+    },
+    {
+      name: "ConditionalSwapParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "side";
+            type: {
+              defined: "Side";
+            };
+          },
+          {
+            name: "condition";
+            type: {
+              defined: "Condition";
+            };
+          },
+          {
+            name: "amountIn";
+            type: "u64";
           }
         ];
       };
@@ -781,6 +701,7 @@ export type Autocrat = {
         kind: "struct";
         fields: [
           {
+<<<<<<< HEAD
             name: "descriptionUrl";
             type: "string";
           },
@@ -790,6 +711,9 @@ export type Autocrat = {
           },
           {
             name: "failLpTokensToLock";
+=======
+            name: "nonce";
+>>>>>>> af0016f (Get basic swap + conditional swap accounting working)
             type: "u64";
           }
         ];
@@ -929,6 +853,20 @@ export type Autocrat = {
           },
           {
             name: "Sell";
+          }
+        ];
+      };
+    },
+    {
+      name: "Condition";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Pass";
+          },
+          {
+            name: "Fail";
           }
         ];
       };
@@ -1343,7 +1281,15 @@ export type Autocrat = {
       code: 6016;
       name: "ConstantProductInvariantFailed";
       msg: "Constant product invariant failed";
+<<<<<<< HEAD
 >>>>>>> c9984c7 (Get basic `swap` working)
+=======
+    },
+    {
+      code: 6017;
+      name: "ProposalNotLive";
+      msg: "Proposal must be live to swap conditional tokens";
+>>>>>>> af0016f (Get basic swap + conditional swap accounting working)
     }
   ];
 };
@@ -1454,6 +1400,11 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "futarchyAmm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "question",
           isMut: false,
           isSigner: false,
@@ -1469,46 +1420,6 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "passAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "passLpMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "failLpMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "failAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "passLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "passLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "proposer",
           isMut: false,
           isSigner: true,
@@ -1519,17 +1430,7 @@ export const IDL: Autocrat = {
           isSigner: true,
         },
         {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1552,97 +1453,6 @@ export const IDL: Autocrat = {
           },
         },
       ],
-    },
-    {
-      name: "finalizeProposal",
-      accounts: [
-        {
-          name: "proposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsProposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisig",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "passAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "failAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "question",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "passLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "passLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "vaultProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "vaultEventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
     },
     {
       name: "updateDao",
@@ -1809,6 +1619,54 @@ export const IDL: Autocrat = {
           name: "params",
           type: {
             defined: "SwapParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "conditionalSwap",
+      accounts: [
+        {
+          name: "futarchyAmm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "trader",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "traderBaseAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "traderQuoteAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "ConditionalSwapParams",
           },
         },
       ],
@@ -1983,10 +1841,6 @@ export const IDL: Autocrat = {
             type: "publicKey",
           },
           {
-            name: "descriptionUrl",
-            type: "string",
-          },
-          {
             name: "slotEnqueued",
             type: "u64",
           },
@@ -1997,14 +1851,6 @@ export const IDL: Autocrat = {
             },
           },
           {
-            name: "passAmm",
-            type: "publicKey",
-          },
-          {
-            name: "failAmm",
-            type: "publicKey",
-          },
-          {
             name: "baseVault",
             type: "publicKey",
           },
@@ -2013,16 +1859,12 @@ export const IDL: Autocrat = {
             type: "publicKey",
           },
           {
-            name: "dao",
+            name: "futarchyAmm",
             type: "publicKey",
           },
           {
-            name: "passLpTokensLocked",
-            type: "u64",
-          },
-          {
-            name: "failLpTokensLocked",
-            type: "u64",
+            name: "dao",
+            type: "publicKey",
           },
           {
             name: "pdaBump",
@@ -2057,6 +1899,30 @@ export const IDL: Autocrat = {
           {
             name: "unixTimestamp",
             type: "i64",
+          },
+        ],
+      },
+    },
+    {
+      name: "ConditionalSwapParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "side",
+            type: {
+              defined: "Side",
+            },
+          },
+          {
+            name: "condition",
+            type: {
+              defined: "Condition",
+            },
+          },
+          {
+            name: "amountIn",
+            type: "u64",
           },
         ],
       },
@@ -2131,6 +1997,7 @@ export const IDL: Autocrat = {
         kind: "struct",
         fields: [
           {
+<<<<<<< HEAD
             name: "descriptionUrl",
             type: "string",
           },
@@ -2140,6 +2007,9 @@ export const IDL: Autocrat = {
           },
           {
             name: "failLpTokensToLock",
+=======
+            name: "nonce",
+>>>>>>> af0016f (Get basic swap + conditional swap accounting working)
             type: "u64",
           },
         ],
@@ -2279,6 +2149,20 @@ export const IDL: Autocrat = {
           },
           {
             name: "Sell",
+          },
+        ],
+      },
+    },
+    {
+      name: "Condition",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Pass",
+          },
+          {
+            name: "Fail",
           },
         ],
       },
@@ -2694,6 +2578,11 @@ export const IDL: Autocrat = {
       name: "ConstantProductInvariantFailed",
       msg: "Constant product invariant failed",
 >>>>>>> c9984c7 (Get basic `swap` working)
+    },
+    {
+      code: 6017,
+      name: "ProposalNotLive",
+      msg: "Proposal must be live to swap conditional tokens",
     },
   ],
 };

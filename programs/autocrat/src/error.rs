@@ -42,5 +42,10 @@ pub enum AutocratError {
     CastingOverflow,
     #[msg("Constant product invariant failed")]
     ConstantProductInvariantFailed,
+<<<<<<< HEAD
 >>>>>>> c9984c7 (Get basic `swap` working)
+=======
+    #[msg("Proposal must be live to swap conditional tokens")]
+    ProposalNotLive,
+>>>>>>> af0016f (Get basic swap + conditional swap accounting working)
 }
