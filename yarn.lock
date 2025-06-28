@@ -830,10 +830,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@metadaoproject/futarchy@0.5.0-alpha.2":
-  version "0.5.0-alpha.2"
-  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.5.0-alpha.2.tgz#ccc6c20804526af35bfa6697e67a732d6a9bf355"
-  integrity sha512-UrmMJIQmumyFk2Jxj006vRJ29F8Q+xzEULR0Z9BLZ6lFPuhPHnTbyx5NyN2ADqYHgott8zRKtTIEyPCDM05Zow==
+"@metadaoproject/futarchy@0.5.0-alpha.3":
+  version "0.5.0-alpha.3"
+  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.5.0-alpha.3.tgz#717ce50e340b0f7f278fa7ded59fcf05fbb19618"
+  integrity sha512-bljvMMM9rYCEaoH+8Smxq+hF/KShpd0lw5gVCYxAyKaySlAnhWWtkbdx9ND210go1rDOnnfS+Ztl0vQWw1YQwA==
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@metaplex-foundation/umi" "^0.9.2"
@@ -841,7 +841,8 @@
     "@metaplex-foundation/umi-uploader-bundlr" "^0.9.2"
     "@noble/hashes" "^1.4.0"
     "@solana/spl-token" "^0.3.7"
-    "@solana/web3.js" "^1.74.0"
+    "@solana/web3.js" "^1.76.0"
+    "@sqds/multisig" "^2.1.4"
     bn.js "^5.2.1"
     decimal.js "^10.4.3"
     esbuild "^0.17.15"
@@ -1133,13 +1134,6 @@
   dependencies:
     "@noble/hashes" "1.3.3"
 
-"@noble/curves@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.4.0.tgz#f05771ef64da724997f69ee1261b2417a49522d6"
-  integrity sha512-p+4cb332SFCrReJkCYe8Xzm0OWi4Jji5jVdIZRL/PmacmDkFNw6MrrV+gGpiPxLHbV+zKFRywUWbaseT+tZRXg==
-  dependencies:
-    "@noble/hashes" "1.4.0"
-
 "@noble/curves@^1.4.2":
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.9.2.tgz#73388356ce733922396214a933ff7c95afcef911"
@@ -1162,15 +1156,15 @@
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.3.3.tgz#39908da56a4adc270147bb07968bf3b16cfe1699"
   integrity sha512-V7/fPHgl+jsVPXqqeOzT8egNj2iBIVt+ECeMMG8TdcnTikP3oaBtUVqpT/gYCR68aEBJSF+XbYUxStjbFMqIIA==
 
-"@noble/hashes@1.4.0", "@noble/hashes@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.4.0.tgz#45814aa329f30e4fe0ba49426f49dfccdd066426"
-  integrity sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==
-
 "@noble/hashes@1.8.0", "@noble/hashes@^1.3.0":
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.8.0.tgz#cee43d801fcef9644b11b8194857695acd5f815a"
   integrity sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==
+
+"@noble/hashes@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.4.0.tgz#45814aa329f30e4fe0ba49426f49dfccdd066426"
+  integrity sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==
 
 "@noble/secp256k1@^2.0.0":
   version "2.0.0"
@@ -1347,7 +1341,7 @@
     rpc-websockets "^7.5.1"
     superstruct "^0.14.2"
 
-"@solana/web3.js@>1.92.0, <2.0", "@solana/web3.js@^1.56.2", "@solana/web3.js@^1.70.3":
+"@solana/web3.js@>1.92.0, <2.0", "@solana/web3.js@^1.56.2", "@solana/web3.js@^1.70.3", "@solana/web3.js@^1.76.0":
   version "1.98.2"
   resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.98.2.tgz#45167a5cfb64436944bf4dc1e8be8482bd6d4c14"
   integrity sha512-BqVwEG+TaG2yCkBMbD3C4hdpustR4FpuUFRPUmqRZYYlPI9Hg4XMWxHWOWRzHE9Lkc9NDjzXFX7lDXSgzC7R1A==
@@ -1375,27 +1369,6 @@
   dependencies:
     "@babel/runtime" "^7.23.4"
     "@noble/curves" "^1.2.0"
-    "@noble/hashes" "^1.3.3"
-    "@solana/buffer-layout" "^4.0.1"
-    agentkeepalive "^4.5.0"
-    bigint-buffer "^1.1.5"
-    bn.js "^5.2.1"
-    borsh "^0.7.0"
-    bs58 "^4.0.1"
-    buffer "6.0.3"
-    fast-stable-stringify "^1.0.0"
-    jayson "^4.1.0"
-    node-fetch "^2.7.0"
-    rpc-websockets "^7.5.1"
-    superstruct "^0.14.2"
-
-"@solana/web3.js@^1.74.0":
-  version "1.91.7"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.91.7.tgz#1d639f8f3cc772fd6d88b982e8fdb17dc192b9e1"
-  integrity sha512-HqljZKDwk6Z4TajKRGhGLlRsbGK4S8EY27DA7v1z6yakewiUY3J7ZKDZRxcqz2MYV/ZXRrJ6wnnpiHFkPdv0WA==
-  dependencies:
-    "@babel/runtime" "^7.23.4"
-    "@noble/curves" "^1.4.0"
     "@noble/hashes" "^1.3.3"
     "@solana/buffer-layout" "^4.0.1"
     agentkeepalive "^4.5.0"
