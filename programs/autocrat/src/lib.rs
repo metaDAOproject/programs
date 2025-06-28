@@ -93,10 +93,10 @@ pub mod autocrat {
         InitializeProposal::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
-        FinalizeProposal::handle(ctx)
-    }
+    // #[access_control(ctx.accounts.validate())]
+    // pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
+    //     FinalizeProposal::handle(ctx)
+    // }
 
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {
         UpdateDao::handle(ctx, dao_params)
@@ -108,5 +108,10 @@ pub mod autocrat {
 
     pub fn swap(ctx: Context<Swap>, params: SwapParams) -> Result<()> {
         Swap::handle(ctx, params)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn conditional_swap(ctx: Context<ConditionalSwap>, params: ConditionalSwapParams) -> Result<()> {
+        ConditionalSwap::handle(ctx, params)
     }
 }

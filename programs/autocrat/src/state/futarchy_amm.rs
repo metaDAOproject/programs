@@ -8,6 +8,12 @@ pub enum Side {
     Sell,
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Eq, PartialEq, Clone)]
+pub enum Condition {
+    Pass,
+    Fail,
+}
+
 #[account]
 #[derive(InitSpace, Debug)]
 pub struct FutarchyAmm {
@@ -115,7 +121,7 @@ impl FutarchyAmm {
 
                     let spot_split_amount = split_amount / 2;
 
-                    self.spot_pool.feeless_swap(initial_spot_swap_amount + spot_split_amount, side)?;
+                    self.spot_pool.feeless_swap(initial_spot_swap_amount + spot_split_amount, Side::Buy)?;
 
                     pass_pool.feeless_swap(spot_split_amount, Side::Buy)?;
                     fail_pool.feeless_swap(spot_split_amount, Side::Buy)?;
@@ -134,7 +140,7 @@ impl FutarchyAmm {
 
                     let spot_split_amount = split_amount / 2;
 
-                    self.spot_pool.feeless_swap(initial_spot_swap_amount + spot_split_amount, side)?;
+                    self.spot_pool.feeless_swap(initial_spot_swap_amount + spot_split_amount, Side::Sell)?;
 
                     pass_pool.feeless_swap(spot_split_amount, Side::Sell)?;
                     fail_pool.feeless_swap(spot_split_amount, Side::Sell)?;
