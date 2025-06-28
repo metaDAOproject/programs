@@ -132,6 +132,17 @@ export const getDaoTreasuryAddr = (
   return PublicKey.findProgramAddressSync([dao.toBuffer()], programId);
 };
 
+export const getFutarchyAmmAddr = ({
+  programId = AUTOCRAT_PROGRAM_ID,
+}: {
+  programId?: PublicKey;
+}): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("futarchy_amm")],
+    programId
+  );
+};
+
 export const getProposalAddr = (
   programId: PublicKey,
   proposer: PublicKey,

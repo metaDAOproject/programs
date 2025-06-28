@@ -7,6 +7,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -39,6 +40,7 @@ import {
   getDaoAddr,
   getDaoTreasuryAddr,
   getEventAuthorityAddr,
+  getFutarchyAmmAddr,
   getProposalAddr,
   getQuestionAddr,
   getVaultAddr,
@@ -51,7 +53,7 @@ import {
   unpackMint,
 } from "@solana/spl-token";
 import { sha256 } from "@noble/hashes/sha256";
-import { Dao, Proposal } from "./types/index.js";
+import { Dao, Proposal, FutarchyAmm, Side } from "./types/index.js";
 
 import * as multisig from "@sqds/multisig";
 
@@ -126,6 +128,10 @@ export class AutocratClient {
 
   async getDao(dao: PublicKey): Promise<Dao> {
     return this.autocrat.account.dao.fetch(dao);
+  }
+
+  async getFutarchyAmm(futarchyAmm: PublicKey): Promise<FutarchyAmm> {
+    return this.autocrat.account.futarchyAmm.fetch(futarchyAmm);
   }
 
   async fetchProposal(proposal: PublicKey): Promise<Proposal | null> {
@@ -332,6 +338,94 @@ export class AutocratClient {
       squadsProgram: SQUADS_PROGRAM_ID,
       spendingLimit,
     });
+  }
+
+  initializeFutarchyAmmIx({
+    quoteAmount,
+    baseAmount,
+    dao,
+    baseMint,
+    quoteMint,
+    creator = this.provider.publicKey,
+  }: {
+    quoteAmount: BN;
+    baseAmount: BN;
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    creator?: PublicKey;
+  }) {
+    const [futarchyAmm] = getFutarchyAmmAddr({});
+    const baseVault = getAssociatedTokenAddressSync(
+      baseMint,
+      futarchyAmm,
+      true
+    );
+    const quoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
+      futarchyAmm,
+      true
+    );
+    const creatorBaseAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      creator,
+      true
+    );
+    const creatorQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      creator,
+      true
+    );
+
+    return this.autocrat.methods
+      .initializeFutarchyAmm({
+        quoteAmount,
+        baseAmount,
+      })
+      .accounts({
+        futarchyAmm,
+        payer: this.provider.publicKey,
+        creator,
+        dao,
+        baseMint,
+        quoteMint,
+        baseVault,
+        quoteVault,
+        creatorBaseAccount,
+        creatorQuoteAccount,
+      });
+  }
+
+  swapIx({
+    amountIn,
+    side,
+    trader = this.provider.publicKey,
+    baseMint,
+    quoteMint,
+  }: {
+    amountIn: BN;
+    side: Side;
+    trader?: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+  }) {
+    const [futarchyAmm] = getFutarchyAmmAddr({});
+    return this.autocrat.methods
+      .swap({ amountIn, side: { buy: {} } })
+      .accounts({
+        futarchyAmm,
+        trader,
+        traderBaseAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          trader,
+          true
+        ),
+        traderQuoteAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          trader,
+          true
+        ),
+      });
   }
 
   async initializeProposal(

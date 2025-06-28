@@ -101,4 +101,12 @@ pub mod autocrat {
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {
         UpdateDao::handle(ctx, dao_params)
     }
+
+    pub fn initialize_futarchy_amm(ctx: Context<InitializeFutarchyAmm>, params: InitializeFutarchyAmmParams) -> Result<()> {
+        InitializeFutarchyAmm::handle(ctx, params)
+    }
+
+    pub fn swap(ctx: Context<Swap>, params: SwapParams) -> Result<()> {
+        Swap::handle(ctx, params)
+    }
 }

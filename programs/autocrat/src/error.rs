@@ -32,4 +32,10 @@ pub enum AutocratError {
     ProposalDurationTooShort,
     #[msg("Question must have exactly 2 outcomes for binary futarchy")]
     QuestionMustBeBinary,
+    #[msg("No reserves")]
+    NoReserves,
+    #[msg("Got overflow when casting")]
+    CastingOverflow,
+    #[msg("Constant product invariant failed")]
+    ConstantProductInvariantFailed,
 }

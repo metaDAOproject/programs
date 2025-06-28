@@ -326,6 +326,142 @@ export type Autocrat = {
           };
         }
       ];
+    },
+    {
+      name: "initializeFutarchyAmm";
+      accounts: [
+        {
+          name: "futarchyAmm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "creator";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "dao";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "creatorBaseAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "creatorQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "InitializeFutarchyAmmParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "swap";
+      accounts: [
+        {
+          name: "futarchyAmm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "trader";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "traderBaseAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "traderQuoteAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "SwapParams";
+          };
+        }
+      ];
     }
   ];
   accounts: [
@@ -431,6 +567,52 @@ export type Autocrat = {
             type: {
               option: {
                 defined: "InitialSpendingLimit";
+              };
+            };
+          }
+        ];
+      };
+    },
+    {
+      name: "futarchyAmm";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "bump";
+            type: "u8";
+          },
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "baseMint";
+            type: "publicKey";
+          },
+          {
+            name: "quoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "spotPool";
+            type: {
+              defined: "Pool";
+            };
+          },
+          {
+            name: "baseVault";
+            type: "publicKey";
+          },
+          {
+            name: "quoteVault";
+            type: "publicKey";
+          },
+          {
+            name: "liveProposal";
+            type: {
+              option: {
+                defined: "LiveProposalDetails";
               };
             };
           }
@@ -588,6 +770,22 @@ export type Autocrat = {
       };
     },
     {
+      name: "InitializeFutarchyAmmParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "quoteAmount";
+            type: "u64";
+          },
+          {
+            name: "baseAmount";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
       name: "InitializeProposalParams";
       type: {
         kind: "struct";
@@ -606,6 +804,24 @@ export type Autocrat = {
           },
           {
             name: "nonce";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "SwapParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "side";
+            type: {
+              defined: "Side";
+            };
+          },
+          {
+            name: "amountIn";
             type: "u64";
           }
         ];
@@ -669,6 +885,64 @@ export type Autocrat = {
             type: {
               vec: "publicKey";
             };
+          }
+        ];
+      };
+    },
+    {
+      name: "LiveProposalDetails";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "proposal";
+            type: "publicKey";
+          },
+          {
+            name: "question";
+            type: "publicKey";
+          },
+          {
+            name: "passPool";
+            type: {
+              defined: "Pool";
+            };
+          },
+          {
+            name: "failPool";
+            type: {
+              defined: "Pool";
+            };
+          }
+        ];
+      };
+    },
+    {
+      name: "Pool";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "baseReserves";
+            type: "u64";
+          },
+          {
+            name: "quoteReserves";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "Side";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Buy";
+          },
+          {
+            name: "Sell";
           }
         ];
       };
@@ -1025,6 +1299,21 @@ export type Autocrat = {
       code: 6013;
       name: "QuestionMustBeBinary";
       msg: "Question must have exactly 2 outcomes for binary futarchy";
+    },
+    {
+      code: 6014;
+      name: "NoReserves";
+      msg: "No reserves";
+    },
+    {
+      code: 6015;
+      name: "CastingOverflow";
+      msg: "Got overflow when casting";
+    },
+    {
+      code: 6016;
+      name: "ConstantProductInvariantFailed";
+      msg: "Constant product invariant failed";
     }
   ];
 };
@@ -1358,6 +1647,142 @@ export const IDL: Autocrat = {
         },
       ],
     },
+    {
+      name: "initializeFutarchyAmm",
+      accounts: [
+        {
+          name: "futarchyAmm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "creator",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "dao",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "creatorBaseAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "creatorQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "InitializeFutarchyAmmParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "swap",
+      accounts: [
+        {
+          name: "futarchyAmm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "trader",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "traderBaseAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "traderQuoteAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "SwapParams",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -1462,6 +1887,52 @@ export const IDL: Autocrat = {
             type: {
               option: {
                 defined: "InitialSpendingLimit",
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "futarchyAmm",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "bump",
+            type: "u8",
+          },
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "baseMint",
+            type: "publicKey",
+          },
+          {
+            name: "quoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "spotPool",
+            type: {
+              defined: "Pool",
+            },
+          },
+          {
+            name: "baseVault",
+            type: "publicKey",
+          },
+          {
+            name: "quoteVault",
+            type: "publicKey",
+          },
+          {
+            name: "liveProposal",
+            type: {
+              option: {
+                defined: "LiveProposalDetails",
               },
             },
           },
@@ -1619,6 +2090,22 @@ export const IDL: Autocrat = {
       },
     },
     {
+      name: "InitializeFutarchyAmmParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "quoteAmount",
+            type: "u64",
+          },
+          {
+            name: "baseAmount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "InitializeProposalParams",
       type: {
         kind: "struct",
@@ -1637,6 +2124,24 @@ export const IDL: Autocrat = {
           },
           {
             name: "nonce",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "SwapParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "side",
+            type: {
+              defined: "Side",
+            },
+          },
+          {
+            name: "amountIn",
             type: "u64",
           },
         ],
@@ -1700,6 +2205,64 @@ export const IDL: Autocrat = {
             type: {
               vec: "publicKey",
             },
+          },
+        ],
+      },
+    },
+    {
+      name: "LiveProposalDetails",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "proposal",
+            type: "publicKey",
+          },
+          {
+            name: "question",
+            type: "publicKey",
+          },
+          {
+            name: "passPool",
+            type: {
+              defined: "Pool",
+            },
+          },
+          {
+            name: "failPool",
+            type: {
+              defined: "Pool",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "Pool",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "baseReserves",
+            type: "u64",
+          },
+          {
+            name: "quoteReserves",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "Side",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Buy",
+          },
+          {
+            name: "Sell",
           },
         ],
       },
@@ -2056,6 +2619,21 @@ export const IDL: Autocrat = {
       code: 6013,
       name: "QuestionMustBeBinary",
       msg: "Question must have exactly 2 outcomes for binary futarchy",
+    },
+    {
+      code: 6014,
+      name: "NoReserves",
+      msg: "No reserves",
+    },
+    {
+      code: 6015,
+      name: "CastingOverflow",
+      msg: "Got overflow when casting",
+    },
+    {
+      code: 6016,
+      name: "ConstantProductInvariantFailed",
+      msg: "Constant product invariant failed",
     },
   ],
 };
