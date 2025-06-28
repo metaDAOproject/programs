@@ -37,6 +37,9 @@ export type UpdateDaoParams = IdlTypes<AutocratProgram>["UpdateDaoParams"];
 
 export type Dao = IdlAccounts<AutocratProgram>["dao"];
 export type Proposal = IdlAccounts<AutocratProgram>["proposal"];
+export type FutarchyAmm = IdlAccounts<AutocratProgram>["futarchyAmm"];
+export type Side = IdlTypes<AutocratProgram>["Side"];
+
 export type Amm = IdlAccounts<AmmProgram>["amm"];
 export type Launch = IdlAccounts<LaunchpadProgram>["launch"];
 export type FundingRecord = IdlAccounts<LaunchpadProgram>["fundingRecord"];

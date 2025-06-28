@@ -32,6 +32,15 @@ pub enum AutocratError {
     ProposalDurationTooShort,
     #[msg("Question must have exactly 2 outcomes for binary futarchy")]
     QuestionMustBeBinary,
+<<<<<<< HEAD
     #[msg("Squads proposal must be in Draft status")]
     InvalidSquadsProposalStatus,
+=======
+    #[msg("No reserves")]
+    NoReserves,
+    #[msg("Got overflow when casting")]
+    CastingOverflow,
+    #[msg("Constant product invariant failed")]
+    ConstantProductInvariantFailed,
+>>>>>>> c9984c7 (Get basic `swap` working)
 }
