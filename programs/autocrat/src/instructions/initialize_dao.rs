@@ -21,11 +21,12 @@ pub struct InitializeDao<'info> {
     #[account(
         init,
         payer = payer,
-        seeds = [b"dao", params.nonce.to_le_bytes().as_ref()],
+        seeds = [b"dao", dao_creator.key().as_ref(), params.nonce.to_le_bytes().as_ref()],
         bump,
         space = 8 + Dao::INIT_SPACE,
     )]
     pub dao: Account<'info, Dao>,
+    pub dao_creator: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -73,7 +74,8 @@ impl InitializeDao<'_> {
             AutocratError::ProposalDurationTooShort
         );
 
-        let dao_seeds = &[b"dao".as_ref(), &nonce.to_le_bytes(), &[ctx.bumps.dao]];
+        let creator_key = ctx.accounts.dao_creator.key();
+        let dao_seeds = &[b"dao".as_ref(), creator_key.as_ref(), &nonce.to_le_bytes(), &[ctx.bumps.dao]];
 
         squads_multisig_program::cpi::multisig_create_v2(
             CpiContext::new_with_signer(
@@ -115,6 +117,7 @@ impl InitializeDao<'_> {
 
         dao.set_inner(Dao {
             nonce,
+            dao_creator: creator_key,
             pda_bump: ctx.bumps.dao,
             squads_multisig: ctx.accounts.squads_multisig.key(),
             squads_multisig_vault: ctx.accounts.squads_multisig_vault.key(),

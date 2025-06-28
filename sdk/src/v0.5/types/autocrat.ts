@@ -11,6 +11,11 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "daoCreator";
+          isMut: false;
+          isSigner: true;
+        },
+        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -326,7 +331,12 @@ export type Autocrat = {
         fields: [
           {
             name: "nonce";
+            docs: ["`nonce` + `dao_creator` are PDA seeds"];
             type: "u64";
+          },
+          {
+            name: "daoCreator";
+            type: "publicKey";
           },
           {
             name: "pdaBump";
@@ -993,6 +1003,11 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "daoCreator",
+          isMut: false,
+          isSigner: true,
+        },
+        {
           name: "payer",
           isMut: true,
           isSigner: true,
@@ -1308,7 +1323,12 @@ export const IDL: Autocrat = {
         fields: [
           {
             name: "nonce",
+            docs: ["`nonce` + `dao_creator` are PDA seeds"],
             type: "u64",
+          },
+          {
+            name: "daoCreator",
+            type: "publicKey",
           },
           {
             name: "pdaBump",

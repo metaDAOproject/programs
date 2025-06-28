@@ -54,7 +54,10 @@ export default function suite() {
       })
       .rpc();
 
-    [dao] = getDaoAddr({ nonce });
+    [dao] = getDaoAddr({
+      nonce,
+      daoCreator: this.payer.publicKey,
+    });
 
     const descriptionUrl = "https://example.com/proposal";
     const baseTokensToLP = new BN(10 * 10 ** 9); // 10 META

@@ -32,7 +32,10 @@ export default function suite() {
 
     const nonce = new BN(Math.random() * 2 ** 50);
 
-    const [dao] = getDaoAddr({ nonce });
+    const [dao] = getDaoAddr({
+      nonce,
+      daoCreator: this.payer.publicKey,
+    });
 
     await this.autocratClient
       .initializeDaoIx({
@@ -42,9 +45,11 @@ export default function suite() {
           nonce,
           twapStartDelaySlots: new BN(0),
           twapInitialObservation: new BN(0),
-          twapMaxObservationChangePerUpdate: new BN(1000000000000000000n),
+          twapMaxObservationChangePerUpdate: new BN("1000000000000000000"),
           minQuoteFutarchicLiquidity: new BN(0),
-          slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS * 60n * 24n),
+          slotsPerProposal: new BN(
+            (ONE_MINUTE_IN_SLOTS * 60n * 24n).toString()
+          ),
           passThresholdBps: 300,
           minBaseFutarchicLiquidity: new BN(0),
         },

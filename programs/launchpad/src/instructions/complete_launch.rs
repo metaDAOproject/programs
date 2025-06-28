@@ -272,6 +272,16 @@ impl CompleteLaunch<'_> {
         launch.dao = Some(ctx.accounts.dao.key());
         launch.dao_vault = Some(ctx.accounts.squads_multisig_vault.key());
 
+let launch_key = launch.key();
+            let launch_signer_seeds = &[
+                b"launch_signer",
+                launch_key.as_ref(),
+                &[launch.launch_signer_pda_bump],
+            ];
+            let launch_signer = &[&launch_signer_seeds[..]];
+
+
+
         let total_committed_amount = launch.total_committed_amount;
 
         // For the DAO, we want proposals to start at the price of the launch,
@@ -284,10 +294,11 @@ impl CompleteLaunch<'_> {
 
         if total_committed_amount >= launch.minimum_raise_amount {
             autocrat::cpi::initialize_dao(
-                CpiContext::new(
+                CpiContext::new_with_signer(
                     ctx.accounts.static_accounts.autocrat_program.to_account_info(),
                     autocrat::cpi::accounts::InitializeDao {
                         dao: ctx.accounts.dao.to_account_info(),
+                        dao_creator: ctx.accounts.launch_signer.to_account_info(),
                         payer: ctx.accounts.payer.to_account_info(),
                         system_program: ctx.accounts.system_program.to_account_info(),
                         base_mint: ctx.accounts.base_mint.to_account_info(),
@@ -300,6 +311,7 @@ impl CompleteLaunch<'_> {
                         squads_program_config: ctx.accounts.static_accounts.squads_program_config.to_account_info(),
                         squads_program_config_treasury: ctx.accounts.static_accounts.squads_program_config_treasury.to_account_info(),
                     },
+                    launch_signer,
                 ),
                 InitializeDaoParams {
                     twap_initial_observation: price_1e12,
@@ -317,16 +329,7 @@ impl CompleteLaunch<'_> {
             let usdc_to_dao = total_committed_amount.saturating_sub(usdc_to_lp);
             let token_to_lp = AVAILABLE_TOKENS / 10;
 
-            let launch_key = launch.key();
-
-            let launch_signer_seeds = &[
-                b"launch_signer",
-                launch_key.as_ref(),
-                &[launch.launch_signer_pda_bump],
-            ];
-            let launch_signer = &[&launch_signer_seeds[..]];
-
-            token::mint_to(
+                        token::mint_to(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     MintTo {

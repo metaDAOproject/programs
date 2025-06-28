@@ -247,7 +247,10 @@ export class LaunchpadClient {
     );
 
     // const daoKp = Keypair.generate();
-    const [dao] = getDaoAddr({ nonce: new BN(0) });
+    const [dao] = getDaoAddr({
+      nonce: new BN(0),
+      daoCreator: launchSigner,
+    });
 
     const [poolState] = getLiquidityPoolAddr(this.launchpad.programId, dao);
 

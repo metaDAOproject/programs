@@ -3,7 +3,9 @@ pub use super::*;
 #[account]
 #[derive(InitSpace)]
 pub struct Dao {
+    /// `nonce` + `dao_creator` are PDA seeds
     pub nonce: u64,
+    pub dao_creator: Pubkey,
     pub pda_bump: u8,
     pub squads_multisig: Pubkey,
     pub squads_multisig_vault: Pubkey,

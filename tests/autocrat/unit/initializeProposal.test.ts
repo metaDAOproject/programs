@@ -52,7 +52,10 @@ export default function suite() {
       })
       .rpc();
 
-    [dao] = getDaoAddr({ nonce });
+    [dao] = getDaoAddr({
+      nonce,
+      daoCreator: this.payer.publicKey,
+    });
   });
 
   it("should initialize a proposal", async function () {

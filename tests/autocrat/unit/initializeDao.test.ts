@@ -38,7 +38,10 @@ export default function suite() {
       })
       .rpc();
 
-    const [dao, daoBump] = getDaoAddr({ nonce: new BN(1337) });
+    const [dao, daoBump] = getDaoAddr({
+      nonce: new BN(1337),
+      daoCreator: this.payer.publicKey,
+    });
 
     const storedDao = await this.autocratClient.getDao(dao);
 

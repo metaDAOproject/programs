@@ -4,7 +4,12 @@ import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 import sharedLiquidityManager from "./sharedLiquidityManager/main.test.js";
 
-import { BanksClient, Clock, ProgramTestContext, startAnchor } from "solana-bankrun";
+import {
+  BanksClient,
+  Clock,
+  ProgramTestContext,
+  startAnchor,
+} from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
@@ -285,7 +290,7 @@ before(async function () {
         currentClock.epochStartTimestamp,
         currentClock.epoch,
         currentClock.leaderScheduleEpoch,
-        currentClock.unixTimestamp,
+        currentClock.unixTimestamp
       )
     );
   };
@@ -323,5 +328,5 @@ describe("project-wide integration tests", function () {
     scalarMarkets
   );
   it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
-  it.skip("full launch", fullLaunch);
+  describe("full launch", fullLaunch);
 });

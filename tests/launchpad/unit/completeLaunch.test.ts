@@ -1,4 +1,10 @@
-import { ComputeBudgetProgram, Keypair, PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -110,7 +116,6 @@ export default function suite() {
     const tx = new VersionedTransaction(completeLaunchMessage);
     tx.sign([this.payer]);
 
-
     await this.banksClient.processTransaction(tx);
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
@@ -182,7 +187,11 @@ export default function suite() {
     // await this.banksClient.processTransaction(tx).then(callbacks
     let result = await this.banksClient.tryProcessTransaction(tx);
     console.log(result.meta.logMessages);
-    assert.isTrue(result.meta.logMessages.some((log: string) => log.includes("LaunchPeriodNotOver")));
+    assert.isTrue(
+      result.meta.logMessages.some((log: string) =>
+        log.includes("LaunchPeriodNotOver")
+      )
+    );
 
     // Advance by 9 days (still not enough)
     await this.advanceBySeconds(60 * 60 * 24 * 9);
@@ -190,7 +199,9 @@ export default function suite() {
     const completeLaunchMessage2 = new TransactionMessage({
       payerKey: this.payer.publicKey,
       recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-      instructions: completeLaunchTx.instructions.concat(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })),
+      instructions: completeLaunchTx.instructions.concat(
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })
+      ),
     }).compileToV0Message([completeLaunchLut]);
 
     const tx2 = new VersionedTransaction(completeLaunchMessage2);
@@ -198,7 +209,11 @@ export default function suite() {
     tx2.sign([this.payer]);
 
     result = await this.banksClient.tryProcessTransaction(tx2);
-    assert.isTrue(result.meta.logMessages.some((log: string) => log.includes("LaunchPeriodNotOver")));
+    assert.isTrue(
+      result.meta.logMessages.some((log: string) =>
+        log.includes("LaunchPeriodNotOver")
+      )
+    );
   });
 
   it("moves to refunding state when minimum raise is not met after period", async function () {
@@ -294,6 +309,8 @@ export default function suite() {
     tx2.sign([this.payer]);
 
     const result = await this.banksClient.tryProcessTransaction(tx2);
-    assert.isTrue(result.meta.logMessages.some((log) => log.includes("InvalidLaunchState")));
+    assert.isTrue(
+      result.meta.logMessages.some((log) => log.includes("InvalidLaunchState"))
+    );
   });
 }

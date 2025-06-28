@@ -306,7 +306,10 @@ export class AutocratClient {
     quoteMint?: PublicKey;
     squadsProgramConfigTreasury?: PublicKey;
   }) {
-    const [dao] = getDaoAddr({ nonce: params.nonce });
+    const [dao] = getDaoAddr({
+      nonce: params.nonce,
+      daoCreator: this.provider.publicKey,
+    });
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
       multisigPda,
@@ -389,6 +392,7 @@ export class AutocratClient {
       )
       .rpc();
 
+    console.log(baseTokensToLP.toString());
     await this.vaultClient
       .splitTokensIx(question, baseVault, storedDao.baseMint, baseTokensToLP, 2)
       .postInstructions(

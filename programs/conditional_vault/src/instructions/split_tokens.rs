@@ -17,8 +17,9 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
             .map(|mint| mint.supply)
             .collect::<Vec<u64>>();
 
-        require!(
-            accs.user_underlying_token_account.amount >= amount,
+        require_gte!(
+            accs.user_underlying_token_account.amount,
+            amount,
             VaultError::InsufficientUnderlyingTokens
         );
 

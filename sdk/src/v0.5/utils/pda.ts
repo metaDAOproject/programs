@@ -108,13 +108,19 @@ export const getMetadataAddr = (mint: PublicKey) => {
 
 export const getDaoAddr = ({
   nonce,
+  daoCreator,
   programId = AUTOCRAT_PROGRAM_ID,
 }: {
   nonce: BN;
+  daoCreator: PublicKey;
   programId?: PublicKey;
 }): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("dao"), nonce.toArrayLike(Buffer, "le", 8)],
+    [
+      Buffer.from("dao"),
+      daoCreator.toBuffer(),
+      nonce.toArrayLike(Buffer, "le", 8),
+    ],
     programId
   );
 };
