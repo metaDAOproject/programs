@@ -17,11 +17,11 @@ use anchor_spl::metadata::{
 use raydium_cpmm_cpi::{
     cpi, instruction,
     program::RaydiumCpmm,
-    states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
+    states::{AmmConfig, OBSERVATION_SEED},
 };
 
 use autocrat::program::Autocrat;
-use autocrat::InitializeDaoParams;
+use autocrat::{InitialSpendingLimit, InitializeDaoParams};
 use autocrat::DAY_IN_SLOTS;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
@@ -162,12 +162,12 @@ pub struct CompleteLaunch<'info> {
     /// CHECK: pool lp mint, init by cp-swap
     #[account(
         mut,
-        seeds = [
-            POOL_LP_MINT_SEED.as_bytes(),
-            pool_state.key().as_ref(),
-        ],
-        seeds::program = static_accounts.cp_swap_program,
-        bump,
+        // seeds = [
+        //     POOL_LP_MINT_SEED.as_bytes(),
+        //     pool_state.key().as_ref(),
+        // ],
+        // seeds::program = static_accounts.cp_swap_program,
+        // bump,
     )]
     pub lp_mint: UncheckedAccount<'info>,
 
@@ -175,30 +175,12 @@ pub struct CompleteLaunch<'info> {
     #[account(mut)]
     pub lp_vault: UncheckedAccount<'info>,
 
-    /// CHECK: Token_0 vault for the pool, init by cp-swap
-    #[account(
-        mut,
-        seeds = [
-            POOL_VAULT_SEED.as_bytes(),
-            pool_state.key().as_ref(),
-            base_mint.key().as_ref()
-        ],
-        seeds::program = static_accounts.cp_swap_program,
-        bump,
-    )]
+    /// CHECK: checked by cp-swap
+    #[account(mut)]
     pub pool_token_vault: UncheckedAccount<'info>,
 
-    /// CHECK: Token_1 vault for the pool, init by cp-swap
-    #[account(
-        mut,
-        seeds = [
-            POOL_VAULT_SEED.as_bytes(),
-            pool_state.key().as_ref(),
-            quote_mint.key().as_ref()
-        ],
-        seeds::program = static_accounts.cp_swap_program,
-        bump,
-    )]
+    /// CHECK: checked by cp-swap
+    #[account(mut)]
     pub pool_usdc_vault: UncheckedAccount<'info>,
 
     /// CHECK: an account to store oracle observations, init by cp-swap
@@ -214,26 +196,8 @@ pub struct CompleteLaunch<'info> {
     pub observation_state: UncheckedAccount<'info>,
 
     /// CHECK: this is the DAO account, init by autocrat
-    // #[account(
-    //     mut,
-    //     seeds = [
-    //         b"launch_dao",
-    //         launch.key().as_ref(),
-    //     ],
-    //     bump,
-    // )]
     #[account(mut)]
     pub dao: UncheckedAccount<'info>,
-
-    // /// CHECK: this is the DAO treasury account
-    // #[account(
-    //     seeds = [
-    //         dao.key().as_ref(),
-    //     ],
-    //     seeds::program = autocrat_program,
-    //     bump,
-    // )]
-    // pub dao_treasury: UncheckedAccount<'info>,
 
     /// CHECK: checked by autocrat program
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
@@ -241,6 +205,9 @@ pub struct CompleteLaunch<'info> {
     /// CHECK: just a signer
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = static_accounts.squads_program)]
     pub squads_multisig_vault: UncheckedAccount<'info>,
+    /// CHECK: initialized by squads
+    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
+    pub spending_limit: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -284,6 +251,8 @@ let launch_key = launch.key();
 
         let total_committed_amount = launch.total_committed_amount;
 
+        msg!("total_committed_amount: {}", total_committed_amount);
+
         // For the DAO, we want proposals to start at the price of the launch,
         // for the lagging TWAP to be able to move its latest observation by 5%
         // per update (300% per hour), and for proposers to need to lock up 1%
@@ -310,6 +279,7 @@ let launch_key = launch.key();
                         squads_program: ctx.accounts.static_accounts.squads_program.to_account_info(),
                         squads_program_config: ctx.accounts.static_accounts.squads_program_config.to_account_info(),
                         squads_program_config_treasury: ctx.accounts.static_accounts.squads_program_config_treasury.to_account_info(),
+                        spending_limit: ctx.accounts.spending_limit.to_account_info(),
                     },
                     launch_signer,
                 ),
@@ -322,6 +292,10 @@ let launch_key = launch.key();
                     slots_per_proposal: 3 * DAY_IN_SLOTS,
                     twap_start_delay_slots: DAY_IN_SLOTS,
                     nonce: 0,
+                    initial_spending_limit: Some(InitialSpendingLimit {
+                        amount_per_month: launch.monthly_spending_limit_amount,
+                        members: launch.monthly_spending_limit_members.clone(),
+                    }),
                 },
             )?;
 

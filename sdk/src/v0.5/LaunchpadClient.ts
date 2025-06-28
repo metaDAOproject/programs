@@ -121,6 +121,8 @@ export class LaunchpadClient {
     secondsForLaunch: number,
     baseMint: PublicKey,
     quoteMint: PublicKey,
+    monthlySpendingLimitAmount: BN,
+    monthlySpendingLimitMembers: PublicKey[],
     launchAuthority: PublicKey = this.provider.publicKey,
     isDevnet: boolean = false,
     payer: PublicKey = this.provider.publicKey
@@ -150,6 +152,8 @@ export class LaunchpadClient {
         tokenName,
         tokenSymbol,
         tokenUri,
+        monthlySpendingLimitAmount,
+        monthlySpendingLimitMembers,
       })
       .accounts({
         launch,
@@ -297,6 +301,11 @@ export class LaunchpadClient {
       index: 0,
     });
 
+    const [spendingLimit] = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    });
+
     const treasuryQuoteAccount = getAssociatedTokenAddressSync(
       quoteMint,
       multisigVault,
@@ -342,6 +351,7 @@ export class LaunchpadClient {
       },
       squadsMultisig: multisigPda,
       squadsMultisigVault: multisigVault,
+      spendingLimit,
     });
     // .preInstructions([
     //   createAssociatedTokenAccountIdempotentInstruction(

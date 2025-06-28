@@ -61,6 +61,11 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "spendingLimit";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -420,6 +425,14 @@ export type Autocrat = {
           {
             name: "seqNum";
             type: "u64";
+          },
+          {
+            name: "initialSpendingLimit";
+            type: {
+              option: {
+                defined: "InitialSpendingLimit";
+              };
+            };
           }
         ];
       };
@@ -562,6 +575,14 @@ export type Autocrat = {
           {
             name: "nonce";
             type: "u64";
+          },
+          {
+            name: "initialSpendingLimit";
+            type: {
+              option: {
+                defined: "InitialSpendingLimit";
+              };
+            };
           }
         ];
       };
@@ -629,6 +650,24 @@ export type Autocrat = {
             name: "minBaseFutarchicLiquidity";
             type: {
               option: "u64";
+            };
+          }
+        ];
+      };
+    },
+    {
+      name: "InitialSpendingLimit";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amountPerMonth";
+            type: "u64";
+          },
+          {
+            name: "members";
+            type: {
+              vec: "publicKey";
             };
           }
         ];
@@ -1053,6 +1092,11 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "spendingLimit",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -1413,6 +1457,14 @@ export const IDL: Autocrat = {
             name: "seqNum",
             type: "u64",
           },
+          {
+            name: "initialSpendingLimit",
+            type: {
+              option: {
+                defined: "InitialSpendingLimit",
+              },
+            },
+          },
         ],
       },
     },
@@ -1555,6 +1607,14 @@ export const IDL: Autocrat = {
             name: "nonce",
             type: "u64",
           },
+          {
+            name: "initialSpendingLimit",
+            type: {
+              option: {
+                defined: "InitialSpendingLimit",
+              },
+            },
+          },
         ],
       },
     },
@@ -1621,6 +1681,24 @@ export const IDL: Autocrat = {
             name: "minBaseFutarchicLiquidity",
             type: {
               option: "u64",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "InitialSpendingLimit",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amountPerMonth",
+            type: "u64",
+          },
+          {
+            name: "members",
+            type: {
+              vec: "publicKey",
             },
           },
         ],

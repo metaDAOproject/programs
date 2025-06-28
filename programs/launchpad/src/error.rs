@@ -24,4 +24,6 @@ pub enum LaunchpadError {
     LaunchNotInitialized,
     #[msg("Freeze authority can't be set on launchpad tokens")]
     FreezeAuthoritySet,
+    #[msg("Monthly spending limit must be less than 1/6th of the minimum raise amount")]
+    InvalidMonthlySpendingLimit,
 }

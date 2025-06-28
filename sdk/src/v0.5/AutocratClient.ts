@@ -316,6 +316,11 @@ export class AutocratClient {
       index: 0,
     })[0];
 
+    const spendingLimit = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    })[0];
+
     return this.autocrat.methods.initializeDao(params).accounts({
       dao,
       baseMint,
@@ -325,6 +330,7 @@ export class AutocratClient {
       squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
       squadsProgramConfigTreasury,
       squadsProgram: SQUADS_PROGRAM_ID,
+      spendingLimit,
     });
   }
 

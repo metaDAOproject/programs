@@ -43,4 +43,12 @@ pub struct Dao {
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
     pub seq_num: u64,
+    pub initial_spending_limit: Option<InitialSpendingLimit>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
+pub struct InitialSpendingLimit {
+    pub amount_per_month: u64,
+    #[max_len(10)]
+    pub members: Vec<Pubkey>,
 }

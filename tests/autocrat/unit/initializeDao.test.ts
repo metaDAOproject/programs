@@ -3,12 +3,12 @@ import {
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
 } from "@metadaoproject/futarchy/v0.5";
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { expectError, ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
-const { Permissions, Permission } = multisig.types;
+const { Permissions, Permission, Period } = multisig.types;
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 
@@ -34,6 +34,7 @@ export default function suite() {
           minBaseFutarchicLiquidity: new BN(1000),
           passThresholdBps: 300,
           nonce: new BN(1337),
+          initialSpendingLimit: null,
         },
       })
       .rpc();
@@ -70,6 +71,7 @@ export default function suite() {
     assert.equal(storedDao.minQuoteFutarchicLiquidity.toString(), "1");
     assert.equal(storedDao.minBaseFutarchicLiquidity.toString(), "1000");
     assert.equal(storedDao.passThresholdBps, 300);
+    assert.isNull(storedDao.initialSpendingLimit);
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
@@ -109,6 +111,64 @@ export default function suite() {
     );
   });
 
+  it("should initialize a DAO with an initial spending limit", async function () {
+    const spender = Keypair.generate();
+
+    await this.autocratClient
+      .initializeDaoIx({
+        baseMint: META,
+        quoteMint: USDC,
+        params: {
+          slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3),
+          twapStartDelaySlots: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24),
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(1),
+          minBaseFutarchicLiquidity: new BN(1000),
+          passThresholdBps: 300,
+          nonce: new BN(420),
+          initialSpendingLimit: {
+            // 10k per month burn
+            amountPerMonth: new BN(10_000 * 10 ** 6),
+            members: [spender.publicKey],
+          },
+        },
+      })
+      .rpc();
+
+    const [dao] = getDaoAddr({
+      nonce: new BN(420),
+      daoCreator: this.payer.publicKey,
+    });
+
+    const storedDao = await this.autocratClient.getDao(dao);
+
+    assert.exists(storedDao.initialSpendingLimit);
+    assert.equal(storedDao.initialSpendingLimit.amountPerMonth.toString(), "10000000000");
+    assert.equal(storedDao.initialSpendingLimit.members.length, 1);
+    assert.ok(storedDao.initialSpendingLimit.members[0].equals(spender.publicKey));
+
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+
+    const spendingLimitPda = multisig.getSpendingLimitPda({ multisigPda, createKey: dao })[0];
+
+    const storedSpendingLimit = await multisig.accounts.SpendingLimit.fromAccountAddress(
+      this.squadsConnection,
+      spendingLimitPda
+    );
+
+    assert.ok(storedSpendingLimit.multisig.equals(multisigPda));
+    assert.ok(storedSpendingLimit.createKey.equals(dao));
+    assert.equal(storedSpendingLimit.vaultIndex, 0);
+    assert.ok(storedSpendingLimit.mint.equals(USDC));
+    assert.equal(storedSpendingLimit.amount.toString(), "10000000000");
+    assert.equal(storedSpendingLimit.remainingAmount.toString(), "10000000000");
+    assert.equal(storedSpendingLimit.period, Period.Month);
+    assert.equal(storedSpendingLimit.members.length, 1);
+    assert.ok(storedSpendingLimit.members[0].equals(spender.publicKey));
+    assert.equal(storedSpendingLimit.destinations.length, 0);
+  });
+
   it("doesn't allow DAOs with proposal duration less than TWAP start delay", async function () {
     const callbacks = expectError(
       "ProposalDurationTooShort",
@@ -128,6 +188,7 @@ export default function suite() {
           passThresholdBps: 300,
           slotsPerProposal: new BN(5000),
           nonce: new BN(1338),
+          initialSpendingLimit: null,
         },
       })
       .rpc()

@@ -65,7 +65,9 @@ export default function suite() {
         minRaise,
         60 * 60 * 24 * 10,
         META,
-        MAINNET_USDC
+        MAINNET_USDC,
+        new BN(100_000000), // 100 USDC burn
+        [this.payer.publicKey]
       )
       .rpc();
 
@@ -97,7 +99,7 @@ export default function suite() {
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx(launch, MAINNET_USDC, META)
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
       ])
       .transaction();

@@ -1,8 +1,8 @@
-use squads_multisig_program::{Member, Permission, Permissions};
+use squads_multisig_program::{Member, Period, Permission, Permissions};
 
 use super::*;
 
-#[derive(Debug, Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub struct InitializeDaoParams {
     pub twap_initial_observation: u128,
     pub twap_max_observation_change_per_update: u128,
@@ -12,6 +12,7 @@ pub struct InitializeDaoParams {
     pub pass_threshold_bps: u16,
     pub slots_per_proposal: u64,
     pub nonce: u64,
+    pub initial_spending_limit: Option<InitialSpendingLimit>,
 }
 
 #[derive(Accounts)]
@@ -31,7 +32,6 @@ pub struct InitializeDao<'info> {
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
     pub base_mint: Account<'info, Mint>,
-    // todo: statically check that this is USDC given a feature flag
     #[account(mint::decimals = 6)]
     pub quote_mint: Account<'info, Mint>,
     /// CHECK: initialized by squads
@@ -46,6 +46,9 @@ pub struct InitializeDao<'info> {
     /// CHECK: checked by squads multisig program
     #[account(mut)]
     pub squads_program_config_treasury: UncheckedAccount<'info>,
+    /// CHECK: initialized by squads
+    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = squads_program)]
+    pub spending_limit: UncheckedAccount<'info>,
 }
 
 pub mod permissionless_account {
@@ -65,6 +68,7 @@ impl InitializeDao<'_> {
             pass_threshold_bps,
             slots_per_proposal,
             nonce,
+            initial_spending_limit,
         } = params;
 
         let dao = &mut ctx.accounts.dao;
@@ -115,6 +119,32 @@ impl InitializeDao<'_> {
             },
         )?;
 
+        if let Some(initial_spending_limit) = initial_spending_limit.clone() {
+            squads_multisig_program::cpi::multisig_add_spending_limit(
+                CpiContext::new_with_signer(
+                    ctx.accounts.squads_program.to_account_info(),
+                    squads_multisig_program::cpi::accounts::MultisigAddSpendingLimit {
+                        multisig: ctx.accounts.squads_multisig.to_account_info(),
+                        system_program: ctx.accounts.system_program.to_account_info(),
+                        rent_payer: ctx.accounts.payer.to_account_info(),
+                        config_authority: dao.to_account_info(),
+                        spending_limit: ctx.accounts.spending_limit.to_account_info(),
+                    },
+                    &[&dao_seeds[..]],
+                ),
+                squads_multisig_program::MultisigAddSpendingLimitArgs {
+                    create_key: dao.key(),
+                    vault_index: 0,
+                    mint: ctx.accounts.quote_mint.key(),
+                    amount: initial_spending_limit.amount_per_month,
+                    period: Period::Month,
+                    members: initial_spending_limit.members,
+                    destinations: vec![],
+                    memo: None,
+                },
+            )?;
+        }
+
         dao.set_inner(Dao {
             nonce,
             dao_creator: creator_key,
@@ -132,6 +162,7 @@ impl InitializeDao<'_> {
             min_base_futarchic_liquidity,
             min_quote_futarchic_liquidity,
             seq_num: 0,
+            initial_spending_limit,
         });
 
         let clock = Clock::get()?;

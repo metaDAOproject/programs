@@ -52,6 +52,7 @@ export default function suite() {
           ),
           passThresholdBps: 300,
           minBaseFutarchicLiquidity: new BN(0),
+          initialSpendingLimit: null,
         },
       })
       .rpc();

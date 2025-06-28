@@ -71,7 +71,9 @@ export default function suite() {
         minRaise,
         60 * 60,
         META,
-        MAINNET_USDC
+        MAINNET_USDC,
+        new BN(100_000000), // 100 USDC burn
+        [this.payer.publicKey]
       )
       .rpc();
   });

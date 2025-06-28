@@ -286,6 +286,11 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "spendingLimit";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
@@ -555,6 +560,23 @@ export type Launchpad = {
             type: "u64";
           },
           {
+            name: "monthlySpendingLimitAmount";
+            docs: [
+              "The monthly spending limit the DAO allocates to the team. Must be",
+              "less than 1/6th of the minimum raise amount (so 6 months of burn)."
+            ];
+            type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitMembers";
+            docs: [
+              "The wallets that have access to the monthly spending limit."
+            ];
+            type: {
+              vec: "publicKey";
+            };
+          },
+          {
             name: "launchAuthority";
             docs: ["The account that can start the launch."];
             type: "publicKey";
@@ -673,6 +695,16 @@ export type Launchpad = {
           {
             name: "minimumRaiseAmount";
             type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitAmount";
+            type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitMembers";
+            type: {
+              vec: "publicKey";
+            };
           },
           {
             name: "secondsForLaunch";
@@ -1019,6 +1051,11 @@ export type Launchpad = {
       code: 6010;
       name: "FreezeAuthoritySet";
       msg: "Freeze authority can't be set on launchpad tokens";
+    },
+    {
+      code: 6011;
+      name: "InvalidMonthlySpendingLimit";
+      msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount";
     }
   ];
 };
@@ -1311,6 +1348,11 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "spendingLimit",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "systemProgram",
           isMut: false,
           isSigner: false,
@@ -1580,6 +1622,23 @@ export const IDL: Launchpad = {
             type: "u64",
           },
           {
+            name: "monthlySpendingLimitAmount",
+            docs: [
+              "The monthly spending limit the DAO allocates to the team. Must be",
+              "less than 1/6th of the minimum raise amount (so 6 months of burn).",
+            ],
+            type: "u64",
+          },
+          {
+            name: "monthlySpendingLimitMembers",
+            docs: [
+              "The wallets that have access to the monthly spending limit.",
+            ],
+            type: {
+              vec: "publicKey",
+            },
+          },
+          {
             name: "launchAuthority",
             docs: ["The account that can start the launch."],
             type: "publicKey",
@@ -1698,6 +1757,16 @@ export const IDL: Launchpad = {
           {
             name: "minimumRaiseAmount",
             type: "u64",
+          },
+          {
+            name: "monthlySpendingLimitAmount",
+            type: "u64",
+          },
+          {
+            name: "monthlySpendingLimitMembers",
+            type: {
+              vec: "publicKey",
+            },
           },
           {
             name: "secondsForLaunch",
@@ -2044,6 +2113,11 @@ export const IDL: Launchpad = {
       code: 6010,
       name: "FreezeAuthoritySet",
       msg: "Freeze authority can't be set on launchpad tokens",
+    },
+    {
+      code: 6011,
+      name: "InvalidMonthlySpendingLimit",
+      msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount",
     },
   ],
 };

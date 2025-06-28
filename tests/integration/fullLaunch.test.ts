@@ -36,6 +36,7 @@ export default async function suite() {
     const funder1 = Keypair.generate();
     const funder2 = Keypair.generate();
     const funder3 = Keypair.generate();
+    const spender = Keypair.generate();
 
     let META: PublicKey;
     let launch: PublicKey;
@@ -43,8 +44,9 @@ export default async function suite() {
     let dao: PublicKey;
     let daoTreasury: PublicKey;
 
-    const minRaise = new BN(1000_000000); // 1000 USDC
+    const minRaise = new BN(300_000 * 10 ** 6); // 300k USDC
     const launchPeriod = 60 * 60 * 24 * 2; // 2 days
+    const monthlySpendingLimitAmount = new BN(25_000 * 10 ** 6); // 25k / month spending limit
 
     // Initialize the launch
     const result = await initializeMintWithSeeds(
@@ -67,19 +69,13 @@ export default async function suite() {
       MAINNET_USDC,
       this.payer,
       funder1.publicKey,
-      5000_000000
-    );
-    await this.transfer(
-      MAINNET_USDC,
-      this.payer,
-      funder2.publicKey,
-      3000_000000
+      500_000_000000
     );
     await this.transfer(
       MAINNET_USDC,
       this.payer,
       funder3.publicKey,
-      4000_000000
+      400_000_000000
     );
 
     // Initialize launch
@@ -91,7 +87,9 @@ export default async function suite() {
         minRaise,
         launchPeriod,
         META,
-        MAINNET_USDC
+        MAINNET_USDC,
+        monthlySpendingLimitAmount,
+        [spender.publicKey]
       )
       .rpc();
 
@@ -100,16 +98,16 @@ export default async function suite() {
 
     // Fund from multiple sources
     await this.launchpadClient
-      .fundIx(launch, new BN(5000_000000), funder1.publicKey, MAINNET_USDC)
+      .fundIx(launch, new BN(500_000_000000), funder1.publicKey, MAINNET_USDC)
       .signers([funder1])
       .rpc();
 
     await this.launchpadClient
-      .fundIx(launch, new BN(1500_000000), undefined, MAINNET_USDC)
+      .fundIx(launch, new BN(150_000_000000), undefined, MAINNET_USDC)
       .rpc();
 
     await this.launchpadClient
-      .fundIx(launch, new BN(3500_000000), funder3.publicKey, MAINNET_USDC)
+      .fundIx(launch, new BN(350_000_000000), funder3.publicKey, MAINNET_USDC)
       .signers([funder3])
       .rpc();
 
@@ -241,7 +239,7 @@ export default async function suite() {
       "Mint 1M tokens to receiver",
       squadsProposalPda,
       PriceMath.getChainAmount(100_000, 6), // 100k tokens
-      PriceMath.getChainAmount(100, 6) // 100 USDC
+      PriceMath.getChainAmount(10_000, 6) // 10k USDC
     );
 
     let {
@@ -334,5 +332,43 @@ export default async function suite() {
     );
 
     assert.equal(receiverBalance.toString(), "1000000000000");
+
+    const spendingLimit = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    })[0];
+
+    await this.createTokenAccount(MAINNET_USDC, spender.publicKey);
+
+    const spendingLimitUseIx = multisig.instructions.spendingLimitUse({
+      multisigPda,
+      member: spender.publicKey,
+      spendingLimit,
+      mint: MAINNET_USDC,
+      vaultIndex: 0,
+      amount: 10_000 * 10 ** 6,
+      decimals: 6,
+      destination: spender.publicKey,
+    });
+
+    const spendingLimitUseTx = new Transaction().add(spendingLimitUseIx);
+    spendingLimitUseTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    spendingLimitUseTx.feePayer = this.payer.publicKey;
+    spendingLimitUseTx.sign(this.payer, spender);
+
+    await this.banksClient.processTransaction(spendingLimitUseTx);
+
+    const spendingLimitUse = await this.getTokenBalance(
+      MAINNET_USDC,
+      spender.publicKey
+    );
+
+    assert.equal(spendingLimitUse.toString(), (10_000 * 10 ** 6).toString());
+
+    const storedSpendingLimit = await multisig.accounts.SpendingLimit.fromAccountAddress(this.squadsConnection, spendingLimit);
+    assert.equal(storedSpendingLimit.amount.toString(), (25_000 * 10 ** 6).toString());
+    assert.equal(storedSpendingLimit.remainingAmount.toString(), (15_000 * 10 ** 6).toString());
   });
 }
