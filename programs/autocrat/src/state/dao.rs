@@ -3,8 +3,12 @@ pub use super::*;
 #[account]
 #[derive(InitSpace)]
 pub struct Dao {
-    pub treasury_pda_bump: u8,
-    pub treasury: Pubkey,
+    /// `nonce` + `dao_creator` are PDA seeds
+    pub nonce: u64,
+    pub dao_creator: Pubkey,
+    pub pda_bump: u8,
+    pub squads_multisig: Pubkey,
+    pub squads_multisig_vault: Pubkey,
     pub base_mint: Pubkey,
     pub quote_mint: Pubkey,
     pub proposal_count: u32,
@@ -39,4 +43,12 @@ pub struct Dao {
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
     pub seq_num: u64,
+    pub initial_spending_limit: Option<InitialSpendingLimit>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
+pub struct InitialSpendingLimit {
+    pub amount_per_month: u64,
+    #[max_len(10)]
+    pub members: Vec<Pubkey>,
 }

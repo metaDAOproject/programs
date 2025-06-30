@@ -11,9 +11,9 @@
         "redeem-launch": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/redeemLaunch.ts"
     },
     "dependencies": {
-        "@coral-xyz/anchor": "0.29.0",
+        "@coral-xyz/anchor": "=0.29.0",
         "@inquirer/prompts": "^7.3.3",
-        "@metadaoproject/futarchy": "0.5.0-alpha.2",
+        "@metadaoproject/futarchy": "0.5.0-alpha.3",
         "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
         "@metaplex-foundation/umi": "^0.9.1",
         "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
@@ -23,9 +23,12 @@
         "@noble/ed25519": "^2.0.0",
         "@noble/secp256k1": "^2.0.0",
         "@solana/spl-token": "^0.3.7",
-        "@solana/web3.js": "^1.90.0",
+        "@solana/web3.js": "=1.76.0",
+        "@sqds/multisig": "^2.1.4",
         "anchor-bankrun": "^0.3.0",
+        "anchor-litesvm": "^0.1.2",
         "arweave": "^1.14.4",
+        "litesvm": "^0.2.0",
         "solana-bankrun": "^0.3.0",
         "spl-token-bankrun": "0.2.6"
     },

@@ -7,8 +7,8 @@ use anchor_lang::Discriminator;
 use anchor_spl::associated_token;
 
 use crate::error::SharedLiquidityManagerError;
-use crate::state::{LiquidityPosition, SharedLiquidityPool};
 use crate::instructions::common::*;
+use crate::state::{LiquidityPosition, SharedLiquidityPool};
 
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
@@ -137,7 +137,6 @@ pub struct InitializeSharedLiquidityPool<'info> {
     )]
     pub spot_pool_quote_vault: UncheckedAccount<'info>,
 
-
     /// CHECK: an account to store oracle observations, init by cp-swap
     #[account(
         mut,
@@ -233,17 +232,45 @@ impl InitializeSharedLiquidityPool<'_> {
 
         let cpi_accounts = cpi::accounts::Initialize {
             creator: ctx.accounts.creator.to_account_info(),
-            amm_config: ctx.accounts.raydium_init_pool_static.amm_config.to_account_info(),
-            authority: ctx.accounts.raydium_init_pool_static.raydium_authority.to_account_info(),
+            amm_config: ctx
+                .accounts
+                .raydium_init_pool_static
+                .amm_config
+                .to_account_info(),
+            authority: ctx
+                .accounts
+                .raydium_init_pool_static
+                .raydium_authority
+                .to_account_info(),
             pool_state: ctx.accounts.spot_pool.to_account_info(),
             lp_mint: ctx.accounts.spot_pool_lp_mint.to_account_info(),
             creator_lp_token: ctx.accounts.creator_lp_account.to_account_info(),
-            create_pool_fee: ctx.accounts.raydium_init_pool_static.create_pool_fee.to_account_info(),
+            create_pool_fee: ctx
+                .accounts
+                .raydium_init_pool_static
+                .create_pool_fee
+                .to_account_info(),
             observation_state: ctx.accounts.spot_pool_observation_state.to_account_info(),
-            token_program: ctx.accounts.raydium_init_pool_static.token_program.to_account_info(),
-            token_0_program: ctx.accounts.raydium_init_pool_static.token_program.to_account_info(),
-            token_1_program: ctx.accounts.raydium_init_pool_static.token_program.to_account_info(),
-            associated_token_program: ctx.accounts.raydium_init_pool_static.associated_token_program.to_account_info(),
+            token_program: ctx
+                .accounts
+                .raydium_init_pool_static
+                .token_program
+                .to_account_info(),
+            token_0_program: ctx
+                .accounts
+                .raydium_init_pool_static
+                .token_program
+                .to_account_info(),
+            token_1_program: ctx
+                .accounts
+                .raydium_init_pool_static
+                .token_program
+                .to_account_info(),
+            associated_token_program: ctx
+                .accounts
+                .raydium_init_pool_static
+                .associated_token_program
+                .to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
             rent: ctx.accounts.raydium_init_pool_static.rent.to_account_info(),
             token_0_mint,
@@ -301,14 +328,21 @@ impl InitializeSharedLiquidityPool<'_> {
         // First, initialize the shared liquidity pool's lp vault
 
         associated_token::create(CpiContext::new(
-            ctx.accounts.raydium_init_pool_static.associated_token_program.to_account_info(),
+            ctx.accounts
+                .raydium_init_pool_static
+                .associated_token_program
+                .to_account_info(),
             associated_token::Create {
                 payer: ctx.accounts.creator.to_account_info(),
                 mint: ctx.accounts.spot_pool_lp_mint.to_account_info(),
                 authority: ctx.accounts.sl_pool_signer.to_account_info(),
                 associated_token: ctx.accounts.sl_pool_spot_lp_vault.to_account_info(),
                 system_program: ctx.accounts.system_program.to_account_info(),
-                token_program: ctx.accounts.raydium_init_pool_static.token_program.to_account_info(),
+                token_program: ctx
+                    .accounts
+                    .raydium_init_pool_static
+                    .token_program
+                    .to_account_info(),
             },
         ))?;
 
@@ -321,7 +355,10 @@ impl InitializeSharedLiquidityPool<'_> {
 
         anchor_spl::token::transfer(
             CpiContext::new(
-                ctx.accounts.raydium_init_pool_static.token_program.to_account_info(),
+                ctx.accounts
+                    .raydium_init_pool_static
+                    .token_program
+                    .to_account_info(),
                 Transfer {
                     from: ctx.accounts.creator_lp_account.to_account_info(),
                     to: ctx.accounts.sl_pool_spot_lp_vault.to_account_info(),
@@ -355,7 +392,6 @@ impl InitializeSharedLiquidityPool<'_> {
         creator_sl_pool_position.pool = ctx.accounts.sl_pool.key();
         creator_sl_pool_position.underlying_spot_lp_shares += lp_amount;
         creator_sl_pool_position.bump = ctx.bumps.creator_sl_pool_position;
-        
 
         Ok(())
     }

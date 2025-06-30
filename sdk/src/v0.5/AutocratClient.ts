@@ -10,8 +10,7 @@ import {
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { PriceMath } from "./utils/priceMath.js";
-import { ProposalInstruction, InitializeDaoParams } from "./types/index.js";
+import { InitializeDaoParams, UpdateDaoParams } from "./types/index.js";
 
 import { Autocrat, IDL as AutocratIDL } from "./types/autocrat.js";
 import {
@@ -25,6 +24,9 @@ import {
   AUTOCRAT_PROGRAM_ID,
   CONDITIONAL_VAULT_PROGRAM_ID,
   MAINNET_USDC,
+  SQUADS_PROGRAM_CONFIG,
+  SQUADS_PROGRAM_CONFIG_TREASURY,
+  SQUADS_PROGRAM_ID,
   USDC_DECIMALS,
 } from "./constants.js";
 import {
@@ -34,6 +36,7 @@ import {
   getAmmAddr,
   getAmmLpMintAddr,
   getConditionalTokenMintAddr,
+  getDaoAddr,
   getDaoTreasuryAddr,
   getEventAuthorityAddr,
   getProposalAddr,
@@ -49,6 +52,8 @@ import {
 } from "@solana/spl-token";
 import { sha256 } from "@noble/hashes/sha256";
 import { Dao, Proposal } from "./types/index.js";
+
+import * as multisig from "@sqds/multisig";
 
 export type CreateClientParams = {
   provider: AnchorProvider;
@@ -235,81 +240,104 @@ export class AutocratClient {
     };
   }
 
-  async initializeDao(
-    tokenMint: PublicKey,
-    tokenPriceUiAmount: number,
-    minBaseFutarchicLiquidity: number,
-    minQuoteFutarchicLiquidity: number,
-    usdcMint: PublicKey = MAINNET_USDC,
-    daoKeypair: Keypair = Keypair.generate(),
-    twapStartDelaySlots: BN
-  ): Promise<PublicKey> {
-    let tokenDecimals = unpackMint(
-      tokenMint,
-      await this.provider.connection.getAccountInfo(tokenMint)
-    ).decimals;
+  // async initializeDao(
+  //   tokenMint: PublicKey,
+  //   tokenPriceUiAmount: number,
+  //   minBaseFutarchicLiquidity: number,
+  //   minQuoteFutarchicLiquidity: number,
+  //   usdcMint: PublicKey = MAINNET_USDC,
+  //   daoKeypair: Keypair = Keypair.generate(),
+  //   twapStartDelaySlots: BN
+  // ): Promise<PublicKey> {
+  //   let tokenDecimals = unpackMint(
+  //     tokenMint,
+  //     await this.provider.connection.getAccountInfo(tokenMint)
+  //   ).decimals;
 
-    let scaledPrice = PriceMath.getAmmPrice(
-      tokenPriceUiAmount,
-      tokenDecimals,
-      USDC_DECIMALS
-    );
+  //   let scaledPrice = PriceMath.getAmmPrice(
+  //     tokenPriceUiAmount,
+  //     tokenDecimals,
+  //     USDC_DECIMALS
+  //   );
 
-    // console.log(
-    //   PriceMath.getHumanPrice(scaledPrice, tokenDecimals, USDC_DECIMALS)
-    // );
+  //   // console.log(
+  //   //   PriceMath.getHumanPrice(scaledPrice, tokenDecimals, USDC_DECIMALS)
+  //   // );
 
-    await this.initializeDaoIx(
-      daoKeypair,
-      tokenMint,
-      {
-        twapStartDelaySlots,
-        twapInitialObservation: scaledPrice,
-        twapMaxObservationChangePerUpdate: scaledPrice.divn(50),
-        minQuoteFutarchicLiquidity: new BN(minQuoteFutarchicLiquidity).mul(
-          new BN(10).pow(new BN(USDC_DECIMALS))
-        ),
-        minBaseFutarchicLiquidity: new BN(minBaseFutarchicLiquidity).mul(
-          new BN(10).pow(new BN(tokenDecimals))
-        ),
-        passThresholdBps: null,
-        slotsPerProposal: null,
-      },
-      usdcMint
-    )
-      .postInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: MaxCUs.initializeDao,
-        }),
-        ComputeBudgetProgram.setComputeUnitPrice({
-          microLamports: DEFAULT_CU_PRICE,
-        }),
-      ])
-      .rpc({ maxRetries: 5 });
+  //   await this.initializeDaoIx({
+  //     daoKeypair,
+  //     baseMint: tokenMint,
+  //     params: {
+  //       twapStartDelaySlots,
+  //       twapInitialObservation: scaledPrice,
+  //       twapMaxObservationChangePerUpdate: scaledPrice.divn(50),
+  //       minQuoteFutarchicLiquidity: new BN(minQuoteFutarchicLiquidity).mul(
+  //         new BN(10).pow(new BN(USDC_DECIMALS))
+  //       ),
+  //       minBaseFutarchicLiquidity: new BN(minBaseFutarchicLiquidity).mul(
+  //         new BN(10).pow(new BN(tokenDecimals))
+  //       ),
+  //       passThresholdBps: null,
+  //       slotsPerProposal: null,
+  //     },
+  //     quoteMint: usdcMint,
+  //   })
+  //     .postInstructions([
+  //       ComputeBudgetProgram.setComputeUnitLimit({
+  //         units: MaxCUs.initializeDao,
+  //       }),
+  //       ComputeBudgetProgram.setComputeUnitPrice({
+  //         microLamports: DEFAULT_CU_PRICE,
+  //       }),
+  //     ])
+  //     .rpc({ maxRetries: 5 });
 
-    return daoKeypair.publicKey;
-  }
+  //   return daoKeypair.publicKey;
+  // }
 
-  initializeDaoIx(
-    daoKeypair: Keypair,
-    baseMint: PublicKey,
-    params: InitializeDaoParams,
-    quoteMint: PublicKey = MAINNET_USDC
-  ) {
-    return this.autocrat.methods
-      .initializeDao(params)
-      .accounts({
-        dao: daoKeypair.publicKey,
-        baseMint,
-        quoteMint,
-      })
-      .signers([daoKeypair]);
+  initializeDaoIx({
+    baseMint,
+    params,
+    quoteMint = MAINNET_USDC,
+    squadsProgramConfigTreasury = SQUADS_PROGRAM_CONFIG_TREASURY,
+  }: {
+    baseMint: PublicKey;
+    params: InitializeDaoParams;
+    quoteMint?: PublicKey;
+    squadsProgramConfigTreasury?: PublicKey;
+  }) {
+    const [dao] = getDaoAddr({
+      nonce: params.nonce,
+      daoCreator: this.provider.publicKey,
+    });
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
+
+    const spendingLimit = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    })[0];
+
+    return this.autocrat.methods.initializeDao(params).accounts({
+      dao,
+      baseMint,
+      quoteMint,
+      squadsMultisig: multisigPda,
+      squadsMultisigVault,
+      squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+      squadsProgramConfigTreasury,
+      squadsProgram: SQUADS_PROGRAM_ID,
+      spendingLimit,
+    });
   }
 
   async initializeProposal(
     dao: PublicKey,
     descriptionUrl: string,
-    instruction: ProposalInstruction,
+    squadsProposal: PublicKey,
     baseTokensToLP: BN,
     quoteTokensToLP: BN
   ): Promise<PublicKey> {
@@ -370,6 +398,7 @@ export class AutocratClient {
       )
       .rpc();
 
+    console.log(baseTokensToLP.toString());
     await this.vaultClient
       .splitTokensIx(question, baseVault, storedDao.baseMint, baseTokensToLP, 2)
       .postInstructions(
@@ -413,7 +442,7 @@ export class AutocratClient {
 
     await this.initializeProposalIx(
       descriptionUrl,
-      instruction,
+      squadsProposal,
       dao,
       storedDao.baseMint,
       storedDao.quoteMint,
@@ -426,138 +455,9 @@ export class AutocratClient {
     return proposal;
   }
 
-  // async createProposalTxAndPDAs(
-  //   dao: PublicKey,
-  //   descriptionUrl: string,
-  //   instruction: ProposalInstruction,
-  //   baseTokensToLP: BN,
-  //   quoteTokensToLP: BN
-  // ): Promise<
-  //   [
-  //     Transaction[],
-  //     {
-  //       proposalAcct: PublicKey;
-  //       baseCondVaultAcct: PublicKey;
-  //       quoteCondVaultAcct: PublicKey;
-  //       passMarketAcct: PublicKey;
-  //       failMarketAcct: PublicKey;
-  //     }
-  //   ]
-  // > {
-  //   const storedDao = await this.getDao(dao);
-
-  //   const nonce = new BN(Math.random() * 2 ** 50);
-
-  //   let [proposal] = getProposalAddr(
-  //     this.autocrat.programId,
-  //     this.provider.publicKey,
-  //     nonce
-  //   );
-
-  //   const {
-  //     baseVault,
-  //     quoteVault,
-  //     passAmm,
-  //     failAmm,
-  //     passBaseMint,
-  //     passQuoteMint,
-  //     failBaseMint,
-  //     failQuoteMint,
-  //   } = this.getProposalPdas(
-  //     proposal,
-  //     storedDao.tokenMint,
-  //     storedDao.usdcMint,
-  //     dao
-  //   );
-
-  //   // it's important that these happen in a single atomic transaction
-  //   const initVaultTx = await this.vaultClient
-  //     .initializeVaultIx(proposal, storedDao.tokenMint)
-  //     .postInstructions(
-  //       await InstructionUtils.getInstructions(
-  //         this.vaultClient.initializeVaultIx(proposal, storedDao.usdcMint),
-  //         this.ammClient.createAmmIx(
-  //           passBaseMint,
-  //           passQuoteMint,
-  //           storedDao.twapInitialObservation,
-  //           storedDao.twapMaxObservationChangePerUpdate
-  //         ),
-  //         this.ammClient.createAmmIx(
-  //           failBaseMint,
-  //           failQuoteMint,
-  //           storedDao.twapInitialObservation,
-  //           storedDao.twapMaxObservationChangePerUpdate
-  //         )
-  //       )
-  //     )
-  //     .transaction();
-
-  //   const mintConditionalTokensTx = await this.vaultClient
-  //     .mintConditionalTokensIx(baseVault, storedDao.tokenMint, baseTokensToLP)
-  //     .postInstructions(
-  //       await InstructionUtils.getInstructions(
-  //         this.vaultClient.mintConditionalTokensIx(
-  //           quoteVault,
-  //           storedDao.usdcMint,
-  //           quoteTokensToLP
-  //         )
-  //       )
-  //     )
-  //     .transaction();
-
-  //   const addLiquidityTx = await this.ammClient
-  //     .addLiquidityIx(
-  //       passAmm,
-  //       passBaseMint,
-  //       passQuoteMint,
-  //       quoteTokensToLP,
-  //       baseTokensToLP,
-  //       new BN(0)
-  //     )
-  //     .postInstructions(
-  //       await InstructionUtils.getInstructions(
-  //         this.ammClient.addLiquidityIx(
-  //           failAmm,
-  //           failBaseMint,
-  //           failQuoteMint,
-  //           quoteTokensToLP,
-  //           baseTokensToLP,
-  //           new BN(0)
-  //         )
-  //       )
-  //     )
-  //     .transaction();
-
-  //   // this is how many original tokens are created
-  //   const lpTokens = quoteTokensToLP;
-
-  //   const initTx = await this.initializeProposalIx(
-  //     descriptionUrl,
-  //     instruction,
-  //     dao,
-  //     storedDao.tokenMint,
-  //     storedDao.usdcMint,
-  //     lpTokens,
-  //     lpTokens,
-  //     nonce,
-  //     question
-  //   ).transaction();
-
-  //   return [
-  //     [initVaultTx, mintConditionalTokensTx, addLiquidityTx, initTx],
-  //     {
-  //       baseCondVaultAcct: baseVault,
-  //       quoteCondVaultAcct: quoteVault,
-  //       failMarketAcct: failAmm,
-  //       passMarketAcct: passAmm,
-  //       proposalAcct: proposal,
-  //     },
-  //   ];
-  // }
-
   initializeProposalIx(
     descriptionUrl: string,
-    instruction: ProposalInstruction,
+    squadsProposal: PublicKey,
     dao: PublicKey,
     baseMint: PublicKey,
     quoteMint: PublicKey,
@@ -598,7 +498,6 @@ export class AutocratClient {
     return this.autocrat.methods
       .initializeProposal({
         descriptionUrl,
-        instruction,
         passLpTokensToLock,
         failLpTokensToLock,
         nonce,
@@ -606,6 +505,7 @@ export class AutocratClient {
       .accounts({
         question,
         proposal,
+        squadsProposal,
         dao,
         baseVault,
         quoteVault,
@@ -635,7 +535,7 @@ export class AutocratClient {
 
     return this.finalizeProposalIx(
       proposal,
-      storedProposal.instruction,
+      storedProposal.squadsProposal,
       storedProposal.dao,
       storedDao.baseMint,
       storedDao.quoteMint,
@@ -645,13 +545,14 @@ export class AutocratClient {
 
   finalizeProposalIx(
     proposal: PublicKey,
-    instruction: any,
+    squadsProposal: PublicKey,
     dao: PublicKey,
     daoToken: PublicKey,
     usdc: PublicKey,
     proposer: PublicKey
   ) {
     let vaultProgramId = this.vaultClient.vaultProgram.programId;
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const { question, passAmm, failAmm } = this.getProposalPdas(
@@ -677,6 +578,9 @@ export class AutocratClient {
       passAmm,
       failAmm,
       dao,
+      squadsProposal,
+      squadsMultisig: multisigPda,
+      squadsMultisigProgram: SQUADS_PROGRAM_ID,
       question,
       // baseVault,
       // quoteVault,
@@ -689,38 +593,51 @@ export class AutocratClient {
     });
   }
 
-  async executeProposal(proposal: PublicKey) {
-    let storedProposal = await this.getProposal(proposal);
+  // async executeProposal(proposal: PublicKey) {
+  //   let storedProposal = await this.getProposal(proposal);
 
-    return this.executeProposalIx(
-      proposal,
-      storedProposal.dao,
-      storedProposal.instruction
-    ).rpc();
-  }
+  //   return this.executeProposalIx(
+  //     proposal,
+  //     storedProposal.dao,
+  //     storedProposal.instruction
+  //   ).rpc();
+  // }
 
-  executeProposalIx(proposal: PublicKey, dao: PublicKey, instruction: any) {
-    const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
-    return this.autocrat.methods
-      .executeProposal()
-      .accounts({
-        proposal,
-        dao,
-        // daoTreasury,
-      })
-      .remainingAccounts(
-        instruction.accounts
-          .concat({
-            pubkey: instruction.programId,
-            isWritable: false,
-            isSigner: false,
-          })
-          .map((meta: AccountMeta) =>
-            meta.pubkey.equals(daoTreasury)
-              ? { ...meta, isSigner: false }
-              : meta
-          )
-      );
+  // executeProposalIx(proposal: PublicKey, dao: PublicKey, instruction: any) {
+  //   const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
+  //   return this.autocrat.methods
+  //     .executeProposal()
+  //     .accounts({
+  //       proposal,
+  //       dao,
+  //       // daoTreasury,
+  //     })
+  //     .remainingAccounts(
+  //       instruction.accounts
+  //         .concat({
+  //           pubkey: instruction.programId,
+  //           isWritable: false,
+  //           isSigner: false,
+  //         })
+  //         .map((meta: AccountMeta) =>
+  //           meta.pubkey.equals(daoTreasury)
+  //             ? { ...meta, isSigner: false }
+  //             : meta
+  //         )
+  //     );
+  // }
+
+  updateDaoIx({ dao, params }: { dao: PublicKey; params: UpdateDaoParams }) {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
+
+    return this.autocrat.methods.updateDao(params).accounts({
+      dao,
+      squadsMultisigVault,
+    });
   }
 
   // cranks the TWAPs of multiple proposals' markets. there's a limit on the

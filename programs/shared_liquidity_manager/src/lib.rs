@@ -20,10 +20,10 @@ use anchor_lang::prelude::*;
 declare_id!("EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d");
 
 mod error;
-mod instructions;
-mod state;
+// mod instructions;
+// mod state;
 
-use instructions::*;
+// use instructions::*;
 
 /// TODO:
 /// - add unstake
@@ -31,65 +31,64 @@ use instructions::*;
 
 #[program]
 pub mod shared_liquidity_manager {
-    use super::*;
 
-    #[access_control(ctx.accounts.validate(&params))]
-    pub fn initialize_shared_liquidity_pool(
-        ctx: Context<InitializeSharedLiquidityPool>,
-        params: InitializeSharedLiquidityPoolParams,
-    ) -> Result<()> {
-        InitializeSharedLiquidityPool::handle(ctx, params)
-    }
+    // #[access_control(ctx.accounts.validate(&params))]
+    // pub fn initialize_shared_liquidity_pool(
+    //     ctx: Context<InitializeSharedLiquidityPool>,
+    //     params: InitializeSharedLiquidityPoolParams,
+    // ) -> Result<()> {
+    //     InitializeSharedLiquidityPool::handle(ctx, params)
+    // }
 
-    pub fn initialize_draft_proposal(
-        ctx: Context<InitializeDraftProposal>,
-        params: InitializeDraftProposalParams,
-    ) -> Result<()> {
-        InitializeDraftProposal::handle(ctx, params)
-    }
+    // pub fn initialize_draft_proposal(
+    //     ctx: Context<InitializeDraftProposal>,
+    //     params: InitializeDraftProposalParams,
+    // ) -> Result<()> {
+    //     InitializeDraftProposal::handle(ctx, params)
+    // }
 
-    #[access_control(ctx.accounts.validate(&params))]
-    pub fn stake_to_draft_proposal(
-        ctx: Context<StakeToDraftProposal>,
-        params: StakeToDraftProposalParams,
-    ) -> Result<()> {
-        StakeToDraftProposal::handle(ctx, params)
-    }
+    // #[access_control(ctx.accounts.validate(&params))]
+    // pub fn stake_to_draft_proposal(
+    //     ctx: Context<StakeToDraftProposal>,
+    //     params: StakeToDraftProposalParams,
+    // ) -> Result<()> {
+    //     StakeToDraftProposal::handle(ctx, params)
+    // }
 
-    #[access_control(ctx.accounts.validate(&params))]
-    pub fn unstake_from_draft_proposal(
-        ctx: Context<UnstakeFromDraftProposal>,
-        params: UnstakeFromDraftProposalParams,
-    ) -> Result<()> {
-        UnstakeFromDraftProposal::handle(ctx, params)
-    }
+    // #[access_control(ctx.accounts.validate(&params))]
+    // pub fn unstake_from_draft_proposal(
+    //     ctx: Context<UnstakeFromDraftProposal>,
+    //     params: UnstakeFromDraftProposalParams,
+    // ) -> Result<()> {
+    //     UnstakeFromDraftProposal::handle(ctx, params)
+    // }
 
-    #[access_control(ctx.accounts.validate(&params))]
-    pub fn deposit_shared_liquidity(
-        ctx: Context<DepositSharedLiquidity>,
-        params: DepositSharedLiquidityParams,
-    ) -> Result<()> {
-        DepositSharedLiquidity::handle(ctx, params)
-    }
+    // #[access_control(ctx.accounts.validate(&params))]
+    // pub fn deposit_shared_liquidity(
+    //     ctx: Context<DepositSharedLiquidity>,
+    //     params: DepositSharedLiquidityParams,
+    // ) -> Result<()> {
+    //     DepositSharedLiquidity::handle(ctx, params)
+    // }
 
-    #[access_control(ctx.accounts.validate(&params))]
-    pub fn withdraw_shared_liquidity(
-        ctx: Context<WithdrawSharedLiquidity>,
-        params: WithdrawSharedLiquidityParams,
-    ) -> Result<()> {
-        WithdrawSharedLiquidity::handle(ctx, params)
-    }
+    // #[access_control(ctx.accounts.validate(&params))]
+    // pub fn withdraw_shared_liquidity(
+    //     ctx: Context<WithdrawSharedLiquidity>,
+    //     params: WithdrawSharedLiquidityParams,
+    // ) -> Result<()> {
+    //     WithdrawSharedLiquidity::handle(ctx, params)
+    // }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn initialize_proposal_with_liquidity(
-        ctx: Context<InitializeProposalWithLiquidity>,
-        params: InitializeProposalWithLiquidityParams,
-    ) -> Result<()> {
-        InitializeProposalWithLiquidity::handle(ctx, params)
-    }
+    // #[access_control(ctx.accounts.validate())]
+    // pub fn initialize_proposal_with_liquidity(
+    //     ctx: Context<InitializeProposalWithLiquidity>,
+    //     params: InitializeProposalWithLiquidityParams,
+    // ) -> Result<()> {
+    //     InitializeProposalWithLiquidity::handle(ctx, params)
+    // }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn remove_proposal_liquidity(ctx: Context<RemoveProposalLiquidity>) -> Result<()> {
-        RemoveProposalLiquidity::handle(ctx)
-    }
+    // #[access_control(ctx.accounts.validate())]
+    // pub fn remove_proposal_liquidity(ctx: Context<RemoveProposalLiquidity>) -> Result<()> {
+    //     RemoveProposalLiquidity::handle(ctx)
+    // }
 }

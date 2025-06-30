@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{ProposalInstruction, ProposalState};
+use crate::ProposalState;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {
@@ -23,7 +23,6 @@ pub struct InitializeDaoEvent {
     pub dao: Pubkey,
     pub base_mint: Pubkey,
     pub quote_mint: Pubkey,
-    pub treasury: Pubkey,
     pub pass_threshold_bps: u16,
     pub slots_per_proposal: u64,
     pub twap_initial_observation: u128,
@@ -62,7 +61,6 @@ pub struct InitializeProposalEvent {
     pub pass_lp_tokens_locked: u64,
     pub fail_lp_tokens_locked: u64,
     pub pda_bump: u8,
-    pub instruction: ProposalInstruction,
     pub duration_in_slots: u64,
 }
 

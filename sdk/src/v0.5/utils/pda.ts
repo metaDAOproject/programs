@@ -15,7 +15,7 @@ import {
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
 } from "../constants.js";
-import { LAUNCHPAD_PROGRAM_ID } from "../constants.js";
+import { LAUNCHPAD_PROGRAM_ID, AUTOCRAT_PROGRAM_ID } from "../constants.js";
 
 export const getEventAuthorityAddr = (programId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
@@ -106,6 +106,25 @@ export const getMetadataAddr = (mint: PublicKey) => {
   );
 };
 
+export const getDaoAddr = ({
+  nonce,
+  daoCreator,
+  programId = AUTOCRAT_PROGRAM_ID,
+}: {
+  nonce: BN;
+  daoCreator: PublicKey;
+  programId?: PublicKey;
+}): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("dao"),
+      daoCreator.toBuffer(),
+      nonce.toArrayLike(Buffer, "le", 8),
+    ],
+    programId
+  );
+};
+
 export const getDaoTreasuryAddr = (
   programId: PublicKey,
   dao: PublicKey
@@ -180,16 +199,6 @@ export const getFundingRecordAddr = (
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("funding_record"), launch.toBuffer(), funder.toBuffer()],
-    programId
-  );
-};
-
-export const getLaunchDaoAddr = (
-  programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
-  launch: PublicKey
-): [PublicKey, number] => {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("launch_dao"), launch.toBuffer()],
     programId
   );
 };

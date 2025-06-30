@@ -19,19 +19,22 @@ import {
   MPL_TOKEN_METADATA_PROGRAM_ID,
   MAINNET_USDC,
   DEVNET_USDC,
+  SQUADS_PROGRAM_ID,
+  SQUADS_PROGRAM_CONFIG,
+  SQUADS_PROGRAM_CONFIG_TREASURY,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { BN } from "@coral-xyz/anchor";
+import BN from "bn.js";
 import { FundingRecord, Launch } from "./types/index.js";
 import {
+  getDaoAddr,
   getDaoTreasuryAddr,
   getEventAuthorityAddr,
   getFundingRecordAddr,
   getLaunchAddr,
-  getLaunchDaoAddr,
   getLaunchSignerAddr,
   getLiquidityPoolAddr,
   getMetadataAddr,
@@ -39,6 +42,7 @@ import {
 } from "./utils/pda.js";
 import { AutocratClient } from "./AutocratClient.js";
 import * as anchor from "@coral-xyz/anchor";
+import * as multisig from "@sqds/multisig";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
@@ -117,6 +121,8 @@ export class LaunchpadClient {
     secondsForLaunch: number,
     baseMint: PublicKey,
     quoteMint: PublicKey,
+    monthlySpendingLimitAmount: BN,
+    monthlySpendingLimitMembers: PublicKey[],
     launchAuthority: PublicKey = this.provider.publicKey,
     isDevnet: boolean = false,
     payer: PublicKey = this.provider.publicKey
@@ -146,6 +152,8 @@ export class LaunchpadClient {
         tokenName,
         tokenSymbol,
         tokenUri,
+        monthlySpendingLimitAmount,
+        monthlySpendingLimitMembers,
       })
       .accounts({
         launch,
@@ -243,16 +251,10 @@ export class LaunchpadClient {
     );
 
     // const daoKp = Keypair.generate();
-    const [dao] = getLaunchDaoAddr(this.launchpad.programId, launch);
-    const [daoTreasury] = getDaoTreasuryAddr(
-      this.autocratClient.getProgramId(),
-      dao
-    );
-    const treasuryQuoteAccount = getAssociatedTokenAddressSync(
-      quoteMint,
-      daoTreasury,
-      true
-    );
+    const [dao] = getDaoAddr({
+      nonce: new BN(0),
+      daoCreator: launchSigner,
+    });
 
     const [poolState] = getLiquidityPoolAddr(this.launchpad.programId, dao);
 
@@ -293,30 +295,45 @@ export class LaunchpadClient {
 
     const [tokenMetadata] = getMetadataAddr(baseMint);
 
-    return this.launchpad.methods
-      .completeLaunch()
-      .accounts({
-        launch,
-        launchSigner,
-        launchQuoteVault,
-        launchBaseVault,
-        dao,
-        daoTreasury,
-        treasuryQuoteAccount,
-        treasuryLpAccount: getAssociatedTokenAddressSync(
-          lpMint,
-          daoTreasury,
-          true
-        ),
-        quoteMint,
-        baseMint,
-        tokenMetadata,
+    const [multisigPda] = multisig.getMultisigPda({ createKey: dao });
+    const [multisigVault] = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    });
+
+    const [spendingLimit] = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    });
+
+    const treasuryQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      multisigVault,
+      true
+    );
+
+    return this.launchpad.methods.completeLaunch().accounts({
+      launch,
+      launchSigner,
+      launchQuoteVault,
+      launchBaseVault,
+      dao,
+      treasuryQuoteAccount,
+      treasuryLpAccount: getAssociatedTokenAddressSync(
         lpMint,
-        lpVault,
-        poolTokenVault,
-        poolUsdcVault,
-        poolState,
-        observationState,
+        multisigVault,
+        true
+      ),
+      quoteMint,
+      baseMint,
+      tokenMetadata,
+      lpMint,
+      lpVault,
+      poolTokenVault,
+      poolUsdcVault,
+      poolState,
+      observationState,
+      staticAccounts: {
         cpSwapProgram: cpSwapProgramId,
         authority: isDevnet ? DEVNET_RAYDIUM_AUTHORITY : RAYDIUM_AUTHORITY,
         ammConfig: isDevnet
@@ -328,15 +345,22 @@ export class LaunchpadClient {
         autocratProgram: this.autocratClient.getProgramId(),
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         autocratEventAuthority,
-      })
-      .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
-          treasuryQuoteAccount,
-          daoTreasury,
-          USDC
-        ),
-      ]);
+        squadsProgram: SQUADS_PROGRAM_ID,
+        squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+        squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
+      },
+      squadsMultisig: multisigPda,
+      squadsMultisigVault: multisigVault,
+      spendingLimit,
+    });
+    // .preInstructions([
+    //   createAssociatedTokenAccountIdempotentInstruction(
+    //     this.provider.publicKey,
+    //     treasuryQuoteAccount,
+    //     daoTreasury,
+    //     USDC
+    //   ),
+    // ]);
   }
 
   refundIx(

@@ -16,6 +16,12 @@ pub struct Launch {
     /// The minimum amount of USDC that must be raised, otherwise
     /// everyone can get their USDC back.
     pub minimum_raise_amount: u64,
+    /// The monthly spending limit the DAO allocates to the team. Must be
+    /// less than 1/6th of the minimum raise amount (so 6 months of burn).
+    pub monthly_spending_limit_amount: u64,
+    /// The wallets that have access to the monthly spending limit.
+    #[max_len(10)]
+    pub monthly_spending_limit_members: Vec<Pubkey>,
     /// The account that can start the launch.
     pub launch_authority: Pubkey,
     /// The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.
@@ -43,5 +49,5 @@ pub struct Launch {
     /// The DAO, if the launch is complete.
     pub dao: Option<Pubkey>,
     /// The DAO treasury that USDC / LP is sent to, if the launch is complete.
-    pub dao_treasury: Option<Pubkey>,
+    pub dao_vault: Option<Pubkey>,
 }

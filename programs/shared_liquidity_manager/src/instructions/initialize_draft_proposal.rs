@@ -5,7 +5,6 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::state::{DraftProposal, DraftProposalStatus, ProposalInstruction, SharedLiquidityPool};
 
-
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeDraftProposalParams {
     pub instruction: ProposalInstruction,

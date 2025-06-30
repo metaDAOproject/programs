@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { BN } from "bn.js";
 
@@ -73,4 +73,25 @@ export const RAYDIUM_CREATE_POOL_FEE_RECEIVE = new PublicKey(
 
 export const DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE = new PublicKey(
   "G11FKBRaAkHAKuLCgLM6K6NUc9rTjPAznRCjZifrTQe2"
+);
+
+export const SQUADS_PROGRAM_CONFIG = new PublicKey(
+  "BSTq9w3kZwNwpBXJEvTZz2G9ZTNyKBvoSeXMvwb4cNZr"
+);
+
+export const SQUADS_PROGRAM_ID = new PublicKey(
+  "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
+);
+
+export const SQUADS_PROGRAM_CONFIG_TREASURY = new PublicKey(
+  "5DH2e3cJmFpyi6mk65EGFediunm4ui6BiKNUNrhWtD1b"
+);
+
+export const PERMISSIONLESS_ACCOUNT = Keypair.fromSecretKey(
+  Uint8Array.from([
+    249, 158, 188, 171, 243, 143, 1, 48, 87, 243, 209, 153, 144, 106, 23, 88,
+    161, 209, 65, 217, 199, 121, 0, 250, 3, 203, 133, 138, 141, 112, 243, 38,
+    198, 205, 120, 222, 160, 224, 151, 190, 84, 254, 127, 178, 224, 195, 130,
+    243, 145, 73, 20, 91, 9, 69, 222, 184, 23, 1, 2, 196, 202, 206, 153, 192,
+  ])
 );

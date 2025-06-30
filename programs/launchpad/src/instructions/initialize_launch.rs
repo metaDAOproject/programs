@@ -15,6 +15,8 @@ use anchor_spl::metadata::{
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeLaunchArgs {
     pub minimum_raise_amount: u64,
+    pub monthly_spending_limit_amount: u64,
+    pub monthly_spending_limit_members: Vec<Pubkey>,
     pub seconds_for_launch: u32,
     pub token_name: String,
     pub token_symbol: String,
@@ -108,6 +110,12 @@ impl InitializeLaunch<'_> {
             LaunchpadError::FreezeAuthoritySet
         );
 
+        require_gte!(
+            args.minimum_raise_amount,
+            args.monthly_spending_limit_amount * 6,
+            LaunchpadError::InvalidMonthlySpendingLimit
+        );
+
         require!(self.base_mint.supply == 0, LaunchpadError::SupplyNonZero);
 
         #[cfg(feature = "production")]
@@ -123,6 +131,8 @@ impl InitializeLaunch<'_> {
     pub fn handle(ctx: Context<Self>, args: InitializeLaunchArgs) -> Result<()> {
         ctx.accounts.launch.set_inner(Launch {
             minimum_raise_amount: args.minimum_raise_amount,
+            monthly_spending_limit_amount: args.monthly_spending_limit_amount,
+            monthly_spending_limit_members: args.monthly_spending_limit_members,
             launch_authority: ctx.accounts.launch_authority.key(),
             launch_signer: ctx.accounts.launch_signer.key(),
             launch_signer_pda_bump: ctx.bumps.launch_signer,
@@ -137,7 +147,7 @@ impl InitializeLaunch<'_> {
             unix_timestamp_started: 0,
             seconds_for_launch: args.seconds_for_launch,
             dao: None,
-            dao_treasury: None,
+            dao_vault: None,
         });
 
         let clock = Clock::get()?;

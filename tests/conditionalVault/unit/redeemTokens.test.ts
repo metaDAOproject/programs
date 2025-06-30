@@ -187,7 +187,7 @@ export default function suite() {
     ).then((acc) => acc.amount);
 
     assert.isTrue(balanceAfter > balanceBefore);
-    assert.isTrue(balanceAfter - balanceBefore == 1000); 
+    assert.isTrue(balanceAfter - balanceBefore == 1000);
 
     // console.log('balanceAfter', balanceAfter);
 

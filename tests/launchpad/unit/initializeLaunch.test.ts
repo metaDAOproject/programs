@@ -69,6 +69,8 @@ export default function suite() {
         secondsForLaunch,
         META,
         MAINNET_USDC,
+        new BN(100_000000), // 100 USDC burn
+        [this.payer.publicKey]
       )
       .rpc();
 
@@ -98,7 +100,6 @@ export default function suite() {
     assert.exists(storedLaunch.state.initialized);
     assert.equal(storedLaunch.unixTimestampStarted.toString(), "0");
     assert.equal(storedLaunch.dao, null);
-    assert.equal(storedLaunch.daoTreasury, null);
   });
 
   it("fails when launch signer is faked", async function () {
@@ -149,6 +150,8 @@ export default function suite() {
           tokenUri: "https://example.com",
           minimumRaiseAmount,
           secondsForLaunch,
+          monthlySpendingLimitAmount: new BN(100_000000),
+          monthlySpendingLimitMembers: [this.payer.publicKey],
         })
         .accounts({
           launch,

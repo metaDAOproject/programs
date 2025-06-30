@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{Mint, TokenAccount};
 
 use raydium_cpmm_cpi::cpi::accounts::Withdraw as RaydiumWithdraw;
 
@@ -163,7 +163,6 @@ pub struct InitializeProposalWithLiquidity<'info> {
     pub autocrat_event_authority: UncheckedAccount<'info>,
 }
 
-
 impl InitializeProposalWithLiquidity<'_> {
     pub fn validate(&self) -> Result<()> {
         // Check stake threshold
@@ -171,10 +170,18 @@ impl InitializeProposalWithLiquidity<'_> {
         let stake_threshold = (total_supply
             * self.shared_liquidity_pool.proposal_stake_rate_threshold_bps as u64)
             / 10_000;
-        require_gte!(self.draft_proposal.staked_token_amount, stake_threshold, SharedLiquidityManagerError::InsufficientStake);
+        require_gte!(
+            self.draft_proposal.staked_token_amount,
+            stake_threshold,
+            SharedLiquidityManagerError::InsufficientStake
+        );
 
         // Check draft proposal status
-        require_eq!(self.draft_proposal.status, DraftProposalStatus::Draft, SharedLiquidityManagerError::ProposalNotInDraftStatus);
+        require_eq!(
+            self.draft_proposal.status,
+            DraftProposalStatus::Draft,
+            SharedLiquidityManagerError::ProposalNotInDraftStatus
+        );
 
         // Check that there's no active proposal
         require!(
@@ -209,15 +216,9 @@ impl InitializeProposalWithLiquidity<'_> {
         );
 
         // Validate AMM account relationships
-        require_keys_eq!(
-            self.amm.pass_lp_mint.key(),
-            self.amm.pass_amm.lp_mint
-        );
+        require_keys_eq!(self.amm.pass_lp_mint.key(), self.amm.pass_amm.lp_mint);
 
-        require_keys_eq!(
-            self.amm.fail_lp_mint.key(),
-            self.amm.fail_amm.lp_mint
-        );
+        require_keys_eq!(self.amm.fail_lp_mint.key(), self.amm.fail_amm.lp_mint);
 
         require_keys_eq!(
             self.amm.pass_amm_vault_ata_base.key(),
@@ -245,8 +246,16 @@ impl InitializeProposalWithLiquidity<'_> {
         );
 
         // Validate that AMMs are empty (no existing liquidity)
-        require_eq!(self.amm.pass_lp_mint.supply, 0, SharedLiquidityManagerError::AmmAlreadyHasLiquidity);
-        require_eq!(self.amm.fail_lp_mint.supply, 0, SharedLiquidityManagerError::AmmAlreadyHasLiquidity);
+        require_eq!(
+            self.amm.pass_lp_mint.supply,
+            0,
+            SharedLiquidityManagerError::AmmAlreadyHasLiquidity
+        );
+        require_eq!(
+            self.amm.fail_lp_mint.supply,
+            0,
+            SharedLiquidityManagerError::AmmAlreadyHasLiquidity
+        );
 
         // Validate that the question is not resolved yet
         require!(
@@ -611,7 +620,10 @@ impl InitializeProposalWithLiquidity<'_> {
                     program: ctx.accounts.autocrat_program.to_account_info(),
                     token_program: ctx.accounts.raydium.token_program.to_account_info(),
                     system_program: ctx.accounts.system_program.to_account_info(),
-                    associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+                    associated_token_program: ctx
+                        .accounts
+                        .associated_token_program
+                        .to_account_info(),
                 },
                 signer,
             ),

@@ -34,18 +34,16 @@ export type ConditionalVault =
 export type InitializeDaoParams =
   IdlTypes<AutocratProgram>["InitializeDaoParams"];
 export type UpdateDaoParams = IdlTypes<AutocratProgram>["UpdateDaoParams"];
-export type ProposalInstruction =
-  IdlTypes<AutocratProgram>["ProposalInstruction"];
 
 export type Dao = IdlAccounts<AutocratProgram>["dao"];
 export type Proposal = IdlAccounts<AutocratProgram>["proposal"];
 export type Amm = IdlAccounts<AmmProgram>["amm"];
 export type Launch = IdlAccounts<LaunchpadProgram>["launch"];
 export type FundingRecord = IdlAccounts<LaunchpadProgram>["fundingRecord"];
-export type SharedLiquidityPool =
-  IdlAccounts<SharedLiquidityManagerProgram>["sharedLiquidityPool"];
-export type SharedLiquidityPoolPosition =
-  IdlAccounts<SharedLiquidityManagerProgram>["liquidityPosition"];
+// export type SharedLiquidityPool =
+//   IdlAccounts<SharedLiquidityManagerProgram>["sharedLiquidityPool"];
+// export type SharedLiquidityPoolPosition =
+//   IdlAccounts<SharedLiquidityManagerProgram>["liquidityPosition"];
 
 export type SwapEvent = IdlEvents<AmmProgram>["SwapEvent"];
 export type AddLiquidityEvent = IdlEvents<AmmProgram>["AddLiquidityEvent"];

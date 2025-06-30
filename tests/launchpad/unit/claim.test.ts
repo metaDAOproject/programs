@@ -1,4 +1,10 @@
-import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -11,6 +17,7 @@ import {
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
+import { createLookupTableForTransaction } from "../../utils.js";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -42,7 +49,11 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
-    quoteVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    quoteVault = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      launchSigner,
+      true
+    );
     funderUsdcAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       this.payer.publicKey
@@ -57,7 +68,9 @@ export default function suite() {
         minRaise,
         60 * 60 * 24 * 2,
         META,
-        MAINNET_USDC
+        MAINNET_USDC,
+        new BN(10_000000),
+        [this.payer.publicKey]
       )
       .rpc();
 
@@ -68,18 +81,36 @@ export default function suite() {
     const fundAmount = new BN(1000_000000); // 1000 USDC
 
     // Fund the launch
-    await launchpadClient.fundIx(launch, fundAmount, undefined, MAINNET_USDC).rpc();
+    await launchpadClient
+      .fundIx(launch, fundAmount, undefined, MAINNET_USDC)
+      .rpc();
   });
 
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
     await this.advanceBySeconds(60 * 60 * 24 * 3);
-    await launchpadClient
+    const completeLaunchTx = await launchpadClient
       .completeLaunchIx(launch, MAINNET_USDC, META)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
       ])
-      .rpc();
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer]);
+
+    await this.banksClient.processTransaction(tx);
 
     const initialTokenBalance = await this.getTokenBalance(
       META,
