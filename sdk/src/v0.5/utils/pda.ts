@@ -134,15 +134,10 @@ export const getDaoTreasuryAddr = (
 
 export const getProposalAddr = (
   programId: PublicKey,
-  proposer: PublicKey,
-  nonce: BN
+  squadsProposal: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [
-      utils.bytes.utf8.encode("proposal"),
-      proposer.toBuffer(),
-      nonce.toArrayLike(Buffer, "le", 8),
-    ],
+    [utils.bytes.utf8.encode("proposal"), squadsProposal.toBuffer()],
     programId
   );
 };

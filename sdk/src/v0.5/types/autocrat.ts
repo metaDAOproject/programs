@@ -493,16 +493,6 @@ export type Autocrat = {
             type: "u64";
           },
           {
-            name: "nonce";
-            docs: [
-              "We need to include a per-proposer nonce to prevent some weird proposal",
-              "front-running edge cases. Using a `u64` means that proposers are unlikely",
-              "to run into collisions, even if they generate nonces randomly - I've run",
-              "the math :D"
-            ];
-            type: "u64";
-          },
-          {
             name: "pdaBump";
             type: "u8";
           },
@@ -602,10 +592,6 @@ export type Autocrat = {
           },
           {
             name: "failLpTokensToLock";
-            type: "u64";
-          },
-          {
-            name: "nonce";
             type: "u64";
           }
         ];
@@ -854,11 +840,6 @@ export type Autocrat = {
         {
           name: "proposer";
           type: "publicKey";
-          index: false;
-        },
-        {
-          name: "nonce";
-          type: "u64";
           index: false;
         },
         {
@@ -1529,16 +1510,6 @@ export const IDL: Autocrat = {
             type: "u64",
           },
           {
-            name: "nonce",
-            docs: [
-              "We need to include a per-proposer nonce to prevent some weird proposal",
-              "front-running edge cases. Using a `u64` means that proposers are unlikely",
-              "to run into collisions, even if they generate nonces randomly - I've run",
-              "the math :D",
-            ],
-            type: "u64",
-          },
-          {
             name: "pdaBump",
             type: "u8",
           },
@@ -1638,10 +1609,6 @@ export const IDL: Autocrat = {
           },
           {
             name: "failLpTokensToLock",
-            type: "u64",
-          },
-          {
-            name: "nonce",
             type: "u64",
           },
         ],
@@ -1890,11 +1857,6 @@ export const IDL: Autocrat = {
         {
           name: "proposer",
           type: "publicKey",
-          index: false,
-        },
-        {
-          name: "nonce",
-          type: "u64",
           index: false,
         },
         {

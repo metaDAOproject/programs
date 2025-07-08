@@ -56,7 +56,6 @@ pub struct InitializeProposalEvent {
     pub pass_lp_mint: Pubkey,
     pub fail_lp_mint: Pubkey,
     pub proposer: Pubkey,
-    pub nonce: u64,
     pub number: u32,
     pub pass_lp_tokens_locked: u64,
     pub fail_lp_tokens_locked: u64,

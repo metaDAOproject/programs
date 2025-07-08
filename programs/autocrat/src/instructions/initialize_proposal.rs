@@ -9,7 +9,6 @@ pub struct InitializeProposalParams {
     pub description_url: String,
     pub pass_lp_tokens_to_lock: u64,
     pub fail_lp_tokens_to_lock: u64,
-    pub nonce: u64,
 }
 
 #[derive(Accounts)]
@@ -20,7 +19,7 @@ pub struct InitializeProposal<'info> {
         init,
         payer = payer,
         space = 8 + Proposal::INIT_SPACE,
-        seeds = [b"proposal", proposer.key().as_ref(), &args.nonce.to_le_bytes()],
+        seeds = [b"proposal", squads_proposal.key().as_ref()],
         bump
     )]
     pub proposal: Box<Account<'info, Proposal>>,
@@ -171,7 +170,6 @@ impl InitializeProposal<'_> {
             description_url,
             pass_lp_tokens_to_lock,
             fail_lp_tokens_to_lock,
-            nonce,
         } = params;
 
         require_gte!(
@@ -249,7 +247,6 @@ impl InitializeProposal<'_> {
             dao: dao.key(),
             pass_lp_tokens_locked: pass_lp_tokens_to_lock,
             fail_lp_tokens_locked: fail_lp_tokens_to_lock,
-            nonce,
             pda_bump: ctx.bumps.proposal,
             question: question.key(),
             duration_in_slots: dao.slots_per_proposal,
@@ -267,7 +264,6 @@ impl InitializeProposal<'_> {
             pass_lp_mint: pass_lp_mint.key(),
             fail_lp_mint: fail_lp_mint.key(),
             proposer: proposer.key(),
-            nonce,
             number: dao.proposal_count,
             pass_lp_tokens_locked: pass_lp_tokens_to_lock,
             fail_lp_tokens_locked: fail_lp_tokens_to_lock,

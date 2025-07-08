@@ -343,13 +343,7 @@ export class AutocratClient {
   ): Promise<PublicKey> {
     const storedDao = await this.getDao(dao);
 
-    const nonce = new BN(Math.random() * 2 ** 50);
-
-    let [proposal] = getProposalAddr(
-      this.autocrat.programId,
-      this.provider.publicKey,
-      nonce
-    );
+    let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
 
     await this.vaultClient.initializeQuestion(
       sha256(`Will ${proposal} pass?/FAIL/PASS`),
@@ -448,7 +442,6 @@ export class AutocratClient {
       storedDao.quoteMint,
       lpTokens,
       lpTokens,
-      nonce,
       question
     ).rpc();
 
@@ -463,11 +456,10 @@ export class AutocratClient {
     quoteMint: PublicKey,
     passLpTokensToLock: BN,
     failLpTokensToLock: BN,
-    nonce: BN,
     question: PublicKey,
     proposer: PublicKey = this.provider.publicKey
   ) {
-    let [proposal] = getProposalAddr(this.autocrat.programId, proposer, nonce);
+    let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
     const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
       proposal,
       baseMint,
@@ -500,7 +492,6 @@ export class AutocratClient {
         descriptionUrl,
         passLpTokensToLock,
         failLpTokensToLock,
-        nonce,
       })
       .accounts({
         question,

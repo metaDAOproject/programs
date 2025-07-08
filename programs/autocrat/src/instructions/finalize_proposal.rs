@@ -94,12 +94,10 @@ impl FinalizeProposal<'_> {
             program: _,
         } = ctx.accounts;
 
-        let proposer_key = proposal.proposer;
-        let nonce = proposal.nonce;
+        let squads_proposal_key = squads_proposal.key();
         let proposal_seeds = &[
             b"proposal",
-            proposer_key.as_ref(),
-            &nonce.to_le_bytes(),
+            squads_proposal_key.as_ref(),
             &[proposal.pda_bump],
         ];
         let proposal_signer = &[&proposal_seeds[..]];
