@@ -177,6 +177,9 @@ impl InitializeDao<'_> {
             twap_max_observation_change_per_update: dao.twap_max_observation_change_per_update,
             min_quote_futarchic_liquidity: dao.min_quote_futarchic_liquidity,
             min_base_futarchic_liquidity: dao.min_base_futarchic_liquidity,
+            initial_spending_limit: dao.initial_spending_limit.clone(),
+            squads_multisig: dao.squads_multisig,
+            squads_multisig_vault: dao.squads_multisig_vault,
         });
 
         Ok(())

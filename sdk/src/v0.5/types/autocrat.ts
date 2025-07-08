@@ -732,6 +732,25 @@ export type Autocrat = {
           name: "minBaseFutarchicLiquidity";
           type: "u64";
           index: false;
+        },
+        {
+          name: "initialSpendingLimit";
+          type: {
+            option: {
+              defined: "InitialSpendingLimit";
+            };
+          };
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          type: "publicKey";
+          index: false;
         }
       ];
     },
@@ -866,6 +885,21 @@ export type Autocrat = {
           name: "durationInSlots";
           type: "u64";
           index: false;
+        },
+        {
+          name: "squadsProposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          type: "publicKey";
+          index: false;
         }
       ];
     },
@@ -909,6 +943,16 @@ export type Autocrat = {
           type: {
             defined: "ProposalState";
           };
+          index: false;
+        },
+        {
+          name: "squadsProposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
           index: false;
         }
       ];
@@ -1750,6 +1794,25 @@ export const IDL: Autocrat = {
           type: "u64",
           index: false,
         },
+        {
+          name: "initialSpendingLimit",
+          type: {
+            option: {
+              defined: "InitialSpendingLimit",
+            },
+          },
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          type: "publicKey",
+          index: false,
+        },
       ],
     },
     {
@@ -1884,6 +1947,21 @@ export const IDL: Autocrat = {
           type: "u64",
           index: false,
         },
+        {
+          name: "squadsProposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          type: "publicKey",
+          index: false,
+        },
       ],
     },
     {
@@ -1926,6 +2004,16 @@ export const IDL: Autocrat = {
           type: {
             defined: "ProposalState",
           },
+          index: false,
+        },
+        {
+          name: "squadsProposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
           index: false,
         },
       ],

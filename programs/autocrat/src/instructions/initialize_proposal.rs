@@ -269,6 +269,9 @@ impl InitializeProposal<'_> {
             fail_lp_tokens_locked: fail_lp_tokens_to_lock,
             pda_bump: ctx.bumps.proposal,
             duration_in_slots: proposal.duration_in_slots,
+            squads_proposal: squads_proposal.key(),
+            squads_multisig: dao.squads_multisig,
+            squads_multisig_vault: dao.squads_multisig_vault,
         });
 
         Ok(())

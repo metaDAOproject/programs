@@ -204,6 +204,8 @@ impl FinalizeProposal<'_> {
             fail_market_twap,
             threshold,
             state: new_proposal_state,
+            squads_proposal: squads_proposal.key(),
+            squads_multisig: dao.squads_multisig,
         });
 
         Ok(())
