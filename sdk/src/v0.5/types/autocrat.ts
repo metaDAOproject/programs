@@ -1025,6 +1025,11 @@ export type Autocrat = {
       code: 6013;
       name: "QuestionMustBeBinary";
       msg: "Question must have exactly 2 outcomes for binary futarchy";
+    },
+    {
+      code: 6014;
+      name: "InvalidSquadsProposalStatus";
+      msg: "Squads proposal must be in Draft status";
     }
   ];
 };
@@ -2056,6 +2061,11 @@ export const IDL: Autocrat = {
       code: 6013,
       name: "QuestionMustBeBinary",
       msg: "Question must have exactly 2 outcomes for binary futarchy",
+    },
+    {
+      code: 6014,
+      name: "InvalidSquadsProposalStatus",
+      msg: "Squads proposal must be in Draft status",
     },
   ],
 };

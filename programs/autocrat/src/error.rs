@@ -32,4 +32,6 @@ pub enum AutocratError {
     ProposalDurationTooShort,
     #[msg("Question must have exactly 2 outcomes for binary futarchy")]
     QuestionMustBeBinary,
+    #[msg("Squads proposal must be in Draft status")]
+    InvalidSquadsProposalStatus,
 }

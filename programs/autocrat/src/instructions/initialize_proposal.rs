@@ -100,6 +100,16 @@ impl InitializeProposal<'_> {
             AutocratError::QuestionMustBeBinary
         );
 
+        require_keys_eq!(self.squads_proposal.multisig, self.dao.squads_multisig);
+
+        match self.squads_proposal.status {
+            squads_multisig_program::ProposalStatus::Active { timestamp: _ } => {}
+            _ => {
+                msg!("squads proposal status: {:?}", self.squads_proposal.status);
+                return Err(AutocratError::InvalidSquadsProposalStatus.into());
+            }
+        }
+
         for amm in [&self.pass_amm, &self.fail_amm] {
             // an attacker is able to crank 5 observations before a proposal starts
             require!(
