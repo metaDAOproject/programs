@@ -68,19 +68,18 @@ pub struct InitializeProposal<'info> {
     pub fail_lp_user_account: Account<'info, TokenAccount>,
     #[account(
         init_if_needed,
-        payer = proposer,
+        payer = payer,
         associated_token::mint = pass_lp_mint,
         associated_token::authority = proposal,
     )]
     pub pass_lp_vault_account: Box<Account<'info, TokenAccount>>,
     #[account(
         init_if_needed,
-        payer = proposer,
+        payer = payer,
         associated_token::mint = fail_lp_mint,
         associated_token::authority = proposal,
     )]
     pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
     pub proposer: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,

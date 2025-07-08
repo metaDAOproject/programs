@@ -160,7 +160,7 @@ export type Autocrat = {
         },
         {
           name: "proposer";
-          isMut: true;
+          isMut: false;
           isSigner: true;
         },
         {
@@ -1221,7 +1221,7 @@ export const IDL: Autocrat = {
         },
         {
           name: "proposer",
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
