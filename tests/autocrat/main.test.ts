@@ -1,5 +1,5 @@
-import autocrat from "./autocrat.js";
 import fullProposal from "./integration/fullProposal.test.js";
+import proposalBatchTx from "./integration/proposalBatchTx.test.js";
 
 import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
@@ -12,4 +12,5 @@ export default function suite() {
 
   // describe("autocrat", autocrat);
   describe("full proposal", fullProposal);
+  describe("proposal with a squads batch tx", proposalBatchTx);
 }

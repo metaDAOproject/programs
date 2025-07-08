@@ -22,6 +22,8 @@ import {
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_ID,
+  PERMISSIONLESS_ACCOUNT,
+  AUTOCRAT_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.5";
 // import {
 //   // AmmClient,
@@ -30,7 +32,7 @@ import {
 //   getVersion,
 //   VersionKey
 // } from "@metadaoproject/futarchy";
-import { PublicKey, Keypair, Connection } from "@solana/web3.js";
+import { PublicKey, Keypair, Connection, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -207,6 +209,47 @@ before(async function () {
       return accountInfo;
     },
   } as Connection;
+
+  console.log("assigning permissionless account to autocrat program");
+
+  let assignIx = SystemProgram.assign({
+    accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
+    programId: SystemProgram.programId,
+  });
+
+  let allocateIx = SystemProgram.allocate({
+    accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
+    space: 8,
+  })
+
+  let transferIx = SystemProgram.transfer({
+    fromPubkey: this.payer.publicKey,
+    toPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
+    lamports: 1000000000,
+  })
+  console.log("assigning permissionless account to autocrat program");
+  let assignTx = new Transaction().add(allocateIx, assignIx, transferIx);
+  assignTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  assignTx.feePayer = this.payer.publicKey;
+  assignTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+  console.log("assigning permissionless account to autocrat program");
+
+  await this.banksClient.processTransaction(assignTx);
+  // console.log("assigning permissionless account to autocrat program");
+
+  // const assignTx2 = new Transaction().add(SystemProgram.assign({
+  //   accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
+  //   programId: SQUADS_PROGRAM_ID,
+  // }));
+  // assignTx2.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  // assignTx2.feePayer = this.payer.publicKey;
+  // assignTx2.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+  // await this.banksClient.processTransaction(assignTx2);
+
+  // console.log(await this.banksClient.getAccount(PERMISSIONLESS_ACCOUNT.publicKey));
+
+  // throw new Error("stop here");
+
 
   this.createTokenAccount = async (mint: PublicKey, owner: PublicKey) => {
     return await createAssociatedTokenAccount(
