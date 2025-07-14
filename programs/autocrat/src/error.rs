@@ -40,4 +40,6 @@ pub enum AutocratError {
     ConstantProductInvariantFailed,
     #[msg("Proposal must be live to swap conditional tokens")]
     ProposalNotLive,
+    #[msg("Invariant violation")]
+    InvariantViolation,
 }

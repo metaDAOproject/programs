@@ -106,6 +106,21 @@ pub mod autocrat {
         InitializeFutarchyAmm::handle(ctx, params)
     }
 
+    /// You should NOT be calling into this directly.
+    pub fn arbitrary_swap<'c: 'info, 'info>(
+        ctx: Context<'_, '_, 'c, 'info, ArbitrarySwap<'info>>,
+        params: ArbitrarySwapParams,
+    ) -> Result<()> {
+        ArbitrarySwap::handle(ctx, params)
+    }
+
+    pub fn spot_swap<'info>(
+        ctx: Context<'_, '_, 'info, 'info, SpotSwap<'info>>,
+        params: SpotSwapParams,
+    ) -> Result<()> {
+        SpotSwap::handle(ctx, params)
+    }
+
     pub fn swap(ctx: Context<Swap>, params: SwapParams) -> Result<()> {
         Swap::handle(ctx, params)
     }

@@ -9,11 +9,12 @@ crate-type = ["cdylib", "lib"]
 name = "autocrat"
 
 [features]
+default = ["custom-heap"]
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
-default = []
+custom-heap = []
 
 [dependencies]
 anchor-lang = "^0.29.0"

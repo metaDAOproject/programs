@@ -45,6 +45,7 @@ impl ConditionalSwap<'_> {
         let pool = match condition {
             Condition::Pass => &mut live_proposal.pass_pool,
             Condition::Fail => &mut live_proposal.fail_pool,
+            _ => unimplemented!(),
         };
 
         pool.feeless_swap(amount_in, side)?;
