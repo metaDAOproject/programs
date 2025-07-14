@@ -22,7 +22,7 @@ use crate::events::*;
 use crate::instructions::*;
 use crate::state::*;
 
-declare_id!("AMMyu265tkBpRW21iGQxKGLaves3gKm2JcMUqfXNSpqD");
+declare_id!("AMMJdEiCCa8mdugg6JPF7gFirmmxisTfDJoSNSUi5zDJ");
 
 #[program]
 pub mod amm {

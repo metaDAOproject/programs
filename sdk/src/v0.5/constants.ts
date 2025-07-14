@@ -3,16 +3,16 @@ import * as anchor from "@coral-xyz/anchor";
 import { BN } from "bn.js";
 
 export const AUTOCRAT_PROGRAM_ID = new PublicKey(
-  "autowMzCbM29YXMgVG3T62Hkgo7RcyrvgQQkd54fDQL"
+  "auToUr3CQza3D4qreT6Std2MTomfzvrEeCC5qh7ivW5"
 );
 export const AMM_PROGRAM_ID = new PublicKey(
-  "AMMyu265tkBpRW21iGQxKGLaves3gKm2JcMUqfXNSpqD"
+  "AMMJdEiCCa8mdugg6JPF7gFirmmxisTfDJoSNSUi5zDJ"
 );
 export const CONDITIONAL_VAULT_PROGRAM_ID = new PublicKey(
   "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 );
 export const LAUNCHPAD_PROGRAM_ID = new PublicKey(
-  "AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE"
+  "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA"
 );
 export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
   "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d"

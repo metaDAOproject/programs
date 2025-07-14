@@ -1,5 +1,5 @@
 export type Autocrat = {
-  version: "0.4.2";
+  version: "0.5.0";
   name: "autocrat";
   instructions: [
     {
@@ -1060,7 +1060,7 @@ export type Autocrat = {
 };
 
 export const IDL: Autocrat = {
-  version: "0.4.2",
+  version: "0.5.0",
   name: "autocrat",
   instructions: [
     {
