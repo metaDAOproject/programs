@@ -276,15 +276,15 @@ export default function suite() {
     // .rpc();
 
     await this.autocratClient.autocrat.methods.spotSwap({
-      side: {buy: {}},
-      amountIn: new BN(1).mul(new BN(10 ** 6)),
+      side: {sell: {}},
+      amountIn: new BN(3).mul(new BN(10 ** 6)),
       minAmountOut: new BN(990_009),
     })
     .accounts({
       arbitrarySwap: {
         futarchyAmm,
         trader: this.payer.publicKey,
-        traderInputAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+        traderInputAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
         baseVault: baseVault,
         quoteVault: quoteVault,
         baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
@@ -315,7 +315,7 @@ export default function suite() {
     ])
     .remainingAccounts([
       {
-        pubkey: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+        pubkey: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
         isWritable: true,
         isSigner: false,
       },
