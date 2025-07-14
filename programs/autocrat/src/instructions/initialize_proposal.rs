@@ -39,15 +39,19 @@ pub struct InitializeProposal<'info> {
         constraint = question.oracle == proposal.key()
     )]
     pub question: Box<Account<'info, Question>>,
+    pub amm_token_accounts: AmmTokenAccounts<'info>,
     #[account(
         constraint = quote_vault.underlying_token_mint == dao.quote_mint,
         has_one = question,
+        mut,
     )]
-    pub quote_vault: Account<'info, ConditionalVaultAccount>,
+    pub quote_vault: Box<Account<'info, ConditionalVaultAccount>>,
     #[account(
         constraint = base_vault.underlying_token_mint == dao.base_mint,
         has_one = question,
+        mut,
     )]
+<<<<<<< HEAD
     pub base_vault: Account<'info, ConditionalVaultAccount>,
 <<<<<<< HEAD
     #[account(
@@ -92,10 +96,31 @@ pub struct InitializeProposal<'info> {
     pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
 =======
 >>>>>>> af0016f (Get basic swap + conditional swap accounting working)
+=======
+    pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,
+    #[account(mut)]
+    pub base_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub quote_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
+    pub base_mint: Box<Account<'info, Mint>>,
+    pub quote_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub fail_base_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub fail_quote_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub pass_base_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub pass_quote_mint: Box<Account<'info, Mint>>,
+    pub token_program: Program<'info, Token>,
+>>>>>>> 0caa311 (Get closed-form swap working)
     pub proposer: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
+    pub conditional_vault_program: Program<'info, ConditionalVaultProgram>,
+    /// CHECK: verified by conditional_vault
+    pub vault_event_authority: UncheckedAccount<'info>,
 }
 
 impl InitializeProposal<'_> {
@@ -151,6 +176,18 @@ impl InitializeProposal<'_> {
             system_program: _,
             event_authority: _,
             program: _,
+            amm_token_accounts,
+            base_vault_underlying_token_account,
+            quote_vault_underlying_token_account,
+            base_mint,
+            quote_mint,
+            fail_base_mint,
+            fail_quote_mint,
+            pass_base_mint,
+            pass_quote_mint,
+            token_program,
+            conditional_vault_program,
+            vault_event_authority,
         } = ctx.accounts;
 
 <<<<<<< HEAD
@@ -285,6 +322,69 @@ impl InitializeProposal<'_> {
             },
 >>>>>>> af0016f (Get basic swap + conditional swap accounting working)
         });
+
+        let signer_seeds = &[b"futarchy_amm".as_ref(), &[ctx.accounts.futarchy_amm.bump]];
+        let signer = &[&signer_seeds[..]];
+
+        let base_cpi_context = CpiContext::new_with_signer(
+            ctx.accounts.conditional_vault_program.to_account_info(),
+            conditional_vault::cpi::accounts::InteractWithVault {
+                question: ctx.accounts.question.to_account_info(),
+                vault: ctx.accounts.base_vault.to_account_info(),
+                vault_underlying_token_account: ctx
+                    .accounts
+                    .base_vault_underlying_token_account
+                    .to_account_info(),
+                authority: ctx.accounts.futarchy_amm.to_account_info(),
+                user_underlying_token_account: ctx
+                    .accounts
+                    .amm_token_accounts
+                    .base_unconditional
+                    .to_account_info(),
+                event_authority: ctx.accounts.vault_event_authority.to_account_info(),
+                program: ctx.accounts.conditional_vault_program.to_account_info(),
+                token_program: ctx.accounts.token_program.to_account_info(),
+            },
+            signer,
+        )
+        .with_remaining_accounts(vec![
+            ctx.accounts.fail_base_mint.to_account_info(),
+            ctx.accounts.pass_base_mint.to_account_info(),
+            ctx.accounts.amm_token_accounts.base_fail.to_account_info(),
+            ctx.accounts.amm_token_accounts.base_pass.to_account_info(),
+        ]);
+
+        conditional_vault::cpi::split_tokens(base_cpi_context, base_to_provide)?;
+
+        let quote_cpi_context = CpiContext::new_with_signer(
+            ctx.accounts.conditional_vault_program.to_account_info(),
+            conditional_vault::cpi::accounts::InteractWithVault {
+                question: ctx.accounts.question.to_account_info(),
+                vault: ctx.accounts.quote_vault.to_account_info(),
+                vault_underlying_token_account: ctx
+                    .accounts
+                    .quote_vault_underlying_token_account
+                    .to_account_info(),
+                authority: ctx.accounts.futarchy_amm.to_account_info(),
+                user_underlying_token_account: ctx
+                    .accounts
+                    .amm_token_accounts
+                    .quote_unconditional
+                    .to_account_info(),
+                event_authority: ctx.accounts.vault_event_authority.to_account_info(),
+                program: ctx.accounts.conditional_vault_program.to_account_info(),
+                token_program: ctx.accounts.token_program.to_account_info(),
+            },
+            signer,
+        )
+        .with_remaining_accounts(vec![
+            ctx.accounts.fail_quote_mint.to_account_info(),
+            ctx.accounts.pass_quote_mint.to_account_info(),
+            ctx.accounts.amm_token_accounts.quote_fail.to_account_info(),
+            ctx.accounts.amm_token_accounts.quote_pass.to_account_info(),
+        ]);
+
+        conditional_vault::cpi::split_tokens(quote_cpi_context, quote_to_provide)?;
 
         // emit_cpi!(InitializeProposalEvent {
         //     common: CommonFields::new(&clock),

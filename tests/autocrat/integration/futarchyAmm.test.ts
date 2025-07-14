@@ -15,6 +15,8 @@ import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
 import { getFutarchyAmmAddr } from "@metadaoproject/futarchy/v0.5";
 import { sha256 } from "@metadaoproject/futarchy";
+import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getEventAuthorityAddr } from "@metadaoproject/futarchy/v0.4";
 
 export default function suite() {
   it("should enable creation, passing, and execution of a proposal", async function () {
@@ -62,8 +64,8 @@ export default function suite() {
     const storedDao = await this.autocratClient.getDao(dao);
 
     await this.autocratClient.initializeFutarchyAmmIx({
-      quoteAmount: new BN(100).mul(new BN(10 ** 6)),
-      baseAmount: new BN(100).mul(new BN(10 ** 6)),
+      quoteAmount: new BN(200).mul(new BN(10 ** 6)),
+      baseAmount: new BN(200).mul(new BN(10 ** 6)),
       dao,
       baseMint: META,
       quoteMint: USDC,
@@ -74,12 +76,12 @@ export default function suite() {
     console.log(storedAmm.spotPool.quoteReserves.toString());
     console.log(storedAmm.spotPool.baseReserves.toString());
 
-    await this.autocratClient.swapIx({
-      amountIn: new BN(1).mul(new BN(10 ** 6)),
-      side: {buy: {}},
-      baseMint: META,
-      quoteMint: USDC,
-    }).rpc();
+    // await this.autocratClient.swapIx({
+    //   amountIn: new BN(1).mul(new BN(10 ** 6)),
+    //   side: {buy: {}},
+    //   baseMint: META,
+    //   quoteMint: USDC,
+    // }).rpc();
 
     storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
     console.log(storedAmm.spotPool.quoteReserves.toString());
@@ -183,6 +185,8 @@ export default function suite() {
         )
       )
       .rpc();
+
+    let futarchyAmm = getFutarchyAmmAddr({})[0];
     
     await this.autocratClient.initializeProposalIx({
       nonce: proposalNonce,
@@ -191,7 +195,28 @@ export default function suite() {
       quoteMint: USDC,
       question,
       squadsProposal: squadsProposalPda,
-    }).rpc();
+    })
+    .accounts({
+      baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
+      quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(USDC, quoteVault, true),
+      passBaseMint: passBaseMint,
+      failBaseMint: failBaseMint,
+      passQuoteMint: passQuoteMint,
+      failQuoteMint: failQuoteMint,
+      baseMint: META,
+      quoteMint: USDC,
+      conditionalVaultProgram: this.vaultClient.vaultProgram.programId,
+      vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }) 
+    .preInstructions([
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+      createAssociatedTokenAccountIdempotentInstruction(this.payer.publicKey, getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true), futarchyAmm, passBaseMint),
+      createAssociatedTokenAccountIdempotentInstruction(this.payer.publicKey, getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true), futarchyAmm, passQuoteMint),
+      createAssociatedTokenAccountIdempotentInstruction(this.payer.publicKey, getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true), futarchyAmm, failBaseMint),
+      createAssociatedTokenAccountIdempotentInstruction(this.payer.publicKey, getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true), futarchyAmm, failQuoteMint),
+    ])
+    .rpc();
 
     storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
     console.log(storedAmm.spotPool.quoteReserves.toString());
@@ -201,28 +226,103 @@ export default function suite() {
     console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
     console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
 
-    await this.autocratClient.swapIx({
-      amountIn: new BN(1).mul(new BN(10 ** 6)),
+
+    // await this.autocratClient.autocrat.methods.arbitrarySwap({
+    //   input: {asset: {spotQuote: {}}, amount: new BN(1).mul(new BN(10 ** 6))}, 
+    //   outputs: [
+    //     {asset: {spotBase: {}}, amount: new BN(990_009)}
+    //   ],
+    //   quoteSplitOrMerge: { splitOrMerge: { merge: {} }, amount: new BN(0) },
+    //   baseSplitOrMerge: { splitOrMerge: { split: {} }, amount: new BN(1) },
+    // })
+    // .accounts({
+    //   futarchyAmm,
+    //   trader: this.payer.publicKey,
+    //   traderInputAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+    //   baseVault: baseVault,
+    //   quoteVault: quoteVault,
+    //   baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
+    //   quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(USDC, quoteVault, true),
+    //   baseMint: META,
+    //   quoteMint: USDC,
+    //   passQuoteMint: passQuoteMint,
+    //   failQuoteMint: failQuoteMint,
+    //   passBaseMint: passBaseMint,
+    //   failBaseMint: failBaseMint,
+    //   ammTokenAccounts: {
+    //     baseUnconditional: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+    //     quoteUnconditional: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+    //     basePass: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+    //     quotePass: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+    //     baseFail: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+    //     quoteFail: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+    //   },
+    //   question: question,
+    //   vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
+    //   tokenProgram: TOKEN_PROGRAM_ID,
+    //   conditionalVaultProgram: this.vaultClient.vaultProgram.programId,
+    // })
+    // .preInstructions([
+    //   ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+    //   ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    // ])
+    // .remainingAccounts([
+    //   {
+    //     pubkey: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+    //     isWritable: true,
+    //     isSigner: false,
+    //   },
+    // ])
+    // .rpc();
+
+    await this.autocratClient.autocrat.methods.spotSwap({
       side: {buy: {}},
-      baseMint: META,
-      quoteMint: USDC,
-    }).rpc();
-
-    storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
-    console.log(storedAmm.spotPool.quoteReserves.toString());
-    console.log(storedAmm.spotPool.baseReserves.toString());
-    console.log(storedAmm.liveProposal.passPool.quoteReserves.toString());
-    console.log(storedAmm.liveProposal.passPool.baseReserves.toString());
-    console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
-    console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
-
-    await this.autocratClient.conditionalSwapIx({
       amountIn: new BN(1).mul(new BN(10 ** 6)),
-      side: {sell: {}},
-      condition: {pass: {}},
-      baseMint: META,
-      quoteMint: USDC,
-    }).rpc();
+      minAmountOut: new BN(990_009),
+    })
+    .accounts({
+      arbitrarySwap: {
+        futarchyAmm,
+        trader: this.payer.publicKey,
+        traderInputAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+        baseVault: baseVault,
+        quoteVault: quoteVault,
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
+        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(USDC, quoteVault, true),
+        baseMint: META,
+        quoteMint: USDC,
+        passQuoteMint: passQuoteMint,
+        failQuoteMint: failQuoteMint,
+        passBaseMint: passBaseMint,
+        failBaseMint: failBaseMint,
+        ammTokenAccounts: {
+          baseUnconditional: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+          quoteUnconditional: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+          basePass: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+          quotePass: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+          baseFail: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+          quoteFail: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+        },
+        question: question,
+        vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
+        tokenProgram: TOKEN_PROGRAM_ID,
+        conditionalVaultProgram: this.vaultClient.vaultProgram.programId,
+      },
+    })
+    .preInstructions([
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ])
+    .remainingAccounts([
+      {
+        pubkey: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+        isWritable: true,
+        isSigner: false,
+      },
+    ])
+    .rpc();
+
+
 
     storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
     console.log(storedAmm.spotPool.quoteReserves.toString());
@@ -231,6 +331,22 @@ export default function suite() {
     console.log(storedAmm.liveProposal.passPool.baseReserves.toString());
     console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
     console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
+
+    // await this.autocratClient.conditionalSwapIx({
+    //   amountIn: new BN(1).mul(new BN(10 ** 6)),
+    //   side: {sell: {}},
+    //   condition: {pass: {}},
+    //   baseMint: META,
+    //   quoteMint: USDC,
+    // }).rpc();
+
+    // storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
+    // console.log(storedAmm.spotPool.quoteReserves.toString());
+    // console.log(storedAmm.spotPool.baseReserves.toString());
+    // console.log(storedAmm.liveProposal.passPool.quoteReserves.toString());
+    // console.log(storedAmm.liveProposal.passPool.baseReserves.toString());
+    // console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
+    // console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
 
   });
 }

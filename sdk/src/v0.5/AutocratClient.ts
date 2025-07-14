@@ -734,6 +734,7 @@ export class AutocratClient {
     proposer?: PublicKey;
   }) {
     let [proposal] = getProposalAddr(this.autocrat.programId, proposer, nonce);
+<<<<<<< HEAD
     const { baseVault, quoteVault } = this.getProposalPdas(
 >>>>>>> af0016f (Get basic swap + conditional swap accounting working)
       proposal,
@@ -741,6 +742,16 @@ export class AutocratClient {
       quoteMint,
       dao
     );
+=======
+    const {
+      baseVault,
+      quoteVault,
+      failBaseMint,
+      failQuoteMint,
+      passBaseMint,
+      passQuoteMint,
+    } = this.getProposalPdas(proposal, baseMint, quoteMint, dao);
+>>>>>>> 0caa311 (Get closed-form swap working)
 
     const [futarchyAmm] = getFutarchyAmmAddr({});
 
@@ -763,6 +774,38 @@ export class AutocratClient {
         quoteVault,
         futarchyAmm,
         proposer,
+        ammTokenAccounts: {
+          baseUnconditional: getAssociatedTokenAddressSync(
+            baseMint,
+            futarchyAmm,
+            true
+          ),
+          quoteUnconditional: getAssociatedTokenAddressSync(
+            quoteMint,
+            futarchyAmm,
+            true
+          ),
+          basePass: getAssociatedTokenAddressSync(
+            passBaseMint,
+            futarchyAmm,
+            true
+          ),
+          quotePass: getAssociatedTokenAddressSync(
+            passQuoteMint,
+            futarchyAmm,
+            true
+          ),
+          baseFail: getAssociatedTokenAddressSync(
+            failBaseMint,
+            futarchyAmm,
+            true
+          ),
+          quoteFail: getAssociatedTokenAddressSync(
+            failQuoteMint,
+            futarchyAmm,
+            true
+          ),
+        },
       });
   }
 

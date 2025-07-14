@@ -114,12 +114,92 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "ammTokenAccounts";
+          accounts: [
+            {
+              name: "baseUnconditional";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quoteUnconditional";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "basePass";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quotePass";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseFail";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quoteFail";
+              isMut: true;
+              isSigner: false;
+            }
+          ];
+        },
+        {
           name: "quoteVault";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
           name: "baseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "failBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -135,6 +215,16 @@ export type Autocrat = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "conditionalVaultProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "vaultEventAuthority";
           isMut: false;
           isSigner: false;
         },
@@ -275,6 +365,308 @@ export type Autocrat = {
           name: "params";
           type: {
             defined: "InitializeFutarchyAmmParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "arbitrarySwap";
+      docs: ["You should NOT be calling into this directly."];
+      accounts: [
+        {
+          name: "futarchyAmm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "trader";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "traderInputAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammTokenAccounts";
+          accounts: [
+            {
+              name: "baseUnconditional";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quoteUnconditional";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "basePass";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quotePass";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseFail";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quoteFail";
+              isMut: true;
+              isSigner: false;
+            }
+          ];
+        },
+        {
+          name: "question";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "conditionalVaultProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "vaultEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "passQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "ArbitrarySwapParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "spotSwap";
+      accounts: [
+        {
+          name: "arbitrarySwap";
+          accounts: [
+            {
+              name: "futarchyAmm";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "trader";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "traderInputAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "ammTokenAccounts";
+              accounts: [
+                {
+                  name: "baseUnconditional";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "quoteUnconditional";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "basePass";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "quotePass";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "baseFail";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "quoteFail";
+                  isMut: true;
+                  isSigner: false;
+                }
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quoteVaultUnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseVaultUnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "conditionalVaultProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "vaultEventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "passQuoteMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failQuoteMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passBaseMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failBaseMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "eventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "program";
+              isMut: false;
+              isSigner: false;
+            }
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "SpotSwapParams";
           };
         }
       ];
@@ -608,6 +1000,98 @@ export type Autocrat = {
       };
     },
     {
+      name: "ArbitrarySwapParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "input";
+            type: {
+              defined: "AssetAndAmount";
+            };
+          },
+          {
+            name: "outputs";
+            type: {
+              vec: {
+                defined: "AssetAndAmount";
+              };
+            };
+          },
+          {
+            name: "quoteSplitOrMerge";
+            type: {
+              defined: "SplitOrMergeAndAmount";
+            };
+          },
+          {
+            name: "baseSplitOrMerge";
+            type: {
+              defined: "SplitOrMergeAndAmount";
+            };
+          }
+        ];
+      };
+    },
+    {
+      name: "SpotSwapParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "side";
+            type: {
+              defined: "Side";
+            };
+          },
+          {
+            name: "amountIn";
+            type: "u64";
+          },
+          {
+            name: "minAmountOut";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "SplitOrMergeAndAmount";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "splitOrMerge";
+            type: {
+              defined: "SplitOrMerge";
+            };
+          },
+          {
+            name: "amount";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "AssetAndAmount";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "asset";
+            type: {
+              defined: "Asset";
+            };
+          },
+          {
+            name: "amount";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
       name: "ConditionalSwapParams";
       type: {
         kind: "struct";
@@ -844,15 +1328,55 @@ export type Autocrat = {
       };
     },
     {
-      name: "Side";
+      name: "SplitOrMerge";
       type: {
         kind: "enum";
         variants: [
           {
-            name: "Buy";
+            name: "Split";
           },
           {
-            name: "Sell";
+            name: "Merge";
+          }
+        ];
+      };
+    },
+    {
+      name: "Asset";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "SpotQuote";
+          },
+          {
+            name: "SpotBase";
+          },
+          {
+            name: "PassQuote";
+          },
+          {
+            name: "PassBase";
+          },
+          {
+            name: "FailQuote";
+          },
+          {
+            name: "FailBase";
+          }
+        ];
+      };
+    },
+    {
+      name: "AssetType";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Quote";
+          },
+          {
+            name: "Base";
           }
         ];
       };
@@ -863,10 +1387,27 @@ export type Autocrat = {
         kind: "enum";
         variants: [
           {
+            name: "Unconditional";
+          },
+          {
             name: "Pass";
           },
           {
             name: "Fail";
+          }
+        ];
+      };
+    },
+    {
+      name: "Side";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Buy";
+          },
+          {
+            name: "Sell";
           }
         ];
       };
@@ -1289,7 +1830,15 @@ export type Autocrat = {
       code: 6017;
       name: "ProposalNotLive";
       msg: "Proposal must be live to swap conditional tokens";
+<<<<<<< HEAD
 >>>>>>> af0016f (Get basic swap + conditional swap accounting working)
+=======
+    },
+    {
+      code: 6018;
+      name: "InvariantViolation";
+      msg: "Invariant violation";
+>>>>>>> 0caa311 (Get closed-form swap working)
     }
   ];
 };
@@ -1410,12 +1959,92 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "ammTokenAccounts",
+          accounts: [
+            {
+              name: "baseUnconditional",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quoteUnconditional",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "basePass",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quotePass",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseFail",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quoteFail",
+              isMut: true,
+              isSigner: false,
+            },
+          ],
+        },
+        {
           name: "quoteVault",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
           name: "baseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "failBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failQuoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passQuoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1431,6 +2060,16 @@ export const IDL: Autocrat = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "conditionalVaultProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "vaultEventAuthority",
           isMut: false,
           isSigner: false,
         },
@@ -1571,6 +2210,308 @@ export const IDL: Autocrat = {
           name: "params",
           type: {
             defined: "InitializeFutarchyAmmParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "arbitrarySwap",
+      docs: ["You should NOT be calling into this directly."],
+      accounts: [
+        {
+          name: "futarchyAmm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "trader",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "traderInputAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammTokenAccounts",
+          accounts: [
+            {
+              name: "baseUnconditional",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quoteUnconditional",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "basePass",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quotePass",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseFail",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quoteFail",
+              isMut: true,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "question",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "conditionalVaultProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "vaultEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "passQuoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failQuoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "ArbitrarySwapParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "spotSwap",
+      accounts: [
+        {
+          name: "arbitrarySwap",
+          accounts: [
+            {
+              name: "futarchyAmm",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "trader",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "traderInputAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "ammTokenAccounts",
+              accounts: [
+                {
+                  name: "baseUnconditional",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "quoteUnconditional",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "basePass",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "quotePass",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "baseFail",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "quoteFail",
+                  isMut: true,
+                  isSigner: false,
+                },
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quoteVaultUnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseVaultUnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "conditionalVaultProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "vaultEventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "passQuoteMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failQuoteMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passBaseMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failBaseMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "eventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "program",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "SpotSwapParams",
           },
         },
       ],
@@ -1904,6 +2845,98 @@ export const IDL: Autocrat = {
       },
     },
     {
+      name: "ArbitrarySwapParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "input",
+            type: {
+              defined: "AssetAndAmount",
+            },
+          },
+          {
+            name: "outputs",
+            type: {
+              vec: {
+                defined: "AssetAndAmount",
+              },
+            },
+          },
+          {
+            name: "quoteSplitOrMerge",
+            type: {
+              defined: "SplitOrMergeAndAmount",
+            },
+          },
+          {
+            name: "baseSplitOrMerge",
+            type: {
+              defined: "SplitOrMergeAndAmount",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "SpotSwapParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "side",
+            type: {
+              defined: "Side",
+            },
+          },
+          {
+            name: "amountIn",
+            type: "u64",
+          },
+          {
+            name: "minAmountOut",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "SplitOrMergeAndAmount",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "splitOrMerge",
+            type: {
+              defined: "SplitOrMerge",
+            },
+          },
+          {
+            name: "amount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "AssetAndAmount",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "asset",
+            type: {
+              defined: "Asset",
+            },
+          },
+          {
+            name: "amount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "ConditionalSwapParams",
       type: {
         kind: "struct",
@@ -2140,15 +3173,55 @@ export const IDL: Autocrat = {
       },
     },
     {
-      name: "Side",
+      name: "SplitOrMerge",
       type: {
         kind: "enum",
         variants: [
           {
-            name: "Buy",
+            name: "Split",
           },
           {
-            name: "Sell",
+            name: "Merge",
+          },
+        ],
+      },
+    },
+    {
+      name: "Asset",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "SpotQuote",
+          },
+          {
+            name: "SpotBase",
+          },
+          {
+            name: "PassQuote",
+          },
+          {
+            name: "PassBase",
+          },
+          {
+            name: "FailQuote",
+          },
+          {
+            name: "FailBase",
+          },
+        ],
+      },
+    },
+    {
+      name: "AssetType",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Quote",
+          },
+          {
+            name: "Base",
           },
         ],
       },
@@ -2159,10 +3232,27 @@ export const IDL: Autocrat = {
         kind: "enum",
         variants: [
           {
+            name: "Unconditional",
+          },
+          {
             name: "Pass",
           },
           {
             name: "Fail",
+          },
+        ],
+      },
+    },
+    {
+      name: "Side",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Buy",
+          },
+          {
+            name: "Sell",
           },
         ],
       },
@@ -2583,6 +3673,11 @@ export const IDL: Autocrat = {
       code: 6017,
       name: "ProposalNotLive",
       msg: "Proposal must be live to swap conditional tokens",
+    },
+    {
+      code: 6018,
+      name: "InvariantViolation",
+      msg: "Invariant violation",
     },
   ],
 };

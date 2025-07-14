@@ -47,5 +47,10 @@ pub enum AutocratError {
 =======
     #[msg("Proposal must be live to swap conditional tokens")]
     ProposalNotLive,
+<<<<<<< HEAD
 >>>>>>> af0016f (Get basic swap + conditional swap accounting working)
+=======
+    #[msg("Invariant violation")]
+    InvariantViolation,
+>>>>>>> 0caa311 (Get closed-form swap working)
 }
