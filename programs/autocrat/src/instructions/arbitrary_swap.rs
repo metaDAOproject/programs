@@ -117,6 +117,13 @@ pub struct SpotSwap<'info> {
     pub arbitrary_swap: ArbitrarySwap<'info>,
 }
 
+#[derive(Accounts)]
+#[event_cpi]
+pub struct PredictionSwap<'info> {
+    pub arbitrary_swap: ArbitrarySwap<'info>,
+}
+
+
 pub fn min_b(a: f64, c: f64, d: f64, k1: f64, k2: f64) -> Option<f64> {
     if a + c <= 0.0 || k1 <= 0.0 || k2 <= 0.0 {
         return None;           // the neat closed form no longer applies
@@ -227,6 +234,93 @@ impl<'info, 'c: 'info> SpotSwap<'info> {
     }
 }
 
+impl<'info, 'c: 'info> PredictionSwap<'info> {
+    pub fn handle(ctx: Context<'_, '_, 'info, 'info, Self>, params: SpotSwapParams) -> Result<()> {
+        let SpotSwapParams { side, amount_in, min_amount_out } = params;
+
+        let remaining_accs = &mut ctx.remaining_accounts.iter();
+
+        let trader_output_account = next_account_info(remaining_accs)?;
+
+        let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+            ctx.accounts.arbitrary_swap.futarchy_amm.spot_pool.quote_reserves as f64,
+            ctx.accounts.arbitrary_swap.futarchy_amm.spot_pool.base_reserves as f64,
+            ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().pass_pool.quote_reserves as f64,
+            ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().pass_pool.base_reserves as f64,
+            ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().fail_pool.quote_reserves as f64,
+            ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().fail_pool.base_reserves as f64,
+        );
+
+        let (a, b, c, d, e, f) = match side {
+            Side::Buy => (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base),
+            Side::Sell => (unconditional_base, unconditional_quote, fail_base, fail_quote, pass_base, pass_quote),
+        };
+
+        msg!("a: {}, b: {}, c: {}, d: {}, e: {}, f: {}", a, b, c, d, e, f);
+
+        let b1 = min_b(a + amount_in as f64, c, d, a * b, c * d).unwrap();
+        let b2 = min_b(a + amount_in as f64, e, f, a * b, e * f).unwrap();
+
+
+        msg!("b1: {}", b1);
+        msg!("b2: {}", b2);
+
+        let (new_b, x, y) = if b1 > b2 { 
+            let (x, y) = witness(a + amount_in as f64, b1, c, d, a * b, c * d, 1e-6).unwrap();
+            (b1, x, y)
+        } else { 
+            let (x, y) = witness(a + amount_in as f64, b2, e, f, a * b, e * f, 1e-6).unwrap();
+            (b2, x, y)
+        };
+
+        msg!("b: {}, x: {}, y: {}", new_b, x, y);
+
+
+        let (input_asset, output_asset, quote_split, base_split) = if side == Side::Buy {
+            (Asset::SpotQuote, Asset::SpotBase, x, y)
+        } else {
+            (Asset::SpotBase, Asset::SpotQuote, y, x)
+        };
+
+
+        // Create the parameters for ArbitrarySwap
+        let arbitrary_params = ArbitrarySwapParams {
+            input: AssetAndAmount { 
+                asset: input_asset, 
+                amount: amount_in 
+            },
+            outputs: vec![
+                AssetAndAmount { 
+                    asset: output_asset,
+                    amount: (b - new_b) as u64 - 1,
+                }
+            ],
+            quote_split_or_merge: SplitOrMergeAndAmount { 
+                split_or_merge: if quote_split > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+                amount: quote_split.abs() as u64
+            },
+            base_split_or_merge: SplitOrMergeAndAmount { 
+                split_or_merge: if base_split > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+                amount: base_split.abs() as u64
+            },
+        };
+
+        ArbitrarySwap::handle(
+            Context::<'_, '_, 'info, 'info, ArbitrarySwap>::new(
+                ctx.program_id,
+                &mut ctx.accounts.arbitrary_swap,
+                ctx.remaining_accounts,
+                ArbitrarySwapBumps {
+                    amm_token_accounts: AmmTokenAccountsBumps {},
+                    event_authority: ctx.bumps.event_authority,
+                },
+            ),
+            arbitrary_params,
+        )?;
+
+        Ok(())
+    }
+}
 
 
 impl<'info, 'c: 'info> ArbitrarySwap<'info> {
