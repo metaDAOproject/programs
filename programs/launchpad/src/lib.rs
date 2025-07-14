@@ -15,11 +15,9 @@ use solana_security_txt::security_txt;
 security_txt! {
     name: "launchpad",
     project_url: "https://metadao.fi",
-    contacts: "email:metaproph3t@protonmail.com",
-    policy: "The market will decide whether we pay a bug bounty.",
+    contacts: "telegram:metaproph3t,telegram:kollan_house",
     source_code: "https://github.com/metaDAOproject/futarchy",
-    source_release: "delayed-twap-v0.4.1",
-    auditors: "Accretion",
+    source_release: "v0.5.0",
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
 

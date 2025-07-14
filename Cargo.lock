@@ -73,7 +73,7 @@ dependencies = [
 
 [[package]]
 name = "amm"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -402,7 +402,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "autocrat"
-version = "0.4.2"
+version = "0.5.0"
 dependencies = [
  "amm",
  "anchor-lang",
@@ -1153,7 +1153,7 @@ dependencies = [
 
 [[package]]
 name = "launchpad"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "ahash 0.8.6",
  "anchor-lang",
