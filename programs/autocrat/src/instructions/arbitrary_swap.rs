@@ -141,13 +141,13 @@ pub fn witness(
 
 impl<'info, 'c: 'info> SpotSwap<'info> {
     pub fn handle(ctx: Context<'_, '_, 'info, 'info, Self>, params: SpotSwapParams) -> Result<()> {
-        let SpotSwapParams { side: _side, amount_in, min_amount_out } = params;
+        let SpotSwapParams { side, amount_in, min_amount_out } = params;
 
         let remaining_accs = &mut ctx.remaining_accounts.iter();
 
         let trader_output_account = next_account_info(remaining_accs)?;
 
-        let (a, b, c, d, e, f) = (
+        let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
             ctx.accounts.arbitrary_swap.futarchy_amm.spot_pool.quote_reserves as f64,
             ctx.accounts.arbitrary_swap.futarchy_amm.spot_pool.base_reserves as f64,
             ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().pass_pool.quote_reserves as f64,
@@ -155,6 +155,11 @@ impl<'info, 'c: 'info> SpotSwap<'info> {
             ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().fail_pool.quote_reserves as f64,
             ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().fail_pool.base_reserves as f64,
         );
+
+        let (a, b, c, d, e, f) = match side {
+            Side::Buy => (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base),
+            Side::Sell => (unconditional_base, unconditional_quote, fail_base, fail_quote, pass_base, pass_quote),
+        };
 
         msg!("a: {}, b: {}, c: {}, d: {}, e: {}, f: {}", a, b, c, d, e, f);
 
@@ -176,28 +181,32 @@ impl<'info, 'c: 'info> SpotSwap<'info> {
         msg!("b: {}, x: {}, y: {}", new_b, x, y);
 
 
-
+        let (input_asset, output_asset, quote_split, base_split) = if side == Side::Buy {
+            (Asset::SpotQuote, Asset::SpotBase, x, y)
+        } else {
+            (Asset::SpotBase, Asset::SpotQuote, y, x)
+        };
 
 
         // Create the parameters for ArbitrarySwap
         let arbitrary_params = ArbitrarySwapParams {
             input: AssetAndAmount { 
-                asset: Asset::SpotQuote, 
+                asset: input_asset, 
                 amount: amount_in 
             },
             outputs: vec![
                 AssetAndAmount { 
-                    asset: Asset::SpotBase,
-                    amount: (b - new_b) as u64,
+                    asset: output_asset,
+                    amount: (b - new_b) as u64 - 1,
                 }
             ],
             quote_split_or_merge: SplitOrMergeAndAmount { 
-                split_or_merge: if x > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: x.abs() as u64
+                split_or_merge: if quote_split > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+                amount: quote_split.abs() as u64
             },
             base_split_or_merge: SplitOrMergeAndAmount { 
-                split_or_merge: if y > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: y.abs() as u64
+                split_or_merge: if base_split > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+                amount: base_split.abs() as u64
             },
         };
 
