@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::ProposalState;
+use crate::{InitialSpendingLimit, ProposalState};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {
@@ -29,6 +29,9 @@ pub struct InitializeDaoEvent {
     pub twap_max_observation_change_per_update: u128,
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
+    pub initial_spending_limit: Option<InitialSpendingLimit>,
+    pub squads_multisig: Pubkey,
+    pub squads_multisig_vault: Pubkey,
 }
 
 #[event]
@@ -56,12 +59,14 @@ pub struct InitializeProposalEvent {
     pub pass_lp_mint: Pubkey,
     pub fail_lp_mint: Pubkey,
     pub proposer: Pubkey,
-    pub nonce: u64,
     pub number: u32,
     pub pass_lp_tokens_locked: u64,
     pub fail_lp_tokens_locked: u64,
     pub pda_bump: u8,
     pub duration_in_slots: u64,
+    pub squads_proposal: Pubkey,
+    pub squads_multisig: Pubkey,
+    pub squads_multisig_vault: Pubkey,
 }
 
 #[event]
@@ -73,6 +78,8 @@ pub struct FinalizeProposalEvent {
     pub fail_market_twap: u128,
     pub threshold: u128,
     pub state: ProposalState,
+    pub squads_proposal: Pubkey,
+    pub squads_multisig: Pubkey,
 }
 
 #[event]

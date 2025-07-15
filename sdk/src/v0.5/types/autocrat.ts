@@ -160,7 +160,7 @@ export type Autocrat = {
         },
         {
           name: "proposer";
-          isMut: true;
+          isMut: false;
           isSigner: true;
         },
         {
@@ -493,16 +493,6 @@ export type Autocrat = {
             type: "u64";
           },
           {
-            name: "nonce";
-            docs: [
-              "We need to include a per-proposer nonce to prevent some weird proposal",
-              "front-running edge cases. Using a `u64` means that proposers are unlikely",
-              "to run into collisions, even if they generate nonces randomly - I've run",
-              "the math :D"
-            ];
-            type: "u64";
-          },
-          {
             name: "pdaBump";
             type: "u8";
           },
@@ -602,10 +592,6 @@ export type Autocrat = {
           },
           {
             name: "failLpTokensToLock";
-            type: "u64";
-          },
-          {
-            name: "nonce";
             type: "u64";
           }
         ];
@@ -746,6 +732,25 @@ export type Autocrat = {
           name: "minBaseFutarchicLiquidity";
           type: "u64";
           index: false;
+        },
+        {
+          name: "initialSpendingLimit";
+          type: {
+            option: {
+              defined: "InitialSpendingLimit";
+            };
+          };
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          type: "publicKey";
+          index: false;
         }
       ];
     },
@@ -857,11 +862,6 @@ export type Autocrat = {
           index: false;
         },
         {
-          name: "nonce";
-          type: "u64";
-          index: false;
-        },
-        {
           name: "number";
           type: "u32";
           index: false;
@@ -884,6 +884,21 @@ export type Autocrat = {
         {
           name: "durationInSlots";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "squadsProposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          type: "publicKey";
           index: false;
         }
       ];
@@ -928,6 +943,16 @@ export type Autocrat = {
           type: {
             defined: "ProposalState";
           };
+          index: false;
+        },
+        {
+          name: "squadsProposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
           index: false;
         }
       ];
@@ -1025,6 +1050,11 @@ export type Autocrat = {
       code: 6013;
       name: "QuestionMustBeBinary";
       msg: "Question must have exactly 2 outcomes for binary futarchy";
+    },
+    {
+      code: 6014;
+      name: "InvalidSquadsProposalStatus";
+      msg: "Squads proposal must be in Draft status";
     }
   ];
 };
@@ -1191,7 +1221,7 @@ export const IDL: Autocrat = {
         },
         {
           name: "proposer",
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -1524,16 +1554,6 @@ export const IDL: Autocrat = {
             type: "u64",
           },
           {
-            name: "nonce",
-            docs: [
-              "We need to include a per-proposer nonce to prevent some weird proposal",
-              "front-running edge cases. Using a `u64` means that proposers are unlikely",
-              "to run into collisions, even if they generate nonces randomly - I've run",
-              "the math :D",
-            ],
-            type: "u64",
-          },
-          {
             name: "pdaBump",
             type: "u8",
           },
@@ -1633,10 +1653,6 @@ export const IDL: Autocrat = {
           },
           {
             name: "failLpTokensToLock",
-            type: "u64",
-          },
-          {
-            name: "nonce",
             type: "u64",
           },
         ],
@@ -1778,6 +1794,25 @@ export const IDL: Autocrat = {
           type: "u64",
           index: false,
         },
+        {
+          name: "initialSpendingLimit",
+          type: {
+            option: {
+              defined: "InitialSpendingLimit",
+            },
+          },
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          type: "publicKey",
+          index: false,
+        },
       ],
     },
     {
@@ -1888,11 +1923,6 @@ export const IDL: Autocrat = {
           index: false,
         },
         {
-          name: "nonce",
-          type: "u64",
-          index: false,
-        },
-        {
           name: "number",
           type: "u32",
           index: false,
@@ -1915,6 +1945,21 @@ export const IDL: Autocrat = {
         {
           name: "durationInSlots",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "squadsProposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          type: "publicKey",
           index: false,
         },
       ],
@@ -1959,6 +2004,16 @@ export const IDL: Autocrat = {
           type: {
             defined: "ProposalState",
           },
+          index: false,
+        },
+        {
+          name: "squadsProposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
           index: false,
         },
       ],
@@ -2056,6 +2111,11 @@ export const IDL: Autocrat = {
       code: 6013,
       name: "QuestionMustBeBinary",
       msg: "Question must have exactly 2 outcomes for binary futarchy",
+    },
+    {
+      code: 6014,
+      name: "InvalidSquadsProposalStatus",
+      msg: "Squads proposal must be in Draft status",
     },
   ],
 };

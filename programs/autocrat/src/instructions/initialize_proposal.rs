@@ -9,7 +9,6 @@ pub struct InitializeProposalParams {
     pub description_url: String,
     pub pass_lp_tokens_to_lock: u64,
     pub fail_lp_tokens_to_lock: u64,
-    pub nonce: u64,
 }
 
 #[derive(Accounts)]
@@ -20,7 +19,7 @@ pub struct InitializeProposal<'info> {
         init,
         payer = payer,
         space = 8 + Proposal::INIT_SPACE,
-        seeds = [b"proposal", proposer.key().as_ref(), &args.nonce.to_le_bytes()],
+        seeds = [b"proposal", squads_proposal.key().as_ref()],
         bump
     )]
     pub proposal: Box<Account<'info, Proposal>>,
@@ -69,19 +68,18 @@ pub struct InitializeProposal<'info> {
     pub fail_lp_user_account: Account<'info, TokenAccount>,
     #[account(
         init_if_needed,
-        payer = proposer,
+        payer = payer,
         associated_token::mint = pass_lp_mint,
         associated_token::authority = proposal,
     )]
     pub pass_lp_vault_account: Box<Account<'info, TokenAccount>>,
     #[account(
         init_if_needed,
-        payer = proposer,
+        payer = payer,
         associated_token::mint = fail_lp_mint,
         associated_token::authority = proposal,
     )]
     pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
     pub proposer: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -99,6 +97,16 @@ impl InitializeProposal<'_> {
             2,
             AutocratError::QuestionMustBeBinary
         );
+
+        require_keys_eq!(self.squads_proposal.multisig, self.dao.squads_multisig);
+
+        match self.squads_proposal.status {
+            squads_multisig_program::ProposalStatus::Active { timestamp: _ } => {}
+            _ => {
+                msg!("squads proposal status: {:?}", self.squads_proposal.status);
+                return Err(AutocratError::InvalidSquadsProposalStatus.into());
+            }
+        }
 
         for amm in [&self.pass_amm, &self.fail_amm] {
             // an attacker is able to crank 5 observations before a proposal starts
@@ -161,7 +169,6 @@ impl InitializeProposal<'_> {
             description_url,
             pass_lp_tokens_to_lock,
             fail_lp_tokens_to_lock,
-            nonce,
         } = params;
 
         require_gte!(
@@ -239,7 +246,6 @@ impl InitializeProposal<'_> {
             dao: dao.key(),
             pass_lp_tokens_locked: pass_lp_tokens_to_lock,
             fail_lp_tokens_locked: fail_lp_tokens_to_lock,
-            nonce,
             pda_bump: ctx.bumps.proposal,
             question: question.key(),
             duration_in_slots: dao.slots_per_proposal,
@@ -257,12 +263,14 @@ impl InitializeProposal<'_> {
             pass_lp_mint: pass_lp_mint.key(),
             fail_lp_mint: fail_lp_mint.key(),
             proposer: proposer.key(),
-            nonce,
             number: dao.proposal_count,
             pass_lp_tokens_locked: pass_lp_tokens_to_lock,
             fail_lp_tokens_locked: fail_lp_tokens_to_lock,
             pda_bump: ctx.bumps.proposal,
             duration_in_slots: proposal.duration_in_slots,
+            squads_proposal: squads_proposal.key(),
+            squads_multisig: dao.squads_multisig,
+            squads_multisig_vault: dao.squads_multisig_vault,
         });
 
         Ok(())
