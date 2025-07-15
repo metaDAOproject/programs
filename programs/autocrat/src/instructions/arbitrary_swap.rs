@@ -21,6 +21,20 @@ pub struct SpotSwapParams {
 }
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
+pub enum UnderlyingAsset {
+    Base,
+    Quote,
+}
+
+#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
+pub struct PredictionSwapParams {
+    pub side: Side,
+    pub underlying_asset: UnderlyingAsset,
+    pub amount_in: u64,
+    pub min_amount_out: u64, 
+}
+
+#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub struct SplitOrMergeAndAmount {
     pub split_or_merge: SplitOrMerge,
     pub amount: u64,
@@ -144,6 +158,85 @@ pub fn witness(
     if y_lo > y_hi { return None; }
 
     Some((x, 0.5 * (y_lo + y_hi)))   // any y in [y_lo, y_hi] works
+}
+
+///
+/// Closed‑form smallest `c` for the 3‑hyperbola system (no iteration).
+///
+/// * Returns `None` if k_i ≤ 0 or the right–hand strip is empty (b+d ≤ 0 or b+f ≤ 0).
+/// * Otherwise returns the exact `c_min`.
+///
+pub fn min_c_three(
+    a: f64, b: f64,          // first hyperbola
+    d: f64,                  // second     “
+    e: f64, f_: f64,         // third      “
+    k1: f64, k2: f64, k3: f64,
+) -> Option<f64> {
+    // basic sanity -----------------------------------------------------------
+    if !(k1 > 0.0 && k2 > 0.0 && k3 > 0.0) { return None; }
+    if b + d <= 0.0 || b + f_ <= 0.0 { return None; }   // RHS strip never overlaps
+
+    // helper closures --------------------------------------------------------
+    let g2 = |x: f64, c: f64| k2 / (c + x) - d;
+    let g3 = |x: f64| k3 / (e + x) - f_;
+
+    // ── bucket #1 : active {1,2} ────────────────────────────────────────────
+    let mut c12 = (k1.sqrt() + k2.sqrt()).powi(2) / (b + d) - a;
+    if c12 > 0.0 {
+        let x12 = (a - (k1 / k2).sqrt() * c12) / (1.0 + (k1 / k2).sqrt());
+        if x12 <= -c12 || x12 <= -e || g3(x12) > g2(x12, c12) {
+            c12 = f64::INFINITY;          // infeasible
+        }
+    } else { c12 = f64::INFINITY; }
+
+    // ── bucket #2 : active {1,3} ────────────────────────────────────────────
+    let mut c13 = (k1.sqrt() + k3.sqrt()).powi(2) / (b + f_) - a;
+    if c13 > 0.0 {
+        let x13 = (a - (k1 / k3).sqrt() * c13) / (1.0 + (k1 / k3).sqrt());
+        if x13 <= -c13 || x13 <= -e || g2(x13, c13) > g3(x13) {
+            c13 = f64::INFINITY;
+        }
+    } else { c13 = f64::INFINITY; }
+
+    // ── bucket #3 : g2 == g3  → quadratic in x  (★)  ────────────────────────
+    let s  = b + f_;                                  // S in (★)
+    let ax =  s;
+    let bx = (k1 - k3) - s * (a - e);
+    let cx = k1 * e + k3 * a - s * a * e;
+
+    let mut c_eq = f64::INFINITY;
+    if ax.abs() < 1e-12 {
+        if bx.abs() > 1e-12 {
+            let x = -cx / bx;
+            if -e < x && x < a {
+                let denom = b + d - k1 / (a - x);
+                if denom > 0.0 {
+                    c_eq = k2 / denom - x;
+                    if c_eq <= 0.0 || x <= -c_eq { c_eq = f64::INFINITY; }
+                }
+            }
+        }
+    } else {
+        let disc = bx.mul_add(bx, -4.0 * ax * cx);     // b² - 4ac
+        if disc >= 0.0 {
+            let rt = disc.sqrt();
+            for x in [(-bx - rt) / (2.0 * ax), (-bx + rt) / (2.0 * ax)] {
+                if -e < x && x < a {
+                    let denom = b + d - k1 / (a - x);
+                    if denom > 0.0 {
+                        let c_tmp = k2 / denom - x;
+                        if c_tmp > 0.0 && x > -c_tmp {
+                            c_eq = c_eq.min(c_tmp);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── global minimum ──────────────────────────────────────────────────────
+    let c_min = c12.min(c13).min(c_eq);
+    if c_min.is_finite() { Some(c_min) } else { None }
 }
 
 impl<'info, 'c: 'info> SpotSwap<'info> {
