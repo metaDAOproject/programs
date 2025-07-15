@@ -43,10 +43,6 @@
     "solana-bankrun": "^0.2.0",
     "spl-token-bankrun": "0.2.3",
     "ts-mocha": "^10.0.0",
-<<<<<<< HEAD
     "typescript": "^5.5.5"
-=======
-    "typescript": "^5.3.5"
->>>>>>> 0caa311 (Get closed-form swap working)
   }
 }

@@ -32,25 +32,16 @@ pub enum AutocratError {
     ProposalDurationTooShort,
     #[msg("Question must have exactly 2 outcomes for binary futarchy")]
     QuestionMustBeBinary,
-<<<<<<< HEAD
     #[msg("Squads proposal must be in Draft status")]
     InvalidSquadsProposalStatus,
-=======
     #[msg("No reserves")]
     NoReserves,
     #[msg("Got overflow when casting")]
     CastingOverflow,
     #[msg("Constant product invariant failed")]
     ConstantProductInvariantFailed,
-<<<<<<< HEAD
->>>>>>> c9984c7 (Get basic `swap` working)
-=======
     #[msg("Proposal must be live to swap conditional tokens")]
     ProposalNotLive,
-<<<<<<< HEAD
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
-=======
     #[msg("Invariant violation")]
     InvariantViolation,
->>>>>>> 0caa311 (Get closed-form swap working)
 }

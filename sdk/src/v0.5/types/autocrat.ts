@@ -1056,6 +1056,34 @@ export type Autocrat = {
       };
     },
     {
+      name: "PredictionSwapParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "side";
+            type: {
+              defined: "Side";
+            };
+          },
+          {
+            name: "underlyingAsset";
+            type: {
+              defined: "UnderlyingAsset";
+            };
+          },
+          {
+            name: "amountIn";
+            type: "u64";
+          },
+          {
+            name: "minAmountOut";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
       name: "SplitOrMergeAndAmount";
       type: {
         kind: "struct";
@@ -1183,24 +1211,7 @@ export type Autocrat = {
       name: "InitializeProposalParams";
       type: {
         kind: "struct";
-        fields: [
-          {
-<<<<<<< HEAD
-            name: "descriptionUrl";
-            type: "string";
-          },
-          {
-            name: "passLpTokensToLock";
-            type: "u64";
-          },
-          {
-            name: "failLpTokensToLock";
-=======
-            name: "nonce";
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
-            type: "u64";
-          }
-        ];
+        fields: [];
       };
     },
     {
@@ -1323,6 +1334,20 @@ export type Autocrat = {
           {
             name: "quoteReserves";
             type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "UnderlyingAsset";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Base";
+          },
+          {
+            name: "Quote";
           }
         ];
       };
@@ -1806,39 +1831,33 @@ export type Autocrat = {
     },
     {
       code: 6014;
-<<<<<<< HEAD
       name: "InvalidSquadsProposalStatus";
       msg: "Squads proposal must be in Draft status";
-=======
+    },
+    {
+      code: 6015;
       name: "NoReserves";
       msg: "No reserves";
     },
     {
-      code: 6015;
+      code: 6016;
       name: "CastingOverflow";
       msg: "Got overflow when casting";
     },
     {
-      code: 6016;
+      code: 6017;
       name: "ConstantProductInvariantFailed";
       msg: "Constant product invariant failed";
-<<<<<<< HEAD
->>>>>>> c9984c7 (Get basic `swap` working)
-=======
-    },
-    {
-      code: 6017;
-      name: "ProposalNotLive";
-      msg: "Proposal must be live to swap conditional tokens";
-<<<<<<< HEAD
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
-=======
     },
     {
       code: 6018;
+      name: "ProposalNotLive";
+      msg: "Proposal must be live to swap conditional tokens";
+    },
+    {
+      code: 6019;
       name: "InvariantViolation";
       msg: "Invariant violation";
->>>>>>> 0caa311 (Get closed-form swap working)
     }
   ];
 };
@@ -2901,6 +2920,34 @@ export const IDL: Autocrat = {
       },
     },
     {
+      name: "PredictionSwapParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "side",
+            type: {
+              defined: "Side",
+            },
+          },
+          {
+            name: "underlyingAsset",
+            type: {
+              defined: "UnderlyingAsset",
+            },
+          },
+          {
+            name: "amountIn",
+            type: "u64",
+          },
+          {
+            name: "minAmountOut",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "SplitOrMergeAndAmount",
       type: {
         kind: "struct",
@@ -3028,24 +3075,7 @@ export const IDL: Autocrat = {
       name: "InitializeProposalParams",
       type: {
         kind: "struct",
-        fields: [
-          {
-<<<<<<< HEAD
-            name: "descriptionUrl",
-            type: "string",
-          },
-          {
-            name: "passLpTokensToLock",
-            type: "u64",
-          },
-          {
-            name: "failLpTokensToLock",
-=======
-            name: "nonce",
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
-            type: "u64",
-          },
-        ],
+        fields: [],
       },
     },
     {
@@ -3168,6 +3198,20 @@ export const IDL: Autocrat = {
           {
             name: "quoteReserves",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "UnderlyingAsset",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Base",
+          },
+          {
+            name: "Quote",
           },
         ],
       },
@@ -3651,31 +3695,31 @@ export const IDL: Autocrat = {
     },
     {
       code: 6014,
-<<<<<<< HEAD
       name: "InvalidSquadsProposalStatus",
       msg: "Squads proposal must be in Draft status",
-=======
+    },
+    {
+      code: 6015,
       name: "NoReserves",
       msg: "No reserves",
     },
     {
-      code: 6015,
+      code: 6016,
       name: "CastingOverflow",
       msg: "Got overflow when casting",
     },
     {
-      code: 6016,
+      code: 6017,
       name: "ConstantProductInvariantFailed",
       msg: "Constant product invariant failed",
->>>>>>> c9984c7 (Get basic `swap` working)
     },
     {
-      code: 6017,
+      code: 6018,
       name: "ProposalNotLive",
       msg: "Proposal must be live to swap conditional tokens",
     },
     {
-      code: 6018,
+      code: 6019,
       name: "InvariantViolation",
       msg: "Invariant violation",
     },

@@ -432,135 +432,135 @@ export class AutocratClient {
       });
   }
 
-<<<<<<< HEAD
-  async initializeProposal(
-    dao: PublicKey,
-    descriptionUrl: string,
-    squadsProposal: PublicKey,
-    baseTokensToLP: BN,
-    quoteTokensToLP: BN
-  ): Promise<PublicKey> {
-    const storedDao = await this.getDao(dao);
+  // async initializeProposal(
+  //   dao: PublicKey,
+  //   descriptionUrl: string,
+  //   squadsProposal: PublicKey,
+  //   baseTokensToLP: BN,
+  //   quoteTokensToLP: BN
+  // ): Promise<PublicKey> {
+  //   const storedDao = await this.getDao(dao);
 
-    let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
+  //   let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
 
-    await this.vaultClient.initializeQuestion(
-      sha256(`Will ${proposal} pass?/FAIL/PASS`),
-      proposal,
-      2
-    );
+  //   await this.vaultClient.initializeQuestion(
+  //     sha256(`Will ${proposal} pass?/FAIL/PASS`),
+  //     proposal,
+  //     2
+  //   );
 
-    const {
-      baseVault,
-      quoteVault,
-      passAmm,
-      failAmm,
-      passBaseMint,
-      passQuoteMint,
-      failBaseMint,
-      failQuoteMint,
-      question,
-    } = this.getProposalPdas(
-      proposal,
-      storedDao.baseMint,
-      storedDao.quoteMint,
-      dao
-    );
+  //   const {
+  //     baseVault,
+  //     quoteVault,
+  //     passAmm,
+  //     failAmm,
+  //     passBaseMint,
+  //     passQuoteMint,
+  //     failBaseMint,
+  //     failQuoteMint,
+  //     question,
+  //   } = this.getProposalPdas(
+  //     proposal,
+  //     storedDao.baseMint,
+  //     storedDao.quoteMint,
+  //     dao
+  //   );
 
-    // it's important that these happen in a single atomic transaction
-    await this.vaultClient
-      .initializeVaultIx(question, storedDao.baseMint, 2)
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
-          this.ammClient.initializeAmmIx(
-            passBaseMint,
-            passQuoteMint,
-            storedDao.twapStartDelaySlots,
-            storedDao.twapInitialObservation,
-            storedDao.twapMaxObservationChangePerUpdate
-          ),
-          this.ammClient.initializeAmmIx(
-            failBaseMint,
-            failQuoteMint,
-            storedDao.twapStartDelaySlots,
-            storedDao.twapInitialObservation,
-            storedDao.twapMaxObservationChangePerUpdate
-          )
-        )
-      )
-      .rpc();
+  //   // it's important that these happen in a single atomic transaction
+  //   await this.vaultClient
+  //     .initializeVaultIx(question, storedDao.baseMint, 2)
+  //     .postInstructions(
+  //       await InstructionUtils.getInstructions(
+  //         this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
+  //         this.ammClient.initializeAmmIx(
+  //           passBaseMint,
+  //           passQuoteMint,
+  //           storedDao.twapStartDelaySlots,
+  //           storedDao.twapInitialObservation,
+  //           storedDao.twapMaxObservationChangePerUpdate
+  //         ),
+  //         this.ammClient.initializeAmmIx(
+  //           failBaseMint,
+  //           failQuoteMint,
+  //           storedDao.twapStartDelaySlots,
+  //           storedDao.twapInitialObservation,
+  //           storedDao.twapMaxObservationChangePerUpdate
+  //         )
+  //       )
+  //     )
+  //     .rpc();
 
-    console.log(baseTokensToLP.toString());
-    await this.vaultClient
-      .splitTokensIx(question, baseVault, storedDao.baseMint, baseTokensToLP, 2)
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          this.vaultClient.splitTokensIx(
-            question,
-            quoteVault,
-            storedDao.quoteMint,
-            quoteTokensToLP,
-            2
-          )
-        )
-      )
-      .rpc();
+  //   console.log(baseTokensToLP.toString());
+  //   await this.vaultClient
+  //     .splitTokensIx(question, baseVault, storedDao.baseMint, baseTokensToLP, 2)
+  //     .postInstructions(
+  //       await InstructionUtils.getInstructions(
+  //         this.vaultClient.splitTokensIx(
+  //           question,
+  //           quoteVault,
+  //           storedDao.quoteMint,
+  //           quoteTokensToLP,
+  //           2
+  //         )
+  //       )
+  //     )
+  //     .rpc();
 
-    await this.ammClient
-      .addLiquidityIx(
-        passAmm,
-        passBaseMint,
-        passQuoteMint,
-        quoteTokensToLP,
-        baseTokensToLP,
-        new BN(0)
-      )
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          this.ammClient.addLiquidityIx(
-            failAmm,
-            failBaseMint,
-            failQuoteMint,
-            quoteTokensToLP,
-            baseTokensToLP,
-            new BN(0)
-          )
-        )
-      )
-      .rpc();
+  //   await this.ammClient
+  //     .addLiquidityIx(
+  //       passAmm,
+  //       passBaseMint,
+  //       passQuoteMint,
+  //       quoteTokensToLP,
+  //       baseTokensToLP,
+  //       new BN(0)
+  //     )
+  //     .postInstructions(
+  //       await InstructionUtils.getInstructions(
+  //         this.ammClient.addLiquidityIx(
+  //           failAmm,
+  //           failBaseMint,
+  //           failQuoteMint,
+  //           quoteTokensToLP,
+  //           baseTokensToLP,
+  //           new BN(0)
+  //         )
+  //       )
+  //     )
+  //     .rpc();
 
-    // this is how many original tokens are created
-    const lpTokens = quoteTokensToLP;
+  //   // this is how many original tokens are created
+  //   const lpTokens = quoteTokensToLP;
 
-    await this.initializeProposalIx(
-      descriptionUrl,
-      squadsProposal,
-      dao,
-      storedDao.baseMint,
-      storedDao.quoteMint,
-      lpTokens,
-      lpTokens,
-      question
-    ).rpc();
+  //   await this.initializeProposalIx(
+  //     descriptionUrl,
+  //     squadsProposal,
+  //     dao,
+  //     storedDao.baseMint,
+  //     storedDao.quoteMint,
+  //     lpTokens,
+  //     lpTokens,
+  //     question
+  //   ).rpc();
 
-    return proposal;
-  }
+  //   return proposal;
+  // }
 
-  initializeProposalIx(
-    descriptionUrl: string,
-    squadsProposal: PublicKey,
-    dao: PublicKey,
-    baseMint: PublicKey,
-    quoteMint: PublicKey,
-    passLpTokensToLock: BN,
-    failLpTokensToLock: BN,
-    question: PublicKey,
-    proposer: PublicKey = this.provider.publicKey
-  ) {
-    let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
-    const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
-=======
+  // initializeProposalIx(
+  //   descriptionUrl: string,
+  //   squadsProposal: PublicKey,
+  //   dao: PublicKey,
+  //   baseMint: PublicKey,
+  //   quoteMint: PublicKey,
+  //   passLpTokensToLock: BN,
+  //   failLpTokensToLock: BN,
+  //   question: PublicKey,
+  //   proposer: PublicKey = this.provider.publicKey
+  // ) {
+  //   let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
+  //   const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
+
+  // =======
   conditionalSwapIx({
     amountIn,
     side,
@@ -733,16 +733,7 @@ export class AutocratClient {
     question: PublicKey;
     proposer?: PublicKey;
   }) {
-    let [proposal] = getProposalAddr(this.autocrat.programId, proposer, nonce);
-<<<<<<< HEAD
-    const { baseVault, quoteVault } = this.getProposalPdas(
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
-      proposal,
-      baseMint,
-      quoteMint,
-      dao
-    );
-=======
+    let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
     const {
       baseVault,
       quoteVault,
@@ -751,62 +742,51 @@ export class AutocratClient {
       passBaseMint,
       passQuoteMint,
     } = this.getProposalPdas(proposal, baseMint, quoteMint, dao);
->>>>>>> 0caa311 (Get closed-form swap working)
 
     const [futarchyAmm] = getFutarchyAmmAddr({});
 
-    return this.autocrat.methods
-      .initializeProposal({
-<<<<<<< HEAD
-        descriptionUrl,
-        passLpTokensToLock,
-        failLpTokensToLock,
-=======
-        nonce,
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
-      })
-      .accounts({
-        question,
-        proposal,
-        squadsProposal,
-        dao,
-        baseVault,
-        quoteVault,
-        futarchyAmm,
-        proposer,
-        ammTokenAccounts: {
-          baseUnconditional: getAssociatedTokenAddressSync(
-            baseMint,
-            futarchyAmm,
-            true
-          ),
-          quoteUnconditional: getAssociatedTokenAddressSync(
-            quoteMint,
-            futarchyAmm,
-            true
-          ),
-          basePass: getAssociatedTokenAddressSync(
-            passBaseMint,
-            futarchyAmm,
-            true
-          ),
-          quotePass: getAssociatedTokenAddressSync(
-            passQuoteMint,
-            futarchyAmm,
-            true
-          ),
-          baseFail: getAssociatedTokenAddressSync(
-            failBaseMint,
-            futarchyAmm,
-            true
-          ),
-          quoteFail: getAssociatedTokenAddressSync(
-            failQuoteMint,
-            futarchyAmm,
-            true
-          ),
-        },
-      });
+    return this.autocrat.methods.initializeProposal({}).accounts({
+      question,
+      proposal,
+      squadsProposal,
+      dao,
+      baseVault,
+      quoteVault,
+      futarchyAmm,
+      proposer,
+      ammTokenAccounts: {
+        baseUnconditional: getAssociatedTokenAddressSync(
+          baseMint,
+          futarchyAmm,
+          true
+        ),
+        quoteUnconditional: getAssociatedTokenAddressSync(
+          quoteMint,
+          futarchyAmm,
+          true
+        ),
+        basePass: getAssociatedTokenAddressSync(
+          passBaseMint,
+          futarchyAmm,
+          true
+        ),
+        quotePass: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          futarchyAmm,
+          true
+        ),
+        baseFail: getAssociatedTokenAddressSync(
+          failBaseMint,
+          futarchyAmm,
+          true
+        ),
+        quoteFail: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          futarchyAmm,
+          true
+        ),
+      },
+    });
   }
 
   // async finalizeProposal(proposal: PublicKey) {

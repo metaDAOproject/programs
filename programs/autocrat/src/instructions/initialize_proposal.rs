@@ -8,13 +8,6 @@ use conditional_vault::program::ConditionalVault as ConditionalVaultProgram;
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeProposalParams {
-<<<<<<< HEAD
-    pub description_url: String,
-    pub pass_lp_tokens_to_lock: u64,
-    pub fail_lp_tokens_to_lock: u64,
-=======
-    pub nonce: u64,
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
 }
 
 #[derive(Accounts)]
@@ -51,52 +44,6 @@ pub struct InitializeProposal<'info> {
         has_one = question,
         mut,
     )]
-<<<<<<< HEAD
-    pub base_vault: Account<'info, ConditionalVaultAccount>,
-<<<<<<< HEAD
-    #[account(
-        constraint = pass_amm.base_mint == base_vault.conditional_token_mints[PASS_INDEX],
-        constraint = pass_amm.quote_mint == quote_vault.conditional_token_mints[PASS_INDEX],
-    )]
-    pub pass_amm: Box<Account<'info, Amm>>,
-    #[account(constraint = pass_amm.lp_mint == pass_lp_mint.key())]
-    pub pass_lp_mint: Box<Account<'info, Mint>>,
-    #[account(constraint = fail_amm.lp_mint == fail_lp_mint.key())]
-    pub fail_lp_mint: Box<Account<'info, Mint>>,
-    #[account(
-        constraint = fail_amm.base_mint == base_vault.conditional_token_mints[FAIL_INDEX],
-        constraint = fail_amm.quote_mint == quote_vault.conditional_token_mints[FAIL_INDEX],
-    )]
-    pub fail_amm: Box<Account<'info, Amm>>,
-    #[account(
-        mut,
-        associated_token::mint = pass_amm.lp_mint,
-        associated_token::authority = proposer,
-    )]
-    pub pass_lp_user_account: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        associated_token::mint = fail_amm.lp_mint,
-        associated_token::authority = proposer,
-    )]
-    pub fail_lp_user_account: Account<'info, TokenAccount>,
-    #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = pass_lp_mint,
-        associated_token::authority = proposal,
-    )]
-    pub pass_lp_vault_account: Box<Account<'info, TokenAccount>>,
-    #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = fail_lp_mint,
-        associated_token::authority = proposal,
-    )]
-    pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
-=======
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
-=======
     pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,
     #[account(mut)]
     pub base_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
@@ -113,7 +60,6 @@ pub struct InitializeProposal<'info> {
     #[account(mut)]
     pub pass_quote_mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
->>>>>>> 0caa311 (Get closed-form swap working)
     pub proposer: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -133,7 +79,6 @@ impl InitializeProposal<'_> {
             AutocratError::QuestionMustBeBinary
         );
 
-<<<<<<< HEAD
         require_keys_eq!(self.squads_proposal.multisig, self.dao.squads_multisig);
 
         match self.squads_proposal.status {
@@ -144,15 +89,7 @@ impl InitializeProposal<'_> {
             }
         }
 
-        for amm in [&self.pass_amm, &self.fail_amm] {
-            // an attacker is able to crank 5 observations before a proposal starts
-            require!(
-                clock.slot < amm.created_at_slot + (5 * ONE_MINUTE_IN_SLOTS),
-                AutocratError::AmmTooOld
-            );
-=======
         assert!(self.futarchy_amm.live_proposal.is_none());
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
 
         // TODO: some checks that the futarchy amm
 
@@ -190,72 +127,6 @@ impl InitializeProposal<'_> {
             vault_event_authority,
         } = ctx.accounts;
 
-<<<<<<< HEAD
-        let InitializeProposalParams {
-            description_url,
-            pass_lp_tokens_to_lock,
-            fail_lp_tokens_to_lock,
-        } = params;
-
-        require_gte!(
-            pass_lp_user_account.amount,
-            pass_lp_tokens_to_lock,
-            AutocratError::InsufficientLpTokenBalance
-        );
-        require_gte!(
-            fail_lp_user_account.amount,
-            fail_lp_tokens_to_lock,
-            AutocratError::InsufficientLpTokenBalance
-        );
-
-        let (pass_base_liquidity, pass_quote_liquidity) =
-            pass_amm.get_base_and_quote_withdrawable(pass_lp_tokens_to_lock, pass_lp_mint.supply);
-        let (fail_base_liquidity, fail_quote_liquidity) =
-            fail_amm.get_base_and_quote_withdrawable(fail_lp_tokens_to_lock, fail_lp_mint.supply);
-
-        for base_liquidity in [pass_base_liquidity, fail_base_liquidity] {
-            require_gte!(
-                base_liquidity,
-                dao.min_base_futarchic_liquidity,
-                AutocratError::InsufficientLpTokenLock
-            );
-        }
-
-        for quote_liquidity in [pass_quote_liquidity, fail_quote_liquidity] {
-            require_gte!(
-                quote_liquidity,
-                dao.min_quote_futarchic_liquidity,
-                AutocratError::InsufficientLpTokenLock
-            );
-        }
-
-        for (amount, from, to) in [
-            (
-                pass_lp_tokens_to_lock,
-                &pass_lp_user_account,
-                &pass_lp_vault_account,
-            ),
-            (
-                fail_lp_tokens_to_lock,
-                &fail_lp_user_account,
-                &fail_lp_vault_account,
-            ),
-        ] {
-            token::transfer(
-                CpiContext::new(
-                    token_program.to_account_info(),
-                    Transfer {
-                        from: from.to_account_info(),
-                        to: to.to_account_info(),
-                        authority: proposer.to_account_info(),
-                    },
-                ),
-                amount,
-            )?;
-        }
-=======
-        let InitializeProposalParams { nonce } = params;
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
 
         let clock = Clock::get()?;
 
@@ -271,12 +142,6 @@ impl InitializeProposal<'_> {
             quote_vault: quote_vault.key(),
             futarchy_amm: futarchy_amm.key(),
             dao: dao.key(),
-<<<<<<< HEAD
-            pass_lp_tokens_locked: pass_lp_tokens_to_lock,
-            fail_lp_tokens_locked: fail_lp_tokens_to_lock,
-=======
-            nonce,
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
             pda_bump: ctx.bumps.proposal,
             question: question.key(),
             duration_in_slots: dao.slots_per_proposal,
@@ -295,23 +160,6 @@ impl InitializeProposal<'_> {
         futarchy_amm.live_proposal = Some(LiveProposalDetails {
             proposal: proposal.key(),
             question: question.key(),
-<<<<<<< HEAD
-            pass_amm: pass_amm.key(),
-            fail_amm: fail_amm.key(),
-            base_vault: base_vault.key(),
-            quote_vault: quote_vault.key(),
-            pass_lp_mint: pass_lp_mint.key(),
-            fail_lp_mint: fail_lp_mint.key(),
-            proposer: proposer.key(),
-            number: dao.proposal_count,
-            pass_lp_tokens_locked: pass_lp_tokens_to_lock,
-            fail_lp_tokens_locked: fail_lp_tokens_to_lock,
-            pda_bump: ctx.bumps.proposal,
-            duration_in_slots: proposal.duration_in_slots,
-            squads_proposal: squads_proposal.key(),
-            squads_multisig: dao.squads_multisig,
-            squads_multisig_vault: dao.squads_multisig_vault,
-=======
             pass_pool: Pool {
                 base_reserves: base_to_provide,
                 quote_reserves: quote_to_provide,
@@ -320,7 +168,6 @@ impl InitializeProposal<'_> {
                 base_reserves: base_to_provide,
                 quote_reserves: quote_to_provide,
             },
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
         });
 
         let signer_seeds = &[b"futarchy_amm".as_ref(), &[ctx.accounts.futarchy_amm.bump]];

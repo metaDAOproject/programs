@@ -24,16 +24,6 @@ pub struct Proposal {
     pub quote_vault: Pubkey,
     pub futarchy_amm: Pubkey,
     pub dao: Pubkey,
-<<<<<<< HEAD
-    pub pass_lp_tokens_locked: u64,
-    pub fail_lp_tokens_locked: u64,
-=======
-    /// We need to include a per-proposer nonce to prevent some weird proposal
-    /// front-running edge cases. Using a `u64` means that proposers are unlikely
-    /// to run into collisions, even if they generate nonces randomly - I've run
-    /// the math :D
-    pub nonce: u64,
->>>>>>> af0016f (Get basic swap + conditional swap accounting working)
     pub pda_bump: u8,
     pub question: Pubkey,
     pub duration_in_slots: u64,
