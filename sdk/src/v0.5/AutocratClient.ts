@@ -561,39 +561,39 @@ export class AutocratClient {
   //   const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
 
   // =======
-  conditionalSwapIx({
-    amountIn,
-    side,
-    condition,
-    trader = this.provider.publicKey,
-    baseMint,
-    quoteMint,
-  }: {
-    amountIn: BN;
-    side: Side;
-    condition: Condition;
-    trader?: PublicKey;
-    baseMint: PublicKey;
-    quoteMint: PublicKey;
-  }) {
-    const [futarchyAmm] = getFutarchyAmmAddr({});
-    return this.autocrat.methods
-      .conditionalSwap({ amountIn, side, condition })
-      .accounts({
-        futarchyAmm,
-        trader,
-        traderBaseAccount: getAssociatedTokenAddressSync(
-          baseMint,
-          trader,
-          true
-        ),
-        traderQuoteAccount: getAssociatedTokenAddressSync(
-          quoteMint,
-          trader,
-          true
-        ),
-      });
-  }
+  // conditionalSwapIx({
+  //   amountIn,
+  //   side,
+  //   condition,
+  //   trader = this.provider.publicKey,
+  //   baseMint,
+  //   quoteMint,
+  // }: {
+  //   amountIn: BN;
+  //   side: Side;
+  //   condition: Condition;
+  //   trader?: PublicKey;
+  //   baseMint: PublicKey;
+  //   quoteMint: PublicKey;
+  // }) {
+  //   const [futarchyAmm] = getFutarchyAmmAddr({});
+  //   return this.autocrat.methods
+  //     .conditionalSwap({ amountIn, side, condition })
+  //     .accounts({
+  //       futarchyAmm,
+  //       trader,
+  //       traderBaseAccount: getAssociatedTokenAddressSync(
+  //         baseMint,
+  //         trader,
+  //         true
+  //       ),
+  //       traderQuoteAccount: getAssociatedTokenAddressSync(
+  //         quoteMint,
+  //         trader,
+  //         true
+  //       ),
+  //     });
+  // }
 
   // async initializeProposal(
   //   dao: PublicKey,

@@ -120,6 +120,20 @@ pub mod autocrat {
         SpotSwap::handle(ctx, params)
     }
 
+    pub fn prediction_swap<'info>(
+        ctx: Context<'_, '_, 'info, 'info, PredictionSwap<'info>>,
+        params: PredictionSwapParams,
+    ) -> Result<()> {
+        PredictionSwap::handle(ctx, params)
+    }
+
+    pub fn cond_swap<'info>(
+        ctx: Context<'_, '_, 'info, 'info, CondSwap<'info>>,
+        params: CondSwapParams,
+    ) -> Result<()> {
+        CondSwap::handle(ctx, params)
+    }
+
     pub fn swap(ctx: Context<Swap>, params: SwapParams) -> Result<()> {
         Swap::handle(ctx, params)
     }

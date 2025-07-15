@@ -672,6 +672,322 @@ export type Autocrat = {
       ];
     },
     {
+      name: "predictionSwap";
+      accounts: [
+        {
+          name: "arbitrarySwap";
+          accounts: [
+            {
+              name: "futarchyAmm";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "trader";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "traderInputAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "ammTokenAccounts";
+              accounts: [
+                {
+                  name: "baseUnconditional";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "quoteUnconditional";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "basePass";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "quotePass";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "baseFail";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "quoteFail";
+                  isMut: true;
+                  isSigner: false;
+                }
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quoteVaultUnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseVaultUnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "conditionalVaultProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "vaultEventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "passQuoteMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failQuoteMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passBaseMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failBaseMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "eventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "program";
+              isMut: false;
+              isSigner: false;
+            }
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "PredictionSwapParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "condSwap";
+      accounts: [
+        {
+          name: "arbitrarySwap";
+          accounts: [
+            {
+              name: "futarchyAmm";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "trader";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "traderInputAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "ammTokenAccounts";
+              accounts: [
+                {
+                  name: "baseUnconditional";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "quoteUnconditional";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "basePass";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "quotePass";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "baseFail";
+                  isMut: true;
+                  isSigner: false;
+                },
+                {
+                  name: "quoteFail";
+                  isMut: true;
+                  isSigner: false;
+                }
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "quoteVaultUnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseVaultUnderlyingTokenAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "conditionalVaultProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "vaultEventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "passQuoteMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failQuoteMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "passBaseMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "failBaseMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "eventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "program";
+              isMut: false;
+              isSigner: false;
+            }
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "CondSwapParams";
+          };
+        }
+      ];
+    },
+    {
       name: "swap";
       accounts: [
         {
@@ -1042,6 +1358,34 @@ export type Autocrat = {
             name: "side";
             type: {
               defined: "Side";
+            };
+          },
+          {
+            name: "amountIn";
+            type: "u64";
+          },
+          {
+            name: "minAmountOut";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "CondSwapParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "side";
+            type: {
+              defined: "Side";
+            };
+          },
+          {
+            name: "underlyingAsset";
+            type: {
+              defined: "UnderlyingAsset";
             };
           },
           {
@@ -2536,6 +2880,322 @@ export const IDL: Autocrat = {
       ],
     },
     {
+      name: "predictionSwap",
+      accounts: [
+        {
+          name: "arbitrarySwap",
+          accounts: [
+            {
+              name: "futarchyAmm",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "trader",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "traderInputAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "ammTokenAccounts",
+              accounts: [
+                {
+                  name: "baseUnconditional",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "quoteUnconditional",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "basePass",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "quotePass",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "baseFail",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "quoteFail",
+                  isMut: true,
+                  isSigner: false,
+                },
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quoteVaultUnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseVaultUnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "conditionalVaultProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "vaultEventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "passQuoteMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failQuoteMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passBaseMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failBaseMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "eventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "program",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "PredictionSwapParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "condSwap",
+      accounts: [
+        {
+          name: "arbitrarySwap",
+          accounts: [
+            {
+              name: "futarchyAmm",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "trader",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "traderInputAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "ammTokenAccounts",
+              accounts: [
+                {
+                  name: "baseUnconditional",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "quoteUnconditional",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "basePass",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "quotePass",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "baseFail",
+                  isMut: true,
+                  isSigner: false,
+                },
+                {
+                  name: "quoteFail",
+                  isMut: true,
+                  isSigner: false,
+                },
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "quoteVaultUnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseVaultUnderlyingTokenAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "conditionalVaultProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "vaultEventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "passQuoteMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failQuoteMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "passBaseMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "failBaseMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "eventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "program",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "CondSwapParams",
+          },
+        },
+      ],
+    },
+    {
       name: "swap",
       accounts: [
         {
@@ -2906,6 +3566,34 @@ export const IDL: Autocrat = {
             name: "side",
             type: {
               defined: "Side",
+            },
+          },
+          {
+            name: "amountIn",
+            type: "u64",
+          },
+          {
+            name: "minAmountOut",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "CondSwapParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "side",
+            type: {
+              defined: "Side",
+            },
+          },
+          {
+            name: "underlyingAsset",
+            type: {
+              defined: "UnderlyingAsset",
             },
           },
           {
