@@ -324,7 +324,7 @@ export default async function suite() {
 
     const storedMeta = await this.getMint(META);
 
-    assert.equal(storedMeta.supply, 12_000_000 * 10 ** 6);
+    assert.equal(storedMeta.supply, 13_000_000 * 10 ** 6);
 
     const receiverBalance = await this.getTokenBalance(
       META,

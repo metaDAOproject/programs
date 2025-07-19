@@ -139,12 +139,13 @@ export default function suite() {
     assert.exists(launchAccount.state.complete);
     assert.equal(
       treasuryUSDCBalance.toString(),
-      minRaise.muln(9).divn(10).toString()
+      minRaise.muln(8).divn(10).toString()
     );
     assert.isAbove(Number(treasuryLpBalance.toString()), 1000);
     const mint = await this.getMint(META);
     assert.isTrue(mint.mintAuthority.equals(launchAccount.daoVault));
     assert.exists(launchAccount.dao);
+    assert.equal(mint.supply, 12_000_000 * 10 ** 6);
 
     rawStoredMetadata = await this.banksClient.getAccount(tokenMetadata);
     storedMetadata = deserializeMetadata({
