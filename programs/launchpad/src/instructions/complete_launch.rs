@@ -239,13 +239,13 @@ impl CompleteLaunch<'_> {
         launch.dao = Some(ctx.accounts.dao.key());
         launch.dao_vault = Some(ctx.accounts.squads_multisig_vault.key());
 
-let launch_key = launch.key();
-            let launch_signer_seeds = &[
-                b"launch_signer",
-                launch_key.as_ref(),
-                &[launch.launch_signer_pda_bump],
-            ];
-            let launch_signer = &[&launch_signer_seeds[..]];
+        let launch_key = launch.key();
+        let launch_signer_seeds = &[
+            b"launch_signer",
+            launch_key.as_ref(),
+            &[launch.launch_signer_pda_bump],
+        ];
+        let launch_signer = &[&launch_signer_seeds[..]];
 
 
 
@@ -299,11 +299,11 @@ let launch_key = launch.key();
                 },
             )?;
 
-            let usdc_to_lp = total_committed_amount.saturating_div(10);
+            let usdc_to_lp = total_committed_amount.saturating_div(5);
             let usdc_to_dao = total_committed_amount.saturating_sub(usdc_to_lp);
-            let token_to_lp = AVAILABLE_TOKENS / 10;
+            let token_to_lp = AVAILABLE_TOKENS / 5;
 
-                        token::mint_to(
+            token::mint_to(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     MintTo {
