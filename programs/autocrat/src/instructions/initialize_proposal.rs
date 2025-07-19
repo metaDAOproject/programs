@@ -1,6 +1,5 @@
 use super::*;
 
-use amm::state::ONE_MINUTE_IN_SLOTS;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
@@ -27,7 +26,7 @@ pub struct InitializeProposal<'info> {
     pub dao: Box<Account<'info, Dao>>,
     // TODO: this should also check the other way around: that the dao has canonicalized this amm
     #[account(mut, has_one = dao)]
-    pub futarchy_amm: Box<Account<'info, FutarchyAmm>>,
+    pub futarchy_amm: Box<Account<'info, Amm>>,
     #[account(
         constraint = question.oracle == proposal.key()
     )]
@@ -89,7 +88,7 @@ impl InitializeProposal<'_> {
             }
         }
 
-        assert!(self.futarchy_amm.live_proposal.is_none());
+        assert!(self.futarchy_amm.state == AmmState::Spot);
 
         // TODO: some checks that the futarchy amm
 
@@ -151,24 +150,24 @@ impl InitializeProposal<'_> {
         // to the pass and fail pools. We don't need to actually do any splits
         // because most of the conditional token reserves are virtual.
 
-        let base_to_provide = futarchy_amm.spot_pool.base_reserves / 2;
-        let quote_to_provide = futarchy_amm.spot_pool.quote_reserves / 2;
+        let base_to_provide = ctx.accounts.amm_token_accounts.base_unconditional.amount / 2;
+        let quote_to_provide = ctx.accounts.amm_token_accounts.quote_unconditional.amount / 2;
 
-        futarchy_amm.spot_pool.base_reserves -= base_to_provide;
-        futarchy_amm.spot_pool.quote_reserves -= quote_to_provide;
+        // futarchy_amm.spot_pool.base_reserves -= base_to_provide;
+        // futarchy_amm.spot_pool.quote_reserves -= quote_to_provide;
 
-        futarchy_amm.live_proposal = Some(LiveProposalDetails {
+        futarchy_amm.state = AmmState::Futarchy {
             proposal: proposal.key(),
             question: question.key(),
-            pass_pool: Pool {
-                base_reserves: base_to_provide,
-                quote_reserves: quote_to_provide,
-            },
-            fail_pool: Pool {
-                base_reserves: base_to_provide,
-                quote_reserves: quote_to_provide,
-            },
-        });
+            // pass_pool: Pool {
+            //     base_reserves: base_to_provide,
+            //     quote_reserves: quote_to_provide,
+            // },
+            // fail_pool: Pool {
+            //     base_reserves: base_to_provide,
+            //     quote_reserves: quote_to_provide,
+            // },
+        };
 
         let signer_seeds = &[b"futarchy_amm".as_ref(), &[ctx.accounts.futarchy_amm.bump]];
         let signer = &[&signer_seeds[..]];

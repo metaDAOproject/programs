@@ -39,8 +39,6 @@ pub use events::*;
 pub use instructions::*;
 pub use state::*;
 
-use amm::state::Amm;
-
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
 
@@ -136,10 +134,5 @@ pub mod autocrat {
 
     pub fn swap(ctx: Context<Swap>, params: SwapParams) -> Result<()> {
         Swap::handle(ctx, params)
-    }
-
-    #[access_control(ctx.accounts.validate())]
-    pub fn conditional_swap(ctx: Context<ConditionalSwap>, params: ConditionalSwapParams) -> Result<()> {
-        ConditionalSwap::handle(ctx, params)
     }
 }

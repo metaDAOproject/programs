@@ -4,7 +4,7 @@ use anchor_spl::{
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
 
-use crate::{state::{Dao, FutarchyAmm}, Pool};
+use crate::{state::{Dao, Amm}, AmmState, Pool};
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub struct InitializeFutarchyAmmParams {
@@ -20,9 +20,9 @@ pub struct InitializeFutarchyAmm<'info> {
         payer = payer,
         seeds = [b"futarchy_amm"],
         bump,
-        space = 8 + FutarchyAmm::INIT_SPACE,
+        space = 8 + Amm::INIT_SPACE,
     )]
-    pub futarchy_amm: Account<'info, FutarchyAmm>,
+    pub futarchy_amm: Account<'info, Amm>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub creator: Signer<'info>,
@@ -91,18 +91,18 @@ impl InitializeFutarchyAmm<'_> {
             quote_amount,
         )?;
         
-        ctx.accounts.futarchy_amm.set_inner(FutarchyAmm {
+        ctx.accounts.futarchy_amm.set_inner(Amm {
             bump: ctx.bumps.futarchy_amm,
             dao: ctx.accounts.dao.key(),
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),
-            spot_pool: Pool {
-                base_reserves: base_amount,
-                quote_reserves: quote_amount,
-            },
+            // spot_pool: Pool {
+            //     base_reserves: base_amount,
+            //     quote_reserves: quote_amount,
+            // },
             base_vault: ctx.accounts.base_vault.key(),
             quote_vault: ctx.accounts.quote_vault.key(),
-            live_proposal: None,
+            state: AmmState::Spot,
         });
 
         Ok(())

@@ -400,37 +400,37 @@ export class AutocratClient {
       });
   }
 
-  swapIx({
-    amountIn,
-    side,
-    trader = this.provider.publicKey,
-    baseMint,
-    quoteMint,
-  }: {
-    amountIn: BN;
-    side: Side;
-    trader?: PublicKey;
-    baseMint: PublicKey;
-    quoteMint: PublicKey;
-  }) {
-    const [futarchyAmm] = getFutarchyAmmAddr({});
-    return this.autocrat.methods
-      .swap({ amountIn, side: { buy: {} } })
-      .accounts({
-        futarchyAmm,
-        trader,
-        traderBaseAccount: getAssociatedTokenAddressSync(
-          baseMint,
-          trader,
-          true
-        ),
-        traderQuoteAccount: getAssociatedTokenAddressSync(
-          quoteMint,
-          trader,
-          true
-        ),
-      });
-  }
+  // swapIx({
+  //   amountIn,
+  //   side,
+  //   trader = this.provider.publicKey,
+  //   baseMint,
+  //   quoteMint,
+  // }: {
+  //   amountIn: BN;
+  //   side: Side;
+  //   trader?: PublicKey;
+  //   baseMint: PublicKey;
+  //   quoteMint: PublicKey;
+  // }) {
+  //   const [futarchyAmm] = getFutarchyAmmAddr({});
+  //   return this.autocrat.methods
+  //     .swap({ amountIn, side: { buy: {} } })
+  //     .accounts({
+  //       futarchyAmm,
+  //       trader,
+  //       traderBaseAccount: getAssociatedTokenAddressSync(
+  //         baseMint,
+  //         trader,
+  //         true
+  //       ),
+  //       traderQuoteAccount: getAssociatedTokenAddressSync(
+  //         quoteMint,
+  //         trader,
+  //         true
+  //       ),
+  //     });
+  // }
 
   // async initializeProposal(
   //   dao: PublicKey,
