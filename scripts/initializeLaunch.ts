@@ -1,78 +1,78 @@
 import * as token from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
 import {
-  AutocratClient,
-  ConditionalVaultClient,
-  getDaoTreasuryAddr,
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { BN } from "bn.js";
-import { DEVNET_MUSDC, USDC } from "./consts.js";
-import { createMetadataAccountV3 } from "@metaplex-foundation/mpl-token-metadata";
-import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
-import { mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
-import { walletAdapterIdentity } from "@metaplex-foundation/umi-signer-wallet-adapters";
-import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
+import { USDC } from "./consts.js";
 import {
   ComputeBudgetProgram,
-  Keypair,
   PublicKey,
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
-import * as fs from "fs";
 
 // Use the RPC endpoint of your choice.
-
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const umi = createUmi(provider.connection.rpcEndpoint).use(mplTokenMetadata());
-umi.use(walletAdapterIdentity(provider.wallet));
-
-const autocrat: AutocratClient = AutocratClient.createClient({ provider });
-const vaultProgram: ConditionalVaultClient =
-  ConditionalVaultClient.createClient({ provider });
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
-const ONE_MINUTE_IN_SECONDS = 60;
+// Change these variables to match the launch details
+const START_LAUNCH_KEY = new PublicKey(
+  "CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf"
+);
+const MIN_RAISE_AMOUNT = 300_000;
+const FOUNDER_REQUESTED_SPENDING_LIMIT = 10_000;
+const FOUNDER_KEYS = [
+  new PublicKey("5jRqFejxKHWMfR69dbYF2A9TnpnBPjz7iaRQS44imcMi"),
+  new PublicKey("A4juvYuvaAqhefj8BFkz2QZHxmVZRSf1nmLj8QvKUX4B")
+];
+const TOKEN_SEED = "Ck2w0N97Nkr886o8"; // Thanks Caveycool!
+
+// Safetychecks / processes data
+const MAX_MONTHLY_SPENDING_LIMIT = MIN_RAISE_AMOUNT / 6;
+const SPENDING_LIMIT = Math.min(FOUNDER_REQUESTED_SPENDING_LIMIT, MAX_MONTHLY_SPENDING_LIMIT);
+const ONE_MINUTE_IN_SECONDS = 60; // Devnet only
 const ONE_HOUR_IN_SECONDS = ONE_MINUTE_IN_SECONDS * 60;
 const ONE_DAY_IN_SECONDS = ONE_HOUR_IN_SECONDS * 24;
 const SEVEN_DAYS_IN_SECONDS = ONE_DAY_IN_SECONDS * 7;
-const KOLLAN_PUBKEY = new PublicKey(
-  "CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf"
-);
 
 async function main() {
-  const seed = "186fMCnZjcoD8i9K";
-  const MTN = await PublicKey.createWithSeed(
+  const seed = TOKEN_SEED;
+  const TOKEN = await PublicKey.createWithSeed(
     payer.publicKey,
     seed,
     token.TOKEN_PROGRAM_ID
   );
 
-  const [launch] = getLaunchAddr(launchpad.getProgramId(), MTN);
+  console.log('Token address:', TOKEN.toBase58());
+
+  const [launch] = getLaunchAddr(launchpad.getProgramId(), TOKEN);
   const [launchSigner] = getLaunchSignerAddr(launchpad.getProgramId(), launch);
 
-  console.log(launch.toBase58());
+  console.log('Launch address:', launch.toBase58());
 
   const lamports = await provider.connection.getMinimumBalanceForRentExemption(
     token.MINT_SIZE
   );
 
+  const convertedRaise = MIN_RAISE_AMOUNT * 10 ** 6;
+  const convertedMonthlySpendingLimit = SPENDING_LIMIT * 10 ** 6;
+
   const tx = new Transaction().add(
     SystemProgram.createAccountWithSeed({
       fromPubkey: payer.publicKey,
-      newAccountPubkey: MTN,
+      newAccountPubkey: TOKEN,
       basePubkey: payer.publicKey,
       seed,
       lamports: lamports,
       space: token.MINT_SIZE,
       programId: token.TOKEN_PROGRAM_ID,
     }),
-    token.createInitializeMint2Instruction(MTN, 6, launchSigner, null)
+    token.createInitializeMint2Instruction(TOKEN, 6, launchSigner, null)
   );
   tx.recentBlockhash = (
     await provider.connection.getLatestBlockhash()
@@ -80,18 +80,22 @@ async function main() {
   tx.feePayer = payer.publicKey;
   tx.sign(payer);
 
-  await provider.connection.sendRawTransaction(tx.serialize());
+  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
+  await provider.connection.confirmTransaction(txHash, "confirmed");
 
   await launchpad
     .initializeLaunchIx(
-      "mtnCapital",
-      "MTN",
-      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/MTN/MTN.json",
-      new BN(0),
+      "Omnipair Futarchy Governance",
+      "OMFG",
+      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/OMFG/OMFG.json",
+      new BN(convertedRaise), // note: multiplied by 10^6
       SEVEN_DAYS_IN_SECONDS,
-      MTN,
-      KOLLAN_PUBKEY,
-      false,
+      TOKEN,
+      USDC, // use for devnet new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
+      new BN(convertedMonthlySpendingLimit), // note: multiplied by 10^6
+      FOUNDER_KEYS,
+      START_LAUNCH_KEY,
+      false, // note: change for devnet
       payer.publicKey
     )
     .preInstructions([
