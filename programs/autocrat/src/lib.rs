@@ -105,6 +105,10 @@ pub mod autocrat {
         InitializeFutarchyAmm::handle(ctx, params)
     }
 
+    pub fn conditional_trade(ctx: Context<Trade>, params: ConditionalTradeParams) -> Result<()> {
+        Trade::conditional_trade(ctx, params)
+    }
+
     pub fn spot_swap(
         ctx: Context<Trade>,
         params: SpotTradeParams,

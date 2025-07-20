@@ -414,6 +414,7 @@ export type ConditionalVault = {
       accounts: [
         {
           name: "question";
+          relations: ["vault"];
         },
         {
           name: "vault";
@@ -1183,6 +1184,13 @@ export type ConditionalVault = {
           }
         ];
       };
+    }
+  ];
+  constants: [
+    {
+      name: "conditionalVaultSeed";
+      type: "bytes";
+      value: "[99, 111, 110, 100, 105, 116, 105, 111, 110, 97, 108, 95, 118, 97, 117, 108, 116]";
     }
   ];
 };

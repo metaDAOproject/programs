@@ -14,6 +14,682 @@ export type Autocrat = {
   };
   instructions: [
     {
+      name: "conditionalTrade";
+      discriminator: [44, 27, 51, 121, 184, 31, 203, 63];
+      accounts: [
+        {
+          name: "futarchyAmm";
+          writable: true;
+        },
+        {
+          name: "trader";
+          signer: true;
+        },
+        {
+          name: "traderInputAccount";
+          writable: true;
+        },
+        {
+          name: "traderOutputAccount";
+          writable: true;
+        },
+        {
+          name: "ammTokenAccounts";
+          accounts: [
+            {
+              name: "unconditionalBase";
+              writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.underlying_token_mint";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
+            },
+            {
+              name: "unconditionalQuote";
+              writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.underlying_token_mint";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
+            },
+            {
+              name: "passBase";
+              writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.conditional_token_mints [1]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
+            },
+            {
+              name: "passQuote";
+              writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.conditional_token_mints [1]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
+            },
+            {
+              name: "failBase";
+              writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.conditional_token_mints [0]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
+            },
+            {
+              name: "failQuote";
+              writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.conditional_token_mints [0]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
+            },
+            {
+              name: "baseVault";
+            },
+            {
+              name: "quoteVault";
+            },
+            {
+              name: "futarchyAmm";
+            }
+          ];
+        },
+        {
+          name: "question";
+        },
+        {
+          name: "baseMint";
+        },
+        {
+          name: "quoteMint";
+        },
+        {
+          name: "quoteVault";
+          writable: true;
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount";
+          writable: true;
+        },
+        {
+          name: "baseVault";
+          writable: true;
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount";
+          writable: true;
+        },
+        {
+          name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+        },
+        {
+          name: "conditionalVaultProgram";
+          address: "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg";
+        },
+        {
+          name: "vaultEventAuthority";
+        },
+        {
+          name: "passQuoteMint";
+          writable: true;
+        },
+        {
+          name: "failQuoteMint";
+          writable: true;
+        },
+        {
+          name: "passBaseMint";
+          writable: true;
+        },
+        {
+          name: "failBaseMint";
+          writable: true;
+        },
+        {
+          name: "eventAuthority";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ];
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: {
+              name: "conditionalTradeParams";
+            };
+          };
+        }
+      ];
+    },
+    {
       name: "initializeDao";
       discriminator: [128, 226, 96, 90, 39, 56, 24, 196];
       accounts: [
@@ -550,7 +1226,6 @@ export type Autocrat = {
         },
         {
           name: "question";
-          relations: ["quoteVault", "baseVault"];
         },
         {
           name: "ammTokenAccounts";
@@ -558,36 +1233,645 @@ export type Autocrat = {
             {
               name: "unconditionalBase";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.underlying_token_mint";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "unconditionalQuote";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.underlying_token_mint";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "passBase";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.conditional_token_mints [1]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "passQuote";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.conditional_token_mints [1]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "failBase";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.conditional_token_mints [0]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "failQuote";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.conditional_token_mints [0]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
+            },
+            {
+              name: "baseVault";
+            },
+            {
+              name: "quoteVault";
+            },
+            {
+              name: "futarchyAmm";
             }
           ];
         },
         {
           name: "quoteVault";
           writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  99,
+                  111,
+                  110,
+                  100,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110,
+                  97,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ];
+              },
+              {
+                kind: "account";
+                path: "question";
+              },
+              {
+                kind: "account";
+                path: "dao.quote_mint";
+                account: "dao";
+              }
+            ];
+            program: {
+              kind: "account";
+              path: "conditionalVaultProgram";
+            };
+          };
         },
         {
           name: "baseVault";
           writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  99,
+                  111,
+                  110,
+                  100,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110,
+                  97,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ];
+              },
+              {
+                kind: "account";
+                path: "question";
+              },
+              {
+                kind: "account";
+                path: "dao.base_mint";
+                account: "dao";
+              }
+            ];
+            program: {
+              kind: "account";
+              path: "conditionalVaultProgram";
+            };
+          };
         },
         {
           name: "baseVaultUnderlyingTokenAccount";
@@ -713,26 +1997,557 @@ export type Autocrat = {
             {
               name: "unconditionalBase";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.underlying_token_mint";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "unconditionalQuote";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.underlying_token_mint";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "passBase";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.conditional_token_mints [1]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "passQuote";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.conditional_token_mints [1]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "failBase";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.conditional_token_mints [0]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "failQuote";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.conditional_token_mints [0]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
+            },
+            {
+              name: "baseVault";
+            },
+            {
+              name: "quoteVault";
+            },
+            {
+              name: "futarchyAmm";
             }
           ];
         },
@@ -858,26 +2673,557 @@ export type Autocrat = {
             {
               name: "unconditionalBase";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.underlying_token_mint";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "unconditionalQuote";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.underlying_token_mint";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "passBase";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.conditional_token_mints [1]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "passQuote";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.conditional_token_mints [1]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "failBase";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "base_vault.conditional_token_mints [0]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
             },
             {
               name: "failQuote";
               writable: true;
+              pda: {
+                seeds: [
+                  {
+                    kind: "account";
+                    path: "futarchyAmm";
+                  },
+                  {
+                    kind: "const";
+                    value: [
+                      6,
+                      221,
+                      246,
+                      225,
+                      215,
+                      101,
+                      161,
+                      147,
+                      217,
+                      203,
+                      225,
+                      70,
+                      206,
+                      235,
+                      121,
+                      172,
+                      28,
+                      180,
+                      133,
+                      237,
+                      95,
+                      91,
+                      55,
+                      145,
+                      58,
+                      140,
+                      245,
+                      133,
+                      126,
+                      255,
+                      0,
+                      169
+                    ];
+                  },
+                  {
+                    kind: "account";
+                    path: "quote_vault.conditional_token_mints [0]";
+                    account: "conditionalVault";
+                  }
+                ];
+                program: {
+                  kind: "const";
+                  value: [
+                    140,
+                    151,
+                    37,
+                    143,
+                    78,
+                    36,
+                    137,
+                    241,
+                    187,
+                    61,
+                    16,
+                    41,
+                    20,
+                    142,
+                    13,
+                    131,
+                    11,
+                    90,
+                    19,
+                    153,
+                    218,
+                    255,
+                    16,
+                    132,
+                    4,
+                    142,
+                    123,
+                    216,
+                    219,
+                    233,
+                    248,
+                    89
+                  ];
+                };
+              };
+            },
+            {
+              name: "baseVault";
+            },
+            {
+              name: "quoteVault";
+            },
+            {
+              name: "futarchyAmm";
             }
           ];
         },
@@ -1266,6 +3612,55 @@ export type Autocrat = {
           {
             name: "unixTimestamp";
             type: "i64";
+          }
+        ];
+      };
+    },
+    {
+      name: "condition";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "unconditional";
+          },
+          {
+            name: "pass";
+          },
+          {
+            name: "fail";
+          }
+        ];
+      };
+    },
+    {
+      name: "conditionalTradeParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "side";
+            type: {
+              defined: {
+                name: "side";
+              };
+            };
+          },
+          {
+            name: "condition";
+            type: {
+              defined: {
+                name: "condition";
+              };
+            };
+          },
+          {
+            name: "amountIn";
+            type: "u64";
+          },
+          {
+            name: "minAmountOut";
+            type: "u64";
           }
         ];
       };

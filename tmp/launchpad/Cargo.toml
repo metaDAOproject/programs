@@ -18,11 +18,12 @@ devnet = ["raydium-cpmm-cpi/devnet"]
 production = []
 
 [dependencies]
-anchor-lang = "0.31.1"
-anchor-spl = "0.31.1"
+anchor-lang = "0.29.0"
+anchor-spl = "0.29.0"
 autocrat = { path = "../autocrat", features = ["cpi"] }
 raydium-cpmm-cpi = { git = "https://github.com/raydium-io/raydium-cpi", package = "raydium-cpmm-cpi", branch = "anchor-0.29.0" }
 spl-memo = "=4.0.0"
+solana-program = "=1.17.14"
 spl-token = "=4.0.0"
 ahash = "=0.8.6"
 solana-security-txt = "1.1.1"

@@ -152,8 +152,8 @@ impl InitializeProposal<'_> {
         // to the pass and fail pools. We don't need to actually do any splits
         // because most of the conditional token reserves are virtual.
 
-        let base_to_provide = ctx.accounts.amm_token_accounts.unconditional_base.amount / 2;
-        let quote_to_provide = ctx.accounts.amm_token_accounts.unconditional_quote.amount / 2;
+        let base_to_provide = amm_token_accounts.unconditional_base.amount / 2;
+        let quote_to_provide = amm_token_accounts.unconditional_quote.amount / 2;
 
         // futarchy_amm.spot_pool.base_reserves -= base_to_provide;
         // futarchy_amm.spot_pool.quote_reserves -= quote_to_provide;
@@ -171,65 +171,59 @@ impl InitializeProposal<'_> {
             // },
         };
 
-        let signer_seeds = &[b"futarchy_amm".as_ref(), &[ctx.accounts.futarchy_amm.bump]];
+        let signer_seeds = &[b"futarchy_amm".as_ref(), &[futarchy_amm.bump]];
         let signer = &[&signer_seeds[..]];
 
         let base_cpi_context = CpiContext::new_with_signer(
-            ctx.accounts.conditional_vault_program.to_account_info(),
+            conditional_vault_program.to_account_info(),
             conditional_vault::cpi::accounts::InteractWithVault {
-                question: ctx.accounts.question.to_account_info(),
-                vault: ctx.accounts.base_vault.to_account_info(),
-                vault_underlying_token_account: ctx
-                    .accounts
-                    .base_vault_underlying_token_account
+                question: question.to_account_info(),
+                vault: base_vault.to_account_info(),
+                vault_underlying_token_account: base_vault_underlying_token_account
                     .to_account_info(),
-                authority: ctx.accounts.futarchy_amm.to_account_info(),
-                user_underlying_token_account: ctx
-                    .accounts
-                    .amm_token_accounts
+                authority: futarchy_amm.to_account_info(),
+                user_underlying_token_account: 
+                    amm_token_accounts
                     .unconditional_base
                     .to_account_info(),
-                event_authority: ctx.accounts.vault_event_authority.to_account_info(),
-                program: ctx.accounts.conditional_vault_program.to_account_info(),
-                token_program: ctx.accounts.token_program.to_account_info(),
+                event_authority: vault_event_authority.to_account_info(),
+                program: conditional_vault_program.to_account_info(),
+                token_program: token_program.to_account_info(),
             },
             signer,
         )
         .with_remaining_accounts(vec![
-            ctx.accounts.fail_base_mint.to_account_info(),
-            ctx.accounts.pass_base_mint.to_account_info(),
-            ctx.accounts.amm_token_accounts.fail_base.to_account_info(),
-            ctx.accounts.amm_token_accounts.pass_base.to_account_info(),
+            fail_base_mint.to_account_info(),
+            pass_base_mint.to_account_info(),
+            amm_token_accounts.fail_base.to_account_info(),
+            amm_token_accounts.pass_base.to_account_info(),
         ]);
 
         conditional_vault::cpi::split_tokens(base_cpi_context, base_to_provide)?;
 
         let quote_cpi_context = CpiContext::new_with_signer(
-            ctx.accounts.conditional_vault_program.to_account_info(),
+            conditional_vault_program.to_account_info(),
             conditional_vault::cpi::accounts::InteractWithVault {
-                question: ctx.accounts.question.to_account_info(),
-                vault: ctx.accounts.quote_vault.to_account_info(),
-                vault_underlying_token_account: ctx
-                    .accounts
-                    .quote_vault_underlying_token_account
+                question: question.to_account_info(),
+                vault: quote_vault.to_account_info(),
+                vault_underlying_token_account: quote_vault_underlying_token_account
                     .to_account_info(),
-                authority: ctx.accounts.futarchy_amm.to_account_info(),
-                user_underlying_token_account: ctx
-                    .accounts
-                    .amm_token_accounts
+                authority: futarchy_amm.to_account_info(),
+                user_underlying_token_account: 
+                    amm_token_accounts
                     .unconditional_quote
                     .to_account_info(),
-                event_authority: ctx.accounts.vault_event_authority.to_account_info(),
-                program: ctx.accounts.conditional_vault_program.to_account_info(),
-                token_program: ctx.accounts.token_program.to_account_info(),
+                event_authority: vault_event_authority.to_account_info(),
+                program: conditional_vault_program.to_account_info(),
+                token_program: token_program.to_account_info(),
             },
             signer,
         )
         .with_remaining_accounts(vec![
-            ctx.accounts.fail_quote_mint.to_account_info(),
-            ctx.accounts.pass_quote_mint.to_account_info(),
-            ctx.accounts.amm_token_accounts.fail_quote.to_account_info(),
-            ctx.accounts.amm_token_accounts.pass_quote.to_account_info(),
+            fail_quote_mint.to_account_info(),
+            pass_quote_mint.to_account_info(),
+            amm_token_accounts.fail_quote.to_account_info(),
+            amm_token_accounts.pass_quote.to_account_info(),
         ]);
 
         conditional_vault::cpi::split_tokens(quote_cpi_context, quote_to_provide)?;

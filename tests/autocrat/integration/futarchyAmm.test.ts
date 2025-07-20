@@ -322,8 +322,6 @@ export default function suite() {
     // ])
     .rpc();
 
-    return;
-
 
     await this.vaultClient
       .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
@@ -334,27 +332,25 @@ export default function suite() {
       .rpc();
 
 
-    storedAmm = await this.autocratClient.getAmm(futarchyAmm);
-    console.log(storedAmm.spotPool.quoteReserves.toString());
-    console.log(storedAmm.spotPool.baseReserves.toString());
-    console.log(storedAmm.liveProposal.passPool.quoteReserves.toString());
-    console.log(storedAmm.liveProposal.passPool.baseReserves.toString());
-    console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
-    console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
+    // storedAmm = await this.autocratClient.getAmm(futarchyAmm);
+    // console.log(storedAmm.spotPool.quoteReserves.toString());
+    // console.log(storedAmm.spotPool.baseReserves.toString());
+    // console.log(storedAmm.liveProposal.passPool.quoteReserves.toString());
+    // console.log(storedAmm.liveProposal.passPool.baseReserves.toString());
+    // console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
+    // console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
 
-    return;
-
-    await this.autocratClient.autocrat.methods.condSwap({
+    await program.methods.conditionalTrade({
       side: {buy: {}},
-      underlyingAsset: {quote: {}},
+      condition: {pass: {}},
       amountIn: new BN(1_000).mul(new BN(10 ** 6)),
       minAmountOut: new BN(990_009),
     })
     .accounts({
-      arbitrarySwap: {
         futarchyAmm,
         trader: this.payer.publicKey,
         traderInputAccount: getAssociatedTokenAddressSync(passQuoteMint, this.payer.publicKey),
+        traderOutputAccount: getAssociatedTokenAddressSync(passBaseMint, this.payer.publicKey),
         baseVault: baseVault,
         quoteVault: quoteVault,
         baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
@@ -366,31 +362,28 @@ export default function suite() {
         passBaseMint: passBaseMint,
         failBaseMint: failBaseMint,
         ammTokenAccounts: {
-          baseUnconditional: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-          quoteUnconditional: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-          basePass: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
-          quotePass: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
-          baseFail: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
-          quoteFail: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+          unconditionalBase: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+          unconditionalQuote: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+          passBase: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+          passQuote: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+          failBase: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+          failQuote: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+          baseVault,
+          quoteVault,
+          futarchyAmm,
         },
         question: question,
         vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
         tokenProgram: TOKEN_PROGRAM_ID,
         conditionalVaultProgram: this.vaultClient.vaultProgram.programId,
-      },
     })
     .preInstructions([
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
       ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
     ])
-    .remainingAccounts([
-      {
-        pubkey: getAssociatedTokenAddressSync(passBaseMint, this.payer.publicKey),
-        isWritable: true,
-        isSigner: false,
-      },
-    ])
     .rpc();
+
+    return;
 
     storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
     console.log(storedAmm.spotPool.quoteReserves.toString());
