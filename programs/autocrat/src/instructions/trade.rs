@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount};
+// Assuming 6 decimal places, this means we can handle up to 2**52 * 2**52, so 4B tokens * 4B tokens
+use fixed::types::I104F24;
 
 use crate::{
     state::{Amm, Side}, AutocratError
@@ -85,18 +87,21 @@ pub enum Condition {
 
 #[derive(Accounts)]
 pub struct AmmTokenAccounts<'info> {
-    #[account(mut)]
+    #[account(mut, associated_token::mint = base_vault.underlying_token_mint, associated_token::authority = futarchy_amm)]
     pub unconditional_base: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    #[account(mut, associated_token::mint = quote_vault.underlying_token_mint, associated_token::authority = futarchy_amm)]
     pub unconditional_quote: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    #[account(mut, associated_token::mint = base_vault.conditional_token_mints[1], associated_token::authority = futarchy_amm)]
     pub pass_base: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    #[account(mut, associated_token::mint = quote_vault.conditional_token_mints[1], associated_token::authority = futarchy_amm)]
     pub pass_quote: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    #[account(mut, associated_token::mint = base_vault.conditional_token_mints[0], associated_token::authority = futarchy_amm)]
     pub fail_base: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    #[account(mut, associated_token::mint = quote_vault.conditional_token_mints[0], associated_token::authority = futarchy_amm)]
     pub fail_quote: Box<Account<'info, TokenAccount>>,
+    pub base_vault: Box<Account<'info, conditional_vault::state::ConditionalVault>>,
+    pub quote_vault: Box<Account<'info, conditional_vault::state::ConditionalVault>>,
+    pub futarchy_amm: Account<'info, Amm>,
 }
 
 #[derive(Accounts)]
@@ -135,6 +140,121 @@ pub struct Trade<'info> {
     pub fail_base_mint: Box<Account<'info, token::Mint>>,
 }
 
+pub fn min_b_three_fixed(
+    a: I104F24,
+    c: I104F24,
+    d: I104F24,
+    e: I104F24,
+    f_: I104F24,
+    k1: I104F24,
+    k2: I104F24,
+    k3: I104F24,
+) -> Option<(I104F24, I104F24, I104F24)> {
+    if !(k1 > 0.0 && k2 > 0.0 && k3 > 0.0) {
+        return None;
+    }
+
+    let y2 = |x: I104F24| k2 / (c + x) - d;
+    let y3 = |x: I104F24| k3 / (e + x) - f_;
+
+    let mut b12 = I104F24::MAX; let mut x12 = I104F24::MAX; let mut y12 = I104F24::MAX;
+    let mut b13 = I104F24::MAX; let mut x13 = I104F24::MAX; let mut y13 = I104F24::MAX;
+    let mut b_eq = I104F24::MAX; let mut x_eq = I104F24::MAX; let mut y_eq = I104F24::MAX;
+
+    // --- Case 1: constraints (1)&(2) both tight ---
+    // (1): (a - x)(b - y) = k1  =>  b = k1/(a-x) + y  => b(x) = k1/(a-x) + y2(x)
+    // (2) tight gives y = y2(x)
+    // To minimize b(x), set its derivative to zero => tangency condition:
+    //   d/dx [k1/(a-x) + y2(x)] = 0  <=>  sqrt(k1)/(a-x) = sqrt(k2)/(c+x)
+    {   // Tangency sqrt(k1)/(a-x) = sqrt(k2)/(c+x)
+        // Solve sqrt(k1)/(a-x) = sqrt(k2)/(c+x) for x:
+        //   sqrt(k1)*(c+x) = sqrt(k2)*(a-x)
+        //   => sqrt(k1)*c + sqrt(k1)*x = sqrt(k2)*a - sqrt(k2)*x
+        //   => x*(sqrt(k1)+sqrt(k2)) = sqrt(k2)*a - sqrt(k1)*c
+        //   => x = [sqrt(k2)*a - sqrt(k1)*c] / [sqrt(k1)+sqrt(k2)]
+        let x = ((a.checked_mul(k2.sqrt())).unwrap() - (c * k1.sqrt())) / (k1.sqrt() + k2.sqrt());
+        // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt());
+        // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}, (a * k2.sqrt()) - (c * k1.sqrt()) = {}, a = {a}, c = {c}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt(), (a * k2.sqrt()) - (c * k1.sqrt()));
+        // Equivalent but simplified: x = (a - s*c)/(1 + s)
+        // Check domain: a - x > 0 and c + x > 0
+        if x > -c && x < a {
+            let y = y2(x);  // from constraint 2
+            // Must also satisfy constraint 3 slack: y >= y3(x)
+            if y >= y3(x) {
+                let b = k1 / (a - x) + y;  // compute b(x)
+                b12 = b; x12 = x; y12 = y;
+            }
+        }
+    }
+
+    // --- Case 2: constraints (1)&(3) both tight ---
+    // Analogous to Case 1 but use y3(x)
+    // b(x) = k1/(a-x) + y3(x)
+    // Tangency: sqrt(k1)/(a-x) = sqrt(k3)/(e+x)
+    {   // solve x = [sqrt(k3)*a - sqrt(k1)*e] / [sqrt(k1)+sqrt(k3)]
+        let x = (a * (k3.sqrt()) - e * (k1.sqrt())) / (k1.sqrt() + k3.sqrt());
+        if x > -e && x < a {
+            let y = y3(x);
+            // ensure constraint 2 slack: y >= y2(x)
+            if y >= y2(x) {
+                let b = k1 / (a - x) + y;
+                b13 = b; x13 = x; y13 = y;
+            }
+        }
+    }
+
+    // --- Case 3: constraints (2)&(3) tangent ---
+    // y2(x) = y3(x) => k2/(c+x) - d = k3/(e+x) - f_
+    // Multiply both sides by (c+x)(e+x): k2(e+x) - d(c+x)(e+x) = k3(c+x) - f_(c+x)(e+x)
+    // Rearranged gives quadratic A x^2 + B x + C = 0:
+    //   A = d - f_
+    //   B = k2 - k3 - A*(c+e)
+    //   C = k2*e - k3*c - A*c*e
+    {
+        let A = d - f_;
+        let B = k2 - k3 - A * (c + e);
+        let C = k2 * e - k3 * c - A * c * e;
+        let mut check_root = |x: I104F24| {
+            if x > -c && x > -e && x < a {
+                let y = y2(x);                    // common y
+                // b(x) = k1/(a-x) + y
+                let b = k1 / (a - x) + y;
+                // ensure constraint 1 slack: (a-x)(b-y)>=k1 => y <= b - k1/(a-x)
+                if y <= b - k1 / (a - x) {
+                    b_eq = b; x_eq = x; y_eq = y;
+                }
+            }
+        };
+        if A.abs() < 1e-12 {
+            if B.abs() > 1e-12 { check_root(-C / B); }
+        } else {
+            let disc = B * B - I104F24::from_num(4.0) * A * C;
+            if disc >= 0.0 {
+                let rt = disc.sqrt();
+                check_root((-B - rt) / (I104F24::from_num(2.0) * A));
+                check_root((-B + rt) / (I104F24::from_num(2.0) * A));
+            }
+        }
+    }
+    msg!("b12: {}, b13: {}, b_eq: {}", b12, b13, b_eq);
+
+    // --- Final: choose the smallest b among three cases ---
+    let (b_min, x_star, y_star) = if b12 <= b13 && b12 <= b_eq {
+        (b12, x12, y12)
+    } else if b13 <= b12 && b13 <= b_eq {
+        (b13, x13, y13)
+    } else {
+        (b_eq, x_eq, y_eq)
+    };
+
+    // If no finite candidate, infeasible
+    if b_min == I104F24::MAX {
+        None
+    } else {
+        Some((b_min, x_star, y_star))
+    }
+}
+
 pub fn min_b_three(
     a: f64,
     c: f64,
@@ -168,13 +288,16 @@ pub fn min_b_three(
     // To minimize b(x), set its derivative to zero => tangency condition:
     //   d/dx [k1/(a-x) + y2(x)] = 0  <=>  sqrt(k1)/(a-x) = sqrt(k2)/(c+x)
     {   // Tangency sqrt(k1)/(a-x) = sqrt(k2)/(c+x)
-        let s = (k2 / k1).sqrt();
+        // let s = (k2 / k1).sqrt();
         // Solve sqrt(k1)/(a-x) = sqrt(k2)/(c+x) for x:
         //   sqrt(k1)*(c+x) = sqrt(k2)*(a-x)
         //   => sqrt(k1)*c + sqrt(k1)*x = sqrt(k2)*a - sqrt(k2)*x
         //   => x*(sqrt(k1)+sqrt(k2)) = sqrt(k2)*a - sqrt(k1)*c
         //   => x = [sqrt(k2)*a - sqrt(k1)*c] / [sqrt(k1)+sqrt(k2)]
         let x = (a * (k2.sqrt()) - c * (k1.sqrt())) / (k1.sqrt() + k2.sqrt());
+        // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}", x, k2.sqrt(), k1.sqrt());
+        // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}, (a * k2.sqrt()) - (c * k1.sqrt()) = {}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt(), a * k2.sqrt() - c * k1.sqrt());
+        // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}, (a * k2.sqrt()) - (c * k1.sqrt()) = {}, a = {a}, c = {c}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt(), (a * k2.sqrt()) - (c * k1.sqrt()));
         // Equivalent but simplified: x = (a - s*c)/(1 + s)
         // Check domain: a - x > 0 and c + x > 0
         if x > -c && x < a {
@@ -236,6 +359,8 @@ pub fn min_b_three(
             }
         }
     }
+
+    msg!("b12: {}, b13: {}, b_eq: {}", b12, b13, b_eq);
 
     // --- Final: choose the smallest b among three cases ---
     let (b_min, x_star, y_star) = if b12 <= b13 && b12 <= b_eq {
@@ -366,12 +491,12 @@ impl Trade<'_> {
         let SpotTradeParams { side, amount_in, min_amount_out } = params;
 
         let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
-            ctx.accounts.amm_token_accounts.unconditional_quote.amount as f64,
-            ctx.accounts.amm_token_accounts.unconditional_base.amount as f64,
-            ctx.accounts.amm_token_accounts.pass_quote.amount as f64,
-            ctx.accounts.amm_token_accounts.pass_base.amount as f64,
-            ctx.accounts.amm_token_accounts.fail_quote.amount as f64,
-            ctx.accounts.amm_token_accounts.fail_base.amount as f64,
+            I104F24::from_num(ctx.accounts.amm_token_accounts.unconditional_quote.amount),
+            I104F24::from_num(ctx.accounts.amm_token_accounts.unconditional_base.amount),
+            I104F24::from_num(ctx.accounts.amm_token_accounts.pass_quote.amount),
+            I104F24::from_num(ctx.accounts.amm_token_accounts.pass_base.amount),
+            I104F24::from_num(ctx.accounts.amm_token_accounts.fail_quote.amount),
+            I104F24::from_num(ctx.accounts.amm_token_accounts.fail_base.amount),
         );
 
         let (a, b, c, d, e, f) = match side {
@@ -379,7 +504,7 @@ impl Trade<'_> {
             Side::Sell => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
         };
 
-        let (new_b, x, y) = min_b_three(a + amount_in as f64, c, d, e, f, a * b, c * d, e * f).unwrap();
+        let (new_b, x, y) = min_b_three_fixed(a + I104F24::from_num(amount_in), c, d, e, f, a * b, c * d, e * f).unwrap();
 
         let (input_asset, output_asset, quote_split, base_split) = if side == Side::Buy {
             (Asset::SpotQuote, Asset::SpotBase, x, y)
@@ -387,15 +512,42 @@ impl Trade<'_> {
             (Asset::SpotBase, Asset::SpotQuote, y, x)
         };
 
+        // msg!("new_b: {}, x: {}, y: {}", new_b, x, y);
+
+
+        // let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+        //     ctx.accounts.amm_token_accounts.unconditional_quote.amount as f64,
+        //     ctx.accounts.amm_token_accounts.unconditional_base.amount as f64,
+        //     ctx.accounts.amm_token_accounts.pass_quote.amount as f64,
+        //     ctx.accounts.amm_token_accounts.pass_base.amount as f64,
+        //     ctx.accounts.amm_token_accounts.fail_quote.amount as f64,
+        //     ctx.accounts.amm_token_accounts.fail_base.amount as f64,
+        // );
+
+        // let (a, b, c, d, e, f) = match side {
+        //     Side::Buy => (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base),
+        //     Side::Sell => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
+        // };
+
+        // let (new_b, x, y) = min_b_three(a + amount_in as f64, c, d, e, f, a * b, c * d, e * f).unwrap();
+
+        // msg!("new_b: {}, x: {}, y: {}", new_b, x, y);
+
+        // let (input_asset, output_asset, quote_split, base_split) = if side == Side::Buy {
+        //     (Asset::SpotQuote, Asset::SpotBase, x, y)
+        // } else {
+        //     (Asset::SpotBase, Asset::SpotQuote, y, x)
+        // };
+
         let quote_split_or_marge = if quote_split > 0.0 {
             SplitOrMergeAndAmount {
                 split_or_merge: SplitOrMerge::Split,
-                amount: quote_split.abs() as u64 + 1,
+                amount: quote_split.abs().to_num::<u64>() + 1,
             }
         } else {
             SplitOrMergeAndAmount {
                 split_or_merge: SplitOrMerge::Merge,
-                amount: quote_split.abs() as u64 - 1,
+                amount: quote_split.abs().to_num::<u64>() - 1,
             }
         };
 
@@ -407,12 +559,12 @@ impl Trade<'_> {
             },
             output: AssetAndAmount { 
                 asset: output_asset,
-                amount: (b - new_b) as u64 - 1,
+                amount: (b - new_b).to_num::<u64>() - 1,
             },
             quote_split_or_merge: quote_split_or_marge,
             base_split_or_merge: SplitOrMergeAndAmount { 
                 split_or_merge: if base_split > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: base_split.abs() as u64
+                amount: base_split.abs().to_num::<u64>()
             },
         };
 

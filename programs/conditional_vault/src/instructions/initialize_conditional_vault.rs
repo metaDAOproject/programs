@@ -3,6 +3,9 @@ use super::*;
 use anchor_lang::system_program;
 use anchor_spl::token;
 
+#[constant]
+pub const CONDITIONAL_VAULT_SEED: &[u8] = b"conditional_vault";
+
 #[event_cpi]
 #[derive(Accounts)]
 pub struct InitializeConditionalVault<'info> {
@@ -11,7 +14,7 @@ pub struct InitializeConditionalVault<'info> {
         payer = payer,
         space = 8 + ConditionalVault::INIT_SPACE + (32 * question.num_outcomes()),
         seeds = [
-            b"conditional_vault", 
+            CONDITIONAL_VAULT_SEED, 
             question.key().as_ref(),
             underlying_token_mint.key().as_ref(),
         ],

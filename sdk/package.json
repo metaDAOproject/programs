@@ -11,17 +11,15 @@
   ],
   "exports": {
     ".": "./dist/index.js",
-    "./v0.3": "./dist/v0.3/index.js",
-    "./v0.4": "./dist/v0.4/index.js",
-    "./v0.5": "./dist/v0.5/index.js"
+    "./v0.6": "./dist/v0.6/index.js"
   },
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "build": "rm -rf ./dist && cp ../target/types/* ./src/v0.5/types && yarn lint:fix && yarn tsc"
+    "build": "rm -rf ./dist && cp ../target/types/* ./src/v0.6/types && yarn lint:fix && yarn tsc"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.29.0",
+    "@coral-xyz/anchor": "^0.31.1",
     "@metaplex-foundation/umi": "^0.9.2",
     "@metaplex-foundation/umi-bundle-defaults": "^0.9.2",
     "@metaplex-foundation/umi-uploader-bundlr": "^0.9.2",

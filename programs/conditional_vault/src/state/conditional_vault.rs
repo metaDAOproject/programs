@@ -13,7 +13,7 @@ pub struct ConditionalVault {
     pub question: Pubkey,
     pub underlying_token_mint: Pubkey,
     pub underlying_token_account: Pubkey,
-    #[max_len(0)]
+    #[max_len(10)]
     pub conditional_token_mints: Vec<Pubkey>,
     pub pda_bump: u8,
     pub decimals: u8,

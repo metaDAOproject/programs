@@ -1,0 +1,2449 @@
+{
+  "address": "EP3SoC2SvR3d4c2eXVBvhEMWSr2j3YtoCY3UMiQV7BPD",
+  "metadata": {
+    "name": "autocrat",
+    "version": "0.5.0",
+    "spec": "0.1.0",
+    "description": "SVM-based program for running futarchy"
+  },
+  "instructions": [
+    {
+      "name": "initialize_dao",
+      "discriminator": [
+        128,
+        226,
+        96,
+        90,
+        39,
+        56,
+        24,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "dao",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  97,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "dao_creator"
+              },
+              {
+                "kind": "arg",
+                "path": "params.nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dao_creator",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "squads_multisig",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  117,
+                  108,
+                  116,
+                  105,
+                  115,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  117,
+                  108,
+                  116,
+                  105,
+                  115,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "dao"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "squads_program"
+            }
+          }
+        },
+        {
+          "name": "squads_multisig_vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  117,
+                  108,
+                  116,
+                  105,
+                  115,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "squads_multisig"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "squads_program"
+            }
+          }
+        },
+        {
+          "name": "squads_program",
+          "address": "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
+        },
+        {
+          "name": "squads_program_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  117,
+                  108,
+                  116,
+                  105,
+                  115,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "squads_program"
+            }
+          }
+        },
+        {
+          "name": "squads_program_config_treasury",
+          "writable": true
+        },
+        {
+          "name": "spending_limit",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  117,
+                  108,
+                  116,
+                  105,
+                  115,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "squads_multisig"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  112,
+                  101,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103,
+                  95,
+                  108,
+                  105,
+                  109,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "dao"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "squads_program"
+            }
+          }
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeDaoParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_futarchy_amm",
+      "discriminator": [
+        152,
+        34,
+        129,
+        79,
+        207,
+        32,
+        253,
+        162
+      ],
+      "accounts": [
+        {
+          "name": "futarchy_amm",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  117,
+                  116,
+                  97,
+                  114,
+                  99,
+                  104,
+                  121,
+                  95,
+                  97,
+                  109,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "creator",
+          "signer": true
+        },
+        {
+          "name": "dao"
+        },
+        {
+          "name": "base_mint",
+          "relations": [
+            "dao"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "relations": [
+            "dao"
+          ]
+        },
+        {
+          "name": "base_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "futarchy_amm"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "futarchy_amm"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "creator_base_account",
+          "writable": true
+        },
+        {
+          "name": "creator_quote_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeFutarchyAmmParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_proposal",
+      "discriminator": [
+        50,
+        73,
+        156,
+        98,
+        129,
+        149,
+        21,
+        158
+      ],
+      "accounts": [
+        {
+          "name": "proposal",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  112,
+                  111,
+                  115,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "squads_proposal"
+              }
+            ]
+          }
+        },
+        {
+          "name": "squads_proposal"
+        },
+        {
+          "name": "dao",
+          "writable": true,
+          "relations": [
+            "futarchy_amm"
+          ]
+        },
+        {
+          "name": "futarchy_amm",
+          "writable": true
+        },
+        {
+          "name": "question",
+          "relations": [
+            "quote_vault",
+            "base_vault"
+          ]
+        },
+        {
+          "name": "amm_token_accounts",
+          "accounts": [
+            {
+              "name": "unconditional_base",
+              "writable": true
+            },
+            {
+              "name": "unconditional_quote",
+              "writable": true
+            },
+            {
+              "name": "pass_base",
+              "writable": true
+            },
+            {
+              "name": "pass_quote",
+              "writable": true
+            },
+            {
+              "name": "fail_base",
+              "writable": true
+            },
+            {
+              "name": "fail_quote",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "base_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "quote_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "fail_base_mint",
+          "writable": true
+        },
+        {
+          "name": "fail_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "pass_base_mint",
+          "writable": true
+        },
+        {
+          "name": "pass_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "proposer",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "conditional_vault_program",
+          "address": "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
+        },
+        {
+          "name": "vault_event_authority"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeProposalParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "prediction_swap",
+      "discriminator": [
+        196,
+        11,
+        102,
+        50,
+        166,
+        8,
+        225,
+        211
+      ],
+      "accounts": [
+        {
+          "name": "futarchy_amm",
+          "writable": true
+        },
+        {
+          "name": "trader",
+          "signer": true
+        },
+        {
+          "name": "trader_input_account",
+          "writable": true
+        },
+        {
+          "name": "trader_output_account",
+          "writable": true
+        },
+        {
+          "name": "amm_token_accounts",
+          "accounts": [
+            {
+              "name": "unconditional_base",
+              "writable": true
+            },
+            {
+              "name": "unconditional_quote",
+              "writable": true
+            },
+            {
+              "name": "pass_base",
+              "writable": true
+            },
+            {
+              "name": "pass_quote",
+              "writable": true
+            },
+            {
+              "name": "fail_base",
+              "writable": true
+            },
+            {
+              "name": "fail_quote",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "question"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "base_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "conditional_vault_program",
+          "address": "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
+        },
+        {
+          "name": "vault_event_authority"
+        },
+        {
+          "name": "pass_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "fail_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "pass_base_mint",
+          "writable": true
+        },
+        {
+          "name": "fail_base_mint",
+          "writable": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "PredictionSwapParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "spot_swap",
+      "discriminator": [
+        167,
+        97,
+        12,
+        231,
+        237,
+        78,
+        166,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "futarchy_amm",
+          "writable": true
+        },
+        {
+          "name": "trader",
+          "signer": true
+        },
+        {
+          "name": "trader_input_account",
+          "writable": true
+        },
+        {
+          "name": "trader_output_account",
+          "writable": true
+        },
+        {
+          "name": "amm_token_accounts",
+          "accounts": [
+            {
+              "name": "unconditional_base",
+              "writable": true
+            },
+            {
+              "name": "unconditional_quote",
+              "writable": true
+            },
+            {
+              "name": "pass_base",
+              "writable": true
+            },
+            {
+              "name": "pass_quote",
+              "writable": true
+            },
+            {
+              "name": "fail_base",
+              "writable": true
+            },
+            {
+              "name": "fail_quote",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "question"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "base_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "conditional_vault_program",
+          "address": "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
+        },
+        {
+          "name": "vault_event_authority"
+        },
+        {
+          "name": "pass_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "fail_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "pass_base_mint",
+          "writable": true
+        },
+        {
+          "name": "fail_base_mint",
+          "writable": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "SpotTradeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_dao",
+      "discriminator": [
+        131,
+        72,
+        75,
+        25,
+        112,
+        210,
+        109,
+        2
+      ],
+      "accounts": [
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "squads_multisig_vault",
+          "signer": true,
+          "relations": [
+            "dao"
+          ]
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "dao_params",
+          "type": {
+            "defined": {
+              "name": "UpdateDaoParams"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Amm",
+      "discriminator": [
+        143,
+        245,
+        200,
+        17,
+        74,
+        214,
+        196,
+        135
+      ]
+    },
+    {
+      "name": "ConditionalVault",
+      "discriminator": [
+        63,
+        132,
+        87,
+        98,
+        36,
+        51,
+        175,
+        247
+      ]
+    },
+    {
+      "name": "Dao",
+      "discriminator": [
+        163,
+        9,
+        47,
+        31,
+        52,
+        85,
+        197,
+        49
+      ]
+    },
+    {
+      "name": "FutarchyProposal",
+      "discriminator": [
+        223,
+        2,
+        123,
+        23,
+        249,
+        7,
+        207,
+        255
+      ]
+    },
+    {
+      "name": "ProgramConfig",
+      "discriminator": [
+        196,
+        210,
+        90,
+        231,
+        144,
+        149,
+        140,
+        63
+      ]
+    },
+    {
+      "name": "Proposal",
+      "discriminator": [
+        26,
+        94,
+        189,
+        187,
+        116,
+        136,
+        53,
+        33
+      ]
+    },
+    {
+      "name": "Question",
+      "discriminator": [
+        111,
+        22,
+        150,
+        220,
+        181,
+        122,
+        118,
+        127
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "ExecuteProposalEvent",
+      "discriminator": [
+        153,
+        12,
+        41,
+        73,
+        206,
+        114,
+        248,
+        233
+      ]
+    },
+    {
+      "name": "FinalizeProposalEvent",
+      "discriminator": [
+        45,
+        29,
+        122,
+        181,
+        79,
+        224,
+        57,
+        141
+      ]
+    },
+    {
+      "name": "InitializeDaoEvent",
+      "discriminator": [
+        119,
+        48,
+        153,
+        116,
+        127,
+        37,
+        226,
+        228
+      ]
+    },
+    {
+      "name": "InitializeProposalEvent",
+      "discriminator": [
+        141,
+        56,
+        246,
+        192,
+        168,
+        254,
+        64,
+        111
+      ]
+    },
+    {
+      "name": "UpdateDaoEvent",
+      "discriminator": [
+        12,
+        58,
+        244,
+        224,
+        171,
+        25,
+        33,
+        56
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AmmTooOld",
+      "msg": "Amms must have been created within 5 minutes (counted in slots) of proposal initialization"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidInitialObservation",
+      "msg": "An amm has an `initial_observation` that doesn't match the `dao`'s config"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidMaxObservationChange",
+      "msg": "An amm has a `max_observation_change_per_update` that doesn't match the `dao`'s config"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidStartDelaySlots",
+      "msg": "An amm has a `start_delay_slots` that doesn't match the `dao`'s config"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidSettlementAuthority",
+      "msg": "One of the vaults has an invalid `settlement_authority`"
+    },
+    {
+      "code": 6005,
+      "name": "ProposalTooYoung",
+      "msg": "Proposal is too young to be executed or rejected"
+    },
+    {
+      "code": 6006,
+      "name": "MarketsTooYoung",
+      "msg": "Markets too young for proposal to be finalized. TWAP might need to be cranked"
+    },
+    {
+      "code": 6007,
+      "name": "ProposalAlreadyFinalized",
+      "msg": "This proposal has already been finalized"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidVaultNonce",
+      "msg": "A conditional vault has an invalid nonce. A nonce should encode the proposal number"
+    },
+    {
+      "code": 6009,
+      "name": "ProposalNotPassed",
+      "msg": "This proposal can't be executed because it isn't in the passed state"
+    },
+    {
+      "code": 6010,
+      "name": "InsufficientLpTokenBalance",
+      "msg": "The proposer has fewer pass or fail LP tokens than they requested to lock"
+    },
+    {
+      "code": 6011,
+      "name": "InsufficientLpTokenLock",
+      "msg": "The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`"
+    },
+    {
+      "code": 6012,
+      "name": "ProposalDurationTooShort",
+      "msg": "Proposal duration must be longer than TWAP start delay"
+    },
+    {
+      "code": 6013,
+      "name": "QuestionMustBeBinary",
+      "msg": "Question must have exactly 2 outcomes for binary futarchy"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidSquadsProposalStatus",
+      "msg": "Squads proposal must be in Draft status"
+    },
+    {
+      "code": 6015,
+      "name": "NoReserves",
+      "msg": "No reserves"
+    },
+    {
+      "code": 6016,
+      "name": "CastingOverflow",
+      "msg": "Got overflow when casting"
+    },
+    {
+      "code": 6017,
+      "name": "ConstantProductInvariantFailed",
+      "msg": "Constant product invariant failed"
+    },
+    {
+      "code": 6018,
+      "name": "ProposalNotLive",
+      "msg": "Proposal must be live to swap conditional tokens"
+    },
+    {
+      "code": 6019,
+      "name": "InvariantViolation",
+      "msg": "Invariant violation"
+    }
+  ],
+  "types": [
+    {
+      "name": "Amm",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "AmmState"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AmmState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Spot"
+          },
+          {
+            "name": "Futarchy",
+            "fields": [
+              {
+                "name": "proposal",
+                "type": "pubkey"
+              },
+              {
+                "name": "question",
+                "type": "pubkey"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "CommonFields",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConditionalVault",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "question",
+            "type": "pubkey"
+          },
+          {
+            "name": "underlying_token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "underlying_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "conditional_token_mints",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "decimals",
+            "type": "u8"
+          },
+          {
+            "name": "seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Dao",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "docs": [
+              "`nonce` + `dao_creator` are PDA seeds"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "dao_creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposal_count",
+            "type": "u32"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "slots_per_proposal",
+            "type": "u64"
+          },
+          {
+            "name": "twap_initial_observation",
+            "docs": [
+              "For manipulation-resistance the TWAP is a time-weighted average observation,",
+              "where observation tries to approximate price but can only move by",
+              "`twap_max_observation_change_per_update` per update. Because it can only move",
+              "a little bit per update, you need to check that it has a good initial observation.",
+              "Otherwise, an attacker could create a very high initial observation in the pass",
+              "market and a very low one in the fail market to force the proposal to pass.",
+              "",
+              "We recommend setting an initial observation around the spot price of the token,",
+              "and max observation change per update around 2% the spot price of the token.",
+              "For example, if the spot price of META is $400, we'd recommend setting an initial",
+              "observation of 400 (converted into the AMM prices) and a max observation change per",
+              "update of 8 (also converted into the AMM prices). Observations can be updated once",
+              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
+              "in 50 minutes."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "twap_start_delay_slots",
+            "docs": [
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "docs": [
+              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
+              "in both futarchic markets in order to create a proposal.",
+              "",
+              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
+              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
+              "10 * 1_000_000_000 (10 META)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "seq_num",
+            "type": "u64"
+          },
+          {
+            "name": "initial_spending_limit",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "InitialSpendingLimit"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExecuteProposalEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FinalizeProposalEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_market_twap",
+            "type": "u128"
+          },
+          {
+            "name": "fail_market_twap",
+            "type": "u128"
+          },
+          {
+            "name": "threshold",
+            "type": "u128"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "ProposalState"
+              }
+            }
+          },
+          {
+            "name": "squads_proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FutarchyProposal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "number",
+            "type": "u32"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "slot_enqueued",
+            "type": "u64"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "ProposalState"
+              }
+            }
+          },
+          {
+            "name": "base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "futarchy_amm",
+            "type": "pubkey"
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "question",
+            "type": "pubkey"
+          },
+          {
+            "name": "duration_in_slots",
+            "type": "u64"
+          },
+          {
+            "name": "squads_proposal",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitialSpendingLimit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount_per_month",
+            "type": "u64"
+          },
+          {
+            "name": "members",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeDaoEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "slots_per_proposal",
+            "type": "u64"
+          },
+          {
+            "name": "twap_initial_observation",
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "initial_spending_limit",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "InitialSpendingLimit"
+                }
+              }
+            }
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig_vault",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeDaoParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "twap_initial_observation",
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "twap_start_delay_slots",
+            "type": "u64"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "slots_per_proposal",
+            "type": "u64"
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "initial_spending_limit",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "InitialSpendingLimit"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeFutarchyAmmParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "quote_amount",
+            "type": "u64"
+          },
+          {
+            "name": "base_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeProposalEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "question",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_amm",
+            "type": "pubkey"
+          },
+          {
+            "name": "fail_amm",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_lp_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "fail_lp_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "number",
+            "type": "u32"
+          },
+          {
+            "name": "pass_lp_tokens_locked",
+            "type": "u64"
+          },
+          {
+            "name": "fail_lp_tokens_locked",
+            "type": "u64"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "duration_in_slots",
+            "type": "u64"
+          },
+          {
+            "name": "squads_proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig_vault",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeProposalParams",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "PredictionSwapParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "Side"
+              }
+            }
+          },
+          {
+            "name": "underlying_asset",
+            "type": {
+              "defined": {
+                "name": "UnderlyingAsset"
+              }
+            }
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "min_amount_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramConfig",
+      "docs": [
+        "Global program configuration account."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "multisig_creation_fee",
+            "type": "u64"
+          },
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Proposal",
+      "docs": [
+        "Stores the data required for tracking the status of a multisig proposal.",
+        "Each `Proposal` has a 1:1 association with a transaction account, e.g. a `VaultTransaction` or a `ConfigTransaction`;",
+        "the latter can be executed only after the `Proposal` has been approved and its time lock is released."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "transaction_index",
+            "type": "u64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "ProposalStatus"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "approved",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "rejected",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "cancelled",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposalState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Passed"
+          },
+          {
+            "name": "Failed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposalStatus",
+      "docs": [
+        "The status of a proposal.",
+        "Each variant wraps a timestamp of when the status was set."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Draft",
+            "fields": [
+              {
+                "name": "timestamp",
+                "type": "i64"
+              }
+            ]
+          },
+          {
+            "name": "Active",
+            "fields": [
+              {
+                "name": "timestamp",
+                "type": "i64"
+              }
+            ]
+          },
+          {
+            "name": "Rejected",
+            "fields": [
+              {
+                "name": "timestamp",
+                "type": "i64"
+              }
+            ]
+          },
+          {
+            "name": "Approved",
+            "fields": [
+              {
+                "name": "timestamp",
+                "type": "i64"
+              }
+            ]
+          },
+          {
+            "name": "Executing"
+          },
+          {
+            "name": "Executed",
+            "fields": [
+              {
+                "name": "timestamp",
+                "type": "i64"
+              }
+            ]
+          },
+          {
+            "name": "Cancelled",
+            "fields": [
+              {
+                "name": "timestamp",
+                "type": "i64"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Question",
+      "docs": [
+        "Questions represent statements about future events.",
+        "",
+        "These statements include:",
+        "- \"Will this proposal pass?\"",
+        "- \"Who, if anyone, will be hired?\"",
+        "- \"How effective will the grant committee deem this grant?\"",
+        "",
+        "Questions have 2 or more possible outcomes. For a question like \"will this",
+        "proposal pass,\" the outcomes are \"yes\" and \"no.\" For a question like \"who",
+        "will be hired,\" the outcomes could be \"Alice,\" \"Bob,\" and \"neither.\"",
+        "",
+        "Outcomes resolve to a number between 0 and 1. Binary questions like \"will",
+        "this proposal pass\" have outcomes that resolve to exactly 0 or 1. You can",
+        "also have questions with scalar outcomes. For example, the question \"how",
+        "effective will the grant committee deem this grant\" could have two outcomes:",
+        "\"ineffective\" and \"effective.\" If the grant committee deems the grant 70%",
+        "effective, the \"effective\" outcome would resolve to 0.7 and the \"ineffective\"",
+        "outcome would resolve to 0.3.",
+        "",
+        "Once resolved, the sum of all outcome resolutions is exactly 1."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "question_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "oracle",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout_numerators",
+            "type": {
+              "vec": "u32"
+            }
+          },
+          {
+            "name": "payout_denominator",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Side",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SpotTradeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "side",
+            "type": {
+              "defined": {
+                "name": "Side"
+              }
+            }
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "min_amount_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnderlyingAsset",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Base"
+          },
+          {
+            "name": "Quote"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateDaoEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "slots_per_proposal",
+            "type": "u64"
+          },
+          {
+            "name": "twap_initial_observation",
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateDaoParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pass_threshold_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "slots_per_proposal",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "twap_initial_observation",
+            "type": {
+              "option": "u128"
+            }
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": {
+              "option": "u128"
+            }
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

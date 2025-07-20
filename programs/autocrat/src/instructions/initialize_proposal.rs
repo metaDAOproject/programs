@@ -33,14 +33,16 @@ pub struct InitializeProposal<'info> {
     pub question: Box<Account<'info, Question>>,
     pub amm_token_accounts: AmmTokenAccounts<'info>,
     #[account(
-        constraint = quote_vault.underlying_token_mint == dao.quote_mint,
-        has_one = question,
+        seeds = [conditional_vault::CONDITIONAL_VAULT_SEED, question.key().as_ref(), dao.quote_mint.key().as_ref()],
+        seeds::program = conditional_vault_program,
+        bump,
         mut,
     )]
     pub quote_vault: Box<Account<'info, ConditionalVaultAccount>>,
     #[account(
-        constraint = base_vault.underlying_token_mint == dao.base_mint,
-        has_one = question,
+        seeds = [conditional_vault::CONDITIONAL_VAULT_SEED, question.key().as_ref(), dao.base_mint.key().as_ref()],
+        seeds::program = conditional_vault_program,
+        bump,
         mut,
     )]
     pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,

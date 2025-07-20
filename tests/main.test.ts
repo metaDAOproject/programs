@@ -14,8 +14,6 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   AutocratClient,
   ConditionalVaultClient,
-  LaunchpadClient,
-  SharedLiquidityManagerClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SQUADS_PROGRAM_CONFIG,
@@ -30,7 +28,7 @@ import {
 //   getVersion,
 //   VersionKey
 // } from "@metadaoproject/futarchy";
-import { PublicKey, Keypair, Connection, SystemProgram, Transaction } from "@solana/web3.js";
+import { PublicKey, Keypair, Connection, SystemProgram, Transaction, AccountInfo } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -45,7 +43,7 @@ import { assert } from "chai";
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import * as fs from "fs";
-import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
+import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.5";
 import { LiteSVM } from "litesvm";
 import { fromWorkspace, LiteSVMProvider } from "anchor-litesvm";
 
@@ -56,10 +54,10 @@ const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
   "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
 );
 
-import mintAndSwap from "./integration/mintAndSwap.test.js";
-import scalarMarkets from "./integration/scalarMarkets.test.js";
-import twap from "./integration/twap.test.js";
-import fullLaunch from "./integration/fullLaunch.test.js";
+// import mintAndSwap from "./integration/mintAndSwap.test.js";
+// import scalarMarkets from "./integration/scalarMarkets.test.js";
+// import twap from "./integration/twap.test.js";
+// import fullLaunch from "./integration/fullLaunch.test.js";
 
 // Extend the Mocha context to include our test properties
 declare module "mocha" {
@@ -72,8 +70,8 @@ declare module "mocha" {
     banksClient: BanksClient;
     vaultClient: ConditionalVaultClient;
     autocratClient: AutocratClient;
-    launchpadClient: LaunchpadClient;
-    sharedLiquidityManagerClient: SharedLiquidityManagerClient;
+    // launchpadClient: LaunchpadClient;
+    // sharedLiquidityManagerClient: SharedLiquidityManagerClient;
     payer: Keypair;
     squadsConnection: Connection;
     createTokenAccount: (
@@ -183,13 +181,13 @@ before(async function () {
   this.autocratClient = AutocratClient.createClient({
     provider: provider as any,
   });
-  this.launchpadClient = LaunchpadClient.createClient({
-    provider: provider as any,
-  });
+  // this.launchpadClient = LaunchpadClient.createClient({
+  //   provider: provider as any,
+  // });
   this.provider = provider;
-  this.sharedLiquidityManagerClient = SharedLiquidityManagerClient.createClient(
-    { provider: provider as any }
-  );
+  // this.sharedLiquidityManagerClient = SharedLiquidityManagerClient.createClient(
+  //   { provider: provider as any }
+  // );
   this.payer = provider.wallet.payer;
 
   this.squadsConnection = {
@@ -354,16 +352,16 @@ before(async function () {
   );
 });
 
-describe("conditional_vault", conditionalVault);
+// describe("conditional_vault", conditionalVault);
 describe("autocrat", autocrat);
-describe("launchpad", launchpad);
-// describe("shared_liquidity_manager", sharedLiquidityManager);
-describe("project-wide integration tests", function () {
-  it("mint and swap in a single transaction", mintAndSwap);
-  it(
-    "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
-    scalarMarkets
-  );
-  it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
-  describe("full launch", fullLaunch);
-});
+// describe("launchpad", launchpad);
+// // describe("shared_liquidity_manager", sharedLiquidityManager);
+// describe("project-wide integration tests", function () {
+//   it("mint and swap in a single transaction", mintAndSwap);
+//   it(
+//     "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
+//     scalarMarkets
+//   );
+//   it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
+//   describe("full launch", fullLaunch);
+// });

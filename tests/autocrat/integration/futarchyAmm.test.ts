@@ -1,4 +1,4 @@
-import { AutocratClient, getDaoAddr, getProposalAddr, InstructionUtils } from "@metadaoproject/futarchy/v0.5";
+import { AUTOCRAT_PROGRAM_ID, AutocratClient, getDaoAddr, getProposalAddr, InstructionUtils } from "@metadaoproject/futarchy/v0.5";
 import {
   ComputeBudgetProgram,
   Keypair,
@@ -13,25 +13,47 @@ import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
 import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
-import { getFutarchyAmmAddr } from "@metadaoproject/futarchy/v0.5";
+// import { getFutarchyAmmAddr } from "@metadaoproject/futarchy/v0.5";
 import { sha256 } from "@metadaoproject/futarchy";
 import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { getEventAuthorityAddr } from "@metadaoproject/futarchy/v0.4";
+import { getEventAuthorityAddr } from "@metadaoproject/futarchy/v0.5";
+import { Program } from "@coral-xyz/anchor";
+
+// import { readFileSync } from 'fs';
+// import { dirname, join } from 'path';
+// import { fileURLToPath } from 'url';
+
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
+const IDL = (await import("../../../target/idl/autocrat.json", { assert: { type: "json" } })).default;
+
+export const getFutarchyAmmAddr = ({
+  programId = AUTOCRAT_PROGRAM_ID,
+}: {
+  programId?: PublicKey;
+}): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("futarchy_amm")],
+    programId
+  );
+};
 
 export default function suite() {
   it("should enable creation, passing, and execution of a proposal", async function () {
+    const program = new Program(IDL, this.autocratClient.provider);
+
     const META = await this.createMint(this.payer.publicKey, 6);
     const USDC = await this.createMint(this.payer.publicKey, 6);
 
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
 
-    await this.mintTo(META, this.payer.publicKey, this.payer, 1_000_000 * 10 ** 6);
+    await this.mintTo(META, this.payer.publicKey, this.payer, 100_000_000 * 10 ** 6);
     await this.mintTo(
       USDC,
       this.payer.publicKey,
       this.payer,
-      1_000_000 * 1_000_000
+      100_000_000 * 1_000_000
     );
 
     const nonce = new BN(Math.random() * 2 ** 50);
@@ -63,15 +85,32 @@ export default function suite() {
 
     const storedDao = await this.autocratClient.getDao(dao);
 
-    await this.autocratClient.initializeFutarchyAmmIx({
-      quoteAmount: new BN(500_000).mul(new BN(10 ** 6)),
-      baseAmount: new BN(500_000).mul(new BN(10 ** 6)),
-      dao,
-      baseMint: META,
-      quoteMint: USDC,
-    }).rpc();
+    await program.methods
+      .initializeFutarchyAmm({
+        quoteAmount: new BN(5_000_000).mul(new BN(10 ** 6)),
+        baseAmount: new BN(5_000_000).mul(new BN(10 ** 6)),
+      })
+      .accounts({
+        payer: this.payer.publicKey,
+        creator: this.payer.publicKey,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        creatorBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+        creatorQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+      })
+      .rpc();
 
-    let storedAmm = await this.autocratClient.getAmm(getFutarchyAmmAddr({})[0]);
+
+    // await this.autocratClient.initializeFutarchyAmmIx({
+    //   quoteAmount: new BN(500_000).mul(new BN(10 ** 6)),
+    //   baseAmount: new BN(500_000).mul(new BN(10 ** 6)),
+    //   dao,
+    //   baseMint: META,
+    //   quoteMint: USDC,
+    // }).rpc();
+
+    // let storedAmm = await this.autocratClient.getAmm(getFutarchyAmmAddr({})[0]);
 
     // console.log(storedAmm.spotPool.quoteReserves.toString());
     // console.log(storedAmm.spotPool.baseReserves.toString());
@@ -83,7 +122,7 @@ export default function suite() {
     //   quoteMint: USDC,
     // }).rpc();
 
-    storedAmm = await this.autocratClient.getAmm(getFutarchyAmmAddr({})[0]);
+    // storedAmm = await this.autocratClient.getAmm(getFutarchyAmmAddr({})[0]);
     // console.log(storedAmm.spotPool.quoteReserves.toString());
     // console.log(storedAmm.spotPool.baseReserves.toString());
 
@@ -182,17 +221,29 @@ export default function suite() {
       )
       .rpc();
 
-    let futarchyAmm = getFutarchyAmmAddr({})[0];
+    // let futarchyAmm = getFutarchyAmmAddr({})[0];
+
+    const futarchyAmm = getFutarchyAmmAddr({})[0];
     
-    await this.autocratClient.initializeProposalIx({
+    await program.methods.initializeProposal({
       nonce: proposalNonce,
-      dao,
-      baseMint: META,
-      quoteMint: USDC,
-      question,
-      squadsProposal: squadsProposalPda,
     })
     .accounts({
+      question,
+      dao,
+      squadsProposal: squadsProposalPda,
+      futarchyAmm,
+      ammTokenAccounts: {
+        futarchyAmm,
+        baseVault,
+        quoteVault,
+        unconditionalBase: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+        unconditionalQuote: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+        passBase: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+        passQuote: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+        failBase: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+        failQuote: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+      },
       baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
       quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(USDC, quoteVault, true),
       passBaseMint: passBaseMint,
@@ -214,7 +265,7 @@ export default function suite() {
     ])
     .rpc();
 
-    storedAmm = await this.autocratClient.getAmm(futarchyAmm);
+    let storedAmm = await program.account.amm.fetch(futarchyAmm);
     // console.log(storedAmm.spotPool.quoteReserves.toString());
     // console.log(storedAmm.spotPool.baseReserves.toString());
     // console.log(storedAmm.liveProposal.passPool.quoteReserves.toString());
@@ -222,7 +273,7 @@ export default function suite() {
     // console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
     // console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
 
-    await this.autocratClient.autocrat.methods.spotSwap({
+    await program.methods.spotSwap({
       side: {sell: {}},
       amountIn: new BN(3).mul(new BN(10 ** 6)),
       minAmountOut: new BN(990_009),
@@ -249,6 +300,9 @@ export default function suite() {
           passQuote: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
           failBase: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
           failQuote: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+          baseVault,
+          quoteVault,
+          futarchyAmm,
         },
         question: question,
         vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
@@ -257,7 +311,7 @@ export default function suite() {
     })
     .preInstructions([
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
     ])
     // .remainingAccounts([
     //   {

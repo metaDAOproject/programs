@@ -1,4 +1,4 @@
-use squads_multisig_program::types::{Member, Period, Permission, Permissions};
+use squads_multisig_program::types::{Member, Period, Permissions};
 
 use super::*;
 
@@ -55,6 +55,13 @@ pub mod permissionless_account {
     use anchor_lang::prelude::declare_id;
 
     declare_id!("EP3SoC2SvR3d4c2eXVBvhEMWSr2j3YtoCY3UMiQV7BPD");
+}
+
+#[derive(Clone, Copy)]
+pub enum Permission {
+    Initiate = 1 << 0,
+    Vote = 1 << 1,
+    Execute = 1 << 2,
 }
 
 impl Permissions {

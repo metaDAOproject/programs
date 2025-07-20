@@ -1,4 +1,11 @@
 export type Amm = {
+  address: "AmM1234567890123456789012345678901234567890";
+  metadata: {
+    name: "amm";
+    version: "0.3.0";
+    spec: "0.1.0";
+    description: "Amm program";
+  };
   version: "0.3.0";
   name: "amm";
   instructions: [
