@@ -74,6 +74,8 @@ pub const PASS_INDEX: usize = 1;
 // TWAP can only move by $5 per slot
 pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 
+declare_program!(squads_multisig_program);
+
 #[program]
 pub mod autocrat {
     use super::*;
@@ -103,36 +105,24 @@ pub mod autocrat {
         InitializeFutarchyAmm::handle(ctx, params)
     }
 
-    /// You should NOT be calling into this directly.
-    pub fn arbitrary_swap<'c: 'info, 'info>(
-        ctx: Context<'_, '_, 'c, 'info, ArbitrarySwap<'info>>,
-        params: ArbitrarySwapParams,
+    pub fn spot_swap(
+        ctx: Context<Trade>,
+        params: SpotTradeParams,
     ) -> Result<()> {
-        ArbitrarySwap::handle(ctx, params)
+        Trade::spot_trade(ctx, params)
     }
 
-    // pub fn spot_swap<'info>(
-    //     ctx: Context<'_, '_, 'info, 'info, SpotSwap<'info>>,
-    //     params: SpotSwapParams,
-    // ) -> Result<()> {
-    //     SpotSwap::handle(ctx, params)
-    // }
-
-    pub fn prediction_swap<'info>(
-        ctx: Context<'_, '_, 'info, 'info, PredictionSwap<'info>>,
+    pub fn prediction_swap(
+        ctx: Context<Trade>,
         params: PredictionSwapParams,
     ) -> Result<()> {
-        PredictionSwap::handle(ctx, params)
+        Trade::prediction_trade(ctx, params)
     }
 
-    pub fn cond_swap<'info>(
-        ctx: Context<'_, '_, 'info, 'info, CondSwap<'info>>,
-        params: CondSwapParams,
-    ) -> Result<()> {
-        CondSwap::handle(ctx, params)
-    }
-
-    pub fn spot_swap(ctx: Context<Swap>, params: SwapParams) -> Result<()> {
-        Swap::spot_swap(ctx, params)
-    }
+    // pub fn cond_swap<'info>(
+    //     ctx: Context<'_, '_, 'info, 'info, CondSwap<'info>>,
+    //     params: CondSwapParams,
+    // ) -> Result<()> {
+    //     CondSwap::handle(ctx, params)
+    // }
 }

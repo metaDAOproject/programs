@@ -1,5 +1,4 @@
 import conditionalVault from "./conditionalVault/main.test.js";
-import amm from "./amm/main.test.js";
 import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 import sharedLiquidityManager from "./sharedLiquidityManager/main.test.js";
@@ -13,7 +12,6 @@ import {
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
-  AmmClient,
   AutocratClient,
   ConditionalVaultClient,
   LaunchpadClient,
@@ -70,13 +68,11 @@ declare module "mocha" {
     svmProvider: LiteSVMProvider;
     svmAutocratClient: AutocratClient;
     svmVaultClient: ConditionalVaultClient;
-    svmAmmClient: AmmClient;
     context: ProgramTestContext;
     banksClient: BanksClient;
     vaultClient: ConditionalVaultClient;
     autocratClient: AutocratClient;
     launchpadClient: LaunchpadClient;
-    ammClient: AmmClient;
     sharedLiquidityManagerClient: SharedLiquidityManagerClient;
     payer: Keypair;
     squadsConnection: Connection;
@@ -191,7 +187,6 @@ before(async function () {
     provider: provider as any,
   });
   this.provider = provider;
-  this.ammClient = AmmClient.createClient({ provider: provider as any });
   this.sharedLiquidityManagerClient = SharedLiquidityManagerClient.createClient(
     { provider: provider as any }
   );
@@ -360,7 +355,6 @@ before(async function () {
 });
 
 describe("conditional_vault", conditionalVault);
-describe("amm", amm);
 describe("autocrat", autocrat);
 describe("launchpad", launchpad);
 // describe("shared_liquidity_manager", sharedLiquidityManager);

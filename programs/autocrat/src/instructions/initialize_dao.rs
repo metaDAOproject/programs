@@ -1,4 +1,4 @@
-use squads_multisig_program::{Member, Period, Permission, Permissions};
+use squads_multisig_program::types::{Member, Period, Permission, Permissions};
 
 use super::*;
 
@@ -35,19 +35,19 @@ pub struct InitializeDao<'info> {
     #[account(mint::decimals = 6)]
     pub quote_mint: Account<'info, Mint>,
     /// CHECK: initialized by squads
-    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
+    #[account(mut, seeds = [squads_multisig_program::constants::SEED_PREFIX, squads_multisig_program::constants::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig: UncheckedAccount<'info>,
     /// CHECK: just a signer
-    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
+    #[account(seeds = [squads_multisig_program::constants::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::constants::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig_vault: UncheckedAccount<'info>,
     pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
-    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_PROGRAM_CONFIG], bump, seeds::program = squads_program)]
-    pub squads_program_config: Account<'info, squads_multisig_program::state::ProgramConfig>,
+    #[account(seeds = [squads_multisig_program::constants::SEED_PREFIX, squads_multisig_program::constants::SEED_PROGRAM_CONFIG], bump, seeds::program = squads_program)]
+    pub squads_program_config: Account<'info, squads_multisig_program::accounts::ProgramConfig>,
     /// CHECK: checked by squads multisig program
     #[account(mut)]
     pub squads_program_config_treasury: UncheckedAccount<'info>,
     /// CHECK: initialized by squads
-    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = squads_program)]
+    #[account(mut, seeds = [squads_multisig_program::constants::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::constants::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub spending_limit: UncheckedAccount<'info>,
 }
 
@@ -55,6 +55,21 @@ pub mod permissionless_account {
     use anchor_lang::prelude::declare_id;
 
     declare_id!("EP3SoC2SvR3d4c2eXVBvhEMWSr2j3YtoCY3UMiQV7BPD");
+}
+
+impl Permissions {
+    /// Currently unused.
+    pub fn from_vec(permissions: &[Permission]) -> Self {
+        let mut mask = 0;
+        for permission in permissions {
+            mask |= *permission as u8;
+        }
+        Self { mask }
+    }
+
+    pub fn has(&self, permission: Permission) -> bool {
+        self.mask & (permission as u8) != 0
+    }
 }
 
 impl InitializeDao<'_> {
@@ -97,7 +112,7 @@ impl InitializeDao<'_> {
                 },
                 &[&dao_seeds[..]],
             ),
-            squads_multisig_program::MultisigCreateArgsV2 {
+            squads_multisig_program::types::MultisigCreateArgsV2 {
                 config_authority: Some(dao.key()),
                 threshold: 1,
                 members: vec![
@@ -132,7 +147,7 @@ impl InitializeDao<'_> {
                     },
                     &[&dao_seeds[..]],
                 ),
-                squads_multisig_program::MultisigAddSpendingLimitArgs {
+                squads_multisig_program::types::MultisigAddSpendingLimitArgs {
                     create_key: dao.key(),
                     vault_index: 0,
                     mint: ctx.accounts.quote_mint.key(),

@@ -16,12 +16,12 @@ pub struct InitializeProposal<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + Proposal::INIT_SPACE,
+        space = 8 + FutarchyProposal::INIT_SPACE,
         seeds = [b"proposal", squads_proposal.key().as_ref()],
         bump
     )]
-    pub proposal: Box<Account<'info, Proposal>>,
-    pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
+    pub proposal: Box<Account<'info, FutarchyProposal>>,
+    pub squads_proposal: Box<Account<'info, squads_multisig_program::accounts::Proposal>>,
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
     // TODO: this should also check the other way around: that the dao has canonicalized this amm
@@ -81,7 +81,7 @@ impl InitializeProposal<'_> {
         require_keys_eq!(self.squads_proposal.multisig, self.dao.squads_multisig);
 
         match self.squads_proposal.status {
-            squads_multisig_program::ProposalStatus::Active { timestamp: _ } => {}
+            squads_multisig_program::types::ProposalStatus::Active { timestamp: _ } => {}
             _ => {
                 msg!("squads proposal status: {:?}", self.squads_proposal.status);
                 return Err(AutocratError::InvalidSquadsProposalStatus.into());
@@ -131,7 +131,7 @@ impl InitializeProposal<'_> {
 
         dao.proposal_count += 1;
 
-        proposal.set_inner(Proposal {
+        proposal.set_inner(FutarchyProposal {
             number: dao.proposal_count,
             squads_proposal: squads_proposal.key(),
             proposer: proposer.key(),
@@ -150,8 +150,8 @@ impl InitializeProposal<'_> {
         // to the pass and fail pools. We don't need to actually do any splits
         // because most of the conditional token reserves are virtual.
 
-        let base_to_provide = ctx.accounts.amm_token_accounts.base_unconditional.amount / 2;
-        let quote_to_provide = ctx.accounts.amm_token_accounts.quote_unconditional.amount / 2;
+        let base_to_provide = ctx.accounts.amm_token_accounts.unconditional_base.amount / 2;
+        let quote_to_provide = ctx.accounts.amm_token_accounts.unconditional_quote.amount / 2;
 
         // futarchy_amm.spot_pool.base_reserves -= base_to_provide;
         // futarchy_amm.spot_pool.quote_reserves -= quote_to_provide;
@@ -185,7 +185,7 @@ impl InitializeProposal<'_> {
                 user_underlying_token_account: ctx
                     .accounts
                     .amm_token_accounts
-                    .base_unconditional
+                    .unconditional_base
                     .to_account_info(),
                 event_authority: ctx.accounts.vault_event_authority.to_account_info(),
                 program: ctx.accounts.conditional_vault_program.to_account_info(),
@@ -196,8 +196,8 @@ impl InitializeProposal<'_> {
         .with_remaining_accounts(vec![
             ctx.accounts.fail_base_mint.to_account_info(),
             ctx.accounts.pass_base_mint.to_account_info(),
-            ctx.accounts.amm_token_accounts.base_fail.to_account_info(),
-            ctx.accounts.amm_token_accounts.base_pass.to_account_info(),
+            ctx.accounts.amm_token_accounts.fail_base.to_account_info(),
+            ctx.accounts.amm_token_accounts.pass_base.to_account_info(),
         ]);
 
         conditional_vault::cpi::split_tokens(base_cpi_context, base_to_provide)?;
@@ -215,7 +215,7 @@ impl InitializeProposal<'_> {
                 user_underlying_token_account: ctx
                     .accounts
                     .amm_token_accounts
-                    .quote_unconditional
+                    .unconditional_quote
                     .to_account_info(),
                 event_authority: ctx.accounts.vault_event_authority.to_account_info(),
                 program: ctx.accounts.conditional_vault_program.to_account_info(),
@@ -226,8 +226,8 @@ impl InitializeProposal<'_> {
         .with_remaining_accounts(vec![
             ctx.accounts.fail_quote_mint.to_account_info(),
             ctx.accounts.pass_quote_mint.to_account_info(),
-            ctx.accounts.amm_token_accounts.quote_fail.to_account_info(),
-            ctx.accounts.amm_token_accounts.quote_pass.to_account_info(),
+            ctx.accounts.amm_token_accounts.fail_quote.to_account_info(),
+            ctx.accounts.amm_token_accounts.pass_quote.to_account_info(),
         ]);
 
         conditional_vault::cpi::split_tokens(quote_cpi_context, quote_to_provide)?;

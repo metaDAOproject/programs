@@ -71,10 +71,10 @@ export default function suite() {
       quoteMint: USDC,
     }).rpc();
 
-    let storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
+    let storedAmm = await this.autocratClient.getAmm(getFutarchyAmmAddr({})[0]);
 
-    console.log(storedAmm.spotPool.quoteReserves.toString());
-    console.log(storedAmm.spotPool.baseReserves.toString());
+    // console.log(storedAmm.spotPool.quoteReserves.toString());
+    // console.log(storedAmm.spotPool.baseReserves.toString());
 
     // await this.autocratClient.swapIx({
     //   amountIn: new BN(1).mul(new BN(10 ** 6)),
@@ -83,9 +83,9 @@ export default function suite() {
     //   quoteMint: USDC,
     // }).rpc();
 
-    storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
-    console.log(storedAmm.spotPool.quoteReserves.toString());
-    console.log(storedAmm.spotPool.baseReserves.toString());
+    storedAmm = await this.autocratClient.getAmm(getFutarchyAmmAddr({})[0]);
+    // console.log(storedAmm.spotPool.quoteReserves.toString());
+    // console.log(storedAmm.spotPool.baseReserves.toString());
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
@@ -160,8 +160,6 @@ export default function suite() {
     const {
       baseVault,
       quoteVault,
-      passAmm,
-      failAmm,
       passBaseMint,
       passQuoteMint,
       failBaseMint,
@@ -216,62 +214,13 @@ export default function suite() {
     ])
     .rpc();
 
-    storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
-    console.log(storedAmm.spotPool.quoteReserves.toString());
-    console.log(storedAmm.spotPool.baseReserves.toString());
-    console.log(storedAmm.liveProposal.passPool.quoteReserves.toString());
-    console.log(storedAmm.liveProposal.passPool.baseReserves.toString());
-    console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
-    console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
-
-
-    // await this.autocratClient.autocrat.methods.arbitrarySwap({
-    //   input: {asset: {spotQuote: {}}, amount: new BN(1).mul(new BN(10 ** 6))}, 
-    //   outputs: [
-    //     {asset: {spotBase: {}}, amount: new BN(990_009)}
-    //   ],
-    //   quoteSplitOrMerge: { splitOrMerge: { merge: {} }, amount: new BN(0) },
-    //   baseSplitOrMerge: { splitOrMerge: { split: {} }, amount: new BN(1) },
-    // })
-    // .accounts({
-    //   futarchyAmm,
-    //   trader: this.payer.publicKey,
-    //   traderInputAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
-    //   baseVault: baseVault,
-    //   quoteVault: quoteVault,
-    //   baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
-    //   quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(USDC, quoteVault, true),
-    //   baseMint: META,
-    //   quoteMint: USDC,
-    //   passQuoteMint: passQuoteMint,
-    //   failQuoteMint: failQuoteMint,
-    //   passBaseMint: passBaseMint,
-    //   failBaseMint: failBaseMint,
-    //   ammTokenAccounts: {
-    //     baseUnconditional: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-    //     quoteUnconditional: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-    //     basePass: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
-    //     quotePass: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
-    //     baseFail: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
-    //     quoteFail: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
-    //   },
-    //   question: question,
-    //   vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
-    //   tokenProgram: TOKEN_PROGRAM_ID,
-    //   conditionalVaultProgram: this.vaultClient.vaultProgram.programId,
-    // })
-    // .preInstructions([
-    //   ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-    //   ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-    // ])
-    // .remainingAccounts([
-    //   {
-    //     pubkey: getAssociatedTokenAddressSync(META, this.payer.publicKey),
-    //     isWritable: true,
-    //     isSigner: false,
-    //   },
-    // ])
-    // .rpc();
+    storedAmm = await this.autocratClient.getAmm(futarchyAmm);
+    // console.log(storedAmm.spotPool.quoteReserves.toString());
+    // console.log(storedAmm.spotPool.baseReserves.toString());
+    // console.log(storedAmm.liveProposal.passPool.quoteReserves.toString());
+    // console.log(storedAmm.liveProposal.passPool.baseReserves.toString());
+    // console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
+    // console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
 
     await this.autocratClient.autocrat.methods.spotSwap({
       side: {sell: {}},
@@ -279,10 +228,10 @@ export default function suite() {
       minAmountOut: new BN(990_009),
     })
     .accounts({
-      arbitrarySwap: {
         futarchyAmm,
         trader: this.payer.publicKey,
         traderInputAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+        traderOutputAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
         baseVault: baseVault,
         quoteVault: quoteVault,
         baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
@@ -294,31 +243,32 @@ export default function suite() {
         passBaseMint: passBaseMint,
         failBaseMint: failBaseMint,
         ammTokenAccounts: {
-          baseUnconditional: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-          quoteUnconditional: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-          basePass: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
-          quotePass: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
-          baseFail: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
-          quoteFail: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+          unconditionalBase: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+          unconditionalQuote: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+          passBase: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+          passQuote: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+          failBase: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+          failQuote: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
         },
         question: question,
         vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
         tokenProgram: TOKEN_PROGRAM_ID,
         conditionalVaultProgram: this.vaultClient.vaultProgram.programId,
-      },
     })
     .preInstructions([
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
       ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
     ])
-    .remainingAccounts([
-      {
-        pubkey: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
-        isWritable: true,
-        isSigner: false,
-      },
-    ])
+    // .remainingAccounts([
+    //   {
+    //     pubkey: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+    //     isWritable: true,
+    //     isSigner: false,
+    //   },
+    // ])
     .rpc();
+
+    return;
 
 
     await this.vaultClient
@@ -330,13 +280,15 @@ export default function suite() {
       .rpc();
 
 
-    storedAmm = await this.autocratClient.getFutarchyAmm(getFutarchyAmmAddr({})[0]);
+    storedAmm = await this.autocratClient.getAmm(futarchyAmm);
     console.log(storedAmm.spotPool.quoteReserves.toString());
     console.log(storedAmm.spotPool.baseReserves.toString());
     console.log(storedAmm.liveProposal.passPool.quoteReserves.toString());
     console.log(storedAmm.liveProposal.passPool.baseReserves.toString());
     console.log(storedAmm.liveProposal.failPool.quoteReserves.toString());
     console.log(storedAmm.liveProposal.failPool.baseReserves.toString());
+
+    return;
 
     await this.autocratClient.autocrat.methods.condSwap({
       side: {buy: {}},

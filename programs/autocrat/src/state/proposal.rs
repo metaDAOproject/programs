@@ -15,7 +15,7 @@ impl std::fmt::Display for ProposalState {
 
 #[account]
 #[derive(InitSpace)]
-pub struct Proposal {
+pub struct FutarchyProposal {
     pub number: u32,
     pub proposer: Pubkey,
     pub slot_enqueued: u64,

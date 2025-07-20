@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "programs/*"
+    "programs/autocrat",
+    "programs/conditional_vault"
 ]
 resolver = "2"
 

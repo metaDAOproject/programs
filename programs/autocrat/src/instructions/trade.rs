@@ -6,15 +6,15 @@ use crate::{
 };
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
-pub struct ArbitrarySwapParams {
+pub struct TradeExecutionParams {
     pub input: AssetAndAmount,
-    pub outputs: Vec<AssetAndAmount>,
+    pub output: AssetAndAmount,
     pub quote_split_or_merge: SplitOrMergeAndAmount,
     pub base_split_or_merge: SplitOrMergeAndAmount,
 }
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
-pub struct SpotSwapParams {
+pub struct SpotTradeParams {
     pub side: Side,
     pub amount_in: u64,
     pub min_amount_out: u64,
@@ -86,27 +86,29 @@ pub enum Condition {
 #[derive(Accounts)]
 pub struct AmmTokenAccounts<'info> {
     #[account(mut)]
-    pub base_unconditional: Box<Account<'info, TokenAccount>>,
+    pub unconditional_base: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub quote_unconditional: Box<Account<'info, TokenAccount>>,
+    pub unconditional_quote: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub base_pass: Box<Account<'info, TokenAccount>>,
+    pub pass_base: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub quote_pass: Box<Account<'info, TokenAccount>>,
+    pub pass_quote: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub base_fail: Box<Account<'info, TokenAccount>>,
+    pub fail_base: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub quote_fail: Box<Account<'info, TokenAccount>>,
+    pub fail_quote: Box<Account<'info, TokenAccount>>,
 }
 
 #[derive(Accounts)]
 #[event_cpi]
-pub struct ArbitrarySwap<'info> {
+pub struct Trade<'info> {
     #[account(mut)]
     pub futarchy_amm: Account<'info, Amm>,
     pub trader: Signer<'info>,
     #[account(mut)]
-    pub trader_input_account: Account<'info, TokenAccount>,
+    pub trader_input_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub trader_output_account: Box<Account<'info, TokenAccount>>,
     pub amm_token_accounts: AmmTokenAccounts<'info>,
     pub question: Box<Account<'info, conditional_vault::state::Question>>,
     pub base_mint: Box<Account<'info, token::Mint>>,
@@ -132,25 +134,6 @@ pub struct ArbitrarySwap<'info> {
     #[account(mut)]
     pub fail_base_mint: Box<Account<'info, token::Mint>>,
 }
-
-#[derive(Accounts)]
-#[event_cpi]
-pub struct SpotSwap<'info> {
-    pub arbitrary_swap: ArbitrarySwap<'info>,
-}
-
-#[derive(Accounts)]
-#[event_cpi]
-pub struct CondSwap<'info> {
-    pub arbitrary_swap: ArbitrarySwap<'info>,
-}
-
-#[derive(Accounts)]
-#[event_cpi]
-pub struct PredictionSwap<'info> {
-    pub arbitrary_swap: ArbitrarySwap<'info>,
-}
-
 
 pub fn min_b_three(
     a: f64,
@@ -378,106 +361,67 @@ pub fn min_d_three(
     }
 }
 
-impl<'info, 'c: 'info> SpotSwap<'info> {
-    pub fn handle(ctx: Context<'_, '_, 'info, 'info, Self>, params: SpotSwapParams) -> Result<()> {
-        let SpotSwapParams { side, amount_in, min_amount_out } = params;
+impl Trade<'_> {
+    pub fn spot_trade(ctx: Context<Self>, params: SpotTradeParams) -> Result<()> {
+        let SpotTradeParams { side, amount_in, min_amount_out } = params;
 
-        let remaining_accs = &mut ctx.remaining_accounts.iter();
+        let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+            ctx.accounts.amm_token_accounts.unconditional_quote.amount as f64,
+            ctx.accounts.amm_token_accounts.unconditional_base.amount as f64,
+            ctx.accounts.amm_token_accounts.pass_quote.amount as f64,
+            ctx.accounts.amm_token_accounts.pass_base.amount as f64,
+            ctx.accounts.amm_token_accounts.fail_quote.amount as f64,
+            ctx.accounts.amm_token_accounts.fail_base.amount as f64,
+        );
 
-        let trader_output_account = next_account_info(remaining_accs)?;
+        let (a, b, c, d, e, f) = match side {
+            Side::Buy => (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base),
+            Side::Sell => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
+        };
 
-        // let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
-        //     ctx.accounts.arbitrary_swap.futarchy_amm.spot_pool.quote_reserves as f64,
-        //     ctx.accounts.arbitrary_swap.futarchy_amm.spot_pool.base_reserves as f64,
-        //     ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().pass_pool.quote_reserves as f64,
-        //     ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().pass_pool.base_reserves as f64,
-        //     ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().fail_pool.quote_reserves as f64,
-        //     ctx.accounts.arbitrary_swap.futarchy_amm.live_proposal.as_ref().unwrap().fail_pool.base_reserves as f64,
-        // );
+        let (new_b, x, y) = min_b_three(a + amount_in as f64, c, d, e, f, a * b, c * d, e * f).unwrap();
 
-        // let (a, b, c, d, e, f) = match side {
-        //     Side::Buy => (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base),
-        //     Side::Sell => (unconditional_base, unconditional_quote, fail_base, fail_quote, pass_base, pass_quote),
-        // };
+        let (input_asset, output_asset, quote_split, base_split) = if side == Side::Buy {
+            (Asset::SpotQuote, Asset::SpotBase, x, y)
+        } else {
+            (Asset::SpotBase, Asset::SpotQuote, y, x)
+        };
 
-        // msg!("a: {}, b: {}, c: {}, d: {}, e: {}, f: {}", a, b, c, d, e, f);
-
-        // let (new_b, x, y) = min_b_three(a + amount_in as f64, c, d, e, f, a * b, c * d, e * f).unwrap();
-
-        // // let b1 = min_b(a + amount_in as f64, c, d, a * b, c * d).unwrap();
-        // // let b2 = min_b(a + amount_in as f64, e, f, a * b, e * f).unwrap();
-
-
-        // // msg!("b1: {}", b1);
-        // // msg!("b2: {}", b2);
-
-        // // let (new_b, x, y) = if b1 > b2 { 
-        // //     let (x, y) = witness(a + amount_in as f64, b1, c, d, a * b, c * d, 1e-6).unwrap();
-        // //     (b1, x, y)
-        // // } else { 
-        // //     let (x, y) = witness(a + amount_in as f64, b2, e, f, a * b, e * f, 1e-6).unwrap();
-        // //     (b2, x, y)
-        // // };
-
-        // msg!("b: {}, x: {}, y: {}", new_b, x, y);
-
-
-        // let (input_asset, output_asset, quote_split, base_split) = if side == Side::Buy {
-        //     (Asset::SpotQuote, Asset::SpotBase, x, y)
-        // } else {
-        //     (Asset::SpotBase, Asset::SpotQuote, y, x)
-        // };
-
-        // let quote_split_or_marge = if quote_split > 0.0 {
-        //     SplitOrMergeAndAmount {
-        //         split_or_merge: SplitOrMerge::Split,
-        //         amount: quote_split.abs() as u64 + 1,
-        //     }
-        // } else {
-        //     SplitOrMergeAndAmount {
-        //         split_or_merge: SplitOrMerge::Merge,
-        //         amount: quote_split.abs() as u64 - 1,
-        //     }
-        // };
+        let quote_split_or_marge = if quote_split > 0.0 {
+            SplitOrMergeAndAmount {
+                split_or_merge: SplitOrMerge::Split,
+                amount: quote_split.abs() as u64 + 1,
+            }
+        } else {
+            SplitOrMergeAndAmount {
+                split_or_merge: SplitOrMerge::Merge,
+                amount: quote_split.abs() as u64 - 1,
+            }
+        };
 
         // // Create the parameters for ArbitrarySwap
-        // let arbitrary_params = ArbitrarySwapParams {
-        //     input: AssetAndAmount { 
-        //         asset: input_asset, 
-        //         amount: amount_in 
-        //     },
-        //     outputs: vec![
-        //         AssetAndAmount { 
-        //             asset: output_asset,
-        //             amount: (b - new_b) as u64 - 10,
-        //         }
-        //     ],
-        //     quote_split_or_merge: quote_split_or_marge,
-        //     base_split_or_merge: SplitOrMergeAndAmount { 
-        //         split_or_merge: if base_split > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-        //         amount: base_split.abs() as u64
-        //     },
-        // };
+        let trade_execution_params = TradeExecutionParams {
+            input: AssetAndAmount { 
+                asset: input_asset, 
+                amount: amount_in 
+            },
+            output: AssetAndAmount { 
+                asset: output_asset,
+                amount: (b - new_b) as u64 - 1,
+            },
+            quote_split_or_merge: quote_split_or_marge,
+            base_split_or_merge: SplitOrMergeAndAmount { 
+                split_or_merge: if base_split > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+                amount: base_split.abs() as u64
+            },
+        };
 
-        // ArbitrarySwap::handle(
-        //     Context::<'_, '_, 'info, 'info, ArbitrarySwap>::new(
-        //         ctx.program_id,
-        //         &mut ctx.accounts.arbitrary_swap,
-        //         ctx.remaining_accounts,
-        //         ArbitrarySwapBumps {
-        //             amm_token_accounts: AmmTokenAccountsBumps {},
-        //             event_authority: ctx.bumps.event_authority,
-        //         },
-        //     ),
-        //     arbitrary_params,
-        // )?;
+        Self::execute_trade(ctx, trade_execution_params)?;
 
         Ok(())
     }
-}
 
-impl<'info, 'c: 'info> CondSwap<'info> {
-    pub fn handle(ctx: Context<'_, '_, 'info, 'info, Self>, params: CondSwapParams) -> Result<()> {
+    pub fn conditional_trade(ctx: Context<Self>, params: CondSwapParams) -> Result<()> {
         let CondSwapParams { side, underlying_asset, amount_in, min_amount_out } = params;
 
         assert!(underlying_asset == UnderlyingAsset::Quote);
@@ -545,10 +489,8 @@ impl<'info, 'c: 'info> CondSwap<'info> {
 
         Ok(())
     }
-}
 
-impl<'info, 'c: 'info> PredictionSwap<'info> {
-    pub fn handle(ctx: Context<'_, '_, 'info, 'info, Self>, params: PredictionSwapParams) -> Result<()> {
+    pub fn prediction_trade(ctx: Context<Self>, params: PredictionSwapParams) -> Result<()> {
         let PredictionSwapParams { side, underlying_asset, amount_in, min_amount_out } = params;
 
         assert!(underlying_asset == UnderlyingAsset::Quote);
@@ -629,10 +571,7 @@ impl<'info, 'c: 'info> PredictionSwap<'info> {
 
         Ok(())
     }
-}
 
-
-impl<'info, 'c: 'info> ArbitrarySwap<'info> {
     pub fn validate(&self) -> Result<()> {
         let futarchy_amm = &self.futarchy_amm;
 
@@ -644,35 +583,34 @@ impl<'info, 'c: 'info> ArbitrarySwap<'info> {
         Ok(())
     }
 
-    fn get_amm_token_account(
+    fn get_amm_token_account<'info>(
         amm_token_accounts: &AmmTokenAccounts<'info>,
         asset: Asset,
     ) -> AccountInfo<'info> {
         match asset {
-            Asset::SpotQuote => amm_token_accounts.quote_unconditional.to_account_info(),
-            Asset::SpotBase => amm_token_accounts.base_unconditional.to_account_info(),
-            Asset::PassQuote => amm_token_accounts.quote_pass.to_account_info(),
-            Asset::PassBase => amm_token_accounts.base_pass.to_account_info(),
-            Asset::FailQuote => amm_token_accounts.quote_fail.to_account_info(),
-            Asset::FailBase => amm_token_accounts.base_fail.to_account_info(),
+            Asset::SpotQuote => amm_token_accounts.unconditional_quote.to_account_info(),
+            Asset::SpotBase => amm_token_accounts.unconditional_base.to_account_info(),
+            Asset::PassQuote => amm_token_accounts.pass_quote.to_account_info(),
+            Asset::PassBase => amm_token_accounts.pass_base.to_account_info(),
+            Asset::FailQuote => amm_token_accounts.fail_quote.to_account_info(),
+            Asset::FailBase => amm_token_accounts.fail_base.to_account_info(),
         }
     }
 
-    pub fn handle(
-        ctx: Context<'_, '_, 'c, 'info, Self>,
-        params: ArbitrarySwapParams,
+    fn execute_trade(
+        ctx: Context<Self>,
+        params: TradeExecutionParams,
     ) -> Result<()> {
+        msg!("{:?}", params);
         // First, pull the invariants
-        let unconditional_k = ctx.accounts.amm_token_accounts.base_unconditional.amount as u128
-            * ctx.accounts.amm_token_accounts.quote_unconditional.amount as u128;
-        let pass_k = ctx.accounts.amm_token_accounts.base_pass.amount as u128
-            * ctx.accounts.amm_token_accounts.quote_pass.amount as u128;
-        let fail_k = ctx.accounts.amm_token_accounts.base_fail.amount as u128
-            * ctx.accounts.amm_token_accounts.quote_fail.amount as u128;
+        let unconditional_k = ctx.accounts.amm_token_accounts.unconditional_base.amount as u128
+            * ctx.accounts.amm_token_accounts.unconditional_quote.amount as u128;
+        let pass_k = ctx.accounts.amm_token_accounts.pass_base.amount as u128
+            * ctx.accounts.amm_token_accounts.pass_quote.amount as u128;
+        let fail_k = ctx.accounts.amm_token_accounts.fail_base.amount as u128
+            * ctx.accounts.amm_token_accounts.fail_quote.amount as u128;
 
         // Second, optimistically assume that the swap will succeed and do all the transfers and splits/merges
-
-        msg!("params: {:?}", params);
 
         let signer_seeds = &[b"futarchy_amm".as_ref(), &[ctx.accounts.futarchy_amm.bump]];
         let signer = &[&signer_seeds[..]];
@@ -695,28 +633,24 @@ impl<'info, 'c: 'info> ArbitrarySwap<'info> {
             params.input.amount,
         )?;
 
-        let remaining_accs = &mut ctx.remaining_accounts.iter();
 
-        for output in params.outputs {
-            let trader_output_account = next_account_info(remaining_accs)?;
-            let amm_output_account = Self::get_amm_token_account(
-                &ctx.accounts.amm_token_accounts,
-                output.asset,
-            );
+        let amm_output_account = Self::get_amm_token_account(
+            &ctx.accounts.amm_token_accounts,
+            params.output.asset,
+        );
 
-            token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    token::Transfer {
-                        from: amm_output_account,
-                        to: trader_output_account.to_account_info(),
-                        authority: ctx.accounts.futarchy_amm.to_account_info(),
-                    },
-                    signer,
-                ),
-                output.amount,
-            )?;
-        }
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                token::Transfer {
+                    from: amm_output_account,
+                    to: ctx.accounts.trader_output_account.to_account_info(),
+                    authority: ctx.accounts.futarchy_amm.to_account_info(),
+                },
+                signer,
+            ),
+            params.output.amount,
+        )?;
 
         let quote_split_or_merge = params.quote_split_or_merge;
 
@@ -733,7 +667,7 @@ impl<'info, 'c: 'info> ArbitrarySwap<'info> {
                 user_underlying_token_account: ctx
                     .accounts
                     .amm_token_accounts
-                    .quote_unconditional
+                    .unconditional_quote
                     .to_account_info(),
                 event_authority: ctx.accounts.vault_event_authority.to_account_info(),
                 program: ctx.accounts.conditional_vault_program.to_account_info(),
@@ -744,8 +678,8 @@ impl<'info, 'c: 'info> ArbitrarySwap<'info> {
         .with_remaining_accounts(vec![
             ctx.accounts.fail_quote_mint.to_account_info(),
             ctx.accounts.pass_quote_mint.to_account_info(),
-            ctx.accounts.amm_token_accounts.quote_fail.to_account_info(),
-            ctx.accounts.amm_token_accounts.quote_pass.to_account_info(),
+            ctx.accounts.amm_token_accounts.fail_quote.to_account_info(),
+            ctx.accounts.amm_token_accounts.pass_quote.to_account_info(),
         ]);
 
         if quote_split_or_merge.split_or_merge == SplitOrMerge::Split {
@@ -769,7 +703,7 @@ impl<'info, 'c: 'info> ArbitrarySwap<'info> {
                 user_underlying_token_account: ctx
                     .accounts
                     .amm_token_accounts
-                    .base_unconditional
+                    .unconditional_base
                     .to_account_info(),
                 event_authority: ctx.accounts.vault_event_authority.to_account_info(),
                 program: ctx.accounts.conditional_vault_program.to_account_info(),
@@ -780,8 +714,8 @@ impl<'info, 'c: 'info> ArbitrarySwap<'info> {
         .with_remaining_accounts(vec![
             ctx.accounts.fail_base_mint.to_account_info(),
             ctx.accounts.pass_base_mint.to_account_info(),
-            ctx.accounts.amm_token_accounts.base_fail.to_account_info(),
-            ctx.accounts.amm_token_accounts.base_pass.to_account_info(),
+            ctx.accounts.amm_token_accounts.fail_base.to_account_info(),
+            ctx.accounts.amm_token_accounts.pass_base.to_account_info(),
         ]);
 
         if base_split_or_merge.split_or_merge == SplitOrMerge::Split {
@@ -792,34 +726,25 @@ impl<'info, 'c: 'info> ArbitrarySwap<'info> {
 
         // Third, check the invariants again
 
-        ctx.accounts.amm_token_accounts.quote_unconditional.reload()?;
-        ctx.accounts.amm_token_accounts.base_unconditional.reload()?;
+        ctx.accounts.amm_token_accounts.unconditional_quote.reload()?;
+        ctx.accounts.amm_token_accounts.unconditional_base.reload()?;
 
-        ctx.accounts.amm_token_accounts.quote_pass.reload()?;
-        ctx.accounts.amm_token_accounts.base_pass.reload()?;
+        ctx.accounts.amm_token_accounts.pass_quote.reload()?;
+        ctx.accounts.amm_token_accounts.pass_base.reload()?;
 
-        ctx.accounts.amm_token_accounts.quote_fail.reload()?;
-        ctx.accounts.amm_token_accounts.base_fail.reload()?;
+        ctx.accounts.amm_token_accounts.fail_quote.reload()?;
+        ctx.accounts.amm_token_accounts.fail_base.reload()?;
 
-        let unconditional_k_after = ctx.accounts.amm_token_accounts.base_unconditional.amount as u128
-            * ctx.accounts.amm_token_accounts.quote_unconditional.amount as u128;
-        let pass_k_after = ctx.accounts.amm_token_accounts.base_pass.amount as u128
-            * ctx.accounts.amm_token_accounts.quote_pass.amount as u128;
-        let fail_k_after = ctx.accounts.amm_token_accounts.base_fail.amount as u128
-            * ctx.accounts.amm_token_accounts.quote_fail.amount as u128;
+        let unconditional_k_after = ctx.accounts.amm_token_accounts.unconditional_base.amount as u128
+            * ctx.accounts.amm_token_accounts.unconditional_quote.amount as u128;
+        let pass_k_after = ctx.accounts.amm_token_accounts.pass_base.amount as u128
+            * ctx.accounts.amm_token_accounts.pass_quote.amount as u128;
+        let fail_k_after = ctx.accounts.amm_token_accounts.fail_base.amount as u128
+            * ctx.accounts.amm_token_accounts.fail_quote.amount as u128;
 
         require_gte!(unconditional_k_after, unconditional_k, AutocratError::InvariantViolation);
         require_gte!(pass_k_after, pass_k, AutocratError::InvariantViolation);
         require_gte!(fail_k_after, fail_k, AutocratError::InvariantViolation);
-
-        let futarchy_amm = &mut ctx.accounts.futarchy_amm;
-        // futarchy_amm.spot_pool.quote_reserves = ctx.accounts.amm_token_accounts.quote_unconditional.amount;
-        // futarchy_amm.spot_pool.base_reserves = ctx.accounts.amm_token_accounts.base_unconditional.amount;
-        // futarchy_amm.live_proposal.as_mut().unwrap().pass_pool.quote_reserves = ctx.accounts.amm_token_accounts.quote_pass.amount;
-        // futarchy_amm.live_proposal.as_mut().unwrap().pass_pool.base_reserves = ctx.accounts.amm_token_accounts.base_pass.amount;
-        // futarchy_amm.live_proposal.as_mut().unwrap().fail_pool.quote_reserves = ctx.accounts.amm_token_accounts.quote_fail.amount;
-        // futarchy_amm.live_proposal.as_mut().unwrap().fail_pool.base_reserves = ctx.accounts.amm_token_accounts.base_fail.amount;
-
 
         Ok(())
     }

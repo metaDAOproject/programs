@@ -11,7 +11,7 @@
         "redeem-launch": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/redeemLaunch.ts"
     },
     "dependencies": {
-        "@coral-xyz/anchor": "=0.29.0",
+        "@coral-xyz/anchor": "0.31.1",
         "@inquirer/prompts": "^7.3.3",
         "@metadaoproject/futarchy": "0.5.0-alpha.5",
         "@metaplex-foundation/mpl-token-metadata": "^3.2.0",

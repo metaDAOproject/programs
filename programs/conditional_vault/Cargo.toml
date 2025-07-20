@@ -15,8 +15,10 @@ no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
 production = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 
 [dependencies]
-anchor-lang = { version = "0.29.0", features = ["init-if-needed", "event-cpi"] }
-anchor-spl = { version = "0.29.0", features = ["metadata"] }
+anchor-lang = { version = "0.31.1", features = ["init-if-needed", "event-cpi"] }
+anchor-spl = { version = "0.31.1", features = ["metadata"] }
 solana-security-txt = "1.1.1"
+

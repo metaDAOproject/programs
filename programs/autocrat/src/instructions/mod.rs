@@ -5,13 +5,11 @@ pub mod initialize_dao;
 pub mod initialize_proposal;
 pub mod update_dao;
 pub mod initialize_futarchy_amm;
-pub mod swap;
-pub mod arbitrary_swap;
+pub mod trade;
 
 // pub use finalize_proposal::*;
 pub use initialize_dao::*;
 pub use initialize_proposal::*;
 pub use update_dao::*;
 pub use initialize_futarchy_amm::*;
-pub use swap::*;
-pub use arbitrary_swap::*;
+pub use trade::*;

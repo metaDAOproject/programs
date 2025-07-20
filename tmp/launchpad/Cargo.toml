@@ -1,0 +1,29 @@
+[package]
+name = "launchpad"
+version = "0.5.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "launchpad"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+devnet = ["raydium-cpmm-cpi/devnet"]
+production = []
+
+[dependencies]
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
+autocrat = { path = "../autocrat", features = ["cpi"] }
+raydium-cpmm-cpi = { git = "https://github.com/raydium-io/raydium-cpi", package = "raydium-cpmm-cpi", branch = "anchor-0.29.0" }
+spl-memo = "=4.0.0"
+spl-token = "=4.0.0"
+ahash = "=0.8.6"
+solana-security-txt = "1.1.1"
+squads-multisig-program = { git = "https://github.com/Squads-Protocol/v4", package = "squads-multisig-program", rev = "6d5235da621a2e9b7379ea358e48760e981053be", features = ["cpi"] }
