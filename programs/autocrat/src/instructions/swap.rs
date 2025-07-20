@@ -4,12 +4,31 @@ use anchor_spl::{
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
 
-use crate::{state::{Dao, Amm, Side}, AmmState, TokenType};
+use crate::{state::{Dao, Amm, Side}, AmmState, TokenTypeFull};
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Eq, PartialEq, Clone)]
+pub struct AmmToken {
+    pub asset: Asset,
+    pub condition: Condition,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Eq, PartialEq, Clone)]
+pub enum Asset {
+    Quote,
+    Base,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Eq, PartialEq, Clone)]
+pub enum Condition {
+    Unconditional,
+    Pass,
+    Fail,
+}
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub struct SwapParams {
-    pub token_in: TokenType,
-    pub token_out: TokenType,
+    pub token_in: AmmToken,
+    pub token_out: AmmToken,
     pub amount_in: u64,
     pub min_out: u64,
 }
@@ -76,7 +95,7 @@ pub struct Swap<'info> {
 }
 
 impl Swap<'_> {
-    pub fn handle(ctx: Context<Self>, params: SwapParams) -> Result<()> {
+    pub fn spot_swap(ctx: Context<Self>, params: SwapParams) -> Result<()> {
         let SwapParams { token_in, token_out, amount_in, min_out } = params;
 
         // TODO: apply fees
@@ -87,6 +106,11 @@ impl Swap<'_> {
             }
             AmmState::Futarchy { proposal: _, question: _ } => {
                 // Futarchy AMM swap
+
+                if token_in.condition == token_out.condition {
+                    // Either a spot swap or a conditional swap
+                }
+
 
 
 

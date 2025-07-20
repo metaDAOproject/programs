@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::AutocratError;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Eq, PartialEq, Clone)]
-pub enum TokenType {
+pub enum TokenTypeFull {
     UnconditionalQuote,
     UnconditionalBase,
     PassQuote,
@@ -11,6 +11,10 @@ pub enum TokenType {
     FailQuote,
     FailBase,
 }
+
+
+
+
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Eq, PartialEq, Clone)]
 pub enum Side {
