@@ -1,48 +1,35 @@
 import {
   ComputeBudgetProgram,
-  Keypair,
   Transaction,
   PublicKey,
+  TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient } from "@metadaoproject/futarchy/v0.4";
-import { homedir } from "os";
-import { join } from "path";
-import { input } from "@inquirer/prompts";
+import { LaunchpadClient } from "@metadaoproject/futarchy/v0.5";
 
 import dotenv from "dotenv";
+import { createLookupTableForTransaction } from "./utils/utils.js";
 
 dotenv.config();
 
-const rpcUrl = await input({
-  message: "Enter your RPC URL:",
-  default: process.env.RPC_URL,
-});
-
-const walletPath = await input({
-  message: "Enter the path (relative to home directory) to your wallet file",
-  default: join(homedir(), process.env.WALLET_PATH),
-});
-process.env.ANCHOR_WALLET = walletPath;
-const provider = anchor.AnchorProvider.local(rpcUrl, {
-  commitment: "confirmed",
-});
+const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const launchAddr = new PublicKey(
-  await input({
-    message: "Enter the launch address",
-    default: process.env.LAUNCH_ADDRESS,
-  })
-);
+const LAUNCH_TO_FINALIZE = new PublicKey("7DzBXBYSKhrXHPWT6mAKq394vKupaKaqLn9bK1wscpBz");
+
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
 async function main() {
-  const launch = await launchpad.getLaunch(launchAddr);
+  const launch = await launchpad.getLaunch(LAUNCH_TO_FINALIZE);
 
   const tx = await launchpad
-    .completeLaunchIx(launchAddr, launch.tokenMint, true)
+    .completeLaunchIx(LAUNCH_TO_FINALIZE, launch.quoteMint, launch.baseMint, false)
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+    ])
     .transaction();
 
   await sendAndConfirmTransaction(tx, "Complete launch");
@@ -59,14 +46,27 @@ main().catch((error) => {
 async function sendAndConfirmTransaction(
   tx: Transaction,
   label: string,
-  signers: Keypair[] = []
 ) {
-  tx.feePayer = payer.publicKey;
-  tx.recentBlockhash = (
-    await provider.connection.getLatestBlockhash()
-  ).blockhash;
-  tx.partialSign(payer, ...signers);
-  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
+
+  const completeLaunchLut = await createLookupTableForTransaction(
+    tx,
+    payer,
+    provider
+  );
+
+  console.log('Complete launch lookup table:', completeLaunchLut);
+  new Promise(resolve => setTimeout(resolve, 4000));
+  let blockhash = await provider.connection.getLatestBlockhash()
+
+  const messageV0 = new TransactionMessage({
+    payerKey: payer.publicKey,
+    recentBlockhash: blockhash.blockhash,
+    instructions: tx.instructions,
+  }).compileToV0Message([completeLaunchLut]);
+
+  const transactionV0 = new VersionedTransaction(messageV0);
+  transactionV0.sign([payer]);
+  const txHash = await provider.connection.sendRawTransaction(transactionV0.serialize());
   console.log(`${label} transaction sent:`, txHash);
 
   await provider.connection.confirmTransaction(txHash, "confirmed");
