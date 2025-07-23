@@ -96,7 +96,7 @@ async function main() {
     // Create proposal
     const proposalCreateIx = multisig.instructions.proposalCreate({
         multisigPda,
-        transactionIndex: BigInt((transactionIndex +1 ).toString()),
+        transactionIndex: BigInt(transactionIndex.toString()),
         creator: PERMISSIONLESS_ACCOUNT.publicKey,
         rentPayer: payer.publicKey,
         isDraft: false,
