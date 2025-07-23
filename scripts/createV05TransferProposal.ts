@@ -16,10 +16,9 @@ const payer = provider.wallet["payer"];
 const SQUADS_MULTISIG_ADDRESS = new PublicKey("7AivcS5Sm3uneG7EKtjAmmgWeQ653v6B1Uzc3JiYWihY");
 const USDC_MINT = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"); // Mainnet USDC
 const SQUADS_VAULT = new PublicKey("rK7cW554iF9v8eNcH8DwLWX4a435DeB1TcUURnSjkcr");
-const DAO_ADDRESS = new PublicKey("9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo");
 
 // Configuration
-const RECIPIENT = new PublicKey("RECIPIENT_ADDRESS_HERE"); // change this to the recipient's address when testing
+const RECIPIENT = new PublicKey("CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf"); // change this to the recipient's address when testing
 const AMOUNT = 1_000_000; // 1 USDC (6 decimals)
 
 async function main() {
@@ -59,7 +58,7 @@ async function main() {
 
     // Add idempotent instruction to create recipient's USDC account if needed
     const createRecipientAtaIx = createAssociatedTokenAccountIdempotentInstruction(
-        payer.PublicKey,
+        payer.publicKey,
         recipientUsdcAccount,  
         RECIPIENT,             
         USDC_MINT            
