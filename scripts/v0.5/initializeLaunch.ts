@@ -6,7 +6,7 @@ import {
   LaunchpadClient,
 } from "@metadaoproject/futarchy/v0.5";
 import { BN } from "bn.js";
-import { USDC } from "./consts.js";
+import { USDC } from "../consts.js";
 import {
   ComputeBudgetProgram,
   PublicKey,
