@@ -1,6 +1,7 @@
 import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
 
 const provider = anchor.AnchorProvider.env();
@@ -9,10 +10,15 @@ const payer = provider.wallet["payer"];
 const SQUADS_MULTISIG_ADDRESS = new PublicKey("7AivcS5Sm3uneG7EKtjAmmgWeQ653v6B1Uzc3JiYWihY");
 const SQUADS_VAULT = new PublicKey("rK7cW554iF9v8eNcH8DwLWX4a435DeB1TcUURnSjkcr");
 const DAO_ADDRESS = new PublicKey("9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo");
+const USDC_MINT = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"); // Mainnet USDC
+const MEMBERS_TO_ADD = [
+    new PublicKey("CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf"), 
+    new PublicKey("FWAVLoePxNurdxanrEnd9d7cSYpRzFYAE2CNFPotz15K"), 
+];
 
 // Configuration - set these values
-const SPENDING_LIMIT_TO_REMOVE = new PublicKey("SPENDING_LIMIT_PDA_HERE"); // The spending limit PDA to remove, still need to dynamically calculate
-const RENT_COLLECTOR = new PublicKey("RENT_COLLECTOR_ADDRESS_HERE"); // Who receives the rent
+const RENT_COLLECTOR = new PublicKey("rK7cW554iF9v8eNcH8DwLWX4a435DeB1TcUURnSjkcr"); // Who receives the rent
+const AMOUNT = 20_000_000; // 20 USDC (6 decimals)
 
 async function main() {
     const multisigPda = SQUADS_MULTISIG_ADDRESS;
@@ -22,6 +28,22 @@ async function main() {
         provider.connection,
         multisigPda
     );
+
+    const destinations = await Promise.all(
+        MEMBERS_TO_ADD.map(member => 
+            getAssociatedTokenAddress(
+                USDC_MINT,
+                member,
+                true 
+            )
+        )
+    );
+
+    // this works because the DAO_ADDRESS was used as the createKey on dao initialization, ASSUMING we haven't since removed it
+    const spendingLimitPda = await multisig.getSpendingLimitPda({ 
+        multisigPda,
+        createKey: DAO_ADDRESS,
+    })
 
     const currentTransactionIndex = Number(multisigAccountInfo.transactionIndex);
     console.log("Current transaction index:", currentTransactionIndex.toString());
@@ -39,16 +61,31 @@ async function main() {
     const removeSpendingLimitIx = multisig.instructions.multisigRemoveSpendingLimit({
         multisigPda,
         configAuthority: DAO_ADDRESS, 
-        spendingLimit: SPENDING_LIMIT_TO_REMOVE,
+        spendingLimit: spendingLimitPda[0],
         rentCollector: payer.publicKey, 
         memo: "Removing spending limit",
     });
 
+    const addSpendingLimitIx = multisig.instructions.multisigAddSpendingLimit ({
+        multisigPda,
+        spendingLimit: spendingLimitPda[0],
+        configAuthority: DAO_ADDRESS,
+        rentPayer: payer.publicKey,
+        createKey: DAO_ADDRESS,
+        vaultIndex: 0, // again assumes we're 0th index for the vault
+        mint:  USDC_MINT,
+        amount: BigInt(AMOUNT),
+        period: multisig.generated.Period.Week,
+        members: MEMBERS_TO_ADD,
+        destinations: destinations, 
+        memo: "Adding spending limit"
+    })
+
     // Create the transaction message for the vault
     const transactionMessage = new TransactionMessage({
-        payerKey: payer.publicKey, // does the user pay for everything? can they? 
+        payerKey: payer.publicKey, 
         recentBlockhash: (await provider.connection.getLatestBlockhash()).blockhash,
-        instructions: [removeSpendingLimitIx],
+        instructions: [removeSpendingLimitIx, addSpendingLimitIx],
     });
 
     // Create vault transaction
@@ -82,11 +119,10 @@ async function main() {
     const txHash = await provider.connection.sendRawTransaction(tx.serialize());
     await provider.connection.confirmTransaction(txHash, "confirmed");
     
-    console.log("Remove spending limit proposal created successfully!");
+    console.log("Updating spending limit proposal created successfully!");
     console.log("Transaction hash:", txHash);
     console.log("Proposal index:", transactionIndex.toString());
-    console.log(`Proposed removal of spending limit: ${SPENDING_LIMIT_TO_REMOVE.toBase58()}`);
-    console.log(`Rent will be returned to: ${RENT_COLLECTOR.toBase58()}`);
+    console.log(`Rent will be returned to: ${payer.publicKey.toBase58()}`);
 
     // Get the proposal PDA
     const [proposalPda] = multisig.getProposalPda({
@@ -97,6 +133,6 @@ async function main() {
 }
 
 main().catch((error) => {
-    console.error("Error removing spending limit:", error);
+    console.error("Error updating spending limit:", error);
     process.exit(1);
 });

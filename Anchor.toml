@@ -30,6 +30,7 @@ create-v04-proposal = "yarn run tsx scripts/createV04Proposal.ts"
 initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
 test = "npx mocha --import=tsx --bail tests/main.test.ts"
 transfer = "yarn run tsx scripts/createV05TransferProposal.ts"
+update-spending-limit = "yarn run tsx scripts/updateV05SpendingLimit.ts"
 
 [test]
 startup_wait = 5000
