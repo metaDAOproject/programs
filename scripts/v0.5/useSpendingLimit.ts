@@ -2,7 +2,7 @@ import { PublicKey, Transaction } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
 import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { USDC } from "./consts.js";
+import { USDC } from "../consts.js";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];

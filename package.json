@@ -28,6 +28,7 @@
         "anchor-bankrun": "^0.3.0",
         "anchor-litesvm": "^0.1.2",
         "arweave": "^1.14.4",
+        "bs58": "^6.0.0",
         "litesvm": "^0.2.0",
         "solana-bankrun": "^0.3.0",
         "spl-token-bankrun": "0.2.6"

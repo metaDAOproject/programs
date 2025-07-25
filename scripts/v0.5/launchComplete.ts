@@ -9,7 +9,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { LaunchpadClient } from "@metadaoproject/futarchy/v0.5";
 
 import dotenv from "dotenv";
-import { createLookupTableForTransaction } from "./utils/utils.js";
+import { createLookupTableForTransaction } from "../utils/utils.js";
 
 dotenv.config();
 
