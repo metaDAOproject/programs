@@ -379,7 +379,7 @@ export default function suite() {
     })
     .preInstructions([
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_200_000 }),
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
     ])
     .rpc();
 
