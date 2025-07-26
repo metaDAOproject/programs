@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount};
 // Assuming 6 decimal places, this means we can handle up to 2**52 * 2**52, so 4B tokens * 4B tokens
+use brine_fp::{signed::SignedNumeric, UnsignedNumeric};
 use fixed::types::I110F18;
 
 use crate::{
@@ -40,6 +41,7 @@ pub enum UnderlyingAsset {
 pub struct PredictionSwapParams {
     pub side: Side,
     pub underlying_asset: UnderlyingAsset,
+    pub condition: Condition,
     pub amount_in: u64,
     pub min_amount_out: u64, 
 }
@@ -103,6 +105,8 @@ pub struct AmmTokenAccounts<'info> {
     pub quote_vault: Box<Account<'info, conditional_vault::state::ConditionalVault>>,
     pub futarchy_amm: Account<'info, Amm>,
 }
+
+// TODO: bound all u64s at 2**55 so that their multiples are less than 2**110 and fit within our decimal
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -213,6 +217,22 @@ pub fn min_b_three_fixed(
     //   A = d - f_
     //   B = k2 - k3 - A*(c+e)
     //   C = k2*e - k3*c - A*c*e
+    // {
+    //     let sn_d = SignedNumeric {
+    //         value: UnsignedNumeric::new(d.to_num::<u128>()).unwrap(),
+    //         is_negative: false,
+    //     };
+
+    //     let sn_f = SignedNumeric {
+    //         value: UnsignedNumeric::new(f_.to_num::<u128>()).unwrap(),
+    //         is_negative: false,
+    //     };
+
+    //     let sn_A = (sn_d.checked_sub(&sn_f).unwrap()).negate();
+
+    //     msg!("sn_A: {:?}", sn_A);
+
+    // }
     {
         let A = -(d - f_);
         let B = k2 - k3 - A * (c + e);
@@ -333,9 +353,64 @@ pub fn min_d_three_fixed(
     // Bring RHS terms over to form quadratic in x:
     //   (b-f_)*(-x^2) + (b-f_)*(a - e)*x + (b-f_)*a e - k3*(a-x) - k1*(e+x) = 0
     // Combine like terms to Ax^2 + Bx + C = 0:
-    let A = -(b + f_);
-    let B = (b + f_)*(a - e) + k3 - k1;
-    let C = (b + f_)*a*e - k3*a - k1*e;
+    // {
+    //     let sn_b = SignedNumeric {
+    //         value: UnsignedNumeric::new(b.to_num::<u128>()).unwrap(),
+    //         is_negative: false,
+    //     };
+
+    //     let sn_f = SignedNumeric {
+    //         value: UnsignedNumeric::new(f_.to_num::<u128>()).unwrap(),
+    //         is_negative: false,
+    //     };
+
+    //     let sn_a = SignedNumeric {
+    //         value: UnsignedNumeric::new(a.to_num::<u128>()).unwrap(),
+    //         is_negative: false,
+    //     };
+
+    //     let sn_e = SignedNumeric {
+    //         value: UnsignedNumeric::new(e.to_num::<u128>()).unwrap(),
+    //         is_negative: false,
+    //     };
+    // to_string
+    //     let sn_k3 = SignedNumeric {
+    //         value: UnsignedNumeric::new(k3.to_num::<u128>()).unwrap(),
+    //         is_negative: false,
+    //     };
+
+    //     let sn_k1 = SignedNumeric {
+    //         value: UnsignedNumeric::new(k1.to_num::<u128>()).unwrap(),
+    //         is_negative: false,
+    //     };
+
+    //     let sn_A = (sn_b.checked_add(&sn_f).unwrap()).negate();
+
+    //     // msg!("sn_A: {}", sn_A.to_string());
+
+    //     let sn_B = (sn_b.checked_add(&sn_f).unwrap()).checked_mul(&sn_a.checked_sub(&sn_e).unwrap()).unwrap().checked_add(&sn_k3).unwrap().checked_sub(&sn_k1).unwrap();
+    //     // msg!("sn_B: {}", sn_B.to_string());
+    //     let sn_C = (sn_b.checked_add(&sn_f).unwrap()).checked_mul(&sn_a).unwrap().checked_mul(&sn_e).unwrap().checked_sub(&sn_k3.checked_mul(&sn_a).unwrap()).unwrap().checked_sub(&sn_k1.checked_mul(&sn_e).unwrap()).unwrap();
+    //     // msg!("sn_C: {}", sn_C.to_string());
+
+    //     // msg!("left C: {}", sn_b.checked_add(&sn_f).unwrap().checked_mul(&sn_a).unwrap().checked_mul(&sn_e).unwrap().to_string());
+
+    // }
+    let A = -(b + f_); // bounds: up to u64::MAX * 2
+    msg!("A: {}", A);
+    let B = (b + f_)*(a - e) + k3 - k1; 
+    let C = (b + f_)*a*e - k3*a - k1*e; // up to u197::MAX + u128::MAX + u128::MAX;
+    msg!("A = {}, B = {}, C = {}", A, B, C);
+
+    if A != 0 {
+        let c_t = a.checked_mul(e).unwrap().checked_sub(k3.checked_div(A).unwrap().checked_mul(a).unwrap()).unwrap().checked_sub(k1.checked_div(A).unwrap().checked_mul(e).unwrap()).unwrap();
+        msg!("c_t: {}", c_t);
+    }
+    let i = (b + f_).checked_mul(e).unwrap().checked_sub(k3).unwrap();
+    msg!("i: {}", i);
+    let _ = i.checked_mul(a).unwrap();
+
+    // let C = (b + f_).checked_mul(e).unwrap().checked_sub(k3).unwrap().checked_mul(a).unwrap() - k1*e; // up to u197::MAX + u128::MAX + u128::MAX;
     // msg!("k3*a: {}", k3*a);
     // Now solve A x^2 + B x + C = 0
     let mut test = |x: I110F18| {
@@ -355,17 +430,32 @@ pub fn min_d_three_fixed(
         // 3) B is 0 and C is 0, which only happens if the curves are identical, in which case we can
         //    still rely on the other constraints
     } else {
-        let disc = B * B - I110F18::from_num(4.0) * A * C;
-        // msg!("disc: {}", disc);
+        let b_tick = B / A;
+        let c_tick = C / A;
+
+        let disc = b_tick * b_tick - I110F18::from_num(4.0) * c_tick;
+        msg!("disc: {}", disc);
+        // TODO: this can easily overflow. if we only need to check if discriminator is positive, maybe we
+        //       can compute from B, A, and C sign? no, because we'd need to compare A*C, which we can't do.
         if disc >= 0 {
             let rt = disc.sqrt();
-            test((-B - rt) / (I110F18::from_num(2.0) * A));
-            test((-B + rt) / (I110F18::from_num(2.0) * A));
+            test((-b_tick - rt) / I110F18::from_num(2.0));
+            test((-b_tick + rt) / I110F18::from_num(2.0));
         }
+        let disc = B * B - I110F18::from_num(4.0) * A * C;
+        msg!("disc: {}", disc);
+        // if disc >= 0 {
+        // if (A > 0 && (B * B) / A >= I110F18::from_num(4.0) * C) || (A < 0 && (B * B) / A <= I110F18::from_num(4.0) * C) {
+        //     let rt = disc.sqrt();
+        //     test((-B - rt) / (I110F18::from_num(2.0) * A));
+        //     test((-B + rt) / (I110F18::from_num(2.0) * A));
+        // }
     }
 
     // msg!("A: {}, B: {}, C: {}", A, B, C);
     // msg!("d12: {}, d23: {}, d13: {}", d12, d23, d13);
+
+    msg!("d12 = {}, d23 = {}, d13 = {}", d12, d23, d13);
 
     // pick minimal d
     let (d_min, xs, ys) = if d12 <= d23 && d12 <= d13 {
@@ -376,6 +466,163 @@ pub fn min_d_three_fixed(
         (d13, x13, y13)
     };
     if d_min == I110F18::MAX {
+        None
+    } else {
+        Some((d_min, xs, ys))
+    }
+}
+
+#[allow(non_snake_case)]
+pub fn min_d_sn(
+    a: SignedNumeric,
+    b: SignedNumeric,
+    c: SignedNumeric,
+    e: SignedNumeric,
+    f_: SignedNumeric,
+    k1: SignedNumeric,
+    k2: SignedNumeric,
+    k3: SignedNumeric,
+) -> Option<(SignedNumeric, SignedNumeric, SignedNumeric)> {
+    // 1) Sanity: all k1,k2,k3 > 0
+    if !(k1 > 0 && k2 > 0 && k3 > 0) {
+        return None;
+    }
+    // Helper closures:
+    // Constraint1 → y = b - k1/(a-x)
+    let y1 = |x: &SignedNumeric| b - k1 / (a - x);
+    // Constraint3 → y = k3/(e+x) - f_
+    let y3 = |x: &SignedNumeric| k3 / (e + x) - f_;
+
+    // Store candidates: d12,d23,d13
+    let mut d12 = SignedNumeric::MAX; let mut x12 = SignedNumeric::MAX; let mut y12 = SignedNumeric::MAX;
+    let mut d23 = SignedNumeric::MAX; let mut x23 = SignedNumeric::MAX; let mut y23 = SignedNumeric::MAX;
+    let mut d13 = SignedNumeric::MAX; let mut x13 = SignedNumeric::MAX; let mut y13 = SignedNumeric::MAX;
+
+    // --- Case 1: (1)&(2) tight ---
+    // y from (1): y=y1(x);
+    // then solve (c+x)(d+y)=k2 → d(x)=k2/(c+x)-y1(x)
+    // minimize via tangency of f1,f2 → sqrt(k1)/(a-x)=sqrt(k2)/(c+x)
+    {
+        // Solve for x: sqrt(k1)*(c+x)=sqrt(k2)*(a-x)
+        let x = (a * k2.sqrt().unwrap() - c * k1.sqrt().unwrap()) / (k1.sqrt().unwrap() + k2.sqrt().unwrap());
+        // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}, (a * k2.sqrt()) - (c * k1.sqrt()) = {}, a = {a}, c = {c}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt(), (a * k2.sqrt()) - (c * k1.sqrt()));
+        if x > -c && x < a {
+            let y = y1(&x);
+            // msg!("y: {}, y1(x): {}, y3(x): {}", y, y1(x), y3(x));
+
+            // msg!("y: {}, y1(x): {}, y3(x): {}, d_val: {}", y, y1(x), y3(x), k2 / (c + x) - y);
+            // ensure constraint3 slack: y >= y3(x)
+            if y >= y3(&x) {
+                let d_val = k2 / (c + x) - y;
+                d12 = d_val; x12 = x; y12 = y;
+            }
+        }
+    }
+
+    // --- Case 2: (2)&(3) tight ---
+    // y from (3): y=y3(x);
+    // (c+x)(d+y)=k2 → d(x)=k2/(c+x)-y3(x)
+    // tangency f2,f3 → sqrt(k2)/(c+x)=sqrt(k3)/(e+x)
+    {
+        let x = (c * k3.sqrt().unwrap() - e * k2.sqrt().unwrap()) / (k2.sqrt().unwrap() + k3.sqrt().unwrap());
+        // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}, (a * k2.sqrt()) - (c * k1.sqrt()) = {}, a = {a}, c = {c}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt(), (a * k2.sqrt()) - (c * k1.sqrt()));
+        if x > -e && x > -c {
+            let y = y3(&x);
+            // msg!("y: {}, y1(x): {}, y3(x): {}, d_val: {}", y, y1(x), y3(x), k2 / (c + x) - y);
+            // ensure constraint1 slack: y <= b - k1/(a-x)
+            if y <= y1(&x) {
+                let d_val = k2 / (c + x) - y;
+                d23 = d_val; x23 = x; y23 = y;
+            }
+        }
+    }
+
+    // --- Case 3: (1)&(3) tight ---
+    // Constraints tight:
+    //   (1) (a - x)(b - y) = k1  ⇒  y = b - k1/(a-x)
+    //   (3) (e + x)(f + y) = k3  ⇒  y = k3/(e+x) - f_
+    // Set equal: b - k1/(a-x) = k3/(e+x) - f_
+    // Multiply both sides by (a-x)(e+x):
+    //   (b - f_)*(a-x)*(e+x) = (k3)*(a-x) + (k1)*(e+x)
+    // Expand LHS: (b-f_)*(ae + a x - e x - x^2)
+    // Bring RHS terms over to form quadratic in x:
+    //   (b-f_)*(-x^2) + (b-f_)*(a - e)*x + (b-f_)*a e - k3*(a-x) - k1*(e+x) = 0
+    // Combine like terms to Ax^2 + Bx + C = 0:
+    
+    let A = -(b + f_); // bounds: up to u64::MAX * 2
+    // msg!("A: {}", A.to_string());
+    let B = (b + f_)*(a - e) + k3 - k1; 
+    let C = (b + f_)*a*e - k3*a - k1*e; // up to u197::MAX + u128::MAX + u128::MAX;
+    // msg!("A = {}, B = {}, C = {}", A.to_string(), B.to_string(), C.to_string());
+
+    // if A != 0 {
+    //     let c_t = a.checked_mul(e).unwrap().checked_sub(k3.checked_div(A).unwrap().checked_mul(a).unwrap()).unwrap().checked_sub(k1.checked_div(A).unwrap().checked_mul(e).unwrap()).unwrap();
+    //     msg!("c_t: {}", c_t);
+    // }
+    // let i = (b + f_).checked_mul(e).unwrap().checked_sub(k3).unwrap();
+    // msg!("i: {}", i);
+    // let _ = i.checked_mul(a).unwrap();
+
+    // let C = (b + f_).checked_mul(e).unwrap().checked_sub(k3).unwrap().checked_mul(a).unwrap() - k1*e; // up to u197::MAX + u128::MAX + u128::MAX;
+    // msg!("k3*a: {}", k3*a);
+    // Now solve A x^2 + B x + C = 0
+    let mut test = |x: SignedNumeric| {
+        if x.clone() > -c && x.clone() > -e && x.clone() < a {
+            let y = y1(&x);
+            let d_val = k2 / (c.clone() + x) - y;    // from constraint 2
+            // ensure slack on 2: (c+x)(d+y)>=k2 ⇒ no extra check as computed x from tight 1&3
+            d13 = d_val; x13 = x.clone(); y13 = y;
+        }
+    };
+    if A == 0 {
+        // If A is 0, then either:
+        // 1) B is non-zero and this is a linear equation (Bx + C = 0 <=> x = -C/B)
+        if B != 0 { test(-C / B); }
+        // 2) B is 0 and C is non-zero, then this is infeasible (C = 0) and there's no interesection,
+        //    we should rely on the other constraints
+        // 3) B is 0 and C is 0, which only happens if the curves are identical, in which case we can
+        //    still rely on the other constraints
+    } else {
+        let b_tick = B / A;
+        let c_tick = C / A;
+
+        let disc = b_tick * b_tick - SignedNumeric::new(4) * c_tick;
+        msg!("disc: {}", disc.to_string());
+        // TODO: this can easily overflow. if we only need to check if discriminator is positive, maybe we
+        //       can compute from B, A, and C sign? no, because we'd need to compare A*C, which we can't do.
+        // if disc >= 0 {
+        //     let rt = disc.sqrt().unwrap();
+        //     test(&((-b_tick.clone() - rt) / SignedNumeric::new(2)));
+        //     test(&((-b_tick.clone() + rt) / SignedNumeric::new(2)));
+        // }
+        msg!("got here");
+        // msg!("fake_disc: {}", fake_disc.to_string());
+        let disc = B * B - SignedNumeric::new(4) * A * C;
+        msg!("disc: {}", disc.to_string());
+        // if disc >= 0 {
+        // if (A > 0 && (B * B) / A >= I110F18::from_num(4.0) * C) || (A < 0 && (B * B) / A <= I110F18::from_num(4.0) * C) {
+        if disc >= 0 {
+            let rt = disc.sqrt().unwrap();
+        msg!("got here 2");
+            test((-B - rt) / (SignedNumeric::new(2) * A));
+            test((-B + rt) / (SignedNumeric::new(2) * A));
+        }
+    }
+
+    // msg!("A: {}, B: {}, C: {}", A, B, C);
+    // msg!("d12: {}, d23: {}, d13: {}", d12, d23, d13);
+
+    // msg!("d12 = {}, d23 = {}, d13 = {}", d12.to_string(), d23.to_string(), d13.to_string());
+
+    // pick minimal d
+    let (d_min, xs, ys) = if d12 <= d23 && d12 <= d13 {
+        (d12, x12, y12)
+    } else if d23 <= d12 && d23 <= d13 {
+        (d23, x23, y23)
+    } else {
+        (d13, x13, y13)
+    };
+    if d_min == SignedNumeric::MAX {
         None
     } else {
         Some((d_min, xs, ys))
@@ -445,15 +692,16 @@ impl Trade<'_> {
     pub fn conditional_trade(ctx: Context<Self>, params: ConditionalTradeParams) -> Result<()> {
         let ConditionalTradeParams { side, condition, amount_in, min_amount_out } = params;
 
-        let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
-            I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_quote.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_base.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.pass_quote.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.pass_base.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.fail_quote.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.fail_base.amount),
-        );
+        let amount_in_after_fee = amount_in as u128 * (10000 - FEE_BPS) as u128 / 10000;
 
+        let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_quote.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_base.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_quote.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_base.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_quote.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_base.amount as i128),
+        );
         let (a, b, c, d, e, f) = match side {
             Side::Buy => (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base),
             Side::Sell => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
@@ -465,7 +713,36 @@ impl Trade<'_> {
             Condition::Fail => (e, f, c, d),
         };
 
-        let (new_d, x, y) = min_d_three_fixed(a, b, c + I110F18::from_num(amount_in), e, f, a * b, c * d, e * f).unwrap();
+        let (new_d, x, y) = min_d_sn(a, b, c + SignedNumeric::new(amount_in_after_fee as i128), e, f, a * b, c * d, e * f).unwrap();
+
+        // msg!("new_d: {}, x: {}, y: {}", new_d.to_string(), x.to_string(), y.to_string());
+
+
+
+
+
+
+        // let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_quote.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_base.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.pass_quote.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.pass_base.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.fail_quote.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.fail_base.amount),
+        // );
+
+        // let (a, b, c, d, e, f) = match side {
+        //     Side::Buy => (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base),
+        //     Side::Sell => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
+        // };
+
+        // let (c, d, e, f) = match condition {
+        //     Condition::Unconditional => todo!(),
+        //     Condition::Pass => (c, d, e, f),
+        //     Condition::Fail => (e, f, c, d),
+        // };
+
+        // let (new_d, x, y) = min_d_three_fixed(a, b, c + I110F18::from_num(amount_in), e, f, a * b, c * d, e * f).unwrap();
 
         let (quote_split, base_split) = if side == Side::Buy {
             (x, y)
@@ -488,15 +765,15 @@ impl Trade<'_> {
             },
             output: AssetAndAmount { 
                 asset: output_asset,
-                amount: (d - new_d).to_num::<u64>(),
+                amount: (d - new_d).value.floor().unwrap().to_imprecise().unwrap() as u64,
             },
             quote_split_or_merge: SplitOrMergeAndAmount { 
-                split_or_merge: if quote_split > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: quote_split.abs().to_num::<u64>()
+                split_or_merge: if quote_split > 0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+                amount: quote_split.value.floor().unwrap().to_imprecise().unwrap() as u64
             },
             base_split_or_merge: SplitOrMergeAndAmount { 
-                split_or_merge: if base_split > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: base_split.abs().to_num::<u64>()
+                split_or_merge: if base_split > 0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+                amount: base_split.value.floor().unwrap().to_imprecise().unwrap() as u64
             },
         };
 
@@ -506,33 +783,55 @@ impl Trade<'_> {
     }
 
     pub fn prediction_trade(ctx: Context<Self>, params: PredictionSwapParams) -> Result<()> {
-        let PredictionSwapParams { side, underlying_asset, amount_in, min_amount_out } = params;
+        let PredictionSwapParams { side, underlying_asset, condition, amount_in, min_amount_out } = params;
 
         let amount_in_after_fee = amount_in as u128 * (10000 - FEE_BPS) as u128 / 10000;
 
+        // For now, only facilitate quote swaps
         assert!(underlying_asset == UnderlyingAsset::Quote);
+
         assert!(side == Side::Buy);
+
+        let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_quote.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_base.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_quote.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_base.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_quote.amount as i128),
+            SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_base.amount as i128),
+        );
+
 
         // TODO: handle fail trades
 
-        let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
-            I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_quote.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_base.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.pass_quote.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.pass_base.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.fail_quote.amount),
-            I110F18::from_num(ctx.accounts.amm_token_accounts.fail_base.amount),
-        );
+        // let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_quote.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_base.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.pass_quote.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.pass_base.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.fail_quote.amount),
+        //     I110F18::from_num(ctx.accounts.amm_token_accounts.fail_base.amount),
+        // );
 
-        let (a, b, c, d, e, f) = (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote);
 
-        let (output_amount, x, y) = if side == Side::Buy {
-            let (new_d, x, y) = min_d_three_fixed(a, b + I110F18::from_num(amount_in_after_fee), c, e, f, a*b, c*d, e*f).unwrap();
-            (d - new_d, x, y)
-        } else {
-            let (new_b, x, y) = min_b_three_fixed(a, c, d + I110F18::from_num(amount_in_after_fee), e, f, a*b, c*d, e*f).unwrap();
-            (b - new_b, x, y)
+        let (a, b, c, d, e, f) = match condition {
+            Condition::Pass => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
+            Condition::Fail => (unconditional_base, unconditional_quote, fail_base, fail_quote, pass_base, pass_quote),
+            Condition::Unconditional => todo!(),
         };
+
+        // let (output_amount, x, y) = if side == Side::Buy {
+        //     let (new_d, x, y) = min_d_three_fixed(a, b + I110F18::from_num(amount_in_after_fee), c, e, f, a*b, c*d, e*f).unwrap();
+        //     (d - new_d, x, y)
+        // } else {
+        //     let (new_b, x, y) = min_b_three_fixed(a, c, d + I110F18::from_num(amount_in_after_fee), e, f, a*b, c*d, e*f).unwrap();
+        //     (b - new_b, x, y)
+        // };
+
+        let (new_d, x, y) = min_d_sn(a, b + SignedNumeric::new(amount_in_after_fee as i128), c, e, f, a * b, c * d, e * f).unwrap();
+
+        let (output_amount, x, y) = (d - new_d, x, y*SignedNumeric::new(10_001)/SignedNumeric::new(10_000));
+        msg!("output_amount: {}, x: {}, y: {}", output_amount.to_string(), x.to_string(), y.to_string());
 
 
         let trade_execution_params = TradeExecutionParams {
@@ -542,16 +841,24 @@ impl Trade<'_> {
             },
             output: AssetAndAmount { 
                 asset: if side == Side::Buy { Asset::PassQuote } else { Asset::SpotQuote },
-                amount: output_amount.to_num::<u64>(),
+                amount: output_amount.value.floor().unwrap().to_imprecise().unwrap() as u64,
             },
             quote_split_or_merge: SplitOrMergeAndAmount { 
-                split_or_merge: if y > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: y.abs().to_num::<u64>()
+                split_or_merge: if y > 0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+                amount: y.value.floor().unwrap().to_imprecise().unwrap() as u64
             },
             base_split_or_merge: SplitOrMergeAndAmount { 
-                split_or_merge: if x > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: x.abs().to_num::<u64>()
+                split_or_merge: if x > 0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+                amount: x.value.floor().unwrap().to_imprecise().unwrap() as u64
             },
+            // quote_split_or_merge: SplitOrMergeAndAmount { 
+            //     split_or_merge: if y > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+            //     amount: y.abs().to_num::<u64>()
+            // },
+            // base_split_or_merge: SplitOrMergeAndAmount { 
+            //     split_or_merge: if x > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
+            //     amount: x.abs().to_num::<u64>() + 1
+            // },
         };
 
         Self::execute_trade(ctx, trade_execution_params)?;

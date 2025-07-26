@@ -379,7 +379,7 @@ export default function suite() {
     })
     .preInstructions([
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_200_000 }),
     ])
     .rpc();
 
@@ -395,7 +395,8 @@ export default function suite() {
     await program.methods.predictionSwap({
       side: {buy: {}},
       underlyingAsset: {quote: {}},
-      amountIn: new BN(10_000_000),
+      condition: {pass: {}},
+      amountIn: new BN(100_000),
       minAmountOut: new BN(990_009),
     })
     .accounts({
@@ -431,7 +432,7 @@ export default function suite() {
     })
     .preInstructions([
       ComputeBudgetProgram.requestHeapFrame({ bytes: 256 * 1024 }),
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
     ])
     .rpc();
 

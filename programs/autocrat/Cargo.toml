@@ -22,4 +22,6 @@ anchor-lang = "^0.31.1"
 anchor-spl = "^0.31.1"
 solana-security-txt = "1.1.1"
 conditional_vault = { path = "../conditional_vault", features = ["cpi"] }
-fixed = "^1.26.0"
+fixed = "=1.26.0"
+brine-fp = { git = "https://github.com/metaproph3t/brine-fp.git", branch = "canonical", features = ["256-bit"] }
+
