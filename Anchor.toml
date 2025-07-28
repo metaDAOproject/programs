@@ -23,7 +23,7 @@ wallet = "~/.config/solana/id.json"
 [scripts]
 add-v03-metadata = "yarn run tsx scripts/addV03Metadata.ts"
 add-v04-metadata = "yarn run tsx scripts/addV04Metadata.ts"
-create-proposal = "yarn run tsx scripts/createProposal.ts"
+create-proposal = "yarn run tsx scripts/v0.5/createProposal.ts"
 create-v04-dao = "yarn run tsx scripts/createV04DAO.ts"
 assign-permissionless-account = "yarn run tsx scripts/assignPermissionlessAccount.ts"
 create-v04-proposal = "yarn run tsx scripts/createV04Proposal.ts"
@@ -31,6 +31,7 @@ initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
 test = "npx mocha --import=tsx --bail tests/main.test.ts"
 transfer = "yarn run tsx scripts/v0.5/createV05TransferProposal.ts"
 update-spending-limit = "yarn run tsx scripts/v0.5/updateV05SpendingLimit.ts"
+execute-v05-proposal = "yarn run tsx scripts/v0.5/executeV05Proposal.ts"
 
 [test]
 startup_wait = 5000

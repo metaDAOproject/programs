@@ -17,7 +17,6 @@ const MEMBERS_TO_ADD = [
 ];
 
 // Configuration - set these values
-const RENT_COLLECTOR = new PublicKey("rK7cW554iF9v8eNcH8DwLWX4a435DeB1TcUURnSjkcr"); // Who receives the rent
 const AMOUNT = 20_000_000; // 20 USDC (6 decimals)
 
 async function main() {
@@ -62,7 +61,7 @@ async function main() {
         multisigPda,
         configAuthority: DAO_ADDRESS, 
         spendingLimit: spendingLimitPda[0],
-        rentCollector: payer.publicKey, 
+        rentCollector: SQUADS_VAULT, 
         memo: "Removing spending limit",
     });
 
@@ -70,7 +69,7 @@ async function main() {
         multisigPda,
         spendingLimit: spendingLimitPda[0],
         configAuthority: DAO_ADDRESS,
-        rentPayer: payer.publicKey,
+        rentPayer: SQUADS_VAULT,
         createKey: DAO_ADDRESS,
         vaultIndex: 0, // again assumes we're 0th index for the vault
         mint:  USDC_MINT,
@@ -83,7 +82,7 @@ async function main() {
 
     // Create the transaction message for the vault
     const transactionMessage = new TransactionMessage({
-        payerKey: payer.publicKey, 
+        payerKey: payer.PublicKey, 
         recentBlockhash: (await provider.connection.getLatestBlockhash()).blockhash,
         instructions: [removeSpendingLimitIx, addSpendingLimitIx],
     });
@@ -93,7 +92,7 @@ async function main() {
         multisigPda,
         transactionIndex: BigInt(transactionIndex.toString()),
         creator: PERMISSIONLESS_ACCOUNT.publicKey,
-        rentPayer: payer.publicKey,
+        rentPayer: payer.PublicKey,
         vaultIndex: 0, // assuming 0th index vault
         ephemeralSigners: 0, // do we want to use ephemeral signers?
         transactionMessage,
@@ -104,17 +103,17 @@ async function main() {
         multisigPda,
         transactionIndex: BigInt((transactionIndex ).toString()),
         creator: PERMISSIONLESS_ACCOUNT.publicKey,
-        rentPayer: payer.publicKey,
+        rentPayer: payer.PublicKey,
         isDraft: false,
     });
 
     // Add both instructions to create the proposal
     const tx = new Transaction().add(vaultTxCreateIx, proposalCreateIx);
     tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
-    tx.feePayer = payer.publicKey;
+    tx.feePayer = payer.PublicKey;
     
     // Sign with both accounts
-    tx.sign(payer, PERMISSIONLESS_ACCOUNT);
+    tx.sign(payer, PERMISSIONLESS_ACCOUNT); 
     
     const txHash = await provider.connection.sendRawTransaction(tx.serialize());
     await provider.connection.confirmTransaction(txHash, "confirmed");

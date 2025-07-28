@@ -86,8 +86,8 @@ async function main() {
         multisigPda,
         transactionIndex: BigInt(transactionIndex.toString()),
         creator: PERMISSIONLESS_ACCOUNT.publicKey,
-        rentPayer: payer.publicKey,
-        vaultIndex: 0, // need to check this
+        rentPayer: payer.PublicKey,
+        vaultIndex: 0, 
         ephemeralSigners: 0, // do we want to use ephemeral signers?
         transactionMessage,
     });
@@ -97,14 +97,14 @@ async function main() {
         multisigPda,
         transactionIndex: BigInt(transactionIndex.toString()),
         creator: PERMISSIONLESS_ACCOUNT.publicKey,
-        rentPayer: payer.publicKey,
+        rentPayer: payer.PublicKey,
         isDraft: false,
     });
 
     // Add both instructions to create the proposal
     const tx = new Transaction().add(vaultTxCreateIx, proposalCreateIx);
     tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
-    tx.feePayer = payer.publicKey;
+    tx.feePayer = payer.publicKey; 
     
     // Sign with both accounts
     tx.sign(payer, PERMISSIONLESS_ACCOUNT);

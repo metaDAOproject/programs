@@ -10,10 +10,6 @@ const SQUADS_MULTISIG_ADDRESS = new PublicKey("7AivcS5Sm3uneG7EKtjAmmgWeQ653v6B1
 const SQUADS_VAULT = new PublicKey("rK7cW554iF9v8eNcH8DwLWX4a435DeB1TcUURnSjkcr");
 const DAO_ADDRESS = new PublicKey("9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo");
 
-// Configuration - set these values
-const SPENDING_LIMIT_TO_REMOVE = new PublicKey("SPENDING_LIMIT_PDA_HERE"); // The spending limit PDA to remove, still need to dynamically calculate
-const RENT_COLLECTOR = new PublicKey("RENT_COLLECTOR_ADDRESS_HERE"); // Who receives the rent
-
 async function main() {
     const multisigPda = SQUADS_MULTISIG_ADDRESS;
     
@@ -22,6 +18,12 @@ async function main() {
         provider.connection,
         multisigPda
     );
+
+    // this works because the DAO_ADDRESS was used as the createKey on dao initialization, ASSUMING we haven't since removed it
+    const spendingLimitPda = await multisig.getSpendingLimitPda({ 
+        multisigPda,
+        createKey: DAO_ADDRESS,
+    })
 
     const currentTransactionIndex = Number(multisigAccountInfo.transactionIndex);
     console.log("Current transaction index:", currentTransactionIndex.toString());
@@ -39,14 +41,14 @@ async function main() {
     const removeSpendingLimitIx = multisig.instructions.multisigRemoveSpendingLimit({
         multisigPda,
         configAuthority: DAO_ADDRESS, 
-        spendingLimit: SPENDING_LIMIT_TO_REMOVE,
-        rentCollector: payer.publicKey, 
+        spendingLimit: spendingLimitPda[0],
+        rentCollector: SQUADS_VAULT, 
         memo: "Removing spending limit",
     });
 
     // Create the transaction message for the vault
     const transactionMessage = new TransactionMessage({
-        payerKey: payer.publicKey, // does the user pay for everything? can they? 
+        payerKey: payer.PublicKey, 
         recentBlockhash: (await provider.connection.getLatestBlockhash()).blockhash,
         instructions: [removeSpendingLimitIx],
     });
@@ -56,9 +58,9 @@ async function main() {
         multisigPda,
         transactionIndex: BigInt(transactionIndex.toString()),
         creator: PERMISSIONLESS_ACCOUNT.publicKey,
-        rentPayer: payer.publicKey,
+        rentPayer: payer.PublicKey,
         vaultIndex: 0, // assuming 0th index vault
-        ephemeralSigners: 0, // do we want to use ephemeral signers?
+        ephemeralSigners: 0, 
         transactionMessage,
     });
 
@@ -67,14 +69,14 @@ async function main() {
         multisigPda,
         transactionIndex: BigInt((transactionIndex ).toString()),
         creator: PERMISSIONLESS_ACCOUNT.publicKey,
-        rentPayer: payer.publicKey,
+        rentPayer: payer.PublicKey,
         isDraft: false,
     });
 
     // Add both instructions to create the proposal
     const tx = new Transaction().add(vaultTxCreateIx, proposalCreateIx);
     tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
-    tx.feePayer = payer.publicKey;
+    tx.feePayer = payer.PublicKey;
     
     // Sign with both accounts
     tx.sign(payer, PERMISSIONLESS_ACCOUNT);
@@ -85,8 +87,7 @@ async function main() {
     console.log("Remove spending limit proposal created successfully!");
     console.log("Transaction hash:", txHash);
     console.log("Proposal index:", transactionIndex.toString());
-    console.log(`Proposed removal of spending limit: ${SPENDING_LIMIT_TO_REMOVE.toBase58()}`);
-    console.log(`Rent will be returned to: ${RENT_COLLECTOR.toBase58()}`);
+    console.log(`Proposed removal of spending limit: ${spendingLimitPda[0].toBase58()}`);
 
     // Get the proposal PDA
     const [proposalPda] = multisig.getProposalPda({
