@@ -94,39 +94,38 @@ async function main() {
 
   const txns = [];
 
-  // TODO: You likely have to break this up into it's many transactions...
+  // it's important that these happen in a single atomic transaction
   const questionIx = await vaultClient.initializeQuestionIx(
       sha256(`Will ${metaDaoProposal} pass?/FAIL/PASS`),
       metaDaoProposal,
       2
   ).transaction();
   txns.push(questionIx);
-  // it's important that these happen in a single atomic transaction
   const vaultTx = await vaultClient
-      .initializeVaultIx(question, dao.baseMint, 2)
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          vaultClient.initializeVaultIx(question, dao.quoteMint, 2),
-          ammClient.initializeAmmIx(passBaseMint, passQuoteMint, dao.twapStartDelaySlots, dao.twapInitialObservation, dao.twapMaxObservationChangePerUpdate),
-          ammClient.initializeAmmIx(failBaseMint, failQuoteMint, dao.twapStartDelaySlots, dao.twapInitialObservation, dao.twapMaxObservationChangePerUpdate)
-        )
-      ).transaction();
+    .initializeVaultIx(question, dao.baseMint, 2)
+    .postInstructions(
+      await InstructionUtils.getInstructions(
+        vaultClient.initializeVaultIx(question, dao.quoteMint, 2),
+        ammClient.initializeAmmIx(passBaseMint, passQuoteMint, dao.twapStartDelaySlots, dao.twapInitialObservation, dao.twapMaxObservationChangePerUpdate),
+        ammClient.initializeAmmIx(failBaseMint, failQuoteMint, dao.twapStartDelaySlots, dao.twapInitialObservation, dao.twapMaxObservationChangePerUpdate)
+      )
+    ).transaction();
   txns.push(vaultTx);
   const splitTokensTx = await vaultClient
-      .splitTokensIx(question, baseVault, dao.baseMint, minBaseLiquidity, 2)
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          vaultClient.splitTokensIx(question, quoteVault, dao.quoteMint, minQuoteLiquidity, 2)
-        )
-      ).transaction();
+    .splitTokensIx(question, baseVault, dao.baseMint, minBaseLiquidity, 2)
+    .postInstructions(
+      await InstructionUtils.getInstructions(
+        vaultClient.splitTokensIx(question, quoteVault, dao.quoteMint, minQuoteLiquidity, 2)
+      )
+    ).transaction();
   txns.push(splitTokensTx);
   const addLiquidityTx = await ammClient
-      .addLiquidityIx(passAmm, passBaseMint, passQuoteMint, minQuoteLiquidity, minBaseLiquidity, new BN(0))
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          ammClient.addLiquidityIx(failAmm, failBaseMint, failQuoteMint, minQuoteLiquidity, minBaseLiquidity, new BN(0))
-        )
-      ).transaction();
+    .addLiquidityIx(passAmm, passBaseMint, passQuoteMint, minQuoteLiquidity, minBaseLiquidity, new BN(0))
+    .postInstructions(
+      await InstructionUtils.getInstructions(
+        ammClient.addLiquidityIx(failAmm, failBaseMint, failQuoteMint, minQuoteLiquidity, minBaseLiquidity, new BN(0))
+      )
+    ).transaction();
   txns.push(addLiquidityTx);
   // this is how many original tokens are created
   const lpTokens = minQuoteLiquidity;

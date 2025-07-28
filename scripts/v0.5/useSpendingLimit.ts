@@ -3,6 +3,7 @@ import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
 import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { USDC } from "../consts.js";
+import { getSquadsPdasFromDao } from "../utils/squads.js";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
@@ -17,14 +18,7 @@ const MINT = USDC; // NOTE: This is the mint of the token you want to spend
 // This checks for the token account and creates it if it doesn't exist.
 // This will spend the amount set above or the remaining amount of the spending limit, whichever is less.
 async function main() { 
-  const [multisigPDA] = multisig.getMultisigPda({
-    createKey: DAO_ADDRESS,
-  });
-
-  const [spendingLimitPda] = multisig.getSpendingLimitPda({
-    multisigPda: multisigPDA,
-    createKey: DAO_ADDRESS,
-  });
+  const { multisigPda, spendingLimitPda } = await getSquadsPdasFromDao(DAO_ADDRESS);
 
   const spendingLimitAccount = await multisig.accounts.SpendingLimit.fromAccountAddress(
     provider.connection,
@@ -92,7 +86,7 @@ async function main() {
 
   // Use the spending limit
   const ix = multisig.instructions.spendingLimitUse({
-    multisigPda: multisigPDA,
+    multisigPda: multisigPda,
     member: payer.publicKey,
     spendingLimit: spendingLimitPda,
     mint: MINT,
