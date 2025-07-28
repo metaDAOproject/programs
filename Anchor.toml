@@ -32,6 +32,7 @@ test = "npx mocha --import=tsx --bail tests/main.test.ts"
 transfer = "yarn run tsx scripts/v0.5/createV05TransferProposal.ts"
 update-spending-limit = "yarn run tsx scripts/v0.5/updateV05SpendingLimit.ts"
 execute-v05-proposal = "yarn run tsx scripts/v0.5/executeV05Proposal.ts"
+use-spending-limit = "yarn run tsx scripts/v0.5/useSpendingLimit.ts"
 
 [test]
 startup_wait = 5000
