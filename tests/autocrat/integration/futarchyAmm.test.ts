@@ -87,8 +87,8 @@ export default function suite() {
 
     await program.methods
       .initializeFutarchyAmm({
-        quoteAmount: new BN(5_000_000).mul(new BN(10 ** 6)),
-        baseAmount: new BN(5_000_000).mul(new BN(10 ** 6)),
+        quoteAmount: new BN(100_000).mul(new BN(10 ** 6)),
+        baseAmount: new BN(100_000).mul(new BN(10 ** 6)),
       })
       .accounts({
         payer: this.payer.publicKey,

@@ -509,7 +509,7 @@ pub fn min_d_sn(
         // Solve for x: sqrt(k1)*(c+x)=sqrt(k2)*(a-x)
         let x = (a * k2.sqrt().unwrap() - c * k1.sqrt().unwrap()) / (k1.sqrt().unwrap() + k2.sqrt().unwrap());
         // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}, (a * k2.sqrt()) - (c * k1.sqrt()) = {}, a = {a}, c = {c}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt(), (a * k2.sqrt()) - (c * k1.sqrt()));
-        if x > -c && x < a {
+        if x > -c && x < a && x > -e {
             let y = y1(&x);
             // msg!("y: {}, y1(x): {}, y3(x): {}", y, y1(x), y3(x));
 
@@ -529,7 +529,7 @@ pub fn min_d_sn(
     {
         let x = (c * k3.sqrt().unwrap() - e * k2.sqrt().unwrap()) / (k2.sqrt().unwrap() + k3.sqrt().unwrap());
         // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}, (a * k2.sqrt()) - (c * k1.sqrt()) = {}, a = {a}, c = {c}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt(), (a * k2.sqrt()) - (c * k1.sqrt()));
-        if x > -e && x > -c {
+        if x > -e && x > -c && x < a {
             let y = y3(&x);
             // msg!("y: {}, y1(x): {}, y3(x): {}, d_val: {}", y, y1(x), y3(x), k2 / (c + x) - y);
             // ensure constraint1 slack: y <= b - k1/(a-x)
@@ -602,7 +602,7 @@ pub fn min_d_sn(
         msg!("got here");
         // msg!("fake_disc: {}", fake_disc.to_string());
         let disc = B * B - SignedNumeric::new(4) * A * C;
-        msg!("disc: {}", disc.to_string());
+        // msg!("disc: {}", disc.to_string());
         // if disc >= 0 {
         // if (A > 0 && (B * B) / A >= I110F18::from_num(4.0) * C) || (A < 0 && (B * B) / A <= I110F18::from_num(4.0) * C) {
         if disc >= 0 {
@@ -635,25 +635,39 @@ pub fn min_d_sn(
     }
 }
 
-pub fn min_d_dashu(a: u64, b: u64, c: u64, e: u64, f: u64, k1: u128, k2: u128, k3: u128) -> Option<(u64, u64, u64)> {
-    let a = IBig::from(a);
-    let b = IBig::from(b);
-    let c = IBig::from(c);
-    let e = IBig::from(e);
-    let f = IBig::from(f);
+pub fn min_d_dashu(a: u64, b: u64, c: u64, e: u64, f: u64, k1: u128, k2: u128, k3: u128) -> Option<(u64, i64, i64)> {
+    let float_x = (a as f64 * (k2 as f64).sqrt() - c as f64 * (k1 as f64).sqrt()) / ((k1 as f64).sqrt() + (k2 as f64).sqrt());
+    msg!("float_x: {}", float_x);
 
-    let k1 = IBig::from(k1);
-    let k2 = IBig::from(k2);
-    let k3 = IBig::from(k3);
+    let float_y = b as f64 - k1 as f64 / (a as f64 - float_x);
+    msg!("float_y: {}", float_y);
+
+    let t = (k1 as f64).sqrt() / (k2 as f64).sqrt();
+    let second_x = (a as f64 - t * c as f64) / (1.0 + t);
+    msg!("second_x: {}", second_x);
+
+    let a = IBig::from(a) * IBig::from(10_u128.pow(18));
+    let b = IBig::from(b) * IBig::from(10_u128.pow(18));
+    let c = IBig::from(c) * IBig::from(10_u128.pow(18));
+    let e = IBig::from(e) * IBig::from(10_u128.pow(18));
+    let f = IBig::from(f) * IBig::from(10_u128.pow(18));
+
+    let k1 = IBig::from(k1) * IBig::from(10_u128.pow(18)) * IBig::from(10_u128.pow(18));
+    let k2 = IBig::from(k2) * IBig::from(10_u128.pow(18)) * IBig::from(10_u128.pow(18));
+    let k3 = IBig::from(k3) * IBig::from(10_u128.pow(18)) * IBig::from(10_u128.pow(18));
     
     let mut d12 = None; let mut x12 = None; let mut y12 = None;
     let mut d23 = None; let mut x23 = None; let mut y23 = None;
     let mut d13 = None; let mut x13 = None; let mut y13 = None;
 
     // Constraint1 → y = b - k1/(a-x)
-    let y1 = |x: &IBig| &b - &k1 / (&a - x);
-    // Constraint3 → y = k3/(e+x) - f
-    let y3 = |x: &IBig| &k3 / (&e + x) - &f;
+    let y1 = |x: &IBig| &b - (&k1 / (&a - x));
+
+    // Constraint 3:
+    // (e + x)(f + y) = k3
+    // f + y = k3 / (e + x)
+    // y = k3 / (e + x) - f
+    let y3 = |x: &IBig| (&k3 / (&e + x)) - &f;
 
     // --- Case 1: (1)&(2) tight ---
     // y from (1): y=y1(x);
@@ -662,9 +676,17 @@ pub fn min_d_dashu(a: u64, b: u64, c: u64, e: u64, f: u64, k1: u128, k2: u128, k
     {
         // Solve for x: sqrt(k1)*(c+x)=sqrt(k2)*(a-x)
         let x = (&a * &k2.sqrt() - &c * &k1.sqrt()) / (&k1.sqrt() + &k2.sqrt());
+
+        msg!("x: {}", x);
+
+        let t = &(&k1.sqrt() / &k2.sqrt());
+        let second_x = (&a - t * &c) / (IBig::from(1) + t);
+        msg!("second_x: {}", second_x);
+
         // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}, (a * k2.sqrt()) - (c * k1.sqrt()) = {}, a = {a}, c = {c}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt(), (a * k2.sqrt()) - (c * k1.sqrt()));
-        if &x > &-&c && &x < &a {
+        if &x > &-&c && &x < &a && &x > &-&e {
             let y = y1(&x);
+            msg!("y: {}, y3(x): {}", y, y3(&x));
             // msg!("y: {}, y1(x): {}, y3(x): {}", y, y1(x), y3(x));
 
             // msg!("y: {}, y1(x): {}, y3(x): {}, d_val: {}", y, y1(x), y3(x), k2 / (c + x) - y);
@@ -683,8 +705,9 @@ pub fn min_d_dashu(a: u64, b: u64, c: u64, e: u64, f: u64, k1: u128, k2: u128, k
     {
         let x = (&c * &k3.sqrt() - &e * &k2.sqrt()) / (&k2.sqrt() + &k3.sqrt());
         // msg!("x: {}, k2.sqrt(): {}, k1.sqrt(): {}, (a * k2.sqrt()) = {}, (c * k1.sqrt()) = {}, (a * k2.sqrt()) - (c * k1.sqrt()) = {}, a = {a}, c = {c}", x, k2.sqrt(), k1.sqrt(), a * k2.sqrt(), c * k1.sqrt(), (a * k2.sqrt()) - (c * k1.sqrt()));
-        if &x > &-&e && &x > &-&c {
+        if &x > &-&e && &x > &-&c && &x < &a {
             let y = y3(&x);
+            msg!("y: {}, y1(x): {}", y, y1(&x));
             // msg!("y: {}, y1(x): {}, y3(x): {}, d_val: {}", y, y1(x), y3(x), k2 / (c + x) - y);
             // ensure constraint1 slack: y <= b - k1/(a-x)
             if y <= y1(&x) {
@@ -705,10 +728,13 @@ pub fn min_d_dashu(a: u64, b: u64, c: u64, e: u64, f: u64, k1: u128, k2: u128, k
     // Bring RHS terms over to form quadratic in x:
     //   (b-f_)*(-x^2) + (b-f_)*(a - e)*x + (b-f_)*a e - k3*(a-x) - k1*(e+x) = 0
     // Combine like terms to Ax^2 + Bx + C = 0:
-    let A = &(-(&b + &f)); // bounds: up to u64::MAX * 2
+    let A = &(&b + &f);
+    let B = &((&k1 - &k3) - (&b + &f)*(&a - &e));
+    let C = &(&k1*&e + &k3*&a - (&b + &f)*&a*&e);
+    // let A = &(-(&b + &f)); // bounds: up to u64::MAX * 2
     msg!("A: {}", A);
-    let B = &((&b + &f)*(&a - &e) + &k3 - &k1); 
-    let C = &((&b + &f)*&a*&e - &k3*&a - &k1*&e); // up to u197::MAX + u128::MAX + u128::MAX;
+    // let B = &((&b + &f)*(&a - &e) + &k3 - &k1); 
+    // let C = &((&b + &f)*&a*&e - &k3*&a - &k1*&e); // up to u197::MAX + u128::MAX + u128::MAX;
     msg!("A = {}, B = {}, C = {}", A, B, C);
 
 
@@ -756,19 +782,39 @@ pub fn min_d_dashu(a: u64, b: u64, c: u64, e: u64, f: u64, k1: u128, k2: u128, k
         }
     }
 
-    msg!("d13 = {:?}", d13);
+    msg!("d12: {:?}, d23: {:?}, d13: {:?}", d12, d23, d13);
+
+    let scaled_d13 = d13.unwrap() / IBig::from(10_u128.pow(18));
+    let scaled_x13 = x13.unwrap() / IBig::from(10_u128.pow(18));
+    let scaled_y13 = y13.unwrap() / IBig::from(10_u128.pow(18));
+
+    msg!("scaled_d13: {}, scaled_x13: {}, scaled_y13: {}", scaled_d13, scaled_x13, scaled_y13);
+
+
+    Some((scaled_d13.try_into().unwrap(), scaled_x13.try_into().unwrap(), scaled_y13.try_into().unwrap()))
+
+    // // Pick the minimal d
+    // let (d_min, xs, ys) = if d12.is_some() && d23.is_some() && d13.is_some() {
+    //     (d12, x12, y12)
+    // } else if d23.is_some() && d13.is_some() {
+    //     (d23, x23, y23)
+    // } else {
+    //     (d13, x13, y13)
+    // };
+
+    // msg!("d_min = {:?}", d_min);
+    // msg!("xs = {:?}, ys = {:?}", xs, ys);
 
     // msg!("A: {}, B: {}, C: {}", A, B, C);
     // msg!("d12: {}, d23: {}, d13: {}", d12, d23, d13);
 
     // msg!("d12 = {:?}, d23 = {:?}, d13 = {:?}", d12, d23, d13);
 
-    msg!("x13 = {:?}, y13 = {:?}", x13, y13);
+    // msg!("x13 = {:?}, y13 = {:?}", x13, y13);
 
 
 
 
-    None
 }
 
 // pub fn min_d_dashu_r(a: u64, b: u64, c: u64, e: u64, f: u64, k1: u128, k2: u128, k3: u128) -> Option<(u64, u64, u64)> {
@@ -922,7 +968,9 @@ impl Trade<'_> {
             Side::Sell => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
         };
 
-        let (new_b, x, y) = min_b_three_fixed(a + I110F18::from_num(amount_in), c, d, e, f, a * b, c * d, e * f).unwrap();
+        let k_multiplier = I110F18::from(1_00001) / I110F18::from(1_00000);
+
+        let (new_b, x, y) = min_b_three_fixed(a + I110F18::from_num(amount_in), c, d, e, f, (a * b)*k_multiplier, (c * d)*k_multiplier, (e * f)*k_multiplier).unwrap();
 
         let (input_asset, output_asset, quote_split, base_split) = if side == Side::Buy {
             (Asset::SpotQuote, Asset::SpotBase, x, y)
@@ -984,31 +1032,35 @@ impl Trade<'_> {
             Side::Sell => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
         };
 
+        msg!("a: {}, b: {}, c: {}, d: {}, e: {}, f: {}", a, b, c, d, e, f);
+
         msg!("amount_in_after_fee: {}", amount_in_after_fee);
-        let _ = min_d_dashu(a, b, c + amount_in_after_fee, e, f, a as u128 * b as u128, c as u128 * d as u128, e as u128 * f as u128);
+        let (new_d, x, y) = min_d_dashu(a, b, c + amount_in_after_fee, e, f, (a as u128 * b as u128 * 1_000000000000) / 1_000000000000, (c as u128 * d as u128 * 1_000000000000) / 1_000000000000, (e as u128 * f as u128 * 1_000000000000) / 1_000000000000).unwrap();
+        msg!("new_d: {}, x: {}, y: {}", new_d.to_string(), x.to_string(), y.to_string());
 
 
 
-        let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_quote.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_base.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_quote.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_base.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_quote.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_base.amount as i128),
-        );
-        let (a, b, c, d, e, f) = match side {
-            Side::Buy => (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base),
-            Side::Sell => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
-        };
+        // let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_quote.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_base.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_quote.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_base.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_quote.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_base.amount as i128),
+        // );
+        // let (a, b, c, d, e, f) = match side {
+        //     Side::Buy => (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base),
+        //     Side::Sell => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
+        // };
 
-        let (c, d, e, f) = match condition {
-            Condition::Unconditional => todo!(),
-            Condition::Pass => (c, d, e, f),
-            Condition::Fail => (e, f, c, d),
-        };
+        // let (c, d, e, f) = match condition {
+        //     Condition::Unconditional => todo!(),
+        //     Condition::Pass => (c, d, e, f),
+        //     Condition::Fail => (e, f, c, d),
+        // };
 
-        let (new_d, x, y) = min_d_sn(a, b, c + SignedNumeric::new(amount_in_after_fee as i128), e, f, a * b, c * d, e * f).unwrap();
+        // let (new_d, x, y) = min_d_sn(a, b, c + SignedNumeric::new(amount_in_after_fee as i128), e, f, a * b, c * d, e * f).unwrap();
+        // msg!("new_d: {}, x: {}, y: {}", new_d.to_string(), x.to_string(), y.to_string());
 
         // msg!("new_d: {}, x: {}, y: {}", new_d.to_string(), x.to_string(), y.to_string());
         // require_eq!(1, 0);
@@ -1062,15 +1114,15 @@ impl Trade<'_> {
             },
             output: AssetAndAmount { 
                 asset: output_asset,
-                amount: (d - new_d).value.floor().unwrap().to_imprecise().unwrap() as u64,
+                amount: (d - new_d)
             },
             quote_split_or_merge: SplitOrMergeAndAmount { 
                 split_or_merge: if quote_split > 0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: quote_split.value.floor().unwrap().to_imprecise().unwrap() as u64
+                amount: quote_split.abs() as u64
             },
             base_split_or_merge: SplitOrMergeAndAmount { 
                 split_or_merge: if base_split > 0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: base_split.value.floor().unwrap().to_imprecise().unwrap() as u64
+                amount: base_split.abs() as u64
             },
         };
 
@@ -1091,47 +1143,14 @@ impl Trade<'_> {
         let amount_in_after_fee = (amount_in as u128 * (10000 - FEE_BPS) as u128 / 10000) as u64;
         let fee = amount_in - amount_in_after_fee;
 
-        // let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
-        //     ctx.accounts.amm_token_accounts.unconditional_quote.amount,
-        //     ctx.accounts.amm_token_accounts.unconditional_base.amount,
-        //     ctx.accounts.amm_token_accounts.pass_quote.amount,
-        //     ctx.accounts.amm_token_accounts.pass_base.amount,
-        //     ctx.accounts.amm_token_accounts.fail_quote.amount,
-        //     ctx.accounts.amm_token_accounts.fail_base.amount,
-        // );
-
-        // let (a, b, c, d, e, f) = match condition {
-        //     Condition::Pass => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
-        //     Condition::Fail => (unconditional_base, unconditional_quote, fail_base, fail_quote, pass_base, pass_quote),
-        //     Condition::Unconditional => todo!(),
-        // };
-
-        // msg!("d: {}", d);
-
-
-        // let _ = min_d_dashu(a, b + amount_in_after_fee, c, e, f, a as u128 * b as u128, c as u128 * d as u128, e as u128 * f as u128);
-
         let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_quote.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_base.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_quote.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_base.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_quote.amount as i128),
-            SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_base.amount as i128),
+            ctx.accounts.amm_token_accounts.unconditional_quote.amount,
+            ctx.accounts.amm_token_accounts.unconditional_base.amount,
+            ctx.accounts.amm_token_accounts.pass_quote.amount,
+            ctx.accounts.amm_token_accounts.pass_base.amount,
+            ctx.accounts.amm_token_accounts.fail_quote.amount,
+            ctx.accounts.amm_token_accounts.fail_base.amount,
         );
-
-
-        // TODO: handle fail trades
-
-        // let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
-        //     I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_quote.amount),
-        //     I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_base.amount),
-        //     I110F18::from_num(ctx.accounts.amm_token_accounts.pass_quote.amount),
-        //     I110F18::from_num(ctx.accounts.amm_token_accounts.pass_base.amount),
-        //     I110F18::from_num(ctx.accounts.amm_token_accounts.fail_quote.amount),
-        //     I110F18::from_num(ctx.accounts.amm_token_accounts.fail_base.amount),
-        // );
-
 
         let (a, b, c, d, e, f) = match condition {
             Condition::Pass => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
@@ -1139,20 +1158,55 @@ impl Trade<'_> {
             Condition::Unconditional => todo!(),
         };
 
-        // msg!("a: {}, b: {}, c: {}, d: {}, e: {}, f: {}", a.to_string(), b.to_string(), c.to_string(), d.to_string(), e.to_string(), f.to_string());
+        msg!("a: {}, b: {}, c: {}, d: {}, e: {}, f: {}, amount_in_after_fee: {}", a, b, c, d, e, f, amount_in_after_fee);
 
-        // let (output_amount, x, y) = if side == Side::Buy {
-        //     let (new_d, x, y) = min_d_three_fixed(a, b + I110F18::from_num(amount_in_after_fee), c, e, f, a*b, c*d, e*f).unwrap();
-        //     (d - new_d, x, y)
-        // } else {
-        //     let (new_b, x, y) = min_b_three_fixed(a, c, d + I110F18::from_num(amount_in_after_fee), e, f, a*b, c*d, e*f).unwrap();
-        //     (b - new_b, x, y)
+
+
+        let (new_d, x, y) = min_d_dashu(a, b + amount_in_after_fee, c, e, f, a as u128 * b as u128, c as u128 * d as u128, e as u128 * f as u128).unwrap();
+        msg!("pre d: {}", d);
+
+        // let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_quote.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.unconditional_base.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_quote.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.pass_base.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_quote.amount as i128),
+        //     SignedNumeric::new(ctx.accounts.amm_token_accounts.fail_base.amount as i128),
+        // );
+
+
+        // // TODO: handle fail trades
+
+        // // let (unconditional_quote, unconditional_base, pass_quote, pass_base, fail_quote, fail_base) = (
+        // //     I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_quote.amount),
+        // //     I110F18::from_num(ctx.accounts.amm_token_accounts.unconditional_base.amount),
+        // //     I110F18::from_num(ctx.accounts.amm_token_accounts.pass_quote.amount),
+        // //     I110F18::from_num(ctx.accounts.amm_token_accounts.pass_base.amount),
+        // //     I110F18::from_num(ctx.accounts.amm_token_accounts.fail_quote.amount),
+        // //     I110F18::from_num(ctx.accounts.amm_token_accounts.fail_base.amount),
+        // // );
+
+
+        // let (a, b, c, d, e, f) = match condition {
+        //     Condition::Pass => (unconditional_base, unconditional_quote, pass_base, pass_quote, fail_base, fail_quote),
+        //     Condition::Fail => (unconditional_base, unconditional_quote, fail_base, fail_quote, pass_base, pass_quote),
+        //     Condition::Unconditional => todo!(),
         // };
 
-        let (new_d, x, y) = min_d_sn(a, b + SignedNumeric::new(amount_in_after_fee as i128), c, e, f, (a * b)*SignedNumeric::new(100_000_001)/SignedNumeric::new(100_000_000), (c * d)*SignedNumeric::new(100_000_001)/SignedNumeric::new(100_000_000), (e * f)*SignedNumeric::new(100_000_001)/SignedNumeric::new(100_000_000)).unwrap();
+        // // msg!("a: {}, b: {}, c: {}, d: {}, e: {}, f: {}", a.to_string(), b.to_string(), c.to_string(), d.to_string(), e.to_string(), f.to_string());
+
+        // // let (output_amount, x, y) = if side == Side::Buy {
+        // //     let (new_d, x, y) = min_d_three_fixed(a, b + I110F18::from_num(amount_in_after_fee), c, e, f, a*b, c*d, e*f).unwrap();
+        // //     (d - new_d, x, y)
+        // // } else {
+        // //     let (new_b, x, y) = min_b_three_fixed(a, c, d + I110F18::from_num(amount_in_after_fee), e, f, a*b, c*d, e*f).unwrap();
+        // //     (b - new_b, x, y)
+        // // };
+
+        // let (new_d, x, y) = min_d_sn(a, b + SignedNumeric::new(amount_in_after_fee as i128), c, e, f, (a * b)*SignedNumeric::new(100_000_000)/SignedNumeric::new(100_000_000), (c * d)*SignedNumeric::new(100_000_000)/SignedNumeric::new(100_000_000), (e * f)*SignedNumeric::new(100_000_000)/SignedNumeric::new(100_000_000)).unwrap();
 
         let (output_amount, x, y) = (d - new_d, x, y);
-        // msg!("output_amount: {}, x: {}, y: {}", output_amount.to_string(), x.to_string(), y.to_string());
+        msg!("output_amount: {}, x: {}, y: {}", output_amount.to_string(), x.to_string(), y.to_string());
 
 
         let trade_execution_params = TradeExecutionParams {
@@ -1162,15 +1216,17 @@ impl Trade<'_> {
             },
             output: AssetAndAmount { 
                 asset: if side == Side::Buy { Asset::PassQuote } else { Asset::SpotQuote },
-                amount: 0,
+                amount: output_amount,
             },
             quote_split_or_merge: SplitOrMergeAndAmount { 
                 split_or_merge: if y > 0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: y.value.floor().unwrap().to_imprecise().unwrap() as u64 + (fee / 2)
+                // amount: y.value.floor().unwrap().to_imprecise().unwrap() as u64 + (fee / 2)
+                amount: y.abs() as u64 - 1,
             },
             base_split_or_merge: SplitOrMergeAndAmount { 
                 split_or_merge: if x > 0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
-                amount: x.value.floor().unwrap().to_imprecise().unwrap() as u64
+                // amount: x.value.floor().unwrap().to_imprecise().unwrap() as u64
+                amount: x.abs() as u64 + 1,
             },
             // quote_split_or_merge: SplitOrMergeAndAmount { 
             //     split_or_merge: if y > 0.0 { SplitOrMerge::Split } else { SplitOrMerge::Merge }, 
@@ -1230,7 +1286,6 @@ impl Trade<'_> {
         let signer_seeds = &[b"futarchy_amm".as_ref(), &[ctx.accounts.futarchy_amm.bump]];
         let signer = &[&signer_seeds[..]];
 
-
         let amm_input_account = Self::get_amm_token_account(
             &ctx.accounts.amm_token_accounts,
             params.input.asset,
@@ -1248,26 +1303,21 @@ impl Trade<'_> {
             params.input.amount,
         )?;
 
-
-        let amm_output_account = Self::get_amm_token_account(
-            &ctx.accounts.amm_token_accounts,
-            params.output.asset,
-        );
-
-        token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                token::Transfer {
-                    from: amm_output_account,
-                    to: ctx.accounts.trader_output_account.to_account_info(),
-                    authority: ctx.accounts.futarchy_amm.to_account_info(),
-                },
-                signer,
-            ),
-            params.output.amount,
-        )?;
+        ctx.accounts.amm_token_accounts.unconditional_quote.reload()?;
+        ctx.accounts.amm_token_accounts.unconditional_base.reload()?;
+        ctx.accounts.amm_token_accounts.pass_quote.reload()?;
+        ctx.accounts.amm_token_accounts.pass_base.reload()?;
+        ctx.accounts.amm_token_accounts.fail_quote.reload()?;
+        ctx.accounts.amm_token_accounts.fail_base.reload()?;
 
         let quote_split_or_merge = params.quote_split_or_merge;
+
+        if quote_split_or_merge.split_or_merge == SplitOrMerge::Split {
+            require_gte!(ctx.accounts.amm_token_accounts.unconditional_quote.amount, quote_split_or_merge.amount, AutocratError::InvariantViolation);
+        } else {
+            require_gte!(ctx.accounts.amm_token_accounts.pass_quote.amount, quote_split_or_merge.amount, AutocratError::InvariantViolation);
+            require_gte!(ctx.accounts.amm_token_accounts.fail_quote.amount, quote_split_or_merge.amount, AutocratError::InvariantViolation);
+        }
 
         let quote_cpi_context = CpiContext::new_with_signer(
             ctx.accounts.conditional_vault_program.to_account_info(),
@@ -1338,6 +1388,29 @@ impl Trade<'_> {
         } else {
             conditional_vault::cpi::merge_tokens(base_cpi_context, base_split_or_merge.amount)?;
         }
+
+
+
+        
+
+
+        let amm_output_account = Self::get_amm_token_account(
+            &ctx.accounts.amm_token_accounts,
+            params.output.asset,
+        );
+
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                token::Transfer {
+                    from: amm_output_account,
+                    to: ctx.accounts.trader_output_account.to_account_info(),
+                    authority: ctx.accounts.futarchy_amm.to_account_info(),
+                },
+                signer,
+            ),
+            params.output.amount,
+        )?;
 
         // Third, check the invariants again
 
