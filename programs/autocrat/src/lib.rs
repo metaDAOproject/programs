@@ -33,11 +33,13 @@ pub mod error;
 pub mod events;
 pub mod instructions;
 pub mod state;
+pub mod math;
 
 pub use error::AutocratError;
 pub use events::*;
 pub use instructions::*;
 pub use state::*;
+pub use math::*;
 
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
