@@ -22,6 +22,12 @@ import {
 } from "./shared_liquidity_manager.js";
 export { SharedLiquidityManagerProgram, SharedLiquidityManagerIDL };
 
+import {
+  TokenMigrator as TokenMigratorProgram,
+  IDL as TokenMigratorIDL,
+} from "./token_migrator.js";
+export { TokenMigratorProgram, TokenMigratorIDL };
+
 export { LowercaseKeys } from "./utils.js";
 
 import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
@@ -40,6 +46,7 @@ export type Proposal = IdlAccounts<AutocratProgram>["proposal"];
 export type Amm = IdlAccounts<AmmProgram>["amm"];
 export type Launch = IdlAccounts<LaunchpadProgram>["launch"];
 export type FundingRecord = IdlAccounts<LaunchpadProgram>["fundingRecord"];
+export type TokenMigrator = IdlAccounts<TokenMigratorProgram>["tokenMigrator"];
 // export type SharedLiquidityPool =
 //   IdlAccounts<SharedLiquidityManagerProgram>["sharedLiquidityPool"];
 // export type SharedLiquidityPoolPosition =

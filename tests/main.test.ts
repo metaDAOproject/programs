@@ -2,6 +2,9 @@ import conditionalVault from "./conditionalVault/main.test.js";
 import amm from "./amm/main.test.js";
 import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
+import tokenConverter from "./tokenConverter/main.test.js";
+// import redemption from "./redemption/main.test.js";
+// import tokenMigrator from "./tokenMigrator/main.test.js";
 import sharedLiquidityManager from "./sharedLiquidityManager/main.test.js";
 
 import {
@@ -32,7 +35,7 @@ import {
 //   getVersion,
 //   VersionKey
 // } from "@metadaoproject/futarchy";
-import { PublicKey, Keypair, Connection, SystemProgram, Transaction } from "@solana/web3.js";
+import { PublicKey, Keypair, Connection, SystemProgram, Transaction, AccountInfo } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -363,6 +366,8 @@ describe("conditional_vault", conditionalVault);
 describe("amm", amm);
 describe("autocrat", autocrat);
 describe("launchpad", launchpad);
+// describe("redemption", redemption);
+describe("token_converter", tokenConverter);
 // describe("shared_liquidity_manager", sharedLiquidityManager);
 describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);

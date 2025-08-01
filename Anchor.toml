@@ -12,6 +12,7 @@ conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 shared_liquidity_manager = "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d"
 launchpad = "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA"
 optimistic_timelock = "tiME1hz9F5C5ZecbvE5z6Msjy8PKfTqo1UuRYXfndKF"
+token_converter = "tknMiQZDHrrJe4VDESf3cJorj1jWCfCYK2g4d7nqjT1"
 
 [registry]
 url = "https://api.apr.dev"

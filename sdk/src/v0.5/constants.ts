@@ -18,6 +18,10 @@ export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
   "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d"
 );
 
+export const TOKEN_MIGRATOR_PROGRAM_ID = new PublicKey(
+  "tknMiQZDHrrJe4VDESf3cJorj1jWCfCYK2g4d7nqjT1"
+);
+
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 );

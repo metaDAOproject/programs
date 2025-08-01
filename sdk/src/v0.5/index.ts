@@ -6,3 +6,4 @@ export * from "./AutocratClient.js";
 export * from "./ConditionalVaultClient.js";
 export * from "./LaunchpadClient.js";
 export * from "./SharedLiquidityManagerClient.js";
+export * from "./TokenConverterClient.js";
