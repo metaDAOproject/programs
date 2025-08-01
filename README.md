@@ -26,3 +26,24 @@ Programs for market-driven governance
 | autocrat_v0       | v0   | meta3cxKzFBmWYgCVozmvCQAS3y9b3fGxrG9HkHL7Wi  |
 | conditional_vault | v0   | vaU1tVLj8RFk7mNj1BxqgAsMKKaL8UvEUHvU3tdbZPe  |
 
+## Third-Party Licenses
+
+Approval Notice - Squads v4.0
+
+Solana Program: `SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf`
+
+Github Repository: [https://github.com/Squads-Protocol/v4](https://github.com/Squads-Protocol/v4) [(97b8ce8)](https://github.com/Squads-Protocol/v4/commit/97b8ce82cc4e52a4ade42412c6c09cb81a20dd99)
+
+We have received confirmation from the original authors and copyright holders of the referenced program that our use of the code complies with the terms of the GNU Affero General Public License v3.0 (AGPLv3).
+
+As confirmed:
+
+- No modifications have been made to the code.
+- The program remains publicly available under the AGPLv3 license.
+- The copyright holders have no objections to our current use of the program and fully support it.
+- This notice is included here for clarity and documentation purposes with the explicit understanding that our use remains within the scope and requirements of the AGPLv3.
+
+If additional information is needed, please contact: [legal@sqds.io](mailto:legal@sqds.io)
+
+Author / Copyright Holder - PGP Message: 
+Author / Copyright Holder Public Key: 
