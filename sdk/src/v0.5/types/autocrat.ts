@@ -4,6 +4,17 @@ export type Autocrat = {
   instructions: [
     {
       name: "initializeDao";
+      docs: [
+        "TODO:",
+        "- Collect taker fees",
+        "- Collect self-arbitrage profits in tokens not used",
+        "- Allow people to provide liquidity",
+        "- Allow people to withdraw liquidity",
+        "- Allow protocol treasury to collect fees",
+        "- Enable staking to proposals",
+        "- Switch proposal to use Futarchy AMM",
+        "- Add TWAPs"
+      ];
       accounts: [
         {
           name: "dao";
@@ -229,6 +240,130 @@ export type Autocrat = {
       ];
     },
     {
+      name: "finalizeProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "passAmm";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "failAmm";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "question";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passLpUserAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failLpUserAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passLpVaultAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failLpVaultAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "vaultProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "vaultEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "updateDao";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "daoParams";
+          type: {
+            defined: "UpdateDaoParams";
+          };
+        }
+      ];
+    },
+    {
       name: "spotSwap";
       accounts: [
         {
@@ -413,21 +548,6 @@ export type Autocrat = {
           isSigner: true;
         },
         {
-          name: "initializer";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "initializerBaseAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "initializerQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -468,75 +588,53 @@ export type Autocrat = {
           isSigner: false;
         }
       ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "InitializeFutarchyAmmParams";
-          };
-        }
-      ];
+      args: [];
     },
     {
-      name: "finalizeProposal";
+      name: "provideLiquidity";
       accounts: [
         {
-          name: "proposal";
+          name: "futarchyAmm";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "squadsProposal";
+          name: "liquidityProvider";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "liquidityProviderBaseAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "squadsMultisigProgram";
+          name: "liquidityProviderQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "squadsMultisig";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "passAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "failAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "dao";
+          name: "ammBaseVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "question";
+          name: "ammQuoteVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "passLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "passLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpVaultAccount";
+          name: "ammPosition";
           isMut: true;
           isSigner: false;
         },
@@ -544,65 +642,39 @@ export type Autocrat = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
-        {
-          name: "vaultProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "vaultEventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
-      name: "updateDao";
-      accounts: [
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigVault";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
         }
       ];
       args: [
         {
-          name: "daoParams";
+          name: "params";
           type: {
-            defined: "UpdateDaoParams";
+            defined: "ProvideLiquidityParams";
           };
         }
       ];
     }
   ];
   accounts: [
+    {
+      name: "ammPosition";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "futarchyAmm";
+            type: "publicKey";
+          },
+          {
+            name: "liquidityProvider";
+            type: "publicKey";
+          },
+          {
+            name: "liquidity";
+            type: "u128";
+          }
+        ];
+      };
+    },
     {
       name: "dao";
       type: {
@@ -721,6 +793,10 @@ export type Autocrat = {
             type: {
               defined: "PoolState";
             };
+          },
+          {
+            name: "totalLiquidity";
+            type: "u128";
           },
           {
             name: "baseMint";
@@ -914,22 +990,6 @@ export type Autocrat = {
       };
     },
     {
-      name: "InitializeFutarchyAmmParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "quoteTokenAmount";
-            type: "u64";
-          },
-          {
-            name: "baseTokenAmount";
-            type: "u64";
-          }
-        ];
-      };
-    },
-    {
       name: "InitializeProposalParams";
       type: {
         kind: "struct";
@@ -945,6 +1005,29 @@ export type Autocrat = {
           {
             name: "failLpTokensToLock";
             type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "ProvideLiquidityParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "quoteAmount";
+            docs: ["How much quote token you will deposit to the pool"];
+            type: "u64";
+          },
+          {
+            name: "maxBaseAmount";
+            docs: ["The maximum base token you will deposit to the pool"];
+            type: "u64";
+          },
+          {
+            name: "minLiquidity";
+            docs: ["The minimum liquidity you will be assigned"];
+            type: "u128";
           }
         ];
       };
@@ -1532,6 +1615,11 @@ export type Autocrat = {
       code: 6014;
       name: "InvalidSquadsProposalStatus";
       msg: "Squads proposal must be in Draft status";
+    },
+    {
+      code: 6015;
+      name: "CastingOverflow";
+      msg: "Casting overflow. If you're seeing this, please report this";
     }
   ];
 };
@@ -1542,6 +1630,17 @@ export const IDL: Autocrat = {
   instructions: [
     {
       name: "initializeDao",
+      docs: [
+        "TODO:",
+        "- Collect taker fees",
+        "- Collect self-arbitrage profits in tokens not used",
+        "- Allow people to provide liquidity",
+        "- Allow people to withdraw liquidity",
+        "- Allow protocol treasury to collect fees",
+        "- Enable staking to proposals",
+        "- Switch proposal to use Futarchy AMM",
+        "- Add TWAPs",
+      ],
       accounts: [
         {
           name: "dao",
@@ -1767,6 +1866,130 @@ export const IDL: Autocrat = {
       ],
     },
     {
+      name: "finalizeProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "passAmm",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "failAmm",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "question",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passLpUserAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failLpUserAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passLpVaultAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failLpVaultAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "vaultProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "vaultEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "updateDao",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "daoParams",
+          type: {
+            defined: "UpdateDaoParams",
+          },
+        },
+      ],
+    },
+    {
       name: "spotSwap",
       accounts: [
         {
@@ -1951,21 +2174,6 @@ export const IDL: Autocrat = {
           isSigner: true,
         },
         {
-          name: "initializer",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "initializerBaseAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "initializerQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "payer",
           isMut: true,
           isSigner: true,
@@ -2006,75 +2214,53 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
       ],
-      args: [
-        {
-          name: "params",
-          type: {
-            defined: "InitializeFutarchyAmmParams",
-          },
-        },
-      ],
+      args: [],
     },
     {
-      name: "finalizeProposal",
+      name: "provideLiquidity",
       accounts: [
         {
-          name: "proposal",
+          name: "futarchyAmm",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "squadsProposal",
+          name: "liquidityProvider",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "liquidityProviderBaseAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "squadsMultisigProgram",
+          name: "liquidityProviderQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "squadsMultisig",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "passAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "failAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "dao",
+          name: "ammBaseVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "question",
+          name: "ammQuoteVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "passLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "passLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpVaultAccount",
+          name: "ammPosition",
           isMut: true,
           isSigner: false,
         },
@@ -2083,64 +2269,38 @@ export const IDL: Autocrat = {
           isMut: false,
           isSigner: false,
         },
-        {
-          name: "vaultProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "vaultEventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "updateDao",
-      accounts: [
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigVault",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
       ],
       args: [
         {
-          name: "daoParams",
+          name: "params",
           type: {
-            defined: "UpdateDaoParams",
+            defined: "ProvideLiquidityParams",
           },
         },
       ],
     },
   ],
   accounts: [
+    {
+      name: "ammPosition",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "futarchyAmm",
+            type: "publicKey",
+          },
+          {
+            name: "liquidityProvider",
+            type: "publicKey",
+          },
+          {
+            name: "liquidity",
+            type: "u128",
+          },
+        ],
+      },
+    },
     {
       name: "dao",
       type: {
@@ -2259,6 +2419,10 @@ export const IDL: Autocrat = {
             type: {
               defined: "PoolState",
             },
+          },
+          {
+            name: "totalLiquidity",
+            type: "u128",
           },
           {
             name: "baseMint",
@@ -2452,22 +2616,6 @@ export const IDL: Autocrat = {
       },
     },
     {
-      name: "InitializeFutarchyAmmParams",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "quoteTokenAmount",
-            type: "u64",
-          },
-          {
-            name: "baseTokenAmount",
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
       name: "InitializeProposalParams",
       type: {
         kind: "struct",
@@ -2483,6 +2631,29 @@ export const IDL: Autocrat = {
           {
             name: "failLpTokensToLock",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "ProvideLiquidityParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "quoteAmount",
+            docs: ["How much quote token you will deposit to the pool"],
+            type: "u64",
+          },
+          {
+            name: "maxBaseAmount",
+            docs: ["The maximum base token you will deposit to the pool"],
+            type: "u64",
+          },
+          {
+            name: "minLiquidity",
+            docs: ["The minimum liquidity you will be assigned"],
+            type: "u128",
           },
         ],
       },
@@ -3070,6 +3241,11 @@ export const IDL: Autocrat = {
       code: 6014,
       name: "InvalidSquadsProposalStatus",
       msg: "Squads proposal must be in Draft status",
+    },
+    {
+      code: 6015,
+      name: "CastingOverflow",
+      msg: "Casting overflow. If you're seeing this, please report this",
     },
   ],
 };

@@ -14,33 +14,33 @@ pub struct ProvideLiquidityParams {
 
 #[derive(Accounts)]
 pub struct ProvideLiquidity<'info> {
-    #[account(has_one = amm_base_vault, has_one = amm_quote_vault)]
+    #[account(mut, has_one = amm_base_vault, has_one = amm_quote_vault)]
     pub futarchy_amm: Account<'info, FutarchyAmm>,
     pub liquidity_provider: Signer<'info>,
     #[account(
         mut,
-        token::mint = base_mint,
+        token::mint = futarchy_amm.base_mint,
         token::authority = liquidity_provider,
     )]
     pub liquidity_provider_base_account: Account<'info, TokenAccount>,
     #[account(
         mut,
-        token::mint = quote_mint,
+        token::mint = futarchy_amm.quote_mint,
         token::authority = liquidity_provider,
     )]
     pub liquidity_provider_quote_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
-    pub base_mint: Account<'info, Mint>,
-    pub quote_mint: Account<'info, Mint>,
     #[account(
-        associated_token::mint = base_mint,
+        mut,
+        associated_token::mint = futarchy_amm.base_mint,
         associated_token::authority = futarchy_amm,
     )]
     pub amm_base_vault: Account<'info, TokenAccount>,
     #[account(
-        associated_token::mint = quote_mint,
+        mut,
+        associated_token::mint = futarchy_amm.quote_mint,
         associated_token::authority = futarchy_amm,
     )]
     pub amm_quote_vault: Account<'info, TokenAccount>,
@@ -68,22 +68,21 @@ impl ProvideLiquidity<'_> {
             liquidity_provider,
             liquidity_provider_base_account,
             liquidity_provider_quote_account,
-            payer,
-            system_program,
-            base_mint,
-            quote_mint,
+            payer: _,
+            system_program: _,
             amm_base_vault,
             amm_quote_vault,
             amm_position,
             token_program,
         } = ctx.accounts;
 
-        let PoolState::Spot { spot } = futarchy_amm.state else {
+        let total_liquidity = futarchy_amm.total_liquidity;
+        let PoolState::Spot { ref mut spot } = futarchy_amm.state else {
             // TODO: check that pool is already in right state
             unreachable!();
         };
 
-        let (liquidity_to_mint, base_amount) = if futarchy_amm.total_liquidity > 0 {
+        let (liquidity_to_mint, base_amount) = if total_liquidity > 0 {
             // require!(min_lp_tokens > 0, AmmError::ZeroMinLpTokens);
             require_gt!(min_liquidity, 0);
 
@@ -96,7 +95,7 @@ impl ProvideLiquidity<'_> {
                 .map_err(|_| AutocratError::CastingOverflow)?;
 
             let liquidity_to_mint =
-                ((quote_amount as u128 * futarchy_amm.total_liquidity) / quote_reserves);
+                (quote_amount as u128 * total_liquidity) / quote_reserves;
 
             require_gte!(
                 max_base_amount,
@@ -121,44 +120,41 @@ impl ProvideLiquidity<'_> {
             (initial_liquidity, base_amount)
         };
 
+        
+        spot.base_reserves += base_amount;
+        spot.quote_reserves += quote_amount;
+
         amm_position.set_inner(AmmPosition {
             futarchy_amm: futarchy_amm.key(),
             liquidity_provider: liquidity_provider.key(),
             liquidity: amm_position.liquidity + liquidity_to_mint,
         });
 
-        // token::transfer(
-        //     CpiContext::new(
-        //         ctx.accounts.token_program.to_account_info(),
-        //         token::Transfer {
-        //             from: ctx.accounts.initializer_base_account.to_account_info(),
-        //             to: ctx.accounts.amm_base_vault.to_account_info(),
-        //             authority: ctx.accounts.initializer.to_account_info(),
-        //         }
-        //     ),
-        //     params.base_token_amount,
-        // )?;
+        futarchy_amm.total_liquidity += liquidity_to_mint;
 
-        // token::transfer(
-        //     CpiContext::new(
-        //         ctx.accounts.token_program.to_account_info(),
-        //         token::Transfer {
-        //             from: ctx.accounts.initializer_quote_account.to_account_info(),
-        //             to: ctx.accounts.amm_quote_vault.to_account_info(),
-        //             authority: ctx.accounts.initializer.to_account_info(),
-        //         }
-        //     ),
-        //     params.quote_token_amount,
-        // )?;
+        token::transfer(
+            CpiContext::new(
+                token_program.to_account_info(),
+                token::Transfer {
+                    from: liquidity_provider_base_account.to_account_info(),
+                    to: amm_base_vault.to_account_info(),
+                    authority: liquidity_provider.to_account_info(),
+                }
+            ),
+            base_amount,
+        )?;
 
-        // ctx.accounts.futarchy_amm.set_inner(FutarchyAmm {
-        //     state: PoolState::Spot { spot: Pool { quote_reserves: params.quote_token_amount, base_reserves: params.base_token_amount } },
-        //     base_mint: ctx.accounts.base_mint.key(),
-        //     quote_mint: ctx.accounts.quote_mint.key(),
-        //     amm_base_vault: ctx.accounts.amm_base_vault.key(),
-        //     amm_quote_vault: ctx.accounts.amm_quote_vault.key(),
-        //     pda_bump: ctx.bumps.futarchy_amm,
-        // });
+        token::transfer(
+            CpiContext::new(
+                token_program.to_account_info(),
+                token::Transfer {
+                    from: liquidity_provider_quote_account.to_account_info(),
+                    to: amm_quote_vault.to_account_info(),
+                    authority: liquidity_provider.to_account_info(),
+                }
+            ),
+            quote_amount,
+        )?;
 
         Ok(())
     }

@@ -77,7 +77,7 @@ impl PoolState {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, InitSpace)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
 pub struct Pool {
     pub quote_reserves: u64,
     pub base_reserves: u64,

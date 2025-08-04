@@ -105,17 +105,7 @@ pub mod autocrat {
         InitializeProposal::handle(ctx, params)
     }
 
-    pub fn spot_swap(ctx: Context<SpotSwap>, params: SpotSwapParams) -> Result<()> {
-        SpotSwap::handle(ctx, params)
-    }
-
-    pub fn conditional_swap(ctx: Context<ConditionalSwap>, params: ConditionalSwapParams) -> Result<()> {
-        ConditionalSwap::handle(ctx, params)
-    }
-
-    pub fn initialize_futarchy_amm(ctx: Context<InitializeFutarchyAmm>, params: InitializeFutarchyAmmParams) -> Result<()> {
-        InitializeFutarchyAmm::handle(ctx, params)
-    }
+    
 
     #[access_control(ctx.accounts.validate())]
     pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
@@ -124,5 +114,23 @@ pub mod autocrat {
 
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {
         UpdateDao::handle(ctx, dao_params)
+    }
+
+    // AMM instructions
+
+    pub fn spot_swap(ctx: Context<SpotSwap>, params: SpotSwapParams) -> Result<()> {
+        SpotSwap::handle(ctx, params)
+    }
+
+    pub fn conditional_swap(ctx: Context<ConditionalSwap>, params: ConditionalSwapParams) -> Result<()> {
+        ConditionalSwap::handle(ctx, params)
+    }
+
+    pub fn initialize_futarchy_amm(ctx: Context<InitializeFutarchyAmm>) -> Result<()> {
+        InitializeFutarchyAmm::handle(ctx)
+    }
+
+    pub fn provide_liquidity(ctx: Context<ProvideLiquidity>, params: ProvideLiquidityParams) -> Result<()> {
+        ProvideLiquidity::handle(ctx, params)
     }
 }

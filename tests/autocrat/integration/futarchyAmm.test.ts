@@ -61,10 +61,7 @@ export default function suite() {
 
     let [futarchyAmm] = PublicKey.findProgramAddressSync([Buffer.from("futarchy_amm")], this.autocratClient.getProgramId());
 
-    await this.autocratClient.autocrat.methods.initializeFutarchyAmm({
-        quoteTokenAmount: new BN(2_000_000 * 1_000_000),
-        baseTokenAmount: new BN(2_000_000 * 1_000_000),
-    }).accounts({
+    await this.autocratClient.autocrat.methods.initializeFutarchyAmm().accounts({
         futarchyAmm,
         createKey: this.payer.publicKey,
         payer: this.payer.publicKey,
@@ -72,11 +69,32 @@ export default function suite() {
         quoteMint: USDC,
         ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
         ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-        initializer: this.payer.publicKey,
-        initializerBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
-        initializerQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
       })
       .rpc();
+
+    await this.autocratClient.autocrat.methods.provideLiquidity({
+        quoteAmount: new BN(100_000 * 1_000_000),
+        maxBaseAmount: new BN(100_000 * 1_000_000),
+        minLiquidity: new BN(0),
+    }).accounts({
+        futarchyAmm,
+        payer: this.payer.publicKey,
+        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+        liquidityProvider: this.payer.publicKey,
+        liquidityProviderBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+        liquidityProviderQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+        ammPosition: PublicKey.findProgramAddressSync([Buffer.from("amm_position"), futarchyAmm.toBuffer(), this.payer.publicKey.toBuffer()], this.autocratClient.getProgramId())[0],
+    }).rpc();
+
+    const ammPosition = PublicKey.findProgramAddressSync([Buffer.from("amm_position"), futarchyAmm.toBuffer(), this.payer.publicKey.toBuffer()], this.autocratClient.getProgramId())[0];
+
+    const storedAmmPosition = await this.autocratClient.autocrat.account.ammPosition.fetch(ammPosition);
+    console.log(storedAmmPosition.liquidity.toString());
+
+    let storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm));
+    console.log(storedFutarchyAmm.totalLiquidity.toString());
+    console.log("spot", storedFutarchyAmm.state.spot.spot.baseReserves.toString(), storedFutarchyAmm.state.spot.spot.quoteReserves.toString());
 
     const storedDao = await this.autocratClient.getDao(dao);
 
@@ -157,7 +175,7 @@ export default function suite() {
       new BN(1_000_000_000)
     );
 
-    let storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
     console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
     console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
     console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
