@@ -62,8 +62,8 @@ export default function suite() {
     let [futarchyAmm] = PublicKey.findProgramAddressSync([Buffer.from("futarchy_amm")], this.autocratClient.getProgramId());
 
     await this.autocratClient.autocrat.methods.initializeFutarchyAmm({
-        quoteTokenAmount: new BN(200 * 1_000_000),
-        baseTokenAmount: new BN(200 * 1_000_000),
+        quoteTokenAmount: new BN(2_000_000 * 1_000_000),
+        baseTokenAmount: new BN(2_000_000 * 1_000_000),
     }).accounts({
         futarchyAmm,
         createKey: this.payer.publicKey,
@@ -202,7 +202,7 @@ export default function suite() {
     await this.autocratClient.autocrat.methods.conditionalSwap({
         market: { pass: {} },
         swapType: {buy: {}},
-        inputAmount: new BN(10 * 1_000_000),
+        inputAmount: new BN(10_000 * 1_000_000),
         minOutputAmount: new BN(0),
     }).accounts({
         futarchyAmm,
@@ -227,33 +227,33 @@ export default function suite() {
         question,
     }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();
 
-    await this.autocratClient.autocrat.methods.conditionalSwap({
-        market: { fail: {} },
-        swapType: {sell: {}},
-        inputAmount: new BN(20 * 1_000_000),
-        minOutputAmount: new BN(0),
-    }).accounts({
-        futarchyAmm,
-        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
-        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
-        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
-        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
-        baseVault,
-        quoteVault,
-        userInputAccount: getAssociatedTokenAddressSync(failBaseMint, this.payer.publicKey),
-        userOutputAccount: getAssociatedTokenAddressSync(failQuoteMint, this.payer.publicKey),
-        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
-        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(USDC, quoteVault, true),
-        passBaseMint,
-        failBaseMint,
-        passQuoteMint,
-        failQuoteMint,
-        conditionalVaultProgram: this.autocratClient.vaultClient.vaultProgram.programId,
-        vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
-        question,
-    }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
+    // await this.autocratClient.autocrat.methods.conditionalSwap({
+    //     market: { fail: {} },
+    //     swapType: {sell: {}},
+    //     inputAmount: new BN(10_000 * 1_000_000),
+    //     minOutputAmount: new BN(0),
+    // }).accounts({
+    //     futarchyAmm,
+    //     ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+    //     ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+    //     ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+    //     ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+    //     ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+    //     ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+    //     baseVault,
+    //     quoteVault,
+    //     userInputAccount: getAssociatedTokenAddressSync(failBaseMint, this.payer.publicKey),
+    //     userOutputAccount: getAssociatedTokenAddressSync(failQuoteMint, this.payer.publicKey),
+    //     baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
+    //     quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(USDC, quoteVault, true),
+    //     passBaseMint,
+    //     failBaseMint,
+    //     passQuoteMint,
+    //     failQuoteMint,
+    //     conditionalVaultProgram: this.autocratClient.vaultClient.vaultProgram.programId,
+    //     vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
+    //     question,
+    // }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
 
     storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
     console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
@@ -262,7 +262,7 @@ export default function suite() {
 
     await this.autocratClient.autocrat.methods.spotSwap({
         swapType: {sell: {}},
-        inputAmount: (new BN(100_000)).muln(1_000_000),
+        inputAmount: (new BN(20_000)).muln(1_000_000),
         minOutputAmount: new BN(0),
     }).accounts({
         futarchyAmm,

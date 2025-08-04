@@ -66,6 +66,9 @@ pub const TEN_DAYS_IN_SECONDS: i64 = 10 * 24 * 60 * 60;
 // by default, the pass price needs to be 3% higher than the fail price
 pub const DEFAULT_PASS_THRESHOLD_BPS: u16 = 300;
 
+// 0.5% Taker fee, 35% of which goes to MetaDAO
+pub const TAKER_FEE_BPS: u16 = 50;
+pub const PROTOCOL_SHARE_BPS: u16 = 3_500;
 pub const MAX_BPS: u16 = 10_000;
 
 // the index of the fail and pass outcomes in the question and the index of
@@ -79,6 +82,16 @@ pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 #[program]
 pub mod autocrat {
     use super::*;
+
+    /// TODO:
+    /// - Collect taker fees
+    /// - Collect self-arbitrage profits in tokens not used
+    /// - Allow people to provide liquidity
+    /// - Allow people to withdraw liquidity
+    /// - Allow protocol treasury to collect fees
+    /// - Enable staking to proposals
+    /// - Switch proposal to use Futarchy AMM
+    /// - Add TWAPs
 
     pub fn initialize_dao(ctx: Context<InitializeDao>, params: InitializeDaoParams) -> Result<()> {
         InitializeDao::handle(ctx, params)

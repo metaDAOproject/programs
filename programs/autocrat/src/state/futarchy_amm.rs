@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 #[derive(InitSpace)]
 pub struct FutarchyAmm {
     pub state: PoolState,
+    pub total_liquidity: u128,
     pub base_mint: Pubkey,
     pub quote_mint: Pubkey,
     pub amm_base_vault: Pubkey,
@@ -76,7 +77,7 @@ impl PoolState {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, InitSpace)]
 pub struct Pool {
     pub quote_reserves: u64,
     pub base_reserves: u64,

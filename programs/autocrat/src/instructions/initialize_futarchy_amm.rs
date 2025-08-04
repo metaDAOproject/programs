@@ -84,6 +84,7 @@ impl InitializeFutarchyAmm<'_> {
 
         ctx.accounts.futarchy_amm.set_inner(FutarchyAmm { 
             state: PoolState::Spot { spot: Pool { quote_reserves: params.quote_token_amount, base_reserves: params.base_token_amount } },
+            total_liquidity: 0,
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),
             amm_base_vault: ctx.accounts.amm_base_vault.key(),
