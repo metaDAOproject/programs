@@ -487,6 +487,11 @@ export class AutocratClient {
       true
     );
 
+    let [futarchyAmm] = PublicKey.findProgramAddressSync(
+      [Buffer.from("futarchy_amm")],
+      this.getProgramId()
+    );
+
     return this.autocrat.methods
       .initializeProposal({
         descriptionUrl,
@@ -496,6 +501,7 @@ export class AutocratClient {
       .accounts({
         question,
         proposal,
+        futarchyAmm,
         squadsProposal,
         dao,
         baseVault,

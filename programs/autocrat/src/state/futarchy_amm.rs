@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
-use dashu_int::{IBig, ops::{SquareRoot, Abs}};
 
+#[account]
+#[derive(InitSpace)]
 pub struct FutarchyAmm {
-    pub spot: Pool,
-    pub active_proposal: Option<ProposalPricing>
+    pub state: PoolState,
 }
 
-#[derive(Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
 pub enum PoolState {
     Spot { spot: Pool },
     Futarchy { spot: Pool, pass: Pool, fail: Pool },
@@ -68,12 +68,7 @@ impl PoolState {
     }
 }
 
-pub struct ProposalPricing {
-    pub pass: Pool,
-    pub fail: Pool,
-}
-
-#[derive(Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
 pub struct Pool {
     pub quote_reserves: u64,
     pub base_reserves: u64,

@@ -23,6 +23,7 @@ pub struct InitializeProposal<'info> {
         bump
     )]
     pub proposal: Box<Account<'info, Proposal>>,
+    pub futarchy_amm: Box<Account<'info, FutarchyAmm>>,
     pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
@@ -145,6 +146,7 @@ impl InitializeProposal<'_> {
             base_vault,
             quote_vault,
             question,
+            futarchy_amm,
             proposal,
             squads_proposal,
             dao,

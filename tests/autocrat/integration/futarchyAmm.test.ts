@@ -15,7 +15,7 @@ import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
 
 export default function suite() {
-  it("should enable creation, passing, and execution of a proposal", async function () {
+  it.only("futarchy amm", async function () {
     const META = await this.createMint(this.payer.publicKey, 9);
     const USDC = await this.createMint(this.payer.publicKey, 6);
 
@@ -54,6 +54,18 @@ export default function suite() {
           minBaseFutarchicLiquidity: new BN(0),
           initialSpendingLimit: null,
         },
+      })
+      .rpc();
+
+    let [futarchyAmm] = PublicKey.findProgramAddressSync([Buffer.from("futarchy_amm")], this.autocratClient.getProgramId());
+
+    await this.autocratClient.autocrat.methods.initializeFutarchyAmm({
+        quoteTokenAmount: new BN(100 * 1_000_000),
+        baseTokenAmount: new BN(100 * 1_000_000),
+    }).accounts({
+        futarchyAmm,
+        createKey: this.payer.publicKey,
+        payer: this.payer.publicKey,
       })
       .rpc();
 

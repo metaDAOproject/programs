@@ -92,6 +92,10 @@ pub mod autocrat {
         InitializeProposal::handle(ctx, params)
     }
 
+    pub fn initialize_futarchy_amm(ctx: Context<InitializeFutarchyAmm>, params: InitializeFutarchyAmmParams) -> Result<()> {
+        InitializeFutarchyAmm::handle(ctx, params)
+    }
+
     #[access_control(ctx.accounts.validate())]
     pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
         FinalizeProposal::handle(ctx)

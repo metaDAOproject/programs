@@ -94,6 +94,11 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "futarchyAmm";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "squadsProposal";
           isMut: false;
           isSigner: false;
@@ -199,6 +204,39 @@ export type Autocrat = {
           name: "params";
           type: {
             defined: "InitializeProposalParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "initializeFutarchyAmm";
+      accounts: [
+        {
+          name: "futarchyAmm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "createKey";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "InitializeFutarchyAmmParams";
           };
         }
       ];
@@ -438,6 +476,20 @@ export type Autocrat = {
       };
     },
     {
+      name: "futarchyAmm";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "state";
+            type: {
+              defined: "PoolState";
+            };
+          }
+        ];
+      };
+    },
+    {
       name: "proposal";
       type: {
         kind: "struct";
@@ -578,6 +630,22 @@ export type Autocrat = {
       };
     },
     {
+      name: "InitializeFutarchyAmmParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "quoteTokenAmount";
+            type: "u64";
+          },
+          {
+            name: "baseTokenAmount";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
       name: "InitializeProposalParams";
       type: {
         kind: "struct";
@@ -655,6 +723,22 @@ export type Autocrat = {
             type: {
               vec: "publicKey";
             };
+          }
+        ];
+      };
+    },
+    {
+      name: "Pool";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "quoteReserves";
+            type: "u64";
+          },
+          {
+            name: "baseReserves";
+            type: "u64";
           }
         ];
       };
@@ -1242,6 +1326,11 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "futarchyAmm",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "squadsProposal",
           isMut: false,
           isSigner: false,
@@ -1347,6 +1436,39 @@ export const IDL: Autocrat = {
           name: "params",
           type: {
             defined: "InitializeProposalParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "initializeFutarchyAmm",
+      accounts: [
+        {
+          name: "futarchyAmm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "createKey",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "InitializeFutarchyAmmParams",
           },
         },
       ],
@@ -1586,6 +1708,20 @@ export const IDL: Autocrat = {
       },
     },
     {
+      name: "futarchyAmm",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "state",
+            type: {
+              defined: "PoolState",
+            },
+          },
+        ],
+      },
+    },
+    {
       name: "proposal",
       type: {
         kind: "struct",
@@ -1726,6 +1862,22 @@ export const IDL: Autocrat = {
       },
     },
     {
+      name: "InitializeFutarchyAmmParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "quoteTokenAmount",
+            type: "u64",
+          },
+          {
+            name: "baseTokenAmount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "InitializeProposalParams",
       type: {
         kind: "struct",
@@ -1803,6 +1955,22 @@ export const IDL: Autocrat = {
             type: {
               vec: "publicKey",
             },
+          },
+        ],
+      },
+    },
+    {
+      name: "Pool",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "quoteReserves",
+            type: "u64",
+          },
+          {
+            name: "baseReserves",
+            type: "u64",
           },
         ],
       },
