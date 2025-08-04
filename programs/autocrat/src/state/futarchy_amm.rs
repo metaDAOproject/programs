@@ -4,6 +4,11 @@ use anchor_lang::prelude::*;
 #[derive(InitSpace)]
 pub struct FutarchyAmm {
     pub state: PoolState,
+    pub base_mint: Pubkey,
+    pub quote_mint: Pubkey,
+    pub amm_base_vault: Pubkey,
+    pub amm_quote_vault: Pubkey,
+    pub pda_bump: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
@@ -12,7 +17,7 @@ pub enum PoolState {
     Futarchy { spot: Pool, pass: Pool, fail: Pool },
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Market {
     Spot,
     Pass,
@@ -40,8 +45,8 @@ impl PoolState {
 
                         let arbitrage_result = arbitrage_after_spot_swap(spot, pass, fail, spot_output, swap_type)?;
 
-                        // msg!("spot_output: {:?}", spot_output);
-                        // msg!("arbitrage_result: {:?}", arbitrage_result);
+                        msg!("spot_output: {:?}", spot_output);
+                        msg!("arbitrage_result: {:?}", arbitrage_result);
 
                         Ok(spot_output + arbitrage_result.spot_profit)
                     },
@@ -279,7 +284,7 @@ pub fn arbitrage_after_conditional_swap(
             // spot + profit from remaining
             let fail_profit_incl_spot = fail_profit_from_remaining as i64 + spot_profit;
 
-            msg!("{} = {} + {}", fail_profit_incl_spot, fail_profit_from_remaining, spot_profit);
+            // msg!("{} = {} + {}", fail_profit_incl_spot, fail_profit_from_remaining, spot_profit);
 
             if fail_profit_incl_spot > best_arb_profit && spot_profit >= 0 {
                 best_arb_profit = fail_profit_incl_spot;

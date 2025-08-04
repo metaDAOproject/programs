@@ -96,6 +96,10 @@ pub mod autocrat {
         SpotSwap::handle(ctx, params)
     }
 
+    pub fn conditional_swap(ctx: Context<ConditionalSwap>, params: ConditionalSwapParams) -> Result<()> {
+        ConditionalSwap::handle(ctx, params)
+    }
+
     pub fn initialize_futarchy_amm(ctx: Context<InitializeFutarchyAmm>, params: InitializeFutarchyAmmParams) -> Result<()> {
         InitializeFutarchyAmm::handle(ctx, params)
     }

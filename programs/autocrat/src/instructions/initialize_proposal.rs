@@ -36,12 +36,12 @@ pub struct InitializeProposal<'info> {
         constraint = quote_vault.underlying_token_mint == dao.quote_mint,
         has_one = question,
     )]
-    pub quote_vault: Account<'info, ConditionalVaultAccount>,
+    pub quote_vault: Box<Account<'info, ConditionalVaultAccount>>,
     #[account(
         constraint = base_vault.underlying_token_mint == dao.base_mint,
         has_one = question,
     )]
-    pub base_vault: Account<'info, ConditionalVaultAccount>,
+    pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,
     #[account(
         constraint = pass_amm.base_mint == base_vault.conditional_token_mints[PASS_INDEX],
         constraint = pass_amm.quote_mint == quote_vault.conditional_token_mints[PASS_INDEX],
@@ -61,13 +61,13 @@ pub struct InitializeProposal<'info> {
         associated_token::mint = pass_amm.lp_mint,
         associated_token::authority = proposer,
     )]
-    pub pass_lp_user_account: Account<'info, TokenAccount>,
+    pub pass_lp_user_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         associated_token::mint = fail_amm.lp_mint,
         associated_token::authority = proposer,
     )]
-    pub fail_lp_user_account: Account<'info, TokenAccount>,
+    pub fail_lp_user_account: Box<Account<'info, TokenAccount>>,
     #[account(
         init_if_needed,
         payer = payer,
@@ -82,6 +82,14 @@ pub struct InitializeProposal<'info> {
         associated_token::authority = proposal,
     )]
     pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = base_vault.conditional_token_mints[1], associated_token::authority = futarchy_amm)]
+    pub amm_pass_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = quote_vault.conditional_token_mints[1], associated_token::authority = futarchy_amm)]
+    pub amm_pass_quote_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = base_vault.conditional_token_mints[0], associated_token::authority = futarchy_amm)]
+    pub amm_fail_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = quote_vault.conditional_token_mints[0], associated_token::authority = futarchy_amm)]
+    pub amm_fail_quote_vault: Box<Account<'info, TokenAccount>>,
     pub proposer: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -159,6 +167,10 @@ impl InitializeProposal<'_> {
             fail_lp_user_account,
             pass_lp_vault_account,
             fail_lp_vault_account,
+            amm_pass_base_vault,
+            amm_pass_quote_vault,
+            amm_fail_base_vault,
+            amm_fail_quote_vault,
             proposer,
             payer: _,
             token_program,

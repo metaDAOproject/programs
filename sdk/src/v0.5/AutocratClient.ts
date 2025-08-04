@@ -460,12 +460,16 @@ export class AutocratClient {
     proposer: PublicKey = this.provider.publicKey
   ) {
     let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
-    const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
-      proposal,
-      baseMint,
-      quoteMint,
-      dao
-    );
+    const {
+      baseVault,
+      quoteVault,
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+    } = this.getProposalPdas(proposal, baseMint, quoteMint, dao);
 
     const [passLp] = getAmmLpMintAddr(
       this.ammClient.program.programId,
@@ -510,6 +514,26 @@ export class AutocratClient {
         failAmm,
         passLpMint: passLp,
         failLpMint: failLp,
+        ammPassBaseVault: getAssociatedTokenAddressSync(
+          passBaseMint,
+          futarchyAmm,
+          true
+        ),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          futarchyAmm,
+          true
+        ),
+        ammFailBaseVault: getAssociatedTokenAddressSync(
+          failBaseMint,
+          futarchyAmm,
+          true
+        ),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          futarchyAmm,
+          true
+        ),
         passLpUserAccount: getAssociatedTokenAddressSync(
           passLp,
           proposer,
@@ -523,7 +547,33 @@ export class AutocratClient {
         passLpVaultAccount,
         failLpVaultAccount,
         proposer,
-      });
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+          futarchyAmm,
+          passBaseMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+          futarchyAmm,
+          passQuoteMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+          futarchyAmm,
+          failBaseMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+          futarchyAmm,
+          failQuoteMint
+        ),
+      ]);
   }
 
   async finalizeProposal(proposal: PublicKey) {

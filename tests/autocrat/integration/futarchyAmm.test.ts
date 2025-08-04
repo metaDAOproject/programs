@@ -13,6 +13,7 @@ import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
 import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 export default function suite() {
   it.only("futarchy amm", async function () {
@@ -60,12 +61,19 @@ export default function suite() {
     let [futarchyAmm] = PublicKey.findProgramAddressSync([Buffer.from("futarchy_amm")], this.autocratClient.getProgramId());
 
     await this.autocratClient.autocrat.methods.initializeFutarchyAmm({
-        quoteTokenAmount: new BN(100 * 1_000_000),
-        baseTokenAmount: new BN(100 * 1_000_000),
+        quoteTokenAmount: new BN(200 * 1_000_000),
+        baseTokenAmount: new BN(200 * 1_000_000),
     }).accounts({
         futarchyAmm,
         createKey: this.payer.publicKey,
         payer: this.payer.publicKey,
+        baseMint: META,
+        quoteMint: USDC,
+        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+        initializer: this.payer.publicKey,
+        initializerBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+        initializerQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
       })
       .rpc();
 
@@ -154,8 +162,61 @@ export default function suite() {
     console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
 
     await this.autocratClient.autocrat.methods.spotSwap({
+        swapType: {sell: {}},
+        inputAmount: new BN(1 * 1_000_000),
+        minOutputAmount: new BN(0),
+    }).accounts({
+        futarchyAmm,
+        userBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+        userQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+        trader: this.payer.publicKey,
+    }).rpc();
+
+    storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
+    console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
+    console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
+
+    const {
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      question,
+      baseVault,
+      quoteVault,
+    } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+
+    await this.autocratClient.autocrat.methods.conditionalSwap({
+        market: { pass: {} },
         swapType: {buy: {}},
         inputAmount: new BN(1 * 1_000_000),
+        minOutputAmount: new BN(0),
+    }).accounts({
+        futarchyAmm,
+        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+        baseVault,
+        quoteVault,
+    }).rpc();
+
+    storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
+    console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
+    console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
+
+    await this.autocratClient.autocrat.methods.conditionalSwap({
+        market: { fail: {} },
+        swapType: {buy: {}},
+        inputAmount: new BN(2 * 1_000_000),
         minOutputAmount: new BN(0),
     }).accounts({
         futarchyAmm,
@@ -166,17 +227,15 @@ export default function suite() {
     console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
     console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
 
+
+
+
+
+
+
     return;
 
-    const {
-      passAmm,
-      failAmm,
-      passBaseMint,
-      passQuoteMint,
-      question,
-      baseVault,
-      quoteVault,
-    } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+    
 
     // await this.vaultClient
     //   .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
