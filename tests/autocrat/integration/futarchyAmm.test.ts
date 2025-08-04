@@ -245,33 +245,33 @@ export default function suite() {
         question,
     }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();
 
-    // await this.autocratClient.autocrat.methods.conditionalSwap({
-    //     market: { fail: {} },
-    //     swapType: {sell: {}},
-    //     inputAmount: new BN(10_000 * 1_000_000),
-    //     minOutputAmount: new BN(0),
-    // }).accounts({
-    //     futarchyAmm,
-    //     ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-    //     ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-    //     ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
-    //     ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
-    //     ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
-    //     ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
-    //     baseVault,
-    //     quoteVault,
-    //     userInputAccount: getAssociatedTokenAddressSync(failBaseMint, this.payer.publicKey),
-    //     userOutputAccount: getAssociatedTokenAddressSync(failQuoteMint, this.payer.publicKey),
-    //     baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
-    //     quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(USDC, quoteVault, true),
-    //     passBaseMint,
-    //     failBaseMint,
-    //     passQuoteMint,
-    //     failQuoteMint,
-    //     conditionalVaultProgram: this.autocratClient.vaultClient.vaultProgram.programId,
-    //     vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
-    //     question,
-    // }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
+    await this.autocratClient.autocrat.methods.conditionalSwap({
+        market: { fail: {} },
+        swapType: {sell: {}},
+        inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
+    }).accounts({
+        futarchyAmm,
+        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+        baseVault,
+        quoteVault,
+        userInputAccount: getAssociatedTokenAddressSync(failBaseMint, this.payer.publicKey),
+        userOutputAccount: getAssociatedTokenAddressSync(failQuoteMint, this.payer.publicKey),
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
+        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(USDC, quoteVault, true),
+        passBaseMint,
+        failBaseMint,
+        passQuoteMint,
+        failQuoteMint,
+        conditionalVaultProgram: this.autocratClient.vaultClient.vaultProgram.programId,
+        vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
+        question,
+    }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
 
     storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
     console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
@@ -293,6 +293,8 @@ export default function suite() {
 
     storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
     console.log("spot base", storedFutarchyAmm.spot.baseReserves.toString(), "quote", storedFutarchyAmm.spot.quoteReserves.toString(), "base fee", storedFutarchyAmm.spot.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.spot.quoteProtocolFeeBalance.toString());
+    console.log("pass base", storedFutarchyAmm.pass.baseReserves.toString(), "quote", storedFutarchyAmm.pass.quoteReserves.toString(), "base fee", storedFutarchyAmm.pass.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.pass.quoteProtocolFeeBalance.toString());
+    console.log("fail base", storedFutarchyAmm.fail.baseReserves.toString(), "quote", storedFutarchyAmm.fail.quoteReserves.toString(), "base fee", storedFutarchyAmm.fail.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.fail.quoteProtocolFeeBalance.toString());
 
     // await this.autocratClient.autocrat.methods.conditionalSwap({
     //     market: { fail: {} },
@@ -312,9 +314,9 @@ export default function suite() {
     // }).rpc();
 
     // storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
-    // console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
-    // console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
-    // console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
+    // console.log("spot base", storedFutarchyAmm.spot.baseReserves.toString(), "quote", storedFutarchyAmm.spot.quoteReserves.toString(), "base fee", storedFutarchyAmm.spot.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.spot.quoteProtocolFeeBalance.toString());
+    // console.log("pass base", storedFutarchyAmm.pass.baseReserves.toString(), "quote", storedFutarchyAmm.pass.quoteReserves.toString(), "base fee", storedFutarchyAmm.pass.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.pass.quoteProtocolFeeBalance.toString());
+    // console.log("fail base", storedFutarchyAmm.fail.baseReserves.toString(), "quote", storedFutarchyAmm.fail.quoteReserves.toString(), "base fee", storedFutarchyAmm.fail.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.fail.quoteProtocolFeeBalance.toString());
 
 
 

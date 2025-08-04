@@ -49,6 +49,8 @@ impl PoolState {
                 spot.swap(input_amount, swap_type)
             }
             PoolState::Futarchy { spot, pass, fail } => {
+                let spot_k = spot.k(); let pass_k = pass.k(); let fail_k = fail.k();
+
                 match market {
                     Market::Spot => {
                         let spot_output = spot.swap(input_amount, swap_type)?;
@@ -56,8 +58,22 @@ impl PoolState {
                         let arbitrage_result =
                             arbitrage_after_spot_swap(spot, pass, fail, spot_output, swap_type)?;
 
-                        msg!("spot_output: {:?}", spot_output);
                         msg!("arbitrage_result: {:?}", arbitrage_result);
+
+                        match swap_type {
+                            SwapType::Buy => {
+                                pass.base_protocol_fee_balance += arbitrage_result.pass_profit;
+                                fail.base_protocol_fee_balance += arbitrage_result.fail_profit;
+                            }
+                            SwapType::Sell => {
+                                pass.quote_protocol_fee_balance += arbitrage_result.pass_profit;
+                                fail.quote_protocol_fee_balance += arbitrage_result.fail_profit;
+                            }
+                        }
+
+                        require_gte!(spot.k(), spot_k);
+                        require_gte!(pass.k(), pass_k);
+                        require_gte!(fail.k(), fail_k);
 
                         Ok(spot_output + arbitrage_result.spot_profit)
                     }
@@ -82,13 +98,21 @@ impl PoolState {
                         // Split the spot
                         let conditional_profit = match market {
                             Market::Pass => {
+                                fail.base_protocol_fee_balance += arbitrage_result.fail_profit;
+
                                 arbitrage_result.pass_profit + arbitrage_result.spot_profit
                             }
                             Market::Fail => {
+                                pass.quote_protocol_fee_balance += arbitrage_result.pass_profit;
+
                                 arbitrage_result.fail_profit + arbitrage_result.spot_profit
                             }
                             Market::Spot => unreachable!(),
                         };
+
+                        require_gte!(spot.k(), spot_k);
+                        require_gte!(pass.k(), pass_k);
+                        require_gte!(fail.k(), fail_k);
 
                         Ok(conditional_output + conditional_profit)
                     }
