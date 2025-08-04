@@ -92,9 +92,9 @@ export default function suite() {
     const storedAmmPosition = await this.autocratClient.autocrat.account.ammPosition.fetch(ammPosition);
     console.log(storedAmmPosition.liquidity.toString());
 
-    let storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm));
-    console.log(storedFutarchyAmm.totalLiquidity.toString());
-    console.log("spot", storedFutarchyAmm.state.spot.spot.baseReserves.toString(), storedFutarchyAmm.state.spot.spot.quoteReserves.toString());
+    const firstFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm));
+    console.log(firstFutarchyAmm.totalLiquidity.toString());
+    console.log("spot", firstFutarchyAmm.state.spot.spot.baseReserves.toString(), firstFutarchyAmm.state.spot.spot.quoteReserves.toString());
 
     const storedDao = await this.autocratClient.getDao(dao);
 
@@ -175,7 +175,7 @@ export default function suite() {
       new BN(1_000_000_000)
     );
 
-    storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    let storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
     console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
     console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
     console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
@@ -292,9 +292,7 @@ export default function suite() {
     }).rpc();
 
     storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
-    console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
-    console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
-    console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
+    console.log("spot base", storedFutarchyAmm.spot.baseReserves.toString(), "quote", storedFutarchyAmm.spot.quoteReserves.toString(), "base fee", storedFutarchyAmm.spot.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.spot.quoteProtocolFeeBalance.toString());
 
     // await this.autocratClient.autocrat.methods.conditionalSwap({
     //     market: { fail: {} },

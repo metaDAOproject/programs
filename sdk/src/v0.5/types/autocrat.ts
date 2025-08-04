@@ -8,7 +8,6 @@ export type Autocrat = {
         "TODO:",
         "- Collect taker fees",
         "- Collect self-arbitrage profits in tokens not used",
-        "- Allow people to provide liquidity",
         "- Allow people to withdraw liquidity",
         "- Allow protocol treasury to collect fees",
         "- Enable staking to proposals",
@@ -1128,6 +1127,14 @@ export type Autocrat = {
           {
             name: "baseReserves";
             type: "u64";
+          },
+          {
+            name: "quoteProtocolFeeBalance";
+            type: "u64";
+          },
+          {
+            name: "baseProtocolFeeBalance";
+            type: "u64";
           }
         ];
       };
@@ -1634,7 +1641,6 @@ export const IDL: Autocrat = {
         "TODO:",
         "- Collect taker fees",
         "- Collect self-arbitrage profits in tokens not used",
-        "- Allow people to provide liquidity",
         "- Allow people to withdraw liquidity",
         "- Allow protocol treasury to collect fees",
         "- Enable staking to proposals",
@@ -2753,6 +2759,14 @@ export const IDL: Autocrat = {
           },
           {
             name: "baseReserves",
+            type: "u64",
+          },
+          {
+            name: "quoteProtocolFeeBalance",
+            type: "u64",
+          },
+          {
+            name: "baseProtocolFeeBalance",
             type: "u64",
           },
         ],

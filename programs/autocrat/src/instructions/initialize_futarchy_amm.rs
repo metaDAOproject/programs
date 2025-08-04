@@ -39,7 +39,7 @@ pub struct InitializeFutarchyAmm<'info> {
 impl InitializeFutarchyAmm<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         ctx.accounts.futarchy_amm.set_inner(FutarchyAmm { 
-            state: PoolState::Spot { spot: Pool { quote_reserves: 0, base_reserves: 0 } },
+            state: PoolState::Spot { spot: Pool { quote_reserves: 0, base_reserves: 0, quote_protocol_fee_balance: 0, base_protocol_fee_balance: 0 } },
             total_liquidity: 0,
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),

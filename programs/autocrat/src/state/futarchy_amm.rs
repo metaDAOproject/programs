@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::{LP_TAKER_FEE_BPS, MAX_BPS, PROTOCOL_TAKER_FEE_BPS};
+
 #[account]
 #[derive(InitSpace)]
 pub struct FutarchyAmm {
@@ -33,6 +35,13 @@ impl std::fmt::Display for Market {
 
 impl PoolState {
     pub fn swap(&mut self, input_amount: u64, swap_type: SwapType, market: Market) -> Result<u64> {
+        // let input_amount_after_fee =
+        //     (input_amount as u128 * (MAX_BPS - TAKER_FEE_BPS) as u128 / MAX_BPS as u128) as u64;
+        // msg!("fee: {}", input_amount - input_amount_after_fee);
+        // msg!("input_amount_after_fee: {}", input_amount_after_fee);
+
+        // require_gt!(input_amount_after_fee, 0);
+
         match self {
             PoolState::Spot { spot } => {
                 require_eq!(market, Market::Spot);
@@ -44,33 +53,45 @@ impl PoolState {
                     Market::Spot => {
                         let spot_output = spot.swap(input_amount, swap_type)?;
 
-                        let arbitrage_result = arbitrage_after_spot_swap(spot, pass, fail, spot_output, swap_type)?;
+                        let arbitrage_result =
+                            arbitrage_after_spot_swap(spot, pass, fail, spot_output, swap_type)?;
 
                         msg!("spot_output: {:?}", spot_output);
                         msg!("arbitrage_result: {:?}", arbitrage_result);
 
                         Ok(spot_output + arbitrage_result.spot_profit)
-                    },
+                    }
                     Market::Pass | Market::Fail => {
                         let conditional_output = match market {
                             Market::Pass => pass.swap(input_amount, swap_type)?,
                             Market::Fail => fail.swap(input_amount, swap_type)?,
-                            Market::Spot => unreachable!()
+                            Market::Spot => unreachable!(),
                         };
 
-                        let arbitrage_result = arbitrage_after_conditional_swap(spot, pass, fail, conditional_output, swap_type, market)?;
+                        let arbitrage_result = arbitrage_after_conditional_swap(
+                            spot,
+                            pass,
+                            fail,
+                            conditional_output,
+                            swap_type,
+                            market,
+                        )?;
 
                         msg!("arbitrage_result: {:?}", arbitrage_result);
 
-                        // Split the spot 
+                        // Split the spot
                         let conditional_profit = match market {
-                            Market::Pass => arbitrage_result.pass_profit + arbitrage_result.spot_profit,
-                            Market::Fail => arbitrage_result.fail_profit + arbitrage_result.spot_profit,
-                            Market::Spot => unreachable!()
+                            Market::Pass => {
+                                arbitrage_result.pass_profit + arbitrage_result.spot_profit
+                            }
+                            Market::Fail => {
+                                arbitrage_result.fail_profit + arbitrage_result.spot_profit
+                            }
+                            Market::Spot => unreachable!(),
                         };
-                        
+
                         Ok(conditional_output + conditional_profit)
-                    },
+                    }
                 }
             }
         }
@@ -81,8 +102,9 @@ impl PoolState {
 pub struct Pool {
     pub quote_reserves: u64,
     pub base_reserves: u64,
+    pub quote_protocol_fee_balance: u64,
+    pub base_protocol_fee_balance: u64,
 }
-
 
 // Buy spot to above conditional -> sell spot & buy back conditional, META profit
 // Buy conditional to above spot -> sell conditional & buy back spot, META profit
@@ -100,11 +122,61 @@ impl Pool {
         (self.base_reserves as u128) * (self.quote_reserves as u128)
     }
 
+    #[cfg(test)]
     pub fn price(&self) -> f64 {
         self.quote_reserves as f64 / self.base_reserves as f64
     }
 
     pub fn swap(&mut self, input_amount: u64, swap_type: SwapType) -> Result<u64> {
+        let input_amount_after_protocol_fee = (input_amount as u128 * (MAX_BPS - PROTOCOL_TAKER_FEE_BPS) as u128 / MAX_BPS as u128) as u64;
+        let protocol_fee = input_amount - input_amount_after_protocol_fee;
+
+        if swap_type == SwapType::Buy {
+            self.quote_protocol_fee_balance += protocol_fee;
+        } else {
+            self.base_protocol_fee_balance += protocol_fee;
+        }
+
+        let k = self.k();
+
+        let (input_reserve, output_reserve) = match swap_type {
+            SwapType::Buy => (self.quote_reserves, self.base_reserves),
+            SwapType::Sell => (self.base_reserves, self.quote_reserves),
+        };
+
+        // airlifted from uniswap v1:
+        // https://github.com/Uniswap/v1-contracts/blob/c10c08d81d6114f694baa8bd32f555a40f6264da/contracts/uniswap_exchange.vy#L106-L111
+
+        require_neq!(input_reserve, 0);
+        require_neq!(output_reserve, 0);
+
+        let input_amount_with_lp_fee = input_amount_after_protocol_fee as u128 * (MAX_BPS - LP_TAKER_FEE_BPS) as u128 / MAX_BPS as u128;
+
+        let numerator = input_amount_with_lp_fee * output_reserve as u128;
+
+        let denominator = (input_reserve as u128 * MAX_BPS as u128) + input_amount_with_lp_fee as u128;
+
+        let output_amount = (numerator / denominator) as u64;
+
+        match swap_type {
+            SwapType::Buy => {
+                self.quote_reserves += input_amount_after_protocol_fee;
+                self.base_reserves -= output_amount;
+            }
+            SwapType::Sell => {
+                self.base_reserves += input_amount_after_protocol_fee;
+                self.quote_reserves -= output_amount;
+            }
+        }
+
+        let new_k = self.k();
+
+        require_gte!(new_k, k);
+
+        Ok(output_amount)
+    }
+
+    pub fn feeless_swap(&mut self, input_amount: u64, swap_type: SwapType) -> Result<u64> {
         let k = self.k();
 
         let (input_reserve, output_reserve) = match swap_type {
@@ -144,7 +216,7 @@ impl Pool {
 
     pub fn simulate_swap(&self, input_amount: u64, swap_type: SwapType) -> Result<u64> {
         let mut pool = self.clone();
-        pool.swap(input_amount, swap_type)
+        pool.feeless_swap(input_amount, swap_type)
     }
 }
 
@@ -187,10 +259,13 @@ pub fn arbitrage_after_spot_swap(
 
         let spot_output = spot.simulate_swap(input_amount, spot_direction).unwrap();
 
-        let pass_output = pass.simulate_swap(spot_output, conditional_direction).unwrap();
+        let pass_output = pass
+            .simulate_swap(spot_output, conditional_direction)
+            .unwrap();
 
-        let fail_output = fail.simulate_swap(spot_output, conditional_direction).unwrap();
-
+        let fail_output = fail
+            .simulate_swap(spot_output, conditional_direction)
+            .unwrap();
 
         let conditional_output = std::cmp::min(pass_output, fail_output);
 
@@ -209,11 +284,11 @@ pub fn arbitrage_after_spot_swap(
         }
     }
 
-    let final_spot_output = spot.swap(best_input_amount, spot_direction).unwrap();
+    let final_spot_output = spot.feeless_swap(best_input_amount, spot_direction).unwrap();
 
-    let final_pass_output = pass.swap(final_spot_output, conditional_direction).unwrap();
+    let final_pass_output = pass.feeless_swap(final_spot_output, conditional_direction).unwrap();
 
-    let final_fail_output = fail.swap(final_spot_output, conditional_direction).unwrap();
+    let final_fail_output = fail.feeless_swap(final_spot_output, conditional_direction).unwrap();
 
     let final_conditional_output = std::cmp::min(final_pass_output, final_fail_output);
 
@@ -224,7 +299,10 @@ pub fn arbitrage_after_spot_swap(
     };
 
     assert!(final_conditional_output >= best_input_amount);
-    assert_eq!(final_conditional_output - best_input_amount, best_profit as u64);
+    assert_eq!(
+        final_conditional_output - best_input_amount,
+        best_profit as u64
+    );
 
     Ok(ArbitrageResult {
         spot_profit: best_profit as u64,
@@ -267,19 +345,23 @@ pub fn arbitrage_after_conditional_swap(
         let mut temp_pass = pass.clone();
         let mut temp_fail = fail.clone();
 
-        let pass_output = temp_pass.swap(input_amount, conditional_direction).unwrap();
-        let fail_output = temp_fail.swap(input_amount, conditional_direction).unwrap();
+        let pass_output = temp_pass.feeless_swap(input_amount, conditional_direction).unwrap();
+        let fail_output = temp_fail.feeless_swap(input_amount, conditional_direction).unwrap();
 
         let conditional_output = std::cmp::min(pass_output, fail_output);
 
-        let spot_output = spot.simulate_swap(conditional_output, spot_direction).unwrap();
+        let spot_output = spot
+            .simulate_swap(conditional_output, spot_direction)
+            .unwrap();
 
         let spot_profit = spot_output as i64 - input_amount as i64;
 
         if market == Market::Fail {
             let fail_remaining_from_step_1 = fail_output.saturating_sub(conditional_output);
 
-            let fail_profit_from_remaining = temp_fail.swap(fail_remaining_from_step_1, spot_direction).unwrap();
+            let fail_profit_from_remaining = temp_fail
+                .feeless_swap(fail_remaining_from_step_1, spot_direction)
+                .unwrap();
 
             // We can split those spot tokens, so for the purpose of profit maximization we consider
             // spot + profit from remaining
@@ -296,7 +378,9 @@ pub fn arbitrage_after_conditional_swap(
         } else if market == Market::Pass {
             let pass_remaining_from_step_1 = pass_output.saturating_sub(conditional_output);
 
-            let pass_profit_from_remaining = temp_pass.swap(pass_remaining_from_step_1, spot_direction).unwrap();
+            let pass_profit_from_remaining = temp_pass
+                .feeless_swap(pass_remaining_from_step_1, spot_direction)
+                .unwrap();
 
             let pass_profit_incl_spot = pass_profit_from_remaining as i64 + spot_profit;
 
@@ -311,16 +395,20 @@ pub fn arbitrage_after_conditional_swap(
         }
     }
 
-    let final_pass_output = pass.swap(best_arb_input_amount, conditional_direction).unwrap();
-    let final_fail_output = fail.swap(best_arb_input_amount, conditional_direction).unwrap();
+    let final_pass_output = pass
+        .feeless_swap(best_arb_input_amount, conditional_direction)
+        .unwrap();
+    let final_fail_output = fail
+        .feeless_swap(best_arb_input_amount, conditional_direction)
+        .unwrap();
     let final_conditional_output = std::cmp::min(final_pass_output, final_fail_output);
 
-    let final_spot_output = spot.swap(final_conditional_output, spot_direction).unwrap();
+    let final_spot_output = spot.feeless_swap(final_conditional_output, spot_direction).unwrap();
 
     let fail_profit = if final_fail_output > final_pass_output {
         let remaining_fail = final_fail_output - final_conditional_output;
 
-        let fail_profit_from_base_remaining = fail.swap(remaining_fail, spot_direction).unwrap();
+        let fail_profit_from_base_remaining = fail.feeless_swap(remaining_fail, spot_direction).unwrap();
 
         fail_profit_from_base_remaining
     } else {
@@ -330,7 +418,7 @@ pub fn arbitrage_after_conditional_swap(
     let pass_profit = if final_pass_output > final_fail_output {
         let remaining_pass = final_pass_output - final_conditional_output;
 
-        let pass_profit_from_base_remaining = pass.swap(remaining_pass, spot_direction).unwrap();
+        let pass_profit_from_base_remaining = pass.feeless_swap(remaining_pass, spot_direction).unwrap();
 
         pass_profit_from_base_remaining
     } else {
@@ -355,13 +443,12 @@ mod tests {
 
     #[test]
     fn test_base_arbitrage() {
-
         let mut spot = Pool {
             base_reserves: 100 * 1_000_000,
             quote_reserves: 100 * 1_000_000,
         };
 
-        let mut pass = Pool { 
+        let mut pass = Pool {
             base_reserves: 100 * 1_000_000,
             quote_reserves: 100 * 1_000_000,
         };
@@ -379,21 +466,25 @@ mod tests {
 
         // msg!("result: {:?}", result);
 
-
-
         // let spot_output = spot.swap(1 * 1_000_000, SwapType::Buy).unwrap();
 
         let mut state = PoolState::Futarchy { spot, pass, fail };
 
-        let output = state.swap(1 * 1_000_000, SwapType::Buy, Market::Spot).unwrap();
+        let output = state
+            .swap(1 * 1_000_000, SwapType::Buy, Market::Spot)
+            .unwrap();
 
         msg!("output: {:?}", output);
 
-        let output = state.swap(1 * 1_000_000, SwapType::Sell, Market::Pass).unwrap();
+        let output = state
+            .swap(1 * 1_000_000, SwapType::Sell, Market::Pass)
+            .unwrap();
 
         msg!("output: {:?}", output);
 
-        let output = state.swap(1 * 1_200_000, SwapType::Sell, Market::Fail).unwrap();
+        let output = state
+            .swap(1 * 1_200_000, SwapType::Sell, Market::Fail)
+            .unwrap();
 
         msg!("output: {:?}", output);
 

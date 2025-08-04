@@ -256,10 +256,14 @@ impl InitializeProposal<'_> {
             pass: Pool {
                 base_reserves: half_base,
                 quote_reserves: half_quote,
+                quote_protocol_fee_balance: 0,
+                base_protocol_fee_balance: 0,
             },
             fail: Pool {
                 base_reserves: half_base,
                 quote_reserves: half_quote,
+                quote_protocol_fee_balance: 0,
+                base_protocol_fee_balance: 0,
             },
         };
 
