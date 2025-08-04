@@ -41,6 +41,12 @@ const ONE_DAY_IN_SECONDS = ONE_HOUR_IN_SECONDS * 24;
 const SEVEN_DAYS_IN_SECONDS = ONE_DAY_IN_SECONDS * 7;
 
 async function main() {
+  
+  console.log('Payer address:', payer.publicKey.toBase58());
+  console.log('Authorized launcher key address:', START_LAUNCH_KEY.toBase58());
+  console.log('Spending limit: $', SPENDING_LIMIT);
+  console.log('Minimum raise amount: $', MIN_RAISE_AMOUNT);
+
   const seed = TOKEN_SEED;
   const TOKEN = await PublicKey.createWithSeed(
     payer.publicKey,
@@ -85,7 +91,7 @@ async function main() {
 
   await launchpad
     .initializeLaunchIx(
-      "Omnipair Futarchy Governance",
+      "Omnipair",
       "OMFG",
       "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/OMFG/OMFG.json",
       new BN(convertedRaise), // note: multiplied by 10^6
