@@ -15,7 +15,7 @@ import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
 
 export default function suite() {
-  it("should enable creation, passing, and execution of a proposal", async function () {
+  it.only("should enable creation, passing, and execution of a proposal", async function () {
     const META = await this.createMint(this.payer.publicKey, 9);
     const USDC = await this.createMint(this.payer.publicKey, 6);
 

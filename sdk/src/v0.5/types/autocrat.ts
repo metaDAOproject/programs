@@ -660,6 +660,93 @@ export type Autocrat = {
       };
     },
     {
+      name: "PoolState";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Spot";
+            fields: [
+              {
+                name: "spot";
+                type: {
+                  defined: "Pool";
+                };
+              }
+            ];
+          },
+          {
+            name: "Futarchy";
+            fields: [
+              {
+                name: "spot";
+                type: {
+                  defined: "Pool";
+                };
+              },
+              {
+                name: "pass";
+                type: {
+                  defined: "Pool";
+                };
+              },
+              {
+                name: "fail";
+                type: {
+                  defined: "Pool";
+                };
+              }
+            ];
+          }
+        ];
+      };
+    },
+    {
+      name: "Market";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Spot";
+          },
+          {
+            name: "Pass";
+          },
+          {
+            name: "Fail";
+          }
+        ];
+      };
+    },
+    {
+      name: "SwapType";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Buy";
+          },
+          {
+            name: "Sell";
+          }
+        ];
+      };
+    },
+    {
+      name: "Token";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Base";
+          },
+          {
+            name: "Quote";
+          }
+        ];
+      };
+    },
+    {
       name: "ProposalState";
       type: {
         kind: "enum";
@@ -1716,6 +1803,93 @@ export const IDL: Autocrat = {
             type: {
               vec: "publicKey",
             },
+          },
+        ],
+      },
+    },
+    {
+      name: "PoolState",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Spot",
+            fields: [
+              {
+                name: "spot",
+                type: {
+                  defined: "Pool",
+                },
+              },
+            ],
+          },
+          {
+            name: "Futarchy",
+            fields: [
+              {
+                name: "spot",
+                type: {
+                  defined: "Pool",
+                },
+              },
+              {
+                name: "pass",
+                type: {
+                  defined: "Pool",
+                },
+              },
+              {
+                name: "fail",
+                type: {
+                  defined: "Pool",
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      name: "Market",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Spot",
+          },
+          {
+            name: "Pass",
+          },
+          {
+            name: "Fail",
+          },
+        ],
+      },
+    },
+    {
+      name: "SwapType",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Buy",
+          },
+          {
+            name: "Sell",
+          },
+        ],
+      },
+    },
+    {
+      name: "Token",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Base",
+          },
+          {
+            name: "Quote",
           },
         ],
       },
