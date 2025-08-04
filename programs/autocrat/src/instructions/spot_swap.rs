@@ -42,6 +42,10 @@ impl SpotSwap<'_> {
 
         require_gte!(user_input_account.amount, input_amount);
 
+        let output_amount = ctx.accounts.futarchy_amm.state.swap(input_amount, swap_type, Market::Spot)?;
+
+        require_gte!(output_amount, min_output_amount);
+
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -53,10 +57,6 @@ impl SpotSwap<'_> {
             ),
             input_amount,
         )?;
-
-        let output_amount = ctx.accounts.futarchy_amm.state.swap(input_amount, swap_type, Market::Spot)?;
-
-        require_gte!(output_amount, min_output_amount);
 
         let signer_seeds = &[b"futarchy_amm".as_ref(), &[ctx.accounts.futarchy_amm.pda_bump]];
 

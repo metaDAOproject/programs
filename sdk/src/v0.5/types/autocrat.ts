@@ -335,6 +335,11 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "quoteVaultUnderlyingTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "quoteVault";
           isMut: true;
           isSigner: false;
@@ -1864,6 +1869,11 @@ export const IDL: Autocrat = {
         },
         {
           name: "baseVaultUnderlyingTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount",
           isMut: true,
           isSigner: false,
         },

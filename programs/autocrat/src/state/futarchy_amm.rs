@@ -117,11 +117,11 @@ impl Pool {
         require_neq!(input_reserve, 0);
         require_neq!(output_reserve, 0);
 
-        let numerator = input_amount * output_reserve;
+        let numerator = input_amount as u128 * output_reserve as u128;
 
-        let denominator = input_reserve + input_amount;
+        let denominator = input_reserve as u128 + input_amount as u128;
 
-        let output_amount = numerator / denominator;
+        let output_amount = (numerator / denominator) as u64;
 
         match swap_type {
             SwapType::Buy => {
