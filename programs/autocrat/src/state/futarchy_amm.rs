@@ -242,6 +242,29 @@ impl Pool {
         let mut pool = self.clone();
         pool.feeless_swap(input_amount, swap_type)
     }
+
+    /// Get the number of base and quote tokens withdrawable from a position
+    pub fn get_base_and_quote_withdrawable(
+        &self,
+        lp_tokens: u64,
+        lp_total_supply: u64,
+    ) -> (u64, u64) {
+        (
+            self.get_base_withdrawable(lp_tokens, lp_total_supply),
+            self.get_quote_withdrawable(lp_tokens, lp_total_supply),
+        )
+    }
+
+    /// Get the number of base tokens withdrawable from a position
+    pub fn get_base_withdrawable(&self, lp_tokens: u64, lp_total_supply: u64) -> u64 {
+        // must fit back into u64 since `lp_tokens` <= `lp_total_supply`
+        ((lp_tokens as u128 * self.base_reserves as u128) / lp_total_supply as u128) as u64
+    }
+
+    /// Get the number of quote tokens withdrawable from a position
+    pub fn get_quote_withdrawable(&self, lp_tokens: u64, lp_total_supply: u64) -> u64 {
+        ((lp_tokens as u128 * self.quote_reserves as u128) / lp_total_supply as u128) as u64
+    }
 }
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]

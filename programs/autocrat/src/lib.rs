@@ -84,8 +84,6 @@ pub mod autocrat {
     use super::*;
 
     /// TODO:
-    /// - Collect taker fees
-    /// - Collect self-arbitrage profits in tokens not used
     /// - Allow people to withdraw liquidity
     /// - Allow protocol treasury to collect fees
     /// - Enable staking to proposals
@@ -131,5 +129,9 @@ pub mod autocrat {
 
     pub fn provide_liquidity(ctx: Context<ProvideLiquidity>, params: ProvideLiquidityParams) -> Result<()> {
         ProvideLiquidity::handle(ctx, params)
+    }
+
+    pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, params: WithdrawLiquidityParams) -> Result<()> {
+        WithdrawLiquidity::handle(ctx, params)
     }
 }

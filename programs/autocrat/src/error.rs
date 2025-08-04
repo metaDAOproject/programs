@@ -36,4 +36,12 @@ pub enum AutocratError {
     InvalidSquadsProposalStatus,
     #[msg("Casting overflow. If you're seeing this, please report this")]
     CastingOverflow,
+    #[msg("Insufficient balance")]
+    InsufficientBalance,
+    #[msg("Cannot remove zero liquidity")]
+    ZeroLiquidityRemove,
+    #[msg("Swap slippage exceeded")]
+    SwapSlippageExceeded,
+    #[msg("Assert failed")]
+    AssertFailed,
 }

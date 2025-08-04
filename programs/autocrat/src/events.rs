@@ -88,3 +88,15 @@ pub struct ExecuteProposalEvent {
     pub proposal: Pubkey,
     pub dao: Pubkey,
 }
+
+#[event]
+pub struct WithdrawLiquidityEvent {
+    pub common: CommonFields,
+    pub futarchy_amm: Pubkey,
+    pub liquidity_provider: Pubkey,
+    pub liquidity_withdrawn: u128,
+    pub min_base_amount: u64,
+    pub min_quote_amount: u64,
+    pub base_amount: u64,
+    pub quote_amount: u64,
+}

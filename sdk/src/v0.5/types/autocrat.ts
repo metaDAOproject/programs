@@ -6,8 +6,6 @@ export type Autocrat = {
       name: "initializeDao";
       docs: [
         "TODO:",
-        "- Collect taker fees",
-        "- Collect self-arbitrage profits in tokens not used",
         "- Allow people to withdraw liquidity",
         "- Allow protocol treasury to collect fees",
         "- Enable staking to proposals",
@@ -651,6 +649,59 @@ export type Autocrat = {
           };
         }
       ];
+    },
+    {
+      name: "withdrawLiquidity";
+      accounts: [
+        {
+          name: "futarchyAmm";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "liquidityProvider";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "liquidityProviderBaseAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "liquidityProviderQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammPosition";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "WithdrawLiquidityParams";
+          };
+        }
+      ];
     }
   ];
   accounts: [
@@ -1093,6 +1144,29 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
+          }
+        ];
+      };
+    },
+    {
+      name: "WithdrawLiquidityParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "liquidityToWithdraw";
+            docs: ["How much liquidity to withdraw"];
+            type: "u128";
+          },
+          {
+            name: "minBaseAmount";
+            docs: ["Minimum base tokens to receive"];
+            type: "u64";
+          },
+          {
+            name: "minQuoteAmount";
+            docs: ["Minimum quote tokens to receive"];
+            type: "u64";
           }
         ];
       };
@@ -1545,6 +1619,53 @@ export type Autocrat = {
           index: false;
         }
       ];
+    },
+    {
+      name: "WithdrawLiquidityEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "futarchyAmm";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "liquidityProvider";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "liquidityWithdrawn";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "minBaseAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "minQuoteAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "baseAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "quoteAmount";
+          type: "u64";
+          index: false;
+        }
+      ];
     }
   ];
   errors: [
@@ -1627,6 +1748,26 @@ export type Autocrat = {
       code: 6015;
       name: "CastingOverflow";
       msg: "Casting overflow. If you're seeing this, please report this";
+    },
+    {
+      code: 6016;
+      name: "InsufficientBalance";
+      msg: "Insufficient balance";
+    },
+    {
+      code: 6017;
+      name: "ZeroLiquidityRemove";
+      msg: "Cannot remove zero liquidity";
+    },
+    {
+      code: 6018;
+      name: "SwapSlippageExceeded";
+      msg: "Swap slippage exceeded";
+    },
+    {
+      code: 6019;
+      name: "AssertFailed";
+      msg: "Assert failed";
     }
   ];
 };
@@ -1639,8 +1780,6 @@ export const IDL: Autocrat = {
       name: "initializeDao",
       docs: [
         "TODO:",
-        "- Collect taker fees",
-        "- Collect self-arbitrage profits in tokens not used",
         "- Allow people to withdraw liquidity",
         "- Allow protocol treasury to collect fees",
         "- Enable staking to proposals",
@@ -2285,6 +2424,59 @@ export const IDL: Autocrat = {
         },
       ],
     },
+    {
+      name: "withdrawLiquidity",
+      accounts: [
+        {
+          name: "futarchyAmm",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "liquidityProvider",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "liquidityProviderBaseAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "liquidityProviderQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammPosition",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "WithdrawLiquidityParams",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -2726,6 +2918,29 @@ export const IDL: Autocrat = {
             type: {
               option: "u64",
             },
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawLiquidityParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "liquidityToWithdraw",
+            docs: ["How much liquidity to withdraw"],
+            type: "u128",
+          },
+          {
+            name: "minBaseAmount",
+            docs: ["Minimum base tokens to receive"],
+            type: "u64",
+          },
+          {
+            name: "minQuoteAmount",
+            docs: ["Minimum quote tokens to receive"],
+            type: "u64",
           },
         ],
       },
@@ -3179,6 +3394,53 @@ export const IDL: Autocrat = {
         },
       ],
     },
+    {
+      name: "WithdrawLiquidityEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "futarchyAmm",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "liquidityProvider",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "liquidityWithdrawn",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "minBaseAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "minQuoteAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "baseAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "quoteAmount",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -3260,6 +3522,26 @@ export const IDL: Autocrat = {
       code: 6015,
       name: "CastingOverflow",
       msg: "Casting overflow. If you're seeing this, please report this",
+    },
+    {
+      code: 6016,
+      name: "InsufficientBalance",
+      msg: "Insufficient balance",
+    },
+    {
+      code: 6017,
+      name: "ZeroLiquidityRemove",
+      msg: "Cannot remove zero liquidity",
+    },
+    {
+      code: 6018,
+      name: "SwapSlippageExceeded",
+      msg: "Swap slippage exceeded",
+    },
+    {
+      code: 6019,
+      name: "AssertFailed",
+      msg: "Assert failed",
     },
   ],
 };
