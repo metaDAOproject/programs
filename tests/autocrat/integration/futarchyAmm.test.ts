@@ -14,6 +14,7 @@ import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { getEventAuthorityAddr } from "@metadaoproject/futarchy/v0.4";
 
 export default function suite() {
   it.only("futarchy amm", async function () {
@@ -191,6 +192,13 @@ export default function suite() {
       quoteVault,
     } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
 
+    await this.vaultClient
+      .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
+      .rpc();
+    await this.vaultClient
+      .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
+      .rpc();
+
     await this.autocratClient.autocrat.methods.conditionalSwap({
         market: { pass: {} },
         swapType: {buy: {}},
@@ -206,6 +214,16 @@ export default function suite() {
         ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
         baseVault,
         quoteVault,
+        userInputAccount: getAssociatedTokenAddressSync(passQuoteMint, this.payer.publicKey),
+        userOutputAccount: getAssociatedTokenAddressSync(passBaseMint, this.payer.publicKey),
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(META, baseVault, true),
+        passBaseMint,
+        failBaseMint,
+        passQuoteMint,
+        failQuoteMint,
+        conditionalVaultProgram: this.autocratClient.vaultClient.vaultProgram.programId,
+        vaultEventAuthority: getEventAuthorityAddr(this.vaultClient.vaultProgram.programId)[0],
+        question,
     }).rpc();
 
     storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
@@ -213,19 +231,27 @@ export default function suite() {
     console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
     console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
 
-    await this.autocratClient.autocrat.methods.conditionalSwap({
-        market: { fail: {} },
-        swapType: {buy: {}},
-        inputAmount: new BN(2 * 1_000_000),
-        minOutputAmount: new BN(0),
-    }).accounts({
-        futarchyAmm,
-    }).rpc();
+    // await this.autocratClient.autocrat.methods.conditionalSwap({
+    //     market: { fail: {} },
+    //     swapType: { buy: {} },
+    //     inputAmount: new BN(2 * 1_000_000),
+    //     minOutputAmount: new BN(0),
+    // }).accounts({
+    //     futarchyAmm,
+    //     ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+    //     ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+    //     ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
+    //     ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
+    //     ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
+    //     ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+    //     baseVault,
+    //     quoteVault,
+    // }).rpc();
 
-    storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
-    console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
-    console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
-    console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
+    // storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    // console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
+    // console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
+    // console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
 
 
 
@@ -236,13 +262,6 @@ export default function suite() {
     return;
 
     
-
-    // await this.vaultClient
-    //   .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
-    //   .rpc();
-    // await this.vaultClient
-    //   .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
-    //   .rpc();
 
     // // swap $500 in the pass market, make it pass
     // await this.ammClient

@@ -315,12 +315,72 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "userInputAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "userOutputAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "baseVault";
-          isMut: false;
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount";
+          isMut: true;
           isSigner: false;
         },
         {
           name: "quoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "trader";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "passBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "conditionalVaultProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "vaultEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "question";
           isMut: false;
           isSigner: false;
         }
@@ -1788,12 +1848,72 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "userInputAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "userOutputAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "baseVault",
-          isMut: false,
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount",
+          isMut: true,
           isSigner: false,
         },
         {
           name: "quoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "trader",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "passBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passQuoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failQuoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "conditionalVaultProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "vaultEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "question",
           isMut: false,
           isSigner: false,
         },
