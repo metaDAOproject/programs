@@ -83,7 +83,7 @@ export type SharedLiquidityManager = {
       code: 6015;
       name: "QuestionAlreadyResolved";
       msg: "Question already resolved";
-    }
+    },
   ];
 };
 

@@ -16,7 +16,7 @@ dotenv.config();
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const LAUNCH_TO_FINALIZE = new PublicKey("7DzBXBYSKhrXHPWT6mAKq394vKupaKaqLn9bK1wscpBz");
+const LAUNCH_TO_FINALIZE = new PublicKey("EmAQS3qhcETCd9gXNavjwbMKgcybJajhHmcn7BoXiP8E");
 
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
@@ -25,7 +25,7 @@ async function main() {
   const launch = await launchpad.getLaunch(LAUNCH_TO_FINALIZE);
 
   const tx = await launchpad
-    .completeLaunchIx(LAUNCH_TO_FINALIZE, launch.quoteMint, launch.baseMint, false)
+    .completeLaunchIx(LAUNCH_TO_FINALIZE, launch.quoteMint, launch.baseMint, true)
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
       ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),

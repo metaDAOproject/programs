@@ -14,7 +14,6 @@ import {
   Transaction,
 } from "@solana/web3.js";
 
-// Use the RPC endpoint of your choice.
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
