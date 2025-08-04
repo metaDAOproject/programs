@@ -40,6 +40,9 @@ impl PoolState {
 
                         let arbitrage_result = arbitrage_after_spot_swap(spot, pass, fail, spot_output, swap_type)?;
 
+                        // msg!("spot_output: {:?}", spot_output);
+                        // msg!("arbitrage_result: {:?}", arbitrage_result);
+
                         Ok(spot_output + arbitrage_result.spot_profit)
                     },
                     Market::Pass | Market::Fail => {
@@ -80,7 +83,7 @@ pub struct Pool {
 // Sell spot to below conditional -> buy spot & sell back conditional, USDC profit
 // Sell conditional to below spot -> buy conditional & sell back spot, USDC profit
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy, AnchorSerialize, AnchorDeserialize)]
 pub enum SwapType {
     Buy,
     Sell,

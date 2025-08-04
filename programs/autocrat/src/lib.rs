@@ -92,6 +92,10 @@ pub mod autocrat {
         InitializeProposal::handle(ctx, params)
     }
 
+    pub fn spot_swap(ctx: Context<SpotSwap>, params: SpotSwapParams) -> Result<()> {
+        SpotSwap::handle(ctx, params)
+    }
+
     pub fn initialize_futarchy_amm(ctx: Context<InitializeFutarchyAmm>, params: InitializeFutarchyAmmParams) -> Result<()> {
         InitializeFutarchyAmm::handle(ctx, params)
     }

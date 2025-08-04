@@ -95,7 +95,7 @@ export type Autocrat = {
         },
         {
           name: "futarchyAmm";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -204,6 +204,24 @@ export type Autocrat = {
           name: "params";
           type: {
             defined: "InitializeProposalParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "spotSwap";
+      accounts: [
+        {
+          name: "futarchyAmm";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "SpotSwapParams";
           };
         }
       ];
@@ -660,6 +678,28 @@ export type Autocrat = {
           },
           {
             name: "failLpTokensToLock";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "SpotSwapParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "swapType";
+            type: {
+              defined: "SwapType";
+            };
+          },
+          {
+            name: "inputAmount";
+            type: "u64";
+          },
+          {
+            name: "minOutputAmount";
             type: "u64";
           }
         ];
@@ -1327,7 +1367,7 @@ export const IDL: Autocrat = {
         },
         {
           name: "futarchyAmm",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1436,6 +1476,24 @@ export const IDL: Autocrat = {
           name: "params",
           type: {
             defined: "InitializeProposalParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "spotSwap",
+      accounts: [
+        {
+          name: "futarchyAmm",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "SpotSwapParams",
           },
         },
       ],
@@ -1892,6 +1950,28 @@ export const IDL: Autocrat = {
           },
           {
             name: "failLpTokensToLock",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "SpotSwapParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "swapType",
+            type: {
+              defined: "SwapType",
+            },
+          },
+          {
+            name: "inputAmount",
+            type: "u64",
+          },
+          {
+            name: "minOutputAmount",
             type: "u64",
           },
         ],

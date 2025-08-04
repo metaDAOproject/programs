@@ -23,6 +23,7 @@ pub struct InitializeProposal<'info> {
         bump
     )]
     pub proposal: Box<Account<'info, Proposal>>,
+    #[account(mut)]
     pub futarchy_amm: Box<Account<'info, FutarchyAmm>>,
     pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
     #[account(mut)]
@@ -229,6 +230,26 @@ impl InitializeProposal<'_> {
                 amount,
             )?;
         }
+
+        let PoolState::Spot { mut spot } = futarchy_amm.state.to_owned() else { unreachable!() };
+
+        let half_base = spot.base_reserves / 2;
+        let half_quote = spot.quote_reserves / 2;
+
+        spot.base_reserves -= half_base;
+        spot.quote_reserves -= half_quote;
+
+        futarchy_amm.state = PoolState::Futarchy {
+            spot,
+            pass: Pool {
+                base_reserves: half_base,
+                quote_reserves: half_quote,
+            },
+            fail: Pool {
+                base_reserves: half_base,
+                quote_reserves: half_quote,
+            },
+        };
 
         let clock = Clock::get()?;
 

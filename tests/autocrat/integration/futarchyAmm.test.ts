@@ -148,6 +148,26 @@ export default function suite() {
       new BN(1_000_000_000)
     );
 
+    let storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
+    console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
+    console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
+
+    await this.autocratClient.autocrat.methods.spotSwap({
+        swapType: {buy: {}},
+        inputAmount: new BN(1 * 1_000_000),
+        minOutputAmount: new BN(0),
+    }).accounts({
+        futarchyAmm,
+    }).rpc();
+
+    storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
+    console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
+    console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
+
+    return;
+
     const {
       passAmm,
       failAmm,
@@ -158,59 +178,23 @@ export default function suite() {
       quoteVault,
     } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
 
-    await this.vaultClient
-      .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
-      .rpc();
-    await this.vaultClient
-      .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
-      .rpc();
+    // await this.vaultClient
+    //   .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
+    //   .rpc();
+    // await this.vaultClient
+    //   .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
+    //   .rpc();
 
-    // swap $500 in the pass market, make it pass
-    await this.ammClient
-      .swapIx(
-        passAmm,
-        passBaseMint,
-        passQuoteMint,
-        { buy: {} },
-        new BN(10000).muln(1_000_000),
-        new BN(0)
-      )
-      .rpc();
-
-    for (let i = 0; i < 100; i++) {
-      await this.advanceBySlots(20_000n);
-
-      await this.ammClient
-        .crankThatTwapIx(passAmm)
-        .preInstructions([
-          // this is to get around bankrun thinking we've processed the same transaction multiple times
-          ComputeBudgetProgram.setComputeUnitPrice({
-            microLamports: i,
-          }),
-          await this.ammClient.crankThatTwapIx(failAmm).instruction(),
-        ])
-        .rpc();
-    }
-
-    await this.autocratClient.finalizeProposal(proposal);
-
-    const txExecuteIx = await multisig.instructions.vaultTransactionExecute({
-      connection: this.squadsConnection,
-      multisigPda,
-      transactionIndex: 1n,
-      member: PERMISSIONLESS_ACCOUNT.publicKey,
-    });
-
-    const txExecute = new Transaction().add(txExecuteIx.instruction);
-    txExecute.recentBlockhash = (
-      await this.banksClient.getLatestBlockhash()
-    )[0];
-    txExecute.feePayer = this.payer.publicKey;
-    txExecute.sign(this.payer, PERMISSIONLESS_ACCOUNT);
-
-    await this.banksClient.processTransaction(txExecute);
-
-    const storedDao2 = await this.autocratClient.getDao(dao);
-    console.log("post update", storedDao2.passThresholdBps);
+    // // swap $500 in the pass market, make it pass
+    // await this.ammClient
+    //   .swapIx(
+    //     passAmm,
+    //     passBaseMint,
+    //     passQuoteMint,
+    //     { buy: {} },
+    //     new BN(10000).muln(1_000_000),
+    //     new BN(0)
+    //   )
+    //   .rpc();
   });
 }
