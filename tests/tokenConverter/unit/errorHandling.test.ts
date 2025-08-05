@@ -8,7 +8,6 @@ import { expectError } from "../../utils.js";
 export default function suite() {
   let inboundTokenMint: PublicKey;
   let outboundTokenMint: PublicKey;
-  let tokenConverterConfig: PublicKey;
   let tokenConverter: PublicKey;
   let inboundTokenVault: PublicKey;
   let outboundTokenVault: PublicKey;
@@ -33,22 +32,15 @@ export default function suite() {
       9 // 9 decimals
     );
 
-    // Derive token converter config PDA
-    [tokenConverterConfig] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("token_converter_config"),
-        inboundTokenMint.toBuffer(),
-        outboundTokenMint.toBuffer(),
-      ],
-      anchor.workspace.TokenConverter.programId
-    );
-
     // Derive token converter PDA
+    const nonce = new BN(1754430104587);
     [tokenConverter] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("token_converter"),
         inboundTokenMint.toBuffer(),
         outboundTokenMint.toBuffer(),
+        this.payer.publicKey.toBuffer(),
+        nonce.toArrayLike(Buffer, "le", 8),
       ],
       anchor.workspace.TokenConverter.programId
     );
@@ -68,26 +60,6 @@ export default function suite() {
       this.payer.publicKey
     );
 
-    // Initialize token converter config
-    const maxInboundTokenAmount = new BN(1000000); // 1 token with 6 decimals
-    const maxOutboundTokenAmount = new BN(1000000000); // 1 token with 9 decimals
-    const burnInboundToken = false;
-
-    await anchor.workspace.TokenConverter.methods
-      .initializeTokenConverterConfig(
-        maxInboundTokenAmount,
-        maxOutboundTokenAmount,
-        burnInboundToken
-      )
-      .accounts({
-        tokenConverterConfig,
-        inboundTokenMint,
-        outboundTokenMint,
-        authority: this.payer.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .rpc();
-
     // Initialize token converter
     inboundTokenVault = await createAssociatedTokenAccount(
       this.banksClient,
@@ -104,10 +76,9 @@ export default function suite() {
     );
 
     await anchor.workspace.TokenConverter.methods
-      .initializeTokenConverter()
+      .initializeTokenConverter(new BN(1000000000000), nonce) // 1:1 conversion ratio (CONVERSION_RATIO_SCALE)
       .accounts({
         tokenConverter,
-        tokenConverterConfig,
         inboundTokenVault,
         outboundTokenVault,
         inboundTokenMint,
@@ -152,7 +123,6 @@ export default function suite() {
       .convert(largeAmount)
       .accounts({
         tokenConverter,
-        tokenConverterConfig,
         authority: this.payer.publicKey,
         from: userInboundTokenAccount,
         to: userOutboundTokenAccount,
@@ -176,7 +146,6 @@ export default function suite() {
       .convert(new BN(0))
       .accounts({
         tokenConverter,
-        tokenConverterConfig,
         authority: this.payer.publicKey,
         from: userInboundTokenAccount,
         to: userOutboundTokenAccount,
@@ -213,7 +182,6 @@ export default function suite() {
       .convert(largeAmount)
       .accounts({
         tokenConverter,
-        tokenConverterConfig,
         authority: this.payer.publicKey,
         from: userInboundTokenAccount,
         to: userOutboundTokenAccount,
