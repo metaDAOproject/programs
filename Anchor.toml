@@ -30,6 +30,9 @@ assign-permissionless-account = "yarn run tsx scripts/assignPermissionlessAccoun
 create-v04-proposal = "yarn run tsx scripts/createV04Proposal.ts"
 initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
 test = "npx mocha --import=tsx --bail tests/main.test.ts"
+initializeConverter = "yarn run tsx scripts/initializeConverter.ts"
+convertTokens = "yarn run tsx scripts/convertTokens.ts"
+checkConverter = "yarn run tsx scripts/checkConverter.ts"
 
 [test]
 startup_wait = 5000
