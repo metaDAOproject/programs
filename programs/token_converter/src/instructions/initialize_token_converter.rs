@@ -4,10 +4,10 @@ use anchor_spl::associated_token::AssociatedToken;
 use crate::state::TokenConverter;
 use crate::error::TokenConverterError;
 
-pub const CONVERSION_RATIO_SCALE: u64 = 1_000_000_000_000; // 1e12, would need to be changed per launch
+pub const CONVERSION_RATIO_SCALE: u64 = 1_000_000_000_000; // 1e12
 
 #[derive(Accounts)]
-#[instruction(conversion_ratio: u64, burn_inbound_token: bool, nonce: u64)]
+#[instruction(conversion_ratio: u64, nonce: u64)]
 pub struct InitializeTokenConverter<'info> {
     #[account(
         init,
@@ -53,7 +53,6 @@ pub struct InitializeTokenConverter<'info> {
 pub fn initialize_token_converter(
     ctx: Context<InitializeTokenConverter>,
     conversion_ratio: u64, // How many outbound tokens per inbound token, scaled by 1e12
-    burn_inbound_token: bool,
     nonce: u64,
 ) -> Result<()> {
     let converter = &mut ctx.accounts.token_converter;
@@ -76,7 +75,6 @@ pub fn initialize_token_converter(
         inbound_token_decimals: inbound_mint.decimals,
         outbound_token_decimals: outbound_mint.decimals,
         conversion_ratio,
-        burn_inbound_token,
         nonce,
         bump: ctx.bumps.token_converter,
     });

@@ -7,7 +7,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("tknMiQZDHrrJe4VDESf3cJorj1jWCfCYK2g4d7nqjT1");
+declare_id!("A5Tx19gQkMAdo8rWz9tTpbKWhGM2jMn59FP7vanNnvEf");
 
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
@@ -30,10 +30,9 @@ pub mod token_converter {
     pub fn initialize_token_converter(
         ctx: Context<InitializeTokenConverter>,
         conversion_ratio: u64,
-        burn_inbound_token: bool,
         nonce: u64,
     ) -> Result<()> {
-        instructions::initialize_token_converter(ctx, conversion_ratio, burn_inbound_token, nonce)
+        instructions::initialize_token_converter(ctx, conversion_ratio, nonce)
     }
 
     pub fn convert(ctx: Context<Convert>, amount: u64) -> Result<()> {

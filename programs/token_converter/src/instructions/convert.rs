@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer, Burn, Mint};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer, Mint};
 use crate::state::TokenConverter;
 use crate::error::TokenConverterError;
-use crate::events::SwapExecuted;
+use crate::events::TokensConverted;
 use crate::instructions::initialize_token_converter::CONVERSION_RATIO_SCALE;
 
 #[derive(Accounts)]
@@ -86,30 +86,16 @@ pub fn convert(ctx: Context<Convert>, amount: u64) -> Result<()> {
         TokenConverterError::InsufficientConverterBalance
     );
     
-    // Handle inbound token (burn or transfer)
-    if converter.burn_inbound_token {
-        // Burn the inbound tokens from user's account
-        let burn_cpi_accounts = CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            Burn {
-                mint: ctx.accounts.inbound_token_mint.to_account_info(),
-                from: ctx.accounts.from.to_account_info(),
-                authority: ctx.accounts.authority.to_account_info(),
-            }
-        );
-        token::burn(burn_cpi_accounts, amount)?;
-    } else {
-        // Transfer the inbound tokens from user's account to converter's vault
-        let transfer_in_cpi_accounts = CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.from.to_account_info(),
-                to: ctx.accounts.inbound_token_vault.to_account_info(),   
-                authority: ctx.accounts.authority.to_account_info(),
-            }
-        );
-        token::transfer(transfer_in_cpi_accounts, amount)?;
-    }
+    // Transfer the inbound tokens from user's account to converter's vault
+    let transfer_in_cpi_accounts = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        Transfer {
+            from: ctx.accounts.from.to_account_info(),
+            to: ctx.accounts.inbound_token_vault.to_account_info(),   
+            authority: ctx.accounts.authority.to_account_info(),
+        }
+    );
+    token::transfer(transfer_in_cpi_accounts, amount)?;
 
     // Transfer outbound tokens from converter's vault to user's account
     let authority_seeds = &[
@@ -133,14 +119,13 @@ pub fn convert(ctx: Context<Convert>, amount: u64) -> Result<()> {
     token::transfer(transfer_out_cpi_accounts, amount_to_transfer)?;
     
     // Emit swap event
-    emit!(SwapExecuted {
+    emit!(TokensConverted {
         user: ctx.accounts.authority.key(),
         token_converter: ctx.accounts.token_converter.key(),
         inbound_token_mint: converter.inbound_token_mint,
         outbound_token_mint: converter.outbound_token_mint,
         inbound_amount: amount,
         outbound_amount: amount_to_transfer,
-        burned: converter.burn_inbound_token,
         timestamp: Clock::get()?.unix_timestamp,
     });
     
