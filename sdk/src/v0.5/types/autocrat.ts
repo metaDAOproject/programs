@@ -6,11 +6,9 @@ export type Autocrat = {
       name: "initializeDao";
       docs: [
         "TODO:",
-        "- Allow people to withdraw liquidity",
-        "- Allow protocol treasury to collect fees",
+        "- Add TWAPs",
         "- Enable staking to proposals",
-        "- Switch proposal to use Futarchy AMM",
-        "- Add TWAPs"
+        "- Switch proposal to use Futarchy AMM"
       ];
       accounts: [
         {
@@ -1768,6 +1766,11 @@ export type Autocrat = {
       code: 6019;
       name: "AssertFailed";
       msg: "Assert failed";
+    },
+    {
+      code: 6020;
+      name: "InvalidAdmin";
+      msg: "Invalid admin";
     }
   ];
 };
@@ -1780,11 +1783,9 @@ export const IDL: Autocrat = {
       name: "initializeDao",
       docs: [
         "TODO:",
-        "- Allow people to withdraw liquidity",
-        "- Allow protocol treasury to collect fees",
+        "- Add TWAPs",
         "- Enable staking to proposals",
         "- Switch proposal to use Futarchy AMM",
-        "- Add TWAPs",
       ],
       accounts: [
         {
@@ -3542,6 +3543,11 @@ export const IDL: Autocrat = {
       code: 6019,
       name: "AssertFailed",
       msg: "Assert failed",
+    },
+    {
+      code: 6020,
+      name: "InvalidAdmin",
+      msg: "Invalid admin",
     },
   ],
 };

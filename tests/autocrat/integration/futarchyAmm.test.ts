@@ -296,6 +296,20 @@ export default function suite() {
     console.log("pass base", storedFutarchyAmm.pass.baseReserves.toString(), "quote", storedFutarchyAmm.pass.quoteReserves.toString(), "base fee", storedFutarchyAmm.pass.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.pass.quoteProtocolFeeBalance.toString());
     console.log("fail base", storedFutarchyAmm.fail.baseReserves.toString(), "quote", storedFutarchyAmm.fail.quoteReserves.toString(), "base fee", storedFutarchyAmm.fail.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.fail.quoteProtocolFeeBalance.toString());
 
+    await this.autocratClient.autocrat.methods.withdrawLiquidity({
+      liquidityToWithdraw: new BN(100_000 * 1_000_000),
+      minBaseAmount: new BN(0),
+      minQuoteAmount: new BN(0),
+    }).accounts({
+      futarchyAmm,
+      ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+      ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+      liquidityProvider: this.payer.publicKey,
+      liquidityProviderBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+      liquidityProviderQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+      ammPosition: ammPosition,
+    }).rpc();
+
     // await this.autocratClient.autocrat.methods.conditionalSwap({
     //     market: { fail: {} },
     //     swapType: { buy: {} },

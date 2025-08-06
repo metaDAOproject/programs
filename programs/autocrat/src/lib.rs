@@ -84,11 +84,9 @@ pub mod autocrat {
     use super::*;
 
     /// TODO:
-    /// - Allow people to withdraw liquidity
-    /// - Allow protocol treasury to collect fees
+    /// - Add TWAPs
     /// - Enable staking to proposals
     /// - Switch proposal to use Futarchy AMM
-    /// - Add TWAPs
 
     pub fn initialize_dao(ctx: Context<InitializeDao>, params: InitializeDaoParams) -> Result<()> {
         InitializeDao::handle(ctx, params)

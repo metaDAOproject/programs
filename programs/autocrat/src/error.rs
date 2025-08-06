@@ -44,4 +44,6 @@ pub enum AutocratError {
     SwapSlippageExceeded,
     #[msg("Assert failed")]
     AssertFailed,
+    #[msg("Invalid admin")]
+    InvalidAdmin,
 }

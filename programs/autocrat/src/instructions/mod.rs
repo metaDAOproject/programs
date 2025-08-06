@@ -9,6 +9,7 @@ pub mod spot_swap;
 pub mod conditional_swap;
 pub mod provide_liquidity;
 pub mod withdraw_liquidity;
+pub mod collect_fees;
 
 pub use finalize_proposal::*;
 pub use initialize_dao::*;
@@ -19,3 +20,4 @@ pub use spot_swap::*;
 pub use conditional_swap::*;
 pub use provide_liquidity::*;
 pub use withdraw_liquidity::*;
+pub use collect_fees::*;
