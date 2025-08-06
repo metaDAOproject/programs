@@ -6,7 +6,6 @@ export type Autocrat = {
       name: "initializeDao";
       docs: [
         "TODO:",
-        "- Add TWAPs",
         "- Enable staking to proposals",
         "- Switch proposal to use Futarchy AMM"
       ];
@@ -130,36 +129,6 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "passAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "passLpMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "failLpMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "failAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "passLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "ammPassBaseVault";
           isMut: true;
           isSigner: false;
@@ -248,16 +217,6 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "passAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "failAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "futarchyAmm";
           isMut: true;
           isSigner: false;
@@ -269,26 +228,6 @@ export type Autocrat = {
         },
         {
           name: "question";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "passLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "passLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpVaultAccount";
           isMut: true;
           isSigner: false;
         },
@@ -897,14 +836,6 @@ export type Autocrat = {
             };
           },
           {
-            name: "passAmm";
-            type: "publicKey";
-          },
-          {
-            name: "failAmm";
-            type: "publicKey";
-          },
-          {
             name: "baseVault";
             type: "publicKey";
           },
@@ -915,14 +846,6 @@ export type Autocrat = {
           {
             name: "dao";
             type: "publicKey";
-          },
-          {
-            name: "passLpTokensLocked";
-            type: "u64";
-          },
-          {
-            name: "failLpTokensLocked";
-            type: "u64";
           },
           {
             name: "pdaBump";
@@ -1554,26 +1477,6 @@ export type Autocrat = {
           index: false;
         },
         {
-          name: "passAmm";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "failAmm";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "passLpMint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "failLpMint";
-          type: "publicKey";
-          index: false;
-        },
-        {
           name: "proposer";
           type: "publicKey";
           index: false;
@@ -1581,16 +1484,6 @@ export type Autocrat = {
         {
           name: "number";
           type: "u32";
-          index: false;
-        },
-        {
-          name: "passLpTokensLocked";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "failLpTokensLocked";
-          type: "u64";
           index: false;
         },
         {
@@ -1861,7 +1754,6 @@ export const IDL: Autocrat = {
       name: "initializeDao",
       docs: [
         "TODO:",
-        "- Add TWAPs",
         "- Enable staking to proposals",
         "- Switch proposal to use Futarchy AMM",
       ],
@@ -1985,36 +1877,6 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "passAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "passLpMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "failLpMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "failAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "passLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "ammPassBaseVault",
           isMut: true,
           isSigner: false,
@@ -2103,16 +1965,6 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "passAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "failAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "futarchyAmm",
           isMut: true,
           isSigner: false,
@@ -2124,26 +1976,6 @@ export const IDL: Autocrat = {
         },
         {
           name: "question",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "passLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "passLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpVaultAccount",
           isMut: true,
           isSigner: false,
         },
@@ -2752,14 +2584,6 @@ export const IDL: Autocrat = {
             },
           },
           {
-            name: "passAmm",
-            type: "publicKey",
-          },
-          {
-            name: "failAmm",
-            type: "publicKey",
-          },
-          {
             name: "baseVault",
             type: "publicKey",
           },
@@ -2770,14 +2594,6 @@ export const IDL: Autocrat = {
           {
             name: "dao",
             type: "publicKey",
-          },
-          {
-            name: "passLpTokensLocked",
-            type: "u64",
-          },
-          {
-            name: "failLpTokensLocked",
-            type: "u64",
           },
           {
             name: "pdaBump",
@@ -3409,26 +3225,6 @@ export const IDL: Autocrat = {
           index: false,
         },
         {
-          name: "passAmm",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "failAmm",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "passLpMint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "failLpMint",
-          type: "publicKey",
-          index: false,
-        },
-        {
           name: "proposer",
           type: "publicKey",
           index: false,
@@ -3436,16 +3232,6 @@ export const IDL: Autocrat = {
         {
           name: "number",
           type: "u32",
-          index: false,
-        },
-        {
-          name: "passLpTokensLocked",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "failLpTokensLocked",
-          type: "u64",
           index: false,
         },
         {

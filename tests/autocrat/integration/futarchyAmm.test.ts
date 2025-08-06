@@ -297,6 +297,28 @@ export default function suite() {
     console.log("pass base", storedFutarchyAmm.pass.baseReserves.toString(), "quote", storedFutarchyAmm.pass.quoteReserves.toString(), "base fee", storedFutarchyAmm.pass.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.pass.quoteProtocolFeeBalance.toString());
     console.log("fail base", storedFutarchyAmm.fail.baseReserves.toString(), "quote", storedFutarchyAmm.fail.quoteReserves.toString(), "base fee", storedFutarchyAmm.fail.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.fail.quoteProtocolFeeBalance.toString());
 
+    for (let i = 0; i < 100; i++) {
+      await this.advanceBySlots(20_000n);
+      await this.autocratClient.autocrat.methods.spotSwap({
+              swapType: {sell: {}},
+              inputAmount: (new BN(100)).muln(1_000_000),
+              minOutputAmount: new BN(i),
+          }).accounts({
+              futarchyAmm,
+              userBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
+              userQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
+              ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+              ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+              trader: this.payer.publicKey,
+          }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();
+    }
+
+    await this.autocratClient.finalizeProposal(proposal);
+
+    const storedProposal = await this.autocratClient.getProposal(proposal);
+    // console.log(storedProposal);
+
+    // return;
     await this.autocratClient.autocrat.methods.withdrawLiquidity({
       liquidityToWithdraw: new BN(100_000 * 1_000_000),
       minBaseAmount: new BN(0),

@@ -7,8 +7,6 @@ use super::*;
 pub struct FinalizeProposal<'info> {
     #[account(mut,
         has_one = question,
-        has_one = pass_amm,
-        has_one = fail_amm,
         has_one = dao,
         has_one = squads_proposal,
     )]
@@ -20,38 +18,12 @@ pub struct FinalizeProposal<'info> {
         Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
     /// CHECK: checked by the has_one
     pub squads_multisig: UncheckedAccount<'info>,
-    pub pass_amm: Account<'info, Amm>,
-    pub fail_amm: Account<'info, Amm>,
     #[account(mut)]
     pub futarchy_amm: Box<Account<'info, FutarchyAmm>>,
     #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut)]
     pub question: Account<'info, Question>,
-    #[account(
-        mut,
-        associated_token::mint = pass_amm.lp_mint,
-        associated_token::authority = proposal.proposer,
-    )]
-    pub pass_lp_user_account: Box<Account<'info, TokenAccount>>,
-    #[account(
-        mut,
-        associated_token::mint = fail_amm.lp_mint,
-        associated_token::authority = proposal.proposer,
-    )]
-    pub fail_lp_user_account: Box<Account<'info, TokenAccount>>,
-    #[account(
-        mut,
-        associated_token::mint = pass_amm.lp_mint,
-        associated_token::authority = proposal,
-    )]
-    pub pass_lp_vault_account: Box<Account<'info, TokenAccount>>,
-    #[account(
-        mut,
-        associated_token::mint = fail_amm.lp_mint,
-        associated_token::authority = proposal,
-    )]
-    pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
     pub token_program: Program<'info, Token>,
     pub vault_program: Program<'info, ConditionalVaultProgram>,
     /// CHECK: checked by vault program
@@ -81,14 +53,8 @@ impl FinalizeProposal<'_> {
             squads_proposal,
             squads_multisig_program,
             squads_multisig,
-            pass_amm,
-            fail_amm,
             dao,
             question,
-            pass_lp_user_account,
-            fail_lp_user_account,
-            pass_lp_vault_account,
-            fail_lp_vault_account,
             futarchy_amm,
             vault_program,
             token_program,
@@ -105,37 +71,8 @@ impl FinalizeProposal<'_> {
         ];
         let proposal_signer = &[&proposal_seeds[..]];
 
-        for (lp_tokens_to_unlock, from, to) in [
-            (
-                proposal.pass_lp_tokens_locked,
-                pass_lp_vault_account,
-                pass_lp_user_account,
-            ),
-            (
-                proposal.fail_lp_tokens_locked,
-                fail_lp_vault_account,
-                fail_lp_user_account,
-            ),
-        ] {
-            // without this, someone can brick a proposal if they have another proposal transfer
-            // out its LP tokens from the treasury.
-            let lp_tokens_to_unlock = std::cmp::min(lp_tokens_to_unlock, from.amount);
 
-            token::transfer(
-                CpiContext::new(
-                    token_program.to_account_info(),
-                    Transfer {
-                        from: from.to_account_info(),
-                        to: to.to_account_info(),
-                        authority: proposal.to_account_info(),
-                    },
-                )
-                .with_signer(proposal_signer),
-                lp_tokens_to_unlock,
-            )?;
-        }
-
-        let calculate_twap = |amm: &Amm| -> Result<u128> {
+        let calculate_twap = |amm: &Pool| -> Result<u128> {
             let slots_passed = amm.oracle.last_updated_slot - proposal.slot_enqueued;
 
             require!(
@@ -146,8 +83,12 @@ impl FinalizeProposal<'_> {
             amm.get_twap()
         };
 
-        let pass_market_twap = calculate_twap(pass_amm)?;
-        let fail_market_twap = calculate_twap(fail_amm)?;
+        let PoolState::Futarchy { pass, fail, mut spot } = futarchy_amm.state.to_owned() else {
+            unreachable!();
+        };
+
+        let pass_market_twap = calculate_twap(&pass)?;
+        let fail_market_twap = calculate_twap(&fail)?;
 
         // this can't overflow because each twap can only be MAX_PRICE (~1e31),
         // MAX_BPS + pass_threshold_bps is at most 1e5, and a u128 can hold
@@ -195,7 +136,19 @@ impl FinalizeProposal<'_> {
                 ),
                 squads_multisig_program::ProposalVoteArgs { memo: None },
             )?;
+
+            spot.base_reserves += pass.base_reserves;
+            spot.quote_reserves += pass.quote_reserves;
+            spot.base_protocol_fee_balance += pass.base_protocol_fee_balance;
+            spot.quote_protocol_fee_balance += pass.quote_protocol_fee_balance;
+        } else {
+            spot.base_reserves += fail.base_reserves;
+            spot.quote_reserves += fail.quote_reserves;
+            spot.base_protocol_fee_balance += fail.base_protocol_fee_balance;
+            spot.quote_protocol_fee_balance += fail.quote_protocol_fee_balance;
         }
+
+        futarchy_amm.state = PoolState::Spot { spot };
 
         let clock = Clock::get()?;
 

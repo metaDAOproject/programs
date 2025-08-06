@@ -310,6 +310,22 @@ impl Pool {
 
         Ok(Some(new_observation))
     }
+
+    /// Returns the time-weighted average price since market creation
+    pub fn get_twap(&self) -> Result<u128> {
+        let start_slot = self.oracle.created_at_slot + self.oracle.start_delay_slots;
+
+        require_gt!(
+            self.oracle.last_updated_slot,
+            start_slot,
+        );
+        let slots_passed = (self.oracle.last_updated_slot - start_slot) as u128;
+
+        require_neq!(slots_passed, 0);
+        require_neq!(self.oracle.aggregator, 0);
+
+        Ok(self.oracle.aggregator / slots_passed)
+    }
 }
 
 // Buy spot to above conditional -> sell spot & buy back conditional, META profit

@@ -84,7 +84,6 @@ pub mod autocrat {
     use super::*;
 
     /// TODO:
-    /// - Add TWAPs
     /// - Enable staking to proposals
     /// - Switch proposal to use Futarchy AMM
 
@@ -99,8 +98,6 @@ pub mod autocrat {
     ) -> Result<()> {
         InitializeProposal::handle(ctx, params)
     }
-
-    
 
     #[access_control(ctx.accounts.validate())]
     pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {

@@ -53,7 +53,7 @@ impl InitializeFutarchyAmm<'_> {
                         clock.slot,
                         dao.twap_initial_observation,
                         dao.twap_max_observation_change_per_update,
-                        dao.twap_start_delay_slots,
+                        0,
                     ),
                 },
             },

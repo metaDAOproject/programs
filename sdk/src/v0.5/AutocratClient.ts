@@ -510,10 +510,10 @@ export class AutocratClient {
         dao,
         baseVault,
         quoteVault,
-        passAmm,
-        failAmm,
-        passLpMint: passLp,
-        failLpMint: failLp,
+        // passAmm,
+        // failAmm,
+        // passLpMint: passLp,
+        // failLpMint: failLp,
         ammPassBaseVault: getAssociatedTokenAddressSync(
           passBaseMint,
           futarchyAmm,
@@ -544,8 +544,8 @@ export class AutocratClient {
         //   proposer,
         //   true
         // ),
-        passLpVaultAccount,
-        failLpVaultAccount,
+        // passLpVaultAccount,
+        // failLpVaultAccount,
         proposer,
       })
       .preInstructions([
@@ -600,6 +600,10 @@ export class AutocratClient {
   ) {
     let vaultProgramId = this.vaultClient.vaultProgram.programId;
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const [futarchyAmm] = PublicKey.findProgramAddressSync(
+      [Buffer.from("futarchy_amm")],
+      this.getProgramId()
+    );
 
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const { question, passAmm, failAmm } = this.getProposalPdas(
@@ -622,8 +626,7 @@ export class AutocratClient {
 
     return this.autocrat.methods.finalizeProposal().accounts({
       proposal,
-      passAmm,
-      failAmm,
+      futarchyAmm,
       dao,
       squadsProposal,
       squadsMultisig: multisigPda,
@@ -631,10 +634,6 @@ export class AutocratClient {
       question,
       // baseVault,
       // quoteVault,
-      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer, true),
-      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer, true),
-      passLpVaultAccount: getAssociatedTokenAddressSync(passLp, proposal, true),
-      failLpVaultAccount: getAssociatedTokenAddressSync(failLp, proposal, true),
       vaultProgram: this.vaultClient.vaultProgram.programId,
       vaultEventAuthority,
     });
@@ -690,42 +689,42 @@ export class AutocratClient {
   // cranks the TWAPs of multiple proposals' markets. there's a limit on the
   // number of proposals you can pass in, which I can't determine rn because
   // there aren't enough proposals on devnet
-  async crankProposalMarkets(
-    proposals: PublicKey[],
-    priorityFeeMicroLamports: number
-  ) {
-    const amms: PublicKey[] = [];
+  // async crankProposalMarkets(
+  //   proposals: PublicKey[],
+  //   priorityFeeMicroLamports: number
+  // ) {
+  //   const amms: PublicKey[] = [];
 
-    for (const proposal of proposals) {
-      const storedProposal = await this.getProposal(proposal);
-      amms.push(storedProposal.passAmm);
-      amms.push(storedProposal.failAmm);
-    }
+  //   for (const proposal of proposals) {
+  //     const storedProposal = await this.getProposal(proposal);
+  //     amms.push(storedProposal.passAmm);
+  //     amms.push(storedProposal.failAmm);
+  //   }
 
-    while (true) {
-      let ixs: TransactionInstruction[] = [];
+  //   while (true) {
+  //     let ixs: TransactionInstruction[] = [];
 
-      for (const amm of amms) {
-        ixs.push(await this.ammClient.crankThatTwapIx(amm).instruction());
-      }
+  //     for (const amm of amms) {
+  //       ixs.push(await this.ammClient.crankThatTwapIx(amm).instruction());
+  //     }
 
-      let tx = new Transaction();
-      tx.add(
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 4_000 * ixs.length })
-      );
-      tx.add(
-        ComputeBudgetProgram.setComputeUnitPrice({
-          microLamports: priorityFeeMicroLamports,
-        })
-      );
-      tx.add(...ixs);
-      try {
-        await this.provider.sendAndConfirm(tx);
-      } catch (err) {
-        console.log("err", err);
-      }
+  //     let tx = new Transaction();
+  //     tx.add(
+  //       ComputeBudgetProgram.setComputeUnitLimit({ units: 4_000 * ixs.length })
+  //     );
+  //     tx.add(
+  //       ComputeBudgetProgram.setComputeUnitPrice({
+  //         microLamports: priorityFeeMicroLamports,
+  //       })
+  //     );
+  //     tx.add(...ixs);
+  //     try {
+  //       await this.provider.sendAndConfirm(tx);
+  //     } catch (err) {
+  //       console.log("err", err);
+  //     }
 
-      await new Promise((resolve) => setTimeout(resolve, 65 * 1000)); // 65,000 milliseconds = 1 minute and 5 seconds
-    }
-  }
+  //     await new Promise((resolve) => setTimeout(resolve, 65 * 1000)); // 65,000 milliseconds = 1 minute and 5 seconds
+  //   }
+  // }
 }
