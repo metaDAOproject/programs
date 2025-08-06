@@ -1,6 +1,6 @@
 {
-  "name": "Futarchy Governance Token",
+  "name": "MetaDAO",
   "symbol": "META",
-  "description": "Native token of MetaDAO",
-  "image": ""
+  "description": "Futarchy governance token of MetaDAO",
+  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/META/META.png"
 }

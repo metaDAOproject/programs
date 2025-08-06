@@ -34,9 +34,9 @@ const SPENDING_MEMBERS: PublicKey[] = [
   new PublicKey("4LpE9Lxqb4jYYh8jA8oDhsGDKPNBNkcoXobbAJTa3pWw"), // Kollan
   new PublicKey("613BRiXuAEn7vibs2oAYzpGW9fXgjzDNuFMM4wPzLdY"), // Proph3t
 ];
-const SPENDING_LIMIT: number = 85_000; // NOTE: Human readable
-const MIN_BASE_FUTARCHIC_LIQUIDITY: number = 5_000; // NOTE: Human readable
-const MIN_QUOTE_FUTARCHIC_LIQUIDITY: number = 15_000; // NOTE: Human readable
+const SPENDING_LIMIT: number = 100_000; // NOTE: Human readable
+const MIN_BASE_FUTARCHIC_LIQUIDITY: number = 30_000; // NOTE: Human readable
+const MIN_QUOTE_FUTARCHIC_LIQUIDITY: number = 25_000; // NOTE: Human readable
 
 const ONE_DAY_IN_SLOTS = new BN(216_000);
 const THREE_DAYS_IN_SLOTS = ONE_DAY_IN_SLOTS.mul(new BN(3));
@@ -290,7 +290,7 @@ const initializeNewDaoAndToken = async () => {
   const umiInstructions = createV1(umi, {
     mint: umiMint,
     updateAuthority: payer.publicKey,
-    name: "Futarchy Governance Token", // TODO: Review this is correct.
+    name: "MetaDAO", // TODO: Review this is correct.
     symbol: "META", // TODO: Review this is correct.
     uri: "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/META/META.json",
     sellerFeeBasisPoints: percentAmount(0),
