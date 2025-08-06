@@ -150,16 +150,6 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "passLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "passLpVaultAccount";
           isMut: true;
           isSigner: false;
@@ -265,6 +255,11 @@ export type Autocrat = {
         {
           name: "failAmm";
           isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "futarchyAmm";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -535,6 +530,11 @@ export type Autocrat = {
         {
           name: "futarchyAmm";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -1188,6 +1188,78 @@ export type Autocrat = {
       };
     },
     {
+      name: "TwapOracle";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "createdAtSlot";
+            type: "u64";
+          },
+          {
+            name: "lastUpdatedSlot";
+            type: "u64";
+          },
+          {
+            name: "lastPrice";
+            docs: [
+              "A price is the number of quote units per base unit multiplied by 1e12.",
+              "You cannot simply divide by 1e12 to get a price you can display in the UI",
+              "because the base and quote decimals may be different. Instead, do:",
+              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
+            ];
+            type: "u128";
+          },
+          {
+            name: "lastObservation";
+            docs: [
+              "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
+              "a few extremely large outliers. So we use observations, which can only move",
+              "by `max_observation_change_per_update` per update."
+            ];
+            type: "u128";
+          },
+          {
+            name: "aggregator";
+            docs: [
+              "Running sum of slots_per_last_update * last_observation.",
+              "",
+              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
+              "we can store 18 million slots worth of observations, which turns out to",
+              "be ~85 days worth of slots.",
+              "",
+              "Assuming that latest observations are 100x smaller than they could theoretically",
+              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
+              "very conservative assumption - META/USDC prices should be between 1e9 and",
+              "1e15, which would overflow after 1e15 years worth of slots.",
+              "",
+              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
+              "client's responsibility to sanity check the assets or to handle an",
+              "aggregator at T2 being smaller than an aggregator at T1."
+            ];
+            type: "u128";
+          },
+          {
+            name: "maxObservationChangePerUpdate";
+            docs: ["The most that an observation can change per update."];
+            type: "u128";
+          },
+          {
+            name: "initialObservation";
+            docs: ["What the initial `latest_observation` is set to."];
+            type: "u128";
+          },
+          {
+            name: "startDelaySlots";
+            docs: [
+              "Number of slots after amm.created_at_slot to start recording TWAP"
+            ];
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
       name: "Pool";
       type: {
         kind: "struct";
@@ -1207,6 +1279,12 @@ export type Autocrat = {
           {
             name: "baseProtocolFeeBalance";
             type: "u64";
+          },
+          {
+            name: "oracle";
+            type: {
+              defined: "TwapOracle";
+            };
           }
         ];
       };
@@ -1927,16 +2005,6 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "passLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "passLpVaultAccount",
           isMut: true,
           isSigner: false,
@@ -2042,6 +2110,11 @@ export const IDL: Autocrat = {
         {
           name: "failAmm",
           isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "futarchyAmm",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -2312,6 +2385,11 @@ export const IDL: Autocrat = {
         {
           name: "futarchyAmm",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2965,6 +3043,78 @@ export const IDL: Autocrat = {
       },
     },
     {
+      name: "TwapOracle",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "createdAtSlot",
+            type: "u64",
+          },
+          {
+            name: "lastUpdatedSlot",
+            type: "u64",
+          },
+          {
+            name: "lastPrice",
+            docs: [
+              "A price is the number of quote units per base unit multiplied by 1e12.",
+              "You cannot simply divide by 1e12 to get a price you can display in the UI",
+              "because the base and quote decimals may be different. Instead, do:",
+              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12",
+            ],
+            type: "u128",
+          },
+          {
+            name: "lastObservation",
+            docs: [
+              "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
+              "a few extremely large outliers. So we use observations, which can only move",
+              "by `max_observation_change_per_update` per update.",
+            ],
+            type: "u128",
+          },
+          {
+            name: "aggregator",
+            docs: [
+              "Running sum of slots_per_last_update * last_observation.",
+              "",
+              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
+              "we can store 18 million slots worth of observations, which turns out to",
+              "be ~85 days worth of slots.",
+              "",
+              "Assuming that latest observations are 100x smaller than they could theoretically",
+              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
+              "very conservative assumption - META/USDC prices should be between 1e9 and",
+              "1e15, which would overflow after 1e15 years worth of slots.",
+              "",
+              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
+              "client's responsibility to sanity check the assets or to handle an",
+              "aggregator at T2 being smaller than an aggregator at T1.",
+            ],
+            type: "u128",
+          },
+          {
+            name: "maxObservationChangePerUpdate",
+            docs: ["The most that an observation can change per update."],
+            type: "u128",
+          },
+          {
+            name: "initialObservation",
+            docs: ["What the initial `latest_observation` is set to."],
+            type: "u128",
+          },
+          {
+            name: "startDelaySlots",
+            docs: [
+              "Number of slots after amm.created_at_slot to start recording TWAP",
+            ],
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "Pool",
       type: {
         kind: "struct",
@@ -2984,6 +3134,12 @@ export const IDL: Autocrat = {
           {
             name: "baseProtocolFeeBalance",
             type: "u64",
+          },
+          {
+            name: "oracle",
+            type: {
+              defined: "TwapOracle",
+            },
           },
         ],
       },

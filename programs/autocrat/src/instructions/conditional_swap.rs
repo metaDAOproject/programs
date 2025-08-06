@@ -13,7 +13,7 @@ pub struct ConditionalSwapParams {
 #[derive(Accounts)]
 pub struct ConditionalSwap<'info> {
     #[account(mut, has_one = amm_base_vault, has_one = amm_quote_vault)]
-    pub futarchy_amm: Account<'info, FutarchyAmm>,
+    pub futarchy_amm: Box<Account<'info, FutarchyAmm>>,
     #[account(mut, associated_token::mint = futarchy_amm.base_mint, associated_token::authority = futarchy_amm)]
     pub amm_base_vault: Account<'info, TokenAccount>,
     #[account(mut, associated_token::mint = futarchy_amm.quote_mint, associated_token::authority = futarchy_amm)]

@@ -56,18 +56,18 @@ pub struct InitializeProposal<'info> {
         constraint = fail_amm.quote_mint == quote_vault.conditional_token_mints[FAIL_INDEX],
     )]
     pub fail_amm: Box<Account<'info, Amm>>,
-    #[account(
-        mut,
-        associated_token::mint = pass_amm.lp_mint,
-        associated_token::authority = proposer,
-    )]
-    pub pass_lp_user_account: Box<Account<'info, TokenAccount>>,
-    #[account(
-        mut,
-        associated_token::mint = fail_amm.lp_mint,
-        associated_token::authority = proposer,
-    )]
-    pub fail_lp_user_account: Box<Account<'info, TokenAccount>>,
+    // #[account(
+    //     mut,
+    //     associated_token::mint = pass_amm.lp_mint,
+    //     associated_token::authority = proposer,
+    // )]
+    // pub pass_lp_user_account: Box<Account<'info, TokenAccount>>,
+    // #[account(
+    //     mut,
+    //     associated_token::mint = fail_amm.lp_mint,
+    //     associated_token::authority = proposer,
+    // )]
+    // pub fail_lp_user_account: Box<Account<'info, TokenAccount>>,
     #[account(
         init_if_needed,
         payer = payer,
@@ -163,8 +163,8 @@ impl InitializeProposal<'_> {
             fail_amm,
             pass_lp_mint,
             fail_lp_mint,
-            pass_lp_user_account,
-            fail_lp_user_account,
+            // pass_lp_user_account,
+            // fail_lp_user_account,
             pass_lp_vault_account,
             fail_lp_vault_account,
             amm_pass_base_vault,
@@ -186,16 +186,16 @@ impl InitializeProposal<'_> {
             fail_lp_tokens_to_lock,
         } = params;
 
-        require_gte!(
-            pass_lp_user_account.amount,
-            pass_lp_tokens_to_lock,
-            AutocratError::InsufficientLpTokenBalance
-        );
-        require_gte!(
-            fail_lp_user_account.amount,
-            fail_lp_tokens_to_lock,
-            AutocratError::InsufficientLpTokenBalance
-        );
+        // require_gte!(
+        //     pass_lp_user_account.amount,
+        //     pass_lp_tokens_to_lock,
+        //     AutocratError::InsufficientLpTokenBalance
+        // );
+        // require_gte!(
+        //     fail_lp_user_account.amount,
+        //     fail_lp_tokens_to_lock,
+        //     AutocratError::InsufficientLpTokenBalance
+        // );
 
         let (pass_base_liquidity, pass_quote_liquidity) =
             pass_amm.get_base_and_quote_withdrawable(pass_lp_tokens_to_lock, pass_lp_mint.supply);
@@ -218,30 +218,30 @@ impl InitializeProposal<'_> {
             );
         }
 
-        for (amount, from, to) in [
-            (
-                pass_lp_tokens_to_lock,
-                &pass_lp_user_account,
-                &pass_lp_vault_account,
-            ),
-            (
-                fail_lp_tokens_to_lock,
-                &fail_lp_user_account,
-                &fail_lp_vault_account,
-            ),
-        ] {
-            token::transfer(
-                CpiContext::new(
-                    token_program.to_account_info(),
-                    Transfer {
-                        from: from.to_account_info(),
-                        to: to.to_account_info(),
-                        authority: proposer.to_account_info(),
-                    },
-                ),
-                amount,
-            )?;
-        }
+        // for (amount, from, to) in [
+        //     (
+        //         pass_lp_tokens_to_lock,
+        //         &pass_lp_user_account,
+        //         &pass_lp_vault_account,
+        //     ),
+        //     (
+        //         fail_lp_tokens_to_lock,
+        //         &fail_lp_user_account,
+        //         &fail_lp_vault_account,
+        //     ),
+        // ] {
+        //     token::transfer(
+        //         CpiContext::new(
+        //             token_program.to_account_info(),
+        //             Transfer {
+        //                 from: from.to_account_info(),
+        //                 to: to.to_account_info(),
+        //                 authority: proposer.to_account_info(),
+        //             },
+        //         ),
+        //         amount,
+        //     )?;
+        // }
 
         let PoolState::Spot { mut spot } = futarchy_amm.state.to_owned() else { unreachable!() };
 
@@ -251,6 +251,8 @@ impl InitializeProposal<'_> {
         spot.base_reserves -= half_base;
         spot.quote_reserves -= half_quote;
 
+        let clock = Clock::get()?;
+
         futarchy_amm.state = PoolState::Futarchy {
             spot,
             pass: Pool {
@@ -258,12 +260,24 @@ impl InitializeProposal<'_> {
                 quote_reserves: half_quote,
                 quote_protocol_fee_balance: 0,
                 base_protocol_fee_balance: 0,
+                oracle: TwapOracle::new(
+                    clock.slot,
+                    dao.twap_initial_observation,
+                    dao.twap_max_observation_change_per_update,
+                    dao.twap_start_delay_slots,
+                ),
             },
             fail: Pool {
                 base_reserves: half_base,
                 quote_reserves: half_quote,
                 quote_protocol_fee_balance: 0,
                 base_protocol_fee_balance: 0,
+                oracle: TwapOracle::new(
+                    clock.slot,
+                    dao.twap_initial_observation,
+                    dao.twap_max_observation_change_per_update,
+                    dao.twap_start_delay_slots,
+                ),
             },
         };
 

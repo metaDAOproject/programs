@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::{LP_TAKER_FEE_BPS, MAX_BPS, PROTOCOL_TAKER_FEE_BPS};
+use std::cmp::Ordering;
 
 #[account]
 #[derive(InitSpace)]
@@ -42,13 +43,21 @@ impl PoolState {
 
         // require_gt!(input_amount_after_fee, 0);
 
+        let clock = Clock::get()?;
+
         match self {
             PoolState::Spot { spot } => {
                 require_eq!(market, Market::Spot);
 
+                spot.update_twap(clock.slot)?;
+
                 spot.swap(input_amount, swap_type)
             }
             PoolState::Futarchy { spot, pass, fail } => {
+                spot.update_twap(clock.slot)?;
+                pass.update_twap(clock.slot)?;
+                fail.update_twap(clock.slot)?;
+
                 let spot_k = spot.k(); let pass_k = pass.k(); let fail_k = fail.k();
 
                 match market {
@@ -120,6 +129,64 @@ impl PoolState {
             }
         }
     }
+
+    
+}
+
+#[derive(Default, Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, InitSpace)]
+pub struct TwapOracle {
+    pub created_at_slot: u64,
+    pub last_updated_slot: u64,
+    /// A price is the number of quote units per base unit multiplied by 1e12.
+    /// You cannot simply divide by 1e12 to get a price you can display in the UI
+    /// because the base and quote decimals may be different. Instead, do:
+    /// ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12
+    pub last_price: u128,
+    /// If we did a raw TWAP over prices, someone could push the TWAP heavily with
+    /// a few extremely large outliers. So we use observations, which can only move
+    /// by `max_observation_change_per_update` per update.
+    pub last_observation: u128,
+    /// Running sum of slots_per_last_update * last_observation.
+    ///
+    /// Assuming latest observations are as big as possible (u64::MAX * 1e12),
+    /// we can store 18 million slots worth of observations, which turns out to
+    /// be ~85 days worth of slots.
+    ///
+    /// Assuming that latest observations are 100x smaller than they could theoretically
+    /// be, we can store 8500 days (23 years) worth of them. Even this is a very
+    /// very conservative assumption - META/USDC prices should be between 1e9 and
+    /// 1e15, which would overflow after 1e15 years worth of slots.
+    ///
+    /// So in the case of an overflow, the aggregator rolls back to 0. It's the
+    /// client's responsibility to sanity check the assets or to handle an
+    /// aggregator at T2 being smaller than an aggregator at T1.
+    pub aggregator: u128,
+    /// The most that an observation can change per update.
+    pub max_observation_change_per_update: u128,
+    /// What the initial `latest_observation` is set to.
+    pub initial_observation: u128,
+    /// Number of slots after amm.created_at_slot to start recording TWAP
+    pub start_delay_slots: u64,
+}
+
+impl TwapOracle {
+    pub fn new(
+        current_slot: u64,
+        initial_observation: u128,
+        max_observation_change_per_update: u128,
+        start_delay_slots: u64,
+    ) -> Self {
+        Self {
+            created_at_slot: current_slot,
+            last_updated_slot: current_slot,
+            last_price: 0,
+            last_observation: initial_observation,
+            aggregator: 0,
+            max_observation_change_per_update,
+            initial_observation,
+            start_delay_slots,
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
@@ -128,6 +195,121 @@ pub struct Pool {
     pub base_reserves: u64,
     pub quote_protocol_fee_balance: u64,
     pub base_protocol_fee_balance: u64,
+    pub oracle: TwapOracle,
+}
+
+impl Pool {
+    /// Updates the TWAP. Should be called before any changes to the AMM's state
+    /// have been made.
+    ///
+    /// Returns an observation if one was recorded.
+    pub fn update_twap(&mut self, current_slot: u64) -> Result<Option<u128>> {
+        let oracle = &mut self.oracle;
+
+        // a manipulator is likely to be "bursty" with their usage, such as a
+        // validator who abuses their slots to manipulate the TWAP.
+        // meanwhile, regular trading is less likely to happen in each slot.
+        // suppose that in normal trading, one trade happens every 4 slots.
+        // if we allow observations to move 1% per slot, a manipulator who
+        // can land every slot would be able to move the last observation by 348%
+        // over 1 minute (1.01^(# of slots in a minute)) whereas normal trading
+        // activity would be only able to move it by 45% over 1 minute
+        // (1.01^(# of slots in a minute / 4)). so it makes sense to not allow an
+        // update every slot.
+        //
+        // on the other hand, you can't allow updates too infrequently either.
+        // if you could only update once a day, a manipulator only needs to buy
+        // one slot per day to drastically shift the TWAP.
+        //
+        // we allow updates once a minute as a happy medium. if you have an asset
+        // that trades near $1500 and you allow $25 updates per minute, it can double
+        // over an hour.
+        if current_slot < oracle.last_updated_slot + amm::state::ONE_MINUTE_IN_SLOTS {
+            return Ok(None);
+        }
+
+        if self.base_reserves == 0 || self.quote_reserves == 0 {
+            return Ok(None);
+        }
+
+        // we store prices as quote units / base units scaled by 1e12.
+        // for example, suppose META is $100 and there's 400 USDC & 4 META in
+        // this pool. USDC has 6 decimals and META has 9, so we have:
+        // - 400 * 1,000,000   = 400,000,000 USDC units
+        // - 4 * 1,000,000,000 = 4,000,000,000 META units (hansons)
+        // so there's (400,000,000 / 4,000,000,000) or 0.1 USDC units per hanson,
+        // which is 100,000,000,000 when scaled by 1e12.
+        let price = (self.quote_reserves as u128 * amm::state::PRICE_SCALE) / self.base_reserves as u128;
+
+        let last_observation = oracle.last_observation;
+
+        let new_observation = if price > last_observation {
+            let max_observation =
+                last_observation.saturating_add(oracle.max_observation_change_per_update);
+
+            std::cmp::min(price, max_observation)
+        } else {
+            let min_observation =
+                last_observation.saturating_sub(oracle.max_observation_change_per_update);
+
+            std::cmp::max(price, min_observation)
+        };
+
+        // if the start delay hasn't passed, we don't update the aggregator
+        // but we still update the observation
+        let twap_start_slot = oracle.created_at_slot + oracle.start_delay_slots;
+
+        let new_aggregator = if current_slot <= twap_start_slot {
+            oracle.aggregator
+        } else {
+            // so that we don't act as if the first update ocurred over the whole
+            // pre-start delay period
+            let effective_last_updated_slot = oracle.last_updated_slot.max(twap_start_slot);
+
+            let slot_difference = (current_slot - effective_last_updated_slot) as u128;
+
+            // if this saturates, the aggregator will wrap back to 0, so this value doesn't
+            // really matter. we just can't panic.
+            let weighted_observation = new_observation.saturating_mul(slot_difference);
+
+            oracle.aggregator.wrapping_add(weighted_observation)
+        };
+
+        let new_oracle = TwapOracle {
+            created_at_slot: oracle.created_at_slot,
+            last_updated_slot: current_slot,
+            last_price: price,
+            last_observation: new_observation,
+            aggregator: new_aggregator,
+            // these three shouldn't change
+            max_observation_change_per_update: oracle.max_observation_change_per_update,
+            initial_observation: oracle.initial_observation,
+            start_delay_slots: oracle.start_delay_slots,
+        };
+
+        require_gt!(new_oracle.last_updated_slot, oracle.last_updated_slot);
+
+        // assert that the new observation is between price and last observation
+        match price.cmp(&oracle.last_observation) {
+            Ordering::Greater => {
+                require_gte!(new_observation, oracle.last_observation); 
+                require_gte!(price, new_observation);
+            }
+            Ordering::Equal => {
+                require_eq!(new_observation, price);
+            }
+            Ordering::Less => {
+                require_gte!(
+                    oracle.last_observation, new_observation
+                );
+                require_gte!(new_observation, price);
+            }
+        }
+
+        *oracle = new_oracle;
+
+        Ok(Some(new_observation))
+    }
 }
 
 // Buy spot to above conditional -> sell spot & buy back conditional, META profit

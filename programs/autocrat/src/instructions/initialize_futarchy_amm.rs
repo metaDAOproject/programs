@@ -12,6 +12,7 @@ pub struct InitializeFutarchyAmm<'info> {
         space = 8 + FutarchyAmm::INIT_SPACE,
     )]
     pub futarchy_amm: Account<'info, FutarchyAmm>,
+    pub dao: Account<'info, Dao>,
     pub create_key: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -38,8 +39,24 @@ pub struct InitializeFutarchyAmm<'info> {
 
 impl InitializeFutarchyAmm<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        ctx.accounts.futarchy_amm.set_inner(FutarchyAmm { 
-            state: PoolState::Spot { spot: Pool { quote_reserves: 0, base_reserves: 0, quote_protocol_fee_balance: 0, base_protocol_fee_balance: 0 } },
+        let clock = Clock::get()?;
+        let dao = &ctx.accounts.dao;
+
+        ctx.accounts.futarchy_amm.set_inner(FutarchyAmm {
+            state: PoolState::Spot {
+                spot: Pool {
+                    quote_reserves: 0,
+                    base_reserves: 0,
+                    quote_protocol_fee_balance: 0,
+                    base_protocol_fee_balance: 0,
+                    oracle: TwapOracle::new(
+                        clock.slot,
+                        dao.twap_initial_observation,
+                        dao.twap_max_observation_change_per_update,
+                        dao.twap_start_delay_slots,
+                    ),
+                },
+            },
             total_liquidity: 0,
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),

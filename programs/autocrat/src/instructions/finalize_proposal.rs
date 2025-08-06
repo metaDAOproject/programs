@@ -22,6 +22,8 @@ pub struct FinalizeProposal<'info> {
     pub squads_multisig: UncheckedAccount<'info>,
     pub pass_amm: Account<'info, Amm>,
     pub fail_amm: Account<'info, Amm>,
+    #[account(mut)]
+    pub futarchy_amm: Box<Account<'info, FutarchyAmm>>,
     #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut)]
@@ -87,6 +89,7 @@ impl FinalizeProposal<'_> {
             fail_lp_user_account,
             pass_lp_vault_account,
             fail_lp_vault_account,
+            futarchy_amm,
             vault_program,
             token_program,
             vault_event_authority,

@@ -65,6 +65,7 @@ export default function suite() {
         futarchyAmm,
         createKey: this.payer.publicKey,
         payer: this.payer.publicKey,
+        dao,
         baseMint: META,
         quoteMint: USDC,
         ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
@@ -191,7 +192,7 @@ export default function suite() {
         ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
         ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
         trader: this.payer.publicKey,
-    }).rpc();
+    }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();
 
     storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
     console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
@@ -289,7 +290,7 @@ export default function suite() {
         ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
         ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
         trader: this.payer.publicKey,
-    }).rpc();
+    }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();
 
     storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
     console.log("spot base", storedFutarchyAmm.spot.baseReserves.toString(), "quote", storedFutarchyAmm.spot.quoteReserves.toString(), "base fee", storedFutarchyAmm.spot.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.spot.quoteProtocolFeeBalance.toString());

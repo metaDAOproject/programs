@@ -534,16 +534,16 @@ export class AutocratClient {
           futarchyAmm,
           true
         ),
-        passLpUserAccount: getAssociatedTokenAddressSync(
-          passLp,
-          proposer,
-          true
-        ),
-        failLpUserAccount: getAssociatedTokenAddressSync(
-          failLp,
-          proposer,
-          true
-        ),
+        // passLpUserAccount: getAssociatedTokenAddressSync(
+        //   passLp,
+        //   proposer,
+        //   true
+        // ),
+        // failLpUserAccount: getAssociatedTokenAddressSync(
+        //   failLp,
+        //   proposer,
+        //   true
+        // ),
         passLpVaultAccount,
         failLpVaultAccount,
         proposer,
