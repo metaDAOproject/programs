@@ -1,4 +1,4 @@
-import { AutocratClient, getDaoAddr } from "@metadaoproject/futarchy/v0.5";
+import { AutocratClient, getDaoAddr } from "@metadaoproject/futarchy/v0.6";
 import {
   ComputeBudgetProgram,
   Keypair,
@@ -14,7 +14,7 @@ import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { getEventAuthorityAddr } from "@metadaoproject/futarchy/v0.4";
+import { getEventAuthorityAddr } from "@metadaoproject/futarchy/v0.6";
 
 export default function suite() {
   it.only("futarchy amm", async function () {

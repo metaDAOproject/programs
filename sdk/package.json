@@ -13,7 +13,8 @@
     ".": "./dist/index.js",
     "./v0.3": "./dist/v0.3/index.js",
     "./v0.4": "./dist/v0.4/index.js",
-    "./v0.5": "./dist/v0.5/index.js"
+    "./v0.5": "./dist/v0.5/index.js",
+    "./v0.6": "./dist/v0.6/index.js"
   },
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",

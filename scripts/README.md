@@ -39,3 +39,19 @@ To complete a launch, run:
 ```sh
 yarn launch-complete
 ```
+
+## Futarchy AMM Setup
+
+To set up a complete futarchy AMM with tokens, DAO, and liquidity, run:
+```sh
+yarn setup-futarchy-amm
+```
+
+This script will:
+1. Create META and USDC token mints
+2. Mint initial tokens to your wallet
+3. Initialize a DAO with the tokens
+4. Create a futarchy AMM
+5. Provide initial liquidity to the AMM
+
+The script outputs all the important addresses (tokens, DAO, AMM, position) for future reference.

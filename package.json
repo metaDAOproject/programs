@@ -8,7 +8,8 @@
         "launch-init": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchInit.ts",
         "launch-start": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchStart.ts",
         "launch-complete": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchComplete.ts",
-        "redeem-launch": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/redeemLaunch.ts"
+        "redeem-launch": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/redeemLaunch.ts",
+        "setup-futarchy-amm": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/setupFutarchyAmm.ts"
     },
     "dependencies": {
         "@coral-xyz/anchor": "=0.29.0",

@@ -24,7 +24,7 @@ import {
   SQUADS_PROGRAM_ID,
   PERMISSIONLESS_ACCOUNT,
   AUTOCRAT_PROGRAM_ID,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 // import {
 //   // AmmClient,
 //   // AutocratClient,

@@ -26,3 +26,9 @@ Programs for market-driven governance
 | autocrat_v0       | v0   | meta3cxKzFBmWYgCVozmvCQAS3y9b3fGxrG9HkHL7Wi  |
 | conditional_vault | v0   | vaU1tVLj8RFk7mNj1BxqgAsMKKaL8UvEUHvU3tdbZPe  |
 
+
+How do I get to mainnet Futarchy AMM in as low friction a way as possible?
+
+Need:
+- Jupiter routing
+- 
