@@ -1,53 +1,36 @@
-import {
-  ComputeBudgetProgram,
-  Keypair,
-  Transaction,
-  PublicKey,
-} from "@solana/web3.js";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient } from "@metadaoproject/futarchy/v0.4";
-import { homedir } from "os";
-import { join } from "path";
-import { input } from "@inquirer/prompts";
+import { LaunchpadClient } from "@metadaoproject/futarchy/v0.5";
 
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const rpcUrl = await input({
-  message: "Enter your RPC URL:",
-  default: process.env.RPC_URL,
-});
-
-const walletPath = await input({
-  message: "Enter the path (relative to home directory) to your wallet file",
-  default: join(homedir(), process.env.WALLET_PATH),
-});
-process.env.ANCHOR_WALLET = walletPath;
-const provider = anchor.AnchorProvider.local(rpcUrl, {
-  commitment: "confirmed",
-});
+const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const launchAddr = new PublicKey(
-  await input({
-    message: "Enter the launch address",
-    default: process.env.LAUNCH_ADDRESS,
-  })
-);
+const LAUNCH_TO_START = new PublicKey("7DzBXBYSKhrXHPWT6mAKq394vKupaKaqLn9bK1wscpBz");
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
 async function main() {
-  const launch = await launchpad.getLaunch(launchAddr);
+  const launchAuthorityKeypair = payer
+
+  console.log(
+    "Launch authority public key:",
+    launchAuthorityKeypair.publicKey.toBase58()
+  );
+
+  console.log("Starting launch...");
 
   const tx = await launchpad
-    .completeLaunchIx(launchAddr, launch.tokenMint, true)
+    .startLaunchIx(LAUNCH_TO_START, launchAuthorityKeypair.publicKey)
     .transaction();
 
-  await sendAndConfirmTransaction(tx, "Complete launch");
+  await sendAndConfirmTransaction(tx, "Start launch", [launchAuthorityKeypair]);
 
-  console.log("Launch completed!");
+  console.log("Launch started!");
+  console.log("Launch address:", LAUNCH_TO_START.toBase58());
 }
 
 // Make sure the promise rejection is handled

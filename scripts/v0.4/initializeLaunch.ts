@@ -1,10 +1,5 @@
 import * as token from "@solana/spl-token";
-import {
-  ComputeBudgetProgram,
-  Keypair,
-  PublicKey,
-  Transaction,
-} from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, Transaction } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
   getLaunchAddr,
@@ -51,9 +46,10 @@ const provider = anchor.AnchorProvider.local(rpcUrl, {
 });
 const payer = provider.wallet["payer"];
 
-const launchAuthorityAddress = await input({
-  message: "Enter the address of the launch authority",
-  default: process.env.LAUNCH_AUTHORITY_ADDRESS,
+const launchAuthorityKeypairPath = await input({
+  message:
+    "Enter the path (relative to home directory) to your launch authority keypair file",
+  default: join(homedir(), process.env.LAUNCH_AUTHORITY_KEYPAIR_PATH),
 });
 
 const isDevnet = network === "devnet";
@@ -90,6 +86,15 @@ const secondsForLaunch = Number.parseInt(
 );
 
 async function main() {
+  const launchAuthorityFile = fs.readFileSync(launchAuthorityKeypairPath);
+  const launchAuthorityKeypair = Keypair.fromSecretKey(
+    Buffer.from(JSON.parse(launchAuthorityFile.toString()) as Uint8Array)
+  );
+
+  if (!launchAuthorityKeypair) {
+    throw new Error("Could not read launch authority keypair.");
+  }
+
   if (!tokenName.length) {
     throw new Error("Token name is required.");
   }
@@ -101,6 +106,11 @@ async function main() {
   if (!tokenUri.length) {
     throw new Error("Token URI is required.");
   }
+
+  console.log(
+    "Launch authority public key:",
+    launchAuthorityKeypair.publicKey.toBase58()
+  );
 
   const mintKeypair = Keypair.generate();
 
@@ -114,7 +124,7 @@ async function main() {
   );
 
   console.log("Creating mint...");
-
+  
   const mint = await token.createMint(
     provider.connection,
     payer,
@@ -127,7 +137,7 @@ async function main() {
       commitment: "finalized",
     }
   );
-
+  
   console.log("Mint created:", mint.toBase58());
 
   console.log("Launching...");
@@ -140,7 +150,7 @@ async function main() {
       minimumRaiseAmount,
       secondsForLaunch,
       mint,
-      new PublicKey(launchAuthorityAddress),
+      launchAuthorityKeypair.publicKey,
       isDevnet,
       payer.publicKey
     )

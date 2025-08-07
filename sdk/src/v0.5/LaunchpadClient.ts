@@ -22,6 +22,7 @@ import {
   SQUADS_PROGRAM_ID,
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_CONFIG_TREASURY,
+  DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -62,7 +63,7 @@ export class LaunchpadClient {
     this.launchpad = new Program(
       LaunchpadIDL,
       params.launchpadProgramId || LAUNCHPAD_PROGRAM_ID,
-      this.provider
+      this.provider,
     );
     this.autocratClient = AutocratClient.createClient({
       provider: this.provider,
@@ -97,19 +98,19 @@ export class LaunchpadClient {
   }
 
   async fetchFundingRecord(
-    fundingRecord: PublicKey
+    fundingRecord: PublicKey,
   ): Promise<FundingRecord | null> {
     return await this.launchpad.account.fundingRecord.fetchNullable(
-      fundingRecord
+      fundingRecord,
     );
   }
 
   async deserializeFundingRecord(
-    accountInfo: AccountInfo<Buffer>
+    accountInfo: AccountInfo<Buffer>,
   ): Promise<FundingRecord> {
     return this.launchpad.coder.accounts.decode(
       "fundingRecord",
-      accountInfo.data
+      accountInfo.data,
     );
   }
 
@@ -125,23 +126,23 @@ export class LaunchpadClient {
     monthlySpendingLimitMembers: PublicKey[],
     launchAuthority: PublicKey = this.provider.publicKey,
     isDevnet: boolean = false,
-    payer: PublicKey = this.provider.publicKey
+    payer: PublicKey = this.provider.publicKey,
   ) {
     const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch
+      launch,
     );
     const quoteVault = getAssociatedTokenAddressSync(
       quoteMint,
       launchSigner,
-      true
+      true,
     );
 
     const baseVault = getAssociatedTokenAddressSync(
       baseMint,
       launchSigner,
-      true
+      true,
     );
     const [tokenMetadata] = getMetadataAddr(baseMint);
 
@@ -172,7 +173,7 @@ export class LaunchpadClient {
           payer,
           getAssociatedTokenAddressSync(quoteMint, launchSigner, true),
           launchSigner,
-          quoteMint
+          quoteMint,
         ),
       ]);
     // .signers([tokenMintKp]);
@@ -180,7 +181,7 @@ export class LaunchpadClient {
 
   startLaunchIx(
     launch: PublicKey,
-    launchAuthority: PublicKey = this.provider.publicKey
+    launchAuthority: PublicKey = this.provider.publicKey,
   ) {
     return this.launchpad.methods.startLaunch().accounts({
       launch,
@@ -193,28 +194,28 @@ export class LaunchpadClient {
     amount: BN,
     funder: PublicKey = this.provider.publicKey,
     quoteMint: PublicKey,
-    isDevnet: boolean = false
+    isDevnet: boolean = false,
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
 
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch
+      launch,
     );
     const launchQuoteVault = getAssociatedTokenAddressSync(
       quoteMint,
       launchSigner,
-      true
+      true,
     );
     const funderQuoteAccount = getAssociatedTokenAddressSync(
       quoteMint,
       funder,
-      true
+      true,
     );
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
-      funder
+      funder,
     );
 
     return this.launchpad.methods.fund(amount).accounts({
@@ -231,23 +232,26 @@ export class LaunchpadClient {
     launch: PublicKey,
     quoteMint: PublicKey,
     baseMint: PublicKey,
-    isDevnet: boolean = false
+    isDevnet: boolean = false,
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
+    const _SQUADS_PROGRAM_CONFIG_TREASURY = isDevnet
+      ? DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY
+      : SQUADS_PROGRAM_CONFIG_TREASURY;
 
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch
+      launch,
     );
     const launchQuoteVault = getAssociatedTokenAddressSync(
       quoteMint,
       launchSigner,
-      true
+      true,
     );
     const launchBaseVault = getAssociatedTokenAddressSync(
       baseMint,
       launchSigner,
-      true
+      true,
     );
 
     // const daoKp = Keypair.generate();
@@ -272,7 +276,7 @@ export class LaunchpadClient {
         poolState.toBuffer(),
         baseMint.toBuffer(),
       ],
-      cpSwapProgramId
+      cpSwapProgramId,
     );
 
     const [poolUsdcVault] = PublicKey.findProgramAddressSync(
@@ -281,16 +285,16 @@ export class LaunchpadClient {
         poolState.toBuffer(),
         USDC.toBuffer(),
       ],
-      cpSwapProgramId
+      cpSwapProgramId,
     );
 
     const [observationState] = PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("observation"), poolState.toBuffer()],
-      cpSwapProgramId
+      cpSwapProgramId,
     );
 
     const [autocratEventAuthority] = getEventAuthorityAddr(
-      this.autocratClient.getProgramId()
+      this.autocratClient.getProgramId(),
     );
 
     const [tokenMetadata] = getMetadataAddr(baseMint);
@@ -309,7 +313,7 @@ export class LaunchpadClient {
     const treasuryQuoteAccount = getAssociatedTokenAddressSync(
       quoteMint,
       multisigVault,
-      true
+      true,
     );
 
     return this.launchpad.methods.completeLaunch().accounts({
@@ -322,7 +326,7 @@ export class LaunchpadClient {
       treasuryLpAccount: getAssociatedTokenAddressSync(
         lpMint,
         multisigVault,
-        true
+        true,
       ),
       quoteMint,
       baseMint,
@@ -347,7 +351,7 @@ export class LaunchpadClient {
         autocratEventAuthority,
         squadsProgram: SQUADS_PROGRAM_ID,
         squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
-        squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
+        squadsProgramConfigTreasury: _SQUADS_PROGRAM_CONFIG_TREASURY,
       },
       squadsMultisig: multisigPda,
       squadsMultisigVault: multisigVault,
@@ -367,28 +371,28 @@ export class LaunchpadClient {
     launch: PublicKey,
     funder: PublicKey = this.provider.publicKey,
     quoteMint: PublicKey,
-    isDevnet: boolean = false
+    isDevnet: boolean = false,
   ) {
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch
+      launch,
     );
 
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
-      funder
+      funder,
     );
 
     const launchQuoteVault = getAssociatedTokenAddressSync(
       quoteMint,
       launchSigner,
-      true
+      true,
     );
     const funderQuoteAccount = getAssociatedTokenAddressSync(
       quoteMint,
       funder,
-      true
+      true,
     );
 
     return this.launchpad.methods.refund().accounts({
@@ -404,16 +408,16 @@ export class LaunchpadClient {
   claimIx(
     launch: PublicKey,
     baseMint: PublicKey,
-    funder: PublicKey = this.provider.publicKey
+    funder: PublicKey = this.provider.publicKey,
   ) {
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch
+      launch,
     );
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
-      funder
+      funder,
     );
 
     return this.launchpad.methods
@@ -426,13 +430,13 @@ export class LaunchpadClient {
         funderTokenAccount: getAssociatedTokenAddressSync(
           baseMint,
           funder,
-          true
+          true,
         ),
         baseMint,
         launchBaseVault: getAssociatedTokenAddressSync(
           baseMint,
           launchSigner,
-          true
+          true,
         ),
       })
       .preInstructions([
@@ -440,7 +444,7 @@ export class LaunchpadClient {
           this.provider.publicKey,
           getAssociatedTokenAddressSync(baseMint, funder, true),
           funder,
-          baseMint
+          baseMint,
         ),
       ]);
   }

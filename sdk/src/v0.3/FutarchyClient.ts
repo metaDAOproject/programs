@@ -58,12 +58,12 @@ export class FutarchyClient {
     const [baseVault] = getVaultAddr(
       this.conditionalVaultClient.vaultProgram.programId,
       proposal,
-      baseMint
+      baseMint,
     );
     const [quoteVault] = getVaultAddr(
       this.conditionalVaultClient.vaultProgram.programId,
       proposal,
-      quoteMint
+      quoteMint,
     );
 
     const [underlyingVault, underlyingTokenMint] = swapType.buy
@@ -89,38 +89,38 @@ export class FutarchyClient {
           underlyingTokenMint,
           mintAmount,
           user,
-          payer
+          payer,
         )
         .transaction();
     }
 
     const [pUSDC] = getVaultFinalizeMintAddr(
       this.conditionalVaultClient.vaultProgram.programId,
-      quoteVault
+      quoteVault,
     );
     const [pTOKE] = getVaultFinalizeMintAddr(
       this.conditionalVaultClient.vaultProgram.programId,
-      baseVault
+      baseVault,
     );
 
     const [fUSDC] = getVaultRevertMintAddr(
       this.conditionalVaultClient.vaultProgram.programId,
-      quoteVault
+      quoteVault,
     );
     const [fTOKE] = getVaultRevertMintAddr(
       this.conditionalVaultClient.vaultProgram.programId,
-      baseVault
+      baseVault,
     );
 
     const [passMarket] = getAmmAddr(
       this.ammClient.program.programId,
       pTOKE,
-      pUSDC
+      pUSDC,
     );
     const [failMarket] = getAmmAddr(
       this.ammClient.program.programId,
       fTOKE,
-      fUSDC
+      fUSDC,
     );
 
     const [market, ammBaseMint, ammQuoteMint] =
@@ -137,7 +137,7 @@ export class FutarchyClient {
         inputAmount,
         new BN(0),
         user,
-        payer
+        payer,
       )
       .transaction();
 

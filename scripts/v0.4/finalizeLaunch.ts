@@ -1,9 +1,13 @@
-import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  Transaction,
+  PublicKey,
+} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { getLaunchAddr, LaunchpadClient } from "@metadaoproject/futarchy/v0.4";
+import { LaunchpadClient } from "@metadaoproject/futarchy/v0.4";
 import { homedir } from "os";
 import { join } from "path";
-import fs from "fs";
 import { input } from "@inquirer/prompts";
 
 import dotenv from "dotenv";
@@ -25,12 +29,6 @@ const provider = anchor.AnchorProvider.local(rpcUrl, {
 });
 const payer = provider.wallet["payer"];
 
-const launchAuthorityKeypairPath = await input({
-  message:
-    "Enter the path (relative to home directory) to your launch authority keypair file",
-  default: join(homedir(), process.env.LAUNCH_AUTHORITY_KEYPAIR_PATH),
-});
-
 const launchAddr = new PublicKey(
   await input({
     message: "Enter the launch address",
@@ -41,30 +39,15 @@ const launchAddr = new PublicKey(
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
 async function main() {
-  const launchAuthorityFile = fs.readFileSync(launchAuthorityKeypairPath);
-  const launchAuthorityKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(launchAuthorityFile.toString()) as Uint8Array)
-  );
-
-  if (!launchAuthorityKeypair) {
-    throw new Error("Could not read launch authority keypair.");
-  }
-
-  console.log(
-    "Launch authority public key:",
-    launchAuthorityKeypair.publicKey.toBase58()
-  );
-
-  console.log("Starting launch...");
+  const launch = await launchpad.getLaunch(launchAddr);
 
   const tx = await launchpad
-    .startLaunchIx(launchAddr, launchAuthorityKeypair.publicKey)
+    .completeLaunchIx(launchAddr, launch.tokenMint, true)
     .transaction();
 
-  await sendAndConfirmTransaction(tx, "Start launch", [launchAuthorityKeypair]);
+  await sendAndConfirmTransaction(tx, "Complete launch");
 
-  console.log("Launch started!");
-  console.log("Launch address:", launchAddr.toBase58());
+  console.log("Launch completed!");
 }
 
 // Make sure the promise rejection is handled

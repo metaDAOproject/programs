@@ -20,7 +20,7 @@ import { LAUNCHPAD_PROGRAM_ID, AUTOCRAT_PROGRAM_ID } from "../constants.js";
 export const getEventAuthorityAddr = (programId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("__event_authority")],
-    programId
+    programId,
   );
 };
 
@@ -28,7 +28,7 @@ export const getQuestionAddr = (
   programId: PublicKey,
   questionId: Uint8Array,
   oracle: PublicKey,
-  numOutcomes: number
+  numOutcomes: number,
 ) => {
   if (questionId.length != 32) {
     throw new Error("questionId must be 32 bytes");
@@ -41,14 +41,14 @@ export const getQuestionAddr = (
       oracle.toBuffer(),
       new BN(numOutcomes).toArrayLike(Buffer, "le", 1),
     ],
-    programId
+    programId,
   );
 };
 
 export const getVaultAddr = (
   programId: PublicKey,
   question: PublicKey,
-  underlyingTokenMint: PublicKey
+  underlyingTokenMint: PublicKey,
 ) => {
   return PublicKey.findProgramAddressSync(
     [
@@ -56,14 +56,14 @@ export const getVaultAddr = (
       question.toBuffer(),
       underlyingTokenMint.toBuffer(),
     ],
-    programId
+    programId,
   );
 };
 
 export const getConditionalTokenMintAddr = (
   programId: PublicKey,
   vault: PublicKey,
-  index: number
+  index: number,
 ) => {
   return PublicKey.findProgramAddressSync(
     [
@@ -71,13 +71,13 @@ export const getConditionalTokenMintAddr = (
       vault.toBuffer(),
       new BN(index).toArrayLike(Buffer, "le", 1),
     ],
-    programId
+    programId,
   );
 };
 
 export const getDownAndUpMintAddrs = (
   programId: PublicKey,
-  vault: PublicKey
+  vault: PublicKey,
 ): { down: PublicKey; up: PublicKey } => {
   return {
     down: getConditionalTokenMintAddr(programId, vault, 0)[0],
@@ -87,7 +87,7 @@ export const getDownAndUpMintAddrs = (
 
 export const getFailAndPassMintAddrs = (
   programId: PublicKey,
-  vault: PublicKey
+  vault: PublicKey,
 ): { fail: PublicKey; pass: PublicKey } => {
   return {
     fail: getConditionalTokenMintAddr(programId, vault, 0)[0],
@@ -102,7 +102,7 @@ export const getMetadataAddr = (mint: PublicKey) => {
       MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    MPL_TOKEN_METADATA_PROGRAM_ID
+    MPL_TOKEN_METADATA_PROGRAM_ID,
   );
 };
 
@@ -121,31 +121,31 @@ export const getDaoAddr = ({
       daoCreator.toBuffer(),
       nonce.toArrayLike(Buffer, "le", 8),
     ],
-    programId
+    programId,
   );
 };
 
 export const getDaoTreasuryAddr = (
   programId: PublicKey,
-  dao: PublicKey
+  dao: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync([dao.toBuffer()], programId);
 };
 
 export const getProposalAddr = (
   programId: PublicKey,
-  squadsProposal: PublicKey
+  squadsProposal: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [utils.bytes.utf8.encode("proposal"), squadsProposal.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getAmmAddr = (
   programId: PublicKey,
   baseMint: PublicKey,
-  quoteMint: PublicKey
+  quoteMint: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
@@ -153,58 +153,58 @@ export const getAmmAddr = (
       baseMint.toBuffer(),
       quoteMint.toBuffer(),
     ],
-    programId
+    programId,
   );
 };
 
 export const getAmmLpMintAddr = (
   programId: PublicKey,
-  amm: PublicKey
+  amm: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [utils.bytes.utf8.encode("amm_lp_mint"), amm.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export function getLaunchAddr(
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
-  tokenMint: PublicKey
+  tokenMint: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("launch"), tokenMint.toBuffer()],
-    programId
+    programId,
   );
 }
 
 export const getLaunchSignerAddr = (
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
-  launch: PublicKey
+  launch: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("launch_signer"), launch.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getFundingRecordAddr = (
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
   launch: PublicKey,
-  funder: PublicKey
+  funder: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("funding_record"), launch.toBuffer(), funder.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getLiquidityPoolAddr = (
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
-  dao: PublicKey
+  dao: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("pool_state"), dao.toBuffer()],
-    programId
+    programId,
   );
 };
 
@@ -212,7 +212,7 @@ export const getSharedLiquidityPoolAddr = (
   programId: PublicKey = SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
   dao: PublicKey,
   creator: PublicKey,
-  proposalStakeRateThresholdBps: number
+  proposalStakeRateThresholdBps: number,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
@@ -221,38 +221,38 @@ export const getSharedLiquidityPoolAddr = (
       creator.toBuffer(),
       new BN(proposalStakeRateThresholdBps).toArrayLike(Buffer, "le", 2),
     ],
-    programId
+    programId,
   );
 };
 
 export const getSlPoolPositionAddr = (
   programId: PublicKey = SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
   slPool: PublicKey,
-  user: PublicKey
+  user: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("sl_pool_position"), slPool.toBuffer(), user.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getRaydiumCpmmLpMintAddr = (
   poolState: PublicKey,
-  isDevnet: boolean
+  isDevnet: boolean,
 ): [PublicKey, number] => {
   const programId = isDevnet
     ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
     : RAYDIUM_CP_SWAP_PROGRAM_ID;
   return PublicKey.findProgramAddressSync(
     [Buffer.from("pool_lp_mint"), poolState.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getRaydiumCpmmPoolVaultAddr = (
   poolState: PublicKey,
   token: PublicKey,
-  isDevnet: boolean
+  isDevnet: boolean,
 ): [PublicKey, number] => {
   const programId = isDevnet
     ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
@@ -263,37 +263,37 @@ export const getRaydiumCpmmPoolVaultAddr = (
       poolState.toBuffer(),
       token.toBuffer(),
     ],
-    programId
+    programId,
   );
 };
 
 export const getRaydiumCpmmObservationStateAddr = (
   poolState: PublicKey,
-  isDevnet: boolean
+  isDevnet: boolean,
 ): [PublicKey, number] => {
   const programId = isDevnet
     ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
     : RAYDIUM_CP_SWAP_PROGRAM_ID;
   return PublicKey.findProgramAddressSync(
     [utils.bytes.utf8.encode("observation"), poolState.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getSharedLiquidityPoolSignerAddr = (
   programId: PublicKey = SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
-  slPool: PublicKey
+  slPool: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("sl_pool_signer"), slPool.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getSpotPoolAddr = (
   programId: PublicKey = SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
   slPool: PublicKey,
-  index: number
+  index: number,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
@@ -301,27 +301,27 @@ export const getSpotPoolAddr = (
       slPool.toBuffer(),
       new BN(index).toArrayLike(Buffer, "le", 4),
     ],
-    programId
+    programId,
   );
 };
 
 export const getDraftProposalAddr = (
   programId: PublicKey = SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
-  nonce: BN
+  nonce: BN,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("draft_proposal"), nonce.toArrayLike(Buffer, "le", 8)],
-    programId
+    programId,
   );
 };
 
 export const getStakeRecordAddr = (
   programId: PublicKey = SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
   draftProposal: PublicKey,
-  staker: PublicKey
+  staker: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("stake_record"), draftProposal.toBuffer(), staker.toBuffer()],
-    programId
+    programId,
   );
 };

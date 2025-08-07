@@ -1,7 +1,8 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import { AutocratClient } from "@metadaoproject/futarchy/v0.4";
 import * as token from "@solana/spl-token";
+import { BN } from "bn.js";
 
 async function main() {
   const provider = anchor.AnchorProvider.env();
@@ -78,7 +79,8 @@ async function main() {
     minBaseFutarchicLiquidity,
     minQuoteFutarchicLiquidity,
     usdcMint,
-    daoKeypair
+    daoKeypair,
+    new BN(100000),
   );
 
   console.log("DAO created with address:", dao.toString());
