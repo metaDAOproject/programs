@@ -35,17 +35,15 @@ export type Redeem = {
         },
         {
           name: "baseMint";
-          isMut: false;
+          isMut: true;
           isSigner: false;
-          docs: ["Base token mint (must match DAO and pool configuration)"];
+          docs: ["Base token mint (must match DAO )"];
         },
         {
           name: "quoteMint";
           isMut: false;
           isSigner: false;
-          docs: [
-            "Quote token mint (USDC - must match DAO and pool configuration)",
-          ];
+          docs: ["Quote token mint (USDC - must match DAO )"];
         },
         {
           name: "lpAccount";
@@ -54,13 +52,13 @@ export type Redeem = {
           docs: ["Treasury's LP token account"];
         },
         {
-          name: "baseAccount";
+          name: "treasuryBaseAccount";
           isMut: true;
           isSigner: false;
           docs: ["Treasury's base token account"];
         },
         {
-          name: "quoteAccount";
+          name: "treasuryQuoteAccount";
           isMut: true;
           isSigner: false;
           docs: ["Treasury's USDC account"];
@@ -69,31 +67,18 @@ export type Redeem = {
           name: "poolBaseVault";
           isMut: true;
           isSigner: false;
-          docs: ["Raydium pool's base token vault, vault 0"];
+          docs: ["Raydium pool's base token vault"];
         },
         {
           name: "poolQuoteVault";
           isMut: true;
           isSigner: false;
-          docs: ["Raydium pool's USDC vault, vault 1"];
+          docs: ["Raydium pool's quote token vault"];
         },
         {
-          name: "destinationBaseAccount";
-          isMut: true;
+          name: "migratorVault";
+          isMut: false;
           isSigner: false;
-          docs: ["Destination account for base tokens"];
-        },
-        {
-          name: "destinationQuoteAccount";
-          isMut: true;
-          isSigner: false;
-          docs: ["Destination account for USDC"];
-        },
-        {
-          name: "lamportReceiver";
-          isMut: true;
-          isSigner: false;
-          docs: ["Account that receives remaining SOL rent"];
         },
         {
           name: "tokenProgram";
@@ -154,43 +139,63 @@ export type Redeem = {
     },
     {
       code: 6003;
+      name: "InvalidPoolConfigurationToken0";
+      msg: "Invalid pool configuration for token 0";
+    },
+    {
+      code: 6004;
+      name: "InvalidPoolConfigurationToken1";
+      msg: "Invalid pool configuration for token 1";
+    },
+    {
+      code: 6005;
+      name: "InvalidPoolConfigurationLpMint";
+      msg: "Invalid pool configuration for LP Mint";
+    },
+    {
+      code: 6006;
       name: "InvalidTokenAccount";
       msg: "Invalid token account";
     },
     {
-      code: 6004;
+      code: 6007;
       name: "NoLpTokens";
       msg: "No LP tokens to withdraw";
     },
     {
-      code: 6005;
+      code: 6008;
       name: "InvalidPoolVault";
       msg: "Invalid pool vault";
     },
     {
-      code: 6006;
+      code: 6009;
       name: "InvalidDestination";
       msg: "Invalid destination account";
     },
     {
-      code: 6007;
-      name: "MathOverflow";
-      msg: "Math overflow";
-    },
-    {
-      code: 6008;
+      code: 6010;
       name: "InvalidMint";
       msg: "Invalid mint - does not match DAO configuration";
     },
     {
-      code: 6009;
+      code: 6011;
       name: "WrongPool";
       msg: "Wrong pool - pool tokens don't match DAO configuration";
     },
     {
-      code: 6010;
+      code: 6012;
       name: "WithdrawalsDisabled";
       msg: "Withdrawals are disabled for this pool";
+    },
+    {
+      code: 6013;
+      name: "MigratorVaultNotInitialized";
+      msg: "Migrator vault not initialized";
+    },
+    {
+      code: 6014;
+      name: "MigratorVaultNotFunded";
+      msg: "Migrator vault must be funded to receive USDC";
     },
   ];
 };
@@ -232,17 +237,15 @@ export const IDL: Redeem = {
         },
         {
           name: "baseMint",
-          isMut: false,
+          isMut: true,
           isSigner: false,
-          docs: ["Base token mint (must match DAO and pool configuration)"],
+          docs: ["Base token mint (must match DAO )"],
         },
         {
           name: "quoteMint",
           isMut: false,
           isSigner: false,
-          docs: [
-            "Quote token mint (USDC - must match DAO and pool configuration)",
-          ],
+          docs: ["Quote token mint (USDC - must match DAO )"],
         },
         {
           name: "lpAccount",
@@ -251,13 +254,13 @@ export const IDL: Redeem = {
           docs: ["Treasury's LP token account"],
         },
         {
-          name: "baseAccount",
+          name: "treasuryBaseAccount",
           isMut: true,
           isSigner: false,
           docs: ["Treasury's base token account"],
         },
         {
-          name: "quoteAccount",
+          name: "treasuryQuoteAccount",
           isMut: true,
           isSigner: false,
           docs: ["Treasury's USDC account"],
@@ -266,31 +269,18 @@ export const IDL: Redeem = {
           name: "poolBaseVault",
           isMut: true,
           isSigner: false,
-          docs: ["Raydium pool's base token vault, vault 0"],
+          docs: ["Raydium pool's base token vault"],
         },
         {
           name: "poolQuoteVault",
           isMut: true,
           isSigner: false,
-          docs: ["Raydium pool's USDC vault, vault 1"],
+          docs: ["Raydium pool's quote token vault"],
         },
         {
-          name: "destinationBaseAccount",
-          isMut: true,
+          name: "migratorVault",
+          isMut: false,
           isSigner: false,
-          docs: ["Destination account for base tokens"],
-        },
-        {
-          name: "destinationQuoteAccount",
-          isMut: true,
-          isSigner: false,
-          docs: ["Destination account for USDC"],
-        },
-        {
-          name: "lamportReceiver",
-          isMut: true,
-          isSigner: false,
-          docs: ["Account that receives remaining SOL rent"],
         },
         {
           name: "tokenProgram",
@@ -351,43 +341,63 @@ export const IDL: Redeem = {
     },
     {
       code: 6003,
+      name: "InvalidPoolConfigurationToken0",
+      msg: "Invalid pool configuration for token 0",
+    },
+    {
+      code: 6004,
+      name: "InvalidPoolConfigurationToken1",
+      msg: "Invalid pool configuration for token 1",
+    },
+    {
+      code: 6005,
+      name: "InvalidPoolConfigurationLpMint",
+      msg: "Invalid pool configuration for LP Mint",
+    },
+    {
+      code: 6006,
       name: "InvalidTokenAccount",
       msg: "Invalid token account",
     },
     {
-      code: 6004,
+      code: 6007,
       name: "NoLpTokens",
       msg: "No LP tokens to withdraw",
     },
     {
-      code: 6005,
+      code: 6008,
       name: "InvalidPoolVault",
       msg: "Invalid pool vault",
     },
     {
-      code: 6006,
+      code: 6009,
       name: "InvalidDestination",
       msg: "Invalid destination account",
     },
     {
-      code: 6007,
-      name: "MathOverflow",
-      msg: "Math overflow",
-    },
-    {
-      code: 6008,
+      code: 6010,
       name: "InvalidMint",
       msg: "Invalid mint - does not match DAO configuration",
     },
     {
-      code: 6009,
+      code: 6011,
       name: "WrongPool",
       msg: "Wrong pool - pool tokens don't match DAO configuration",
     },
     {
-      code: 6010,
+      code: 6012,
       name: "WithdrawalsDisabled",
       msg: "Withdrawals are disabled for this pool",
+    },
+    {
+      code: 6013,
+      name: "MigratorVaultNotInitialized",
+      msg: "Migrator vault not initialized",
+    },
+    {
+      code: 6014,
+      name: "MigratorVaultNotFunded",
+      msg: "Migrator vault must be funded to receive USDC",
     },
   ],
 };

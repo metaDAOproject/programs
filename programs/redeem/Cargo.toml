@@ -22,3 +22,4 @@ raydium-cpmm-cpi = { git = "https://github.com/raydium-io/raydium-cpi", package 
 autocrat = { path = "../autocrat", features = ["cpi"] }
 launchpad = { path = "../launchpad", features = ["cpi"] }
 solana-security-txt = "1.1.1"
+solana-program = "=1.17.14"

@@ -11,11 +11,11 @@ import {
   LAUNCHPAD_PROGRAM_ID,
   AutocratClient,
   AUTOCRAT_PROGRAM_ID,
+  RAYDIUM_CP_SWAP_PROGRAM_ID,
+  DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.4";
 
 import {
-  RAYDIUM_CP_SWAP_PROGRAM_ID,
-  DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
   MEMO_PROGRAM_ID,
   TOKEN_PROGRAM_2022_ID,
 } from "../consts.js";

@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 pub mod error;
 pub mod instructions;
+pub mod consts;
 
 pub use instructions::*;
 
@@ -26,7 +27,7 @@ pub mod redeem {
     use super::*;
 
     #[access_control(ctx.accounts.validate())]
-    pub fn redeem(ctx: Context<UnwindAndMigrate>) -> Result<()> {
-        UnwindAndMigrate::handler(ctx)
+    pub fn redeem(ctx: Context<Redeem>) -> Result<()> {
+        Redeem::handler(ctx)
     }
 }

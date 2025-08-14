@@ -1668,6 +1668,7 @@ dependencies = [
  "autocrat",
  "launchpad",
  "raydium-cpmm-cpi",
+ "solana-program",
  "solana-security-txt",
 ]
 

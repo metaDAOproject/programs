@@ -1,15 +1,19 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer, Mint, Burn};
 use anchor_spl::associated_token::AssociatedToken;
-use raydium_cpmm_cpi::{cpi, program::RaydiumCpmm, states::{PoolState, POOL_LP_MINT_SEED}};
+use raydium_cpmm_cpi::{
+    cpi, 
+    program::RaydiumCpmm,
+    states::{PoolState, POOL_LP_MINT_SEED}
+};
 use autocrat::state::Dao;
 use autocrat::program::Autocrat;
-use std::str::FromStr;
+use crate::consts::{V4_LAUNCHPAD_PROGRAM, MIGRATOR_ADMIN_ADDRESS, TOKEN_MIGRATOR_PROGRAM};
 
 use crate::error::RedeemError;
 
 #[derive(Accounts)]
-pub struct UnwindAndMigrate<'info> {
+pub struct Redeem<'info> {
     // DAO account from Autocrat with all configuration
     pub dao: Box<Account<'info, Dao>>,
     
@@ -35,7 +39,7 @@ pub struct UnwindAndMigrate<'info> {
             dao.key().as_ref(),
         ],
         bump,
-        seeds::program = Pubkey::from_str("AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE").unwrap(), // v4 launchpad
+        seeds::program = V4_LAUNCHPAD_PROGRAM,
     )]
     pub pool_state: AccountLoader<'info, PoolState>,
     
@@ -63,19 +67,17 @@ pub struct UnwindAndMigrate<'info> {
     )]
     pub lp_mint: Box<Account<'info, Mint>>,
     
-    // Mints - validated against DAO and pool configuration
-    /// Base token mint (must match DAO and pool configuration)
+    // Mints - validated against DAO
+    /// Base token mint (must match DAO )
     #[account(
         mut,
         constraint = base_mint.key() == dao.base_mint @ RedeemError::InvalidMint,
-        constraint = base_mint.key() == pool_state.load()?.token_0_mint @ RedeemError::InvalidPoolConfiguration,
     )]
     pub base_mint: Box<Account<'info, Mint>>,
     
-    /// Quote token mint (USDC - must match DAO and pool configuration)
+    /// Quote token mint (USDC - must match DAO )
     #[account(
         constraint = quote_mint.key() == dao.quote_mint @ RedeemError::InvalidMint,
-        constraint = quote_mint.key() == pool_state.load()?.token_1_mint @ RedeemError::InvalidPoolConfiguration,
     )]
     pub quote_mint: Box<Account<'info, Mint>>,
     
@@ -83,8 +85,8 @@ pub struct UnwindAndMigrate<'info> {
     /// Treasury's LP token account
     #[account(
         mut,
-        constraint = lp_account.owner == treasury.key() @ RedeemError::InvalidAuthority,
-        constraint = lp_account.mint == lp_mint.key() @ RedeemError::InvalidTokenAccount,
+        associated_token::authority = treasury,
+        associated_token::mint = lp_mint,
         constraint = lp_account.amount > 0 @ RedeemError::NoLpTokens,
     )]
     pub lp_account: Box<Account<'info, TokenAccount>>,
@@ -92,41 +94,45 @@ pub struct UnwindAndMigrate<'info> {
     /// Treasury's base token account
     #[account(
         mut,
-        constraint = base_account.owner == treasury.key() @ RedeemError::InvalidAuthority,
-        constraint = base_account.mint == base_mint.key() @ RedeemError::InvalidTokenAccount,
+        associated_token::authority = treasury,
+        associated_token::mint = base_mint,
     )]
-    pub base_account: Box<Account<'info, TokenAccount>>,
+    pub treasury_base_account: Box<Account<'info, TokenAccount>>,
     
     /// Treasury's USDC account
     #[account(
         mut,
-        constraint = quote_account.owner == treasury.key() @ RedeemError::InvalidAuthority,
-        constraint = quote_account.mint == quote_mint.key() @ RedeemError::InvalidTokenAccount,
+        associated_token::authority = treasury,
+        associated_token::mint = quote_mint,
     )]
-    pub quote_account: Box<Account<'info, TokenAccount>>,
+    pub treasury_quote_account: Box<Account<'info, TokenAccount>>,
     
     // Pool vault accounts
-    /// Raydium pool's base token vault, vault 0
+    /// Raydium pool's base token vault
     #[account(
         mut,
-        constraint = pool_base_vault.key() == pool_state.load()?.token_0_vault @ RedeemError::InvalidPoolVault,
-        constraint = pool_base_vault.owner == pool_authority.key() @ RedeemError::InvalidPoolVault,
-        constraint = pool_base_vault.mint == base_mint.key() @ RedeemError::InvalidPoolVault,
+        associated_token::authority = pool_authority,
+        associated_token::mint = base_mint,
     )]
     pub pool_base_vault: Box<Account<'info, TokenAccount>>,
     
-    /// Raydium pool's USDC vault, vault 1
+    /// Raydium pool's quote token vault
     #[account(
         mut,
-        constraint = pool_quote_vault.key() == pool_state.load()?.token_1_vault @ RedeemError::InvalidPoolVault,
-        constraint = pool_quote_vault.owner == pool_authority.key() @ RedeemError::InvalidPoolVault,
-        constraint = pool_quote_vault.mint == quote_mint.key() @ RedeemError::InvalidPoolVault,
+        associated_token::authority = pool_authority,
+        associated_token::mint = quote_mint,
     )]
     pub pool_quote_vault: Box<Account<'info, TokenAccount>>,
     
     #[account(
-        mut,
-        constraint = migrator_vault.mint == quote_mint.key() @ RedeemError::InvalidDestination,
+        seeds = [
+            b"vault",
+            MIGRATOR_ADMIN_ADDRESS.as_ref(),
+            base_mint.key().as_ref(),
+            quote_mint.key().as_ref(),
+        ],
+        bump,
+        seeds::program = TOKEN_MIGRATOR_PROGRAM,
     )]
     pub migrator_vault: Box<Account<'info, TokenAccount>>,
     
@@ -146,7 +152,7 @@ pub struct UnwindAndMigrate<'info> {
     pub memo_program: UncheckedAccount<'info>,
 }
 
-impl UnwindAndMigrate<'_> {
+impl Redeem<'_> {
     pub fn validate(&self) -> Result<()> {
         // Load the pool state to access its fields
         let pool = self.pool_state.load()?;
@@ -170,7 +176,7 @@ impl UnwindAndMigrate<'_> {
         
         // Check pool status - ensure withdrawals are enabled
         require!(
-            pool.status & 2 == 0,
+            pool.status & 0b10 == 0,
             RedeemError::WithdrawalsDisabled
         );
         
@@ -195,6 +201,27 @@ impl UnwindAndMigrate<'_> {
             &[ctx.bumps.treasury],
         ];
         let signer_seeds = &[&treasury_seeds[..]];
+
+        let (token_0_account, token_1_account, token_0_vault, token_1_vault, vault_0_mint, vault_1_mint) = 
+            if ctx.accounts.base_mint.key() < ctx.accounts.quote_mint.key() {
+                (
+                    ctx.accounts.treasury_base_account.to_account_info(),
+                    ctx.accounts.treasury_quote_account.to_account_info(),
+                    ctx.accounts.pool_base_vault.to_account_info(),
+                    ctx.accounts.pool_quote_vault.to_account_info(),
+                    ctx.accounts.base_mint.to_account_info(),
+                    ctx.accounts.quote_mint.to_account_info(),
+                )
+            } else {
+                (
+                    ctx.accounts.treasury_quote_account.to_account_info(),
+                    ctx.accounts.treasury_base_account.to_account_info(),
+                    ctx.accounts.pool_quote_vault.to_account_info(),
+                    ctx.accounts.pool_base_vault.to_account_info(),
+                    ctx.accounts.quote_mint.to_account_info(),
+                    ctx.accounts.base_mint.to_account_info(),
+                )
+            };
         
         // Build the CPI context for Raydium withdraw
         let cpi_accounts = cpi::accounts::Withdraw {
@@ -202,14 +229,14 @@ impl UnwindAndMigrate<'_> {
             authority: ctx.accounts.pool_authority.to_account_info(),
             pool_state: ctx.accounts.pool_state.to_account_info(),
             owner_lp_token: ctx.accounts.lp_account.to_account_info(),
-            token_0_account: ctx.accounts.base_account.to_account_info(),
-            token_1_account: ctx.accounts.quote_account.to_account_info(),
-            token_0_vault: ctx.accounts.pool_base_vault.to_account_info(),
-            token_1_vault: ctx.accounts.pool_quote_vault.to_account_info(),
+            token_0_account,
+            token_1_account,
+            token_0_vault,
+            token_1_vault,
             token_program: ctx.accounts.token_program.to_account_info(),
             token_program_2022: ctx.accounts.token_program_2022.to_account_info(),
-            vault_0_mint: ctx.accounts.base_mint.to_account_info(),
-            vault_1_mint: ctx.accounts.quote_mint.to_account_info(),
+            vault_0_mint,
+            vault_1_mint,
             lp_mint: ctx.accounts.lp_mint.to_account_info(),
             memo_program: ctx.accounts.memo_program.to_account_info(),
         };
@@ -223,7 +250,7 @@ impl UnwindAndMigrate<'_> {
             signer_seeds,
         );
         
-        cpi::withdraw(
+        raydium_cpmm_cpi::cpi::withdraw(
             cpi_ctx,
             lp_amount,
             min_base_amount,
@@ -231,18 +258,18 @@ impl UnwindAndMigrate<'_> {
         )?;
 
         // Reload accounts after CPI to get updated balances
-        ctx.accounts.base_account.reload()?;
-        ctx.accounts.quote_account.reload()?;
+        ctx.accounts.treasury_base_account.reload()?;
+        ctx.accounts.treasury_quote_account.reload()?;
 
         // Step 2: Burn base tokens
-        let base_balance = ctx.accounts.base_account.amount;
+        let base_balance = ctx.accounts.treasury_base_account.amount;
         if base_balance > 0 {
             token::burn(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     Burn {
                         mint: ctx.accounts.base_mint.to_account_info(),
-                        from: ctx.accounts.base_account.to_account_info(),
+                        from: ctx.accounts.treasury_base_account.to_account_info(),
                         authority: ctx.accounts.treasury.to_account_info(),
                     },
                     signer_seeds,
@@ -252,13 +279,13 @@ impl UnwindAndMigrate<'_> {
         }
 
         // Step 3: Transfer USDC to migrator vault
-        let quote_balance = ctx.accounts.quote_account.amount;
+        let quote_balance = ctx.accounts.treasury_quote_account.amount;
         if quote_balance > 0 {
             token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     Transfer {
-                        from: ctx.accounts.quote_account.to_account_info(),
+                        from: ctx.accounts.treasury_quote_account.to_account_info(),
                         to: ctx.accounts.migrator_vault.to_account_info(),
                         authority: ctx.accounts.treasury.to_account_info(),
                     },
