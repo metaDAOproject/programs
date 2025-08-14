@@ -1660,6 +1660,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "redeem"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "autocrat",
+ "launchpad",
+ "raydium-cpmm-cpi",
+ "solana-security-txt",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.5.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"

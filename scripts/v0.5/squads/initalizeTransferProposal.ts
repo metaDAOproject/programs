@@ -7,8 +7,8 @@ import {
     getAssociatedTokenAddressSync,
     createAssociatedTokenAccountIdempotentInstruction 
 } from "@solana/spl-token";
-import { getSquadsPdasFromDao } from "../utils/squads.js";
-import { USDC } from "../consts.js";
+import { getSquadsPdasFromDao } from "../../utils/squads.js";
+import { USDC } from "../../consts.js";
 
 // we want transfer and config authority removal out the gate
 

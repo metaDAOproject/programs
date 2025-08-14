@@ -48,3 +48,19 @@ export const DEVNET_DRIFT = new PublicKey(
 export const DEVNET_ORE = new PublicKey(
   "Et9wvs9gEBQtFY2RkvLw2XVLaBqjotHPvQBDvqkKxDR8"
 );
+
+export const DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
+  "CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW"
+);
+
+export const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
+  "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+)
+
+export const MEMO_PROGRAM_ID = new PublicKey(
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+)
+
+export const TOKEN_PROGRAM_2022_ID = new PublicKey(
+  "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+)
