@@ -19,7 +19,7 @@ default = []
 anchor-lang = { version = "0.29.0", features = ["init-if-needed", "event-cpi"] }
 anchor-spl = "0.29.0"
 raydium-cpmm-cpi = { git = "https://github.com/raydium-io/raydium-cpi", package = "raydium-cpmm-cpi", branch = "anchor-0.29.0" }
-autocrat = { path = "../autocrat", features = ["cpi"] }
-launchpad = { path = "../launchpad", features = ["cpi"] }
+autocrat = { git = "https://github.com/metaDAOproject/futarchy.git", branch = "v4-stable", features = ["cpi"] }
+launchpad = { git = "https://github.com/metaDAOproject/futarchy.git", branch = "v4-stable", features = ["cpi"] }
 solana-security-txt = "1.1.1"
 solana-program = "=1.17.14"

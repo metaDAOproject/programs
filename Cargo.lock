@@ -73,6 +73,16 @@ dependencies = [
 
 [[package]]
 name = "amm"
+version = "0.4.1"
+source = "git+https://github.com/metaDAOproject/futarchy.git?branch=v4-stable#b28bda3dc0034f7b0cfbd350ce89e4262bd047cd"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "solana-security-txt",
+]
+
+[[package]]
+name = "amm"
 version = "0.5.0"
 dependencies = [
  "anchor-lang",
@@ -402,12 +412,24 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "autocrat"
-version = "0.5.0"
+version = "0.4.2"
+source = "git+https://github.com/metaDAOproject/futarchy.git?branch=v4-stable#b28bda3dc0034f7b0cfbd350ce89e4262bd047cd"
 dependencies = [
- "amm",
+ "amm 0.4.1",
  "anchor-lang",
  "anchor-spl",
- "conditional_vault",
+ "conditional_vault 0.4.0 (git+https://github.com/metaDAOproject/futarchy.git?branch=v4-stable)",
+ "solana-security-txt",
+]
+
+[[package]]
+name = "autocrat"
+version = "0.5.0"
+dependencies = [
+ "amm 0.5.0",
+ "anchor-lang",
+ "anchor-spl",
+ "conditional_vault 0.4.0",
  "solana-security-txt",
  "squads-multisig-program",
 ]
@@ -689,6 +711,16 @@ dependencies = [
 [[package]]
 name = "conditional_vault"
 version = "0.4.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "solana-security-txt",
+]
+
+[[package]]
+name = "conditional_vault"
+version = "0.4.0"
+source = "git+https://github.com/metaDAOproject/futarchy.git?branch=v4-stable#b28bda3dc0034f7b0cfbd350ce89e4262bd047cd"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -1153,12 +1185,28 @@ dependencies = [
 
 [[package]]
 name = "launchpad"
+version = "0.4.1"
+source = "git+https://github.com/metaDAOproject/futarchy.git?branch=v4-stable#b28bda3dc0034f7b0cfbd350ce89e4262bd047cd"
+dependencies = [
+ "ahash 0.8.6",
+ "anchor-lang",
+ "anchor-spl",
+ "autocrat 0.4.2",
+ "raydium-cpmm-cpi",
+ "solana-program",
+ "solana-security-txt",
+ "spl-memo",
+ "spl-token",
+]
+
+[[package]]
+name = "launchpad"
 version = "0.5.0"
 dependencies = [
  "ahash 0.8.6",
  "anchor-lang",
  "anchor-spl",
- "autocrat",
+ "autocrat 0.5.0",
  "raydium-cpmm-cpi",
  "solana-program",
  "solana-security-txt",
@@ -1665,8 +1713,8 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "autocrat",
- "launchpad",
+ "autocrat 0.4.2",
+ "launchpad 0.4.1",
  "raydium-cpmm-cpi",
  "solana-program",
  "solana-security-txt",
@@ -1863,11 +1911,11 @@ name = "shared_liquidity_manager"
 version = "0.1.0"
 dependencies = [
  "ahash 0.8.6",
- "amm",
+ "amm 0.5.0",
  "anchor-lang",
  "anchor-spl",
- "autocrat",
- "conditional_vault",
+ "autocrat 0.5.0",
+ "conditional_vault 0.4.0",
  "raydium-cpmm-cpi",
  "solana-program",
  "solana-security-txt",

@@ -71,13 +71,13 @@ pub struct Redeem<'info> {
     /// Base token mint (must match DAO )
     #[account(
         mut,
-        constraint = base_mint.key() == dao.base_mint @ RedeemError::InvalidMint,
+        constraint = base_mint.key() == dao.token_mint @ RedeemError::InvalidMint,
     )]
     pub base_mint: Box<Account<'info, Mint>>,
     
     /// Quote token mint (USDC - must match DAO )
     #[account(
-        constraint = quote_mint.key() == dao.quote_mint @ RedeemError::InvalidMint,
+        constraint = quote_mint.key() == dao.usdc_mint @ RedeemError::InvalidMint,
     )]
     pub quote_mint: Box<Account<'info, Mint>>,
     
@@ -158,16 +158,6 @@ impl Redeem<'_> {
         let pool = self.pool_state.load()?;
         
         // Validate pool configuration
-        require_keys_eq!(
-            pool.token_0_mint, 
-            self.dao.base_mint,
-            RedeemError::InvalidPoolConfigurationToken0
-        );
-        require_keys_eq!(
-            pool.token_1_mint,
-            self.dao.quote_mint,
-            RedeemError::InvalidPoolConfigurationToken1
-        );
         require_keys_eq!(
             pool.lp_mint,
             self.lp_mint.key(),
