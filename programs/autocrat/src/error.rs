@@ -46,4 +46,14 @@ pub enum AutocratError {
     AssertFailed,
     #[msg("Invalid admin")]
     InvalidAdmin,
+    #[msg("Proposal is not in draft state")]
+    ProposalNotInDraftState,
+    #[msg("Insufficient token balance")]
+    InsufficientTokenBalance,
+    #[msg("Invalid amount")]
+    InvalidAmount,
+    #[msg("Insufficient stake to launch proposal")]
+    InsufficientStakeToLaunch,
+    #[msg("Staker not found in proposal")]
+    StakerNotFound,
 }

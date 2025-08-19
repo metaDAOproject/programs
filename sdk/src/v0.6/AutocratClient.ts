@@ -295,44 +295,44 @@ export class AutocratClient {
   //   return daoKeypair.publicKey;
   // }
 
-  initializeDaoIx({
-    baseMint,
-    params,
-    quoteMint = MAINNET_USDC,
-    squadsProgramConfigTreasury = SQUADS_PROGRAM_CONFIG_TREASURY,
-  }: {
-    baseMint: PublicKey;
-    params: InitializeDaoParams;
-    quoteMint?: PublicKey;
-    squadsProgramConfigTreasury?: PublicKey;
-  }) {
-    const [dao] = getDaoAddr({
-      nonce: params.nonce,
-      daoCreator: this.provider.publicKey,
-    });
-    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
-    const squadsMultisigVault = multisig.getVaultPda({
-      multisigPda,
-      index: 0,
-    })[0];
+  // initializeDaoIx({
+  //   baseMint,
+  //   params,
+  //   quoteMint = MAINNET_USDC,
+  //   squadsProgramConfigTreasury = SQUADS_PROGRAM_CONFIG_TREASURY,
+  // }: {
+  //   baseMint: PublicKey;
+  //   params: InitializeDaoParams;
+  //   quoteMint?: PublicKey;
+  //   squadsProgramConfigTreasury?: PublicKey;
+  // }) {
+  //   const [dao] = getDaoAddr({
+  //     nonce: params.nonce,
+  //     daoCreator: this.provider.publicKey,
+  //   });
+  //   const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+  //   const squadsMultisigVault = multisig.getVaultPda({
+  //     multisigPda,
+  //     index: 0,
+  //   })[0];
 
-    const spendingLimit = multisig.getSpendingLimitPda({
-      multisigPda,
-      createKey: dao,
-    })[0];
+  //   const spendingLimit = multisig.getSpendingLimitPda({
+  //     multisigPda,
+  //     createKey: dao,
+  //   })[0];
 
-    return this.autocrat.methods.initializeDao(params).accounts({
-      dao,
-      baseMint,
-      quoteMint,
-      squadsMultisig: multisigPda,
-      squadsMultisigVault,
-      squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
-      squadsProgramConfigTreasury,
-      squadsProgram: SQUADS_PROGRAM_ID,
-      spendingLimit,
-    });
-  }
+  //   return this.autocrat.methods.initializeDao(params).accounts({
+  //     dao,
+  //     baseMint,
+  //     quoteMint,
+  //     squadsMultisig: multisigPda,
+  //     squadsMultisigVault,
+  //     squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+  //     squadsProgramConfigTreasury,
+  //     squadsProgram: SQUADS_PROGRAM_ID,
+  //     spendingLimit,
+  //   });
+  // }
 
   async initializeProposal(
     dao: PublicKey,
@@ -408,28 +408,28 @@ export class AutocratClient {
       )
       .rpc();
 
-    await this.ammClient
-      .addLiquidityIx(
-        passAmm,
-        passBaseMint,
-        passQuoteMint,
-        quoteTokensToLP,
-        baseTokensToLP,
-        new BN(0)
-      )
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          this.ammClient.addLiquidityIx(
-            failAmm,
-            failBaseMint,
-            failQuoteMint,
-            quoteTokensToLP,
-            baseTokensToLP,
-            new BN(0)
-          )
-        )
-      )
-      .rpc();
+    // await this.ammClient
+    //   .addLiquidityIx(
+    //     passAmm,
+    //     passBaseMint,
+    //     passQuoteMint,
+    //     quoteTokensToLP,
+    //     baseTokensToLP,
+    //     new BN(0)
+    //   )
+    //   .postInstructions(
+    //     await InstructionUtils.getInstructions(
+    //       this.ammClient.addLiquidityIx(
+    //         failAmm,
+    //         failBaseMint,
+    //         failQuoteMint,
+    //         quoteTokensToLP,
+    //         baseTokensToLP,
+    //         new BN(0)
+    //       )
+    //     )
+    //   )
+    //   .rpc();
 
     // this is how many original tokens are created
     const lpTokens = quoteTokensToLP;
@@ -499,13 +499,10 @@ export class AutocratClient {
     return this.autocrat.methods
       .initializeProposal({
         descriptionUrl,
-        passLpTokensToLock,
-        failLpTokensToLock,
       })
       .accounts({
         question,
         proposal,
-        futarchyAmm,
         squadsProposal,
         dao,
         baseVault,
@@ -514,26 +511,6 @@ export class AutocratClient {
         // failAmm,
         // passLpMint: passLp,
         // failLpMint: failLp,
-        ammPassBaseVault: getAssociatedTokenAddressSync(
-          passBaseMint,
-          futarchyAmm,
-          true
-        ),
-        ammPassQuoteVault: getAssociatedTokenAddressSync(
-          passQuoteMint,
-          futarchyAmm,
-          true
-        ),
-        ammFailBaseVault: getAssociatedTokenAddressSync(
-          failBaseMint,
-          futarchyAmm,
-          true
-        ),
-        ammFailQuoteVault: getAssociatedTokenAddressSync(
-          failQuoteMint,
-          futarchyAmm,
-          true
-        ),
         // passLpUserAccount: getAssociatedTokenAddressSync(
         //   passLp,
         //   proposer,

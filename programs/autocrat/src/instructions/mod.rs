@@ -10,6 +10,9 @@ pub mod conditional_swap;
 pub mod provide_liquidity;
 pub mod withdraw_liquidity;
 pub mod collect_fees;
+pub mod stake_to_proposal;
+pub mod unstake_from_proposal;
+pub mod launch_proposal;
 
 pub use finalize_proposal::*;
 pub use initialize_dao::*;
@@ -21,3 +24,6 @@ pub use conditional_swap::*;
 pub use provide_liquidity::*;
 pub use withdraw_liquidity::*;
 pub use collect_fees::*;
+pub use stake_to_proposal::*;
+pub use unstake_from_proposal::*;
+pub use launch_proposal::*;

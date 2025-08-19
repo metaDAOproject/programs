@@ -289,6 +289,7 @@ impl CompleteLaunch<'_> {
                     min_quote_futarchic_liquidity: total_committed_amount / 100,
                     min_base_futarchic_liquidity: AVAILABLE_TOKENS / 100,
                     pass_threshold_bps: 300,
+                    base_to_stake: AVAILABLE_TOKENS / 100,
                     slots_per_proposal: 3 * DAY_IN_SLOTS,
                     twap_start_delay_slots: DAY_IN_SLOTS,
                     nonce: 0,

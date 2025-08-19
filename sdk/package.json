@@ -19,7 +19,7 @@
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "build": "rm -rf ./dist && cp ../target/types/* ./src/v0.5/types && yarn lint:fix && yarn tsc"
+    "build": "rm -rf ./dist && cp ../target/types/* ./src/v0.6/types && yarn lint:fix && yarn tsc"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",

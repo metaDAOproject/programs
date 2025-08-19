@@ -29,6 +29,7 @@ pub struct InitializeDaoEvent {
     pub twap_max_observation_change_per_update: u128,
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
+    pub base_to_stake: u64,
     pub initial_spending_limit: Option<InitialSpendingLimit>,
     pub squads_multisig: Pubkey,
     pub squads_multisig_vault: Pubkey,
@@ -44,6 +45,7 @@ pub struct UpdateDaoEvent {
     pub twap_max_observation_change_per_update: u128,
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
+    pub base_to_stake: u64,
 }
 
 #[event]
@@ -61,6 +63,32 @@ pub struct InitializeProposalEvent {
     pub squads_proposal: Pubkey,
     pub squads_multisig: Pubkey,
     pub squads_multisig_vault: Pubkey,
+}
+
+#[event]
+pub struct StakeToProposalEvent {
+    pub common: CommonFields,
+    pub proposal: Pubkey,
+    pub staker: Pubkey,
+    pub amount: u64,
+    pub total_staked: u64,
+}
+
+#[event]
+pub struct UnstakeFromProposalEvent {
+    pub common: CommonFields,
+    pub proposal: Pubkey,
+    pub staker: Pubkey,
+    pub amount: u64,
+    pub total_staked: u64,
+}
+
+#[event]
+pub struct LaunchProposalEvent {
+    pub common: CommonFields,
+    pub proposal: Pubkey,
+    pub dao: Pubkey,
+    pub total_staked: u64,
 }
 
 #[event]

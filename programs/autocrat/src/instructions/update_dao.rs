@@ -8,6 +8,7 @@ pub struct UpdateDaoParams {
     pub twap_max_observation_change_per_update: Option<u128>,
     pub min_quote_futarchic_liquidity: Option<u64>,
     pub min_base_futarchic_liquidity: Option<u64>,
+    pub base_to_stake: Option<u64>,
 }
 
 #[derive(Accounts)]
@@ -36,6 +37,7 @@ impl UpdateDao<'_> {
         update_dao_if_passed!(twap_max_observation_change_per_update);
         update_dao_if_passed!(min_quote_futarchic_liquidity);
         update_dao_if_passed!(min_base_futarchic_liquidity);
+        update_dao_if_passed!(base_to_stake);
 
         dao.seq_num += 1;
 
@@ -49,6 +51,7 @@ impl UpdateDao<'_> {
             twap_max_observation_change_per_update: dao.twap_max_observation_change_per_update,
             min_quote_futarchic_liquidity: dao.min_quote_futarchic_liquidity,
             min_base_futarchic_liquidity: dao.min_base_futarchic_liquidity,
+            base_to_stake: dao.base_to_stake,
         });
 
         Ok(())

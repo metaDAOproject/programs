@@ -42,6 +42,8 @@ pub struct Dao {
     /// 10 * 1_000_000_000 (10 META).
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
+    /// Minimum amount of base tokens that must be staked to launch a proposal
+    pub base_to_stake: u64,
     pub seq_num: u64,
     pub initial_spending_limit: Option<InitialSpendingLimit>,
 }

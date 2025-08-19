@@ -1,4 +1,4 @@
-import { AutocratClient, getDaoAddr } from "@metadaoproject/futarchy/v0.6";
+import { AutocratClient, getDaoAddr, SQUADS_PROGRAM_ID } from "@metadaoproject/futarchy/v0.6";
 import {
   ComputeBudgetProgram,
   Keypair,
@@ -9,12 +9,13 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
+import { PERMISSIONLESS_ACCOUNT, SQUADS_PROGRAM_CONFIG, SQUADS_PROGRAM_CONFIG_TREASURY } from "@metadaoproject/futarchy/v0.6";
 import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { getEventAuthorityAddr } from "@metadaoproject/futarchy/v0.6";
+import { getMultisigPda } from "@sqds/multisig";
 
 export default function suite() {
   it.only("futarchy amm", async function () {
@@ -39,25 +40,54 @@ export default function suite() {
       daoCreator: this.payer.publicKey,
     });
 
-    await this.autocratClient
-      .initializeDaoIx({
-        baseMint: META,
-        quoteMint: USDC,
-        params: {
-          nonce,
-          twapStartDelaySlots: new BN(0),
-          twapInitialObservation: new BN(0),
-          twapMaxObservationChangePerUpdate: new BN("1000000000000000000"),
-          minQuoteFutarchicLiquidity: new BN(0),
-          slotsPerProposal: new BN(
-            (ONE_MINUTE_IN_SLOTS * 60n * 24n).toString()
-          ),
-          passThresholdBps: 300,
-          minBaseFutarchicLiquidity: new BN(0),
-          initialSpendingLimit: null,
-        },
-      })
-      .rpc();
+    // await this.autocratClient
+    //   .initializeDaoIx({
+    //     baseMint: META,
+    //     quoteMint: USDC,
+    //     params: {
+    //       nonce,
+    //       twapStartDelaySlots: new BN(0),
+    //       twapInitialObservation: new BN(0),
+    //       twapMaxObservationChangePerUpdate: new BN("1000000000000000000"),
+    //       minQuoteFutarchicLiquidity: new BN(0),
+    //       slotsPerProposal: new BN(
+    //         (ONE_MINUTE_IN_SLOTS * 60n * 24n).toString()
+    //       ),
+    //       passThresholdBps: 300,
+    //       minBaseFutarchicLiquidity: new BN(0),
+    //       initialSpendingLimit: null,
+    //     },
+    //   })
+    //   .rpc();
+
+    await this.autocratClient.autocrat.methods.initializeDao({
+      nonce,
+      twapStartDelaySlots: new BN(0),
+      twapInitialObservation: new BN(0),
+      twapMaxObservationChangePerUpdate: new BN("1000000000000000000"),
+      minQuoteFutarchicLiquidity: new BN(0),
+      slotsPerProposal: new BN(
+        (ONE_MINUTE_IN_SLOTS * 60n * 24n).toString()
+      ),
+      passThresholdBps: 300,
+      minBaseFutarchicLiquidity: new BN(0),
+      initialSpendingLimit: null,
+      baseToStake: new BN(0),
+    })
+    .accounts({
+      dao,
+      daoCreator: this.payer.publicKey,
+      payer: this.payer.publicKey,
+      systemProgram: SystemProgram.programId,
+      baseMint: META,
+      quoteMint: USDC,
+      squadsMultisig: multisig.getMultisigPda({ createKey: dao })[0],
+      squadsMultisigVault: multisig.getVaultPda({ multisigPda: multisig.getMultisigPda({ createKey: dao })[0], index: 0 })[0],
+      squadsProgram: SQUADS_PROGRAM_ID,
+      squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
+      squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+      spendingLimit: multisig.getSpendingLimitPda({ multisigPda: multisig.getMultisigPda({ createKey: dao })[0], createKey: dao })[0],
+    }).rpc();
 
     let [futarchyAmm] = PublicKey.findProgramAddressSync([Buffer.from("futarchy_amm")], this.autocratClient.getProgramId());
 
@@ -129,6 +159,7 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
           minBaseFutarchicLiquidity: null,
+          baseToStake: null,
         },
       })
       .instruction();
@@ -176,6 +207,29 @@ export default function suite() {
       new BN(1_000_000_000)
     );
 
+    console.log(await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm));
+
+    const {
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      question,
+      baseVault,
+      quoteVault,
+    } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+
+
+    await this.autocratClient.autocrat.methods.launchProposal()
+      .accounts({
+        proposal,
+        futarchyAmm,
+        dao,
+      })
+      .rpc();
+
     let storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
     console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
     console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
@@ -199,17 +253,6 @@ export default function suite() {
     console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
     console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
 
-    const {
-      passAmm,
-      failAmm,
-      passBaseMint,
-      passQuoteMint,
-      failBaseMint,
-      failQuoteMint,
-      question,
-      baseVault,
-      quoteVault,
-    } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
 
     await this.vaultClient
       .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)

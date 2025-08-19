@@ -8,14 +8,9 @@
 //!
 //! Proposals pass through various states in their lifecycle. Here's a description
 //! of these states:
-//! - Pre-creation: this is when you initialize the accounts needed for a proposal,
-//!   including the vaults and the AMM accounts. The proposer will also deposit to
-//!   create their LP during this time.
-//! - Trading: to create a proposal, the proposer must call
-//!   `initialize_proposal`, which requires them to lock up some LP tokens in each
-//!   of the markets. Once a proposal is created, anyone can trade its markets.
-//!   Prices of these markets are aggregated into a time-weighted average price
-//!   oracle.
+//! - Draft: proposals start in draft state where users can stake tokens
+//! - Pending: once sufficient stake is accumulated, proposals move to pending state
+//!   and trading begins
 //! - Pass or fail: if the TWAP of the pass market is sufficiently higher than the
 //!   TWAP of the fail market, the proposal will pass. If it's not, the proposal will
 //!   fail. If it passes, both vaults will be finalized, allowing pTOKEN holders to
@@ -24,7 +19,7 @@
 //! - Executed: if a proposal passes, anyone can make autocrat execute its SVM
 //!   instruction by calling `execute_proposal`.
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use conditional_vault::program::ConditionalVault as ConditionalVaultProgram;
 use conditional_vault::ConditionalVault as ConditionalVaultAccount;
 use conditional_vault::Question;
@@ -39,7 +34,7 @@ pub use events::*;
 pub use instructions::*;
 pub use state::*;
 
-use amm::state::Amm;
+
 
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
@@ -83,10 +78,6 @@ pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 pub mod autocrat {
     use super::*;
 
-    /// TODO:
-    /// - Enable staking to proposals
-    /// - Switch proposal to use Futarchy AMM
-
     pub fn initialize_dao(ctx: Context<InitializeDao>, params: InitializeDaoParams) -> Result<()> {
         InitializeDao::handle(ctx, params)
     }
@@ -97,6 +88,27 @@ pub mod autocrat {
         params: InitializeProposalParams,
     ) -> Result<()> {
         InitializeProposal::handle(ctx, params)
+    }
+
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn stake_to_proposal(
+        ctx: Context<StakeToProposal>,
+        params: StakeToProposalParams,
+    ) -> Result<()> {
+        StakeToProposal::handle(ctx, params)
+    }
+
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn unstake_from_proposal(
+        ctx: Context<UnstakeFromProposal>,
+        params: UnstakeFromProposalParams,
+    ) -> Result<()> {
+        UnstakeFromProposal::handle(ctx, params)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn launch_proposal(ctx: Context<LaunchProposal>) -> Result<()> {
+        LaunchProposal::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate())]
