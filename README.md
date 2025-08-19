@@ -45,5 +45,35 @@ As confirmed:
 
 If additional information is needed, please contact: [legal@sqds.io](mailto:legal@sqds.io)
 
-Author / Copyright Holder - PGP Message: 
-Author / Copyright Holder Public Key: 
+Author / Copyright Holder - PGP Message
+
+```
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+b598a2fcb7f64f3b42b1ef180b90d87c725d1e91 
+-----BEGIN PGP SIGNATURE-----
+
+iHoEARYIACIbHFNlYW4gR2Fuc2VyIDxzZWFuQHNxZHMuaW8+BQJoo9r2AAoJEBWz
+djNpuRaDjZ8BAKBGcZBmZfB4DwJqSf82LQkJBC3aj7fQw9Grs2ejw9dPAPsF8pJJ
+EtIuAdgLyTJSCmxjOreQoLK2qp2TnCJVBuQ+CA==
+=2LUJ
+-----END PGP SIGNATURE-----
+```
+
+Author / Copyright Holder Public Key
+
+```
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mDMEaKPaQRYJKwYBBAHaRw8BAQdAOFSjz2LK/9ugAK0+PE1xTBd3GkoQMk60my+K
+JIz69Eq0GlNlYW4gR2Fuc2VyIDxzZWFuQHNxZHMuaW8+iHIEExYIABoECwkIBwIV
+CAIWAQIZAQWCaKPaQQKeAQKbAwAKCRAVs3YzabkWgyeZAQDEsyIPGbuKRwHnLDBl
+qiBQVRaV4QPxolLfnqIpyV4ZHwD+NgD/9UQ0nXUYM8tl9tgzwg9+sccxAmp+Lmta
+r/dJiwy4OARoo9pBEgorBgEEAZdVAQUBAQdABCgNwp9PQinGsISxKHyPdW1Jb0Bz
+Qmbcg/Jfv+e2XBYDAQgHiGEEGBYIAAkFgmij2kECmwwACgkQFbN2M2m5FoMKpgD/
+Rd+WIvQBBEDkeXfI2ej5/ubiD2dM58Y0OHMtAY3uFSEBAKlvd/vBMwET9PNK8iHz
+Sk3raTvUx9Y+QeJWau4A+NgB
+=NWWX
+-----END PGP PUBLIC KEY BLOCK-----
+```
