@@ -66,6 +66,26 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "futarchyAmmBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "futarchyAmmQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -278,13 +298,78 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "futarchyAmm";
-          isMut: true;
+          name: "baseVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "passBaseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "passQuoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "failBaseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "failQuoteMint";
+          isMut: false;
           isSigner: false;
         },
         {
           name: "dao";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "ammPassBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammPassQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammFailBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammFailQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -309,26 +394,6 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "squadsProposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisig";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "futarchyAmm";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "dao";
           isMut: true;
           isSigner: false;
@@ -339,7 +404,17 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "tokenProgram";
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
           isMut: false;
           isSigner: false;
         },
@@ -350,6 +425,11 @@ export type Autocrat = {
         },
         {
           name: "vaultEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -403,14 +483,9 @@ export type Autocrat = {
       name: "spotSwap";
       accounts: [
         {
-          name: "futarchyAmm";
+          name: "dao";
           isMut: true;
           isSigner: false;
-        },
-        {
-          name: "trader";
-          isMut: false;
-          isSigner: true;
         },
         {
           name: "userBaseAccount";
@@ -433,7 +508,22 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "user";
+          isMut: false;
+          isSigner: true;
+        },
+        {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         }
@@ -451,7 +541,7 @@ export type Autocrat = {
       name: "conditionalSwap";
       accounts: [
         {
-          name: "futarchyAmm";
+          name: "dao";
           isMut: true;
           isSigner: false;
         },
@@ -571,71 +661,10 @@ export type Autocrat = {
       ];
     },
     {
-      name: "initializeFutarchyAmm";
-      accounts: [
-        {
-          name: "futarchyAmm";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "createKey";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "baseMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "quoteMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "ammBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
       name: "provideLiquidity";
       accounts: [
         {
-          name: "futarchyAmm";
+          name: "dao";
           isMut: true;
           isSigner: false;
         },
@@ -698,12 +727,12 @@ export type Autocrat = {
       name: "withdrawLiquidity";
       accounts: [
         {
-          name: "futarchyAmm";
+          name: "dao";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "liquidityProvider";
+          name: "positionAuthority";
           isMut: false;
           isSigner: true;
         },
@@ -755,11 +784,11 @@ export type Autocrat = {
         kind: "struct";
         fields: [
           {
-            name: "futarchyAmm";
+            name: "dao";
             type: "publicKey";
           },
           {
-            name: "liquidityProvider";
+            name: "positionAuthority";
             type: "publicKey";
           },
           {
@@ -880,44 +909,13 @@ export type Autocrat = {
                 defined: "InitialSpendingLimit";
               };
             };
-          }
-        ];
-      };
-    },
-    {
-      name: "futarchyAmm";
-      type: {
-        kind: "struct";
-        fields: [
+          },
           {
-            name: "state";
+            name: "futarchyAmm";
+            docs: ["Embedded FutarchyAmm - 1:1 relationship"];
             type: {
-              defined: "PoolState";
+              defined: "FutarchyAmm";
             };
-          },
-          {
-            name: "totalLiquidity";
-            type: "u128";
-          },
-          {
-            name: "baseMint";
-            type: "publicKey";
-          },
-          {
-            name: "quoteMint";
-            type: "publicKey";
-          },
-          {
-            name: "ammBaseVault";
-            type: "publicKey";
-          },
-          {
-            name: "ammQuoteVault";
-            type: "publicKey";
-          },
-          {
-            name: "pdaBump";
-            type: "u8";
           }
         ];
       };
@@ -1130,14 +1128,14 @@ export type Autocrat = {
         kind: "struct";
         fields: [
           {
+            name: "inputAmount";
+            type: "u64";
+          },
+          {
             name: "swapType";
             type: {
               defined: "SwapType";
             };
-          },
-          {
-            name: "inputAmount";
-            type: "u64";
           },
           {
             name: "minOutputAmount";
@@ -1257,6 +1255,40 @@ export type Autocrat = {
             type: {
               vec: "publicKey";
             };
+          }
+        ];
+      };
+    },
+    {
+      name: "FutarchyAmm";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "state";
+            type: {
+              defined: "PoolState";
+            };
+          },
+          {
+            name: "totalLiquidity";
+            type: "u128";
+          },
+          {
+            name: "baseMint";
+            type: "publicKey";
+          },
+          {
+            name: "quoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "ammBaseVault";
+            type: "publicKey";
+          },
+          {
+            name: "ammQuoteVault";
+            type: "publicKey";
           }
         ];
       };
@@ -1877,7 +1909,7 @@ export type Autocrat = {
           index: false;
         },
         {
-          name: "futarchyAmm";
+          name: "dao";
           type: "publicKey";
           index: false;
         },
@@ -2116,6 +2148,26 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "futarchyAmmBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "futarchyAmmQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -2328,13 +2380,78 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "futarchyAmm",
-          isMut: true,
+          name: "baseVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "passBaseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "passQuoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "failBaseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "failQuoteMint",
+          isMut: false,
           isSigner: false,
         },
         {
           name: "dao",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "ammPassBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammPassQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammFailBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammFailQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2359,26 +2476,6 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "squadsProposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisig",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "futarchyAmm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "dao",
           isMut: true,
           isSigner: false,
@@ -2389,7 +2486,17 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "tokenProgram",
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
           isMut: false,
           isSigner: false,
         },
@@ -2400,6 +2507,11 @@ export const IDL: Autocrat = {
         },
         {
           name: "vaultEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -2453,14 +2565,9 @@ export const IDL: Autocrat = {
       name: "spotSwap",
       accounts: [
         {
-          name: "futarchyAmm",
+          name: "dao",
           isMut: true,
           isSigner: false,
-        },
-        {
-          name: "trader",
-          isMut: false,
-          isSigner: true,
         },
         {
           name: "userBaseAccount",
@@ -2483,7 +2590,22 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "user",
+          isMut: false,
+          isSigner: true,
+        },
+        {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -2501,7 +2623,7 @@ export const IDL: Autocrat = {
       name: "conditionalSwap",
       accounts: [
         {
-          name: "futarchyAmm",
+          name: "dao",
           isMut: true,
           isSigner: false,
         },
@@ -2621,71 +2743,10 @@ export const IDL: Autocrat = {
       ],
     },
     {
-      name: "initializeFutarchyAmm",
-      accounts: [
-        {
-          name: "futarchyAmm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "createKey",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "baseMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "quoteMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "ammBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "provideLiquidity",
       accounts: [
         {
-          name: "futarchyAmm",
+          name: "dao",
           isMut: true,
           isSigner: false,
         },
@@ -2748,12 +2809,12 @@ export const IDL: Autocrat = {
       name: "withdrawLiquidity",
       accounts: [
         {
-          name: "futarchyAmm",
+          name: "dao",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "liquidityProvider",
+          name: "positionAuthority",
           isMut: false,
           isSigner: true,
         },
@@ -2805,11 +2866,11 @@ export const IDL: Autocrat = {
         kind: "struct",
         fields: [
           {
-            name: "futarchyAmm",
+            name: "dao",
             type: "publicKey",
           },
           {
-            name: "liquidityProvider",
+            name: "positionAuthority",
             type: "publicKey",
           },
           {
@@ -2931,43 +2992,12 @@ export const IDL: Autocrat = {
               },
             },
           },
-        ],
-      },
-    },
-    {
-      name: "futarchyAmm",
-      type: {
-        kind: "struct",
-        fields: [
           {
-            name: "state",
+            name: "futarchyAmm",
+            docs: ["Embedded FutarchyAmm - 1:1 relationship"],
             type: {
-              defined: "PoolState",
+              defined: "FutarchyAmm",
             },
-          },
-          {
-            name: "totalLiquidity",
-            type: "u128",
-          },
-          {
-            name: "baseMint",
-            type: "publicKey",
-          },
-          {
-            name: "quoteMint",
-            type: "publicKey",
-          },
-          {
-            name: "ammBaseVault",
-            type: "publicKey",
-          },
-          {
-            name: "ammQuoteVault",
-            type: "publicKey",
-          },
-          {
-            name: "pdaBump",
-            type: "u8",
           },
         ],
       },
@@ -3180,14 +3210,14 @@ export const IDL: Autocrat = {
         kind: "struct",
         fields: [
           {
+            name: "inputAmount",
+            type: "u64",
+          },
+          {
             name: "swapType",
             type: {
               defined: "SwapType",
             },
-          },
-          {
-            name: "inputAmount",
-            type: "u64",
           },
           {
             name: "minOutputAmount",
@@ -3307,6 +3337,40 @@ export const IDL: Autocrat = {
             type: {
               vec: "publicKey",
             },
+          },
+        ],
+      },
+    },
+    {
+      name: "FutarchyAmm",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "state",
+            type: {
+              defined: "PoolState",
+            },
+          },
+          {
+            name: "totalLiquidity",
+            type: "u128",
+          },
+          {
+            name: "baseMint",
+            type: "publicKey",
+          },
+          {
+            name: "quoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "ammBaseVault",
+            type: "publicKey",
+          },
+          {
+            name: "ammQuoteVault",
+            type: "publicKey",
           },
         ],
       },
@@ -3927,7 +3991,7 @@ export const IDL: Autocrat = {
           index: false,
         },
         {
-          name: "futarchyAmm",
+          name: "dao",
           type: "publicKey",
           index: false,
         },

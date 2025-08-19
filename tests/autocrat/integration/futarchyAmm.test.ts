@@ -13,7 +13,7 @@ import { PERMISSIONLESS_ACCOUNT, SQUADS_PROGRAM_CONFIG, SQUADS_PROGRAM_CONFIG_TR
 import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { AccountInfo } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { getEventAuthorityAddr } from "@metadaoproject/futarchy/v0.6";
 import { getMultisigPda } from "@sqds/multisig";
 
@@ -87,47 +87,48 @@ export default function suite() {
       squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
       squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
       spendingLimit: multisig.getSpendingLimitPda({ multisigPda: multisig.getMultisigPda({ createKey: dao })[0], createKey: dao })[0],
+      futarchyAmmBaseVault: getAssociatedTokenAddressSync(META, dao, true),
+      futarchyAmmQuoteVault: getAssociatedTokenAddressSync(USDC, dao, true),
     }).rpc();
 
     let [futarchyAmm] = PublicKey.findProgramAddressSync([Buffer.from("futarchy_amm")], this.autocratClient.getProgramId());
 
-    await this.autocratClient.autocrat.methods.initializeFutarchyAmm().accounts({
-        futarchyAmm,
-        createKey: this.payer.publicKey,
-        payer: this.payer.publicKey,
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-      })
-      .rpc();
+    // await this.autocratClient.autocrat.methods.initializeFutarchyAmm().accounts({
+    //     futarchyAmm,
+    //     createKey: this.payer.publicKey,
+    //     payer: this.payer.publicKey,
+    //     dao,
+    //     baseMint: META,
+    //     quoteMint: USDC,
+    //     ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
+    //     ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+    //   })
+    //   .rpc();
 
     await this.autocratClient.autocrat.methods.provideLiquidity({
         quoteAmount: new BN(100_000 * 1_000_000),
         maxBaseAmount: new BN(100_000 * 1_000_000),
         minLiquidity: new BN(0),
     }).accounts({
-        futarchyAmm,
+        // futarchyAmm,
         payer: this.payer.publicKey,
-        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+        dao,
+        ammBaseVault: getAssociatedTokenAddressSync(META, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, dao, true),
         liquidityProvider: this.payer.publicKey,
         liquidityProviderBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
         liquidityProviderQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
-        ammPosition: PublicKey.findProgramAddressSync([Buffer.from("amm_position"), futarchyAmm.toBuffer(), this.payer.publicKey.toBuffer()], this.autocratClient.getProgramId())[0],
+        ammPosition: PublicKey.findProgramAddressSync([Buffer.from("amm_position"), dao.toBuffer(), this.payer.publicKey.toBuffer()], this.autocratClient.getProgramId())[0],
     }).rpc();
 
-    const ammPosition = PublicKey.findProgramAddressSync([Buffer.from("amm_position"), futarchyAmm.toBuffer(), this.payer.publicKey.toBuffer()], this.autocratClient.getProgramId())[0];
+    const ammPosition = PublicKey.findProgramAddressSync([Buffer.from("amm_position"), dao.toBuffer(), this.payer.publicKey.toBuffer()], this.autocratClient.getProgramId())[0];
 
     const storedAmmPosition = await this.autocratClient.autocrat.account.ammPosition.fetch(ammPosition);
     console.log(storedAmmPosition.liquidity.toString());
 
-    const firstFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm));
+    const firstFutarchyAmm = (await this.autocratClient.autocrat.account.dao.fetch(dao)).futarchyAmm;
     console.log(firstFutarchyAmm.totalLiquidity.toString());
     console.log("spot", firstFutarchyAmm.state.spot.spot.baseReserves.toString(), firstFutarchyAmm.state.spot.spot.quoteReserves.toString());
-
-    const storedDao = await this.autocratClient.getDao(dao);
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
@@ -207,7 +208,7 @@ export default function suite() {
       new BN(1_000_000_000)
     );
 
-    console.log(await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm));
+    // console.log(await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm));
 
     const {
       passAmm,
@@ -225,12 +226,23 @@ export default function suite() {
     await this.autocratClient.autocrat.methods.launchProposal()
       .accounts({
         proposal,
-        futarchyAmm,
         dao,
+        baseVault,
+        quoteVault,
+        passBaseMint,
+        passQuoteMint,
+        failBaseMint,
+        failQuoteMint,
+        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, dao, true),
+        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, dao, true),
+        payer: this.payer.publicKey,
       })
+      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })])
       .rpc();
 
-    let storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    let storedFutarchyAmm = (await this.autocratClient.autocrat.account.dao.fetch(dao)).futarchyAmm.state.futarchy;
     console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
     console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
     console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
@@ -240,15 +252,15 @@ export default function suite() {
         inputAmount: new BN(1 * 1_000_000),
         minOutputAmount: new BN(0),
     }).accounts({
-        futarchyAmm,
+        dao,
         userBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
         userQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
-        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-        trader: this.payer.publicKey,
+        ammBaseVault: getAssociatedTokenAddressSync(META, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, dao, true),
+        user: this.payer.publicKey,
     }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();
 
-    storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    storedFutarchyAmm = (await this.autocratClient.autocrat.account.dao.fetch(dao)).futarchyAmm.state.futarchy;
     console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
     console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
     console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
@@ -267,13 +279,13 @@ export default function suite() {
         inputAmount: new BN(10_000 * 1_000_000),
         minOutputAmount: new BN(0),
     }).accounts({
-        futarchyAmm,
-        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
-        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
-        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
-        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+        dao,
+        ammBaseVault: getAssociatedTokenAddressSync(META, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, dao, true),
+        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, dao, true),
+        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, dao, true),
         baseVault,
         quoteVault,
         userInputAccount: getAssociatedTokenAddressSync(passQuoteMint, this.payer.publicKey),
@@ -295,13 +307,13 @@ export default function suite() {
         inputAmount: new BN(10_000 * 1_000_000),
         minOutputAmount: new BN(0),
     }).accounts({
-        futarchyAmm,
-        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
-        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
-        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
-        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
+        dao,
+        ammBaseVault: getAssociatedTokenAddressSync(META, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, dao, true),
+        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, dao, true),
+        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, dao, true),
         baseVault,
         quoteVault,
         userInputAccount: getAssociatedTokenAddressSync(failBaseMint, this.payer.publicKey),
@@ -317,7 +329,7 @@ export default function suite() {
         question,
     }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
 
-    storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    storedFutarchyAmm = (await this.autocratClient.autocrat.account.dao.fetch(dao)).futarchyAmm.state.futarchy;
     console.log("spot", storedFutarchyAmm.spot.baseReserves.toString(), storedFutarchyAmm.spot.quoteReserves.toString());
     console.log("pass", storedFutarchyAmm.pass.baseReserves.toString(), storedFutarchyAmm.pass.quoteReserves.toString());
     console.log("fail", storedFutarchyAmm.fail.baseReserves.toString(), storedFutarchyAmm.fail.quoteReserves.toString());
@@ -327,15 +339,15 @@ export default function suite() {
         inputAmount: (new BN(20_000)).muln(1_000_000),
         minOutputAmount: new BN(0),
     }).accounts({
-        futarchyAmm,
+        dao,
         userBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
         userQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
-        ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-        ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-        trader: this.payer.publicKey,
+        ammBaseVault: getAssociatedTokenAddressSync(META, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, dao, true),
+        user: this.payer.publicKey,
     }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();
 
-    storedFutarchyAmm = (await this.autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm)).state.futarchy;
+    storedFutarchyAmm = (await this.autocratClient.autocrat.account.dao.fetch(dao)).futarchyAmm.state.futarchy;
     console.log("spot base", storedFutarchyAmm.spot.baseReserves.toString(), "quote", storedFutarchyAmm.spot.quoteReserves.toString(), "base fee", storedFutarchyAmm.spot.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.spot.quoteProtocolFeeBalance.toString());
     console.log("pass base", storedFutarchyAmm.pass.baseReserves.toString(), "quote", storedFutarchyAmm.pass.quoteReserves.toString(), "base fee", storedFutarchyAmm.pass.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.pass.quoteProtocolFeeBalance.toString());
     console.log("fail base", storedFutarchyAmm.fail.baseReserves.toString(), "quote", storedFutarchyAmm.fail.quoteReserves.toString(), "base fee", storedFutarchyAmm.fail.baseProtocolFeeBalance.toString(), "quote fee", storedFutarchyAmm.fail.quoteProtocolFeeBalance.toString());
@@ -347,12 +359,12 @@ export default function suite() {
               inputAmount: (new BN(100)).muln(1_000_000),
               minOutputAmount: new BN(i),
           }).accounts({
-              futarchyAmm,
+              dao,
               userBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
               userQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),
-              ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-              ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-              trader: this.payer.publicKey,
+              ammBaseVault: getAssociatedTokenAddressSync(META, dao, true),
+              ammQuoteVault: getAssociatedTokenAddressSync(USDC, dao, true),
+              user: this.payer.publicKey,
           }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();
     }
 
@@ -367,9 +379,9 @@ export default function suite() {
       minBaseAmount: new BN(0),
       minQuoteAmount: new BN(0),
     }).accounts({
-      futarchyAmm,
-      ammBaseVault: getAssociatedTokenAddressSync(META, futarchyAmm, true),
-      ammQuoteVault: getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
+      dao,
+      ammBaseVault: getAssociatedTokenAddressSync(META, dao, true),
+      ammQuoteVault: getAssociatedTokenAddressSync(USDC, dao, true),
       liquidityProvider: this.payer.publicKey,
       liquidityProviderBaseAccount: getAssociatedTokenAddressSync(META, this.payer.publicKey),
       liquidityProviderQuoteAccount: getAssociatedTokenAddressSync(USDC, this.payer.publicKey),

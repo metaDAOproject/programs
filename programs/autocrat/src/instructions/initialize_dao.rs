@@ -1,3 +1,4 @@
+use anchor_spl::associated_token::AssociatedToken;
 use squads_multisig_program::{Member, Period, Permission, Permissions};
 
 use super::*;
@@ -27,14 +28,14 @@ pub struct InitializeDao<'info> {
         bump,
         space = 8 + Dao::INIT_SPACE,
     )]
-    pub dao: Account<'info, Dao>,
+    pub dao: Box<Account<'info, Dao>>,
     pub dao_creator: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
-    pub base_mint: Account<'info, Mint>,
+    pub base_mint: Box<Account<'info, Mint>>,
     #[account(mint::decimals = 6)]
-    pub quote_mint: Account<'info, Mint>,
+    pub quote_mint: Box<Account<'info, Mint>>,
     /// CHECK: initialized by squads
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig: UncheckedAccount<'info>,
@@ -50,6 +51,12 @@ pub struct InitializeDao<'info> {
     /// CHECK: initialized by squads
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub spending_limit: UncheckedAccount<'info>,
+    #[account(init_if_needed, associated_token::mint = base_mint, associated_token::authority = dao, payer = payer)]
+    pub futarchy_amm_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(init_if_needed, associated_token::mint = quote_mint, associated_token::authority = dao, payer = payer)]
+    pub futarchy_amm_quote_vault: Box<Account<'info, TokenAccount>>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 pub mod permissionless_account {
@@ -147,6 +154,8 @@ impl InitializeDao<'_> {
             )?;
         }
 
+        let clock = Clock::get()?;
+        
         dao.set_inner(Dao {
             nonce,
             dao_creator: creator_key,
@@ -166,6 +175,27 @@ impl InitializeDao<'_> {
             base_to_stake,
             seq_num: 0,
             initial_spending_limit,
+            futarchy_amm: FutarchyAmm {
+                state: PoolState::Spot {
+                    spot: Pool {
+                        quote_reserves: 0,
+                        base_reserves: 0,
+                        quote_protocol_fee_balance: 0,
+                        base_protocol_fee_balance: 0,
+                        oracle: TwapOracle::new(
+                            clock.slot,
+                            twap_initial_observation,
+                            twap_max_observation_change_per_update,
+                            0,
+                        ),
+                    },
+                },
+                total_liquidity: 0,
+                base_mint: ctx.accounts.base_mint.key(),
+                quote_mint: ctx.accounts.quote_mint.key(),
+                amm_base_vault: ctx.accounts.futarchy_amm_base_vault.key(),
+                amm_quote_vault: ctx.accounts.futarchy_amm_quote_vault.key(),
+            },
         });
 
         let clock = Clock::get()?;

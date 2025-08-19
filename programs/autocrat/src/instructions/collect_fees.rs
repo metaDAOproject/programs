@@ -12,17 +12,17 @@ pub mod admin {
 
 #[derive(Accounts)]
 pub struct CollectFees<'info> {
-    #[account(mut, has_one = amm_base_vault, has_one = amm_quote_vault)]
-    pub futarchy_amm: Account<'info, FutarchyAmm>,
+    #[account(mut)]
+    pub dao: Account<'info, Dao>,
     pub admin: Signer<'info>,
-    #[account(mut, token::mint = futarchy_amm.base_mint)]
+    #[account(mut, token::mint = dao.base_mint)]
     pub base_receiver: Account<'info, TokenAccount>,
-    #[account(mut, token::mint = futarchy_amm.quote_mint)]
+    #[account(mut, token::mint = dao.quote_mint)]
     pub quote_receiver: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
-    #[account(mut, associated_token::mint = futarchy_amm.base_mint, associated_token::authority = futarchy_amm)]
+    #[account(mut, associated_token::mint = dao.base_mint, associated_token::authority = dao)]
     pub amm_base_vault: Account<'info, TokenAccount>,
-    #[account(mut, associated_token::mint = futarchy_amm.quote_mint, associated_token::authority = futarchy_amm)]
+    #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = dao)]
     pub amm_quote_vault: Account<'info, TokenAccount>,
 }
 
@@ -34,8 +34,8 @@ impl CollectFees<'_> {
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let Self {
-            futarchy_amm,
-            admin,
+            dao,
+            admin: _,
             base_receiver,
             quote_receiver,
             amm_base_vault,
@@ -43,7 +43,7 @@ impl CollectFees<'_> {
             token_program,
         } = ctx.accounts;
 
-        let PoolState::Spot { ref mut spot } = futarchy_amm.state else {
+        let PoolState::Spot { ref mut spot } = dao.futarchy_amm.state else {
             // TODO: check that pool is already in right state
             unreachable!();
         };
@@ -55,7 +55,8 @@ impl CollectFees<'_> {
         spot.quote_protocol_fee_balance = 0;
 
         // Transfer tokens from AMM vaults to user
-        let signer_seeds = &[b"futarchy_amm".as_ref(), &[futarchy_amm.pda_bump]];
+        let dao_key = dao.key();
+        let signer_seeds = &[b"dao".as_ref(), dao_key.as_ref(), &[dao.pda_bump]];
 
         for (amount_to_send, from, to) in [
             (base_fee_balance, amm_base_vault, base_receiver),
@@ -67,7 +68,7 @@ impl CollectFees<'_> {
                     Transfer {
                         from: from.to_account_info(),
                         to: to.to_account_info(),
-                        authority: futarchy_amm.to_account_info(),
+                        authority: dao.to_account_info(),
                     },
                     &[&signer_seeds[..]],
                 ),

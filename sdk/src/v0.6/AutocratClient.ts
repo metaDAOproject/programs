@@ -443,7 +443,11 @@ export class AutocratClient {
       lpTokens,
       lpTokens,
       question
-    ).rpc();
+    )
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
 
     return proposal;
   }
@@ -603,7 +607,7 @@ export class AutocratClient {
 
     return this.autocrat.methods.finalizeProposal().accounts({
       proposal,
-      futarchyAmm,
+      // futarchyAmm,
       dao,
       squadsProposal,
       squadsMultisig: multisigPda,

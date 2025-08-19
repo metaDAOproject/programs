@@ -1,14 +1,37 @@
 use super::*;
 
+use anchor_spl::associated_token::AssociatedToken;
+
 #[derive(Accounts)]
 #[event_cpi]
 pub struct LaunchProposal<'info> {
-    #[account(mut)]
+    #[account(mut, has_one = dao, has_one = quote_vault, has_one = base_vault)]
     pub proposal: Box<Account<'info, Proposal>>,
-    #[account(mut)]
-    pub futarchy_amm: Box<Account<'info, FutarchyAmm>>,
+    pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,
+    pub quote_vault: Box<Account<'info, ConditionalVaultAccount>>,
+    #[account(address = base_vault.conditional_token_mints[1])]
+    pub pass_base_mint: Box<Account<'info, Mint>>,
+    #[account(address = quote_vault.conditional_token_mints[1])]
+    pub pass_quote_mint: Box<Account<'info, Mint>>,
+    #[account(address = base_vault.conditional_token_mints[0])]
+    pub fail_base_mint: Box<Account<'info, Mint>>,
+    #[account(address = quote_vault.conditional_token_mints[0])]
+    pub fail_quote_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(init_if_needed, payer = payer, associated_token::mint = pass_base_mint, associated_token::authority = dao)]
+    pub amm_pass_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(init_if_needed, payer = payer, associated_token::mint = pass_quote_mint, associated_token::authority = dao)]
+    pub amm_pass_quote_vault: Box<Account<'info, TokenAccount>>,
+    #[account(init_if_needed, payer = payer, associated_token::mint = fail_base_mint, associated_token::authority = dao)]
+    pub amm_fail_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(init_if_needed, payer = payer, associated_token::mint = fail_quote_mint, associated_token::authority = dao)]
+    pub amm_fail_quote_vault: Box<Account<'info, TokenAccount>>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl LaunchProposal<'_> {
@@ -34,11 +57,24 @@ impl LaunchProposal<'_> {
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let Self {
-            futarchy_amm,
             proposal,
             dao,
+            payer: _,
             event_authority: _,
             program: _,
+            base_vault,
+            quote_vault,
+            pass_base_mint,
+            pass_quote_mint,
+            fail_base_mint,
+            fail_quote_mint,
+            amm_pass_base_vault,
+            amm_pass_quote_vault,
+            amm_fail_base_vault,
+            amm_fail_quote_vault,
+            system_program,
+            token_program,
+            associated_token_program,
         } = ctx.accounts;
 
         // Get the total staked amount
@@ -48,7 +84,7 @@ impl LaunchProposal<'_> {
         };
 
         // Set up the futarchy AMM by splitting the spot pool reserves
-        let PoolState::Spot { mut spot } = futarchy_amm.state.to_owned() else { unreachable!() };
+        let PoolState::Spot { mut spot } = dao.futarchy_amm.state.to_owned() else { unreachable!() };
 
         let half_base = spot.base_reserves / 2;
         let half_quote = spot.quote_reserves / 2;
@@ -58,7 +94,7 @@ impl LaunchProposal<'_> {
 
         let clock = Clock::get()?;
 
-        futarchy_amm.state = PoolState::Futarchy {
+        dao.futarchy_amm.state = PoolState::Futarchy {
             spot,
             pass: Pool {
                 base_reserves: half_base,
@@ -94,6 +130,7 @@ impl LaunchProposal<'_> {
             proposal: proposal.key(),
             dao: dao.key(),
             total_staked,
+
         });
 
         Ok(())

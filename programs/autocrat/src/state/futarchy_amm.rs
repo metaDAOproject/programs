@@ -3,8 +3,7 @@ use anchor_lang::prelude::*;
 use crate::{LP_TAKER_FEE_BPS, MAX_BPS, PROTOCOL_TAKER_FEE_BPS};
 use std::cmp::Ordering;
 
-#[account]
-#[derive(InitSpace)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
 pub struct FutarchyAmm {
     pub state: PoolState,
     pub total_liquidity: u128,
@@ -12,7 +11,6 @@ pub struct FutarchyAmm {
     pub quote_mint: Pubkey,
     pub amm_base_vault: Pubkey,
     pub amm_quote_vault: Pubkey,
-    pub pda_bump: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
@@ -691,16 +689,25 @@ mod tests {
         let mut spot = Pool {
             base_reserves: 100 * 1_000_000,
             quote_reserves: 100 * 1_000_000,
+            quote_protocol_fee_balance: 0,
+            base_protocol_fee_balance: 0,
+            oracle: TwapOracle::new(0, 0, 0, 0),
         };
 
         let mut pass = Pool {
             base_reserves: 100 * 1_000_000,
             quote_reserves: 100 * 1_000_000,
+            quote_protocol_fee_balance: 0,
+            base_protocol_fee_balance: 0,
+            oracle: TwapOracle::new(0, 0, 0, 0),
         };
 
         let mut fail = Pool {
             base_reserves: 100 * 1_000_000,
             quote_reserves: 100 * 1_000_000,
+            quote_protocol_fee_balance: 0,
+            base_protocol_fee_balance: 0,
+            oracle: TwapOracle::new(0, 0, 0, 0),
         };
 
         // spot.swap(1 * 1_000_000, SwapType::Buy).unwrap();

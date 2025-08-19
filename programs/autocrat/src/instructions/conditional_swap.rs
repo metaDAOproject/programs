@@ -1,4 +1,4 @@
-use amm::instructions::swap;
+
 
 use super::*;
 
@@ -12,19 +12,19 @@ pub struct ConditionalSwapParams {
 
 #[derive(Accounts)]
 pub struct ConditionalSwap<'info> {
-    #[account(mut, has_one = amm_base_vault, has_one = amm_quote_vault)]
-    pub futarchy_amm: Box<Account<'info, FutarchyAmm>>,
-    #[account(mut, associated_token::mint = futarchy_amm.base_mint, associated_token::authority = futarchy_amm)]
+    #[account(mut)]
+    pub dao: Box<Account<'info, Dao>>,
+    #[account(mut)]
     pub amm_base_vault: Account<'info, TokenAccount>,
-    #[account(mut, associated_token::mint = futarchy_amm.quote_mint, associated_token::authority = futarchy_amm)]
+    #[account(mut)]
     pub amm_quote_vault: Account<'info, TokenAccount>,
-    #[account(mut, associated_token::mint = base_vault.conditional_token_mints[1], associated_token::authority = futarchy_amm)]
+    #[account(mut)]
     pub amm_pass_base_vault: Account<'info, TokenAccount>,
-    #[account(mut, associated_token::mint = quote_vault.conditional_token_mints[1], associated_token::authority = futarchy_amm)]
+    #[account(mut)]
     pub amm_pass_quote_vault: Account<'info, TokenAccount>,
-    #[account(mut, associated_token::mint = base_vault.conditional_token_mints[0], associated_token::authority = futarchy_amm)]
+    #[account(mut)]
     pub amm_fail_base_vault: Account<'info, TokenAccount>,
-    #[account(mut, associated_token::mint = quote_vault.conditional_token_mints[0], associated_token::authority = futarchy_amm)]
+    #[account(mut)]
     pub amm_fail_quote_vault: Account<'info, TokenAccount>,
     #[account(mut)]
     pub user_input_account: Account<'info, TokenAccount>,
@@ -67,6 +67,7 @@ impl ConditionalSwap<'_> {
 
         let output_amount =
             ctx.accounts
+                .dao
                 .futarchy_amm
                 .state
                 .swap(input_amount, swap_type, market)?;
@@ -104,9 +105,13 @@ impl ConditionalSwap<'_> {
         ctx.accounts.amm_fail_base_vault.reload()?;
         ctx.accounts.amm_fail_quote_vault.reload()?;
 
+        let dao_creator = ctx.accounts.dao.dao_creator;
+        let nonce = ctx.accounts.dao.nonce.to_le_bytes();
         let signer_seeds = &[
-            b"futarchy_amm".as_ref(),
-            &[ctx.accounts.futarchy_amm.pda_bump],
+            b"dao".as_ref(),
+            dao_creator.as_ref(),
+            nonce.as_ref(),
+            &[ctx.accounts.dao.pda_bump],
         ];
         let signer = &[&signer_seeds[..]];
 
@@ -119,7 +124,7 @@ impl ConditionalSwap<'_> {
                     .accounts
                     .quote_vault_underlying_token_account
                     .to_account_info(),
-                authority: ctx.accounts.futarchy_amm.to_account_info(),
+                authority: ctx.accounts.dao.to_account_info(),
                 user_underlying_token_account: ctx.accounts.amm_quote_vault.to_account_info(),
                 event_authority: ctx.accounts.vault_event_authority.to_account_info(),
                 program: ctx.accounts.conditional_vault_program.to_account_info(),
@@ -175,7 +180,7 @@ impl ConditionalSwap<'_> {
                     .accounts
                     .base_vault_underlying_token_account
                     .to_account_info(),
-                authority: ctx.accounts.futarchy_amm.to_account_info(),
+                authority: ctx.accounts.dao.to_account_info(),
                 user_underlying_token_account: ctx.accounts.amm_base_vault.to_account_info(),
                 event_authority: ctx.accounts.vault_event_authority.to_account_info(),
                 program: ctx.accounts.conditional_vault_program.to_account_info(),
@@ -218,7 +223,7 @@ impl ConditionalSwap<'_> {
                 token::Transfer {
                     from: amm_output_account.to_account_info(),
                     to: ctx.accounts.user_output_account.to_account_info(),
-                    authority: ctx.accounts.futarchy_amm.to_account_info(),
+                    authority: ctx.accounts.dao.to_account_info(),
                 },
                 signer,
             ),

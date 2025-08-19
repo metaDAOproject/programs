@@ -14,39 +14,39 @@ pub struct WithdrawLiquidityParams {
 
 #[derive(Accounts)]
 pub struct WithdrawLiquidity<'info> {
-    #[account(mut, has_one = amm_base_vault, has_one = amm_quote_vault)]
-    pub futarchy_amm: Account<'info, FutarchyAmm>,
-    pub liquidity_provider: Signer<'info>,
+    #[account(mut)]
+    pub dao: Account<'info, Dao>,
+    pub position_authority: Signer<'info>,
     #[account(
         mut,
-        token::mint = futarchy_amm.base_mint,
-        token::authority = liquidity_provider,
+        token::mint = dao.base_mint,
+        token::authority = position_authority,
     )]
     pub liquidity_provider_base_account: Account<'info, TokenAccount>,
     #[account(
         mut,
-        token::mint = futarchy_amm.quote_mint,
-        token::authority = liquidity_provider,
+        token::mint = dao.quote_mint,
+        token::authority = position_authority,
     )]
     pub liquidity_provider_quote_account: Account<'info, TokenAccount>,
     #[account(
         mut,
-        associated_token::mint = futarchy_amm.base_mint,
-        associated_token::authority = futarchy_amm,
+        associated_token::mint = dao.base_mint,
+        associated_token::authority = dao,
     )]
     pub amm_base_vault: Account<'info, TokenAccount>,
     #[account(
         mut,
-        associated_token::mint = futarchy_amm.quote_mint,
-        associated_token::authority = futarchy_amm,
+        associated_token::mint = dao.quote_mint,
+        associated_token::authority = dao,
     )]
     pub amm_quote_vault: Account<'info, TokenAccount>,
     #[account(
         mut,
-        seeds = [b"amm_position", futarchy_amm.key().as_ref(), liquidity_provider.key().as_ref()],
+        seeds = [b"amm_position", dao.key().as_ref(), position_authority.key().as_ref()],
         bump,
-        has_one = futarchy_amm,
-        has_one = liquidity_provider,
+        has_one = dao,
+        has_one = position_authority,
     )]
     pub amm_position: Account<'info, AmmPosition>,
     pub token_program: Program<'info, Token>,
@@ -61,8 +61,8 @@ impl WithdrawLiquidity<'_> {
         } = params;
 
         let Self {
-            futarchy_amm,
-            liquidity_provider,
+            dao,
+            position_authority: liquidity_provider,
             liquidity_provider_base_account,
             liquidity_provider_quote_account,
             amm_base_vault,
@@ -72,7 +72,6 @@ impl WithdrawLiquidity<'_> {
         } = ctx.accounts;
 
         // Get the key before any borrows
-        let futarchy_amm_key = futarchy_amm.key();
         let liquidity_provider_key = liquidity_provider.key();
 
         require_gte!(
@@ -83,11 +82,11 @@ impl WithdrawLiquidity<'_> {
 
         require!(liquidity_to_withdraw > 0, AutocratError::ZeroLiquidityRemove);
 
-        let total_liquidity = futarchy_amm.total_liquidity;
+        let total_liquidity = dao.futarchy_amm.total_liquidity;
         require_gt!(total_liquidity, 0, AutocratError::AssertFailed);
 
         let (base_to_withdraw, quote_to_withdraw) = {
-            let PoolState::Spot { ref spot } = futarchy_amm.state else {
+            let PoolState::Spot { ref spot } = dao.futarchy_amm.state else {
                 // TODO: check that pool is already in right state
                 unreachable!();
             };
@@ -109,17 +108,18 @@ impl WithdrawLiquidity<'_> {
         amm_position.liquidity -= liquidity_to_withdraw;
 
         // Update the futarchy AMM
-        futarchy_amm.total_liquidity -= liquidity_to_withdraw;
+        dao.futarchy_amm.total_liquidity -= liquidity_to_withdraw;
         {
-            let PoolState::Spot { ref mut spot } = futarchy_amm.state else {
+            let PoolState::Spot { ref mut spot } = dao.futarchy_amm.state else {
                 unreachable!();
             };
             spot.base_reserves -= base_to_withdraw;
             spot.quote_reserves -= quote_to_withdraw;
         }
 
-        // Transfer tokens from AMM vaults to user
-        let signer_seeds = &[b"futarchy_amm".as_ref(), &[futarchy_amm.pda_bump]];
+        let dao_creator = dao.dao_creator;
+        let nonce = dao.nonce.to_le_bytes();
+        let signer_seeds = &[b"dao".as_ref(), dao_creator.as_ref(), nonce.as_ref(), &[dao.pda_bump]];
 
         for (amount_to_withdraw, from, to) in [
             (base_to_withdraw, amm_base_vault, liquidity_provider_base_account),
@@ -131,7 +131,7 @@ impl WithdrawLiquidity<'_> {
                     Transfer {
                         from: from.to_account_info(),
                         to: to.to_account_info(),
-                        authority: futarchy_amm.to_account_info(),
+                        authority: dao.to_account_info(),
                     },
                     &[&signer_seeds[..]],
                 ),
@@ -142,7 +142,7 @@ impl WithdrawLiquidity<'_> {
         let clock = Clock::get()?;
         emit!(WithdrawLiquidityEvent {
             common: CommonFields::new(&clock),
-            futarchy_amm: futarchy_amm_key,
+            dao: dao.key(),
             liquidity_provider: liquidity_provider_key,
             liquidity_withdrawn: liquidity_to_withdraw,
             min_base_amount,

@@ -130,9 +130,7 @@ pub mod autocrat {
         ConditionalSwap::handle(ctx, params)
     }
 
-    pub fn initialize_futarchy_amm(ctx: Context<InitializeFutarchyAmm>) -> Result<()> {
-        InitializeFutarchyAmm::handle(ctx)
-    }
+
 
     pub fn provide_liquidity(ctx: Context<ProvideLiquidity>, params: ProvideLiquidityParams) -> Result<()> {
         ProvideLiquidity::handle(ctx, params)

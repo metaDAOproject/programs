@@ -1,6 +1,6 @@
 use super::*;
 
-use anchor_spl::associated_token::AssociatedToken;
+
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct ProvideLiquidityParams {
@@ -14,18 +14,18 @@ pub struct ProvideLiquidityParams {
 
 #[derive(Accounts)]
 pub struct ProvideLiquidity<'info> {
-    #[account(mut, has_one = amm_base_vault, has_one = amm_quote_vault)]
-    pub futarchy_amm: Account<'info, FutarchyAmm>,
+    #[account(mut)]
+    pub dao: Box<Account<'info, Dao>>,
     pub liquidity_provider: Signer<'info>,
     #[account(
         mut,
-        token::mint = futarchy_amm.base_mint,
+        token::mint = dao.base_mint,
         token::authority = liquidity_provider,
     )]
     pub liquidity_provider_base_account: Account<'info, TokenAccount>,
     #[account(
         mut,
-        token::mint = futarchy_amm.quote_mint,
+        token::mint = dao.quote_mint,
         token::authority = liquidity_provider,
     )]
     pub liquidity_provider_quote_account: Account<'info, TokenAccount>,
@@ -34,20 +34,20 @@ pub struct ProvideLiquidity<'info> {
     pub system_program: Program<'info, System>,
     #[account(
         mut,
-        associated_token::mint = futarchy_amm.base_mint,
-        associated_token::authority = futarchy_amm,
+        associated_token::mint = dao.base_mint,
+        associated_token::authority = dao,
     )]
     pub amm_base_vault: Account<'info, TokenAccount>,
     #[account(
         mut,
-        associated_token::mint = futarchy_amm.quote_mint,
-        associated_token::authority = futarchy_amm,
+        associated_token::mint = dao.quote_mint,
+        associated_token::authority = dao,
     )]
     pub amm_quote_vault: Account<'info, TokenAccount>,
     #[account(
         init_if_needed,
         payer = payer,
-        seeds = [b"amm_position", futarchy_amm.key().as_ref(), liquidity_provider.key().as_ref()],
+        seeds = [b"amm_position", dao.key().as_ref(), liquidity_provider.key().as_ref()],
         bump,
         space = 8 + AmmPosition::INIT_SPACE,
     )]
@@ -64,7 +64,7 @@ impl ProvideLiquidity<'_> {
         } = params;
 
         let Self {
-            futarchy_amm,
+            dao,
             liquidity_provider,
             liquidity_provider_base_account,
             liquidity_provider_quote_account,
@@ -76,8 +76,8 @@ impl ProvideLiquidity<'_> {
             token_program,
         } = ctx.accounts;
 
-        let total_liquidity = futarchy_amm.total_liquidity;
-        let PoolState::Spot { ref mut spot } = futarchy_amm.state else {
+        let total_liquidity = dao.futarchy_amm.total_liquidity;
+        let PoolState::Spot { ref mut spot } = dao.futarchy_amm.state else {
             // TODO: check that pool is already in right state
             unreachable!();
         };
@@ -125,12 +125,12 @@ impl ProvideLiquidity<'_> {
         spot.quote_reserves += quote_amount;
 
         amm_position.set_inner(AmmPosition {
-            futarchy_amm: futarchy_amm.key(),
-            liquidity_provider: liquidity_provider.key(),
+            dao: dao.key(),
+            position_authority: liquidity_provider.key(),
             liquidity: amm_position.liquidity + liquidity_to_mint,
         });
 
-        futarchy_amm.total_liquidity += liquidity_to_mint;
+        dao.futarchy_amm.total_liquidity += liquidity_to_mint;
 
         token::transfer(
             CpiContext::new(

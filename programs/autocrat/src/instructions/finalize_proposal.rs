@@ -1,33 +1,30 @@
-use conditional_vault::{cpi::accounts::ResolveQuestion, ResolveQuestionArgs};
-
 use super::*;
+
+use anchor_spl::token::{self, Token};
+use conditional_vault::{cpi::accounts::ResolveQuestion, ResolveQuestionArgs};
+use conditional_vault::program::ConditionalVault as ConditionalVaultProgram;
+use conditional_vault::ConditionalVault as ConditionalVaultAccount;
+use conditional_vault::Question;
 
 #[derive(Accounts)]
 #[event_cpi]
 pub struct FinalizeProposal<'info> {
-    #[account(mut,
-        has_one = question,
-        has_one = dao,
-        has_one = squads_proposal,
-    )]
-    pub proposal: Account<'info, Proposal>,
-    /// CHECK: checked by the has_one
+    #[account(mut, has_one = question, has_one = dao, has_one = squads_proposal)]
+    pub proposal: Box<Account<'info, Proposal>>,
     #[account(mut)]
-    pub squads_proposal: UncheckedAccount<'info>,
-    pub squads_multisig_program:
-        Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
-    /// CHECK: checked by the has_one
-    pub squads_multisig: UncheckedAccount<'info>,
-    #[account(mut)]
-    pub futarchy_amm: Box<Account<'info, FutarchyAmm>>,
-    #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut)]
-    pub question: Account<'info, Question>,
-    pub token_program: Program<'info, Token>,
+    pub question: Box<Account<'info, Question>>,
+    /// CHECK: checked by squads multisig program
+    #[account(mut)]
+    pub squads_proposal: UncheckedAccount<'info>,
+    /// CHECK: checked by squads multisig program
+    pub squads_multisig: UncheckedAccount<'info>,
+    pub squads_multisig_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
     pub vault_program: Program<'info, ConditionalVaultProgram>,
     /// CHECK: checked by vault program
     pub vault_event_authority: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
 }
 
 impl FinalizeProposal<'_> {
@@ -48,18 +45,17 @@ impl FinalizeProposal<'_> {
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let FinalizeProposal {
+        let Self {
             proposal,
-            squads_proposal,
-            squads_multisig_program,
-            squads_multisig,
             dao,
             question,
-            futarchy_amm,
+            squads_proposal,
+            squads_multisig,
+            squads_multisig_program,
             vault_program,
-            token_program,
-            vault_event_authority,
+            token_program: _,
             event_authority: _,
+            vault_event_authority,
             program: _,
         } = ctx.accounts;
 
@@ -83,7 +79,7 @@ impl FinalizeProposal<'_> {
             amm.get_twap()
         };
 
-        let PoolState::Futarchy { pass, fail, mut spot } = futarchy_amm.state.to_owned() else {
+        let PoolState::Futarchy { pass, fail, mut spot } = dao.futarchy_amm.state.to_owned() else {
             unreachable!();
         };
 
@@ -105,14 +101,13 @@ impl FinalizeProposal<'_> {
 
         proposal.state = new_proposal_state;
 
-        let vault_program = vault_program.to_account_info();
         let cpi_accounts = ResolveQuestion {
             question: question.to_account_info(),
             oracle: proposal.to_account_info(),
             event_authority: vault_event_authority.to_account_info(),
             program: vault_program.to_account_info(),
         };
-        let cpi_ctx = CpiContext::new(vault_program, cpi_accounts).with_signer(proposal_signer);
+        let cpi_ctx = CpiContext::new(vault_program.to_account_info(), cpi_accounts).with_signer(proposal_signer);
         conditional_vault::cpi::resolve_question(
             cpi_ctx,
             ResolveQuestionArgs { payout_numerators },
@@ -148,7 +143,7 @@ impl FinalizeProposal<'_> {
             spot.quote_protocol_fee_balance += fail.quote_protocol_fee_balance;
         }
 
-        futarchy_amm.state = PoolState::Spot { spot };
+        dao.futarchy_amm.state = PoolState::Spot { spot };
 
         let clock = Clock::get()?;
 
