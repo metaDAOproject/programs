@@ -16,6 +16,18 @@ export type Autocrat = {
           isSigner: true;
         },
         {
+          name: "daoCreatorBaseAccount";
+          isMut: true;
+          isSigner: false;
+          isOptional: true;
+        },
+        {
+          name: "daoCreatorQuoteAccount";
+          isMut: true;
+          isSigner: false;
+          isOptional: true;
+        },
+        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -1061,6 +1073,14 @@ export type Autocrat = {
             type: "u64";
           },
           {
+            name: "baseLiquidityToLp";
+            type: "u64";
+          },
+          {
+            name: "quoteLiquidityToLp";
+            type: "u64";
+          },
+          {
             name: "baseToStake";
             type: "u64";
           },
@@ -2096,6 +2116,18 @@ export const IDL: Autocrat = {
           name: "daoCreator",
           isMut: false,
           isSigner: true,
+        },
+        {
+          name: "daoCreatorBaseAccount",
+          isMut: true,
+          isSigner: false,
+          isOptional: true,
+        },
+        {
+          name: "daoCreatorQuoteAccount",
+          isMut: true,
+          isSigner: false,
+          isOptional: true,
         },
         {
           name: "payer",
@@ -3140,6 +3172,14 @@ export const IDL: Autocrat = {
           },
           {
             name: "minBaseFutarchicLiquidity",
+            type: "u64",
+          },
+          {
+            name: "baseLiquidityToLp",
+            type: "u64",
+          },
+          {
+            name: "quoteLiquidityToLp",
             type: "u64",
           },
           {

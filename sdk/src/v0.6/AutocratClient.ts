@@ -24,6 +24,7 @@ import {
   AUTOCRAT_PROGRAM_ID,
   CONDITIONAL_VAULT_PROGRAM_ID,
   MAINNET_USDC,
+  PERMISSIONLESS_ACCOUNT,
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_CONFIG_TREASURY,
   SQUADS_PROGRAM_ID,
@@ -54,6 +55,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { Dao, Proposal } from "./types/index.js";
 
 import * as multisig from "@sqds/multisig";
+import { TransactionMessage } from "@solana/web3.js";
 
 export type CreateClientParams = {
   provider: AnchorProvider;
@@ -295,44 +297,219 @@ export class AutocratClient {
   //   return daoKeypair.publicKey;
   // }
 
-  // initializeDaoIx({
-  //   baseMint,
-  //   params,
-  //   quoteMint = MAINNET_USDC,
-  //   squadsProgramConfigTreasury = SQUADS_PROGRAM_CONFIG_TREASURY,
-  // }: {
-  //   baseMint: PublicKey;
-  //   params: InitializeDaoParams;
-  //   quoteMint?: PublicKey;
-  //   squadsProgramConfigTreasury?: PublicKey;
-  // }) {
-  //   const [dao] = getDaoAddr({
-  //     nonce: params.nonce,
-  //     daoCreator: this.provider.publicKey,
-  //   });
-  //   const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
-  //   const squadsMultisigVault = multisig.getVaultPda({
-  //     multisigPda,
-  //     index: 0,
-  //   })[0];
+  initializeDaoIx({
+    baseMint,
+    params,
+    provideLiquidity = false,
+    quoteMint = MAINNET_USDC,
+    squadsProgramConfigTreasury = SQUADS_PROGRAM_CONFIG_TREASURY,
+  }: {
+    baseMint: PublicKey;
+    params: InitializeDaoParams;
+    provideLiquidity?: boolean;
+    quoteMint?: PublicKey;
+    squadsProgramConfigTreasury?: PublicKey;
+  }) {
+    const [dao] = getDaoAddr({
+      nonce: params.nonce,
+      daoCreator: this.provider.publicKey,
+    });
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
 
-  //   const spendingLimit = multisig.getSpendingLimitPda({
-  //     multisigPda,
-  //     createKey: dao,
-  //   })[0];
+    let daoCreatorBaseAccount = null;
+    let daoCreatorQuoteAccount = null;
+    if (provideLiquidity) {
+      daoCreatorBaseAccount = getAssociatedTokenAddressSync(
+        baseMint,
+        this.provider.publicKey,
+        true
+      );
+      daoCreatorQuoteAccount = getAssociatedTokenAddressSync(
+        quoteMint,
+        this.provider.publicKey,
+        true
+      );
+    }
 
-  //   return this.autocrat.methods.initializeDao(params).accounts({
-  //     dao,
-  //     baseMint,
-  //     quoteMint,
-  //     squadsMultisig: multisigPda,
-  //     squadsMultisigVault,
-  //     squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
-  //     squadsProgramConfigTreasury,
-  //     squadsProgram: SQUADS_PROGRAM_ID,
-  //     spendingLimit,
-  //   });
-  // }
+    const spendingLimit = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    })[0];
+
+    return this.autocrat.methods.initializeDao(params).accounts({
+      dao,
+      baseMint,
+      quoteMint,
+      squadsMultisig: multisigPda,
+      squadsMultisigVault,
+      squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+      squadsProgramConfigTreasury,
+      squadsProgram: SQUADS_PROGRAM_ID,
+      spendingLimit,
+      daoCreatorBaseAccount,
+      daoCreatorQuoteAccount,
+      // daoCreatorBaseAccount: getAssociatedTokenAddressSync(
+      //   baseMint,
+      //   this.provider.publicKey,
+      //   true
+      // ),
+      // daoCreatorQuoteAccount: getAssociatedTokenAddressSync(
+      //   quoteMint,
+      //   this.provider.publicKey,
+      //   true
+      // ),
+      futarchyAmmBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
+      futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
+        quoteMint,
+        dao,
+        true
+      ),
+    });
+  }
+
+  launchProposalIx({
+    proposal,
+    dao,
+    baseMint,
+    quoteMint,
+  }: {
+    proposal: PublicKey;
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+  }) {
+    const {
+      baseVault,
+      quoteVault,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+    } = this.getProposalPdas(proposal, baseMint, quoteMint, dao);
+
+    return this.autocrat.methods
+      .launchProposal()
+      .accounts({
+        proposal,
+        dao,
+        baseVault,
+        quoteVault,
+        passBaseMint,
+        passQuoteMint,
+        failBaseMint,
+        failQuoteMint,
+        ammPassBaseVault: getAssociatedTokenAddressSync(
+          passBaseMint,
+          dao,
+          true
+        ),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          dao,
+          true
+        ),
+        ammFailBaseVault: getAssociatedTokenAddressSync(
+          failBaseMint,
+          dao,
+          true
+        ),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          dao,
+          true
+        ),
+        payer: this.provider.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ]);
+  }
+
+  conditionalSwapIx(
+    dao: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    proposal: PublicKey,
+    market: "pass" | "fail",
+    swapType: "buy" | "sell",
+    inputAmount: BN
+  ) {
+    const {
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      baseVault,
+      quoteVault,
+      question,
+    } = this.getProposalPdas(proposal, baseMint, quoteMint, dao);
+
+    return this.autocrat.methods
+      .conditionalSwap({
+        market: market == "pass" ? { pass: {} } : { fail: {} },
+        swapType: swapType == "buy" ? { buy: {} } : { sell: {} },
+        inputAmount,
+        minOutputAmount: new BN(0),
+      })
+      .accounts({
+        dao,
+        ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
+        ammPassBaseVault: getAssociatedTokenAddressSync(
+          passBaseMint,
+          dao,
+          true
+        ),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          dao,
+          true
+        ),
+        ammFailBaseVault: getAssociatedTokenAddressSync(
+          failBaseMint,
+          dao,
+          true
+        ),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          dao,
+          true
+        ),
+        baseVault,
+        quoteVault,
+        userInputAccount: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          this.provider.publicKey
+        ),
+        userOutputAccount: getAssociatedTokenAddressSync(
+          passBaseMint,
+          this.provider.publicKey
+        ),
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          baseVault,
+          true
+        ),
+        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          quoteVault,
+          true
+        ),
+        passBaseMint,
+        failBaseMint,
+        passQuoteMint,
+        failQuoteMint,
+        conditionalVaultProgram: this.vaultClient.vaultProgram.programId,
+        vaultEventAuthority: getEventAuthorityAddr(
+          this.vaultClient.vaultProgram.programId
+        )[0],
+        question,
+      });
+  }
 
   async initializeProposal(
     dao: PublicKey,

@@ -10,6 +10,8 @@ pub struct InitializeDaoParams {
     pub twap_start_delay_slots: u64,
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
+    pub base_liquidity_to_lp: u64,
+    pub quote_liquidity_to_lp: u64,
     pub base_to_stake: u64,
     pub pass_threshold_bps: u16,
     pub slots_per_proposal: u64,
@@ -31,6 +33,10 @@ pub struct InitializeDao<'info> {
     pub dao: Box<Account<'info, Dao>>,
     pub dao_creator: Signer<'info>,
     #[account(mut)]
+    pub dao_creator_base_account: Option<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub dao_creator_quote_account: Option<Account<'info, TokenAccount>>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
     pub base_mint: Box<Account<'info, Mint>>,
@@ -43,8 +49,9 @@ pub struct InitializeDao<'info> {
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig_vault: UncheckedAccount<'info>,
     pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
+    /// CHECK: checked by squads
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_PROGRAM_CONFIG], bump, seeds::program = squads_program)]
-    pub squads_program_config: Account<'info, squads_multisig_program::state::ProgramConfig>,
+    pub squads_program_config: UncheckedAccount<'info>,
     /// CHECK: checked by squads multisig program
     #[account(mut)]
     pub squads_program_config_treasury: UncheckedAccount<'info>,
@@ -73,6 +80,8 @@ impl InitializeDao<'_> {
             twap_start_delay_slots,
             min_base_futarchic_liquidity,
             min_quote_futarchic_liquidity,
+            base_liquidity_to_lp,
+            quote_liquidity_to_lp,
             base_to_stake,
             pass_threshold_bps,
             slots_per_proposal,
@@ -154,6 +163,34 @@ impl InitializeDao<'_> {
             )?;
         }
 
+        if let Some(dao_creator_base_account) = ctx.accounts.dao_creator_base_account.as_ref() {
+            token::transfer(
+                CpiContext::new(
+                    ctx.accounts.token_program.to_account_info(),
+                    token::Transfer {
+                        from: dao_creator_base_account.to_account_info(),
+                        to: ctx.accounts.futarchy_amm_base_vault.to_account_info(),
+                        authority: ctx.accounts.dao_creator.to_account_info(),
+                    },
+                ),
+                base_liquidity_to_lp,
+            )?;
+        }
+
+        if let Some(dao_creator_quote_account) = ctx.accounts.dao_creator_quote_account.as_ref() {
+            token::transfer(
+                CpiContext::new(
+                    ctx.accounts.token_program.to_account_info(),
+                    token::Transfer {
+                        from: dao_creator_quote_account.to_account_info(),
+                        to: ctx.accounts.futarchy_amm_quote_vault.to_account_info(),
+                        authority: ctx.accounts.dao_creator.to_account_info(),
+                    },
+                ),
+                quote_liquidity_to_lp,
+            )?;
+        }
+
         let clock = Clock::get()?;
         
         dao.set_inner(Dao {
@@ -178,8 +215,8 @@ impl InitializeDao<'_> {
             futarchy_amm: FutarchyAmm {
                 state: PoolState::Spot {
                     spot: Pool {
-                        quote_reserves: 0,
-                        base_reserves: 0,
+                        quote_reserves: quote_liquidity_to_lp,
+                        base_reserves: base_liquidity_to_lp,
                         quote_protocol_fee_balance: 0,
                         base_protocol_fee_balance: 0,
                         oracle: TwapOracle::new(
@@ -190,7 +227,7 @@ impl InitializeDao<'_> {
                         ),
                     },
                 },
-                total_liquidity: 0,
+                total_liquidity: quote_liquidity_to_lp as u128 * 1_000_000_000,
                 base_mint: ctx.accounts.base_mint.key(),
                 quote_mint: ctx.accounts.quote_mint.key(),
                 amm_base_vault: ctx.accounts.futarchy_amm_base_vault.key(),

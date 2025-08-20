@@ -2,7 +2,7 @@ import {
   getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -13,6 +13,7 @@ import BN from "bn.js";
 import { expectError, ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 const { Permissions, Permission } = multisig.types;
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
@@ -46,12 +47,16 @@ export default function suite() {
           twapStartDelaySlots: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24),
           twapInitialObservation: THOUSAND_BUCK_PRICE,
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
-          minQuoteFutarchicLiquidity: new BN(1),
-          minBaseFutarchicLiquidity: new BN(1000),
+          minQuoteFutarchicLiquidity: new BN(10_000),
+          minBaseFutarchicLiquidity: new BN(10_000),
+          baseLiquidityToLp: new BN(10 * 10 ** 9),
+          quoteLiquidityToLp: new BN(5000 * 10 ** 6),
           passThresholdBps: 300,
           nonce,
           initialSpendingLimit: null,
+          baseToStake: new BN(0),
         },
+        provideLiquidity: true,
       })
       .rpc();
 
@@ -151,30 +156,36 @@ export default function suite() {
 
     const { passAmm, passBaseMint, passQuoteMint, failAmm } =
       this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
-    await this.ammClient
-      .swapIx(
-        passAmm,
+
+    const { failBaseMint, failQuoteMint } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+
+    // await this.autocratClient.
+    await this.autocratClient.autocrat.methods.launchProposal()
+      .accounts({
+        proposal,
+        dao,
+        baseVault,
+        quoteVault,
         passBaseMint,
         passQuoteMint,
-        { buy: {} },
-        new BN(10000).muln(1_000_000),
-        new BN(0)
-      )
+        failBaseMint,
+        failQuoteMint,
+        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, dao, true),
+        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, dao, true),
+        payer: this.payer.publicKey,
+      })
+      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })])
       .rpc();
+
+    await this.autocratClient.conditionalSwapIx(dao, META, USDC, proposal, "pass", "buy", new BN(10_000 * 1_000_000)).rpc();
 
     for (let i = 0; i < 100; i++) {
       await this.advanceBySlots(20_000n);
 
-      await this.ammClient
-        .crankThatTwapIx(passAmm)
-        .preInstructions([
-          // this is to get around bankrun thinking we've processed the same transaction multiple times
-          ComputeBudgetProgram.setComputeUnitPrice({
-            microLamports: i,
-          }),
-          await this.ammClient.crankThatTwapIx(failAmm).instruction(),
-        ])
-        .rpc();
+      await this.autocratClient.conditionalSwapIx(dao, META, USDC, proposal, "pass", "buy", new BN(10))
+        .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })]).rpc();
     }
 
     // Finalize the proposal
@@ -186,26 +197,29 @@ export default function suite() {
 
   it("fails proposals when Pass TWAP < Fail TWAP", async function () {
     // Split tokens into the vaults
-    const { passAmm, failAmm } = this.autocratClient.getProposalPdas(
+
+    await this.autocratClient.launchProposalIx({
       proposal,
-      META,
-      USDC,
-      dao
-    );
+      dao,
+      baseMint: META,
+      quoteMint: USDC,
+    }).rpc();
 
     for (let i = 0; i < 100; i++) {
       await this.advanceBySlots(20_000n);
 
-      await this.ammClient
-        .crankThatTwapIx(passAmm)
-        .preInstructions([
-          // this is to get around bankrun thinking we've processed the same transaction multiple times
-          ComputeBudgetProgram.setComputeUnitPrice({
-            microLamports: i,
-          }),
-          await this.ammClient.crankThatTwapIx(failAmm).instruction(),
-        ])
-        .rpc();
+      await this.autocratClient.conditionalSwapIx(dao, META, USDC, proposal, "pass", "buy", new BN(10)).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })]).rpc();
+
+      // await this.ammClient
+      //   .crankThatTwapIx(passAmm)
+      //   .preInstructions([
+      //     // this is to get around bankrun thinking we've processed the same transaction multiple times
+      //     ComputeBudgetProgram.setComputeUnitPrice({
+      //       microLamports: i,
+      //     }),
+      //     await this.ammClient.crankThatTwapIx(failAmm).instruction(),
+      //   ])
+      //   .rpc();
     }
 
     // Finalize the proposal

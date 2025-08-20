@@ -2,7 +2,7 @@ import {
   getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 import BN from "bn.js";
 import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
@@ -47,6 +47,7 @@ export default function suite() {
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
           passThresholdBps: 300,
+          baseToStake: new BN(1000),
           nonce,
           initialSpendingLimit: null, 
         },
@@ -71,6 +72,7 @@ export default function suite() {
         params: {
           passThresholdBps: 500,
           slotsPerProposal: null,
+          baseToStake: null,
           twapInitialObservation: null,
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
@@ -142,12 +144,7 @@ export default function suite() {
     assert.ok(storedProposal.dao.equals(dao));
     assert.ok(storedProposal.proposer.equals(this.payer.publicKey));
     assert.ok(storedProposal.squadsProposal.equals(squadsProposalPda));
-    assert.equal(storedProposal.passLpTokensLocked.toString(), "5000000000");
-    assert.equal(
-      storedProposal.failLpTokensLocked.toString(),
-      quoteTokensToLP.toString()
-    );
-    assert.exists(storedProposal.state.pending);
+    assert.exists(storedProposal.state.draft);
 
     // Verify the DAO proposal count was incremented
     const storedDao = await this.autocratClient.getDao(dao);

@@ -2,7 +2,7 @@ import {
   getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { expectError, ONE_MINUTE_IN_SLOTS } from "../../utils.js";
@@ -32,6 +32,7 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
+          baseToStake: new BN(1000),
           passThresholdBps: 300,
           nonce: new BN(1337),
           initialSpendingLimit: null,
@@ -125,6 +126,7 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
+          baseToStake: new BN(1000),
           passThresholdBps: 300,
           nonce: new BN(420),
           initialSpendingLimit: {

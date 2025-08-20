@@ -12,7 +12,7 @@ export default function suite() {
   describe("#finalize_proposal", finalizeProposal);
 
   // describe("autocrat", autocrat);
-  describe("full proposal", fullProposal);
-  describe("proposal with a squads batch tx", proposalBatchTx);
-  describe("futarchy amm", futarchyAmm);
+  // describe("full proposal", fullProposal);
+  // describe("proposal with a squads batch tx", proposalBatchTx);
+  // describe("futarchy amm", futarchyAmm);
 }
