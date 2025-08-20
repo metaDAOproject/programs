@@ -222,7 +222,7 @@ impl Pool {
         // we allow updates once a minute as a happy medium. if you have an asset
         // that trades near $1500 and you allow $25 updates per minute, it can double
         // over an hour.
-        if current_slot < oracle.last_updated_slot + amm::state::ONE_MINUTE_IN_SLOTS {
+        if current_slot < oracle.last_updated_slot + crate::ONE_MINUTE_IN_SLOTS {
             return Ok(None);
         }
 
@@ -237,7 +237,7 @@ impl Pool {
         // - 4 * 1,000,000,000 = 4,000,000,000 META units (hansons)
         // so there's (400,000,000 / 4,000,000,000) or 0.1 USDC units per hanson,
         // which is 100,000,000,000 when scaled by 1e12.
-        let price = (self.quote_reserves as u128 * amm::state::PRICE_SCALE) / self.base_reserves as u128;
+        let price = (self.quote_reserves as u128 * crate::PRICE_SCALE) / self.base_reserves as u128;
 
         let last_observation = oracle.last_observation;
 

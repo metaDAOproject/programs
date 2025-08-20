@@ -226,16 +226,6 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "treasuryLpAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "poolState";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "baseMint";
           isMut: true;
           isSigner: false;
@@ -266,7 +256,12 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "observationState";
+          name: "futarchyAmmBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "futarchyAmmQuoteVault";
           isMut: true;
           isSigner: false;
         },
@@ -308,30 +303,6 @@ export type Launchpad = {
         {
           name: "staticAccounts";
           accounts: [
-            {
-              name: "authority";
-              isMut: false;
-              isSigner: false;
-            },
-            {
-              name: "ammConfig";
-              isMut: true;
-              isSigner: false;
-              docs: [
-                "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config"
-              ];
-            },
-            {
-              name: "createPoolFee";
-              isMut: true;
-              isSigner: false;
-              docs: ["create pool fee account"];
-            },
-            {
-              name: "cpSwapProgram";
-              isMut: false;
-              isSigner: false;
-            },
             {
               name: "autocratProgram";
               isMut: false;
@@ -1288,16 +1259,6 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "treasuryLpAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "poolState",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "baseMint",
           isMut: true,
           isSigner: false,
@@ -1328,7 +1289,12 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "observationState",
+          name: "futarchyAmmBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "futarchyAmmQuoteVault",
           isMut: true,
           isSigner: false,
         },
@@ -1370,30 +1336,6 @@ export const IDL: Launchpad = {
         {
           name: "staticAccounts",
           accounts: [
-            {
-              name: "authority",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "ammConfig",
-              isMut: true,
-              isSigner: false,
-              docs: [
-                "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config",
-              ],
-            },
-            {
-              name: "createPoolFee",
-              isMut: true,
-              isSigner: false,
-              docs: ["create pool fee account"],
-            },
-            {
-              name: "cpSwapProgram",
-              isMut: false,
-              isSigner: false,
-            },
             {
               name: "autocratProgram",
               isMut: false,

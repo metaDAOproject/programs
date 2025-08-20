@@ -5,7 +5,6 @@ use anchor_spl::associated_token::{self, AssociatedToken, Create};
 use anchor_spl::metadata::UpdateMetadataAccountsV2;
 use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, Transfer};
-use raydium_cpmm_cpi::states::AMM_CONFIG_SEED;
 
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCompletedEvent};
@@ -13,11 +12,6 @@ use crate::state::{Launch, LaunchState};
 use crate::AVAILABLE_TOKENS;
 use anchor_spl::metadata::{
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
-};
-use raydium_cpmm_cpi::{
-    cpi, instruction,
-    program::RaydiumCpmm,
-    states::{AmmConfig, OBSERVATION_SEED},
 };
 
 use autocrat::program::Autocrat;
@@ -30,36 +24,6 @@ pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 /// and conserve stack space.
 #[derive(Accounts)]
 pub struct StaticCompleteLaunchAccounts<'info> {
-    /// CHECK: pool vault and lp mint authority
-    #[account(
-        seeds = [
-            raydium_cpmm_cpi::AUTH_SEED.as_bytes(),
-        ],
-        seeds::program = cp_swap_program,
-        bump,
-    )]
-    pub authority: UncheckedAccount<'info>,
-
-    /// Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config
-    #[account(
-        mut,
-        seeds = [
-            AMM_CONFIG_SEED.as_bytes(),
-            &0_u16.to_be_bytes()
-        ],
-        seeds::program = cp_swap_program,
-        bump,
-    )]
-    pub amm_config: Box<Account<'info, AmmConfig>>,
-
-    /// create pool fee account
-    #[account(
-        mut,
-        address = raydium_cpmm_cpi::create_pool_fee_reveiver::id(),
-    )]
-    pub create_pool_fee: Box<Account<'info, TokenAccount>>,
-
-    pub cp_swap_program: Program<'info, RaydiumCpmm>,
     pub autocrat_program: Program<'info, Autocrat>,
     pub token_metadata_program: Program<'info, Metadata>,
     /// CHECK: checked by autocrat program
@@ -133,27 +97,6 @@ pub struct CompleteLaunch<'info> {
     )]
     pub treasury_quote_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: pool lp mint not created yet so we can't initialize it before
-    #[account(
-        mut,
-        address = get_associated_token_address(
-            squads_multisig_vault.key,
-            lp_mint.key,
-        )
-    )]
-    pub treasury_lp_account: UncheckedAccount<'info>,
-
-    /// CHECK: Initialize an account to store the pool state, init by cp-swap
-    #[account(
-        mut,
-        seeds = [
-            b"pool_state",
-            dao.key().as_ref(),
-        ],
-        bump,
-    )]
-    pub pool_state: UncheckedAccount<'info>,
-
     #[account(mut)]
     pub base_mint: Box<Account<'info, Mint>>,
 
@@ -183,17 +126,13 @@ pub struct CompleteLaunch<'info> {
     #[account(mut)]
     pub pool_usdc_vault: UncheckedAccount<'info>,
 
-    /// CHECK: an account to store oracle observations, init by cp-swap
-    #[account(
-        mut,
-        seeds = [
-            OBSERVATION_SEED.as_bytes(),
-            pool_state.key().as_ref(),
-        ],
-        seeds::program = static_accounts.cp_swap_program,
-        bump,
-    )]
-    pub observation_state: UncheckedAccount<'info>,
+    /// CHECK: checked by autocrat
+    #[account(mut)]
+    pub futarchy_amm_base_vault: UncheckedAccount<'info>,
+
+    /// CHECK: checked by autocrat
+    #[account(mut)]
+    pub futarchy_amm_quote_vault: UncheckedAccount<'info>,
 
     /// CHECK: this is the DAO account, init by autocrat
     #[account(mut)]
@@ -261,6 +200,10 @@ impl CompleteLaunch<'_> {
         let price_1e12 =
             ((total_committed_amount as u128) * PRICE_SCALE) / (AVAILABLE_TOKENS as u128);
 
+        let usdc_to_lp = total_committed_amount.saturating_div(5);
+        let usdc_to_dao = total_committed_amount.saturating_sub(usdc_to_lp);
+        let token_to_lp = AVAILABLE_TOKENS / 5;
+
         if total_committed_amount >= launch.minimum_raise_amount {
             autocrat::cpi::initialize_dao(
                 CpiContext::new_with_signer(
@@ -280,6 +223,12 @@ impl CompleteLaunch<'_> {
                         squads_program_config: ctx.accounts.static_accounts.squads_program_config.to_account_info(),
                         squads_program_config_treasury: ctx.accounts.static_accounts.squads_program_config_treasury.to_account_info(),
                         spending_limit: ctx.accounts.spending_limit.to_account_info(),
+                        dao_creator_base_account: Some(ctx.accounts.launch_base_vault.to_account_info()),
+                        dao_creator_quote_account: Some(ctx.accounts.launch_quote_vault.to_account_info()),
+                        futarchy_amm_base_vault: ctx.accounts.futarchy_amm_base_vault.to_account_info(),
+                        futarchy_amm_quote_vault: ctx.accounts.futarchy_amm_quote_vault.to_account_info(),
+                        associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+                        token_program: ctx.accounts.token_program.to_account_info(),
                     },
                     launch_signer,
                 ),
@@ -292,6 +241,8 @@ impl CompleteLaunch<'_> {
                     base_to_stake: AVAILABLE_TOKENS / 100,
                     slots_per_proposal: 3 * DAY_IN_SLOTS,
                     twap_start_delay_slots: DAY_IN_SLOTS,
+                    base_liquidity_to_lp: token_to_lp,
+                    quote_liquidity_to_lp: usdc_to_lp,
                     nonce: 0,
                     initial_spending_limit: Some(InitialSpendingLimit {
                         amount_per_month: launch.monthly_spending_limit_amount,
@@ -300,9 +251,6 @@ impl CompleteLaunch<'_> {
                 },
             )?;
 
-            let usdc_to_lp = total_committed_amount.saturating_div(5);
-            let usdc_to_dao = total_committed_amount.saturating_sub(usdc_to_lp);
-            let token_to_lp = AVAILABLE_TOKENS / 5;
 
             token::mint_to(
                 CpiContext::new_with_signer(
@@ -330,113 +278,113 @@ impl CompleteLaunch<'_> {
                 Some(ctx.accounts.squads_multisig_vault.key()),
             )?;
 
-            system_program::transfer(
-                CpiContext::new(
-                    ctx.accounts.system_program.to_account_info(),
-                    system_program::Transfer {
-                        from: ctx.accounts.payer.to_account_info(),
-                        to: ctx.accounts.launch_signer.to_account_info(),
-                    },
-                ),
-                // pool fee + 0.1 SOL for rent, we only need 0.05 now but Raydium
-                // is upgradeable so I'd rather leave buffer
-                ctx.accounts.static_accounts.amm_config.create_pool_fee + 100_000_000,
-            )?;
+            // system_program::transfer(
+            //     CpiContext::new(
+            //         ctx.accounts.system_program.to_account_info(),
+            //         system_program::Transfer {
+            //             from: ctx.accounts.payer.to_account_info(),
+            //             to: ctx.accounts.launch_signer.to_account_info(),
+            //         },
+            //     ),
+            //     // pool fee + 0.1 SOL for rent, we only need 0.05 now but Raydium
+            //     // is upgradeable so I'd rather leave buffer
+            //     ctx.accounts.static_accounts.amm_config.create_pool_fee + 100_000_000,
+            // )?;
 
-            // Raydium requires that token_0 < token_1
-            let (
-                token_0_mint,
-                token_1_mint,
-                token_0_vault,
-                token_1_vault,
-                creator_token_0,
-                creator_token_1,
-                init_amount_0,
-                init_amount_1,
-            ) = if ctx.accounts.base_mint.key() < ctx.accounts.quote_mint.key() {
-                (
-                    ctx.accounts.base_mint.to_account_info(),
-                    ctx.accounts.quote_mint.to_account_info(),
-                    ctx.accounts.pool_token_vault.to_account_info(),
-                    ctx.accounts.pool_usdc_vault.to_account_info(),
-                    ctx.accounts.launch_base_vault.to_account_info(),
-                    ctx.accounts.launch_quote_vault.to_account_info(),
-                    token_to_lp,
-                    usdc_to_lp,
-                )
-            } else {
-                (
-                    ctx.accounts.quote_mint.to_account_info(),
-                    ctx.accounts.base_mint.to_account_info(),
-                    ctx.accounts.pool_usdc_vault.to_account_info(),
-                    ctx.accounts.pool_token_vault.to_account_info(),
-                    ctx.accounts.launch_quote_vault.to_account_info(),
-                    ctx.accounts.launch_base_vault.to_account_info(),
-                    usdc_to_lp,
-                    token_to_lp,
-                )
-            };
+            // // Raydium requires that token_0 < token_1
+            // let (
+            //     token_0_mint,
+            //     token_1_mint,
+            //     token_0_vault,
+            //     token_1_vault,
+            //     creator_token_0,
+            //     creator_token_1,
+            //     init_amount_0,
+            //     init_amount_1,
+            // ) = if ctx.accounts.base_mint.key() < ctx.accounts.quote_mint.key() {
+            //     (
+            //         ctx.accounts.base_mint.to_account_info(),
+            //         ctx.accounts.quote_mint.to_account_info(),
+            //         ctx.accounts.pool_token_vault.to_account_info(),
+            //         ctx.accounts.pool_usdc_vault.to_account_info(),
+            //         ctx.accounts.launch_base_vault.to_account_info(),
+            //         ctx.accounts.launch_quote_vault.to_account_info(),
+            //         token_to_lp,
+            //         usdc_to_lp,
+            //     )
+            // } else {
+            //     (
+            //         ctx.accounts.quote_mint.to_account_info(),
+            //         ctx.accounts.base_mint.to_account_info(),
+            //         ctx.accounts.pool_usdc_vault.to_account_info(),
+            //         ctx.accounts.pool_token_vault.to_account_info(),
+            //         ctx.accounts.launch_quote_vault.to_account_info(),
+            //         ctx.accounts.launch_base_vault.to_account_info(),
+            //         usdc_to_lp,
+            //         token_to_lp,
+            //     )
+            // };
 
-            let cpi_accounts = cpi::accounts::Initialize {
-                creator: ctx.accounts.launch_signer.to_account_info(),
-                amm_config: ctx.accounts.static_accounts.amm_config.to_account_info(),
-                authority: ctx.accounts.static_accounts.authority.to_account_info(),
-                pool_state: ctx.accounts.pool_state.to_account_info(),
-                lp_mint: ctx.accounts.lp_mint.to_account_info(),
-                creator_lp_token: ctx.accounts.lp_vault.to_account_info(),
-                create_pool_fee: ctx.accounts.static_accounts.create_pool_fee.to_account_info(),
-                observation_state: ctx.accounts.observation_state.to_account_info(),
-                token_program: ctx.accounts.token_program.to_account_info(),
-                token_0_program: ctx.accounts.token_program.to_account_info(),
-                token_1_program: ctx.accounts.token_program.to_account_info(),
-                associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-                system_program: ctx.accounts.system_program.to_account_info(),
-                rent: ctx.accounts.static_accounts.rent.to_account_info(),
-                token_0_mint,
-                token_1_mint,
-                token_0_vault,
-                token_1_vault,
-                creator_token_0,
-                creator_token_1,
-            };
+            // let cpi_accounts = cpi::accounts::Initialize {
+            //     creator: ctx.accounts.launch_signer.to_account_info(),
+            //     amm_config: ctx.accounts.static_accounts.amm_config.to_account_info(),
+            //     authority: ctx.accounts.static_accounts.authority.to_account_info(),
+            //     pool_state: ctx.accounts.pool_state.to_account_info(),
+            //     lp_mint: ctx.accounts.lp_mint.to_account_info(),
+            //     creator_lp_token: ctx.accounts.lp_vault.to_account_info(),
+            //     create_pool_fee: ctx.accounts.static_accounts.create_pool_fee.to_account_info(),
+            //     observation_state: ctx.accounts.observation_state.to_account_info(),
+            //     token_program: ctx.accounts.token_program.to_account_info(),
+            //     token_0_program: ctx.accounts.token_program.to_account_info(),
+            //     token_1_program: ctx.accounts.token_program.to_account_info(),
+            //     associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+            //     system_program: ctx.accounts.system_program.to_account_info(),
+            //     rent: ctx.accounts.static_accounts.rent.to_account_info(),
+            //     token_0_mint,
+            //     token_1_mint,
+            //     token_0_vault,
+            //     token_1_vault,
+            //     creator_token_0,
+            //     creator_token_1,
+            // };
 
-            let ix = instruction::Initialize {
-                init_amount_0,
-                init_amount_1,
-                open_time: 0,
-            };
-            let mut ix_data = Vec::with_capacity(256);
-            ix_data.extend_from_slice(&instruction::Initialize::discriminator());
-            AnchorSerialize::serialize(&ix, &mut ix_data)?;
+            // let ix = instruction::Initialize {
+            //     init_amount_0,
+            //     init_amount_1,
+            //     open_time: 0,
+            // };
+            // let mut ix_data = Vec::with_capacity(256);
+            // ix_data.extend_from_slice(&instruction::Initialize::discriminator());
+            // AnchorSerialize::serialize(&ix, &mut ix_data)?;
 
-            let ix = solana_program::instruction::Instruction {
-                program_id: ctx.accounts.static_accounts.cp_swap_program.key(),
-                accounts: cpi_accounts
-                    .to_account_metas(None)
-                    .into_iter()
-                    .zip(cpi_accounts.to_account_infos())
-                    .map(|mut pair| {
-                        pair.0.is_signer = pair.1.is_signer;
-                        if pair.0.pubkey == ctx.accounts.launch_signer.key()
-                            || pair.0.pubkey == ctx.accounts.pool_state.key()
-                        {
-                            pair.0.is_signer = true;
-                        }
-                        pair.0
-                    })
-                    .collect(),
-                data: ix_data,
-            };
+            // let ix = solana_program::instruction::Instruction {
+            //     program_id: ctx.accounts.static_accounts.cp_swap_program.key(),
+            //     accounts: cpi_accounts
+            //         .to_account_metas(None)
+            //         .into_iter()
+            //         .zip(cpi_accounts.to_account_infos())
+            //         .map(|mut pair| {
+            //             pair.0.is_signer = pair.1.is_signer;
+            //             if pair.0.pubkey == ctx.accounts.launch_signer.key()
+            //                 || pair.0.pubkey == ctx.accounts.pool_state.key()
+            //             {
+            //                 pair.0.is_signer = true;
+            //             }
+            //             pair.0
+            //         })
+            //         .collect(),
+            //     data: ix_data,
+            // };
 
-            let dao_key = ctx.accounts.dao.key();
-            let pool_seeds = &[b"pool_state", dao_key.as_ref(), &[ctx.bumps.pool_state]];
-            let raydium_signer = &[&launch_signer_seeds[..], &pool_seeds[..]];
+            // let dao_key = ctx.accounts.dao.key();
+            // let pool_seeds = &[b"pool_state", dao_key.as_ref(), &[ctx.bumps.pool_state]];
+            // let raydium_signer = &[&launch_signer_seeds[..], &pool_seeds[..]];
 
-            solana_program::program::invoke_signed(
-                &ix,
-                &cpi_accounts.to_account_infos(),
-                raydium_signer,
-            )?;
+            // solana_program::program::invoke_signed(
+            //     &ix,
+            //     &cpi_accounts.to_account_infos(),
+            //     raydium_signer,
+            // )?;
 
             token::transfer(
                 CpiContext::new_with_signer(
@@ -454,34 +402,34 @@ impl CompleteLaunch<'_> {
             // We don't need to do this idempotently because the LP mint is only
             // created in the Raydium IX, which means that the account couldn't
             // exist yet.
-            associated_token::create(CpiContext::new(
-                ctx.accounts.associated_token_program.to_account_info(),
-                Create {
-                    payer: ctx.accounts.payer.to_account_info(),
-                    associated_token: ctx.accounts.treasury_lp_account.to_account_info(),
-                    authority: ctx.accounts.squads_multisig_vault.to_account_info(),
-                    mint: ctx.accounts.lp_mint.to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    token_program: ctx.accounts.token_program.to_account_info(),
-                },
-            ))?;
+            // associated_token::create(CpiContext::new(
+            //     ctx.accounts.associated_token_program.to_account_info(),
+            //     Create {
+            //         payer: ctx.accounts.payer.to_account_info(),
+            //         associated_token: ctx.accounts.treasury_lp_account.to_account_info(),
+            //         authority: ctx.accounts.squads_multisig_vault.to_account_info(),
+            //         mint: ctx.accounts.lp_mint.to_account_info(),
+            //         system_program: ctx.accounts.system_program.to_account_info(),
+            //         token_program: ctx.accounts.token_program.to_account_info(),
+            //     },
+            // ))?;
 
-            let lp_vault = ctx.accounts.lp_vault.to_account_info();
-            let lp_vault: TokenAccount =
-                TokenAccount::try_deserialize(&mut &lp_vault.data.borrow()[..])?;
+            // let lp_vault = ctx.accounts.lp_vault.to_account_info();
+            // let lp_vault: TokenAccount =
+            //     TokenAccount::try_deserialize(&mut &lp_vault.data.borrow()[..])?;
 
-            token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    Transfer {
-                        from: ctx.accounts.lp_vault.to_account_info(),
-                        to: ctx.accounts.treasury_lp_account.to_account_info(),
-                        authority: ctx.accounts.launch_signer.to_account_info(),
-                    },
-                    launch_signer,
-                ),
-                lp_vault.amount,
-            )?;
+            // token::transfer(
+            //     CpiContext::new_with_signer(
+            //         ctx.accounts.token_program.to_account_info(),
+            //         Transfer {
+            //             from: ctx.accounts.lp_vault.to_account_info(),
+            //             to: ctx.accounts.treasury_lp_account.to_account_info(),
+            //             authority: ctx.accounts.launch_signer.to_account_info(),
+            //         },
+            //         launch_signer,
+            //     ),
+            //     lp_vault.amount,
+            // )?;
 
             update_metadata_accounts_v2(
                 CpiContext::new_with_signer(

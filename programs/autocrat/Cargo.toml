@@ -20,6 +20,5 @@ anchor-lang = "^0.29.0"
 anchor-spl = "^0.29.0"
 solana-security-txt = "1.1.1"
 conditional_vault = { path = "../conditional_vault", features = ["cpi"] }
-amm = { path = "../amm", features = ["cpi"] }
 squads-multisig-program = { git = "https://github.com/Squads-Protocol/v4", package = "squads-multisig-program", rev = "6d5235da621a2e9b7379ea358e48760e981053be", features = ["cpi"] }
 dashu-int = "0.4.1"

@@ -404,7 +404,6 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 name = "autocrat"
 version = "0.5.0"
 dependencies = [
- "amm",
  "anchor-lang",
  "anchor-spl",
  "conditional_vault",
@@ -1180,7 +1179,6 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "autocrat",
- "raydium-cpmm-cpi",
  "solana-program",
  "solana-security-txt",
  "spl-memo",

@@ -319,11 +319,11 @@ export class LaunchpadClient {
       launchBaseVault,
       dao,
       treasuryQuoteAccount,
-      treasuryLpAccount: getAssociatedTokenAddressSync(
-        lpMint,
-        multisigVault,
-        true
-      ),
+      // treasuryLpAccount: getAssociatedTokenAddressSync(
+      //   lpMint,
+      //   multisigVault,
+      //   true
+      // ),
       quoteMint,
       baseMint,
       tokenMetadata,
@@ -331,17 +331,23 @@ export class LaunchpadClient {
       lpVault,
       poolTokenVault,
       poolUsdcVault,
-      poolState,
-      observationState,
+      futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
+        quoteMint,
+        dao,
+        true
+      ),
+      futarchyAmmBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
+      // poolState,
+      // observationState,
       staticAccounts: {
-        cpSwapProgram: cpSwapProgramId,
-        authority: isDevnet ? DEVNET_RAYDIUM_AUTHORITY : RAYDIUM_AUTHORITY,
-        ammConfig: isDevnet
-          ? DEVNET_LOW_FEE_RAYDIUM_CONFIG
-          : LOW_FEE_RAYDIUM_CONFIG,
-        createPoolFee: isDevnet
-          ? DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE
-          : RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+        // cpSwapProgram: cpSwapProgramId,
+        // authority: isDevnet ? DEVNET_RAYDIUM_AUTHORITY : RAYDIUM_AUTHORITY,
+        // ammConfig: isDevnet
+        //   ? DEVNET_LOW_FEE_RAYDIUM_CONFIG
+        //   : LOW_FEE_RAYDIUM_CONFIG,
+        // createPoolFee: isDevnet
+        //   ? DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE
+        //   : RAYDIUM_CREATE_POOL_FEE_RECEIVE,
         autocratProgram: this.autocratClient.getProgramId(),
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         autocratEventAuthority,

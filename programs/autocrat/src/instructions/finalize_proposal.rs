@@ -1,9 +1,8 @@
 use super::*;
 
-use anchor_spl::token::{self, Token};
+use anchor_spl::token::Token;
 use conditional_vault::{cpi::accounts::ResolveQuestion, ResolveQuestionArgs};
 use conditional_vault::program::ConditionalVault as ConditionalVaultProgram;
-use conditional_vault::ConditionalVault as ConditionalVaultAccount;
 use conditional_vault::Question;
 
 #[derive(Accounts)]
