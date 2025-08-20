@@ -515,7 +515,6 @@ export class AutocratClient {
 
     return proposal;
   }
-
   async initializeProposalTx(
     dao: PublicKey,
     descriptionUrl: string,
@@ -652,6 +651,261 @@ export class AutocratClient {
       ],
       proposal,
     };
+  }
+
+  async initializeProposalTx2(
+    dao: PublicKey,
+    descriptionUrl: string,
+    instruction: ProposalInstruction,
+    baseTokensToLP: BN,
+    quoteTokensToLP: BN,
+    nonce: BN = new BN(Math.random() * 2 ** 50)
+  ): Promise<{ transactions: Transaction[]; proposal: PublicKey }> {
+    const storedDao = await this.getDao(dao);
+
+    let [proposal] = getProposalAddr(
+      this.autocrat.programId,
+      this.provider.publicKey,
+      nonce
+    );
+
+    // Get the initialize question transaction
+    const questionTx = await this.vaultClient
+      .initializeQuestionIx(
+        sha256(`Will ${proposal} pass?/FAIL/PASS`),
+        proposal,
+        2
+      )
+      .transaction();
+
+    const {
+      baseVault,
+      quoteVault,
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      question,
+    } = this.getProposalPdas(
+      proposal,
+      storedDao.tokenMint,
+      storedDao.usdcMint,
+      dao
+    );
+
+    // Get the initialize vaults and AMMs transaction
+    const initializeVaultsTx = await this.vaultClient
+      .initializeVaultIx(question, storedDao.tokenMint, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.vaultClient.initializeVaultIx(question, storedDao.usdcMint, 2),
+          this.ammClient.initializeAmmIx(
+            passBaseMint,
+            passQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          ),
+          this.ammClient.initializeAmmIx(
+            failBaseMint,
+            failQuoteMint,
+            storedDao.twapStartDelaySlots,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          )
+        )
+      )
+      .transaction();
+
+    // Get the split tokens transaction
+    const splitTokensTx = await this.vaultClient
+      .splitTokensIx(
+        question,
+        baseVault,
+        storedDao.tokenMint,
+        baseTokensToLP,
+        2
+      )
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.vaultClient.splitTokensIx(
+            question,
+            quoteVault,
+            storedDao.usdcMint,
+            quoteTokensToLP,
+            2
+          )
+        )
+      )
+      .transaction();
+
+    // Get the add liquidity transaction
+    const addLiquidityTx = await this.ammClient
+      .addLiquidityIx(
+        passAmm,
+        passBaseMint,
+        passQuoteMint,
+        quoteTokensToLP,
+        baseTokensToLP,
+        new BN(0)
+      )
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.ammClient.addLiquidityIx(
+            failAmm,
+            failBaseMint,
+            failQuoteMint,
+            quoteTokensToLP,
+            baseTokensToLP,
+            new BN(0)
+          )
+        )
+      )
+      .transaction();
+
+    // Get the initialize proposal transaction WITHOUT preInstructions
+    const lpTokens = quoteTokensToLP;
+    const initializeProposalBuilder = this.initializeProposalIx(
+      descriptionUrl,
+      instruction,
+      dao,
+      storedDao.tokenMint,
+      storedDao.usdcMint,
+      lpTokens,
+      lpTokens,
+      nonce,
+      question
+    );
+
+    // Get the preInstructions separately
+    const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
+    const [passLp] = getAmmLpMintAddr(
+      this.ammClient.program.programId,
+      passAmm
+    );
+    const [failLp] = getAmmLpMintAddr(
+      this.ammClient.program.programId,
+      failAmm
+    );
+
+    const passLpVaultAccount = getAssociatedTokenAddressSync(
+      passLp,
+      daoTreasury,
+      true
+    );
+    const failLpVaultAccount = getAssociatedTokenAddressSync(
+      failLp,
+      daoTreasury,
+      true
+    );
+
+    // Create ATA instructions as a separate transaction
+    const createATAsTx = new Transaction().add(
+      createAssociatedTokenAccountIdempotentInstruction(
+        this.provider.publicKey,
+        passLpVaultAccount,
+        daoTreasury,
+        passLp
+      ),
+      createAssociatedTokenAccountIdempotentInstruction(
+        this.provider.publicKey,
+        failLpVaultAccount,
+        daoTreasury,
+        failLp
+      )
+    );
+
+    // Get the actual initialize proposal instruction without preInstructions
+    const initializeProposalTx = await initializeProposalBuilder.transaction();
+
+    return {
+      transactions: [
+        questionTx,
+        initializeVaultsTx,
+        splitTokensTx,
+        addLiquidityTx,
+        createATAsTx, // Separate transaction for creating ATAs
+        initializeProposalTx, // Just the initialize instruction
+      ],
+      proposal,
+    };
+  }
+
+  initializeProposalIx2(
+    descriptionUrl: string,
+    instruction: ProposalInstruction,
+    dao: PublicKey,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    passLpTokensToLock: BN,
+    failLpTokensToLock: BN,
+    nonce: BN,
+    question: PublicKey,
+    proposer: PublicKey = this.provider.publicKey
+  ) {
+    let [proposal] = getProposalAddr(this.autocrat.programId, proposer, nonce);
+    const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
+    const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
+      proposal,
+      baseMint,
+      quoteMint,
+      dao
+    );
+
+    const [passLp] = getAmmLpMintAddr(
+      this.ammClient.program.programId,
+      passAmm
+    );
+    const [failLp] = getAmmLpMintAddr(
+      this.ammClient.program.programId,
+      failAmm
+    );
+
+    const passLpVaultAccount = getAssociatedTokenAddressSync(
+      passLp,
+      daoTreasury,
+      true
+    );
+    const failLpVaultAccount = getAssociatedTokenAddressSync(
+      failLp,
+      daoTreasury,
+      true
+    );
+
+    return this.autocrat.methods
+      .initializeProposal({
+        descriptionUrl,
+        instruction,
+        passLpTokensToLock,
+        failLpTokensToLock,
+        nonce,
+      })
+      .accounts({
+        question,
+        proposal,
+        dao,
+        baseVault,
+        quoteVault,
+        passAmm,
+        failAmm,
+        passLpMint: passLp,
+        failLpMint: failLp,
+        passLpUserAccount: getAssociatedTokenAddressSync(
+          passLp,
+          proposer,
+          true
+        ),
+        failLpUserAccount: getAssociatedTokenAddressSync(
+          failLp,
+          proposer,
+          true
+        ),
+        passLpVaultAccount,
+        failLpVaultAccount,
+        proposer,
+      });
   }
 
   initializeProposalIx(

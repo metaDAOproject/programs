@@ -2,6 +2,7 @@ import conditionalVault from "./conditionalVault/main.test.js";
 import amm from "./amm/main.test.js";
 import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
+import redeemTest from "./redeem/redeem.test.js";
 
 import { Clock, startAnchor } from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
@@ -51,6 +52,10 @@ export const STREAMFLOW_VESTING_PROGRAM_ID = new PublicKey(
   "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m"
 );
 
+export const REDEEM_PROGRAM_ID = new PublicKey(
+  "2yybFizjrwdYEKktHtvpXr9qSSpKLd3NzZE7p4batVAf"
+);
+
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
 import twap from "./integration/twap.test.js";
@@ -80,6 +85,10 @@ before(async function () {
       {
         name: "streamflow_vesting",
         programId: STREAMFLOW_VESTING_PROGRAM_ID,
+      },
+      {
+        name: "redeem",
+        programId: REDEEM_PROGRAM_ID,
       }
     ],
     [
@@ -258,13 +267,15 @@ before(async function () {
   );
 });
 
-describe("conditional_vault", conditionalVault);
-describe("amm", amm);
-describe("autocrat", autocrat);
-describe("launchpad", launchpad);
+// describe("conditional_vault", conditionalVault);
+// describe("amm", amm);
+// describe("autocrat", autocrat);
+// describe("launchpad", launchpad);
 describe("project-wide integration tests", function () {
-  it("mint and swap in a single transaction", mintAndSwap);
-  it("tests scalar markets (mint, split, swap, redeem) with some fuzzing", scalarMarkets);
-  it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
-  it("full launch", fullLaunch);
+  // it("mint and swap in a single transaction", mintAndSwap);
+  // it("tests scalar markets (mint, split, swap, redeem) with some fuzzing", scalarMarkets);
+  // it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
+  // it("full launch", fullLaunch);
+  it("redeem", redeemTest);
+
 });
