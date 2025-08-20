@@ -114,16 +114,9 @@ pub struct Redeem<'info> {
     /// IDLs don't work in our tests with anchor 0.29.0
     #[account(
         mut,
-        // seeds = [
-        //     b"vault",
-        //     MIGRATOR_ADMIN_ADDRESS.as_ref(),
-        //     base_mint.key().as_ref(),
-        //     quote_mint.key().as_ref(),
-        // ],
-        // bump,
-        // seeds::program = TOKEN_MIGRATOR_PROGRAM,
+        constraint = migrator_quote_vault.mint == dao.usdc_mint @ RedeemError::InvalidMigratorVaultMint,
     )]
-    pub migrator_vault: UncheckedAccount<'info>,
+    pub migrator_quote_vault: Box<Account<'info, TokenAccount>>,
     
     // Programs
     pub token_program: Program<'info, Token>,
@@ -188,30 +181,26 @@ impl Redeem<'_> {
                 )
             };
         
-        // Build the CPI context for Raydium withdraw
-        let cpi_accounts = cpi::accounts::Withdraw {
-            owner: ctx.accounts.treasury.to_account_info(),
-            authority: ctx.accounts.pool_authority.to_account_info(),
-            pool_state: ctx.accounts.pool_state.to_account_info(),
-            owner_lp_token: ctx.accounts.lp_account.to_account_info(),
-            token_0_account,
-            token_1_account,
-            token_0_vault,
-            token_1_vault,
-            token_program: ctx.accounts.token_program.to_account_info(),
-            token_program_2022: ctx.accounts.token_program_2022.to_account_info(),
-            vault_0_mint,
-            vault_1_mint,
-            lp_mint: ctx.accounts.lp_mint.to_account_info(),
-            memo_program: ctx.accounts.memo_program.to_account_info(),
-        };
-        
-        let cpi_program = ctx.accounts.cp_swap_program.to_account_info();
-        
         // Execute the withdraw with PDA signer
         let cpi_ctx = CpiContext::new(
-            cpi_program,
-            cpi_accounts,
+            ctx.accounts.cp_swap_program.to_account_info(),
+            cpi::accounts::Withdraw 
+            {
+                owner: ctx.accounts.treasury.to_account_info(),
+                authority: ctx.accounts.pool_authority.to_account_info(),
+                pool_state: ctx.accounts.pool_state.to_account_info(),
+                owner_lp_token: ctx.accounts.lp_account.to_account_info(),
+                token_0_account,
+                token_1_account,
+                token_0_vault,
+                token_1_vault,
+                token_program: ctx.accounts.token_program.to_account_info(),
+                token_program_2022: ctx.accounts.token_program_2022.to_account_info(),
+                vault_0_mint,
+                vault_1_mint,
+                lp_mint: ctx.accounts.lp_mint.to_account_info(),
+                memo_program: ctx.accounts.memo_program.to_account_info(),
+            },
         );
         
         raydium_cpmm_cpi::cpi::withdraw(
@@ -249,7 +238,7 @@ impl Redeem<'_> {
                     ctx.accounts.token_program.to_account_info(),
                     Transfer {
                         from: ctx.accounts.treasury_quote_account.to_account_info(),
-                        to: ctx.accounts.migrator_vault.to_account_info(),
+                        to: ctx.accounts.migrator_quote_vault.to_account_info(),
                         authority: ctx.accounts.treasury.to_account_info(),
                     },
                 ),

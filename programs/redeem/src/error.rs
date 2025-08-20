@@ -46,4 +46,7 @@ pub enum RedeemError {
 
     #[msg("Migrator vault must be funded to receive USDC")]
     MigratorVaultNotFunded,
+
+    #[msg("Migrator vault mint does not match quote mint")]
+    InvalidMigratorVaultMint,
 }

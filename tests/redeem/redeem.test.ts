@@ -432,7 +432,7 @@ export default async function redeemTest() {
       treasuryQuoteAccount: treasuryUsdcAccount,
       poolBaseVault: poolMetaVault,
       poolQuoteVault: poolUsdcVault,
-      migratorVault: migratorVaultKeypair.publicKey,
+      migratorQuoteVault: migratorVaultKeypair.publicKey,
       tokenProgram: TOKEN_PROGRAM_ID,
       cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
       tokenProgram2022: token.TOKEN_2022_PROGRAM_ID,
@@ -889,13 +889,6 @@ export default async function redeemTest() {
           console.log(`Fixing treasury signer flag for ${key.pubkey.toString()}`);
           key.isSigner = false;
         }
-        // Fix executable flag for redeem program
-        if (key.pubkey.equals(REDEEM_PROGRAM_ID)) {
-          console.log(`Fixing executable flag for redeem program ${key.pubkey.toString()}`);
-          // Program accounts should be executable, not writable, not signer
-          key.isWritable = false;
-          key.isSigner = false;
-        }
       });
     });
 
@@ -965,12 +958,6 @@ export default async function redeemTest() {
       // Add all account keys from instructions
       execTx.instructions.forEach(ix => {
         ix.keys.forEach(key => execAddresses.add(key.pubkey.toString()));
-      });
-      
-      // Also add any addresses that might be referenced in instruction data (best-effort)
-      execTx.instructions.forEach(ix => {
-        if (ix.programId.equals(new PublicKey("autowMzCbM29YXMgVG3T62Hkgo7RcyrvgQQkd54fDQL"))) {
-        }
       });
       
       // Add common system accounts that might be needed
