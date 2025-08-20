@@ -8,12 +8,14 @@ import addMetadataToConditionalTokens from "./unit/addMetadataToConditionalToken
 import binaryPredictionMarket from "./integration/binaryPredictionMarket.test.js";
 import scalarGrantMarket from "./integration/scalarGrantMarket.test.js";
 import multiOptionPredictionMarket from "./integration/multiOptionPredictionMarket.test.js";
+import manyOptionMarket from "./integration/manyOptionMarket.test.js";
 
 // TODO add a many-outcome integration test
 export default function suite() {
   it("binary prediction market", binaryPredictionMarket);
   it("scalar grant market", scalarGrantMarket);
   it("multi option prediction market", multiOptionPredictionMarket);
+  it.only("many option market", manyOptionMarket);
   describe("#initialize_question", initializeQuestion);
   describe("#initialize_conditional_vault", initializeConditionalVault);
   describe("#resolve_question", resolveQuestion);

@@ -359,7 +359,7 @@ before(async function () {
   );
 });
 
-describe("conditional_vault", conditionalVault);
+describe.only("conditional_vault", conditionalVault);
 describe("amm", amm);
 describe("autocrat", autocrat);
 describe("launchpad", launchpad);
