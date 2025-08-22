@@ -68,7 +68,6 @@ export class LaunchpadClient {
       provider: this.provider,
       autocratProgramId: params.autocratProgramId,
       conditionalVaultProgramId: params.conditionalVaultProgramId,
-      ammProgramId: params.ammProgramId,
     });
   }
 

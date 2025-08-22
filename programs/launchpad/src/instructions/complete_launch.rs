@@ -1,7 +1,5 @@
-use anchor_lang::Discriminator;
-use anchor_lang::{prelude::*, system_program};
-use anchor_spl::associated_token::get_associated_token_address;
-use anchor_spl::associated_token::{self, AssociatedToken, Create};
+use anchor_lang::prelude::*;
+use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::UpdateMetadataAccountsV2;
 use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, Transfer};

@@ -1,6 +1,5 @@
 import BN from "bn.js";
 import { Amm } from "../types/index.js";
-import { SwapType } from "../AmmClient.js";
 import { AmmMath as V3AmmMath } from "../../v0.3/utils/ammMath.js";
 
 const BN_TEN = new BN(10);
@@ -88,110 +87,110 @@ export class AmmMath {
     return numerator.div(denominator);
   }
 
-  public static simulateSwap(
-    inputAmount: BN,
-    swapType: SwapType,
-    baseReserves: BN,
-    quoteReserves: BN,
-    slippageBps?: BN
-  ): SwapSimulation {
-    let inputReserves: BN, outputReserves: BN;
-    if (swapType.buy) {
-      inputReserves = quoteReserves;
-      outputReserves = baseReserves;
-    } else {
-      inputReserves = baseReserves;
-      outputReserves = quoteReserves;
-    }
+  // public static simulateSwap(
+  //   inputAmount: BN,
+  //   swapType: SwapType,
+  //   baseReserves: BN,
+  //   quoteReserves: BN,
+  //   slippageBps?: BN
+  // ): SwapSimulation {
+  //   let inputReserves: BN, outputReserves: BN;
+  //   if (swapType.buy) {
+  //     inputReserves = quoteReserves;
+  //     outputReserves = baseReserves;
+  //   } else {
+  //     inputReserves = baseReserves;
+  //     outputReserves = quoteReserves;
+  //   }
 
-    let expectedOut = this.simulateSwapInner(
-      inputAmount,
-      inputReserves,
-      outputReserves
-    );
+  //   let expectedOut = this.simulateSwapInner(
+  //     inputAmount,
+  //     inputReserves,
+  //     outputReserves
+  //   );
 
-    let minExpectedOut;
-    if (slippageBps) {
-      minExpectedOut = AmmMath.subtractSlippage(expectedOut, slippageBps);
-    }
+  //   let minExpectedOut;
+  //   if (slippageBps) {
+  //     minExpectedOut = AmmMath.subtractSlippage(expectedOut, slippageBps);
+  //   }
 
-    let newBaseReserves: BN, newQuoteReserves: BN;
-    if (swapType.buy) {
-      newBaseReserves = baseReserves.sub(expectedOut);
-      newQuoteReserves = quoteReserves.add(inputAmount);
-    } else {
-      newBaseReserves = baseReserves.add(inputAmount);
-      newQuoteReserves = quoteReserves.sub(expectedOut);
-    }
+  //   let newBaseReserves: BN, newQuoteReserves: BN;
+  //   if (swapType.buy) {
+  //     newBaseReserves = baseReserves.sub(expectedOut);
+  //     newQuoteReserves = quoteReserves.add(inputAmount);
+  //   } else {
+  //     newBaseReserves = baseReserves.add(inputAmount);
+  //     newQuoteReserves = quoteReserves.sub(expectedOut);
+  //   }
 
-    return {
-      expectedOut,
-      newBaseReserves,
-      newQuoteReserves,
-      minExpectedOut,
-    };
-  }
+  //   return {
+  //     expectedOut,
+  //     newBaseReserves,
+  //     newQuoteReserves,
+  //     minExpectedOut,
+  //   };
+  // }
 
-  /**
-   * Calculates the optimal swap amount and mergeable tokens without using square roots.
-   * @param userBalanceIn BN – Tokens that a user wants to dispose of.
-   * @param ammReserveIn BN – Amount of tokens in the AMM of the token that the user wants to dispose of.
-   * @param ammReserveOut BN – Amount of tokens in the AMM of the token that the user wants to receive.
-   * @returns An object containing the optimal swap amount, expected quote received, and expected mergeable tokens.
-   */
+  // /**
+  //  * Calculates the optimal swap amount and mergeable tokens without using square roots.
+  //  * @param userBalanceIn BN – Tokens that a user wants to dispose of.
+  //  * @param ammReserveIn BN – Amount of tokens in the AMM of the token that the user wants to dispose of.
+  //  * @param ammReserveOut BN – Amount of tokens in the AMM of the token that the user wants to receive.
+  //  * @returns An object containing the optimal swap amount, expected quote received, and expected mergeable tokens.
+  //  */
 
-  public static calculateOptimalSwapForMerge(
-    userBalanceIn: BN,
-    ammReserveIn: BN,
-    ammReserveOut: BN,
-    slippageBps: BN
-  ): {
-    optimalSwapAmount: BN;
-    userInAfterSwap: BN;
-    expectedOut: BN;
-    minimumExpectedOut: BN;
-  } {
-    // essentially, we want to calculate the swap amount so that the remaining user balance = received token amount
+  // public static calculateOptimalSwapForMerge(
+  //   userBalanceIn: BN,
+  //   ammReserveIn: BN,
+  //   ammReserveOut: BN,
+  //   slippageBps: BN
+  // ): {
+  //   optimalSwapAmount: BN;
+  //   userInAfterSwap: BN;
+  //   expectedOut: BN;
+  //   minimumExpectedOut: BN;
+  // } {
+  //   // essentially, we want to calculate the swap amount so that the remaining user balance = received token amount
 
-    // solve this system of equations for swapAmount, outputAmount (we only care about swap amount tho)
-    // (baseReserve + swapAmount) * (quoteReserve - outputAmount) = baseReserve * quoteReserve
-    // baseAmount - swapAmount = outputAmount
+  //   // solve this system of equations for swapAmount, outputAmount (we only care about swap amount tho)
+  //   // (baseReserve + swapAmount) * (quoteReserve - outputAmount) = baseReserve * quoteReserve
+  //   // baseAmount - swapAmount = outputAmount
 
-    //solve equation
-    // (baseReserve + .99*swapAmount) * (quoteReserve - (userTokens - swapAmount)) = baseReserve * quoteReserve
-    // multiplying out the left hand side and subtracting baseReserve * quoteReserve from both sides yields the following:
-    // baseReserve*quoteReserve - baseReserve*userTokens + baseReserve*swapAmount + .99*swapAmount*quoteReserve - .99*swapAmount*userTokens + .99*swapAmount^2 = baseReserve*quoteReserve
-    // .99*swapAmount^2 + baseReserve*swapAmount + .99*swapAmount*quoteReserve - baseReserve*userTokens - .99*swapAmount*userTokens = 0
-    // in the quadratic equation, a = .99, b = (baseReserve + .99*quoteReserve - .99*userTokens), c = -baseReserve*userTokens
-    // x = (-b + sqrt(b^2 - 4ac)) / 2a
+  //   //solve equation
+  //   // (baseReserve + .99*swapAmount) * (quoteReserve - (userTokens - swapAmount)) = baseReserve * quoteReserve
+  //   // multiplying out the left hand side and subtracting baseReserve * quoteReserve from both sides yields the following:
+  //   // baseReserve*quoteReserve - baseReserve*userTokens + baseReserve*swapAmount + .99*swapAmount*quoteReserve - .99*swapAmount*userTokens + .99*swapAmount^2 = baseReserve*quoteReserve
+  //   // .99*swapAmount^2 + baseReserve*swapAmount + .99*swapAmount*quoteReserve - baseReserve*userTokens - .99*swapAmount*userTokens = 0
+  //   // in the quadratic equation, a = .99, b = (baseReserve + .99*quoteReserve - .99*userTokens), c = -baseReserve*userTokens
+  //   // x = (-b + sqrt(b^2 - 4ac)) / 2a
 
-    let a = 0.99;
-    let b =
-      Number(ammReserveIn) +
-      0.99 * Number(ammReserveOut) -
-      0.99 * Number(userBalanceIn);
-    let c = -Number(ammReserveIn) * Number(userBalanceIn);
+  //   let a = 0.99;
+  //   let b =
+  //     Number(ammReserveIn) +
+  //     0.99 * Number(ammReserveOut) -
+  //     0.99 * Number(userBalanceIn);
+  //   let c = -Number(ammReserveIn) * Number(userBalanceIn);
 
-    let x = (-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a);
-    //this should mathematically return a positive number assuming userBalanceIn, ammReserveIn, and ammReserveOut are all positive (which they should be)
-    // -b + Math.sqrt(b ** 2 - 4 * a * c) > 0 because -4*a*c > 0 and sqrt(b**2 + positive number) > b
+  //   let x = (-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a);
+  //   //this should mathematically return a positive number assuming userBalanceIn, ammReserveIn, and ammReserveOut are all positive (which they should be)
+  //   // -b + Math.sqrt(b ** 2 - 4 * a * c) > 0 because -4*a*c > 0 and sqrt(b**2 + positive number) > b
 
-    const swapAmount = x;
+  //   const swapAmount = x;
 
-    let expectedOut = this.simulateSwapInner(
-      new BN(swapAmount),
-      ammReserveIn,
-      ammReserveOut
-    );
-    let minimumExpectedOut =
-      Number(expectedOut) - (Number(expectedOut) * Number(slippageBps)) / 10000;
-    return {
-      optimalSwapAmount: new BN(swapAmount),
-      userInAfterSwap: new BN(Number(userBalanceIn) - swapAmount),
-      expectedOut: expectedOut,
-      minimumExpectedOut: new BN(minimumExpectedOut),
-    };
-  }
+  //   let expectedOut = this.simulateSwapInner(
+  //     new BN(swapAmount),
+  //     ammReserveIn,
+  //     ammReserveOut
+  //   );
+  //   let minimumExpectedOut =
+  //     Number(expectedOut) - (Number(expectedOut) * Number(slippageBps)) / 10000;
+  //   return {
+  //     optimalSwapAmount: new BN(swapAmount),
+  //     userInAfterSwap: new BN(Number(userBalanceIn) - swapAmount),
+  //     expectedOut: expectedOut,
+  //     minimumExpectedOut: new BN(minimumExpectedOut),
+  //   };
+  // }
 }
 
 // Add backwards compatibility alias

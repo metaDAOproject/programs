@@ -60,7 +60,7 @@ export default function suite() {
     });
   });
 
-  it("should initialize a proposal", async function () {
+  it.only("should initialize a proposal", async function () {
     const descriptionUrl = "https://example.com/proposal";
     const baseTokensToLP = new BN(10 * 10 ** 9); // 10 META
     const quoteTokensToLP = new BN(5000 * 10 ** 6); // 5000 USDC

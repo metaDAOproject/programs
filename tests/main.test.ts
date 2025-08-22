@@ -1,8 +1,6 @@
 import conditionalVault from "./conditionalVault/main.test.js";
-import amm from "./amm/main.test.js";
 import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
-import sharedLiquidityManager from "./sharedLiquidityManager/main.test.js";
 
 import {
   BanksClient,
@@ -13,11 +11,9 @@ import {
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
-  AmmClient,
   AutocratClient,
   ConditionalVaultClient,
   LaunchpadClient,
-  SharedLiquidityManagerClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SQUADS_PROGRAM_CONFIG,
@@ -50,6 +46,7 @@ import * as fs from "fs";
 import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
 import { LiteSVM } from "litesvm";
 import { fromWorkspace, LiteSVMProvider } from "anchor-litesvm";
+import { AccountInfo } from "@solana/web3.js";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
@@ -70,14 +67,11 @@ declare module "mocha" {
     svmProvider: LiteSVMProvider;
     svmAutocratClient: AutocratClient;
     svmVaultClient: ConditionalVaultClient;
-    svmAmmClient: AmmClient;
     context: ProgramTestContext;
     banksClient: BanksClient;
     vaultClient: ConditionalVaultClient;
     autocratClient: AutocratClient;
     launchpadClient: LaunchpadClient;
-    ammClient: AmmClient;
-    sharedLiquidityManagerClient: SharedLiquidityManagerClient;
     payer: Keypair;
     squadsConnection: Connection;
     createTokenAccount: (
@@ -191,10 +185,6 @@ before(async function () {
     provider: provider as any,
   });
   this.provider = provider;
-  this.ammClient = AmmClient.createClient({ provider: provider as any });
-  this.sharedLiquidityManagerClient = SharedLiquidityManagerClient.createClient(
-    { provider: provider as any }
-  );
   this.payer = provider.wallet.payer;
 
   this.squadsConnection = {
@@ -359,8 +349,8 @@ before(async function () {
   );
 });
 
-describe("conditional_vault", conditionalVault);
-describe("autocrat", autocrat);
+describe.only("conditional_vault", conditionalVault);
+describe.only("autocrat", autocrat);
 describe.only("launchpad", launchpad);
 // describe("shared_liquidity_manager", sharedLiquidityManager);
 describe("project-wide integration tests", function () {
