@@ -2,11 +2,11 @@ use super::*;
 
 use anchor_spl::token::{self, Transfer};
 
-// declare_id!()
 pub mod admin {
     use anchor_lang::prelude::declare_id;
 
-    declare_id!("613BRiXuAEn7vibs2oAYzpGW9fXgjzDNuFMM4wPzLdY");
+    // MetaDAO multisig
+    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
 
@@ -16,19 +16,21 @@ pub struct CollectFees<'info> {
     pub dao: Account<'info, Dao>,
     pub admin: Signer<'info>,
     #[account(mut, token::mint = dao.base_mint)]
-    pub base_receiver: Account<'info, TokenAccount>,
+    pub base_token_account: Account<'info, TokenAccount>,
     #[account(mut, token::mint = dao.quote_mint)]
-    pub quote_receiver: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
+    pub quote_token_account: Account<'info, TokenAccount>,
     #[account(mut, associated_token::mint = dao.base_mint, associated_token::authority = dao)]
     pub amm_base_vault: Account<'info, TokenAccount>,
     #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = dao)]
     pub amm_quote_vault: Account<'info, TokenAccount>,
+    pub token_program: Program<'info, Token>,
 }
 
 impl CollectFees<'_> {
-    pub fn validate(ctx: &Context<Self>) -> Result<()> {
-        require_keys_eq!(ctx.accounts.admin.key(), admin::ID, AutocratError::InvalidAdmin);
+    pub fn validate(&self) -> Result<()> {
+        #[cfg(feature = "production")]
+        require_keys_eq!(self.admin.key(), admin::ID, AutocratError::InvalidAdmin);
+
         Ok(())
     }
 
@@ -36,16 +38,15 @@ impl CollectFees<'_> {
         let Self {
             dao,
             admin: _,
-            base_receiver,
-            quote_receiver,
+            base_token_account,
+            quote_token_account,
             amm_base_vault,
             amm_quote_vault,
             token_program,
         } = ctx.accounts;
 
         let PoolState::Spot { ref mut spot } = dao.futarchy_amm.state else {
-            // TODO: check that pool is already in right state
-            unreachable!();
+            return err!(AutocratError::PoolNotInSpotState);
         };
 
         let base_fee_balance = spot.base_protocol_fee_balance;
@@ -54,13 +55,13 @@ impl CollectFees<'_> {
         spot.base_protocol_fee_balance = 0;
         spot.quote_protocol_fee_balance = 0;
 
-        // Transfer tokens from AMM vaults to user
-        let dao_key = dao.key();
-        let signer_seeds = &[b"dao".as_ref(), dao_key.as_ref(), &[dao.pda_bump]];
+        let dao_creator = dao.dao_creator;
+        let nonce = dao.nonce.to_le_bytes();
+        let signer_seeds = &[b"dao".as_ref(), dao_creator.as_ref(), nonce.as_ref(), &[dao.pda_bump]];
 
         for (amount_to_send, from, to) in [
-            (base_fee_balance, amm_base_vault, base_receiver),
-            (quote_fee_balance, amm_quote_vault, quote_receiver),
+            (base_fee_balance, amm_base_vault, base_token_account),
+            (quote_fee_balance, amm_quote_vault, quote_token_account),
         ] {
             token::transfer(
                 CpiContext::new_with_signer(

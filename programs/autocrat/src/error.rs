@@ -56,4 +56,6 @@ pub enum AutocratError {
     InsufficientStakeToLaunch,
     #[msg("Staker not found in proposal")]
     StakerNotFound,
+    #[msg("Pool must be in spot state to collect fees")]
+    PoolNotInSpotState,
 }

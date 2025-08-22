@@ -738,6 +738,35 @@ export class AutocratClient {
     });
   }
 
+  collectFeesIx({
+    dao,
+    baseMint,
+    quoteMint,
+    baseTokenAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      this.provider.publicKey
+    ),
+    quoteTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      this.provider.publicKey
+    ),
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    baseTokenAccount?: PublicKey;
+    quoteTokenAccount?: PublicKey;
+  }) {
+    return this.autocrat.methods.collectFees().accounts({
+      dao,
+      admin: this.provider.publicKey,
+      ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
+      ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
+      baseTokenAccount,
+      quoteTokenAccount,
+    });
+  }
+
   // cranks the TWAPs of multiple proposals' markets. there's a limit on the
   // number of proposals you can pass in, which I can't determine rn because
   // there aren't enough proposals on devnet

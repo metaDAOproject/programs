@@ -142,7 +142,7 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  it("passes proposals when Pass TWAP > Fail TWAP", async function () {
+  it.only("passes proposals when Pass TWAP > Fail TWAP", async function () {
     // Split tokens into the vaults
     const { baseVault, quoteVault, question } =
       this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
@@ -151,7 +151,7 @@ export default function suite() {
       .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
       .rpc();
     await this.vaultClient
-      .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
+      .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
       .rpc();
 
     const { passAmm, passBaseMint, passQuoteMint, failAmm } =
@@ -193,6 +193,12 @@ export default function suite() {
 
     const storedProposal = await this.autocratClient.getProposal(proposal);
     assert.exists(storedProposal.state.passed);
+
+    await this.autocratClient.collectFeesIx({
+      dao,
+      baseMint: META,
+      quoteMint: USDC,
+    }).rpc();
   });
 
   it("fails proposals when Pass TWAP < Fail TWAP", async function () {

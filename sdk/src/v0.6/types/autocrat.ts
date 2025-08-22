@@ -787,6 +787,47 @@ export type Autocrat = {
           };
         }
       ];
+    },
+    {
+      name: "collectFees";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "baseTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
     }
   ];
   accounts: [
@@ -2096,6 +2137,11 @@ export type Autocrat = {
       code: 6025;
       name: "StakerNotFound";
       msg: "Staker not found in proposal";
+    },
+    {
+      code: 6026;
+      name: "PoolNotInSpotState";
+      msg: "Pool must be in spot state to collect fees";
     }
   ];
 };
@@ -2889,6 +2935,47 @@ export const IDL: Autocrat = {
           },
         },
       ],
+    },
+    {
+      name: "collectFees",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "baseTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [
@@ -4198,6 +4285,11 @@ export const IDL: Autocrat = {
       code: 6025,
       name: "StakerNotFound",
       msg: "Staker not found in proposal",
+    },
+    {
+      code: 6026,
+      name: "PoolNotInSpotState",
+      msg: "Pool must be in spot state to collect fees",
     },
   ],
 };

@@ -133,13 +133,16 @@ pub mod autocrat {
         ConditionalSwap::handle(ctx, params)
     }
 
-
-
     pub fn provide_liquidity(ctx: Context<ProvideLiquidity>, params: ProvideLiquidityParams) -> Result<()> {
         ProvideLiquidity::handle(ctx, params)
     }
 
     pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, params: WithdrawLiquidityParams) -> Result<()> {
         WithdrawLiquidity::handle(ctx, params)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn collect_fees(ctx: Context<CollectFees>) -> Result<()> {
+        CollectFees::handle(ctx)
     }
 }

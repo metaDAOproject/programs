@@ -349,11 +349,10 @@ before(async function () {
   );
 });
 
-describe.only("conditional_vault", conditionalVault);
-describe.only("autocrat", autocrat);
-describe.only("launchpad", launchpad);
-// describe("shared_liquidity_manager", sharedLiquidityManager);
-describe("project-wide integration tests", function () {
+describe("conditional_vault", conditionalVault);
+describe("autocrat", autocrat);
+describe("launchpad", launchpad);
+describe.skip("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
   it(
     "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
