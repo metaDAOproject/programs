@@ -58,4 +58,6 @@ pub enum AutocratError {
     StakerNotFound,
     #[msg("Pool must be in spot state to collect fees")]
     PoolNotInSpotState,
+    #[msg("If you're providing liquidity, you must provide both base and quote token accounts")]
+    InvalidDaoCreateLiquidity,
 }

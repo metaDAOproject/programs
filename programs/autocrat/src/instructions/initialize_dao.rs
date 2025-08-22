@@ -1,5 +1,5 @@
 use anchor_spl::associated_token::AssociatedToken;
-use squads_multisig_program::{Member, Period, Permission, Permissions};
+use squads_multisig_program::{Member, Period, Permission, Permissions, program::SquadsMultisigProgram};
 
 use super::*;
 
@@ -32,9 +32,9 @@ pub struct InitializeDao<'info> {
     )]
     pub dao: Box<Account<'info, Dao>>,
     pub dao_creator: Signer<'info>,
-    #[account(mut)]
+    #[account(mut, token::authority = dao_creator)]
     pub dao_creator_base_account: Option<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    #[account(mut, token::authority = dao_creator)]
     pub dao_creator_quote_account: Option<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -48,7 +48,7 @@ pub struct InitializeDao<'info> {
     /// CHECK: just a signer
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig_vault: UncheckedAccount<'info>,
-    pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
+    pub squads_program: Program<'info, SquadsMultisigProgram>,
     /// CHECK: checked by squads
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_PROGRAM_CONFIG], bump, seeds::program = squads_program)]
     pub squads_program_config: UncheckedAccount<'info>,
@@ -73,6 +73,20 @@ pub mod permissionless_account {
 }
 
 impl InitializeDao<'_> {
+    pub fn validate(&self) -> Result<()> {
+        require_eq!(self.dao_creator_base_account.is_some(), self.dao_creator_quote_account.is_some(), AutocratError::InvalidDaoCreateLiquidity);
+
+        if let Some(dao_creator_base_account) = self.dao_creator_base_account.as_ref() {
+            require_neq!(dao_creator_base_account.amount, 0);
+        }
+
+        if let Some(dao_creator_quote_account) = self.dao_creator_quote_account.as_ref() {
+            require_neq!(dao_creator_quote_account.amount, 0);
+        }
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, params: InitializeDaoParams) -> Result<()> {
         let InitializeDaoParams {
             twap_initial_observation,

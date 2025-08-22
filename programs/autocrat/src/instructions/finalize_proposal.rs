@@ -1,16 +1,20 @@
 use super::*;
 
 use anchor_spl::token::Token;
-use conditional_vault::{cpi::accounts::ResolveQuestion, ResolveQuestionArgs};
-use conditional_vault::program::ConditionalVault as ConditionalVaultProgram;
-use conditional_vault::Question;
+use conditional_vault::{
+    cpi::accounts::ResolveQuestion,
+    program::ConditionalVault as ConditionalVaultProgram,
+    Question,
+    ResolveQuestionArgs,
+};
+use squads_multisig_program::program::SquadsMultisigProgram;
 
 #[derive(Accounts)]
 #[event_cpi]
 pub struct FinalizeProposal<'info> {
     #[account(mut, has_one = question, has_one = dao, has_one = squads_proposal)]
     pub proposal: Box<Account<'info, Proposal>>,
-    #[account(mut)]
+    #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut)]
     pub question: Box<Account<'info, Question>>,
@@ -19,7 +23,7 @@ pub struct FinalizeProposal<'info> {
     pub squads_proposal: UncheckedAccount<'info>,
     /// CHECK: checked by squads multisig program
     pub squads_multisig: UncheckedAccount<'info>,
-    pub squads_multisig_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
+    pub squads_multisig_program: Program<'info, SquadsMultisigProgram>,
     pub vault_program: Program<'info, ConditionalVaultProgram>,
     /// CHECK: checked by vault program
     pub vault_event_authority: UncheckedAccount<'info>,

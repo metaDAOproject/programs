@@ -2163,6 +2163,11 @@ export type Autocrat = {
       code: 6026;
       name: "PoolNotInSpotState";
       msg: "Pool must be in spot state to collect fees";
+    },
+    {
+      code: 6027;
+      name: "InvalidDaoCreateLiquidity";
+      msg: "If you're providing liquidity, you must provide both base and quote token accounts";
     }
   ];
 };
@@ -4332,6 +4337,11 @@ export const IDL: Autocrat = {
       code: 6026,
       name: "PoolNotInSpotState",
       msg: "Pool must be in spot state to collect fees",
+    },
+    {
+      code: 6027,
+      name: "InvalidDaoCreateLiquidity",
+      msg: "If you're providing liquidity, you must provide both base and quote token accounts",
     },
   ],
 };
