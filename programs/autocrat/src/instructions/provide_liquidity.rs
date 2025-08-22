@@ -76,8 +76,8 @@ impl ProvideLiquidity<'_> {
             token_program,
         } = ctx.accounts;
 
-        let total_liquidity = dao.futarchy_amm.total_liquidity;
-        let PoolState::Spot { ref mut spot } = dao.futarchy_amm.state else {
+        let total_liquidity = dao.amm.total_liquidity;
+        let PoolState::Spot { ref mut spot } = dao.amm.state else {
             // TODO: check that pool is already in right state
             unreachable!();
         };
@@ -130,7 +130,7 @@ impl ProvideLiquidity<'_> {
             liquidity: amm_position.liquidity + liquidity_to_mint,
         });
 
-        dao.futarchy_amm.total_liquidity += liquidity_to_mint;
+        dao.amm.total_liquidity += liquidity_to_mint;
 
         token::transfer(
             CpiContext::new(

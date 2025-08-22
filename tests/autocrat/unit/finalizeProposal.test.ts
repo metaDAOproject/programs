@@ -145,7 +145,7 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  it.only("passes proposals when Pass TWAP > Fail TWAP", async function () {
+  it("passes proposals when Pass TWAP > Fail TWAP", async function () {
     // Split tokens into the vaults
     const { baseVault, quoteVault, question } =
       this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
@@ -157,7 +157,7 @@ export default function suite() {
       .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
       .rpc();
 
-    const { passAmm, passBaseMint, passQuoteMint, failAmm } =
+    const { passBaseMint, passQuoteMint } =
       this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
 
     const { failBaseMint, failQuoteMint } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
@@ -182,12 +182,12 @@ export default function suite() {
       .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })])
       .rpc();
 
-    await this.autocratClient.conditionalSwapIx(dao, META, USDC, proposal, "pass", "buy", new BN(10_000 * 1_000_000)).rpc();
+    await this.autocratClient.conditionalSwapIx({ dao, baseMint: META, quoteMint: USDC, proposal, market: "pass", swapType: "buy", inputAmount: new BN(10_000 * 1_000_000) }).rpc();
 
     for (let i = 0; i < 100; i++) {
       await this.advanceBySlots(20_000n);
 
-      await this.autocratClient.conditionalSwapIx(dao, META, USDC, proposal, "pass", "buy", new BN(10))
+      await this.autocratClient.conditionalSwapIx({ dao, baseMint: META, quoteMint: USDC, proposal, market: "pass", swapType: "buy", inputAmount: new BN(10) })
         .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })]).rpc();
     }
 
@@ -214,10 +214,19 @@ export default function suite() {
       quoteMint: USDC,
     }).rpc();
 
+    const { quoteVault, question } =
+      this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+
+    await this.vaultClient
+      .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
+      .rpc();
+
     for (let i = 0; i < 100; i++) {
       await this.advanceBySlots(20_000n);
 
-      await this.autocratClient.conditionalSwapIx(dao, META, USDC, proposal, "pass", "buy", new BN(10)).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })]).rpc();
+      await this.autocratClient.conditionalSwapIx({ dao, baseMint: META, quoteMint: USDC, proposal, market: "pass", swapType: "buy", inputAmount: new BN(10) })
+        .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })])
+        .rpc();
 
       // await this.ammClient
       //   .crankThatTwapIx(passAmm)

@@ -91,7 +91,7 @@ impl ConditionalSwap<'_> {
         let output_amount =
             ctx.accounts
                 .dao
-                .futarchy_amm
+                .amm
                 .state
                 .swap(input_amount, swap_type, market)?;
 

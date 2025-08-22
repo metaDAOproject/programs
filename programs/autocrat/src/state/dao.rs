@@ -47,7 +47,7 @@ pub struct Dao {
     pub seq_num: u64,
     pub initial_spending_limit: Option<InitialSpendingLimit>,
     /// Embedded FutarchyAmm - 1:1 relationship
-    pub futarchy_amm: FutarchyAmm,
+    pub amm: FutarchyAmm,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]

@@ -3,7 +3,7 @@ import {
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
 } from "@metadaoproject/futarchy/v0.6";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { expectError, ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { assert } from "chai";
@@ -38,6 +38,9 @@ export default function suite() {
           initialSpendingLimit: null,
         },
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })
+      ])
       .rpc();
 
     const [dao, daoBump] = getDaoAddr({

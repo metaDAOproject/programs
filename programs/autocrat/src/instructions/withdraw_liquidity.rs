@@ -82,11 +82,11 @@ impl WithdrawLiquidity<'_> {
 
         require!(liquidity_to_withdraw > 0, AutocratError::ZeroLiquidityRemove);
 
-        let total_liquidity = dao.futarchy_amm.total_liquidity;
+        let total_liquidity = dao.amm.total_liquidity;
         require_gt!(total_liquidity, 0, AutocratError::AssertFailed);
 
         let (base_to_withdraw, quote_to_withdraw) = {
-            let PoolState::Spot { ref spot } = dao.futarchy_amm.state else {
+            let PoolState::Spot { ref spot } = dao.amm.state else {
                 // TODO: check that pool is already in right state
                 unreachable!();
             };
@@ -108,9 +108,9 @@ impl WithdrawLiquidity<'_> {
         amm_position.liquidity -= liquidity_to_withdraw;
 
         // Update the futarchy AMM
-        dao.futarchy_amm.total_liquidity -= liquidity_to_withdraw;
+        dao.amm.total_liquidity -= liquidity_to_withdraw;
         {
-            let PoolState::Spot { ref mut spot } = dao.futarchy_amm.state else {
+            let PoolState::Spot { ref mut spot } = dao.amm.state else {
                 unreachable!();
             };
             spot.base_reserves -= base_to_withdraw;

@@ -82,7 +82,7 @@ impl FinalizeProposal<'_> {
             amm.get_twap()
         };
 
-        let PoolState::Futarchy { pass, fail, mut spot } = dao.futarchy_amm.state.to_owned() else {
+        let PoolState::Futarchy { pass, fail, mut spot } = dao.amm.state.to_owned() else {
             unreachable!();
         };
 
@@ -146,7 +146,7 @@ impl FinalizeProposal<'_> {
             spot.quote_protocol_fee_balance += fail.quote_protocol_fee_balance;
         }
 
-        dao.futarchy_amm.state = PoolState::Spot { spot };
+        dao.amm.state = PoolState::Spot { spot };
 
         let clock = Clock::get()?;
 

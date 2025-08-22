@@ -85,7 +85,7 @@ impl LaunchProposal<'_> {
         };
 
         // Set up the futarchy AMM by splitting the spot pool reserves
-        let PoolState::Spot { mut spot } = dao.futarchy_amm.state.to_owned() else { unreachable!() };
+        let PoolState::Spot { mut spot } = dao.amm.state.to_owned() else { unreachable!() };
 
         let half_base = spot.base_reserves / 2;
         let half_quote = spot.quote_reserves / 2;
@@ -95,7 +95,7 @@ impl LaunchProposal<'_> {
 
         let clock = Clock::get()?;
 
-        dao.futarchy_amm.state = PoolState::Futarchy {
+        dao.amm.state = PoolState::Futarchy {
             spot,
             pass: Pool {
                 base_reserves: half_base,

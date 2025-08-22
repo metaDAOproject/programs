@@ -65,7 +65,7 @@ impl SpotSwap<'_> {
 
         require_gte!(user_input_account.amount, input_amount);
 
-        let output_amount = dao.futarchy_amm.state.swap(input_amount, swap_type, Market::Spot)?;
+        let output_amount = dao.amm.state.swap(input_amount, swap_type, Market::Spot)?;
 
         require_gte!(output_amount, min_output_amount);
 

@@ -391,15 +391,25 @@ export class AutocratClient {
       ]);
   }
 
-  conditionalSwapIx(
-    dao: PublicKey,
-    baseMint: PublicKey,
-    quoteMint: PublicKey,
-    proposal: PublicKey,
-    market: "pass" | "fail",
-    swapType: "buy" | "sell",
-    inputAmount: BN
-  ) {
+  conditionalSwapIx({
+    dao,
+    trader = this.provider.publicKey,
+    baseMint,
+    quoteMint,
+    proposal,
+    market,
+    swapType,
+    inputAmount,
+  }: {
+    dao: PublicKey;
+    trader?: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    proposal: PublicKey;
+    market: "pass" | "fail";
+    swapType: "buy" | "sell";
+    inputAmount: BN;
+  }) {
     const {
       passBaseMint,
       passQuoteMint,
@@ -409,6 +419,26 @@ export class AutocratClient {
       quoteVault,
       question,
     } = this.getProposalPdas(proposal, baseMint, quoteMint, dao);
+
+    let inputMint: PublicKey, outputMint: PublicKey;
+
+    if (market == "pass" && swapType == "buy") {
+      inputMint = passQuoteMint;
+      outputMint = passBaseMint;
+    } else if (market == "pass" && swapType == "sell") {
+      inputMint = passBaseMint;
+      outputMint = passQuoteMint;
+    } else if (market == "fail" && swapType == "buy") {
+      inputMint = failQuoteMint;
+      outputMint = failBaseMint;
+    } else if (market == "fail" && swapType == "sell") {
+      inputMint = failBaseMint;
+      outputMint = failQuoteMint;
+    } else {
+      throw new Error(
+        "Either `market` or `swapType` is incorrectly configured"
+      );
+    }
 
     return this.autocrat.methods
       .conditionalSwap({
@@ -445,11 +475,11 @@ export class AutocratClient {
         baseVault,
         quoteVault,
         userInputAccount: getAssociatedTokenAddressSync(
-          passQuoteMint,
+          inputMint,
           this.provider.publicKey
         ),
         userOutputAccount: getAssociatedTokenAddressSync(
-          passBaseMint,
+          outputMint,
           this.provider.publicKey
         ),
         baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
@@ -471,7 +501,19 @@ export class AutocratClient {
           this.vaultClient.vaultProgram.programId
         )[0],
         question,
-      });
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(
+            outputMint,
+            this.provider.publicKey,
+            true
+          ),
+          this.provider.publicKey,
+          outputMint
+        ),
+      ]);
   }
 
   async initializeProposal(

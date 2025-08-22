@@ -45,7 +45,7 @@ impl CollectFees<'_> {
             token_program,
         } = ctx.accounts;
 
-        let PoolState::Spot { ref mut spot } = dao.futarchy_amm.state else {
+        let PoolState::Spot { ref mut spot } = dao.amm.state else {
             return err!(AutocratError::PoolNotInSpotState);
         };
 

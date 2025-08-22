@@ -969,7 +969,7 @@ export type Autocrat = {
             };
           },
           {
-            name: "futarchyAmm";
+            name: "amm";
             docs: ["Embedded FutarchyAmm - 1:1 relationship"];
             type: {
               defined: "FutarchyAmm";
@@ -3143,7 +3143,7 @@ export const IDL: Autocrat = {
             },
           },
           {
-            name: "futarchyAmm",
+            name: "amm",
             docs: ["Embedded FutarchyAmm - 1:1 relationship"],
             type: {
               defined: "FutarchyAmm",

@@ -226,7 +226,7 @@ impl InitializeDao<'_> {
             base_to_stake,
             seq_num: 0,
             initial_spending_limit,
-            futarchy_amm: FutarchyAmm {
+            amm: FutarchyAmm {
                 state: PoolState::Spot {
                     spot: Pool {
                         quote_reserves: quote_liquidity_to_lp,
