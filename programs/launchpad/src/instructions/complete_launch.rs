@@ -12,9 +12,9 @@ use anchor_spl::metadata::{
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
 };
 
-use autocrat::program::Autocrat;
-use autocrat::{InitialSpendingLimit, InitializeDaoParams};
-use autocrat::DAY_IN_SLOTS;
+use futarchy::program::Futarchy;
+use futarchy::{InitialSpendingLimit, InitializeDaoParams};
+use futarchy::DAY_IN_SLOTS;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
@@ -22,7 +22,7 @@ pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 /// and conserve stack space.
 #[derive(Accounts)]
 pub struct StaticCompleteLaunchAccounts<'info> {
-    pub autocrat_program: Program<'info, Autocrat>,
+    pub futarchy_program: Program<'info, Futarchy>,
     pub token_metadata_program: Program<'info, Metadata>,
     /// CHECK: checked by autocrat program
     pub autocrat_event_authority: UncheckedAccount<'info>,
@@ -203,10 +203,10 @@ impl CompleteLaunch<'_> {
         let token_to_lp = AVAILABLE_TOKENS / 5;
 
         if total_committed_amount >= launch.minimum_raise_amount {
-            autocrat::cpi::initialize_dao(
+            futarchy::cpi::initialize_dao(
                 CpiContext::new_with_signer(
-                    ctx.accounts.static_accounts.autocrat_program.to_account_info(),
-                    autocrat::cpi::accounts::InitializeDao {
+                    ctx.accounts.static_accounts.futarchy_program.to_account_info(),
+                    futarchy::cpi::accounts::InitializeDao {
                         dao: ctx.accounts.dao.to_account_info(),
                         dao_creator: ctx.accounts.launch_signer.to_account_info(),
                         payer: ctx.accounts.payer.to_account_info(),
@@ -214,7 +214,7 @@ impl CompleteLaunch<'_> {
                         base_mint: ctx.accounts.base_mint.to_account_info(),
                         quote_mint: ctx.accounts.quote_mint.to_account_info(),
                         event_authority: ctx.accounts.static_accounts.autocrat_event_authority.to_account_info(),
-                        program: ctx.accounts.static_accounts.autocrat_program.to_account_info(),
+                        program: ctx.accounts.static_accounts.futarchy_program.to_account_info(),
                         squads_multisig: ctx.accounts.squads_multisig.to_account_info(),
                         squads_multisig_vault: ctx.accounts.squads_multisig_vault.to_account_info(),
                         squads_program: ctx.accounts.static_accounts.squads_program.to_account_info(),

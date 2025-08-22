@@ -4,7 +4,7 @@ version = "0.3.0"
 description = "Optimistic timelock"
 authors = ["Proph3t <metaproph3t@protonmail.com>, Henry"]
 edition = "2021"
-repository = "https://github.com/metaDAOproject/futarchy"
+repository = "https://github.com/metaDAOproject/programs"
 categories = ["cryptography::cryptocurrencies"]
 keywords = ["solana", "defi", "ponzu"]
 

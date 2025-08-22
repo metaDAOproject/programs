@@ -1,12 +1,12 @@
 [package]
-name = "autocrat"
-version = "0.5.0"
+name = "futarchy"
+version = "0.6.0"
 description = "SVM-based program for running futarchy"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "autocrat"
+name = "futarchy"
 
 [features]
 no-entrypoint = []

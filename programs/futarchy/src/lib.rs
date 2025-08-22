@@ -41,11 +41,11 @@ use solana_security_txt::security_txt;
 
 #[cfg(not(feature = "no-entrypoint"))]
 security_txt! {
-    name: "autocrat",
+    name: "futarchy",
     project_url: "https://metadao.fi",
     contacts: "telegram:metaproph3t,telegram:kollan_house",
-    source_code: "https://github.com/metaDAOproject/futarchy",
-    source_release: "v0.5.0",
+    source_code: "https://github.com/metaDAOproject/programs",
+    source_release: "v0.6.0",
     policy: "The market will decide whether we pay a bug bounty.",
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
@@ -78,7 +78,7 @@ pub const PASS_INDEX: usize = 1;
 pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 
 #[program]
-pub mod autocrat {
+pub mod futarchy {
     use super::*;
 
     #[access_control(ctx.accounts.validate())]

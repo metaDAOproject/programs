@@ -1,6 +1,6 @@
 [package]
 name = "launchpad"
-version = "0.5.0"
+version = "0.6.0"
 description = "Created with Anchor"
 edition = "2021"
 
@@ -20,7 +20,7 @@ production = []
 [dependencies]
 anchor-lang = "0.29.0"
 anchor-spl = "0.29.0"
-autocrat = { path = "../autocrat", features = ["cpi"] }
+futarchy = { path = "../futarchy", features = ["cpi"] }
 spl-memo = "=4.0.0"
 solana-program = "=1.17.14"
 spl-token = "=4.0.0"

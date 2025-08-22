@@ -5,7 +5,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-autocrat = "GYX6b1pvoy329fHHH6Btb6qzwxc4WGp3J9WeAT3dWCb9"
+futarchy = "GYX6b1pvoy329fHHH6Btb6qzwxc4WGp3J9WeAT3dWCb9"
 autocrat_migrator = "MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt"
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 launchpad = "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA"
