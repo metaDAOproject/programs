@@ -419,6 +419,7 @@ export class AutocratClient {
       })
       .accounts({
         dao,
+        proposal,
         ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
         ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
         ammPassBaseVault: getAssociatedTokenAddressSync(

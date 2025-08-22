@@ -129,6 +129,7 @@ pub mod autocrat {
         SpotSwap::handle(ctx, params)
     }
 
+    #[access_control(ctx.accounts.validate(&params))]
     pub fn conditional_swap(ctx: Context<ConditionalSwap>, params: ConditionalSwapParams) -> Result<()> {
         ConditionalSwap::handle(ctx, params)
     }

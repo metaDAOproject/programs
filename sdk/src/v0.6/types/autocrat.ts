@@ -568,6 +568,11 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "proposal";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "ammPassBaseVault";
           isMut: true;
           isSigner: false;
@@ -586,6 +591,11 @@ export type Autocrat = {
           name: "ammFailQuoteVault";
           isMut: true;
           isSigner: false;
+        },
+        {
+          name: "trader";
+          isMut: false;
+          isSigner: true;
         },
         {
           name: "userInputAccount";
@@ -608,24 +618,14 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "quoteVaultUnderlyingTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "quoteVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "tokenProgram";
-          isMut: false;
+          name: "quoteVaultUnderlyingTokenAccount";
+          isMut: true;
           isSigner: false;
-        },
-        {
-          name: "trader";
-          isMut: false;
-          isSigner: true;
         },
         {
           name: "passBaseMint";
@@ -659,6 +659,11 @@ export type Autocrat = {
         },
         {
           name: "question";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
           isMut: false;
           isSigner: false;
         }
@@ -1026,6 +1031,22 @@ export type Autocrat = {
           },
           {
             name: "squadsProposal";
+            type: "publicKey";
+          },
+          {
+            name: "passBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "passQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "failBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "failQuoteMint";
             type: "publicKey";
           },
           {
@@ -2716,6 +2737,11 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "proposal",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "ammPassBaseVault",
           isMut: true,
           isSigner: false,
@@ -2734,6 +2760,11 @@ export const IDL: Autocrat = {
           name: "ammFailQuoteVault",
           isMut: true,
           isSigner: false,
+        },
+        {
+          name: "trader",
+          isMut: false,
+          isSigner: true,
         },
         {
           name: "userInputAccount",
@@ -2756,24 +2787,14 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "quoteVaultUnderlyingTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "quoteVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "tokenProgram",
-          isMut: false,
+          name: "quoteVaultUnderlyingTokenAccount",
+          isMut: true,
           isSigner: false,
-        },
-        {
-          name: "trader",
-          isMut: false,
-          isSigner: true,
         },
         {
           name: "passBaseMint",
@@ -2807,6 +2828,11 @@ export const IDL: Autocrat = {
         },
         {
           name: "question",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -3174,6 +3200,22 @@ export const IDL: Autocrat = {
           },
           {
             name: "squadsProposal",
+            type: "publicKey",
+          },
+          {
+            name: "passBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "passQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "failBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "failQuoteMint",
             type: "publicKey",
           },
           {

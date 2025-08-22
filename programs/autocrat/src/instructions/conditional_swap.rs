@@ -1,6 +1,6 @@
-
-
 use super::*;
+
+use conditional_vault::state::ConditionalVault;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct ConditionalSwapParams {
@@ -14,32 +14,45 @@ pub struct ConditionalSwapParams {
 pub struct ConditionalSwap<'info> {
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
-    #[account(mut)]
+    #[account(mut, associated_token::mint = dao.base_mint, associated_token::authority = dao)]
     pub amm_base_vault: Account<'info, TokenAccount>,
-    #[account(mut)]
+    #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = dao)]
     pub amm_quote_vault: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub amm_pass_base_vault: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub amm_pass_quote_vault: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub amm_fail_base_vault: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub amm_fail_quote_vault: Account<'info, TokenAccount>,
-    #[account(mut)]
+
+    #[account(
+        has_one = dao, has_one = base_vault, has_one = quote_vault,
+        has_one = pass_base_mint, has_one = pass_quote_mint, 
+        has_one = fail_base_mint, has_one = fail_quote_mint,
+        has_one = question
+    )]
+    pub proposal: Box<Account<'info, Proposal>>,
+
+    // These are checked in `validate`
+    #[account(mut, associated_token::mint = proposal.pass_base_mint, associated_token::authority = dao)]
+    pub amm_pass_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = proposal.pass_quote_mint, associated_token::authority = dao)]
+    pub amm_pass_quote_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = proposal.fail_base_mint, associated_token::authority = dao)]
+    pub amm_fail_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = proposal.fail_quote_mint, associated_token::authority = dao)]
+    pub amm_fail_quote_vault: Box<Account<'info, TokenAccount>>,
+
+    pub trader: Signer<'info>,
+    #[account(mut, token::authority = trader)]
     pub user_input_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub user_output_account: Account<'info, TokenAccount>,
+
     #[account(mut)]
-    pub base_vault: Box<Account<'info, conditional_vault::state::ConditionalVault>>,
-    #[account(mut)]
+    pub base_vault: Box<Account<'info, ConditionalVault>>,
+    #[account(mut, address = base_vault.underlying_token_account)]
     pub base_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
+
     #[account(mut)]
+    pub quote_vault: Box<Account<'info, ConditionalVault>>,
+    #[account(mut, address = quote_vault.underlying_token_account)]
     pub quote_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
-    pub quote_vault: Box<Account<'info, conditional_vault::state::ConditionalVault>>,
-    pub token_program: Program<'info, Token>,
-    pub trader: Signer<'info>,
+
     #[account(mut)]
     pub pass_base_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
@@ -48,13 +61,25 @@ pub struct ConditionalSwap<'info> {
     pub pass_quote_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub fail_quote_mint: Box<Account<'info, Mint>>,
+
     pub conditional_vault_program: Program<'info, ConditionalVaultProgram>,
-    /// CHECK:
+    /// CHECK: checked by conditional vault program
     pub vault_event_authority: UncheckedAccount<'info>,
+
     pub question: Account<'info, Question>,
+
+    pub token_program: Program<'info, Token>,
 }
 
 impl ConditionalSwap<'_> {
+    pub fn validate(&self, params: &ConditionalSwapParams) -> Result<()> {
+        require_neq!(params.market, Market::Spot);
+
+        require_gte!(self.user_input_account.amount, params.input_amount, AutocratError::InsufficientBalance);
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, params: ConditionalSwapParams) -> Result<()> {
         let ConditionalSwapParams {
             market,
@@ -63,8 +88,6 @@ impl ConditionalSwap<'_> {
             min_output_amount,
         } = params;
 
-        assert_ne!(market, Market::Spot);
-
         let output_amount =
             ctx.accounts
                 .dao
@@ -72,7 +95,7 @@ impl ConditionalSwap<'_> {
                 .state
                 .swap(input_amount, swap_type, market)?;
 
-        require_gte!(output_amount, min_output_amount);
+        require_gte!(output_amount, min_output_amount, AutocratError::SwapSlippageExceeded);
 
         // You need to transfer in before you can do merges of in
         // You need to do split of out before you can do transfers of out
@@ -84,8 +107,6 @@ impl ConditionalSwap<'_> {
             (SwapType::Sell, Market::Fail) => &ctx.accounts.amm_fail_base_vault,
             (_, Market::Spot) => unreachable!(),
         };
-
-        require_gte!(ctx.accounts.user_input_account.amount, input_amount);
 
         token::transfer(
             CpiContext::new(
@@ -162,11 +183,9 @@ impl ConditionalSwap<'_> {
             }
             SwapType::Sell => {
                 let amount_to_split = output_amount.saturating_sub(amm_output_account.amount);
+
                 if amount_to_split > 0 {
-                    conditional_vault::cpi::split_tokens(
-                        quote_cpi_context,
-                        amount_to_split,
-                    )?
+                    conditional_vault::cpi::split_tokens(quote_cpi_context, amount_to_split)?
                 }
             }
         }
@@ -198,11 +217,9 @@ impl ConditionalSwap<'_> {
         match swap_type {
             SwapType::Buy => {
                 let amount_to_split = output_amount.saturating_sub(amm_output_account.amount);
+
                 if amount_to_split > 0 {
-                    conditional_vault::cpi::split_tokens(
-                        base_cpi_context,
-                        amount_to_split,
-                    )?
+                    conditional_vault::cpi::split_tokens(base_cpi_context, amount_to_split)?
                 }
             }
             SwapType::Sell => {
@@ -229,20 +246,6 @@ impl ConditionalSwap<'_> {
             ),
             output_amount,
         )?;
-
-        // ctx.accounts.amm_base_vault.reload()?;
-        // ctx.accounts.amm_quote_vault.reload()?;
-        // ctx.accounts.amm_pass_base_vault.reload()?;
-        // ctx.accounts.amm_pass_quote_vault.reload()?;
-        // ctx.accounts.amm_fail_base_vault.reload()?;
-        // ctx.accounts.amm_fail_quote_vault.reload()?;
-
-        // msg!("fail base: {}", ctx.accounts.amm_fail_base_vault.amount);
-        // msg!("fail quote: {}", ctx.accounts.amm_fail_quote_vault.amount);
-        // msg!("pass base: {}", ctx.accounts.amm_pass_base_vault.amount);
-        // msg!("pass quote: {}", ctx.accounts.amm_pass_quote_vault.amount);
-        // msg!("base: {}", ctx.accounts.amm_base_vault.amount);
-        // msg!("quote: {}", ctx.accounts.amm_quote_vault.amount);
 
         Ok(())
     }

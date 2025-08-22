@@ -36,6 +36,10 @@ pub struct Proposal {
     pub question: Pubkey,
     pub duration_in_slots: u64,
     pub squads_proposal: Pubkey,
+    pub pass_base_mint: Pubkey,
+    pub pass_quote_mint: Pubkey,
+    pub fail_base_mint: Pubkey,
+    pub fail_quote_mint: Pubkey,
     /// Mapping of staker to amount staked (only used in Draft state)
     #[max_len(100)]
     pub stakers: Vec<StakerRecord>,

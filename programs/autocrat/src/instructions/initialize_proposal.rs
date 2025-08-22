@@ -100,6 +100,10 @@ impl InitializeProposal<'_> {
             pda_bump: ctx.bumps.proposal,
             question: question.key(),
             duration_in_slots: dao.slots_per_proposal,
+            pass_base_mint: base_vault.conditional_token_mints[1],
+            fail_base_mint: base_vault.conditional_token_mints[0],
+            pass_quote_mint: quote_vault.conditional_token_mints[1],
+            fail_quote_mint: quote_vault.conditional_token_mints[0],
             stakers: Vec::new(),
         });
 

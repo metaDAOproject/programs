@@ -58,6 +58,9 @@ export default function suite() {
         },
         provideLiquidity: true,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
       .rpc();
 
     [dao] = getDaoAddr({
