@@ -6,7 +6,6 @@ use raydium_cpmm_cpi::{
     states::{PoolState, POOL_LP_MINT_SEED}
 };
 use autocrat::state::Dao;
-use crate::consts::{V4_LAUNCHPAD_PROGRAM};
 
 use crate::error::RedeemError;
 
