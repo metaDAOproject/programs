@@ -452,7 +452,7 @@ export default async function redeemTest() {
 
   console.log("\n--- Initializing proposal using initializeProposalTx ---");
   
-  const { transactions, proposal } = await this.autocratClient.initializeProposalTx2(
+  const { transactions, proposal } = await this.autocratClient.initializeProposalTx(
     dao,
     "",
     proposalInstruction,
@@ -622,6 +622,12 @@ export default async function redeemTest() {
           });
           throw new Error("ALT is missing required addresses");
         }
+
+        // Debug: Log all addresses in the ALT
+        console.log("Pre ALT addresses:");
+        this.lookupTableAcct.state.addresses.forEach((addr, idx) => {
+          console.log(`  ${idx}: ${addr.toString()}`);
+        });
         
         console.log(`  All required addresses confirmed in ALT`);
         
@@ -639,8 +645,6 @@ export default async function redeemTest() {
         //   Check if we have all system accounts that might be needed
           const systemAccounts = [
             SystemProgram.programId,
-            TOKEN_PROGRAM_ID,
-            token.ASSOCIATED_TOKEN_PROGRAM_ID,
             new PublicKey("SysvarRent111111111111111111111111111111111"), // Rent sysvar
             new PublicKey("SysvarC1ock11111111111111111111111111111111"), // Clock sysvar
           ];
@@ -1018,7 +1022,7 @@ export default async function redeemTest() {
       console.log(`ALT has ${this.lookupTableAcct.state.addresses.length} addresses for execution`);
       
       // Debug: Log all addresses in the ALT
-      console.log("ALT addresses:");
+      console.log("Post ALT addresses:");
       this.lookupTableAcct.state.addresses.forEach((addr, idx) => {
         console.log(`  ${idx}: ${addr.toString()}`);
       });

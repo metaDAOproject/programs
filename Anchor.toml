@@ -11,6 +11,7 @@ autocrat_migrator = "MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt"
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 launchpad = "AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE"
 optimistic_timelock = "tiME1hz9F5C5ZecbvE5z6Msjy8PKfTqo1UuRYXfndKF"
+redeem = "reedm8Fd33kVxUUN9zHckwCxMvUPmNhY4A7BJWrCZ5A"
 
 [registry]
 url = "https://api.apr.dev"
@@ -28,6 +29,7 @@ create-v04-dao = "yarn run tsx scripts/createV04DAO.ts"
 create-v04-proposal = "yarn run tsx scripts/createV04Proposal.ts"
 create-streamflow-proposal = "yarn run tsx scripts/createStreamflowProposal.ts"
 add-v04-metadata = "yarn run tsx scripts/addV04Metadata.ts"
+recover = "yarn run tsx scripts/v0.4/recoverProposalFunds.ts"
 
 [test]
 startup_wait = 5000

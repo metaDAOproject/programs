@@ -14,6 +14,7 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
+devnet = ["raydium-cpmm-cpi/devnet"]
 
 [dependencies]
 anchor-lang = { version = "0.29.0", features = ["init-if-needed", "event-cpi"] }

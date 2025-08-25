@@ -76,7 +76,7 @@ export type Redeem = {
           docs: ["Raydium pool's quote token vault"];
         },
         {
-          name: "migratorVault";
+          name: "migratorQuoteVault";
           isMut: true;
           isSigner: false;
           docs: ["IDLs don't work in our tests with anchor 0.29.0"];
@@ -182,6 +182,11 @@ export type Redeem = {
       code: 6014;
       name: "MigratorVaultNotFunded";
       msg: "Migrator vault must be funded to receive USDC";
+    },
+    {
+      code: 6015;
+      name: "InvalidMigratorVaultMint";
+      msg: "Migrator vault mint does not match quote mint";
     }
   ];
 };
@@ -264,7 +269,7 @@ export const IDL: Redeem = {
           docs: ["Raydium pool's quote token vault"],
         },
         {
-          name: "migratorVault",
+          name: "migratorQuoteVault",
           isMut: true,
           isSigner: false,
           docs: ["IDLs don't work in our tests with anchor 0.29.0"],
@@ -370,6 +375,11 @@ export const IDL: Redeem = {
       code: 6014,
       name: "MigratorVaultNotFunded",
       msg: "Migrator vault must be funded to receive USDC",
+    },
+    {
+      code: 6015,
+      name: "InvalidMigratorVaultMint",
+      msg: "Migrator vault mint does not match quote mint",
     },
   ],
 };

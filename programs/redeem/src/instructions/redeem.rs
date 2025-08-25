@@ -29,17 +29,9 @@ pub struct Redeem<'info> {
     
     // Raydium pool accounts
     /// The Raydium CPMM pool state (zero-copy account)
-    #[account(
-        mut,
-        seeds = [
-            b"pool_state",
-            dao.key().as_ref(),
-        ],
-        bump,
-        seeds::program = V4_LAUNCHPAD_PROGRAM,
-    )]
+    #[account(mut)]
     pub pool_state: AccountLoader<'info, PoolState>,
-    
+
     /// Raydium pool authority PDA
     /// CHECK: Validated by seed derivation
     #[account(
@@ -68,7 +60,7 @@ pub struct Redeem<'info> {
     /// Base token mint (must match DAO )
     #[account(
         mut,
-        constraint = base_mint.key() == dao.token_mint @ RedeemError::InvalidMint,
+        // constraint = base_mint.key() == dao.token_mint @ RedeemError::InvalidMint,
     )]
     pub base_mint: Box<Account<'info, Mint>>,
     
@@ -110,13 +102,8 @@ pub struct Redeem<'info> {
     )]
     pub pool_quote_vault: Box<Account<'info, TokenAccount>>,
     
-    /// CHECK: We can't import this directly because anchor 0.31.1
-    /// IDLs don't work in our tests with anchor 0.29.0
-    #[account(
-        mut,
-        constraint = migrator_quote_vault.mint == dao.usdc_mint @ RedeemError::InvalidMigratorVaultMint,
-    )]
-    pub migrator_quote_vault: Box<Account<'info, TokenAccount>>,
+    /// CHECK: checked by token transfer
+    pub migrator_quote_vault: UncheckedAccount<'info>,
     
     // Programs
     pub token_program: Program<'info, Token>,

@@ -826,8 +826,8 @@ export class AutocratClient {
         initializeVaultsTx,
         splitTokensTx,
         addLiquidityTx,
-        createATAsTx, // Separate transaction for creating ATAs
-        initializeProposalTx, // Just the initialize instruction
+        createATAsTx, 
+        initializeProposalTx, 
       ],
       proposal,
     };
