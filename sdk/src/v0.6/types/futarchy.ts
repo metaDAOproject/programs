@@ -431,6 +431,36 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "ammPassBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammPassQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammFailBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammFailQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "vaultProgram";
           isMut: false;
           isSigner: false;
@@ -443,6 +473,46 @@ export type Futarchy = {
         {
           name: "tokenProgram";
           isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failQuoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failBaseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -2605,6 +2675,36 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
+          name: "ammPassBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammPassQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammFailBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammFailQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "vaultProgram",
           isMut: false,
           isSigner: false,
@@ -2617,6 +2717,46 @@ export const IDL: Futarchy = {
         {
           name: "tokenProgram",
           isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteVaultUnderlyingTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passQuoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failQuoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failBaseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseVaultUnderlyingTokenAccount",
+          isMut: true,
           isSigner: false,
         },
         {

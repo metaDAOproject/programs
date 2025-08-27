@@ -176,8 +176,6 @@ export default function suite() {
     // assert(daoAfterSpotSwap.amm.state.spot.spot.quoteReserves.lt(daoBeforeSpotSwap.amm.state.spot.spot.quoteReserves), 
     //        "Quote reserves should decrease after selling base tokens");
 
-    return;
-
     console.log("=== Spot swap assertions passed ===");
 
     // Split tokens into the vaults
@@ -220,10 +218,8 @@ export default function suite() {
     const daoAfterLaunch = await this.autocratClient.autocrat.account.dao.fetch(dao);
     console.log("DAO state:", daoAfterLaunch);
 
-    return;
-
     // Perform spot swaps to generate TWAP data
-    for (let i = 0; i < 10; i++) { // Reduced to 10 for faster testing
+    for (let i = 0; i < 100; i++) { // Reduced to 10 for faster testing
       await this.advanceBySlots(20_000n);
 
       await this.autocratClient.conditionalSwapIx({ 
@@ -250,12 +246,13 @@ export default function suite() {
     console.log("Final DAO state:", finalDaoState);
 
     // Temporary return to see results
-    return;
-
     // Finalize the proposal
     await this.autocratClient.finalizeProposal(proposal);
 
     const storedProposal = await this.autocratClient.getProposal(proposal);
+    console.log("Stored proposal:", storedProposal);
+    console.log("AMM fUSDC Balance", await this.getTokenBalance(passQuoteMint, dao));
+    return;
     assert.exists(storedProposal.state.passed);
 
     // Collect fees

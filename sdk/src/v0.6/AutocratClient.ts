@@ -12,7 +12,8 @@ import {
 } from "@solana/web3.js";
 import { InitializeDaoParams, UpdateDaoParams } from "./types/index.js";
 
-import { Autocrat, IDL as AutocratIDL } from "./types/autocrat.js";
+// import { Autocrat, IDL as AutocratIDL } from "./types/autocrat.js";
+import { Futarchy, IDL as FutarchyIDL } from "./types/futarchy.js";
 import {
   ConditionalVault,
   IDL as ConditionalVaultIDL,
@@ -69,7 +70,7 @@ export type ProposalVaults = {
 
 export class AutocratClient {
   public readonly provider: AnchorProvider;
-  public readonly autocrat: Program<Autocrat>;
+  public readonly autocrat: Program<Futarchy>;
   public readonly vaultClient: ConditionalVaultClient;
   public readonly luts: AddressLookupTableAccount[];
 
@@ -80,8 +81,8 @@ export class AutocratClient {
     luts: AddressLookupTableAccount[]
   ) {
     this.provider = provider;
-    this.autocrat = new Program<Autocrat>(
-      AutocratIDL,
+    this.autocrat = new Program<Futarchy>(
+      FutarchyIDL,
       autocratProgramId,
       provider
     );
@@ -756,29 +757,76 @@ export class AutocratClient {
   ) {
     let vaultProgramId = this.vaultClient.vaultProgram.programId;
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
-    const [futarchyAmm] = PublicKey.findProgramAddressSync(
-      [Buffer.from("futarchy_amm")],
-      this.getProgramId()
-    );
 
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
-    const { question } = this.getProposalPdas(proposal, daoToken, usdc, dao);
+    const {
+      question,
+      quoteVault,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      baseVault,
+    } = this.getProposalPdas(proposal, daoToken, usdc, dao);
 
     const [vaultEventAuthority] = getEventAuthorityAddr(vaultProgramId);
 
-    return this.autocrat.methods.finalizeProposal().accounts({
-      proposal,
-      // futarchyAmm,
-      dao,
-      squadsProposal,
-      squadsMultisig: multisigPda,
-      squadsMultisigProgram: SQUADS_PROGRAM_ID,
-      question,
-      // baseVault,
-      // quoteVault,
-      vaultProgram: this.vaultClient.vaultProgram.programId,
-      vaultEventAuthority,
-    });
+    return this.autocrat.methods
+      .finalizeProposal()
+      .accounts({
+        proposal,
+        // futarchyAmm,
+        dao,
+        squadsProposal,
+        squadsMultisig: multisigPda,
+        squadsMultisigProgram: SQUADS_PROGRAM_ID,
+        quoteVault,
+        question,
+        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          usdc,
+          quoteVault,
+          true
+        ),
+        passQuoteMint,
+        failQuoteMint,
+        passBaseMint,
+        failBaseMint,
+        ammPassQuoteVault: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          dao,
+          true
+        ),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          dao,
+          true
+        ),
+        ammQuoteVault: getAssociatedTokenAddressSync(usdc, dao, true),
+        ammPassBaseVault: getAssociatedTokenAddressSync(
+          passBaseMint,
+          dao,
+          true
+        ),
+        ammFailBaseVault: getAssociatedTokenAddressSync(
+          failBaseMint,
+          dao,
+          true
+        ),
+        ammBaseVault: getAssociatedTokenAddressSync(daoToken, dao, true),
+        baseVault,
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          daoToken,
+          baseVault,
+          true
+        ),
+        // baseVault,
+        // quoteVault,
+        vaultProgram: this.vaultClient.vaultProgram.programId,
+        vaultEventAuthority,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ]);
   }
 
   // async executeProposal(proposal: PublicKey) {

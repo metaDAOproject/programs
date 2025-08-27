@@ -2,17 +2,20 @@ use super::*;
 
 use anchor_spl::token::Token;
 use conditional_vault::{
-    cpi::accounts::ResolveQuestion,
-    program::ConditionalVault as ConditionalVaultProgram,
-    Question,
-    ResolveQuestionArgs,
+    cpi::accounts::ResolveQuestion, program::ConditionalVault as ConditionalVaultProgram,
+    ConditionalVault, Question, ResolveQuestionArgs,
 };
 use squads_multisig_program::program::SquadsMultisigProgram;
 
 #[derive(Accounts)]
 #[event_cpi]
 pub struct FinalizeProposal<'info> {
-    #[account(mut, has_one = question, has_one = dao, has_one = squads_proposal)]
+    #[account(
+        mut, has_one = question, has_one = dao, has_one = squads_proposal,
+        has_one = base_vault, has_one = quote_vault,
+        has_one = pass_base_mint, has_one = pass_quote_mint, 
+        has_one = fail_base_mint, has_one = fail_quote_mint
+    )]
     pub proposal: Box<Account<'info, Proposal>>,
     #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
@@ -24,10 +27,41 @@ pub struct FinalizeProposal<'info> {
     /// CHECK: checked by squads multisig program
     pub squads_multisig: UncheckedAccount<'info>,
     pub squads_multisig_program: Program<'info, SquadsMultisigProgram>,
+
+    #[account(mut, associated_token::mint = proposal.pass_base_mint, associated_token::authority = dao)]
+    pub amm_pass_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = proposal.pass_quote_mint, associated_token::authority = dao)]
+    pub amm_pass_quote_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = proposal.fail_base_mint, associated_token::authority = dao)]
+    pub amm_fail_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, associated_token::mint = proposal.fail_quote_mint, associated_token::authority = dao)]
+    pub amm_fail_quote_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut, associated_token::mint = dao.base_mint, associated_token::authority = dao)]
+    pub amm_base_vault: Account<'info, TokenAccount>,
+    #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = dao)]
+    pub amm_quote_vault: Account<'info, TokenAccount>,
+
     pub vault_program: Program<'info, ConditionalVaultProgram>,
     /// CHECK: checked by vault program
     pub vault_event_authority: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
+    #[account(mut)]
+    pub quote_vault: Box<Account<'info, ConditionalVault>>,
+    #[account(mut, address = quote_vault.underlying_token_account)]
+    pub quote_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub pass_quote_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub fail_quote_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub pass_base_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub fail_base_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub base_vault: Box<Account<'info, ConditionalVault>>,
+    #[account(mut, address = base_vault.underlying_token_account)]
+    pub base_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
 }
 
 impl FinalizeProposal<'_> {
@@ -56,10 +90,24 @@ impl FinalizeProposal<'_> {
             squads_multisig,
             squads_multisig_program,
             vault_program,
-            token_program: _,
+            quote_vault,
+            token_program,
             event_authority: _,
             vault_event_authority,
             program: _,
+            quote_vault_underlying_token_account,
+            pass_quote_mint,
+            fail_quote_mint,
+            amm_pass_quote_vault,
+            amm_fail_quote_vault,
+            pass_base_mint,
+            fail_base_mint,
+            amm_quote_vault,
+            amm_pass_base_vault,
+            amm_fail_base_vault,
+            amm_base_vault,
+            base_vault,
+            base_vault_underlying_token_account,
         } = ctx.accounts;
 
         let squads_proposal_key = squads_proposal.key();
@@ -69,7 +117,6 @@ impl FinalizeProposal<'_> {
             &[proposal.pda_bump],
         ];
         let proposal_signer = &[&proposal_seeds[..]];
-
 
         let calculate_twap = |amm: &Pool| -> Result<u128> {
             let slots_passed = amm.oracle.last_updated_slot - proposal.slot_enqueued;
@@ -82,7 +129,12 @@ impl FinalizeProposal<'_> {
             amm.get_twap()
         };
 
-        let PoolState::Futarchy { pass, fail, mut spot } = dao.amm.state.to_owned() else {
+        let PoolState::Futarchy {
+            pass,
+            fail,
+            mut spot,
+        } = dao.amm.state.to_owned()
+        else {
             unreachable!();
         };
 
@@ -110,7 +162,8 @@ impl FinalizeProposal<'_> {
             event_authority: vault_event_authority.to_account_info(),
             program: vault_program.to_account_info(),
         };
-        let cpi_ctx = CpiContext::new(vault_program.to_account_info(), cpi_accounts).with_signer(proposal_signer);
+        let cpi_ctx = CpiContext::new(vault_program.to_account_info(), cpi_accounts)
+            .with_signer(proposal_signer);
         conditional_vault::cpi::resolve_question(
             cpi_ctx,
             ResolveQuestionArgs { payout_numerators },
@@ -145,6 +198,53 @@ impl FinalizeProposal<'_> {
             spot.base_protocol_fee_balance += fail.base_protocol_fee_balance;
             spot.quote_protocol_fee_balance += fail.quote_protocol_fee_balance;
         }
+
+        let quote_cpi_context = CpiContext::new_with_signer(
+            vault_program.to_account_info(),
+            conditional_vault::cpi::accounts::InteractWithVault {
+                question: question.to_account_info(),
+                vault: quote_vault.to_account_info(),
+                vault_underlying_token_account: quote_vault_underlying_token_account
+                    .to_account_info(),
+                authority: dao.to_account_info(),
+                user_underlying_token_account: amm_quote_vault.to_account_info(),
+                event_authority: vault_event_authority.to_account_info(),
+                program: vault_program.to_account_info(),
+                token_program: token_program.to_account_info(),
+            },
+            dao_signer,
+        )
+        .with_remaining_accounts(vec![
+            fail_quote_mint.to_account_info(),
+            pass_quote_mint.to_account_info(),
+            amm_fail_quote_vault.to_account_info(),
+            amm_pass_quote_vault.to_account_info(),
+        ]);
+
+        conditional_vault::cpi::redeem_tokens(quote_cpi_context)?;
+
+        let base_cpi_context = CpiContext::new_with_signer(
+            vault_program.to_account_info(),
+            conditional_vault::cpi::accounts::InteractWithVault {
+                question: question.to_account_info(),
+                vault: base_vault.to_account_info(),
+                vault_underlying_token_account: base_vault_underlying_token_account.to_account_info(),
+                authority: dao.to_account_info(),
+                user_underlying_token_account: amm_base_vault.to_account_info(),
+                event_authority: vault_event_authority.to_account_info(),
+                program: vault_program.to_account_info(),
+                token_program: token_program.to_account_info(),
+            },
+            dao_signer,
+        )
+        .with_remaining_accounts(vec![
+            fail_base_mint.to_account_info(),
+            pass_base_mint.to_account_info(),
+            amm_fail_base_vault.to_account_info(),
+            amm_pass_base_vault.to_account_info(),
+        ]);
+
+        conditional_vault::cpi::redeem_tokens(base_cpi_context)?;
 
         dao.amm.state = PoolState::Spot { spot };
 
