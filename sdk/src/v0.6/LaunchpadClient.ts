@@ -31,16 +31,13 @@ import BN from "bn.js";
 import { FundingRecord, Launch } from "./types/index.js";
 import {
   getDaoAddr,
-  getDaoTreasuryAddr,
   getEventAuthorityAddr,
   getFundingRecordAddr,
   getLaunchAddr,
   getLaunchSignerAddr,
-  getLiquidityPoolAddr,
   getMetadataAddr,
-  getRaydiumCpmmLpMintAddr,
 } from "./utils/pda.js";
-import { AutocratClient } from "./AutocratClient.js";
+import { FutarchyClient } from "./AutocratClient.js";
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
 
@@ -55,7 +52,7 @@ export type CreateLaunchpadClientParams = {
 export class LaunchpadClient {
   public launchpad: Program<Launchpad>;
   public provider: AnchorProvider;
-  public autocratClient: AutocratClient;
+  public autocratClient: FutarchyClient;
 
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
@@ -64,7 +61,7 @@ export class LaunchpadClient {
       params.launchpadProgramId || LAUNCHPAD_PROGRAM_ID,
       this.provider
     );
-    this.autocratClient = AutocratClient.createClient({
+    this.autocratClient = FutarchyClient.createClient({
       provider: this.provider,
       autocratProgramId: params.autocratProgramId,
       conditionalVaultProgramId: params.conditionalVaultProgramId,
@@ -254,39 +251,6 @@ export class LaunchpadClient {
       nonce: new BN(0),
       daoCreator: launchSigner,
     });
-
-    const [poolState] = getLiquidityPoolAddr(this.launchpad.programId, dao);
-
-    const cpSwapProgramId = isDevnet
-      ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
-      : RAYDIUM_CP_SWAP_PROGRAM_ID;
-
-    const [lpMint] = getRaydiumCpmmLpMintAddr(poolState, isDevnet);
-
-    const lpVault = getAssociatedTokenAddressSync(lpMint, launchSigner, true);
-
-    const [poolTokenVault] = PublicKey.findProgramAddressSync(
-      [
-        anchor.utils.bytes.utf8.encode("pool_vault"),
-        poolState.toBuffer(),
-        baseMint.toBuffer(),
-      ],
-      cpSwapProgramId
-    );
-
-    const [poolUsdcVault] = PublicKey.findProgramAddressSync(
-      [
-        anchor.utils.bytes.utf8.encode("pool_vault"),
-        poolState.toBuffer(),
-        USDC.toBuffer(),
-      ],
-      cpSwapProgramId
-    );
-
-    const [observationState] = PublicKey.findProgramAddressSync(
-      [anchor.utils.bytes.utf8.encode("observation"), poolState.toBuffer()],
-      cpSwapProgramId
-    );
 
     const [autocratEventAuthority] = getEventAuthorityAddr(
       this.autocratClient.getProgramId()

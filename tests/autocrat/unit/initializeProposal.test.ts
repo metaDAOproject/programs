@@ -35,7 +35,7 @@ export default function suite() {
     const nonce = new BN(Math.floor(Math.random() * 1000000));
 
     // Initialize a DAO first
-    await this.autocratClient
+    await this.futarchy
       .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,
@@ -66,7 +66,7 @@ export default function suite() {
     const quoteTokensToLP = new BN(5000 * 10 ** 6); // 5000 USDC
 
     // Create a simple instruction for the proposal
-    const updateDaoIx = await this.autocratClient
+    const updateDaoIx = await this.futarchy
       .updateDaoIx({
         dao,
         params: {
@@ -118,7 +118,7 @@ export default function suite() {
     await this.banksClient.processTransaction(tx);
 
     // Now initialize the autocrat proposal
-    const proposal = await this.autocratClient.initializeProposal(
+    const proposal = await this.futarchy.initializeProposal(
       dao,
       descriptionUrl,
       squadsProposalPda,
@@ -128,16 +128,16 @@ export default function suite() {
 
     // Split tokens into the vaults (as in the integration test)
     const { baseVault, quoteVault, question } =
-      this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+      this.futarchy.getProposalPdas(proposal, META, USDC, dao);
 
-    await this.vaultClient
+    await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
       .rpc();
-    await this.vaultClient
+    await this.conditionalVault
       .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
       .rpc();
 
-    const storedProposal = await this.autocratClient.getProposal(proposal);
+    const storedProposal = await this.futarchy.getProposal(proposal);
 
     assert.equal(storedProposal.descriptionUrl, descriptionUrl);
     assert.equal(storedProposal.number, 1);
@@ -147,7 +147,7 @@ export default function suite() {
     assert.exists(storedProposal.state.draft);
 
     // Verify the DAO proposal count was incremented
-    const storedDao = await this.autocratClient.getDao(dao);
+    const storedDao = await this.futarchy.getDao(dao);
     assert.equal(storedDao.proposalCount, 1);
   });
 }

@@ -35,11 +35,8 @@ import {
   DEFAULT_CU_PRICE,
   InstructionUtils,
   MaxCUs,
-  getAmmAddr,
-  getAmmLpMintAddr,
   getConditionalTokenMintAddr,
   getDaoAddr,
-  getDaoTreasuryAddr,
   getEventAuthorityAddr,
   getProposalAddr,
   getQuestionAddr,
@@ -68,7 +65,7 @@ export type ProposalVaults = {
   quoteVault: PublicKey;
 };
 
-export class AutocratClient {
+export class FutarchyClient {
   public readonly provider: AnchorProvider;
   public readonly autocrat: Program<Futarchy>;
   public readonly vaultClient: ConditionalVaultClient;
@@ -95,13 +92,13 @@ export class AutocratClient {
 
   public static createClient(
     createAutocratClientParams: CreateClientParams
-  ): AutocratClient {
+  ): FutarchyClient {
     let { provider, autocratProgramId, conditionalVaultProgramId } =
       createAutocratClientParams;
 
     const luts: AddressLookupTableAccount[] = [];
 
-    return new AutocratClient(
+    return new FutarchyClient(
       provider,
       autocratProgramId || AUTOCRAT_PROGRAM_ID,
       conditionalVaultProgramId || CONDITIONAL_VAULT_PROGRAM_ID,
@@ -160,7 +157,6 @@ export class AutocratClient {
       proposal,
       2
     );
-    const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const [baseVault] = getVaultAddr(
       this.vaultClient.vaultProgram.programId,
       question,
@@ -758,7 +754,6 @@ export class AutocratClient {
     let vaultProgramId = this.vaultClient.vaultProgram.programId;
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
-    const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const {
       question,
       quoteVault,

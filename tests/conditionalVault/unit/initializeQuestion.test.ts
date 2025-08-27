@@ -12,7 +12,7 @@ import {
 export default function suite() {
   let vaultClient: ConditionalVaultClient;
   before(function () {
-    vaultClient = this.vaultClient;
+    vaultClient = this.conditionalVault;
   });
 
   it("initializes 2-outcome questions", async function () {

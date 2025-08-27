@@ -11,7 +11,7 @@ import {
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
-  AutocratClient,
+  FutarchyClient,
   ConditionalVaultClient,
   LaunchpadClient,
   MAINNET_USDC,
@@ -21,13 +21,7 @@ import {
   PERMISSIONLESS_ACCOUNT,
   AUTOCRAT_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.6";
-// import {
-//   // AmmClient,
-//   // AutocratClient,
-//   // ConditionalVaultClient,
-//   getVersion,
-//   VersionKey
-// } from "@metadaoproject/futarchy";
+
 import { PublicKey, Keypair, Connection, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
@@ -63,15 +57,11 @@ import fullLaunch from "./integration/fullLaunch.test.js";
 // Extend the Mocha context to include our test properties
 declare module "mocha" {
   interface Context {
-    svm: LiteSVM;
-    svmProvider: LiteSVMProvider;
-    svmAutocratClient: AutocratClient;
-    svmVaultClient: ConditionalVaultClient;
     context: ProgramTestContext;
     banksClient: BanksClient;
-    vaultClient: ConditionalVaultClient;
-    autocratClient: AutocratClient;
-    launchpadClient: LaunchpadClient;
+    conditionalVault: ConditionalVaultClient;
+    futarchy: FutarchyClient;
+    launchpad: LaunchpadClient;
     payer: Keypair;
     squadsConnection: Connection;
     createTokenAccount: (
@@ -107,9 +97,6 @@ declare module "mocha" {
 }
 
 before(async function () {
-  // const version: VersionKey = "0.4";
-  // const { AmmClient, AutocratClient, ConditionalVaultClient } = getVersion(version);
-
   this.context = await startAnchor(
     "./",
     [
@@ -175,13 +162,13 @@ before(async function () {
 
   // umi = createUmi(anchor.AnchorProvider.env().connection);
 
-  this.vaultClient = ConditionalVaultClient.createClient({
+  this.conditionalVault = ConditionalVaultClient.createClient({
     provider: provider as any,
   });
-  this.autocratClient = AutocratClient.createClient({
+  this.futarchy = FutarchyClient.createClient({
     provider: provider as any,
   });
-  this.launchpadClient = LaunchpadClient.createClient({
+  this.launchpad = LaunchpadClient.createClient({
     provider: provider as any,
   });
   this.provider = provider;

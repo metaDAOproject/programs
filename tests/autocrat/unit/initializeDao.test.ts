@@ -21,7 +21,7 @@ export default function suite() {
   });
 
   it("should initialize a DAO", async function () {
-    await this.autocratClient
+    await this.futarchy
       .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,
@@ -48,7 +48,7 @@ export default function suite() {
       daoCreator: this.payer.publicKey,
     });
 
-    const storedDao = await this.autocratClient.getDao(dao);
+    const storedDao = await this.futarchy.getDao(dao);
 
     assert.ok(storedDao.baseMint.equals(META));
     assert.ok(storedDao.quoteMint.equals(USDC));
@@ -118,7 +118,7 @@ export default function suite() {
   it("should initialize a DAO with an initial spending limit", async function () {
     const spender = Keypair.generate();
 
-    await this.autocratClient
+    await this.futarchy
       .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,
@@ -146,7 +146,7 @@ export default function suite() {
       daoCreator: this.payer.publicKey,
     });
 
-    const storedDao = await this.autocratClient.getDao(dao);
+    const storedDao = await this.futarchy.getDao(dao);
 
     assert.exists(storedDao.initialSpendingLimit);
     assert.equal(storedDao.initialSpendingLimit.amountPerMonth.toString(), "10000000000");
@@ -180,7 +180,7 @@ export default function suite() {
       "DAO initialized despite slots_per_proposal being less than twap_start_delay_slots"
     );
 
-    await this.autocratClient
+    await this.futarchy
       .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,

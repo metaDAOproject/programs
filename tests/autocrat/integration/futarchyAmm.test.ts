@@ -38,7 +38,7 @@ export default function suite() {
 
     const nonce = new BN(Math.floor(Math.random() * 1000000));
 
-    await this.autocratClient
+    await this.futarchy
       .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,
@@ -73,7 +73,7 @@ export default function suite() {
     const quoteTokensToLP = new BN(5000 * 10 ** 6); // 5000 USDC
 
     // Create a simple instruction for the proposal
-    const updateDaoIx = await this.autocratClient
+    const updateDaoIx = await this.futarchy
       .updateDaoIx({
         dao,
         params: {
@@ -126,7 +126,7 @@ export default function suite() {
     await this.banksClient.processTransaction(tx);
 
     // Now initialize the autocrat proposal
-    proposal = await this.autocratClient.initializeProposal(
+    proposal = await this.futarchy.initializeProposal(
       dao,
       descriptionUrl,
       squadsProposalPda,
@@ -137,7 +137,7 @@ export default function suite() {
 
   it.only("futarchy amm", async function () {
     // Get initial state before spot swap (before launching proposal)
-    const daoBeforeSpotSwap = await this.autocratClient.autocrat.account.dao.fetch(dao);
+    const daoBeforeSpotSwap = await this.futarchy.autocrat.account.dao.fetch(dao);
     console.log("=== Before spot swap (initial AMM state) ===");
     console.log("Initial base reserves:", daoBeforeSpotSwap.amm.state.spot.spot.baseReserves.toString());
     console.log("Initial quote reserves:", daoBeforeSpotSwap.amm.state.spot.spot.quoteReserves.toString());
@@ -148,7 +148,7 @@ export default function suite() {
     console.log("Initial user quote balance:", initialUserQuoteBalance);
 
     // Perform a spot swap before launching the proposal
-    await this.autocratClient.spotSwapIx({
+    await this.futarchy.spotSwapIx({
       dao,
       baseMint: META,
       quoteMint: USDC,
@@ -158,7 +158,7 @@ export default function suite() {
     }).rpc();
 
     // Get state after spot swap
-    const daoAfterSpotSwap = await this.autocratClient.autocrat.account.dao.fetch(dao);
+    const daoAfterSpotSwap = await this.futarchy.autocrat.account.dao.fetch(dao);
     console.log("=== After spot swap ===");
     console.log("Final base reserves:", daoAfterSpotSwap.amm.state.spot.spot.baseReserves.toString());
     console.log("Final quote reserves:", daoAfterSpotSwap.amm.state.spot.spot.quoteReserves.toString());
@@ -180,22 +180,22 @@ export default function suite() {
 
     // Split tokens into the vaults
     const { baseVault, quoteVault, question } =
-      this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+      this.futarchy.getProposalPdas(proposal, META, USDC, dao);
 
-    await this.vaultClient
+    await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
       .rpc();
-    await this.vaultClient
+    await this.conditionalVault
       .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
       .rpc();
 
     const { passBaseMint, passQuoteMint } =
-      this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+      this.futarchy.getProposalPdas(proposal, META, USDC, dao);
 
-    const { failBaseMint, failQuoteMint } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+    const { failBaseMint, failQuoteMint } = this.futarchy.getProposalPdas(proposal, META, USDC, dao);
 
     // Launch the proposal
-    await this.autocratClient.autocrat.methods.launchProposal()
+    await this.futarchy.autocrat.methods.launchProposal()
       .accounts({
         proposal,
         dao,
@@ -215,14 +215,14 @@ export default function suite() {
       .rpc();
 
     console.log("=== After launching proposal ===");
-    const daoAfterLaunch = await this.autocratClient.autocrat.account.dao.fetch(dao);
+    const daoAfterLaunch = await this.futarchy.autocrat.account.dao.fetch(dao);
     console.log("DAO state:", daoAfterLaunch);
 
     // Perform spot swaps to generate TWAP data
     for (let i = 0; i < 100; i++) { // Reduced to 10 for faster testing
       await this.advanceBySlots(20_000n);
 
-      await this.autocratClient.conditionalSwapIx({ 
+      await this.futarchy.conditionalSwapIx({ 
         dao, 
         baseMint: META, 
         quoteMint: USDC, 
@@ -236,27 +236,27 @@ export default function suite() {
 
       if (i % 5 === 0) {
         console.log(`=== After ${i + 1} swaps ===`);
-        const daoAfterSwaps = await this.autocratClient.autocrat.account.dao.fetch(dao);
+        const daoAfterSwaps = await this.futarchy.autocrat.account.dao.fetch(dao);
         console.log("DAO state after swaps:", daoAfterSwaps);
       }
     }
 
     console.log("=== Final DAO state before finalization ===");
-    const finalDaoState = await this.autocratClient.autocrat.account.dao.fetch(dao);
+    const finalDaoState = await this.futarchy.autocrat.account.dao.fetch(dao);
     console.log("Final DAO state:", finalDaoState);
 
     // Temporary return to see results
     // Finalize the proposal
-    await this.autocratClient.finalizeProposal(proposal);
+    await this.futarchy.finalizeProposal(proposal);
 
-    const storedProposal = await this.autocratClient.getProposal(proposal);
+    const storedProposal = await this.futarchy.getProposal(proposal);
     console.log("Stored proposal:", storedProposal);
     console.log("AMM fUSDC Balance", await this.getTokenBalance(passQuoteMint, dao));
     return;
     assert.exists(storedProposal.state.passed);
 
     // Collect fees
-    await this.autocratClient.collectFeesIx({
+    await this.futarchy.collectFeesIx({
       dao,
       baseMint: META,
       quoteMint: USDC,

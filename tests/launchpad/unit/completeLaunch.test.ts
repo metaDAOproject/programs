@@ -41,14 +41,14 @@ export default function suite() {
   const SLOTS_PER_DAY = 216_000; // (24 * 60 * 60 * 1000) / 400
 
   before(async function () {
-    autocratClient = this.autocratClient;
-    launchpadClient = this.launchpadClient;
+    autocratClient = this.futarchy;
+    launchpadClient = this.launchpad;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpadClient,
+      this.launchpad,
       this.payer
     );
 

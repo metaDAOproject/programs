@@ -16,7 +16,7 @@ export default function suite() {
   let underlyingTokenMint: PublicKey;
 
   before(async function () {
-    vaultClient = this.vaultClient;
+    vaultClient = this.conditionalVault;
     underlyingTokenMint = await createMint(
       this.banksClient,
       this.payer as Keypair,

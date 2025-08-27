@@ -10,7 +10,7 @@ export default function suite() {
   let settlementAuthority: Keypair;
 
   before(function () {
-    vaultClient = this.vaultClient;
+    vaultClient = this.conditionalVault;
   });
 
   beforeEach(async function () {
