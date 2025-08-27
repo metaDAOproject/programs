@@ -77,6 +77,8 @@ impl ConditionalSwap<'_> {
 
         require_gte!(self.user_input_account.amount, params.input_amount, AutocratError::InsufficientBalance);
 
+        require_eq!(self.proposal.state, ProposalState::Pending);
+
         Ok(())
     }
 
