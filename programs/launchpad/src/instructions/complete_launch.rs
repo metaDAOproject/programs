@@ -13,8 +13,8 @@ use anchor_spl::metadata::{
 };
 
 use futarchy::program::Futarchy;
-use futarchy::{InitialSpendingLimit, InitializeDaoParams, ProvideLiquidityParams};
 use futarchy::DAY_IN_SLOTS;
+use futarchy::{InitialSpendingLimit, InitializeDaoParams, ProvideLiquidityParams};
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
@@ -143,7 +143,9 @@ impl CompleteLaunch<'_> {
 
         require_gte!(
             clock.unix_timestamp,
-            self.launch.unix_timestamp_started.saturating_add(self.launch.seconds_for_launch.try_into().unwrap()),
+            self.launch
+                .unix_timestamp_started
+                .saturating_add(self.launch.seconds_for_launch.try_into().unwrap()),
             LaunchpadError::LaunchPeriodNotOver
         );
 
@@ -164,8 +166,6 @@ impl CompleteLaunch<'_> {
         ];
         let launch_signer = &[&launch_signer_seeds[..]];
 
-
-
         let total_committed_amount = launch.total_committed_amount;
 
         msg!("total_committed_amount: {}", total_committed_amount);
@@ -185,7 +185,10 @@ impl CompleteLaunch<'_> {
         if total_committed_amount >= launch.minimum_raise_amount {
             futarchy::cpi::initialize_dao(
                 CpiContext::new_with_signer(
-                    ctx.accounts.static_accounts.futarchy_program.to_account_info(),
+                    ctx.accounts
+                        .static_accounts
+                        .futarchy_program
+                        .to_account_info(),
                     futarchy::cpi::accounts::InitializeDao {
                         dao: ctx.accounts.dao.to_account_info(),
                         dao_creator: ctx.accounts.launch_signer.to_account_info(),
@@ -193,17 +196,46 @@ impl CompleteLaunch<'_> {
                         system_program: ctx.accounts.system_program.to_account_info(),
                         base_mint: ctx.accounts.base_mint.to_account_info(),
                         quote_mint: ctx.accounts.quote_mint.to_account_info(),
-                        event_authority: ctx.accounts.static_accounts.autocrat_event_authority.to_account_info(),
-                        program: ctx.accounts.static_accounts.futarchy_program.to_account_info(),
+                        event_authority: ctx
+                            .accounts
+                            .static_accounts
+                            .autocrat_event_authority
+                            .to_account_info(),
+                        program: ctx
+                            .accounts
+                            .static_accounts
+                            .futarchy_program
+                            .to_account_info(),
                         squads_multisig: ctx.accounts.squads_multisig.to_account_info(),
                         squads_multisig_vault: ctx.accounts.squads_multisig_vault.to_account_info(),
-                        squads_program: ctx.accounts.static_accounts.squads_program.to_account_info(),
-                        squads_program_config: ctx.accounts.static_accounts.squads_program_config.to_account_info(),
-                        squads_program_config_treasury: ctx.accounts.static_accounts.squads_program_config_treasury.to_account_info(),
+                        squads_program: ctx
+                            .accounts
+                            .static_accounts
+                            .squads_program
+                            .to_account_info(),
+                        squads_program_config: ctx
+                            .accounts
+                            .static_accounts
+                            .squads_program_config
+                            .to_account_info(),
+                        squads_program_config_treasury: ctx
+                            .accounts
+                            .static_accounts
+                            .squads_program_config_treasury
+                            .to_account_info(),
                         spending_limit: ctx.accounts.spending_limit.to_account_info(),
-                        futarchy_amm_base_vault: ctx.accounts.futarchy_amm_base_vault.to_account_info(),
-                        futarchy_amm_quote_vault: ctx.accounts.futarchy_amm_quote_vault.to_account_info(),
-                        associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+                        futarchy_amm_base_vault: ctx
+                            .accounts
+                            .futarchy_amm_base_vault
+                            .to_account_info(),
+                        futarchy_amm_quote_vault: ctx
+                            .accounts
+                            .futarchy_amm_quote_vault
+                            .to_account_info(),
+                        associated_token_program: ctx
+                            .accounts
+                            .associated_token_program
+                            .to_account_info(),
                         token_program: ctx.accounts.token_program.to_account_info(),
                     },
                     launch_signer,
@@ -227,12 +259,21 @@ impl CompleteLaunch<'_> {
 
             futarchy::cpi::provide_liquidity(
                 CpiContext::new_with_signer(
-                    ctx.accounts.static_accounts.futarchy_program.to_account_info(),
+                    ctx.accounts
+                        .static_accounts
+                        .futarchy_program
+                        .to_account_info(),
                     futarchy::cpi::accounts::ProvideLiquidity {
                         dao: ctx.accounts.dao.to_account_info(),
                         liquidity_provider: ctx.accounts.launch_signer.to_account_info(),
-                        liquidity_provider_base_account: ctx.accounts.launch_base_vault.to_account_info(),
-                        liquidity_provider_quote_account: ctx.accounts.launch_quote_vault.to_account_info(),
+                        liquidity_provider_base_account: ctx
+                            .accounts
+                            .launch_base_vault
+                            .to_account_info(),
+                        liquidity_provider_quote_account: ctx
+                            .accounts
+                            .launch_quote_vault
+                            .to_account_info(),
                         payer: ctx.accounts.payer.to_account_info(),
                         system_program: ctx.accounts.system_program.to_account_info(),
                         amm_base_vault: ctx.accounts.futarchy_amm_base_vault.to_account_info(),
@@ -247,9 +288,8 @@ impl CompleteLaunch<'_> {
                     quote_amount: usdc_to_lp,
                     min_liquidity: 0,
                     position_authority: ctx.accounts.squads_multisig_vault.key(),
-                }
+                },
             )?;
-
 
             token::mint_to(
                 CpiContext::new_with_signer(
@@ -292,7 +332,10 @@ impl CompleteLaunch<'_> {
 
             update_metadata_accounts_v2(
                 CpiContext::new_with_signer(
-                    ctx.accounts.static_accounts.token_metadata_program.to_account_info(),
+                    ctx.accounts
+                        .static_accounts
+                        .token_metadata_program
+                        .to_account_info(),
                     UpdateMetadataAccountsV2 {
                         metadata: ctx.accounts.token_metadata.to_account_info(),
                         update_authority: ctx.accounts.launch_signer.to_account_info(),

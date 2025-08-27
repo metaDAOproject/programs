@@ -1,8 +1,5 @@
 use super::*;
 
-use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
-
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct StakeToProposalParams {
     pub amount: u64,

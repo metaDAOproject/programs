@@ -1,10 +1,6 @@
 use super::*;
 
-use anchor_spl::token::Token;
-use conditional_vault::{
-    cpi::accounts::ResolveQuestion, program::ConditionalVault as ConditionalVaultProgram,
-    ConditionalVault, Question, ResolveQuestionArgs,
-};
+use conditional_vault::{cpi::accounts::ResolveQuestion, ResolveQuestionArgs};
 use squads_multisig_program::program::SquadsMultisigProgram;
 
 #[derive(Accounts)]
@@ -13,7 +9,7 @@ pub struct FinalizeProposal<'info> {
     #[account(
         mut, has_one = question, has_one = dao, has_one = squads_proposal,
         has_one = base_vault, has_one = quote_vault,
-        has_one = pass_base_mint, has_one = pass_quote_mint, 
+        has_one = pass_base_mint, has_one = pass_quote_mint,
         has_one = fail_base_mint, has_one = fail_quote_mint
     )]
     pub proposal: Box<Account<'info, Proposal>>,
@@ -228,7 +224,8 @@ impl FinalizeProposal<'_> {
             conditional_vault::cpi::accounts::InteractWithVault {
                 question: question.to_account_info(),
                 vault: base_vault.to_account_info(),
-                vault_underlying_token_account: base_vault_underlying_token_account.to_account_info(),
+                vault_underlying_token_account: base_vault_underlying_token_account
+                    .to_account_info(),
                 authority: dao.to_account_info(),
                 user_underlying_token_account: amm_base_vault.to_account_info(),
                 event_authority: vault_event_authority.to_account_info(),

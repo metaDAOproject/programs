@@ -1,7 +1,5 @@
 use super::*;
 
-use anchor_spl::token::{self, Token, TokenAccount};
-
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct SpotSwapParams {
     pub input_amount: u64,
@@ -44,7 +42,11 @@ pub struct SpotSwap<'info> {
 
 impl SpotSwap<'_> {
     pub fn handle(ctx: Context<Self>, params: SpotSwapParams) -> Result<()> {
-        let SpotSwapParams { swap_type, input_amount, min_output_amount } = params;
+        let SpotSwapParams {
+            swap_type,
+            input_amount,
+            min_output_amount,
+        } = params;
 
         let Self {
             dao,
@@ -58,10 +60,21 @@ impl SpotSwap<'_> {
             program: _,
         } = ctx.accounts;
 
-        let (user_input_account, amm_input_account, user_output_account, amm_output_account) = match swap_type {
-            SwapType::Buy => (user_quote_account, amm_quote_vault, user_base_account, amm_base_vault),
-            SwapType::Sell => (user_base_account, amm_base_vault, user_quote_account, amm_quote_vault),
-        };
+        let (user_input_account, amm_input_account, user_output_account, amm_output_account) =
+            match swap_type {
+                SwapType::Buy => (
+                    user_quote_account,
+                    amm_quote_vault,
+                    user_base_account,
+                    amm_base_vault,
+                ),
+                SwapType::Sell => (
+                    user_base_account,
+                    amm_base_vault,
+                    user_quote_account,
+                    amm_quote_vault,
+                ),
+            };
 
         require_gte!(user_input_account.amount, input_amount);
 
@@ -76,7 +89,7 @@ impl SpotSwap<'_> {
                     from: user_input_account.to_account_info(),
                     to: amm_input_account.to_account_info(),
                     authority: user.to_account_info(),
-                }
+                },
             ),
             input_amount,
         )?;

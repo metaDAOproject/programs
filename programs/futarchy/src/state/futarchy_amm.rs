@@ -56,7 +56,9 @@ impl PoolState {
                 pass.update_twap(clock.slot)?;
                 fail.update_twap(clock.slot)?;
 
-                let spot_k = spot.k(); let pass_k = pass.k(); let fail_k = fail.k();
+                let spot_k = spot.k();
+                let pass_k = pass.k();
+                let fail_k = fail.k();
 
                 match market {
                     Market::Spot => {
@@ -127,8 +129,6 @@ impl PoolState {
             }
         }
     }
-
-    
 }
 
 #[derive(Default, Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, InitSpace)]
@@ -290,16 +290,14 @@ impl Pool {
         // assert that the new observation is between price and last observation
         match price.cmp(&oracle.last_observation) {
             Ordering::Greater => {
-                require_gte!(new_observation, oracle.last_observation); 
+                require_gte!(new_observation, oracle.last_observation);
                 require_gte!(price, new_observation);
             }
             Ordering::Equal => {
                 require_eq!(new_observation, price);
             }
             Ordering::Less => {
-                require_gte!(
-                    oracle.last_observation, new_observation
-                );
+                require_gte!(oracle.last_observation, new_observation);
                 require_gte!(new_observation, price);
             }
         }
@@ -313,10 +311,7 @@ impl Pool {
     pub fn get_twap(&self) -> Result<u128> {
         let start_slot = self.oracle.created_at_slot + self.oracle.start_delay_slots;
 
-        require_gt!(
-            self.oracle.last_updated_slot,
-            start_slot,
-        );
+        require_gt!(self.oracle.last_updated_slot, start_slot,);
         let slots_passed = (self.oracle.last_updated_slot - start_slot) as u128;
 
         require_neq!(slots_passed, 0);
@@ -348,7 +343,9 @@ impl Pool {
     }
 
     pub fn swap(&mut self, input_amount: u64, swap_type: SwapType) -> Result<u64> {
-        let input_amount_after_protocol_fee = (input_amount as u128 * (MAX_BPS - PROTOCOL_TAKER_FEE_BPS) as u128 / MAX_BPS as u128) as u64;
+        let input_amount_after_protocol_fee = (input_amount as u128
+            * (MAX_BPS - PROTOCOL_TAKER_FEE_BPS) as u128
+            / MAX_BPS as u128) as u64;
         let protocol_fee = input_amount - input_amount_after_protocol_fee;
 
         if swap_type == SwapType::Buy {
@@ -370,11 +367,13 @@ impl Pool {
         require_neq!(input_reserve, 0);
         require_neq!(output_reserve, 0);
 
-        let input_amount_with_lp_fee = input_amount_after_protocol_fee as u128 * (MAX_BPS - LP_TAKER_FEE_BPS) as u128;
+        let input_amount_with_lp_fee =
+            input_amount_after_protocol_fee as u128 * (MAX_BPS - LP_TAKER_FEE_BPS) as u128;
 
         let numerator = input_amount_with_lp_fee * output_reserve as u128;
 
-        let denominator = (input_reserve as u128 * MAX_BPS as u128) + input_amount_with_lp_fee as u128;
+        let denominator =
+            (input_reserve as u128 * MAX_BPS as u128) + input_amount_with_lp_fee as u128;
 
         let output_amount = (numerator / denominator) as u64;
 
@@ -527,11 +526,17 @@ pub fn arbitrage_after_spot_swap(
         }
     }
 
-    let final_spot_output = spot.feeless_swap(best_input_amount, spot_direction).unwrap();
+    let final_spot_output = spot
+        .feeless_swap(best_input_amount, spot_direction)
+        .unwrap();
 
-    let final_pass_output = pass.feeless_swap(final_spot_output, conditional_direction).unwrap();
+    let final_pass_output = pass
+        .feeless_swap(final_spot_output, conditional_direction)
+        .unwrap();
 
-    let final_fail_output = fail.feeless_swap(final_spot_output, conditional_direction).unwrap();
+    let final_fail_output = fail
+        .feeless_swap(final_spot_output, conditional_direction)
+        .unwrap();
 
     let final_conditional_output = std::cmp::min(final_pass_output, final_fail_output);
 
@@ -588,8 +593,12 @@ pub fn arbitrage_after_conditional_swap(
         let mut temp_pass = pass.clone();
         let mut temp_fail = fail.clone();
 
-        let pass_output = temp_pass.feeless_swap(input_amount, conditional_direction).unwrap();
-        let fail_output = temp_fail.feeless_swap(input_amount, conditional_direction).unwrap();
+        let pass_output = temp_pass
+            .feeless_swap(input_amount, conditional_direction)
+            .unwrap();
+        let fail_output = temp_fail
+            .feeless_swap(input_amount, conditional_direction)
+            .unwrap();
 
         let conditional_output = std::cmp::min(pass_output, fail_output);
 
@@ -646,12 +655,15 @@ pub fn arbitrage_after_conditional_swap(
         .unwrap();
     let final_conditional_output = std::cmp::min(final_pass_output, final_fail_output);
 
-    let final_spot_output = spot.feeless_swap(final_conditional_output, spot_direction).unwrap();
+    let final_spot_output = spot
+        .feeless_swap(final_conditional_output, spot_direction)
+        .unwrap();
 
     let fail_profit = if final_fail_output > final_pass_output {
         let remaining_fail = final_fail_output - final_conditional_output;
 
-        let fail_profit_from_base_remaining = fail.feeless_swap(remaining_fail, spot_direction).unwrap();
+        let fail_profit_from_base_remaining =
+            fail.feeless_swap(remaining_fail, spot_direction).unwrap();
 
         fail_profit_from_base_remaining
     } else {
@@ -661,7 +673,8 @@ pub fn arbitrage_after_conditional_swap(
     let pass_profit = if final_pass_output > final_fail_output {
         let remaining_pass = final_pass_output - final_conditional_output;
 
-        let pass_profit_from_base_remaining = pass.feeless_swap(remaining_pass, spot_direction).unwrap();
+        let pass_profit_from_base_remaining =
+            pass.feeless_swap(remaining_pass, spot_direction).unwrap();
 
         pass_profit_from_base_remaining
     } else {

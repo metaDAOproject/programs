@@ -1,7 +1,5 @@
 use super::*;
 
-use conditional_vault::state::ConditionalVault;
-
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct ConditionalSwapParams {
     pub market: Market,
@@ -21,7 +19,7 @@ pub struct ConditionalSwap<'info> {
 
     #[account(
         has_one = dao, has_one = base_vault, has_one = quote_vault,
-        has_one = pass_base_mint, has_one = pass_quote_mint, 
+        has_one = pass_base_mint, has_one = pass_quote_mint,
         has_one = fail_base_mint, has_one = fail_quote_mint,
         has_one = question
     )]
@@ -75,7 +73,11 @@ impl ConditionalSwap<'_> {
     pub fn validate(&self, params: &ConditionalSwapParams) -> Result<()> {
         require_neq!(params.market, Market::Spot);
 
-        require_gte!(self.user_input_account.amount, params.input_amount, AutocratError::InsufficientBalance);
+        require_gte!(
+            self.user_input_account.amount,
+            params.input_amount,
+            AutocratError::InsufficientBalance
+        );
 
         require_eq!(self.proposal.state, ProposalState::Pending);
 
@@ -90,14 +92,18 @@ impl ConditionalSwap<'_> {
             min_output_amount,
         } = params;
 
-        let output_amount =
-            ctx.accounts
-                .dao
-                .amm
-                .state
-                .swap(input_amount, swap_type, market)?;
+        let output_amount = ctx
+            .accounts
+            .dao
+            .amm
+            .state
+            .swap(input_amount, swap_type, market)?;
 
-        require_gte!(output_amount, min_output_amount, AutocratError::SwapSlippageExceeded);
+        require_gte!(
+            output_amount,
+            min_output_amount,
+            AutocratError::SwapSlippageExceeded
+        );
 
         // You need to transfer in before you can do merges of in
         // You need to do split of out before you can do transfers of out

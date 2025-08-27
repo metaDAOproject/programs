@@ -1,14 +1,12 @@
 use super::*;
 
-use anchor_spl::associated_token::AssociatedToken;
-
 #[derive(Accounts)]
 #[event_cpi]
 pub struct LaunchProposal<'info> {
     #[account(mut, has_one = dao, has_one = quote_vault, has_one = base_vault)]
     pub proposal: Box<Account<'info, Proposal>>,
-    pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,
-    pub quote_vault: Box<Account<'info, ConditionalVaultAccount>>,
+    pub base_vault: Box<Account<'info, ConditionalVault>>,
+    pub quote_vault: Box<Account<'info, ConditionalVault>>,
     #[account(address = base_vault.conditional_token_mints[1])]
     pub pass_base_mint: Box<Account<'info, Mint>>,
     #[account(address = quote_vault.conditional_token_mints[1])]
@@ -85,9 +83,9 @@ impl LaunchProposal<'_> {
         };
 
         // Set up the futarchy AMM by splitting the spot pool reserves
-        let PoolState::Spot { mut spot } = dao.amm.state.to_owned() else { 
+        let PoolState::Spot { mut spot } = dao.amm.state.to_owned() else {
             return Err(AutocratError::PoolNotInSpotState.into());
-         };
+        };
 
         let base_to_lp = spot.base_reserves / 2;
         let quote_to_lp = spot.quote_reserves / 2;
@@ -95,8 +93,16 @@ impl LaunchProposal<'_> {
         spot.base_reserves -= base_to_lp;
         spot.quote_reserves -= quote_to_lp;
 
-        require_gte!(base_to_lp, dao.min_base_futarchic_liquidity, AutocratError::InsufficientLiquidity);
-        require_gte!(quote_to_lp, dao.min_quote_futarchic_liquidity, AutocratError::InsufficientLiquidity);
+        require_gte!(
+            base_to_lp,
+            dao.min_base_futarchic_liquidity,
+            AutocratError::InsufficientLiquidity
+        );
+        require_gte!(
+            quote_to_lp,
+            dao.min_quote_futarchic_liquidity,
+            AutocratError::InsufficientLiquidity
+        );
 
         let clock = Clock::get()?;
 
@@ -136,7 +142,6 @@ impl LaunchProposal<'_> {
             proposal: proposal.key(),
             dao: dao.key(),
             total_staked,
-
         });
 
         Ok(())

@@ -1,8 +1,5 @@
 use super::*;
 
-use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
-
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct UnstakeFromProposalParams {
     pub amount: u64,
@@ -49,7 +46,11 @@ impl UnstakeFromProposal<'_> {
             }
         }
 
-        require_gte!(staker_amount, params.amount, AutocratError::InsufficientTokenBalance);
+        require_gte!(
+            staker_amount,
+            params.amount,
+            AutocratError::InsufficientTokenBalance
+        );
 
         Ok(())
     }
@@ -76,7 +77,7 @@ impl UnstakeFromProposal<'_> {
             &[proposal.pda_bump],
         ];
         let signer_seeds = &[&seeds[..]];
-        
+
         let transfer_ctx = CpiContext::new_with_signer(
             token_program.to_account_info(),
             Transfer {
@@ -101,7 +102,9 @@ impl UnstakeFromProposal<'_> {
                 staker_record.amount = staker_record.amount.saturating_sub(amount);
                 if staker_record.amount == 0 {
                     // Remove staker if they have no stake left
-                    proposal.stakers.retain(|record| record.staker != staker_key);
+                    proposal
+                        .stakers
+                        .retain(|record| record.staker != staker_key);
                 }
                 break;
             }

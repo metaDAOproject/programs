@@ -1,14 +1,11 @@
 use super::*;
 
-use anchor_spl::token::{self, Transfer};
-
 pub mod admin {
     use anchor_lang::prelude::declare_id;
 
     // MetaDAO multisig
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
-
 
 #[derive(Accounts)]
 pub struct CollectFees<'info> {
@@ -57,7 +54,12 @@ impl CollectFees<'_> {
 
         let dao_creator = dao.dao_creator;
         let nonce = dao.nonce.to_le_bytes();
-        let signer_seeds = &[b"dao".as_ref(), dao_creator.as_ref(), nonce.as_ref(), &[dao.pda_bump]];
+        let signer_seeds = &[
+            b"dao".as_ref(),
+            dao_creator.as_ref(),
+            nonce.as_ref(),
+            &[dao.pda_bump],
+        ];
 
         for (amount_to_send, from, to) in [
             (base_fee_balance, amm_base_vault, base_token_account),
@@ -79,4 +81,4 @@ impl CollectFees<'_> {
 
         Ok(())
     }
-} 
+}

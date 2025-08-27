@@ -1,7 +1,5 @@
 use super::*;
 
-use anchor_spl::token::{self, Transfer};
-
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct WithdrawLiquidityParams {
     /// How much liquidity to withdraw
@@ -80,7 +78,10 @@ impl WithdrawLiquidity<'_> {
             AutocratError::InsufficientBalance
         );
 
-        require!(liquidity_to_withdraw > 0, AutocratError::ZeroLiquidityRemove);
+        require!(
+            liquidity_to_withdraw > 0,
+            AutocratError::ZeroLiquidityRemove
+        );
 
         let total_liquidity = dao.amm.total_liquidity;
         require_gt!(total_liquidity, 0, AutocratError::AssertFailed);
@@ -90,7 +91,10 @@ impl WithdrawLiquidity<'_> {
                 // TODO: check that pool is already in right state
                 unreachable!();
             };
-            spot.get_base_and_quote_withdrawable(liquidity_to_withdraw as u64, total_liquidity as u64)
+            spot.get_base_and_quote_withdrawable(
+                liquidity_to_withdraw as u64,
+                total_liquidity as u64,
+            )
         };
 
         require_gte!(
@@ -119,11 +123,24 @@ impl WithdrawLiquidity<'_> {
 
         let dao_creator = dao.dao_creator;
         let nonce = dao.nonce.to_le_bytes();
-        let signer_seeds = &[b"dao".as_ref(), dao_creator.as_ref(), nonce.as_ref(), &[dao.pda_bump]];
+        let signer_seeds = &[
+            b"dao".as_ref(),
+            dao_creator.as_ref(),
+            nonce.as_ref(),
+            &[dao.pda_bump],
+        ];
 
         for (amount_to_withdraw, from, to) in [
-            (base_to_withdraw, amm_base_vault, liquidity_provider_base_account),
-            (quote_to_withdraw, amm_quote_vault, liquidity_provider_quote_account),
+            (
+                base_to_withdraw,
+                amm_base_vault,
+                liquidity_provider_base_account,
+            ),
+            (
+                quote_to_withdraw,
+                amm_quote_vault,
+                liquidity_provider_quote_account,
+            ),
         ] {
             token::transfer(
                 CpiContext::new_with_signer(
@@ -153,4 +170,4 @@ impl WithdrawLiquidity<'_> {
 
         Ok(())
     }
-} 
+}

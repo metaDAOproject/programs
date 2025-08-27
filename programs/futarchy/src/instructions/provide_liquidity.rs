@@ -1,7 +1,5 @@
 use super::*;
 
-
-
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct ProvideLiquidityParams {
     /// How much quote token you will deposit to the pool
@@ -98,8 +96,7 @@ impl ProvideLiquidity<'_> {
                 .try_into()
                 .map_err(|_| AutocratError::CastingOverflow)?;
 
-            let liquidity_to_mint =
-                (quote_amount as u128 * total_liquidity) / quote_reserves;
+            let liquidity_to_mint = (quote_amount as u128 * total_liquidity) / quote_reserves;
 
             require_gte!(
                 max_base_amount,
@@ -124,7 +121,6 @@ impl ProvideLiquidity<'_> {
             (initial_liquidity, base_amount)
         };
 
-        
         spot.base_reserves += base_amount;
         spot.quote_reserves += quote_amount;
 
@@ -143,7 +139,7 @@ impl ProvideLiquidity<'_> {
                     from: liquidity_provider_base_account.to_account_info(),
                     to: amm_base_vault.to_account_info(),
                     authority: liquidity_provider.to_account_info(),
-                }
+                },
             ),
             base_amount,
         )?;
@@ -155,7 +151,7 @@ impl ProvideLiquidity<'_> {
                     from: liquidity_provider_quote_account.to_account_info(),
                     to: amm_quote_vault.to_account_info(),
                     authority: liquidity_provider.to_account_info(),
-                }
+                },
             ),
             quote_amount,
         )?;

@@ -1,7 +1,8 @@
-use anchor_spl::associated_token::AssociatedToken;
-use squads_multisig_program::{Member, Period, Permission, Permissions, program::SquadsMultisigProgram};
-
 use super::*;
+
+use squads_multisig_program::{
+    program::SquadsMultisigProgram, Member, Period, Permission, Permissions,
+};
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub struct InitializeDaoParams {
@@ -93,7 +94,12 @@ impl InitializeDao<'_> {
         );
 
         let creator_key = ctx.accounts.dao_creator.key();
-        let dao_seeds = &[b"dao".as_ref(), creator_key.as_ref(), &nonce.to_le_bytes(), &[ctx.bumps.dao]];
+        let dao_seeds = &[
+            b"dao".as_ref(),
+            creator_key.as_ref(),
+            &nonce.to_le_bytes(),
+            &[ctx.bumps.dao],
+        ];
 
         squads_multisig_program::cpi::multisig_create_v2(
             CpiContext::new_with_signer(
@@ -160,7 +166,7 @@ impl InitializeDao<'_> {
         }
 
         let clock = Clock::get()?;
-        
+
         dao.set_inner(Dao {
             nonce,
             dao_creator: creator_key,

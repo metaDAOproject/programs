@@ -28,12 +28,12 @@ pub struct InitializeProposal<'info> {
         constraint = quote_vault.underlying_token_mint == dao.quote_mint,
         has_one = question,
     )]
-    pub quote_vault: Box<Account<'info, ConditionalVaultAccount>>,
+    pub quote_vault: Box<Account<'info, ConditionalVault>>,
     #[account(
         constraint = base_vault.underlying_token_mint == dao.base_mint,
         has_one = question,
     )]
-    pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,
+    pub base_vault: Box<Account<'info, ConditionalVault>>,
     pub proposer: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -79,9 +79,7 @@ impl InitializeProposal<'_> {
             program: _,
         } = ctx.accounts;
 
-        let InitializeProposalParams {
-            description_url,
-        } = params;
+        let InitializeProposalParams { description_url } = params;
 
         let clock = Clock::get()?;
 
