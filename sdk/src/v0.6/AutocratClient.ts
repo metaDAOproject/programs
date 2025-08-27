@@ -313,8 +313,8 @@ export class AutocratClient {
       squadsProgramConfigTreasury,
       squadsProgram: SQUADS_PROGRAM_ID,
       spendingLimit,
-      daoCreatorBaseAccount,
-      daoCreatorQuoteAccount,
+      // daoCreatorBaseAccount,
+      // daoCreatorQuoteAccount,
       // daoCreatorBaseAccount: getAssociatedTokenAddressSync(
       //   baseMint,
       //   this.provider.publicKey,

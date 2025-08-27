@@ -236,22 +236,7 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "lpMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "lpVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "poolTokenVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "poolUsdcVault";
+          name: "daoOwnedLpPosition";
           isMut: true;
           isSigner: false;
         },
@@ -1269,22 +1254,7 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "lpMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "lpVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "poolTokenVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "poolUsdcVault",
+          name: "daoOwnedLpPosition",
           isMut: true,
           isSigner: false,
         },

@@ -16,18 +16,6 @@ export type Futarchy = {
           isSigner: true;
         },
         {
-          name: "daoCreatorBaseAccount";
-          isMut: true;
-          isSigner: false;
-          isOptional: true;
-        },
-        {
-          name: "daoCreatorQuoteAccount";
-          isMut: true;
-          isSigner: false;
-          isOptional: true;
-        },
-        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -1205,14 +1193,6 @@ export type Futarchy = {
             type: "u64";
           },
           {
-            name: "baseLiquidityToLp";
-            type: "u64";
-          },
-          {
-            name: "quoteLiquidityToLp";
-            type: "u64";
-          },
-          {
             name: "baseToStake";
             type: "u64";
           },
@@ -1270,6 +1250,11 @@ export type Futarchy = {
             name: "minLiquidity";
             docs: ["The minimum liquidity you will be assigned"];
             type: "u128";
+          },
+          {
+            name: "positionAuthority";
+            docs: ["The account that will own the LP position"];
+            type: "publicKey";
           }
         ];
       };
@@ -2253,18 +2238,6 @@ export const IDL: Futarchy = {
           name: "daoCreator",
           isMut: false,
           isSigner: true,
-        },
-        {
-          name: "daoCreatorBaseAccount",
-          isMut: true,
-          isSigner: false,
-          isOptional: true,
-        },
-        {
-          name: "daoCreatorQuoteAccount",
-          isMut: true,
-          isSigner: false,
-          isOptional: true,
         },
         {
           name: "payer",
@@ -3444,14 +3417,6 @@ export const IDL: Futarchy = {
             type: "u64",
           },
           {
-            name: "baseLiquidityToLp",
-            type: "u64",
-          },
-          {
-            name: "quoteLiquidityToLp",
-            type: "u64",
-          },
-          {
             name: "baseToStake",
             type: "u64",
           },
@@ -3509,6 +3474,11 @@ export const IDL: Futarchy = {
             name: "minLiquidity",
             docs: ["The minimum liquidity you will be assigned"],
             type: "u128",
+          },
+          {
+            name: "positionAuthority",
+            docs: ["The account that will own the LP position"],
+            type: "publicKey",
           },
         ],
       },

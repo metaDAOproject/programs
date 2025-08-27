@@ -311,6 +311,11 @@ export class LaunchpadClient {
       true
     );
 
+    const [ammPosition] = PublicKey.findProgramAddressSync(
+      [Buffer.from("amm_position"), dao.toBuffer(), multisigVault.toBuffer()],
+      this.autocratClient.getProgramId()
+    );
+
     return this.launchpad.methods.completeLaunch().accounts({
       launch,
       launchSigner,
@@ -326,10 +331,11 @@ export class LaunchpadClient {
       quoteMint,
       baseMint,
       tokenMetadata,
-      lpMint,
-      lpVault,
-      poolTokenVault,
-      poolUsdcVault,
+      daoOwnedLpPosition: ammPosition,
+      // lpMint,
+      // lpVault,
+      // poolTokenVault,
+      // poolUsdcVault,
       futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
         quoteMint,
         dao,

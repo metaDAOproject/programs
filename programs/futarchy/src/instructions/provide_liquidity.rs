@@ -10,9 +10,12 @@ pub struct ProvideLiquidityParams {
     pub max_base_amount: u64,
     /// The minimum liquidity you will be assigned
     pub min_liquidity: u128,
+    /// The account that will own the LP position
+    pub position_authority: Pubkey,
 }
 
 #[derive(Accounts)]
+#[instruction(params: ProvideLiquidityParams)]
 pub struct ProvideLiquidity<'info> {
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
@@ -47,7 +50,7 @@ pub struct ProvideLiquidity<'info> {
     #[account(
         init_if_needed,
         payer = payer,
-        seeds = [b"amm_position", dao.key().as_ref(), liquidity_provider.key().as_ref()],
+        seeds = [b"amm_position", dao.key().as_ref(), params.position_authority.key().as_ref()],
         bump,
         space = 8 + AmmPosition::INIT_SPACE,
     )]
@@ -61,6 +64,7 @@ impl ProvideLiquidity<'_> {
             quote_amount,
             max_base_amount,
             min_liquidity,
+            position_authority: _,
         } = params;
 
         let Self {

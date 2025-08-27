@@ -10,8 +10,6 @@ pub struct InitializeDaoParams {
     pub twap_start_delay_slots: u64,
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
-    pub base_liquidity_to_lp: u64,
-    pub quote_liquidity_to_lp: u64,
     pub base_to_stake: u64,
     pub pass_threshold_bps: u16,
     pub slots_per_proposal: u64,
@@ -32,10 +30,6 @@ pub struct InitializeDao<'info> {
     )]
     pub dao: Box<Account<'info, Dao>>,
     pub dao_creator: Signer<'info>,
-    #[account(mut, token::authority = dao_creator)]
-    pub dao_creator_base_account: Option<Account<'info, TokenAccount>>,
-    #[account(mut, token::authority = dao_creator)]
-    pub dao_creator_quote_account: Option<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -74,16 +68,6 @@ pub mod permissionless_account {
 
 impl InitializeDao<'_> {
     pub fn validate(&self) -> Result<()> {
-        require_eq!(self.dao_creator_base_account.is_some(), self.dao_creator_quote_account.is_some(), AutocratError::InvalidDaoCreateLiquidity);
-
-        if let Some(dao_creator_base_account) = self.dao_creator_base_account.as_ref() {
-            require_neq!(dao_creator_base_account.amount, 0);
-        }
-
-        if let Some(dao_creator_quote_account) = self.dao_creator_quote_account.as_ref() {
-            require_neq!(dao_creator_quote_account.amount, 0);
-        }
-
         Ok(())
     }
 
@@ -94,8 +78,6 @@ impl InitializeDao<'_> {
             twap_start_delay_slots,
             min_base_futarchic_liquidity,
             min_quote_futarchic_liquidity,
-            base_liquidity_to_lp,
-            quote_liquidity_to_lp,
             base_to_stake,
             pass_threshold_bps,
             slots_per_proposal,
@@ -177,34 +159,6 @@ impl InitializeDao<'_> {
             )?;
         }
 
-        if let Some(dao_creator_base_account) = ctx.accounts.dao_creator_base_account.as_ref() {
-            token::transfer(
-                CpiContext::new(
-                    ctx.accounts.token_program.to_account_info(),
-                    token::Transfer {
-                        from: dao_creator_base_account.to_account_info(),
-                        to: ctx.accounts.futarchy_amm_base_vault.to_account_info(),
-                        authority: ctx.accounts.dao_creator.to_account_info(),
-                    },
-                ),
-                base_liquidity_to_lp,
-            )?;
-        }
-
-        if let Some(dao_creator_quote_account) = ctx.accounts.dao_creator_quote_account.as_ref() {
-            token::transfer(
-                CpiContext::new(
-                    ctx.accounts.token_program.to_account_info(),
-                    token::Transfer {
-                        from: dao_creator_quote_account.to_account_info(),
-                        to: ctx.accounts.futarchy_amm_quote_vault.to_account_info(),
-                        authority: ctx.accounts.dao_creator.to_account_info(),
-                    },
-                ),
-                quote_liquidity_to_lp,
-            )?;
-        }
-
         let clock = Clock::get()?;
         
         dao.set_inner(Dao {
@@ -229,8 +183,8 @@ impl InitializeDao<'_> {
             amm: FutarchyAmm {
                 state: PoolState::Spot {
                     spot: Pool {
-                        quote_reserves: quote_liquidity_to_lp,
-                        base_reserves: base_liquidity_to_lp,
+                        quote_reserves: 0,
+                        base_reserves: 0,
                         quote_protocol_fee_balance: 0,
                         base_protocol_fee_balance: 0,
                         oracle: TwapOracle::new(
@@ -241,7 +195,7 @@ impl InitializeDao<'_> {
                         ),
                     },
                 },
-                total_liquidity: quote_liquidity_to_lp as u128 * 1_000_000_000,
+                total_liquidity: 0,
                 base_mint: ctx.accounts.base_mint.key(),
                 quote_mint: ctx.accounts.quote_mint.key(),
                 amm_base_vault: ctx.accounts.futarchy_amm_base_vault.key(),

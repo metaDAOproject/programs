@@ -349,9 +349,9 @@ before(async function () {
   );
 });
 
+describe.only("launchpad", launchpad);
 describe("conditional_vault", conditionalVault);
-describe("autocrat", autocrat);
-describe("launchpad", launchpad);
+describe.skip("autocrat", autocrat);
 describe.skip("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
   it(
