@@ -1,6 +1,6 @@
-export type Autocrat = {
+export type Futarchy = {
   version: "0.6.0";
-  name: "autocrat";
+  name: "futarchy";
   instructions: [
     {
       name: "initializeDao";
@@ -2172,9 +2172,9 @@ export type Autocrat = {
   ];
 };
 
-export const IDL: Autocrat = {
+export const IDL: Futarchy = {
   version: "0.6.0",
-  name: "autocrat",
+  name: "futarchy",
   instructions: [
     {
       name: "initializeDao",

@@ -1,5 +1,5 @@
 export type Launchpad = {
-  version: "0.5.0";
+  version: "0.6.0";
   name: "launchpad";
   instructions: [
     {
@@ -304,7 +304,7 @@ export type Launchpad = {
           name: "staticAccounts";
           accounts: [
             {
-              name: "autocratProgram";
+              name: "futarchyProgram";
               isMut: false;
               isSigner: false;
             },
@@ -1032,7 +1032,7 @@ export type Launchpad = {
 };
 
 export const IDL: Launchpad = {
-  version: "0.5.0",
+  version: "0.6.0",
   name: "launchpad",
   instructions: [
     {
@@ -1337,7 +1337,7 @@ export const IDL: Launchpad = {
           name: "staticAccounts",
           accounts: [
             {
-              name: "autocratProgram",
+              name: "futarchyProgram",
               isMut: false,
               isSigner: false,
             },

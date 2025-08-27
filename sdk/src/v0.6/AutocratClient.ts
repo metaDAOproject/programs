@@ -391,6 +391,53 @@ export class AutocratClient {
       ]);
   }
 
+  spotSwapIx({
+    dao,
+    baseMint,
+    quoteMint,
+    swapType,
+    inputAmount,
+    minOutputAmount = new BN(0),
+    user = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    swapType: "buy" | "sell";
+    inputAmount: BN;
+    minOutputAmount?: BN;
+    user?: PublicKey;
+  }) {
+    return this.autocrat.methods
+      .spotSwap({
+        swapType: swapType === "buy" ? { buy: {} } : { sell: {} },
+        inputAmount,
+        minOutputAmount,
+      })
+      .accounts({
+        dao,
+        userBaseAccount: getAssociatedTokenAddressSync(baseMint, user, true),
+        userQuoteAccount: getAssociatedTokenAddressSync(quoteMint, user, true),
+        ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
+        user,
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(baseMint, user, true),
+          user,
+          baseMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(quoteMint, user, true),
+          user,
+          quoteMint
+        ),
+      ]);
+  }
+
   conditionalSwapIx({
     dao,
     trader = this.provider.publicKey,

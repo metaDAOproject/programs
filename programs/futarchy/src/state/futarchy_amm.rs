@@ -100,7 +100,7 @@ impl PoolState {
                             market,
                         )?;
 
-                        msg!("arbitrage_result: {:?}", arbitrage_result);
+                        // msg!("arbitrage_result: {:?}", arbitrage_result);
 
                         // Split the spot
                         let conditional_profit = match market {
@@ -370,7 +370,7 @@ impl Pool {
         require_neq!(input_reserve, 0);
         require_neq!(output_reserve, 0);
 
-        let input_amount_with_lp_fee = input_amount_after_protocol_fee as u128 * (MAX_BPS - LP_TAKER_FEE_BPS) as u128 / MAX_BPS as u128;
+        let input_amount_with_lp_fee = input_amount_after_protocol_fee as u128 * (MAX_BPS - LP_TAKER_FEE_BPS) as u128;
 
         let numerator = input_amount_with_lp_fee * output_reserve as u128;
 

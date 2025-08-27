@@ -347,7 +347,7 @@ export class LaunchpadClient {
         // createPoolFee: isDevnet
         //   ? DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE
         //   : RAYDIUM_CREATE_POOL_FEE_RECEIVE,
-        autocratProgram: this.autocratClient.getProgramId(),
+        futarchyProgram: this.autocratClient.getProgramId(),
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         autocratEventAuthority,
         squadsProgram: SQUADS_PROGRAM_ID,
