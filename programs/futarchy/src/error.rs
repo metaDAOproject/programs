@@ -24,10 +24,8 @@ pub enum AutocratError {
     InvalidVaultNonce,
     #[msg("This proposal can't be executed because it isn't in the passed state")]
     ProposalNotPassed,
-    #[msg("The proposer has fewer pass or fail LP tokens than they requested to lock")]
-    InsufficientLpTokenBalance,
-    #[msg("The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`")]
-    InsufficientLpTokenLock,
+    #[msg("More liquidity needs to be in the AMM to launch this proposal")]
+    InsufficientLiquidity,
     #[msg("Proposal duration must be longer than TWAP start delay")]
     ProposalDurationTooShort,
     #[msg("Question must have exactly 2 outcomes for binary futarchy")]
@@ -56,7 +54,7 @@ pub enum AutocratError {
     InsufficientStakeToLaunch,
     #[msg("Staker not found in proposal")]
     StakerNotFound,
-    #[msg("Pool must be in spot state to collect fees")]
+    #[msg("Pool must be in spot state")]
     PoolNotInSpotState,
     #[msg("If you're providing liquidity, you must provide both base and quote token accounts")]
     InvalidDaoCreateLiquidity,

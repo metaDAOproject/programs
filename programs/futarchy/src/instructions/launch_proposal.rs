@@ -85,21 +85,26 @@ impl LaunchProposal<'_> {
         };
 
         // Set up the futarchy AMM by splitting the spot pool reserves
-        let PoolState::Spot { mut spot } = dao.amm.state.to_owned() else { unreachable!() };
+        let PoolState::Spot { mut spot } = dao.amm.state.to_owned() else { 
+            return Err(AutocratError::PoolNotInSpotState.into());
+         };
 
-        let half_base = spot.base_reserves / 2;
-        let half_quote = spot.quote_reserves / 2;
+        let base_to_lp = spot.base_reserves / 2;
+        let quote_to_lp = spot.quote_reserves / 2;
 
-        spot.base_reserves -= half_base;
-        spot.quote_reserves -= half_quote;
+        spot.base_reserves -= base_to_lp;
+        spot.quote_reserves -= quote_to_lp;
+
+        require_gte!(base_to_lp, dao.min_base_futarchic_liquidity, AutocratError::InsufficientLiquidity);
+        require_gte!(quote_to_lp, dao.min_quote_futarchic_liquidity, AutocratError::InsufficientLiquidity);
 
         let clock = Clock::get()?;
 
         dao.amm.state = PoolState::Futarchy {
             spot,
             pass: Pool {
-                base_reserves: half_base,
-                quote_reserves: half_quote,
+                base_reserves: base_to_lp,
+                quote_reserves: quote_to_lp,
                 quote_protocol_fee_balance: 0,
                 base_protocol_fee_balance: 0,
                 oracle: TwapOracle::new(
@@ -110,8 +115,8 @@ impl LaunchProposal<'_> {
                 ),
             },
             fail: Pool {
-                base_reserves: half_base,
-                quote_reserves: half_quote,
+                base_reserves: base_to_lp,
+                quote_reserves: quote_to_lp,
                 quote_protocol_fee_balance: 0,
                 base_protocol_fee_balance: 0,
                 oracle: TwapOracle::new(
