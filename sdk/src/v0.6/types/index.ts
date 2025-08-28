@@ -1,5 +1,4 @@
-import { Autocrat as AutocratProgram, IDL as AutocratIDL } from "./autocrat.js";
-export { AutocratProgram, AutocratIDL };
+import { Futarchy as FutarchyProgram } from "./futarchy.js";
 
 import { Amm as AmmProgram, IDL as AmmIDL } from "./amm.js";
 export { AmmProgram, AmmIDL };
@@ -32,11 +31,11 @@ export type ConditionalVault =
   IdlAccounts<ConditionalVaultProgram>["conditionalVault"];
 
 export type InitializeDaoParams =
-  IdlTypes<AutocratProgram>["InitializeDaoParams"];
-export type UpdateDaoParams = IdlTypes<AutocratProgram>["UpdateDaoParams"];
+  IdlTypes<FutarchyProgram>["InitializeDaoParams"];
+export type UpdateDaoParams = IdlTypes<FutarchyProgram>["UpdateDaoParams"];
 
-export type Dao = IdlAccounts<AutocratProgram>["dao"];
-export type Proposal = IdlAccounts<AutocratProgram>["proposal"];
+export type Dao = IdlAccounts<FutarchyProgram>["dao"];
+export type Proposal = IdlAccounts<FutarchyProgram>["proposal"];
 export type Amm = IdlAccounts<AmmProgram>["amm"];
 export type Launch = IdlAccounts<LaunchpadProgram>["launch"];
 export type FundingRecord = IdlAccounts<LaunchpadProgram>["fundingRecord"];
@@ -101,15 +100,15 @@ export type LaunchpadEvent =
   | LaunchStartedEvent;
 
 export type InitializeDaoEvent =
-  IdlEvents<AutocratProgram>["InitializeDaoEvent"];
-export type UpdateDaoEvent = IdlEvents<AutocratProgram>["UpdateDaoEvent"];
+  IdlEvents<FutarchyProgram>["InitializeDaoEvent"];
+export type UpdateDaoEvent = IdlEvents<FutarchyProgram>["UpdateDaoEvent"];
 export type InitializeProposalEvent =
-  IdlEvents<AutocratProgram>["InitializeProposalEvent"];
+  IdlEvents<FutarchyProgram>["InitializeProposalEvent"];
 export type FinalizeProposalEvent =
-  IdlEvents<AutocratProgram>["FinalizeProposalEvent"];
+  IdlEvents<FutarchyProgram>["FinalizeProposalEvent"];
 export type ExecuteProposalEvent =
-  IdlEvents<AutocratProgram>["ExecuteProposalEvent"];
-export type AutocratEvent =
+  IdlEvents<FutarchyProgram>["ExecuteProposalEvent"];
+export type FutarchyEvent =
   | InitializeDaoEvent
   | UpdateDaoEvent
   | InitializeProposalEvent

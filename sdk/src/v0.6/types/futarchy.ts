@@ -197,8 +197,18 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "stakeAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "staker";
           isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "payer";
+          isMut: true;
           isSigner: true;
         },
         {
@@ -208,6 +218,11 @@ export type Futarchy = {
         },
         {
           name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -251,6 +266,11 @@ export type Futarchy = {
         },
         {
           name: "proposalBaseAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "stakeAccount";
           isMut: true;
           isSigner: false;
         },
@@ -1106,17 +1126,30 @@ export type Futarchy = {
           {
             name: "failQuoteMint";
             type: "publicKey";
+          }
+        ];
+      };
+    },
+    {
+      name: "stakeAccount";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "proposal";
+            type: "publicKey";
           },
           {
-            name: "stakers";
-            docs: [
-              "Mapping of staker to amount staked (only used in Draft state)"
-            ];
-            type: {
-              vec: {
-                defined: "StakerRecord";
-              };
-            };
+            name: "staker";
+            type: "publicKey";
+          },
+          {
+            name: "amount";
+            type: "u64";
+          },
+          {
+            name: "bump";
+            type: "u8";
           }
         ];
       };
@@ -1528,22 +1561,6 @@ export type Futarchy = {
             type: {
               defined: "TwapOracle";
             };
-          }
-        ];
-      };
-    },
-    {
-      name: "StakerRecord";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "staker";
-            type: "publicKey";
-          },
-          {
-            name: "amount";
-            type: "u64";
           }
         ];
       };
@@ -2218,6 +2235,11 @@ export type Futarchy = {
       code: 6026;
       name: "InvalidDaoCreateLiquidity";
       msg: "If you're providing liquidity, you must provide both base and quote token accounts";
+    },
+    {
+      code: 6027;
+      name: "InvalidStakeAccount";
+      msg: "Invalid stake account";
     }
   ];
 };
@@ -2421,8 +2443,18 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
+          name: "stakeAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "staker",
           isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "payer",
+          isMut: true,
           isSigner: true,
         },
         {
@@ -2432,6 +2464,11 @@ export const IDL: Futarchy = {
         },
         {
           name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
@@ -2475,6 +2512,11 @@ export const IDL: Futarchy = {
         },
         {
           name: "proposalBaseAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "stakeAccount",
           isMut: true,
           isSigner: false,
         },
@@ -3331,16 +3373,29 @@ export const IDL: Futarchy = {
             name: "failQuoteMint",
             type: "publicKey",
           },
+        ],
+      },
+    },
+    {
+      name: "stakeAccount",
+      type: {
+        kind: "struct",
+        fields: [
           {
-            name: "stakers",
-            docs: [
-              "Mapping of staker to amount staked (only used in Draft state)",
-            ],
-            type: {
-              vec: {
-                defined: "StakerRecord",
-              },
-            },
+            name: "proposal",
+            type: "publicKey",
+          },
+          {
+            name: "staker",
+            type: "publicKey",
+          },
+          {
+            name: "amount",
+            type: "u64",
+          },
+          {
+            name: "bump",
+            type: "u8",
           },
         ],
       },
@@ -3752,22 +3807,6 @@ export const IDL: Futarchy = {
             type: {
               defined: "TwapOracle",
             },
-          },
-        ],
-      },
-    },
-    {
-      name: "StakerRecord",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "staker",
-            type: "publicKey",
-          },
-          {
-            name: "amount",
-            type: "u64",
           },
         ],
       },
@@ -4442,6 +4481,11 @@ export const IDL: Futarchy = {
       code: 6026,
       name: "InvalidDaoCreateLiquidity",
       msg: "If you're providing liquidity, you must provide both base and quote token accounts",
+    },
+    {
+      code: 6027,
+      name: "InvalidStakeAccount",
+      msg: "Invalid stake account",
     },
   ],
 };

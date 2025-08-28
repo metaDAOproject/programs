@@ -37,7 +37,7 @@ import {
   getLaunchSignerAddr,
   getMetadataAddr,
 } from "./utils/pda.js";
-import { FutarchyClient } from "./AutocratClient.js";
+import { FutarchyClient } from "./FutarchyClient.js";
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
 

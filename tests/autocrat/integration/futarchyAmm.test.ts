@@ -49,12 +49,10 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(10_000),
           minBaseFutarchicLiquidity: new BN(10_000),
-          baseLiquidityToLp: new BN(100 * 10 ** 6),
-          quoteLiquidityToLp: new BN(100 * 10 ** 6),
           passThresholdBps: 300,
           nonce,
           initialSpendingLimit: null,
-          baseToStake: new BN(0),
+          baseToStake: new BN(100),
         },
         provideLiquidity: true,
       })
@@ -68,9 +66,22 @@ export default function suite() {
       daoCreator: this.payer.publicKey,
     });
 
+    await this.futarchy.provideLiquidityIx({
+      dao,
+      baseMint: META,
+      quoteMint: USDC,
+      quoteAmount: new BN(100_000 * 10 ** 6), // 100,000 USDC
+      maxBaseAmount: new BN(100 * 10 ** 6), // 100 META
+      minLiquidity: new BN(0),
+      positionAuthority: this.payer.publicKey,
+      liquidityProvider: this.payer.publicKey,
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ])
+    .rpc();
+
     const descriptionUrl = "https://example.com/proposal";
-    const baseTokensToLP = new BN(10 * 10 ** 9); // 10 META
-    const quoteTokensToLP = new BN(5000 * 10 ** 6); // 5000 USDC
 
     // Create a simple instruction for the proposal
     const updateDaoIx = await this.futarchy
@@ -130,9 +141,17 @@ export default function suite() {
       dao,
       descriptionUrl,
       squadsProposalPda,
-      baseTokensToLP,
-      quoteTokensToLP
     );
+
+    await this.futarchy.stakeToProposalIx({
+      proposal,
+      dao,
+      baseMint: META,
+      amount: new BN(100),
+      staker: this.payer.publicKey,
+      payer: this.payer.publicKey,
+    })
+    .rpc();
   });
 
   it.only("futarchy amm", async function () {
@@ -154,7 +173,8 @@ export default function suite() {
       quoteMint: USDC,
       swapType: "buy",
       inputAmount: new BN(1 * 10 ** 6), // Buy 1 USDC of META
-      minOutputAmount: new BN(0)
+      minOutputAmount: new BN(0),
+      trader: this.payer.publicKey,
     }).rpc();
 
     // Get state after spot swap
@@ -229,7 +249,8 @@ export default function suite() {
         proposal, 
         market: "pass", 
         swapType: "buy", 
-        inputAmount: new BN(10) 
+        inputAmount: new BN(10),
+        payer: this.payer.publicKey,
       })
         .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })])
         .rpc();

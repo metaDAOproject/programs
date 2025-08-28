@@ -25,6 +25,12 @@ pub struct UnstakeFromProposal<'info> {
         associated_token::authority = proposal,
     )]
     pub proposal_base_account: Box<Account<'info, TokenAccount>>,
+    #[account(
+        mut,
+        seeds = [b"stake", proposal.key().as_ref(), staker.key().as_ref()],
+        bump = stake_account.bump,
+    )]
+    pub stake_account: Box<Account<'info, StakeAccount>>,
     pub staker: Signer<'info>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -37,17 +43,8 @@ impl UnstakeFromProposal<'_> {
         require_gt!(params.amount, 0, AutocratError::InvalidAmount);
 
         // Check if staker has enough staked
-        let staker_key = self.staker.key();
-        let mut staker_amount = 0u64;
-        for staker_record in &self.proposal.stakers {
-            if staker_record.staker == staker_key {
-                staker_amount = staker_record.amount;
-                break;
-            }
-        }
-
         require_gte!(
-            staker_amount,
+            self.stake_account.amount,
             params.amount,
             AutocratError::InsufficientTokenBalance
         );
@@ -61,6 +58,7 @@ impl UnstakeFromProposal<'_> {
             dao: _,
             staker_base_account,
             proposal_base_account,
+            stake_account,
             staker,
             token_program,
             associated_token_program: _,
@@ -95,20 +93,8 @@ impl UnstakeFromProposal<'_> {
             proposal.state = ProposalState::Draft { amount_staked };
         }
 
-        // Update stakers list
-        let staker_key = staker.key();
-        for staker_record in &mut proposal.stakers {
-            if staker_record.staker == staker_key {
-                staker_record.amount = staker_record.amount.saturating_sub(amount);
-                if staker_record.amount == 0 {
-                    // Remove staker if they have no stake left
-                    proposal
-                        .stakers
-                        .retain(|record| record.staker != staker_key);
-                }
-                break;
-            }
-        }
+        // Update stake account
+        stake_account.amount = stake_account.amount.saturating_sub(amount);
 
         let clock = Clock::get()?;
 

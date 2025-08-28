@@ -102,7 +102,7 @@ impl InitializeProposal<'_> {
             fail_base_mint: base_vault.conditional_token_mints[0],
             pass_quote_mint: quote_vault.conditional_token_mints[1],
             fail_quote_mint: quote_vault.conditional_token_mints[0],
-            stakers: Vec::new(),
+
         });
 
         emit_cpi!(InitializeProposalEvent {

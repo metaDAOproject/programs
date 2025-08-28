@@ -7,6 +7,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -47,6 +48,8 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
   unpackMint,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { sha256 } from "@noble/hashes/sha256";
 import { Dao, Proposal } from "./types/index.js";
@@ -201,61 +204,6 @@ export class FutarchyClient {
     };
   }
 
-  // async initializeDao(
-  //   tokenMint: PublicKey,
-  //   tokenPriceUiAmount: number,
-  //   minBaseFutarchicLiquidity: number,
-  //   minQuoteFutarchicLiquidity: number,
-  //   usdcMint: PublicKey = MAINNET_USDC,
-  //   daoKeypair: Keypair = Keypair.generate(),
-  //   twapStartDelaySlots: BN
-  // ): Promise<PublicKey> {
-  //   let tokenDecimals = unpackMint(
-  //     tokenMint,
-  //     await this.provider.connection.getAccountInfo(tokenMint)
-  //   ).decimals;
-
-  //   let scaledPrice = PriceMath.getAmmPrice(
-  //     tokenPriceUiAmount,
-  //     tokenDecimals,
-  //     USDC_DECIMALS
-  //   );
-
-  //   // console.log(
-  //   //   PriceMath.getHumanPrice(scaledPrice, tokenDecimals, USDC_DECIMALS)
-  //   // );
-
-  //   await this.initializeDaoIx({
-  //     daoKeypair,
-  //     baseMint: tokenMint,
-  //     params: {
-  //       twapStartDelaySlots,
-  //       twapInitialObservation: scaledPrice,
-  //       twapMaxObservationChangePerUpdate: scaledPrice.divn(50),
-  //       minQuoteFutarchicLiquidity: new BN(minQuoteFutarchicLiquidity).mul(
-  //         new BN(10).pow(new BN(USDC_DECIMALS))
-  //       ),
-  //       minBaseFutarchicLiquidity: new BN(minBaseFutarchicLiquidity).mul(
-  //         new BN(10).pow(new BN(tokenDecimals))
-  //       ),
-  //       passThresholdBps: null,
-  //       slotsPerProposal: null,
-  //     },
-  //     quoteMint: usdcMint,
-  //   })
-  //     .postInstructions([
-  //       ComputeBudgetProgram.setComputeUnitLimit({
-  //         units: MaxCUs.initializeDao,
-  //       }),
-  //       ComputeBudgetProgram.setComputeUnitPrice({
-  //         microLamports: DEFAULT_CU_PRICE,
-  //       }),
-  //     ])
-  //     .rpc({ maxRetries: 5 });
-
-  //   return daoKeypair.publicKey;
-  // }
-
   initializeDaoIx({
     baseMint,
     params,
@@ -309,18 +257,6 @@ export class FutarchyClient {
       squadsProgramConfigTreasury,
       squadsProgram: SQUADS_PROGRAM_ID,
       spendingLimit,
-      // daoCreatorBaseAccount,
-      // daoCreatorQuoteAccount,
-      // daoCreatorBaseAccount: getAssociatedTokenAddressSync(
-      //   baseMint,
-      //   this.provider.publicKey,
-      //   true
-      // ),
-      // daoCreatorQuoteAccount: getAssociatedTokenAddressSync(
-      //   quoteMint,
-      //   this.provider.publicKey,
-      //   true
-      // ),
       futarchyAmmBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
       futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
         quoteMint,
@@ -395,7 +331,7 @@ export class FutarchyClient {
     swapType,
     inputAmount,
     minOutputAmount = new BN(0),
-    user = this.provider.publicKey,
+    trader = this.provider.publicKey,
   }: {
     dao: PublicKey;
     baseMint: PublicKey;
@@ -403,7 +339,7 @@ export class FutarchyClient {
     swapType: "buy" | "sell";
     inputAmount: BN;
     minOutputAmount?: BN;
-    user?: PublicKey;
+    trader?: PublicKey;
   }) {
     return this.autocrat.methods
       .spotSwap({
@@ -413,23 +349,98 @@ export class FutarchyClient {
       })
       .accounts({
         dao,
-        userBaseAccount: getAssociatedTokenAddressSync(baseMint, user, true),
-        userQuoteAccount: getAssociatedTokenAddressSync(quoteMint, user, true),
+        userBaseAccount: getAssociatedTokenAddressSync(baseMint, trader, true),
+        userQuoteAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          trader,
+          true
+        ),
         ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
         ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
-        user,
+        user: trader,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
-          getAssociatedTokenAddressSync(baseMint, user, true),
-          user,
+          getAssociatedTokenAddressSync(baseMint, trader, true),
+          trader,
           baseMint
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
-          getAssociatedTokenAddressSync(quoteMint, user, true),
-          user,
+          getAssociatedTokenAddressSync(quoteMint, trader, true),
+          trader,
+          quoteMint
+        ),
+      ]);
+  }
+
+  provideLiquidityIx({
+    dao,
+    baseMint,
+    quoteMint,
+    quoteAmount,
+    maxBaseAmount,
+    minLiquidity = new BN(0),
+    positionAuthority = this.provider.publicKey,
+    liquidityProvider = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    quoteAmount: BN;
+    maxBaseAmount: BN;
+    minLiquidity?: BN;
+    positionAuthority?: PublicKey;
+    liquidityProvider?: PublicKey;
+  }) {
+    console.log(positionAuthority);
+    const ammPosition = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("amm_position"),
+        dao.toBuffer(),
+        positionAuthority.toBuffer(),
+      ],
+      this.getProgramId()
+    )[0];
+
+    return this.autocrat.methods
+      .provideLiquidity({
+        quoteAmount,
+        maxBaseAmount,
+        minLiquidity,
+        positionAuthority,
+      })
+      .accounts({
+        dao,
+        liquidityProvider,
+        liquidityProviderBaseAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          liquidityProvider,
+          true
+        ),
+        liquidityProviderQuoteAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          liquidityProvider,
+          true
+        ),
+        payer: this.provider.publicKey,
+        systemProgram: SystemProgram.programId,
+        ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
+        ammPosition,
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(baseMint, liquidityProvider, true),
+          liquidityProvider,
+          baseMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(quoteMint, liquidityProvider, true),
+          liquidityProvider,
           quoteMint
         ),
       ]);
@@ -438,6 +449,7 @@ export class FutarchyClient {
   conditionalSwapIx({
     dao,
     trader = this.provider.publicKey,
+    payer = this.provider.publicKey,
     baseMint,
     quoteMint,
     proposal,
@@ -447,6 +459,7 @@ export class FutarchyClient {
   }: {
     dao: PublicKey;
     trader?: PublicKey;
+    payer?: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
     proposal: PublicKey;
@@ -520,11 +533,13 @@ export class FutarchyClient {
         quoteVault,
         userInputAccount: getAssociatedTokenAddressSync(
           inputMint,
-          this.provider.publicKey
+          trader,
+          true
         ),
         userOutputAccount: getAssociatedTokenAddressSync(
           outputMint,
-          this.provider.publicKey
+          trader,
+          true
         ),
         baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           baseMint,
@@ -548,13 +563,9 @@ export class FutarchyClient {
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
-          getAssociatedTokenAddressSync(
-            outputMint,
-            this.provider.publicKey,
-            true
-          ),
-          this.provider.publicKey,
+          payer,
+          getAssociatedTokenAddressSync(outputMint, trader, true),
+          trader,
           outputMint
         ),
       ]);
@@ -563,9 +574,7 @@ export class FutarchyClient {
   async initializeProposal(
     dao: PublicKey,
     descriptionUrl: string,
-    squadsProposal: PublicKey,
-    baseTokensToLP: BN,
-    quoteTokensToLP: BN
+    squadsProposal: PublicKey
   ): Promise<PublicKey> {
     const storedDao = await this.getDao(dao);
 
@@ -577,15 +586,7 @@ export class FutarchyClient {
       2
     );
 
-    const {
-      baseVault,
-      quoteVault,
-      passBaseMint,
-      passQuoteMint,
-      failBaseMint,
-      failQuoteMint,
-      question,
-    } = this.getProposalPdas(
+    const { question } = this.getProposalPdas(
       proposal,
       storedDao.baseMint,
       storedDao.quoteMint,
@@ -602,40 +603,12 @@ export class FutarchyClient {
       )
       .rpc();
 
-    // await this.ammClient
-    //   .addLiquidityIx(
-    //     passAmm,
-    //     passBaseMint,
-    //     passQuoteMint,
-    //     quoteTokensToLP,
-    //     baseTokensToLP,
-    //     new BN(0)
-    //   )
-    //   .postInstructions(
-    //     await InstructionUtils.getInstructions(
-    //       this.ammClient.addLiquidityIx(
-    //         failAmm,
-    //         failBaseMint,
-    //         failQuoteMint,
-    //         quoteTokensToLP,
-    //         baseTokensToLP,
-    //         new BN(0)
-    //       )
-    //     )
-    //   )
-    //   .rpc();
-
-    // this is how many original tokens are created
-    const lpTokens = quoteTokensToLP;
-
     await this.initializeProposalIx(
       descriptionUrl,
       squadsProposal,
       dao,
       storedDao.baseMint,
       storedDao.quoteMint,
-      lpTokens,
-      lpTokens,
       question
     )
       .preInstructions([
@@ -652,8 +625,6 @@ export class FutarchyClient {
     dao: PublicKey,
     baseMint: PublicKey,
     quoteMint: PublicKey,
-    passLpTokensToLock: BN,
-    failLpTokensToLock: BN,
     question: PublicKey,
     proposer: PublicKey = this.provider.publicKey
   ) {
@@ -683,22 +654,6 @@ export class FutarchyClient {
         dao,
         baseVault,
         quoteVault,
-        // passAmm,
-        // failAmm,
-        // passLpMint: passLp,
-        // failLpMint: failLp,
-        // passLpUserAccount: getAssociatedTokenAddressSync(
-        //   passLp,
-        //   proposer,
-        //   true
-        // ),
-        // failLpUserAccount: getAssociatedTokenAddressSync(
-        //   failLp,
-        //   proposer,
-        //   true
-        // ),
-        // passLpVaultAccount,
-        // failLpVaultAccount,
         proposer,
       })
       .preInstructions([
@@ -869,6 +824,64 @@ export class FutarchyClient {
       dao,
       squadsMultisigVault,
     });
+  }
+
+  stakeToProposalIx({
+    proposal,
+    dao,
+    baseMint,
+    amount,
+    staker = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    proposal: PublicKey;
+    dao: PublicKey;
+    baseMint: PublicKey;
+    amount: BN;
+    staker?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const stakeAccount = PublicKey.findProgramAddressSync(
+      [Buffer.from("stake"), proposal.toBuffer(), staker.toBuffer()],
+      this.getProgramId()
+    )[0];
+
+    return this.autocrat.methods
+      .stakeToProposal({ amount })
+      .accounts({
+        proposal,
+        dao,
+        stakerBaseAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          staker,
+          true
+        ),
+        proposalBaseAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          proposal,
+          true
+        ),
+        stakeAccount,
+        staker,
+        payer,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          getAssociatedTokenAddressSync(baseMint, staker, true),
+          staker,
+          baseMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          getAssociatedTokenAddressSync(baseMint, proposal, true),
+          proposal,
+          baseMint
+        ),
+      ]);
   }
 
   collectFeesIx({

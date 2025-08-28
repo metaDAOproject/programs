@@ -160,8 +160,6 @@ before(async function () {
   let provider = new BankrunProvider(this.context);
   anchor.setProvider(provider);
 
-  // umi = createUmi(anchor.AnchorProvider.env().connection);
-
   this.conditionalVault = ConditionalVaultClient.createClient({
     provider: provider as any,
   });
@@ -336,9 +334,9 @@ before(async function () {
   );
 });
 
-describe.only("launchpad", launchpad);
+describe("launchpad", launchpad);
 describe("conditional_vault", conditionalVault);
-describe.skip("autocrat", autocrat);
+describe.only("autocrat", autocrat);
 describe.skip("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
   it(

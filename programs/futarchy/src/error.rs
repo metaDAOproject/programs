@@ -58,4 +58,6 @@ pub enum AutocratError {
     PoolNotInSpotState,
     #[msg("If you're providing liquidity, you must provide both base and quote token accounts")]
     InvalidDaoCreateLiquidity,
+    #[msg("Invalid stake account")]
+    InvalidStakeAccount,
 }

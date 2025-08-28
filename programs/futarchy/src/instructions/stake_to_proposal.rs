@@ -25,9 +25,20 @@ pub struct StakeToProposal<'info> {
         associated_token::authority = proposal,
     )]
     pub proposal_base_account: Box<Account<'info, TokenAccount>>,
+    #[account(
+        init_if_needed,
+        payer = payer,
+        seeds = [b"stake", proposal.key().as_ref(), staker.key().as_ref()],
+        bump,
+        space = 8 + StakeAccount::INIT_SPACE,
+    )]
+    pub stake_account: Box<Account<'info, StakeAccount>>,
     pub staker: Signer<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
 }
 
 impl StakeToProposal<'_> {
@@ -56,9 +67,12 @@ impl StakeToProposal<'_> {
             dao: _,
             staker_base_account,
             proposal_base_account,
+            stake_account,
             staker,
+            payer: _,
             token_program,
             associated_token_program: _,
+            system_program: _,
             event_authority: _,
             program: _,
         } = ctx.accounts;
@@ -82,22 +96,16 @@ impl StakeToProposal<'_> {
             proposal.state = ProposalState::Draft { amount_staked };
         }
 
-        // Update stakers list
-        let staker_key = staker.key();
-        let mut found = false;
-        for staker_record in &mut proposal.stakers {
-            if staker_record.staker == staker_key {
-                staker_record.amount += amount;
-                found = true;
-                break;
-            }
-        }
-
-        if !found {
-            proposal.stakers.push(StakerRecord {
-                staker: staker_key,
-                amount,
-            });
+        // Update stake account
+        if stake_account.proposal == Pubkey::default() {
+            // Initialize the stake account
+            stake_account.proposal = proposal.key();
+            stake_account.staker = staker.key();
+            stake_account.amount = amount;
+            stake_account.bump = ctx.bumps.stake_account;
+        } else {
+            // Add to existing stake
+            stake_account.amount += amount;
         }
 
         let clock = Clock::get()?;

@@ -14,12 +14,6 @@ impl std::fmt::Display for ProposalState {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, InitSpace)]
-pub struct StakerRecord {
-    pub staker: Pubkey,
-    pub amount: u64,
-}
-
 #[account]
 #[derive(InitSpace)]
 pub struct Proposal {
@@ -40,7 +34,4 @@ pub struct Proposal {
     pub pass_quote_mint: Pubkey,
     pub fail_base_mint: Pubkey,
     pub fail_quote_mint: Pubkey,
-    /// Mapping of staker to amount staked (only used in Draft state)
-    #[max_len(100)]
-    pub stakers: Vec<StakerRecord>,
 }
