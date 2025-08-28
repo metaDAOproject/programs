@@ -37,6 +37,7 @@
     "devDependencies": {
         "@solana/spl-memo": "^0.2.3",
         "@solana/spl-token-registry": "^0.2.4574",
+        "@solana/spl-token-metadata": "^0.1.6",
         "@types/bn.js": "^5.1.0",
         "@types/chai": "^4.3.0",
         "@types/inquirer": "^9.0.7",

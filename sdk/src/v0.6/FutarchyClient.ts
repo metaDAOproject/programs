@@ -78,13 +78,13 @@ export class FutarchyClient {
     provider: AnchorProvider,
     autocratProgramId: PublicKey,
     conditionalVaultProgramId: PublicKey,
-    luts: AddressLookupTableAccount[]
+    luts: AddressLookupTableAccount[],
   ) {
     this.provider = provider;
     this.autocrat = new Program<Futarchy>(
       FutarchyIDL,
       autocratProgramId,
-      provider
+      provider,
     );
     this.vaultClient = ConditionalVaultClient.createClient({
       provider,
@@ -94,7 +94,7 @@ export class FutarchyClient {
   }
 
   public static createClient(
-    createAutocratClientParams: CreateClientParams
+    createAutocratClientParams: CreateClientParams,
   ): FutarchyClient {
     let { provider, autocratProgramId, conditionalVaultProgramId } =
       createAutocratClientParams;
@@ -105,7 +105,7 @@ export class FutarchyClient {
       provider,
       autocratProgramId || AUTOCRAT_PROGRAM_ID,
       conditionalVaultProgramId || CONDITIONAL_VAULT_PROGRAM_ID,
-      luts
+      luts,
     );
   }
 
@@ -130,7 +130,7 @@ export class FutarchyClient {
   }
 
   async deserializeProposal(
-    accountInfo: AccountInfo<Buffer>
+    accountInfo: AccountInfo<Buffer>,
   ): Promise<Proposal> {
     return this.autocrat.coder.accounts.decode("proposal", accountInfo.data);
   }
@@ -143,7 +143,7 @@ export class FutarchyClient {
     proposal: PublicKey,
     baseMint: PublicKey,
     quoteMint: PublicKey,
-    dao: PublicKey
+    dao: PublicKey,
   ): {
     question: PublicKey;
     baseVault: PublicKey;
@@ -158,39 +158,39 @@ export class FutarchyClient {
       vaultProgramId,
       sha256(`Will ${proposal} pass?/FAIL/PASS`),
       proposal,
-      2
+      2,
     );
     const [baseVault] = getVaultAddr(
       this.vaultClient.vaultProgram.programId,
       question,
-      baseMint
+      baseMint,
     );
     const [quoteVault] = getVaultAddr(
       this.vaultClient.vaultProgram.programId,
       question,
-      quoteMint
+      quoteMint,
     );
 
     const [failBaseMint] = getConditionalTokenMintAddr(
       vaultProgramId,
       baseVault,
-      0
+      0,
     );
     const [failQuoteMint] = getConditionalTokenMintAddr(
       vaultProgramId,
       quoteVault,
-      0
+      0,
     );
 
     const [passBaseMint] = getConditionalTokenMintAddr(
       vaultProgramId,
       baseVault,
-      1
+      1,
     );
     const [passQuoteMint] = getConditionalTokenMintAddr(
       vaultProgramId,
       quoteVault,
-      1
+      1,
     );
 
     return {
@@ -233,12 +233,12 @@ export class FutarchyClient {
       daoCreatorBaseAccount = getAssociatedTokenAddressSync(
         baseMint,
         this.provider.publicKey,
-        true
+        true,
       );
       daoCreatorQuoteAccount = getAssociatedTokenAddressSync(
         quoteMint,
         this.provider.publicKey,
-        true
+        true,
       );
     }
 
@@ -261,7 +261,7 @@ export class FutarchyClient {
       futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
         quoteMint,
         dao,
-        true
+        true,
       ),
     });
   }
@@ -300,22 +300,22 @@ export class FutarchyClient {
         ammPassBaseVault: getAssociatedTokenAddressSync(
           passBaseMint,
           dao,
-          true
+          true,
         ),
         ammPassQuoteVault: getAssociatedTokenAddressSync(
           passQuoteMint,
           dao,
-          true
+          true,
         ),
         ammFailBaseVault: getAssociatedTokenAddressSync(
           failBaseMint,
           dao,
-          true
+          true,
         ),
         ammFailQuoteVault: getAssociatedTokenAddressSync(
           failQuoteMint,
           dao,
-          true
+          true,
         ),
         payer: this.provider.publicKey,
       })
@@ -353,7 +353,7 @@ export class FutarchyClient {
         userQuoteAccount: getAssociatedTokenAddressSync(
           quoteMint,
           trader,
-          true
+          true,
         ),
         ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
         ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
@@ -364,13 +364,13 @@ export class FutarchyClient {
           this.provider.publicKey,
           getAssociatedTokenAddressSync(baseMint, trader, true),
           trader,
-          baseMint
+          baseMint,
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
           getAssociatedTokenAddressSync(quoteMint, trader, true),
           trader,
-          quoteMint
+          quoteMint,
         ),
       ]);
   }
@@ -401,7 +401,7 @@ export class FutarchyClient {
         dao.toBuffer(),
         positionAuthority.toBuffer(),
       ],
-      this.getProgramId()
+      this.getProgramId(),
     )[0];
 
     return this.autocrat.methods
@@ -417,12 +417,12 @@ export class FutarchyClient {
         liquidityProviderBaseAccount: getAssociatedTokenAddressSync(
           baseMint,
           liquidityProvider,
-          true
+          true,
         ),
         liquidityProviderQuoteAccount: getAssociatedTokenAddressSync(
           quoteMint,
           liquidityProvider,
-          true
+          true,
         ),
         payer: this.provider.publicKey,
         systemProgram: SystemProgram.programId,
@@ -435,13 +435,13 @@ export class FutarchyClient {
           this.provider.publicKey,
           getAssociatedTokenAddressSync(baseMint, liquidityProvider, true),
           liquidityProvider,
-          baseMint
+          baseMint,
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
           getAssociatedTokenAddressSync(quoteMint, liquidityProvider, true),
           liquidityProvider,
-          quoteMint
+          quoteMint,
         ),
       ]);
   }
@@ -493,7 +493,7 @@ export class FutarchyClient {
       outputMint = failQuoteMint;
     } else {
       throw new Error(
-        "Either `market` or `swapType` is incorrectly configured"
+        "Either `market` or `swapType` is incorrectly configured",
       );
     }
 
@@ -512,44 +512,44 @@ export class FutarchyClient {
         ammPassBaseVault: getAssociatedTokenAddressSync(
           passBaseMint,
           dao,
-          true
+          true,
         ),
         ammPassQuoteVault: getAssociatedTokenAddressSync(
           passQuoteMint,
           dao,
-          true
+          true,
         ),
         ammFailBaseVault: getAssociatedTokenAddressSync(
           failBaseMint,
           dao,
-          true
+          true,
         ),
         ammFailQuoteVault: getAssociatedTokenAddressSync(
           failQuoteMint,
           dao,
-          true
+          true,
         ),
         baseVault,
         quoteVault,
         userInputAccount: getAssociatedTokenAddressSync(
           inputMint,
           trader,
-          true
+          true,
         ),
         userOutputAccount: getAssociatedTokenAddressSync(
           outputMint,
           trader,
-          true
+          true,
         ),
         baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           baseMint,
           baseVault,
-          true
+          true,
         ),
         quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           quoteMint,
           quoteVault,
-          true
+          true,
         ),
         passBaseMint,
         failBaseMint,
@@ -557,7 +557,7 @@ export class FutarchyClient {
         failQuoteMint,
         conditionalVaultProgram: this.vaultClient.vaultProgram.programId,
         vaultEventAuthority: getEventAuthorityAddr(
-          this.vaultClient.vaultProgram.programId
+          this.vaultClient.vaultProgram.programId,
         )[0],
         question,
       })
@@ -566,7 +566,7 @@ export class FutarchyClient {
           payer,
           getAssociatedTokenAddressSync(outputMint, trader, true),
           trader,
-          outputMint
+          outputMint,
         ),
       ]);
   }
@@ -574,7 +574,7 @@ export class FutarchyClient {
   async initializeProposal(
     dao: PublicKey,
     descriptionUrl: string,
-    squadsProposal: PublicKey
+    squadsProposal: PublicKey,
   ): Promise<PublicKey> {
     const storedDao = await this.getDao(dao);
 
@@ -583,14 +583,14 @@ export class FutarchyClient {
     await this.vaultClient.initializeQuestion(
       sha256(`Will ${proposal} pass?/FAIL/PASS`),
       proposal,
-      2
+      2,
     );
 
     const { question } = this.getProposalPdas(
       proposal,
       storedDao.baseMint,
       storedDao.quoteMint,
-      dao
+      dao,
     );
 
     // it's important that these happen in a single atomic transaction
@@ -598,8 +598,8 @@ export class FutarchyClient {
       .initializeVaultIx(question, storedDao.baseMint, 2)
       .postInstructions(
         await InstructionUtils.getInstructions(
-          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2)
-        )
+          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
+        ),
       )
       .rpc();
 
@@ -609,7 +609,7 @@ export class FutarchyClient {
       dao,
       storedDao.baseMint,
       storedDao.quoteMint,
-      question
+      question,
     )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
@@ -626,7 +626,7 @@ export class FutarchyClient {
     baseMint: PublicKey,
     quoteMint: PublicKey,
     question: PublicKey,
-    proposer: PublicKey = this.provider.publicKey
+    proposer: PublicKey = this.provider.publicKey,
   ) {
     let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
     const {
@@ -640,7 +640,7 @@ export class FutarchyClient {
 
     let [futarchyAmm] = PublicKey.findProgramAddressSync(
       [Buffer.from("futarchy_amm")],
-      this.getProgramId()
+      this.getProgramId(),
     );
 
     return this.autocrat.methods
@@ -661,25 +661,25 @@ export class FutarchyClient {
           this.provider.publicKey,
           getAssociatedTokenAddressSync(passBaseMint, futarchyAmm, true),
           futarchyAmm,
-          passBaseMint
+          passBaseMint,
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
           getAssociatedTokenAddressSync(passQuoteMint, futarchyAmm, true),
           futarchyAmm,
-          passQuoteMint
+          passQuoteMint,
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
           getAssociatedTokenAddressSync(failBaseMint, futarchyAmm, true),
           futarchyAmm,
-          failBaseMint
+          failBaseMint,
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
           getAssociatedTokenAddressSync(failQuoteMint, futarchyAmm, true),
           futarchyAmm,
-          failQuoteMint
+          failQuoteMint,
         ),
       ]);
   }
@@ -694,7 +694,7 @@ export class FutarchyClient {
       storedProposal.dao,
       storedDao.baseMint,
       storedDao.quoteMint,
-      storedProposal.proposer
+      storedProposal.proposer,
     ).rpc();
   }
 
@@ -704,7 +704,7 @@ export class FutarchyClient {
     dao: PublicKey,
     daoToken: PublicKey,
     usdc: PublicKey,
-    proposer: PublicKey
+    proposer: PublicKey,
   ) {
     let vaultProgramId = this.vaultClient.vaultProgram.programId;
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
@@ -735,7 +735,7 @@ export class FutarchyClient {
         quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           usdc,
           quoteVault,
-          true
+          true,
         ),
         passQuoteMint,
         failQuoteMint,
@@ -744,30 +744,30 @@ export class FutarchyClient {
         ammPassQuoteVault: getAssociatedTokenAddressSync(
           passQuoteMint,
           dao,
-          true
+          true,
         ),
         ammFailQuoteVault: getAssociatedTokenAddressSync(
           failQuoteMint,
           dao,
-          true
+          true,
         ),
         ammQuoteVault: getAssociatedTokenAddressSync(usdc, dao, true),
         ammPassBaseVault: getAssociatedTokenAddressSync(
           passBaseMint,
           dao,
-          true
+          true,
         ),
         ammFailBaseVault: getAssociatedTokenAddressSync(
           failBaseMint,
           dao,
-          true
+          true,
         ),
         ammBaseVault: getAssociatedTokenAddressSync(daoToken, dao, true),
         baseVault,
         baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           daoToken,
           baseVault,
-          true
+          true,
         ),
         // baseVault,
         // quoteVault,
@@ -843,7 +843,7 @@ export class FutarchyClient {
   }) {
     const stakeAccount = PublicKey.findProgramAddressSync(
       [Buffer.from("stake"), proposal.toBuffer(), staker.toBuffer()],
-      this.getProgramId()
+      this.getProgramId(),
     )[0];
 
     return this.autocrat.methods
@@ -854,12 +854,12 @@ export class FutarchyClient {
         stakerBaseAccount: getAssociatedTokenAddressSync(
           baseMint,
           staker,
-          true
+          true,
         ),
         proposalBaseAccount: getAssociatedTokenAddressSync(
           baseMint,
           proposal,
-          true
+          true,
         ),
         stakeAccount,
         staker,
@@ -873,13 +873,13 @@ export class FutarchyClient {
           payer,
           getAssociatedTokenAddressSync(baseMint, staker, true),
           staker,
-          baseMint
+          baseMint,
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           payer,
           getAssociatedTokenAddressSync(baseMint, proposal, true),
           proposal,
-          baseMint
+          baseMint,
         ),
       ]);
   }
@@ -890,11 +890,11 @@ export class FutarchyClient {
     quoteMint,
     baseTokenAccount = getAssociatedTokenAddressSync(
       baseMint,
-      this.provider.publicKey
+      this.provider.publicKey,
     ),
     quoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
-      this.provider.publicKey
+      this.provider.publicKey,
     ),
   }: {
     dao: PublicKey;
