@@ -4,11 +4,6 @@ export type Autocrat = {
   instructions: [
     {
       name: "initializeDao";
-      docs: [
-        "TODO:",
-        "- Enable staking to proposals",
-        "- Switch proposal to use Futarchy AMM"
-      ];
       accounts: [
         {
           name: "dao";
@@ -79,7 +74,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -87,7 +82,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeDaoParams";
           };
-        }
+        },
       ];
     },
     {
@@ -95,11 +90,6 @@ export type Autocrat = {
       accounts: [
         {
           name: "proposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "futarchyAmm";
           isMut: true;
           isSigner: false;
         },
@@ -129,22 +119,42 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "ammPassBaseVault";
+          name: "passAmm";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "passLpMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "failLpMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "failAmm";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "passLpUserAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "ammPassQuoteVault";
+          name: "failLpUserAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "ammFailBaseVault";
+          name: "passLpVaultAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "ammFailQuoteVault";
+          name: "failLpVaultAccount";
           isMut: true;
           isSigner: false;
         },
@@ -182,7 +192,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -190,7 +200,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeProposalParams";
           };
-        }
+        },
       ];
     },
     {
@@ -217,8 +227,13 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "futarchyAmm";
-          isMut: true;
+          name: "passAmm";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "failAmm";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -228,6 +243,26 @@ export type Autocrat = {
         },
         {
           name: "question";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passLpUserAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failLpUserAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passLpVaultAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failLpVaultAccount";
           isMut: true;
           isSigner: false;
         },
@@ -255,7 +290,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -281,7 +316,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -289,379 +324,11 @@ export type Autocrat = {
           type: {
             defined: "UpdateDaoParams";
           };
-        }
+        },
       ];
     },
-    {
-      name: "spotSwap";
-      accounts: [
-        {
-          name: "futarchyAmm";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "trader";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "userBaseAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "userQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "SpotSwapParams";
-          };
-        }
-      ];
-    },
-    {
-      name: "conditionalSwap";
-      accounts: [
-        {
-          name: "futarchyAmm";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammPassBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammPassQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammFailBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammFailQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "userInputAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "userOutputAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "baseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "baseVaultUnderlyingTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "quoteVaultUnderlyingTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "quoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "trader";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "passBaseMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failBaseMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "passQuoteMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failQuoteMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "conditionalVaultProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "vaultEventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "question";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "ConditionalSwapParams";
-          };
-        }
-      ];
-    },
-    {
-      name: "initializeFutarchyAmm";
-      accounts: [
-        {
-          name: "futarchyAmm";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "createKey";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "baseMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "quoteMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "ammBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
-      name: "provideLiquidity";
-      accounts: [
-        {
-          name: "futarchyAmm";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "liquidityProvider";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "liquidityProviderBaseAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "liquidityProviderQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "ammBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammPosition";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "ProvideLiquidityParams";
-          };
-        }
-      ];
-    },
-    {
-      name: "withdrawLiquidity";
-      accounts: [
-        {
-          name: "futarchyAmm";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "liquidityProvider";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "liquidityProviderBaseAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "liquidityProviderQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammPosition";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "WithdrawLiquidityParams";
-          };
-        }
-      ];
-    }
   ];
   accounts: [
-    {
-      name: "ammPosition";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "futarchyAmm";
-            type: "publicKey";
-          },
-          {
-            name: "liquidityProvider";
-            type: "publicKey";
-          },
-          {
-            name: "liquidity";
-            type: "u128";
-          }
-        ];
-      };
-    },
     {
       name: "dao";
       type: {
@@ -724,7 +391,7 @@ export type Autocrat = {
               "observation of 400 (converted into the AMM prices) and a max observation change per",
               "update of 8 (also converted into the AMM prices). Observations can be updated once",
               "a minute, so 2% allows the proposal market to reach double the spot price or 0",
-              "in 50 minutes."
+              "in 50 minutes.",
             ];
             type: "u128";
           },
@@ -735,7 +402,7 @@ export type Autocrat = {
           {
             name: "twapStartDelaySlots";
             docs: [
-              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots"
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
             ];
             type: "u64";
           },
@@ -747,7 +414,7 @@ export type Autocrat = {
               "",
               "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
               "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
-              "10 * 1_000_000_000 (10 META)."
+              "10 * 1_000_000_000 (10 META).",
             ];
             type: "u64";
           },
@@ -766,45 +433,7 @@ export type Autocrat = {
                 defined: "InitialSpendingLimit";
               };
             };
-          }
-        ];
-      };
-    },
-    {
-      name: "futarchyAmm";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "state";
-            type: {
-              defined: "PoolState";
-            };
           },
-          {
-            name: "totalLiquidity";
-            type: "u128";
-          },
-          {
-            name: "baseMint";
-            type: "publicKey";
-          },
-          {
-            name: "quoteMint";
-            type: "publicKey";
-          },
-          {
-            name: "ammBaseVault";
-            type: "publicKey";
-          },
-          {
-            name: "ammQuoteVault";
-            type: "publicKey";
-          },
-          {
-            name: "pdaBump";
-            type: "u8";
-          }
         ];
       };
     },
@@ -836,6 +465,14 @@ export type Autocrat = {
             };
           },
           {
+            name: "passAmm";
+            type: "publicKey";
+          },
+          {
+            name: "failAmm";
+            type: "publicKey";
+          },
+          {
             name: "baseVault";
             type: "publicKey";
           },
@@ -846,6 +483,14 @@ export type Autocrat = {
           {
             name: "dao";
             type: "publicKey";
+          },
+          {
+            name: "passLpTokensLocked";
+            type: "u64";
+          },
+          {
+            name: "failLpTokensLocked";
+            type: "u64";
           },
           {
             name: "pdaBump";
@@ -862,10 +507,10 @@ export type Autocrat = {
           {
             name: "squadsProposal";
             type: "publicKey";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   types: [
     {
@@ -880,35 +525,7 @@ export type Autocrat = {
           {
             name: "unixTimestamp";
             type: "i64";
-          }
-        ];
-      };
-    },
-    {
-      name: "ConditionalSwapParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "market";
-            type: {
-              defined: "Market";
-            };
           },
-          {
-            name: "swapType";
-            type: {
-              defined: "SwapType";
-            };
-          },
-          {
-            name: "inputAmount";
-            type: "u64";
-          },
-          {
-            name: "minOutputAmount";
-            type: "u64";
-          }
         ];
       };
     },
@@ -956,7 +573,7 @@ export type Autocrat = {
                 defined: "InitialSpendingLimit";
               };
             };
-          }
+          },
         ];
       };
     },
@@ -976,52 +593,7 @@ export type Autocrat = {
           {
             name: "failLpTokensToLock";
             type: "u64";
-          }
-        ];
-      };
-    },
-    {
-      name: "ProvideLiquidityParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "quoteAmount";
-            docs: ["How much quote token you will deposit to the pool"];
-            type: "u64";
           },
-          {
-            name: "maxBaseAmount";
-            docs: ["The maximum base token you will deposit to the pool"];
-            type: "u64";
-          },
-          {
-            name: "minLiquidity";
-            docs: ["The minimum liquidity you will be assigned"];
-            type: "u128";
-          }
-        ];
-      };
-    },
-    {
-      name: "SpotSwapParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "swapType";
-            type: {
-              defined: "SwapType";
-            };
-          },
-          {
-            name: "inputAmount";
-            type: "u64";
-          },
-          {
-            name: "minOutputAmount";
-            type: "u64";
-          }
         ];
       };
     },
@@ -1065,30 +637,7 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
-          }
-        ];
-      };
-    },
-    {
-      name: "WithdrawLiquidityParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "liquidityToWithdraw";
-            docs: ["How much liquidity to withdraw"];
-            type: "u128";
           },
-          {
-            name: "minBaseAmount";
-            docs: ["Minimum base tokens to receive"];
-            type: "u64";
-          },
-          {
-            name: "minQuoteAmount";
-            docs: ["Minimum quote tokens to receive"];
-            type: "u64";
-          }
         ];
       };
     },
@@ -1106,196 +655,7 @@ export type Autocrat = {
             type: {
               vec: "publicKey";
             };
-          }
-        ];
-      };
-    },
-    {
-      name: "TwapOracle";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "createdAtSlot";
-            type: "u64";
           },
-          {
-            name: "lastUpdatedSlot";
-            type: "u64";
-          },
-          {
-            name: "lastPrice";
-            docs: [
-              "A price is the number of quote units per base unit multiplied by 1e12.",
-              "You cannot simply divide by 1e12 to get a price you can display in the UI",
-              "because the base and quote decimals may be different. Instead, do:",
-              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
-            ];
-            type: "u128";
-          },
-          {
-            name: "lastObservation";
-            docs: [
-              "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
-              "a few extremely large outliers. So we use observations, which can only move",
-              "by `max_observation_change_per_update` per update."
-            ];
-            type: "u128";
-          },
-          {
-            name: "aggregator";
-            docs: [
-              "Running sum of slots_per_last_update * last_observation.",
-              "",
-              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
-              "we can store 18 million slots worth of observations, which turns out to",
-              "be ~85 days worth of slots.",
-              "",
-              "Assuming that latest observations are 100x smaller than they could theoretically",
-              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
-              "very conservative assumption - META/USDC prices should be between 1e9 and",
-              "1e15, which would overflow after 1e15 years worth of slots.",
-              "",
-              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
-              "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at T2 being smaller than an aggregator at T1."
-            ];
-            type: "u128";
-          },
-          {
-            name: "maxObservationChangePerUpdate";
-            docs: ["The most that an observation can change per update."];
-            type: "u128";
-          },
-          {
-            name: "initialObservation";
-            docs: ["What the initial `latest_observation` is set to."];
-            type: "u128";
-          },
-          {
-            name: "startDelaySlots";
-            docs: [
-              "Number of slots after amm.created_at_slot to start recording TWAP"
-            ];
-            type: "u64";
-          }
-        ];
-      };
-    },
-    {
-      name: "Pool";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "quoteReserves";
-            type: "u64";
-          },
-          {
-            name: "baseReserves";
-            type: "u64";
-          },
-          {
-            name: "quoteProtocolFeeBalance";
-            type: "u64";
-          },
-          {
-            name: "baseProtocolFeeBalance";
-            type: "u64";
-          },
-          {
-            name: "oracle";
-            type: {
-              defined: "TwapOracle";
-            };
-          }
-        ];
-      };
-    },
-    {
-      name: "PoolState";
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Spot";
-            fields: [
-              {
-                name: "spot";
-                type: {
-                  defined: "Pool";
-                };
-              }
-            ];
-          },
-          {
-            name: "Futarchy";
-            fields: [
-              {
-                name: "spot";
-                type: {
-                  defined: "Pool";
-                };
-              },
-              {
-                name: "pass";
-                type: {
-                  defined: "Pool";
-                };
-              },
-              {
-                name: "fail";
-                type: {
-                  defined: "Pool";
-                };
-              }
-            ];
-          }
-        ];
-      };
-    },
-    {
-      name: "Market";
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Spot";
-          },
-          {
-            name: "Pass";
-          },
-          {
-            name: "Fail";
-          }
-        ];
-      };
-    },
-    {
-      name: "SwapType";
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Buy";
-          },
-          {
-            name: "Sell";
-          }
-        ];
-      };
-    },
-    {
-      name: "Token";
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Base";
-          },
-          {
-            name: "Quote";
-          }
         ];
       };
     },
@@ -1312,10 +672,10 @@ export type Autocrat = {
           },
           {
             name: "Failed";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   events: [
     {
@@ -1391,7 +751,7 @@ export type Autocrat = {
           name: "squadsMultisigVault";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -1438,7 +798,7 @@ export type Autocrat = {
           name: "minBaseFutarchicLiquidity";
           type: "u64";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -1477,6 +837,26 @@ export type Autocrat = {
           index: false;
         },
         {
+          name: "passAmm";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "failAmm";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "passLpMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "failLpMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
           name: "proposer";
           type: "publicKey";
           index: false;
@@ -1484,6 +864,16 @@ export type Autocrat = {
         {
           name: "number";
           type: "u32";
+          index: false;
+        },
+        {
+          name: "passLpTokensLocked";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "failLpTokensLocked";
+          type: "u64";
           index: false;
         },
         {
@@ -1510,7 +900,7 @@ export type Autocrat = {
           name: "squadsMultisigVault";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -1564,7 +954,7 @@ export type Autocrat = {
           name: "squadsMultisig";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -1586,56 +976,9 @@ export type Autocrat = {
           name: "dao";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
-    {
-      name: "WithdrawLiquidityEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "futarchyAmm";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "liquidityProvider";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "liquidityWithdrawn";
-          type: "u128";
-          index: false;
-        },
-        {
-          name: "minBaseAmount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "minQuoteAmount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "baseAmount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "quoteAmount";
-          type: "u64";
-          index: false;
-        }
-      ];
-    }
   ];
   errors: [
     {
@@ -1713,36 +1056,6 @@ export type Autocrat = {
       name: "InvalidSquadsProposalStatus";
       msg: "Squads proposal must be in Draft status";
     },
-    {
-      code: 6015;
-      name: "CastingOverflow";
-      msg: "Casting overflow. If you're seeing this, please report this";
-    },
-    {
-      code: 6016;
-      name: "InsufficientBalance";
-      msg: "Insufficient balance";
-    },
-    {
-      code: 6017;
-      name: "ZeroLiquidityRemove";
-      msg: "Cannot remove zero liquidity";
-    },
-    {
-      code: 6018;
-      name: "SwapSlippageExceeded";
-      msg: "Swap slippage exceeded";
-    },
-    {
-      code: 6019;
-      name: "AssertFailed";
-      msg: "Assert failed";
-    },
-    {
-      code: 6020;
-      name: "InvalidAdmin";
-      msg: "Invalid admin";
-    }
   ];
 };
 
@@ -1752,11 +1065,6 @@ export const IDL: Autocrat = {
   instructions: [
     {
       name: "initializeDao",
-      docs: [
-        "TODO:",
-        "- Enable staking to proposals",
-        "- Switch proposal to use Futarchy AMM",
-      ],
       accounts: [
         {
           name: "dao",
@@ -1847,11 +1155,6 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "futarchyAmm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "squadsProposal",
           isMut: false,
           isSigner: false,
@@ -1877,22 +1180,42 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "ammPassBaseVault",
+          name: "passAmm",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "passLpMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "failLpMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "failAmm",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "passLpUserAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "ammPassQuoteVault",
+          name: "failLpUserAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "ammFailBaseVault",
+          name: "passLpVaultAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "ammFailQuoteVault",
+          name: "failLpVaultAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1965,8 +1288,13 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "futarchyAmm",
-          isMut: true,
+          name: "passAmm",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "failAmm",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1976,6 +1304,26 @@ export const IDL: Autocrat = {
         },
         {
           name: "question",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passLpUserAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failLpUserAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passLpVaultAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failLpVaultAccount",
           isMut: true,
           isSigner: false,
         },
@@ -2040,376 +1388,8 @@ export const IDL: Autocrat = {
         },
       ],
     },
-    {
-      name: "spotSwap",
-      accounts: [
-        {
-          name: "futarchyAmm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "trader",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "userBaseAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "params",
-          type: {
-            defined: "SpotSwapParams",
-          },
-        },
-      ],
-    },
-    {
-      name: "conditionalSwap",
-      accounts: [
-        {
-          name: "futarchyAmm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammPassBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammPassQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammFailBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammFailQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userInputAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userOutputAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "baseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "baseVaultUnderlyingTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "quoteVaultUnderlyingTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "quoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "trader",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "passBaseMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failBaseMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "passQuoteMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failQuoteMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "conditionalVaultProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "vaultEventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "question",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "params",
-          type: {
-            defined: "ConditionalSwapParams",
-          },
-        },
-      ],
-    },
-    {
-      name: "initializeFutarchyAmm",
-      accounts: [
-        {
-          name: "futarchyAmm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "createKey",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "baseMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "quoteMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "ammBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "provideLiquidity",
-      accounts: [
-        {
-          name: "futarchyAmm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "liquidityProvider",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "liquidityProviderBaseAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "liquidityProviderQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "ammBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammPosition",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "params",
-          type: {
-            defined: "ProvideLiquidityParams",
-          },
-        },
-      ],
-    },
-    {
-      name: "withdrawLiquidity",
-      accounts: [
-        {
-          name: "futarchyAmm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "liquidityProvider",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "liquidityProviderBaseAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "liquidityProviderQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammPosition",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "params",
-          type: {
-            defined: "WithdrawLiquidityParams",
-          },
-        },
-      ],
-    },
   ],
   accounts: [
-    {
-      name: "ammPosition",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "futarchyAmm",
-            type: "publicKey",
-          },
-          {
-            name: "liquidityProvider",
-            type: "publicKey",
-          },
-          {
-            name: "liquidity",
-            type: "u128",
-          },
-        ],
-      },
-    },
     {
       name: "dao",
       type: {
@@ -2519,44 +1499,6 @@ export const IDL: Autocrat = {
       },
     },
     {
-      name: "futarchyAmm",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "state",
-            type: {
-              defined: "PoolState",
-            },
-          },
-          {
-            name: "totalLiquidity",
-            type: "u128",
-          },
-          {
-            name: "baseMint",
-            type: "publicKey",
-          },
-          {
-            name: "quoteMint",
-            type: "publicKey",
-          },
-          {
-            name: "ammBaseVault",
-            type: "publicKey",
-          },
-          {
-            name: "ammQuoteVault",
-            type: "publicKey",
-          },
-          {
-            name: "pdaBump",
-            type: "u8",
-          },
-        ],
-      },
-    },
-    {
       name: "proposal",
       type: {
         kind: "struct",
@@ -2584,6 +1526,14 @@ export const IDL: Autocrat = {
             },
           },
           {
+            name: "passAmm",
+            type: "publicKey",
+          },
+          {
+            name: "failAmm",
+            type: "publicKey",
+          },
+          {
             name: "baseVault",
             type: "publicKey",
           },
@@ -2594,6 +1544,14 @@ export const IDL: Autocrat = {
           {
             name: "dao",
             type: "publicKey",
+          },
+          {
+            name: "passLpTokensLocked",
+            type: "u64",
+          },
+          {
+            name: "failLpTokensLocked",
+            type: "u64",
           },
           {
             name: "pdaBump",
@@ -2628,34 +1586,6 @@ export const IDL: Autocrat = {
           {
             name: "unixTimestamp",
             type: "i64",
-          },
-        ],
-      },
-    },
-    {
-      name: "ConditionalSwapParams",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "market",
-            type: {
-              defined: "Market",
-            },
-          },
-          {
-            name: "swapType",
-            type: {
-              defined: "SwapType",
-            },
-          },
-          {
-            name: "inputAmount",
-            type: "u64",
-          },
-          {
-            name: "minOutputAmount",
-            type: "u64",
           },
         ],
       },
@@ -2729,51 +1659,6 @@ export const IDL: Autocrat = {
       },
     },
     {
-      name: "ProvideLiquidityParams",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "quoteAmount",
-            docs: ["How much quote token you will deposit to the pool"],
-            type: "u64",
-          },
-          {
-            name: "maxBaseAmount",
-            docs: ["The maximum base token you will deposit to the pool"],
-            type: "u64",
-          },
-          {
-            name: "minLiquidity",
-            docs: ["The minimum liquidity you will be assigned"],
-            type: "u128",
-          },
-        ],
-      },
-    },
-    {
-      name: "SpotSwapParams",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "swapType",
-            type: {
-              defined: "SwapType",
-            },
-          },
-          {
-            name: "inputAmount",
-            type: "u64",
-          },
-          {
-            name: "minOutputAmount",
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
       name: "UpdateDaoParams",
       type: {
         kind: "struct",
@@ -2818,29 +1703,6 @@ export const IDL: Autocrat = {
       },
     },
     {
-      name: "WithdrawLiquidityParams",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "liquidityToWithdraw",
-            docs: ["How much liquidity to withdraw"],
-            type: "u128",
-          },
-          {
-            name: "minBaseAmount",
-            docs: ["Minimum base tokens to receive"],
-            type: "u64",
-          },
-          {
-            name: "minQuoteAmount",
-            docs: ["Minimum quote tokens to receive"],
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
       name: "InitialSpendingLimit",
       type: {
         kind: "struct",
@@ -2854,195 +1716,6 @@ export const IDL: Autocrat = {
             type: {
               vec: "publicKey",
             },
-          },
-        ],
-      },
-    },
-    {
-      name: "TwapOracle",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "createdAtSlot",
-            type: "u64",
-          },
-          {
-            name: "lastUpdatedSlot",
-            type: "u64",
-          },
-          {
-            name: "lastPrice",
-            docs: [
-              "A price is the number of quote units per base unit multiplied by 1e12.",
-              "You cannot simply divide by 1e12 to get a price you can display in the UI",
-              "because the base and quote decimals may be different. Instead, do:",
-              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12",
-            ],
-            type: "u128",
-          },
-          {
-            name: "lastObservation",
-            docs: [
-              "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
-              "a few extremely large outliers. So we use observations, which can only move",
-              "by `max_observation_change_per_update` per update.",
-            ],
-            type: "u128",
-          },
-          {
-            name: "aggregator",
-            docs: [
-              "Running sum of slots_per_last_update * last_observation.",
-              "",
-              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
-              "we can store 18 million slots worth of observations, which turns out to",
-              "be ~85 days worth of slots.",
-              "",
-              "Assuming that latest observations are 100x smaller than they could theoretically",
-              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
-              "very conservative assumption - META/USDC prices should be between 1e9 and",
-              "1e15, which would overflow after 1e15 years worth of slots.",
-              "",
-              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
-              "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at T2 being smaller than an aggregator at T1.",
-            ],
-            type: "u128",
-          },
-          {
-            name: "maxObservationChangePerUpdate",
-            docs: ["The most that an observation can change per update."],
-            type: "u128",
-          },
-          {
-            name: "initialObservation",
-            docs: ["What the initial `latest_observation` is set to."],
-            type: "u128",
-          },
-          {
-            name: "startDelaySlots",
-            docs: [
-              "Number of slots after amm.created_at_slot to start recording TWAP",
-            ],
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "Pool",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "quoteReserves",
-            type: "u64",
-          },
-          {
-            name: "baseReserves",
-            type: "u64",
-          },
-          {
-            name: "quoteProtocolFeeBalance",
-            type: "u64",
-          },
-          {
-            name: "baseProtocolFeeBalance",
-            type: "u64",
-          },
-          {
-            name: "oracle",
-            type: {
-              defined: "TwapOracle",
-            },
-          },
-        ],
-      },
-    },
-    {
-      name: "PoolState",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Spot",
-            fields: [
-              {
-                name: "spot",
-                type: {
-                  defined: "Pool",
-                },
-              },
-            ],
-          },
-          {
-            name: "Futarchy",
-            fields: [
-              {
-                name: "spot",
-                type: {
-                  defined: "Pool",
-                },
-              },
-              {
-                name: "pass",
-                type: {
-                  defined: "Pool",
-                },
-              },
-              {
-                name: "fail",
-                type: {
-                  defined: "Pool",
-                },
-              },
-            ],
-          },
-        ],
-      },
-    },
-    {
-      name: "Market",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Spot",
-          },
-          {
-            name: "Pass",
-          },
-          {
-            name: "Fail",
-          },
-        ],
-      },
-    },
-    {
-      name: "SwapType",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Buy",
-          },
-          {
-            name: "Sell",
-          },
-        ],
-      },
-    },
-    {
-      name: "Token",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Base",
-          },
-          {
-            name: "Quote",
           },
         ],
       },
@@ -3225,6 +1898,26 @@ export const IDL: Autocrat = {
           index: false,
         },
         {
+          name: "passAmm",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "failAmm",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "passLpMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "failLpMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
           name: "proposer",
           type: "publicKey",
           index: false,
@@ -3232,6 +1925,16 @@ export const IDL: Autocrat = {
         {
           name: "number",
           type: "u32",
+          index: false,
+        },
+        {
+          name: "passLpTokensLocked",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "failLpTokensLocked",
+          type: "u64",
           index: false,
         },
         {
@@ -3337,53 +2040,6 @@ export const IDL: Autocrat = {
         },
       ],
     },
-    {
-      name: "WithdrawLiquidityEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "futarchyAmm",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "liquidityProvider",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "liquidityWithdrawn",
-          type: "u128",
-          index: false,
-        },
-        {
-          name: "minBaseAmount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "minQuoteAmount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "baseAmount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "quoteAmount",
-          type: "u64",
-          index: false,
-        },
-      ],
-    },
   ],
   errors: [
     {
@@ -3460,36 +2116,6 @@ export const IDL: Autocrat = {
       code: 6014,
       name: "InvalidSquadsProposalStatus",
       msg: "Squads proposal must be in Draft status",
-    },
-    {
-      code: 6015,
-      name: "CastingOverflow",
-      msg: "Casting overflow. If you're seeing this, please report this",
-    },
-    {
-      code: 6016,
-      name: "InsufficientBalance",
-      msg: "Insufficient balance",
-    },
-    {
-      code: 6017,
-      name: "ZeroLiquidityRemove",
-      msg: "Cannot remove zero liquidity",
-    },
-    {
-      code: 6018,
-      name: "SwapSlippageExceeded",
-      msg: "Swap slippage exceeded",
-    },
-    {
-      code: 6019,
-      name: "AssertFailed",
-      msg: "Assert failed",
-    },
-    {
-      code: 6020,
-      name: "InvalidAdmin",
-      msg: "Invalid admin",
     },
   ],
 };
