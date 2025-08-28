@@ -8,7 +8,8 @@ pub struct ProvideLiquidityParams {
     pub max_base_amount: u64,
     /// The minimum liquidity you will be assigned
     pub min_liquidity: u128,
-    /// The account that will own the LP position
+    /// The account that will own the LP position, usually the same as the
+    /// liquidity provider
     pub position_authority: Pubkey,
 }
 
