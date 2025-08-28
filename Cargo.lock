@@ -1472,6 +1472,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "price_based_unlock"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
