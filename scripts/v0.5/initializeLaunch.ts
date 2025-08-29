@@ -6,7 +6,7 @@ import {
   LaunchpadClient,
 } from "@metadaoproject/futarchy/v0.5";
 import { BN } from "bn.js";
-import { USDC } from "./consts.js";
+import { USDC } from "../consts.js";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -14,7 +14,6 @@ import {
   Transaction,
 } from "@solana/web3.js";
 
-// Use the RPC endpoint of your choice.
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 

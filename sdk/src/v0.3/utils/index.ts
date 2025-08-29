@@ -26,7 +26,7 @@ export const addPriorityFee = (pf: number) =>
 export const pubkeyToAccountInfo = (
   pubkey: PublicKey,
   isWritable: boolean,
-  isSigner = false
+  isSigner = false,
 ): AccountMeta => {
   return {
     pubkey: pubkey,

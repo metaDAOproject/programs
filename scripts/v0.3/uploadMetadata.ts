@@ -1,14 +1,12 @@
-import * as token from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
   AutocratClient,
   ConditionalVaultClient,
 } from "@metadaoproject/futarchy/v0.3";
-import { BN } from "bn.js";
 
 const provider = anchor.AnchorProvider.env();
-const payer = provider.wallet["payer"];
+
 const autocrat: AutocratClient = AutocratClient.createClient({ provider });
 const vaultProgram: ConditionalVaultClient =
   ConditionalVaultClient.createClient({ provider });
