@@ -21,7 +21,7 @@ export default function suite() {
   let underlyingTokenMint: PublicKey;
 
   before(function () {
-    vaultClient = this.vaultClient;
+    vaultClient = this.conditionalVault;
   });
 
   beforeEach(async function () {

@@ -2,8 +2,8 @@ import {
   getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
-} from "@metadaoproject/futarchy/v0.5";
-import { Keypair, PublicKey } from "@solana/web3.js";
+} from "@metadaoproject/futarchy/v0.6";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { expectError, ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 import { assert } from "chai";
@@ -21,7 +21,7 @@ export default function suite() {
   });
 
   it("should initialize a DAO", async function () {
-    await this.autocratClient
+    await this.futarchy
       .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,
@@ -32,11 +32,15 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
+          baseToStake: new BN(1000),
           passThresholdBps: 300,
           nonce: new BN(1337),
           initialSpendingLimit: null,
         },
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })
+      ])
       .rpc();
 
     const [dao, daoBump] = getDaoAddr({
@@ -44,7 +48,7 @@ export default function suite() {
       daoCreator: this.payer.publicKey,
     });
 
-    const storedDao = await this.autocratClient.getDao(dao);
+    const storedDao = await this.futarchy.getDao(dao);
 
     assert.ok(storedDao.baseMint.equals(META));
     assert.ok(storedDao.quoteMint.equals(USDC));
@@ -114,7 +118,7 @@ export default function suite() {
   it("should initialize a DAO with an initial spending limit", async function () {
     const spender = Keypair.generate();
 
-    await this.autocratClient
+    await this.futarchy
       .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,
@@ -125,6 +129,7 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
+          baseToStake: new BN(1000),
           passThresholdBps: 300,
           nonce: new BN(420),
           initialSpendingLimit: {
@@ -141,7 +146,7 @@ export default function suite() {
       daoCreator: this.payer.publicKey,
     });
 
-    const storedDao = await this.autocratClient.getDao(dao);
+    const storedDao = await this.futarchy.getDao(dao);
 
     assert.exists(storedDao.initialSpendingLimit);
     assert.equal(storedDao.initialSpendingLimit.amountPerMonth.toString(), "10000000000");
@@ -175,7 +180,7 @@ export default function suite() {
       "DAO initialized despite slots_per_proposal being less than twap_start_delay_slots"
     );
 
-    await this.autocratClient
+    await this.futarchy
       .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,

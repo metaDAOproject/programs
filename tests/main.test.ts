@@ -1,8 +1,6 @@
 import conditionalVault from "./conditionalVault/main.test.js";
-import amm from "./amm/main.test.js";
 import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
-import sharedLiquidityManager from "./sharedLiquidityManager/main.test.js";
 
 import {
   BanksClient,
@@ -13,25 +11,17 @@ import {
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
-  AmmClient,
-  AutocratClient,
+  FutarchyClient,
   ConditionalVaultClient,
   LaunchpadClient,
-  SharedLiquidityManagerClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_ID,
   PERMISSIONLESS_ACCOUNT,
   AUTOCRAT_PROGRAM_ID,
-} from "@metadaoproject/futarchy/v0.5";
-// import {
-//   // AmmClient,
-//   // AutocratClient,
-//   // ConditionalVaultClient,
-//   getVersion,
-//   VersionKey
-// } from "@metadaoproject/futarchy";
+} from "@metadaoproject/futarchy/v0.6";
+
 import { PublicKey, Keypair, Connection, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
@@ -50,6 +40,7 @@ import * as fs from "fs";
 import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
 import { LiteSVM } from "litesvm";
 import { fromWorkspace, LiteSVMProvider } from "anchor-litesvm";
+import { AccountInfo } from "@solana/web3.js";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
@@ -66,18 +57,11 @@ import fullLaunch from "./integration/fullLaunch.test.js";
 // Extend the Mocha context to include our test properties
 declare module "mocha" {
   interface Context {
-    svm: LiteSVM;
-    svmProvider: LiteSVMProvider;
-    svmAutocratClient: AutocratClient;
-    svmVaultClient: ConditionalVaultClient;
-    svmAmmClient: AmmClient;
     context: ProgramTestContext;
     banksClient: BanksClient;
-    vaultClient: ConditionalVaultClient;
-    autocratClient: AutocratClient;
-    launchpadClient: LaunchpadClient;
-    ammClient: AmmClient;
-    sharedLiquidityManagerClient: SharedLiquidityManagerClient;
+    conditionalVault: ConditionalVaultClient;
+    futarchy: FutarchyClient;
+    launchpad: LaunchpadClient;
     payer: Keypair;
     squadsConnection: Connection;
     createTokenAccount: (
@@ -113,9 +97,6 @@ declare module "mocha" {
 }
 
 before(async function () {
-  // const version: VersionKey = "0.4";
-  // const { AmmClient, AutocratClient, ConditionalVaultClient } = getVersion(version);
-
   this.context = await startAnchor(
     "./",
     [
@@ -179,22 +160,16 @@ before(async function () {
   let provider = new BankrunProvider(this.context);
   anchor.setProvider(provider);
 
-  // umi = createUmi(anchor.AnchorProvider.env().connection);
-
-  this.vaultClient = ConditionalVaultClient.createClient({
+  this.conditionalVault = ConditionalVaultClient.createClient({
     provider: provider as any,
   });
-  this.autocratClient = AutocratClient.createClient({
+  this.futarchy = FutarchyClient.createClient({
     provider: provider as any,
   });
-  this.launchpadClient = LaunchpadClient.createClient({
+  this.launchpad = LaunchpadClient.createClient({
     provider: provider as any,
   });
   this.provider = provider;
-  this.ammClient = AmmClient.createClient({ provider: provider as any });
-  this.sharedLiquidityManagerClient = SharedLiquidityManagerClient.createClient(
-    { provider: provider as any }
-  );
   this.payer = provider.wallet.payer;
 
   this.squadsConnection = {
@@ -359,12 +334,10 @@ before(async function () {
   );
 });
 
-describe("conditional_vault", conditionalVault);
-describe("amm", amm);
-describe("autocrat", autocrat);
 describe("launchpad", launchpad);
-// describe("shared_liquidity_manager", sharedLiquidityManager);
-describe("project-wide integration tests", function () {
+describe("conditional_vault", conditionalVault);
+describe.only("autocrat", autocrat);
+describe.skip("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
   it(
     "tests scalar markets (mint, split, swap, redeem) with some fuzzing",

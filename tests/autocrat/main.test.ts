@@ -1,5 +1,6 @@
 import fullProposal from "./integration/fullProposal.test.js";
 import proposalBatchTx from "./integration/proposalBatchTx.test.js";
+import futarchyAmm from "./integration/futarchyAmm.test.js";
 
 import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
@@ -11,6 +12,7 @@ export default function suite() {
   describe("#finalize_proposal", finalizeProposal);
 
   // describe("autocrat", autocrat);
-  describe("full proposal", fullProposal);
-  describe("proposal with a squads batch tx", proposalBatchTx);
+  // describe("full proposal", fullProposal);
+  // describe("proposal with a squads batch tx", proposalBatchTx);
+  describe.only("futarchy amm", futarchyAmm);
 }

@@ -8,12 +8,13 @@
         "launch-init": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchInit.ts",
         "launch-start": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchStart.ts",
         "launch-complete": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchComplete.ts",
-        "redeem-launch": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/redeemLaunch.ts"
+        "redeem-launch": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/redeemLaunch.ts",
+        "setup-futarchy-amm": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/setupFutarchyAmm.ts"
     },
     "dependencies": {
         "@coral-xyz/anchor": "=0.29.0",
         "@inquirer/prompts": "^7.3.3",
-        "@metadaoproject/futarchy": "0.5.0-alpha.6",
+        "@metadaoproject/futarchy": "0.6.0-alpha.0",
         "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
         "@metaplex-foundation/umi": "^0.9.1",
         "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",

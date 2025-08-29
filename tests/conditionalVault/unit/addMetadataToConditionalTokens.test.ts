@@ -24,7 +24,7 @@ export default function suite() {
   const metadataSerializer = getMetadataAccountDataSerializer();
 
   before(function () {
-    vaultClient = this.vaultClient;
+    vaultClient = this.conditionalVault;
   });
 
   async function setupVault(outcomes: number) {

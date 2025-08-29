@@ -829,11 +829,11 @@
   dependencies:
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
-
-"@metadaoproject/futarchy@0.5.0-alpha.6":
-  version "0.5.0-alpha.6"
-  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.5.0-alpha.6.tgz#4bc440554b91bab0d213f1db6a61980ebf57de73"
-  integrity sha512-ng6wChvSbCjevwXwuWqH8J4xLm2bk547DwUg5NqZNpQ8eyKA53dp+54PdyA5HA/c9P6f4SI+ttPPyc+HMyRpOw==
+    
+"@metadaoproject/futarchy@0.6.0-alpha.0":
+  version "0.6.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.6.0-alpha.0.tgz#b46033696d79c78cf67bf3b8b7edeed7250a232a"
+  integrity sha512-0usp1cDyECwZtXSeGdKRWNNr69GFlJh52HYYSQ2uAjcR5y3RXaak7UPmT0QCYd/BbujIKHiB/0Sn9Lxu5pFaOg==
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@metaplex-foundation/umi" "^0.9.2"

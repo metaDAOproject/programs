@@ -34,14 +34,14 @@ export default function suite() {
   let launchSigner: PublicKey;
 
   before(async function () {
-    autocratClient = this.autocratClient;
-    launchpadClient = this.launchpadClient;
+    autocratClient = this.futarchy;
+    launchpadClient = this.launchpad;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpadClient,
+      this.launchpad,
       this.payer
     );
 
