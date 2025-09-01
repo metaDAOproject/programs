@@ -24,3 +24,4 @@ autocrat = { git = "https://github.com/metaDAOproject/futarchy.git", branch = "v
 launchpad = { git = "https://github.com/metaDAOproject/futarchy.git", branch = "v4-stable", features = ["cpi"] }
 solana-security-txt = "1.1.1"
 solana-program = "=1.17.14"
+spl-token = "4.0.0"

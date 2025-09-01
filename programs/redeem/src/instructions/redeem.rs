@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer, Mint, Burn};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer, Mint, Burn, SetAuthority};
+use spl_token::instruction::AuthorityType;
 use raydium_cpmm_cpi::{
     cpi, 
     program::RaydiumCpmm,
@@ -231,6 +232,18 @@ impl Redeem<'_> {
                 quote_balance,
             )?;
         }
+
+        token::set_authority(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                SetAuthority {
+                    account_or_mint: ctx.accounts.base_mint.to_account_info(),
+                    current_authority: ctx.accounts.treasury.to_account_info(),
+                },
+            ),
+            AuthorityType::MintTokens,
+            None,
+        )?;
 
         Ok(())
     }
