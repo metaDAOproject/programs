@@ -37,21 +37,13 @@ impl CompleteUnlock<'_> {
             _ => return err!(PriceBasedUnlockError::InvalidLockerState),
         };
 
-        // Calculate how much time has passed since unlocking started
-        let time_passed = clock.unix_timestamp - start_timestamp;
-        require_gte!(
-            time_passed,
-            locker.twap_length_seconds as i64,
-            PriceBasedUnlockError::TwapCalculationFailed
-        );
-
         // Read the current aggregator value from the oracle account
         let oracle_data = ctx.accounts.oracle_account.try_borrow_data()?;
         let offset = locker.oracle_config.byte_offset as usize;
         
         // Ensure we have enough data to read 16 bytes (u128)
         require!(
-            offset + 16 <= oracle_data.len(),
+            offset + 24 <= oracle_data.len(),
             PriceBasedUnlockError::InvalidOracleData
         );
 
@@ -60,13 +52,32 @@ impl CompleteUnlock<'_> {
             oracle_data[offset..offset + 16].try_into().unwrap()
         );
 
+        let last_updated_timestamp = i64::from_le_bytes(
+            oracle_data[offset + 16..offset + 16 + 8].try_into().unwrap()
+        );
+
+        require_gte!(
+            clock.unix_timestamp,
+            last_updated_timestamp,
+            PriceBasedUnlockError::InvalidOracleData
+        );
+
+        let time_passed = last_updated_timestamp - start_timestamp;
+
+        require_gte!(
+            time_passed,
+            locker.twap_length_seconds as i64,
+            PriceBasedUnlockError::TwapCalculationFailed
+        );
+
         // Calculate TWAP: (current_aggregator - start_aggregator) / time_passed
         let aggregator_change = current_aggregator.saturating_sub(start_aggregator);
         let twap_price = aggregator_change / time_passed as u128;
 
         // Check if the TWAP price meets the threshold
-        require!(
-            twap_price >= locker.price_threshold,
+        require_gte!(
+            twap_price,
+            locker.price_threshold,
             PriceBasedUnlockError::PriceThresholdNotMet
         );
 

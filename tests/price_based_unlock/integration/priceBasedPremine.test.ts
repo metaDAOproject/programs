@@ -1,7 +1,9 @@
 import { Keypair, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";
-import { MAINNET_USDC } from "@metadaoproject/futarchy/v0.6";
+import { getDaoAddr, MAINNET_USDC } from "@metadaoproject/futarchy/v0.6";
+
+const DAY_IN_SECONDS = 60 * 60 * 24;
 
 export default function () {
     it("should enable price-based unlocks of a premine", async function () {
@@ -11,7 +13,6 @@ export default function () {
         const alice = Keypair.generate();
 
         const tokenMint = await this.createMint(this.payer.publicKey, 6);
-        const usdcMint = await this.createMint(this.payer.publicKey, 6);
 
         // Do the premine
         const fromTokenAccount = await this.createTokenAccount(tokenMint, this.payer.publicKey);
@@ -34,7 +35,7 @@ export default function () {
             tokenName: "Test Project",
             tokenSymbol: "TPJ",
             tokenUri: "https://example.com",
-            secondsForLaunch: 60 * 60 * 24,
+            secondsForLaunch: DAY_IN_SECONDS,
             minimumRaiseAmount: new BN(1 * 10 ** 6),
             baseMint: tokenMint,
             monthlySpendingLimitAmount: new BN(1),
@@ -47,9 +48,55 @@ export default function () {
 
         await this.launchpad.fundIx({ launch, amount: new BN(1 * 10 ** 6) }).rpc();
 
-        await this.advanceBySeconds(60 * 60 * 24 + 100);
+        await this.advanceBySeconds(DAY_IN_SECONDS + 100);
 
-        await this.launchpad.completeLaunchIx({ launch, baseMint: tokenMint, priceBasedUnlockRecipient: alice.publicKey }).rpc();
+        await this.launchpad.completeLaunchIx({ launch, baseMint: tokenMint }).rpc();
+
+        await this.advanceBySeconds(DAY_IN_SECONDS * 365);
+
+        const clock = await this.banksClient.getClock();
+
+        // await this.advanceBySlots(clock.unixTimestamp);
+
+        await this.advanceBySeconds(10);
+
+        const [dao] = getDaoAddr({ nonce: new BN(0), daoCreator: launchSigner });
+
+        const locker = this.priceBasedUnlock.getLockerAddress(launchSigner);
+
+        await this.futarchy.spotSwapIx({
+            dao,
+            baseMint: tokenMint,
+            swapType: "buy",
+            inputAmount: new BN(1 * 10 ** 6),
+            minOutputAmount: new BN(0),
+            trader: this.payer.publicKey,
+        }).rpc();
+
+        console.log((await this.futarchy.autocrat.account.dao.fetch(dao)).amm.state.spot);
+
+        await this.priceBasedUnlock.startUnlockIx({ locker, oracleAccount: dao }).rpc();
+
+        await this.advanceBySeconds(300);
+
+
+        await this.futarchy.spotSwapIx({
+            dao,
+            baseMint: tokenMint,
+            swapType: "buy",
+            inputAmount: new BN(1 * 10 ** 6),
+            minOutputAmount: new BN(0),
+            trader: this.payer.publicKey,
+        }).rpc();
+
+        const aliceTokenAccount = await this.createTokenAccount(tokenMint, alice.publicKey);
+
+        await this.priceBasedUnlock.completeUnlockIx({
+            locker,
+            lockerAuthority: this.payer.publicKey,
+            oracleAccount: dao,
+            recipientTokenAccount: aliceTokenAccount,
+        }).rpc();
 
 
 

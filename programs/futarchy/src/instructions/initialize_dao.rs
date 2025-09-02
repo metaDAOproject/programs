@@ -8,12 +8,12 @@ use squads_multisig_program::{
 pub struct InitializeDaoParams {
     pub twap_initial_observation: u128,
     pub twap_max_observation_change_per_update: u128,
-    pub twap_start_delay_slots: u64,
+    pub twap_start_delay_seconds: u32,
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
     pub base_to_stake: u64,
     pub pass_threshold_bps: u16,
-    pub slots_per_proposal: u64,
+    pub seconds_per_proposal: u32,
     pub nonce: u64,
     pub initial_spending_limit: Option<InitialSpendingLimit>,
 }
@@ -76,12 +76,12 @@ impl InitializeDao<'_> {
         let InitializeDaoParams {
             twap_initial_observation,
             twap_max_observation_change_per_update,
-            twap_start_delay_slots,
+            twap_start_delay_seconds,
             min_base_futarchic_liquidity,
             min_quote_futarchic_liquidity,
             base_to_stake,
             pass_threshold_bps,
-            slots_per_proposal,
+            seconds_per_proposal,
             nonce,
             initial_spending_limit,
         } = params;
@@ -89,7 +89,7 @@ impl InitializeDao<'_> {
         let dao = &mut ctx.accounts.dao;
 
         require!(
-            slots_per_proposal > twap_start_delay_slots,
+            seconds_per_proposal > twap_start_delay_seconds,
             AutocratError::ProposalDurationTooShort
         );
 
@@ -177,10 +177,10 @@ impl InitializeDao<'_> {
             quote_mint: ctx.accounts.quote_mint.key(),
             proposal_count: 0,
             pass_threshold_bps,
-            slots_per_proposal,
+            seconds_per_proposal,
             twap_initial_observation,
             twap_max_observation_change_per_update,
-            twap_start_delay_slots,
+            twap_start_delay_seconds,
             min_base_futarchic_liquidity,
             min_quote_futarchic_liquidity,
             base_to_stake,
@@ -194,7 +194,7 @@ impl InitializeDao<'_> {
                         quote_protocol_fee_balance: 0,
                         base_protocol_fee_balance: 0,
                         oracle: TwapOracle::new(
-                            clock.slot,
+                            clock.unix_timestamp,
                             twap_initial_observation,
                             twap_max_observation_change_per_update,
                             0,
@@ -216,7 +216,7 @@ impl InitializeDao<'_> {
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),
             pass_threshold_bps: dao.pass_threshold_bps,
-            slots_per_proposal: dao.slots_per_proposal,
+            seconds_per_proposal: dao.seconds_per_proposal,
             twap_initial_observation: dao.twap_initial_observation,
             twap_max_observation_change_per_update: dao.twap_max_observation_change_per_update,
             min_quote_futarchic_liquidity: dao.min_quote_futarchic_liquidity,

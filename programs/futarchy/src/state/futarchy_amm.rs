@@ -34,27 +34,20 @@ impl std::fmt::Display for Market {
 
 impl PoolState {
     pub fn swap(&mut self, input_amount: u64, swap_type: SwapType, market: Market) -> Result<u64> {
-        // let input_amount_after_fee =
-        //     (input_amount as u128 * (MAX_BPS - TAKER_FEE_BPS) as u128 / MAX_BPS as u128) as u64;
-        // msg!("fee: {}", input_amount - input_amount_after_fee);
-        // msg!("input_amount_after_fee: {}", input_amount_after_fee);
-
-        // require_gt!(input_amount_after_fee, 0);
-
         let clock = Clock::get()?;
 
         match self {
             PoolState::Spot { spot } => {
                 require_eq!(market, Market::Spot);
 
-                spot.update_twap(clock.slot)?;
+                spot.update_twap(clock.unix_timestamp)?;
 
                 spot.swap(input_amount, swap_type)
             }
             PoolState::Futarchy { spot, pass, fail } => {
-                spot.update_twap(clock.slot)?;
-                pass.update_twap(clock.slot)?;
-                fail.update_twap(clock.slot)?;
+                spot.update_twap(clock.unix_timestamp)?;
+                pass.update_twap(clock.unix_timestamp)?;
+                fail.update_twap(clock.unix_timestamp)?;
 
                 let spot_k = spot.k();
                 let pass_k = pass.k();
@@ -133,17 +126,6 @@ impl PoolState {
 
 #[derive(Default, Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, InitSpace)]
 pub struct TwapOracle {
-    pub created_at_slot: u64,
-    pub last_updated_slot: u64,
-    /// A price is the number of quote units per base unit multiplied by 1e12.
-    /// You cannot simply divide by 1e12 to get a price you can display in the UI
-    /// because the base and quote decimals may be different. Instead, do:
-    /// ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12
-    pub last_price: u128,
-    /// If we did a raw TWAP over prices, someone could push the TWAP heavily with
-    /// a few extremely large outliers. So we use observations, which can only move
-    /// by `max_observation_change_per_update` per update.
-    pub last_observation: u128,
     /// Running sum of slots_per_last_update * last_observation.
     ///
     /// Assuming latest observations are as big as possible (u64::MAX * 1e12),
@@ -159,41 +141,52 @@ pub struct TwapOracle {
     /// client's responsibility to sanity check the assets or to handle an
     /// aggregator at T2 being smaller than an aggregator at T1.
     pub aggregator: u128,
+    pub last_updated_timestamp: i64,
+    pub created_at_timestamp: i64,
+    /// A price is the number of quote units per base unit multiplied by 1e12.
+    /// You cannot simply divide by 1e12 to get a price you can display in the UI
+    /// because the base and quote decimals may be different. Instead, do:
+    /// ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12
+    pub last_price: u128,
+    /// If we did a raw TWAP over prices, someone could push the TWAP heavily with
+    /// a few extremely large outliers. So we use observations, which can only move
+    /// by `max_observation_change_per_update` per update.
+    pub last_observation: u128,
     /// The most that an observation can change per update.
     pub max_observation_change_per_update: u128,
     /// What the initial `latest_observation` is set to.
     pub initial_observation: u128,
-    /// Number of slots after amm.created_at_slot to start recording TWAP
-    pub start_delay_slots: u64,
+    /// Number of seconds after amm.created_at_slot to start recording TWAP
+    pub start_delay_seconds: u32,
 }
 
 impl TwapOracle {
     pub fn new(
-        current_slot: u64,
+        current_timestamp: i64,
         initial_observation: u128,
         max_observation_change_per_update: u128,
-        start_delay_slots: u64,
+        start_delay_seconds: u32,
     ) -> Self {
         Self {
-            created_at_slot: current_slot,
-            last_updated_slot: current_slot,
+            created_at_timestamp: current_timestamp,
+            last_updated_timestamp: current_timestamp,
             last_price: 0,
             last_observation: initial_observation,
             aggregator: 0,
             max_observation_change_per_update,
             initial_observation,
-            start_delay_slots,
+            start_delay_seconds,
         }
     }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
 pub struct Pool {
+    pub oracle: TwapOracle,
     pub quote_reserves: u64,
     pub base_reserves: u64,
     pub quote_protocol_fee_balance: u64,
     pub base_protocol_fee_balance: u64,
-    pub oracle: TwapOracle,
 }
 
 impl Pool {
@@ -201,7 +194,7 @@ impl Pool {
     /// have been made.
     ///
     /// Returns an observation if one was recorded.
-    pub fn update_twap(&mut self, current_slot: u64) -> Result<Option<u128>> {
+    pub fn update_twap(&mut self, current_timestamp: i64) -> Result<Option<u128>> {
         let oracle = &mut self.oracle;
 
         // a manipulator is likely to be "bursty" with their usage, such as a
@@ -222,7 +215,7 @@ impl Pool {
         // we allow updates once a minute as a happy medium. if you have an asset
         // that trades near $1500 and you allow $25 updates per minute, it can double
         // over an hour.
-        if current_slot < oracle.last_updated_slot + crate::ONE_MINUTE_IN_SLOTS {
+        if current_timestamp < oracle.last_updated_timestamp + 60 {
             return Ok(None);
         }
 
@@ -255,16 +248,16 @@ impl Pool {
 
         // if the start delay hasn't passed, we don't update the aggregator
         // but we still update the observation
-        let twap_start_slot = oracle.created_at_slot + oracle.start_delay_slots;
+        let twap_start_timestamp = oracle.created_at_timestamp + oracle.start_delay_seconds as i64;
 
-        let new_aggregator = if current_slot <= twap_start_slot {
+        let new_aggregator = if current_timestamp <= twap_start_timestamp {
             oracle.aggregator
         } else {
             // so that we don't act as if the first update ocurred over the whole
             // pre-start delay period
-            let effective_last_updated_slot = oracle.last_updated_slot.max(twap_start_slot);
+            let effective_last_updated_timestamp = oracle.last_updated_timestamp.max(twap_start_timestamp);
 
-            let slot_difference = (current_slot - effective_last_updated_slot) as u128;
+            let slot_difference: u128 = (current_timestamp - effective_last_updated_timestamp).try_into().unwrap();
 
             // if this saturates, the aggregator will wrap back to 0, so this value doesn't
             // really matter. we just can't panic.
@@ -274,18 +267,18 @@ impl Pool {
         };
 
         let new_oracle = TwapOracle {
-            created_at_slot: oracle.created_at_slot,
-            last_updated_slot: current_slot,
+            created_at_timestamp: oracle.created_at_timestamp,
+            last_updated_timestamp: current_timestamp,
             last_price: price,
             last_observation: new_observation,
             aggregator: new_aggregator,
             // these three shouldn't change
             max_observation_change_per_update: oracle.max_observation_change_per_update,
             initial_observation: oracle.initial_observation,
-            start_delay_slots: oracle.start_delay_slots,
+            start_delay_seconds: oracle.start_delay_seconds,
         };
 
-        require_gt!(new_oracle.last_updated_slot, oracle.last_updated_slot);
+        require_gt!(new_oracle.last_updated_timestamp, oracle.last_updated_timestamp);
 
         // assert that the new observation is between price and last observation
         match price.cmp(&oracle.last_observation) {
@@ -309,15 +302,15 @@ impl Pool {
 
     /// Returns the time-weighted average price since market creation
     pub fn get_twap(&self) -> Result<u128> {
-        let start_slot = self.oracle.created_at_slot + self.oracle.start_delay_slots;
+        let start_timestamp = self.oracle.created_at_timestamp + self.oracle.start_delay_seconds as i64;
 
-        require_gt!(self.oracle.last_updated_slot, start_slot,);
-        let slots_passed = (self.oracle.last_updated_slot - start_slot) as u128;
+        require_gt!(self.oracle.last_updated_timestamp, start_timestamp);
+        let seconds_passed = (self.oracle.last_updated_timestamp - start_timestamp) as u128;
 
-        require_neq!(slots_passed, 0);
+        require_neq!(seconds_passed, 0);
         require_neq!(self.oracle.aggregator, 0);
 
-        Ok(self.oracle.aggregator / slots_passed)
+        Ok(self.oracle.aggregator / seconds_passed)
     }
 }
 

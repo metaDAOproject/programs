@@ -13,7 +13,6 @@ use anchor_spl::metadata::{
 };
 
 use futarchy::program::Futarchy;
-use futarchy::DAY_IN_SLOTS;
 use futarchy::{InitialSpendingLimit, InitializeDaoParams, ProvideLiquidityParams};
 
 use price_based_unlock::program::PriceBasedUnlock;
@@ -261,8 +260,8 @@ impl CompleteLaunch<'_> {
                     min_base_futarchic_liquidity: TOKENS_TO_PARTICIPANTS / 100,
                     pass_threshold_bps: 300,
                     base_to_stake: TOKENS_TO_PARTICIPANTS / 100,
-                    slots_per_proposal: 3 * DAY_IN_SLOTS,
-                    twap_start_delay_slots: DAY_IN_SLOTS,
+                    seconds_per_proposal: 3 * 24 * 60 * 60,
+                    twap_start_delay_seconds: 24 * 60 * 60,
                     nonce: 0,
                     initial_spending_limit: Some(InitialSpendingLimit {
                         amount_per_month: launch.monthly_spending_limit_amount,
@@ -329,8 +328,10 @@ impl CompleteLaunch<'_> {
                         token_amount: token_to_lp,
                         unlock_timestamp: clock.unix_timestamp + 60 * 60 * 24,
                         oracle_config: OracleConfig {
-                            oracle_account: ctx.accounts.static_accounts.price_based_unlock_program.key(),
-                            byte_offset: 0,
+                            oracle_account: ctx.accounts.dao.key(),
+                            // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
+                            // spot `Pool` is always first and has the TWAP oracle
+                            byte_offset: 8 + 1,
                         },
                         twap_length_seconds: 300,
                         beneficiary: ctx.accounts.treasury_quote_account.key(),

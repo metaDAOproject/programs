@@ -114,10 +114,10 @@ impl LaunchProposal<'_> {
                 quote_protocol_fee_balance: 0,
                 base_protocol_fee_balance: 0,
                 oracle: TwapOracle::new(
-                    clock.slot,
+                    clock.unix_timestamp,
                     dao.twap_initial_observation,
                     dao.twap_max_observation_change_per_update,
-                    dao.twap_start_delay_slots,
+                    dao.twap_start_delay_seconds,
                 ),
             },
             fail: Pool {
@@ -126,10 +126,10 @@ impl LaunchProposal<'_> {
                 quote_protocol_fee_balance: 0,
                 base_protocol_fee_balance: 0,
                 oracle: TwapOracle::new(
-                    clock.slot,
+                    clock.unix_timestamp,
                     dao.twap_initial_observation,
                     dao.twap_max_observation_change_per_update,
-                    dao.twap_start_delay_slots,
+                    dao.twap_start_delay_seconds,
                 ),
             },
         };
