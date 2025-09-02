@@ -30,7 +30,7 @@ export type PriceBasedTokenLock = {
           docs: ["The mint of the tokens to be locked"];
         },
         {
-          name: "tokenAccount";
+          name: "fromTokenAccount";
           isMut: true;
           isSigner: false;
           docs: ["The token account containing the tokens to be locked"];
@@ -75,6 +75,16 @@ export type PriceBasedTokenLock = {
           isMut: false;
           isSigner: false;
         },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [
         {
@@ -94,19 +104,17 @@ export type PriceBasedTokenLock = {
           isSigner: false;
         },
         {
-          name: "lockerAuthority";
-          isMut: false;
-          isSigner: false;
-          docs: ["The authority of the locker"];
-        },
-        {
           name: "oracleAccount";
           isMut: false;
           isSigner: false;
-          docs: ["The oracle account that provides price data"];
         },
         {
-          name: "clock";
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         },
@@ -122,16 +130,9 @@ export type PriceBasedTokenLock = {
           isSigner: false;
         },
         {
-          name: "lockerAuthority";
-          isMut: false;
-          isSigner: false;
-          docs: ["The authority of the locker"];
-        },
-        {
           name: "oracleAccount";
           isMut: false;
           isSigner: false;
-          docs: ["The oracle account that provides price data"];
         },
         {
           name: "lockerTokenAccount";
@@ -146,12 +147,17 @@ export type PriceBasedTokenLock = {
           docs: ["The recipient's token account where tokens will be sent"];
         },
         {
-          name: "clock";
+          name: "tokenProgram";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "tokenProgram";
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         },
@@ -183,16 +189,11 @@ export type PriceBasedTokenLock = {
             type: "i64";
           },
           {
-            name: "oracleAccount";
-            docs: ["The oracle account that provides price data"];
-            type: "publicKey";
-          },
-          {
-            name: "aggregatorByteOffset";
-            docs: [
-              "Byte offset in the oracle account where the aggregator value is stored",
-            ];
-            type: "u8";
+            name: "oracleConfig";
+            docs: ["Where to pull price data from"];
+            type: {
+              defined: "OracleConfig";
+            };
           },
           {
             name: "twapLengthSeconds";
@@ -210,6 +211,16 @@ export type PriceBasedTokenLock = {
             type: {
               defined: "LockerState";
             };
+          },
+          {
+            name: "createKey";
+            docs: ["Used to derive the PDA"];
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            docs: ["The PDA bump"];
+            type: "u8";
           },
         ];
       };
@@ -234,12 +245,10 @@ export type PriceBasedTokenLock = {
             type: "i64";
           },
           {
-            name: "oracleAccount";
-            type: "publicKey";
-          },
-          {
-            name: "aggregatorByteOffset";
-            type: "u8";
+            name: "oracleConfig";
+            type: {
+              defined: "OracleConfig";
+            };
           },
           {
             name: "twapLengthSeconds";
@@ -248,6 +257,39 @@ export type PriceBasedTokenLock = {
           {
             name: "tokenRecipient";
             type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "OracleConfig";
+      docs: [
+        "Starting at `byte_offset` in `oracle_account`, this program expects to read:",
+        "- 16 bytes for the aggregator, stored as a little endian u128",
+        "- 8 bytes for the slot that the aggregator was last updated, stored as a",
+        "little endian u64",
+        "",
+        "The aggregator should be a weighted sum of prices, where the weight is the",
+        "number of seconds between prices. Here's an example:",
+        "- at second 0, the aggregator is 0",
+        "- at second 1, the price is 10 and the aggregator is 10 (10 * 1)",
+        "- at second 4, the price is 11 and 3 seconds have passed, so the aggregator is",
+        "10 + 11 * 3 = 43",
+        "",
+        "This allows our program to read a TWAP over a time period by reading the",
+        "aggregator value at the beginning and at the end, and dividing the difference",
+        "by the number of seconds between the two.",
+      ];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "oracleAccount";
+            type: "publicKey";
+          },
+          {
+            name: "byteOffset";
+            type: "u32";
           },
         ];
       };
@@ -307,8 +349,10 @@ export type PriceBasedTokenLock = {
           index: false;
         },
         {
-          name: "oracleAccount";
-          type: "publicKey";
+          name: "oracleConfig";
+          type: {
+            defined: "OracleConfig";
+          };
           index: false;
         },
         {
@@ -430,7 +474,7 @@ export const IDL: PriceBasedTokenLock = {
           docs: ["The mint of the tokens to be locked"],
         },
         {
-          name: "tokenAccount",
+          name: "fromTokenAccount",
           isMut: true,
           isSigner: false,
           docs: ["The token account containing the tokens to be locked"],
@@ -475,6 +519,16 @@ export const IDL: PriceBasedTokenLock = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [
         {
@@ -494,19 +548,17 @@ export const IDL: PriceBasedTokenLock = {
           isSigner: false,
         },
         {
-          name: "lockerAuthority",
-          isMut: false,
-          isSigner: false,
-          docs: ["The authority of the locker"],
-        },
-        {
           name: "oracleAccount",
           isMut: false,
           isSigner: false,
-          docs: ["The oracle account that provides price data"],
         },
         {
-          name: "clock",
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -522,16 +574,9 @@ export const IDL: PriceBasedTokenLock = {
           isSigner: false,
         },
         {
-          name: "lockerAuthority",
-          isMut: false,
-          isSigner: false,
-          docs: ["The authority of the locker"],
-        },
-        {
           name: "oracleAccount",
           isMut: false,
           isSigner: false,
-          docs: ["The oracle account that provides price data"],
         },
         {
           name: "lockerTokenAccount",
@@ -546,12 +591,17 @@ export const IDL: PriceBasedTokenLock = {
           docs: ["The recipient's token account where tokens will be sent"],
         },
         {
-          name: "clock",
+          name: "tokenProgram",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "tokenProgram",
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -583,16 +633,11 @@ export const IDL: PriceBasedTokenLock = {
             type: "i64",
           },
           {
-            name: "oracleAccount",
-            docs: ["The oracle account that provides price data"],
-            type: "publicKey",
-          },
-          {
-            name: "aggregatorByteOffset",
-            docs: [
-              "Byte offset in the oracle account where the aggregator value is stored",
-            ],
-            type: "u8",
+            name: "oracleConfig",
+            docs: ["Where to pull price data from"],
+            type: {
+              defined: "OracleConfig",
+            },
           },
           {
             name: "twapLengthSeconds",
@@ -610,6 +655,16 @@ export const IDL: PriceBasedTokenLock = {
             type: {
               defined: "LockerState",
             },
+          },
+          {
+            name: "createKey",
+            docs: ["Used to derive the PDA"],
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            docs: ["The PDA bump"],
+            type: "u8",
           },
         ],
       },
@@ -634,12 +689,10 @@ export const IDL: PriceBasedTokenLock = {
             type: "i64",
           },
           {
-            name: "oracleAccount",
-            type: "publicKey",
-          },
-          {
-            name: "aggregatorByteOffset",
-            type: "u8",
+            name: "oracleConfig",
+            type: {
+              defined: "OracleConfig",
+            },
           },
           {
             name: "twapLengthSeconds",
@@ -648,6 +701,39 @@ export const IDL: PriceBasedTokenLock = {
           {
             name: "tokenRecipient",
             type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "OracleConfig",
+      docs: [
+        "Starting at `byte_offset` in `oracle_account`, this program expects to read:",
+        "- 16 bytes for the aggregator, stored as a little endian u128",
+        "- 8 bytes for the slot that the aggregator was last updated, stored as a",
+        "little endian u64",
+        "",
+        "The aggregator should be a weighted sum of prices, where the weight is the",
+        "number of seconds between prices. Here's an example:",
+        "- at second 0, the aggregator is 0",
+        "- at second 1, the price is 10 and the aggregator is 10 (10 * 1)",
+        "- at second 4, the price is 11 and 3 seconds have passed, so the aggregator is",
+        "10 + 11 * 3 = 43",
+        "",
+        "This allows our program to read a TWAP over a time period by reading the",
+        "aggregator value at the beginning and at the end, and dividing the difference",
+        "by the number of seconds between the two.",
+      ],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "oracleAccount",
+            type: "publicKey",
+          },
+          {
+            name: "byteOffset",
+            type: "u32",
           },
         ],
       },
@@ -707,8 +793,10 @@ export const IDL: PriceBasedTokenLock = {
           index: false,
         },
         {
-          name: "oracleAccount",
-          type: "publicKey",
+          name: "oracleConfig",
+          type: {
+            defined: "OracleConfig",
+          },
           index: false,
         },
         {

@@ -1,6 +1,7 @@
 import conditionalVault from "./conditionalVault/main.test.js";
 import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
+import priceBasedUnlock from "./price_based_unlock/main.test.js";
 
 import {
   BanksClient,
@@ -14,6 +15,7 @@ import {
   FutarchyClient,
   ConditionalVaultClient,
   LaunchpadClient,
+  PriceBasedTokenLockClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SQUADS_PROGRAM_CONFIG,
@@ -62,6 +64,7 @@ declare module "mocha" {
     conditionalVault: ConditionalVaultClient;
     futarchy: FutarchyClient;
     launchpad: LaunchpadClient;
+    priceBasedUnlock: PriceBasedTokenLockClient;
     payer: Keypair;
     squadsConnection: Connection;
     createTokenAccount: (
@@ -167,6 +170,9 @@ before(async function () {
     provider: provider as any,
   });
   this.launchpad = LaunchpadClient.createClient({
+    provider: provider as any,
+  });
+  this.priceBasedUnlock = PriceBasedTokenLockClient.createClient({
     provider: provider as any,
   });
   this.provider = provider;
@@ -336,7 +342,8 @@ before(async function () {
 
 describe("launchpad", launchpad);
 describe("conditional_vault", conditionalVault);
-describe.only("autocrat", autocrat);
+describe.only("price_based_unlock", priceBasedUnlock);
+describe("autocrat", autocrat);
 describe.skip("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
   it(

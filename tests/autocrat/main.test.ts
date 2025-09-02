@@ -14,5 +14,5 @@ export default function suite() {
   // describe("autocrat", autocrat);
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
-  describe.only("futarchy amm", futarchyAmm);
+  describe("futarchy amm", futarchyAmm);
 }

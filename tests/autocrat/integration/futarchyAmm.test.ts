@@ -154,7 +154,7 @@ export default function suite() {
     .rpc();
   });
 
-  it.only("futarchy amm", async function () {
+  it("futarchy amm", async function () {
     // Get initial state before spot swap (before launching proposal)
     const daoBeforeSpotSwap = await this.futarchy.autocrat.account.dao.fetch(dao);
     console.log("=== Before spot swap (initial AMM state) ===");

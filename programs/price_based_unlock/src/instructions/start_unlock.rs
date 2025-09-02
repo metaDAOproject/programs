@@ -3,50 +3,42 @@ use anchor_lang::prelude::*;
 use super::*;
 
 #[derive(Accounts)]
+#[event_cpi]
 pub struct StartUnlock<'info> {
-    #[account(
-        mut,
-        seeds = [b"locker", locker_authority.key().as_ref()],
-        bump,
-    )]
-    pub locker: Box<Account<'info, Locker>>,
+    #[account(mut)]
+    pub locker: Account<'info, Locker>,
     
-    /// The authority of the locker
-    /// CHECK: This is used to derive the PDA
-    pub locker_authority: UncheckedAccount<'info>,
-    
-    /// The oracle account that provides price data
     /// CHECK: We will read the aggregator value from this account
+    #[account(address = locker.oracle_config.oracle_account)]
     pub oracle_account: UncheckedAccount<'info>,
-    
-    pub clock: Sysvar<'info, Clock>,
 }
 
 impl StartUnlock<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let locker = &mut ctx.accounts.locker;
-        let clock = &ctx.accounts.clock;
+
+        let clock = Clock::get()?;
 
         // Verify that the current time is past the unlock timestamp
         require!(
             clock.unix_timestamp >= locker.unlock_timestamp,
-            PriceBasedTokenLockError::UnlockTimestampNotReached
+            PriceBasedUnlockError::UnlockTimestampNotReached
         );
 
         // Verify that the locker is in the Locked state
         require!(
             matches!(locker.state, LockerState::Locked),
-            PriceBasedTokenLockError::InvalidLockerState
+            PriceBasedUnlockError::InvalidLockerState
         );
 
         // Read the current aggregator value from the oracle account
         let oracle_data = ctx.accounts.oracle_account.try_borrow_data()?;
-        let offset = locker.aggregator_byte_offset as usize;
+        let offset = locker.oracle_config.byte_offset as usize;
         
-        // Ensure we have enough data to read 16 bytes (u128)
+        // Ensure we have enough data to read 24 bytes (16 bytes for aggregator, 8 bytes for last updated slot)
         require!(
-            offset + 16 <= oracle_data.len(),
-            PriceBasedTokenLockError::InvalidOracleData
+            offset + 16 + 8 <= oracle_data.len(),
+            PriceBasedUnlockError::InvalidOracleData
         );
 
         // Read the aggregator value (assuming it's stored as u128)
@@ -54,17 +46,25 @@ impl StartUnlock<'_> {
             oracle_data[offset..offset + 16].try_into().unwrap()
         );
 
-        // Update locker state to Unlocking
+        let last_updated_timestamp = i64::from_le_bytes(
+            oracle_data[offset + 16..offset + 16 + 8].try_into().unwrap()
+        );
+
+        // The last updated timestamp should be greater than or equal to the unlock timestamp
+        // and less than or equal to the current time
+        require_gte!(last_updated_timestamp, locker.unlock_timestamp, PriceBasedUnlockError::InvalidOracleData);
+        require_gte!(clock.unix_timestamp, last_updated_timestamp, PriceBasedUnlockError::InvalidOracleData);
+
         locker.state = LockerState::Unlocking {
             start_aggregator,
-            start_timestamp: clock.unix_timestamp,
+            // We use the last updated timestamp to keep the aggregator and timestamp in sync
+            start_timestamp: last_updated_timestamp,
         };
 
-        // Emit event
-        emit!(UnlockStarted {
+        emit_cpi!(UnlockStarted {
             locker: locker.key(),
             start_aggregator,
-            start_timestamp: clock.unix_timestamp,
+            start_timestamp: last_updated_timestamp,
         });
 
         Ok(())

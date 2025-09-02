@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use crate::OracleConfig;
 
 #[event]
 pub struct LockerInitialized {
@@ -6,7 +7,7 @@ pub struct LockerInitialized {
     pub price_threshold: u128,
     pub token_amount: u64,
     pub unlock_timestamp: i64,
-    pub oracle_account: Pubkey,
+    pub oracle_config: OracleConfig,
     pub token_recipient: Pubkey,
 }
 

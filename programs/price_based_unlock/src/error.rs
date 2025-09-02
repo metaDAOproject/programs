@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum PriceBasedTokenLockError {
+pub enum PriceBasedUnlockError {
     #[msg("Unlock timestamp has not been reached yet")]
     UnlockTimestampNotReached,
     #[msg("Locker is not in the expected state")]

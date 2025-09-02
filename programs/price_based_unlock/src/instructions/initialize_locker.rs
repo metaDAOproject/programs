@@ -9,14 +9,14 @@ pub struct InitializeLockerParams {
     pub price_threshold: u128,
     pub token_amount: u64,
     pub unlock_timestamp: i64,
-    pub oracle_account: Pubkey,
-    pub aggregator_byte_offset: u8,
+    pub oracle_config: OracleConfig,
     pub twap_length_seconds: u64,
     pub token_recipient: Pubkey,
 }
 
 #[derive(Accounts)]
 #[instruction(params: InitializeLockerParams)]
+#[event_cpi]
 pub struct InitializeLocker<'info> {
     #[account(
         init,
@@ -34,7 +34,7 @@ pub struct InitializeLocker<'info> {
     
     /// The token account containing the tokens to be locked
     #[account(mut)]
-    pub token_account: Box<Account<'info, TokenAccount>>,
+    pub from_token_account: Box<Account<'info, TokenAccount>>,
     
     /// The authority of the token account
     pub token_authority: Signer<'info>,
@@ -42,10 +42,12 @@ pub struct InitializeLocker<'info> {
     
     /// The locker's token account where tokens will be stored
     #[account(
-        init_if_needed,
-        associated_token::mint = token_mint,
-        associated_token::authority = locker,
+        init,
+        seeds = [b"locker_token_account", locker.key().as_ref()],
+        bump,
         payer = payer,
+        token::mint = token_mint,
+        token::authority = locker,
     )]
     pub locker_token_account: Box<Account<'info, TokenAccount>>,
     
@@ -66,8 +68,7 @@ impl InitializeLocker<'_> {
             price_threshold,
             token_amount,
             unlock_timestamp,
-            oracle_account,
-            aggregator_byte_offset,
+            oracle_config,
             twap_length_seconds,
             token_recipient,
         } = params;
@@ -78,41 +79,42 @@ impl InitializeLocker<'_> {
         // Validate that unlock timestamp is in the future
         require!(
             unlock_timestamp > clock.unix_timestamp,
-            PriceBasedTokenLockError::UnlockTimestampNotReached
+            PriceBasedUnlockError::UnlockTimestampNotReached
         );
 
         // Validate that token amount is greater than 0
-        require!(token_amount > 0, PriceBasedTokenLockError::InvalidOracleData);
+        require!(token_amount > 0, PriceBasedUnlockError::InvalidOracleData);
 
         // Transfer tokens from user to locker
         let transfer_ctx = CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             token::Transfer {
-                from: ctx.accounts.token_account.to_account_info(),
+                from: ctx.accounts.from_token_account.to_account_info(),
                 to: ctx.accounts.locker_token_account.to_account_info(),
                 authority: ctx.accounts.token_authority.to_account_info(),
             },
         );
 
         token::transfer(transfer_ctx, token_amount)?;
+        
+        locker.set_inner(Locker {
+            price_threshold,
+            token_amount,
+            unlock_timestamp,
+            oracle_config,
+            twap_length_seconds,
+            token_recipient,
+            state: LockerState::Locked,
+            create_key: ctx.accounts.create_key.key(),
+            pda_bump: ctx.bumps.locker,
+        });
 
-        // Initialize locker
-        locker.price_threshold = price_threshold;
-        locker.token_amount = token_amount;
-        locker.unlock_timestamp = unlock_timestamp;
-        locker.oracle_account = oracle_account;
-        locker.aggregator_byte_offset = aggregator_byte_offset;
-        locker.twap_length_seconds = twap_length_seconds;
-        locker.token_recipient = token_recipient;
-        locker.state = LockerState::Locked;
-
-        // Emit event
-        emit!(LockerInitialized {
+        emit_cpi!(LockerInitialized {
             locker: locker.key(),
             price_threshold,
             token_amount,
             unlock_timestamp,
-            oracle_account,
+            oracle_config,
             token_recipient,
         });
 
