@@ -1149,6 +1149,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "futarchy",
+ "price_based_unlock",
  "solana-program",
  "solana-security-txt",
  "spl-memo",

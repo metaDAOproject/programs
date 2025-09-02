@@ -271,6 +271,16 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "locker";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "lockerTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
@@ -321,6 +331,16 @@ export type Launchpad = {
             {
               name: "squadsProgramConfigTreasury";
               isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "priceBasedUnlockProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "priceBasedUnlockEventAuthority";
+              isMut: false;
               isSigner: false;
             },
           ];
@@ -618,6 +638,16 @@ export type Launchpad = {
               option: "publicKey";
             };
           },
+          {
+            name: "priceBasedUnlockRecipient";
+            docs: ["The price-based unlock address."];
+            type: "publicKey";
+          },
+          {
+            name: "priceBasedPremineAmount";
+            docs: ["The price-based premine amount."];
+            type: "u64";
+          },
         ];
       };
     },
@@ -677,6 +707,14 @@ export type Launchpad = {
           {
             name: "tokenUri";
             type: "string";
+          },
+          {
+            name: "priceBasedUnlockAddress";
+            type: "publicKey";
+          },
+          {
+            name: "priceBasedPremineAmount";
+            type: "u64";
           },
         ];
       };
@@ -1013,6 +1051,11 @@ export type Launchpad = {
       name: "InvalidMonthlySpendingLimit";
       msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount";
     },
+    {
+      code: 6012;
+      name: "InvalidPriceBasedPremineAmount";
+      msg: "Cannot do more than a 50% premine";
+    },
   ];
 };
 
@@ -1289,6 +1332,16 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "locker",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "lockerTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "systemProgram",
           isMut: false,
           isSigner: false,
@@ -1339,6 +1392,16 @@ export const IDL: Launchpad = {
             {
               name: "squadsProgramConfigTreasury",
               isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "priceBasedUnlockProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "priceBasedUnlockEventAuthority",
+              isMut: false,
               isSigner: false,
             },
           ],
@@ -1636,6 +1699,16 @@ export const IDL: Launchpad = {
               option: "publicKey",
             },
           },
+          {
+            name: "priceBasedUnlockRecipient",
+            docs: ["The price-based unlock address."],
+            type: "publicKey",
+          },
+          {
+            name: "priceBasedPremineAmount",
+            docs: ["The price-based premine amount."],
+            type: "u64",
+          },
         ],
       },
     },
@@ -1695,6 +1768,14 @@ export const IDL: Launchpad = {
           {
             name: "tokenUri",
             type: "string",
+          },
+          {
+            name: "priceBasedUnlockAddress",
+            type: "publicKey",
+          },
+          {
+            name: "priceBasedPremineAmount",
+            type: "u64",
           },
         ],
       },
@@ -2030,6 +2111,11 @@ export const IDL: Launchpad = {
       code: 6011,
       name: "InvalidMonthlySpendingLimit",
       msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount",
+    },
+    {
+      code: 6012,
+      name: "InvalidPriceBasedPremineAmount",
+      msg: "Cannot do more than a 50% premine",
     },
   ],
 };

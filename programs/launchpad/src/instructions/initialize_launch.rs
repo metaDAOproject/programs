@@ -6,7 +6,7 @@ use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchInitializedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::usdc_mint;
-use crate::AVAILABLE_TOKENS;
+use crate::TOKENS_TO_PARTICIPANTS;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, CreateMetadataAccountsV3, Metadata,
@@ -21,6 +21,8 @@ pub struct InitializeLaunchArgs {
     pub token_name: String,
     pub token_symbol: String,
     pub token_uri: String,
+    pub price_based_unlock_address: Pubkey,
+    pub price_based_premine_amount: u64,
 }
 
 #[event_cpi]
@@ -116,6 +118,12 @@ impl InitializeLaunch<'_> {
             LaunchpadError::InvalidMonthlySpendingLimit
         );
 
+        require_gte!(
+            TOKENS_TO_PARTICIPANTS,
+            args.price_based_premine_amount,
+            LaunchpadError::InvalidPriceBasedPremineAmount
+        );
+
         require!(self.base_mint.supply == 0, LaunchpadError::SupplyNonZero);
 
         #[cfg(feature = "production")]
@@ -148,6 +156,8 @@ impl InitializeLaunch<'_> {
             seconds_for_launch: args.seconds_for_launch,
             dao: None,
             dao_vault: None,
+            price_based_unlock_recipient: args.price_based_unlock_address,
+            price_based_premine_amount: args.price_based_premine_amount,
         });
 
         let clock = Clock::get()?;
@@ -214,7 +224,7 @@ impl InitializeLaunch<'_> {
                 },
                 signer,
             ),
-            AVAILABLE_TOKENS,
+            TOKENS_TO_PARTICIPANTS,
         )?;
 
         Ok(())

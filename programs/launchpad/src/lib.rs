@@ -25,7 +25,13 @@ security_txt! {
 declare_id!("mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA");
 
 /// 10M tokens with 6 decimals
-pub const AVAILABLE_TOKENS: u64 = 10_000_000 * 1_000_000;
+pub const TOKENS_TO_PARTICIPANTS: u64 = 10_000_000 * 1_000_000;
+
+/// 20% to liquidity
+pub const TOKENS_TO_LIQUIDITY: u64 = TOKENS_TO_PARTICIPANTS / 5;
+
+/// Max 50% premine
+pub const MAX_PREMINE: u64 = TOKENS_TO_PARTICIPANTS + TOKENS_TO_LIQUIDITY;
 
 pub mod usdc_mint {
     use anchor_lang::prelude::declare_id;

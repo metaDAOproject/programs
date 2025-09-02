@@ -4,4 +4,4 @@ export * from "./constants.js";
 export * from "./FutarchyClient.js";
 export * from "./ConditionalVaultClient.js";
 export * from "./LaunchpadClient.js";
-export * from "./PriceBasedTokenLockClient.js";
+export * from "./PriceBasedUnlockClient.js";

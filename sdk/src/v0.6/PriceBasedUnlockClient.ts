@@ -16,13 +16,14 @@ import {
 import { PRICE_BASED_TOKEN_LOCK_PROGRAM_ID } from "./constants.js";
 import BN from "bn.js";
 import { OracleConfig } from "./types/index.js";
+import { getEventAuthorityAddr } from "./utils/pda.js";
 
 export type CreatePriceBasedTokenLockClientParams = {
   provider: AnchorProvider;
   priceBasedTokenLockProgramId?: PublicKey;
 };
 
-export class PriceBasedTokenLockClient {
+export class PriceBasedUnlockClient {
   public readonly provider: AnchorProvider;
   public readonly program: Program<PriceBasedTokenLock>;
   public readonly programId: PublicKey;
@@ -42,17 +43,14 @@ export class PriceBasedTokenLockClient {
 
   public static createClient(
     createClientParams: CreatePriceBasedTokenLockClientParams,
-  ): PriceBasedTokenLockClient {
+  ): PriceBasedUnlockClient {
     let { provider, priceBasedTokenLockProgramId } = createClientParams;
 
     if (!priceBasedTokenLockProgramId) {
       priceBasedTokenLockProgramId = PRICE_BASED_TOKEN_LOCK_PROGRAM_ID;
     }
 
-    return new PriceBasedTokenLockClient(
-      provider,
-      priceBasedTokenLockProgramId,
-    );
+    return new PriceBasedUnlockClient(provider, priceBasedTokenLockProgramId);
   }
 
   public initializeLockerIx(params: {
@@ -141,5 +139,9 @@ export class PriceBasedTokenLockClient {
       this.programId,
     );
     return lockerTokenAccountAddress;
+  }
+
+  public getEventAuthorityAddress(): PublicKey {
+    return getEventAuthorityAddr(this.programId)[0];
   }
 }

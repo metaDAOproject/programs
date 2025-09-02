@@ -4,7 +4,7 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchClaimEvent};
 use crate::state::{FundingRecord, Launch, LaunchState};
-use crate::AVAILABLE_TOKENS;
+use crate::TOKENS_TO_PARTICIPANTS;
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -69,7 +69,7 @@ impl Claim<'_> {
 
         // Calculate tokens to transfer based on contribution percentage
         let token_amount = (funding_record.committed_amount as u128)
-            .checked_mul(AVAILABLE_TOKENS as u128)
+            .checked_mul(TOKENS_TO_PARTICIPANTS as u128)
             .unwrap()
             .checked_div(launch.total_committed_amount as u128)
             .unwrap() as u64;

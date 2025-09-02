@@ -7,7 +7,7 @@ use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, T
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
-use crate::AVAILABLE_TOKENS;
+use crate::TOKENS_TO_PARTICIPANTS;
 use anchor_spl::metadata::{
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
 };
@@ -15,6 +15,9 @@ use anchor_spl::metadata::{
 use futarchy::program::Futarchy;
 use futarchy::DAY_IN_SLOTS;
 use futarchy::{InitialSpendingLimit, InitializeDaoParams, ProvideLiquidityParams};
+
+use price_based_unlock::program::PriceBasedUnlock;
+use price_based_unlock::{InitializeLockerParams, OracleConfig};
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
@@ -34,6 +37,9 @@ pub struct StaticCompleteLaunchAccounts<'info> {
     /// CHECK: checked by squads multisig program
     #[account(mut)]
     pub squads_program_config_treasury: UncheckedAccount<'info>,
+    pub price_based_unlock_program: Program<'info, PriceBasedUnlock>,
+    /// CHECK: checked by price based unlock program
+    pub price_based_unlock_event_authority: UncheckedAccount<'info>,
 }
 
 /// Completes a launch, which if the minimum raise is met:
@@ -126,6 +132,14 @@ pub struct CompleteLaunch<'info> {
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
     pub spending_limit: UncheckedAccount<'info>,
 
+    /// CHECK: initialized by price based unlock program
+    #[account(mut, seeds = [b"locker", launch_signer.key().as_ref()], bump, seeds::program = static_accounts.price_based_unlock_program)]
+    pub locker: UncheckedAccount<'info>,
+
+    /// CHECK: initialized by price based unlock program
+    #[account(mut, seeds = [b"locker_token_account", locker.key().as_ref()], bump, seeds::program = static_accounts.price_based_unlock_program)]
+    pub locker_token_account: UncheckedAccount<'info>,
+
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -176,11 +190,11 @@ impl CompleteLaunch<'_> {
         // of the supply and an equivalent value of USDC.
 
         let price_1e12 =
-            ((total_committed_amount as u128) * PRICE_SCALE) / (AVAILABLE_TOKENS as u128);
+            ((total_committed_amount as u128) * PRICE_SCALE) / (TOKENS_TO_PARTICIPANTS as u128);
 
         let usdc_to_lp = total_committed_amount.saturating_div(5);
         let usdc_to_dao = total_committed_amount.saturating_sub(usdc_to_lp);
-        let token_to_lp = AVAILABLE_TOKENS / 5;
+        let token_to_lp = TOKENS_TO_PARTICIPANTS / 5;
 
         if total_committed_amount >= launch.minimum_raise_amount {
             futarchy::cpi::initialize_dao(
@@ -244,9 +258,9 @@ impl CompleteLaunch<'_> {
                     twap_initial_observation: price_1e12,
                     twap_max_observation_change_per_update: price_1e12 / 20,
                     min_quote_futarchic_liquidity: total_committed_amount / 100,
-                    min_base_futarchic_liquidity: AVAILABLE_TOKENS / 100,
+                    min_base_futarchic_liquidity: TOKENS_TO_PARTICIPANTS / 100,
                     pass_threshold_bps: 300,
-                    base_to_stake: AVAILABLE_TOKENS / 100,
+                    base_to_stake: TOKENS_TO_PARTICIPANTS / 100,
                     slots_per_proposal: 3 * DAY_IN_SLOTS,
                     twap_start_delay_slots: DAY_IN_SLOTS,
                     nonce: 0,
@@ -289,6 +303,38 @@ impl CompleteLaunch<'_> {
                     min_liquidity: 0,
                     position_authority: ctx.accounts.squads_multisig_vault.key(),
                 },
+            )?;
+
+            let clock = Clock::get()?;
+
+            price_based_unlock::cpi::initialize_locker(
+                CpiContext::new_with_signer(
+                    ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
+                    price_based_unlock::cpi::accounts::InitializeLocker {
+                        locker: ctx.accounts.locker.to_account_info(),
+                        create_key: ctx.accounts.launch_signer.to_account_info(),
+                        token_mint: ctx.accounts.base_mint.to_account_info(),
+                        from_token_account: ctx.accounts.launch_base_vault.to_account_info(),
+                        token_authority: ctx.accounts.launch_signer.to_account_info(),
+                        payer: ctx.accounts.payer.to_account_info(),
+                        system_program: ctx.accounts.system_program.to_account_info(),
+                        token_program: ctx.accounts.token_program.to_account_info(),
+                        associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+                        event_authority: ctx.accounts.static_accounts.price_based_unlock_event_authority.to_account_info(),
+                        program: ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
+                        locker_token_account: ctx.accounts.locker_token_account.to_account_info(),
+                    }, launch_signer),
+                    InitializeLockerParams {
+                        price_threshold: price_1e12,
+                        token_amount: token_to_lp,
+                        unlock_timestamp: clock.unix_timestamp + 60 * 60 * 24,
+                        oracle_config: OracleConfig {
+                            oracle_account: ctx.accounts.static_accounts.price_based_unlock_program.key(),
+                            byte_offset: 0,
+                        },
+                        twap_length_seconds: 300,
+                        beneficiary: ctx.accounts.treasury_quote_account.key(),
+                    },
             )?;
 
             token::mint_to(

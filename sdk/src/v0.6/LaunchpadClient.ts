@@ -40,19 +40,21 @@ import {
 import { FutarchyClient } from "./FutarchyClient.js";
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
+import { PriceBasedUnlockClient } from "./PriceBasedUnlockClient.js";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
   launchpadProgramId?: PublicKey;
   autocratProgramId?: PublicKey;
   conditionalVaultProgramId?: PublicKey;
-  ammProgramId?: PublicKey;
+  priceBasedUnlockProgramId?: PublicKey;
 };
 
 export class LaunchpadClient {
   public launchpad: Program<Launchpad>;
   public provider: AnchorProvider;
   public autocratClient: FutarchyClient;
+  public priceBasedUnlock: PriceBasedUnlockClient;
 
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
@@ -65,6 +67,10 @@ export class LaunchpadClient {
       provider: this.provider,
       autocratProgramId: params.autocratProgramId,
       conditionalVaultProgramId: params.conditionalVaultProgramId,
+    });
+    this.priceBasedUnlock = PriceBasedUnlockClient.createClient({
+      provider: this.provider,
+      priceBasedTokenLockProgramId: params.priceBasedUnlockProgramId,
     });
   }
 
@@ -109,20 +115,35 @@ export class LaunchpadClient {
     );
   }
 
-  initializeLaunchIx(
-    tokenName: string,
-    tokenSymbol: string,
-    tokenUri: string,
-    minimumRaiseAmount: BN,
-    secondsForLaunch: number,
-    baseMint: PublicKey,
-    quoteMint: PublicKey,
-    monthlySpendingLimitAmount: BN,
-    monthlySpendingLimitMembers: PublicKey[],
-    launchAuthority: PublicKey = this.provider.publicKey,
-    isDevnet: boolean = false,
-    payer: PublicKey = this.provider.publicKey,
-  ) {
+  initializeLaunchIx({
+    tokenName,
+    tokenSymbol,
+    tokenUri,
+    minimumRaiseAmount,
+    secondsForLaunch = 60 * 60 * 24 * 5, // 5 days
+    baseMint,
+    quoteMint = MAINNET_USDC,
+    monthlySpendingLimitAmount,
+    monthlySpendingLimitMembers,
+    priceBasedUnlockAddress,
+    priceBasedPremineAmount,
+    launchAuthority = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    tokenName: string;
+    tokenSymbol: string;
+    tokenUri: string;
+    minimumRaiseAmount: BN;
+    secondsForLaunch?: number;
+    baseMint: PublicKey;
+    quoteMint?: PublicKey;
+    monthlySpendingLimitAmount: BN;
+    monthlySpendingLimitMembers: PublicKey[];
+    priceBasedUnlockAddress: PublicKey;
+    priceBasedPremineAmount: BN;
+    launchAuthority?: PublicKey;
+    payer?: PublicKey;
+  }) {
     const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
@@ -150,6 +171,8 @@ export class LaunchpadClient {
         tokenUri,
         monthlySpendingLimitAmount,
         monthlySpendingLimitMembers,
+        priceBasedUnlockAddress,
+        priceBasedPremineAmount,
       })
       .accounts({
         launch,
@@ -174,29 +197,32 @@ export class LaunchpadClient {
     // .signers([tokenMintKp]);
   }
 
-  startLaunchIx(
-    launch: PublicKey,
-    launchAuthority: PublicKey = this.provider.publicKey,
-  ) {
+  startLaunchIx({
+    launch,
+    launchAuthority = this.provider.publicKey,
+  }: {
+    launch: PublicKey;
+    launchAuthority?: PublicKey;
+  }) {
     return this.launchpad.methods.startLaunch().accounts({
       launch,
       launchAuthority,
     });
   }
 
-  fundIx(
-    launch: PublicKey,
-    amount: BN,
-    funder: PublicKey = this.provider.publicKey,
-    quoteMint: PublicKey,
-    isDevnet: boolean = false,
-  ) {
-    const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
+  fundIx({
+    launch,
+    amount,
+    funder = this.provider.publicKey,
+    quoteMint = MAINNET_USDC,
+  }: {
+    launch: PublicKey;
+    amount: BN;
+    funder?: PublicKey;
+    quoteMint?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
 
-    const [launchSigner] = getLaunchSignerAddr(
-      this.launchpad.programId,
-      launch,
-    );
     const launchQuoteVault = getAssociatedTokenAddressSync(
       quoteMint,
       launchSigner,
@@ -223,18 +249,17 @@ export class LaunchpadClient {
     });
   }
 
-  completeLaunchIx(
-    launch: PublicKey,
-    quoteMint: PublicKey,
-    baseMint: PublicKey,
-    isDevnet: boolean = false,
-  ) {
-    const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
+  completeLaunchIx({
+    launch,
+    quoteMint = MAINNET_USDC,
+    baseMint,
+  }: {
+    launch: PublicKey;
+    quoteMint?: PublicKey;
+    baseMint: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
 
-    const [launchSigner] = getLaunchSignerAddr(
-      this.launchpad.programId,
-      launch,
-    );
     const launchQuoteVault = getAssociatedTokenAddressSync(
       quoteMint,
       launchSigner,
@@ -280,62 +305,53 @@ export class LaunchpadClient {
       this.autocratClient.getProgramId(),
     );
 
-    return this.launchpad.methods.completeLaunch().accounts({
-      launch,
-      launchSigner,
-      launchQuoteVault,
-      launchBaseVault,
-      dao,
-      treasuryQuoteAccount,
-      // treasuryLpAccount: getAssociatedTokenAddressSync(
-      //   lpMint,
-      //   multisigVault,
-      //   true
-      // ),
-      quoteMint,
-      baseMint,
-      tokenMetadata,
-      daoOwnedLpPosition: ammPosition,
-      // lpMint,
-      // lpVault,
-      // poolTokenVault,
-      // poolUsdcVault,
-      futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
-        quoteMint,
+    const locker = this.priceBasedUnlock.getLockerAddress(launchSigner);
+    const lockerTokenAccount =
+      this.priceBasedUnlock.getLockerTokenAccountAddress(locker);
+
+    return this.launchpad.methods
+      .completeLaunch()
+      .accounts({
+        launch,
+        launchSigner,
+        launchQuoteVault,
+        launchBaseVault,
         dao,
-        true,
-      ),
-      futarchyAmmBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
-      // poolState,
-      // observationState,
-      staticAccounts: {
-        // cpSwapProgram: cpSwapProgramId,
-        // authority: isDevnet ? DEVNET_RAYDIUM_AUTHORITY : RAYDIUM_AUTHORITY,
-        // ammConfig: isDevnet
-        //   ? DEVNET_LOW_FEE_RAYDIUM_CONFIG
-        //   : LOW_FEE_RAYDIUM_CONFIG,
-        // createPoolFee: isDevnet
-        //   ? DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE
-        //   : RAYDIUM_CREATE_POOL_FEE_RECEIVE,
-        futarchyProgram: this.autocratClient.getProgramId(),
-        tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
-        autocratEventAuthority,
-        squadsProgram: SQUADS_PROGRAM_ID,
-        squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
-        squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
-      },
-      squadsMultisig: multisigPda,
-      squadsMultisigVault: multisigVault,
-      spendingLimit,
-    });
-    // .preInstructions([
-    //   createAssociatedTokenAccountIdempotentInstruction(
-    //     this.provider.publicKey,
-    //     treasuryQuoteAccount,
-    //     daoTreasury,
-    //     USDC
-    //   ),
-    // ]);
+        treasuryQuoteAccount,
+        quoteMint,
+        baseMint,
+        tokenMetadata,
+        daoOwnedLpPosition: ammPosition,
+        futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
+          quoteMint,
+          dao,
+          true,
+        ),
+        futarchyAmmBaseVault: getAssociatedTokenAddressSync(
+          baseMint,
+          dao,
+          true,
+        ),
+        staticAccounts: {
+          futarchyProgram: this.autocratClient.getProgramId(),
+          tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+          autocratEventAuthority,
+          squadsProgram: SQUADS_PROGRAM_ID,
+          squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+          squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
+          priceBasedUnlockProgram: this.priceBasedUnlock.programId,
+          priceBasedUnlockEventAuthority:
+            this.priceBasedUnlock.getEventAuthorityAddress(),
+        },
+        squadsMultisig: multisigPda,
+        squadsMultisigVault: multisigVault,
+        spendingLimit,
+        locker,
+        lockerTokenAccount,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }),
+      ]);
   }
 
   refundIx(
@@ -418,5 +434,23 @@ export class LaunchpadClient {
           baseMint,
         ),
       ]);
+  }
+
+  getLaunchAddress({ baseMint }: { baseMint: PublicKey }): PublicKey {
+    return getLaunchAddr(this.launchpad.programId, baseMint)[0];
+  }
+
+  getLaunchSignerAddress({ launch }: { launch: PublicKey }): PublicKey {
+    return getLaunchSignerAddr(this.launchpad.programId, launch)[0];
+  }
+
+  getFundingRecordAddress({
+    launch,
+    funder,
+  }: {
+    launch: PublicKey;
+    funder: PublicKey;
+  }): PublicKey {
+    return getFundingRecordAddr(this.launchpad.programId, launch, funder)[0];
   }
 }

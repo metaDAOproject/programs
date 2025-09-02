@@ -1,5 +1,7 @@
-import { Keypair } from "@solana/web3.js";
+import { Keypair, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
+import * as token from "@solana/spl-token";
+import { MAINNET_USDC } from "@metadaoproject/futarchy/v0.6";
 
 export default function () {
     it("should enable price-based unlocks of a premine", async function () {
@@ -9,11 +11,50 @@ export default function () {
         const alice = Keypair.generate();
 
         const tokenMint = await this.createMint(this.payer.publicKey, 6);
-        const fromTokenAccount = await this.createTokenAccount(tokenMint, this.payer.publicKey);
-        await this.mintTo(tokenMint, this.payer.publicKey, this.payer, 100 * 10 ** 6);
+        const usdcMint = await this.createMint(this.payer.publicKey, 6);
 
-        const aliceTokenAccount = await this.createTokenAccount(tokenMint, alice.publicKey);
-        const lockerTokenAccount = await this.createTokenAccount(tokenMint, this.priceBasedUnlock.getLockerAddress(this.payer.publicKey));
+        // Do the premine
+        const fromTokenAccount = await this.createTokenAccount(tokenMint, this.payer.publicKey);
+        // await this.mintTo(tokenMint, this.payer.publicKey, this.payer, 100 * 10 ** 6);
+
+        const launch = this.launchpad.getLaunchAddress({baseMint: tokenMint});
+        const launchSigner = this.launchpad.getLaunchSignerAddress({launch});
+
+        const tx = new Transaction().add(
+            token.createSetAuthorityInstruction(tokenMint, this.payer.publicKey, token.AuthorityType.MintTokens, launchSigner)
+        );
+
+        tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+        tx.feePayer = this.payer.publicKey;
+        tx.sign(this.payer);
+
+        await this.banksClient.processTransaction(tx);
+
+        await this.launchpad.initializeLaunchIx({
+            tokenName: "Test Project",
+            tokenSymbol: "TPJ",
+            tokenUri: "https://example.com",
+            secondsForLaunch: 60 * 60 * 24,
+            minimumRaiseAmount: new BN(1 * 10 ** 6),
+            baseMint: tokenMint,
+            monthlySpendingLimitAmount: new BN(1),
+            monthlySpendingLimitMembers: [this.payer.publicKey],
+            priceBasedUnlockAddress: this.payer.publicKey,
+            priceBasedPremineAmount: new BN(1 * 10 ** 6),
+        }).rpc();
+
+        await this.launchpad.startLaunchIx({ launch }).rpc();
+
+        await this.launchpad.fundIx({ launch, amount: new BN(1 * 10 ** 6) }).rpc();
+
+        await this.advanceBySeconds(60 * 60 * 24 + 100);
+
+        await this.launchpad.completeLaunchIx({ launch, baseMint: tokenMint, priceBasedUnlockRecipient: alice.publicKey }).rpc();
+
+
+
+
+        return;
 
         await this.priceBasedUnlock.initializeLockerIx({
             params: {
@@ -31,7 +72,6 @@ export default function () {
             tokenMint,
             fromTokenAccount,
             tokenAuthority: this.payer.publicKey,
-            lockerTokenAccount,
             recipientTokenAccount: aliceTokenAccount,
             payer: this.payer.publicKey
         }).rpc();

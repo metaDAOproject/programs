@@ -11,7 +11,7 @@ pub struct InitializeLockerParams {
     pub unlock_timestamp: i64,
     pub oracle_config: OracleConfig,
     pub twap_length_seconds: u64,
-    pub token_recipient: Pubkey,
+    pub beneficiary: Pubkey,
 }
 
 #[derive(Accounts)]
@@ -51,10 +51,6 @@ pub struct InitializeLocker<'info> {
     )]
     pub locker_token_account: Box<Account<'info, TokenAccount>>,
     
-    /// The recipient's token account where tokens will be sent when unlocked
-    #[account(token::mint = token_mint)]
-    pub recipient_token_account: Account<'info, TokenAccount>,
-    
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -70,7 +66,7 @@ impl InitializeLocker<'_> {
             unlock_timestamp,
             oracle_config,
             twap_length_seconds,
-            token_recipient,
+            beneficiary: token_recipient,
         } = params;
 
         let locker = &mut ctx.accounts.locker;

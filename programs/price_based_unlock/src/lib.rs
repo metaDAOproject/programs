@@ -15,7 +15,7 @@ pub use state::*;
 declare_id!("GP3gUFqHgdz9tB5bosCqmnu7qnkFa1gjUMFs8uCkwWQr");
 
 #[program]
-pub mod price_based_token_lock {
+pub mod price_based_unlock {
     use super::*;
 
     pub fn initialize_locker(

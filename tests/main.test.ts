@@ -15,7 +15,7 @@ import {
   FutarchyClient,
   ConditionalVaultClient,
   LaunchpadClient,
-  PriceBasedTokenLockClient,
+  PriceBasedUnlockClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SQUADS_PROGRAM_CONFIG,
@@ -64,7 +64,7 @@ declare module "mocha" {
     conditionalVault: ConditionalVaultClient;
     futarchy: FutarchyClient;
     launchpad: LaunchpadClient;
-    priceBasedUnlock: PriceBasedTokenLockClient;
+    priceBasedUnlock: PriceBasedUnlockClient;
     payer: Keypair;
     squadsConnection: Connection;
     createTokenAccount: (
@@ -172,7 +172,7 @@ before(async function () {
   this.launchpad = LaunchpadClient.createClient({
     provider: provider as any,
   });
-  this.priceBasedUnlock = PriceBasedTokenLockClient.createClient({
+  this.priceBasedUnlock = PriceBasedUnlockClient.createClient({
     provider: provider as any,
   });
   this.provider = provider;
