@@ -1,15 +1,18 @@
-In futarchy markets, your trades signal whether you think a proposal should pass or fail. 
-Each futarchy proposal includes two markets:
-- Approve (green)
-- Reject (red)
+In futarchy markets, your trades signal whether you believe a proposal should pass or fail. You influence the outcome by trading conditional tokens that adjust the market prices.
 
-To participate, you’ll mint (trade) conditional tokens to raise the market cap of your preferred decision or lower the opposing decsion.
+## Market Structure
+
+Each proposal creates two opposing markets:
+- Approve (green) – signals support for the proposal.
+- Reject (red) – signals opposition to the proposal.
+
+To participate, you mint (trade) conditional tokens to raise the market cap of your preferred outcome or lower the market cap of the opposing outcome.
 
 <figure><img src="../.gitbook/assets/example_proposal.png" alt="Proposal Example" width="563"><figcaption></figcaption></figure>
 
 [Example of an approved proposal](https://metadao.fi/metadao/trade/HREoLZVrY5FHhPgBFXGGc6XAA3hPjZw1UZcahhumFkef)
 
-## Approval Threshold
+### Approval Threshold
 
 Each DAO defines an approval threshold. This threshold is the percentage by which the Approve market must outperform the Reject market for the proposal to pass.
 
@@ -17,7 +20,7 @@ Each DAO defines an approval threshold. This threshold is the percentage by whic
 
 **Example:** If the threshold is set to 3%, the Approve market price must be at least 3% higher than the Reject market price during the voting window. If it does not cross this margin, the proposal fails.
 
-## Objective
+### How Proposals are Decided
 
 At the start of every vote, the Approve and Reject markets begin at equal value. Traders determine the outcome by moving prices away from this starting point.
 
