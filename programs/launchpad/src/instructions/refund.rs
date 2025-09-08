@@ -10,7 +10,7 @@ use crate::state::{FundingRecord, Launch, LaunchState};
 pub struct Refund<'info> {
     #[account(
         mut,
-        has_one = launch_usdc_vault,
+        has_one = launch_quote_vault,
         has_one = launch_signer,
     )]
     pub launch: Account<'info, Launch>,
@@ -25,7 +25,7 @@ pub struct Refund<'info> {
     pub funding_record: Account<'info, FundingRecord>,
 
     #[account(mut)]
-    pub launch_usdc_vault: Account<'info, TokenAccount>,
+    pub launch_quote_vault: Account<'info, TokenAccount>,
 
     /// CHECK: just a signer
     pub launch_signer: UncheckedAccount<'info>,
@@ -34,7 +34,7 @@ pub struct Refund<'info> {
     pub funder: Signer<'info>,
 
     #[account(mut)]
-    pub funder_usdc_account: Account<'info, TokenAccount>,
+    pub funder_quote_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -66,8 +66,8 @@ impl Refund<'_> {
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.launch_usdc_vault.to_account_info(),
-                    to: ctx.accounts.funder_usdc_account.to_account_info(),
+                    from: ctx.accounts.launch_quote_vault.to_account_info(),
+                    to: ctx.accounts.funder_quote_account.to_account_info(),
                     authority: ctx.accounts.launch_signer.to_account_info(),
                 },
                 signer,

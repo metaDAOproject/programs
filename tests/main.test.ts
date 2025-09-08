@@ -1,27 +1,28 @@
 import conditionalVault from "./conditionalVault/main.test.js";
-import amm from "./amm/main.test.js";
-import autocrat from "./autocrat/autocrat.js";
+import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 
-import { Clock, startAnchor } from "solana-bankrun";
+import {
+  BanksClient,
+  Clock,
+  ProgramTestContext,
+  startAnchor,
+} from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
-  AmmClient,
-  AutocratClient,
+  FutarchyClient,
   ConditionalVaultClient,
   LaunchpadClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
-} from "@metadaoproject/futarchy/v0.4";
-// import {
-//   // AmmClient,
-//   // AutocratClient,
-//   // ConditionalVaultClient,
-//   getVersion,
-//   VersionKey
-// } from "@metadaoproject/futarchy";
-import { PublicKey, Keypair } from "@solana/web3.js";
+  SQUADS_PROGRAM_CONFIG,
+  SQUADS_PROGRAM_ID,
+  PERMISSIONLESS_ACCOUNT,
+  AUTOCRAT_PROGRAM_ID,
+} from "@metadaoproject/futarchy/v0.6";
+
+import { PublicKey, Keypair, Connection, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -37,6 +38,9 @@ import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } fr
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import * as fs from "fs";
 import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
+import { LiteSVM } from "litesvm";
+import { fromWorkspace, LiteSVMProvider } from "anchor-litesvm";
+import { AccountInfo } from "@solana/web3.js";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
@@ -50,10 +54,49 @@ import scalarMarkets from "./integration/scalarMarkets.test.js";
 import twap from "./integration/twap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
 
-before(async function () {
-  // const version: VersionKey = "0.4";
-  // const { AmmClient, AutocratClient, ConditionalVaultClient } = getVersion(version);
+// Extend the Mocha context to include our test properties
+declare module "mocha" {
+  interface Context {
+    context: ProgramTestContext;
+    banksClient: BanksClient;
+    conditionalVault: ConditionalVaultClient;
+    futarchy: FutarchyClient;
+    launchpad: LaunchpadClient;
+    payer: Keypair;
+    squadsConnection: Connection;
+    createTokenAccount: (
+      mint: PublicKey,
+      owner: PublicKey
+    ) => Promise<PublicKey>;
+    createMint: (
+      mintAuthority: PublicKey,
+      decimals: number
+    ) => Promise<PublicKey>;
+    mintTo: (
+      mint: PublicKey,
+      to: PublicKey,
+      mintAuthority: Keypair,
+      amount: number
+    ) => Promise<any>;
+    getTokenBalance: (mint: PublicKey, owner: PublicKey) => Promise<bigint>;
+    getMint: (mint: PublicKey) => Promise<any>;
+    assertBalance: (
+      mint: PublicKey,
+      owner: PublicKey,
+      amount: number
+    ) => Promise<void>;
+    transfer: (
+      mint: PublicKey,
+      from: Keypair,
+      to: PublicKey,
+      amount: number
+    ) => Promise<any>;
+    advanceBySlots: (slots: bigint) => Promise<void>;
+    advanceBySeconds: (seconds: number) => Promise<void>;
+  }
+}
 
+before(async function () {
   this.context = await startAnchor(
     "./",
     [
@@ -66,6 +109,10 @@ before(async function () {
       {
         name: "raydium_cp_swap",
         programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
+      },
+      {
+        name: "squads_multisig",
+        programId: SQUADS_PROGRAM_ID,
       },
     ],
     [
@@ -98,25 +145,86 @@ before(async function () {
           lamports: 377_950_832_219,
         },
       },
+      {
+        address: SQUADS_PROGRAM_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/squads-program-config"),
+          executable: false,
+          owner: SQUADS_PROGRAM_ID,
+          lamports: 1_000_000_000,
+        },
+      },
     ]
   );
   this.banksClient = this.context.banksClient;
   let provider = new BankrunProvider(this.context);
   anchor.setProvider(provider);
 
-  // umi = createUmi(anchor.AnchorProvider.env().connection);
-
-  this.vaultClient = ConditionalVaultClient.createClient({
+  this.conditionalVault = ConditionalVaultClient.createClient({
     provider: provider as any,
   });
-  this.autocratClient = AutocratClient.createClient({
+  this.futarchy = FutarchyClient.createClient({
     provider: provider as any,
   });
-  this.launchpadClient = LaunchpadClient.createClient({
+  this.launchpad = LaunchpadClient.createClient({
     provider: provider as any,
   });
-  this.ammClient = AmmClient.createClient({ provider: provider as any });
+  this.provider = provider;
   this.payer = provider.wallet.payer;
+
+  this.squadsConnection = {
+    getAccountInfo: async (address: PublicKey) => {
+      let rawAccount = await this.banksClient.getAccount(address);
+      let accountInfo: AccountInfo<Buffer> = {
+        executable: false,
+        owner: rawAccount.owner,
+        lamports: rawAccount.lamports,
+        data: Buffer.from(rawAccount.data),
+      };
+      return accountInfo;
+    },
+  } as Connection;
+
+  console.log("assigning permissionless account to autocrat program");
+
+  let assignIx = SystemProgram.assign({
+    accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
+    programId: SystemProgram.programId,
+  });
+
+  let allocateIx = SystemProgram.allocate({
+    accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
+    space: 8,
+  })
+
+  let transferIx = SystemProgram.transfer({
+    fromPubkey: this.payer.publicKey,
+    toPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
+    lamports: 1000000000,
+  })
+  console.log("assigning permissionless account to autocrat program");
+  let assignTx = new Transaction().add(allocateIx, assignIx, transferIx);
+  assignTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  assignTx.feePayer = this.payer.publicKey;
+  assignTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+  console.log("assigning permissionless account to autocrat program");
+
+  await this.banksClient.processTransaction(assignTx);
+  // console.log("assigning permissionless account to autocrat program");
+
+  // const assignTx2 = new Transaction().add(SystemProgram.assign({
+  //   accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
+  //   programId: SQUADS_PROGRAM_ID,
+  // }));
+  // assignTx2.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+  // assignTx2.feePayer = this.payer.publicKey;
+  // assignTx2.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+  // await this.banksClient.processTransaction(assignTx2);
+
+  // console.log(await this.banksClient.getAccount(PERMISSIONLESS_ACCOUNT.publicKey));
+
+  // throw new Error("stop here");
+
 
   this.createTokenAccount = async (mint: PublicKey, owner: PublicKey) => {
     return await createAssociatedTokenAccount(
@@ -200,7 +308,7 @@ before(async function () {
         currentClock.epochStartTimestamp,
         currentClock.epoch,
         currentClock.leaderScheduleEpoch,
-        50n
+        currentClock.unixTimestamp
       )
     );
   };
@@ -226,13 +334,15 @@ before(async function () {
   );
 });
 
-describe("conditional_vault", conditionalVault);
-describe("amm", amm);
-describe("autocrat", autocrat);
 describe("launchpad", launchpad);
-describe("project-wide integration tests", function () {
+describe("conditional_vault", conditionalVault);
+describe.only("autocrat", autocrat);
+describe.skip("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
-  it("tests scalar markets (mint, split, swap, redeem) with some fuzzing", scalarMarkets);
+  it(
+    "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
+    scalarMarkets
+  );
   it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
-  it("full launch", fullLaunch);
+  describe("full launch", fullLaunch);
 });

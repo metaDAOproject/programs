@@ -15,15 +15,14 @@ use solana_security_txt::security_txt;
 security_txt! {
     name: "launchpad",
     project_url: "https://metadao.fi",
-    contacts: "email:metaproph3t@protonmail.com",
+    contacts: "telegram:metaproph3t,telegram:kollan_house",
+    source_code: "https://github.com/metaDAOproject/programs",
+    source_release: "v0.6.0",
     policy: "The market will decide whether we pay a bug bounty.",
-    source_code: "https://github.com/metaDAOproject/futarchy",
-    source_release: "delayed-twap-v0.4.1",
-    auditors: "Accretion",
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
 
-declare_id!("AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE");
+declare_id!("mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA");
 
 /// 10M tokens with 6 decimals
 pub const AVAILABLE_TOKENS: u64 = 10_000_000 * 1_000_000;

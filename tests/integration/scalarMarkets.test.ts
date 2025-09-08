@@ -4,15 +4,13 @@ import {
   getAmmAddr,
   SwapType,
   InstructionUtils,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { sha256 } from "@noble/hashes/sha256";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
 import * as token from "@solana/spl-token";
-import {
-  getAccount,
-} from "spl-token-bankrun";
+import { getAccount } from "spl-token-bankrun";
 
 export default async function test() {
   let vaultClient: ConditionalVaultClient = this.vaultClient;
@@ -88,7 +86,9 @@ export default async function test() {
   const NO = storedVault.conditionalTokenMints[1];
 
   // Initialize AMM
-  await ammClient.initializeAmmIx(YES, NO, new BN(0), new BN(100), new BN(1000)).rpc();
+  await ammClient
+    .initializeAmmIx(YES, NO, new BN(0), new BN(100), new BN(1000))
+    .rpc();
   const amm = getAmmAddr(ammClient.getProgramId(), YES, NO)[0];
 
   // Create token accounts for Alice, Bob, Carol, and Dan

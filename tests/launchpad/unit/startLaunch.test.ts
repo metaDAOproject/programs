@@ -5,7 +5,7 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
@@ -14,6 +14,7 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
+import { MAINNET_USDC } from "@metadaoproject/futarchy/v0.3";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -26,14 +27,14 @@ export default function suite() {
   const minRaise = new BN(1000_000000); // 1000 USDC
 
   before(async function () {
-    autocratClient = this.autocratClient;
-    launchpadClient = this.launchpadClient;
+    autocratClient = this.futarchy;
+    launchpadClient = this.launchpad;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpadClient,
+      this.launchpad,
       this.payer
     );
 
@@ -49,7 +50,10 @@ export default function suite() {
         "https://example.com",
         minRaise,
         60 * 60 * 24 * 2,
-        META
+        META,
+        MAINNET_USDC,
+        new BN(100_000000), // 100 USDC burn
+        [this.payer.publicKey]
       )
       .rpc();
   });

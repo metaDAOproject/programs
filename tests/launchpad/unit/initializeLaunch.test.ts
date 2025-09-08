@@ -1,4 +1,9 @@
-import { PublicKey, Keypair, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -6,7 +11,7 @@ import {
   getLaunchSignerAddr,
   getMetadataAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { createMint, mintTo } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
@@ -18,7 +23,7 @@ import * as token from "@solana/spl-token";
 import {
   MAINNET_USDC,
   MPL_TOKEN_METADATA_PROGRAM_ID,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {
@@ -29,17 +34,17 @@ export default function suite() {
   let launchSigner: PublicKey;
 
   before(async function () {
-    autocratClient = this.autocratClient;
-    launchpadClient = this.launchpadClient;
+    autocratClient = this.futarchy;
+    launchpadClient = this.launchpad;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpadClient,
+      this.launchpad,
       this.payer
     );
-    
+
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
@@ -62,7 +67,10 @@ export default function suite() {
         "https://example.com",
         minRaise,
         secondsForLaunch,
-        META
+        META,
+        MAINNET_USDC,
+        new BN(100_000000), // 100 USDC burn
+        [this.payer.publicKey]
       )
       .rpc();
 
@@ -76,23 +84,22 @@ export default function suite() {
     assert.ok(storedLaunch.launchSigner.equals(launchSigner));
     assert.equal(storedLaunch.launchSignerPdaBump, launchSignerPdaBump);
     assert.ok(
-      storedLaunch.launchUsdcVault.equals(
+      storedLaunch.launchQuoteVault.equals(
         token.getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true)
       )
     );
     assert.ok(
-      storedLaunch.launchTokenVault.equals(
+      storedLaunch.launchBaseVault.equals(
         token.getAssociatedTokenAddressSync(META, launchSigner, true)
       )
     );
-    assert.ok(storedLaunch.tokenMint.equals(META));
+    assert.ok(storedLaunch.baseMint.equals(META));
     assert.equal(storedLaunch.pdaBump, pdaBump);
     assert.equal(storedLaunch.totalCommittedAmount.toString(), "0");
     assert.equal(storedLaunch.seqNum.toString(), "0");
     assert.exists(storedLaunch.state.initialized);
     assert.equal(storedLaunch.unixTimestampStarted.toString(), "0");
     assert.equal(storedLaunch.dao, null);
-    assert.equal(storedLaunch.daoTreasury, null);
   });
 
   it("fails when launch signer is faked", async function () {
@@ -120,7 +127,12 @@ export default function suite() {
         space: token.MINT_SIZE,
         programId: token.TOKEN_PROGRAM_ID,
       }),
-      token.createInitializeMint2Instruction(META, 6, fakeLaunchSigner.publicKey, null)
+      token.createInitializeMint2Instruction(
+        META,
+        6,
+        fakeLaunchSigner.publicKey,
+        null
+      )
     );
     tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     tx.feePayer = this.payer.publicKey;
@@ -138,23 +150,25 @@ export default function suite() {
           tokenUri: "https://example.com",
           minimumRaiseAmount,
           secondsForLaunch,
+          monthlySpendingLimitAmount: new BN(100_000000),
+          monthlySpendingLimitMembers: [this.payer.publicKey],
         })
         .accounts({
           launch,
           launchSigner: fakeLaunchSigner.publicKey,
-          usdcVault: token.getAssociatedTokenAddressSync(
+          quoteVault: token.getAssociatedTokenAddressSync(
             MAINNET_USDC,
             fakeLaunchSigner.publicKey,
             true
           ),
-          tokenVault: token.getAssociatedTokenAddressSync(
+          baseVault: token.getAssociatedTokenAddressSync(
             META,
             fakeLaunchSigner.publicKey,
             true
           ),
           launchAuthority: this.payer.publicKey,
-          usdcMint: MAINNET_USDC,
-          tokenMint: META,
+          quoteMint: MAINNET_USDC,
+          baseMint: META,
           tokenMetadata,
           tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         })

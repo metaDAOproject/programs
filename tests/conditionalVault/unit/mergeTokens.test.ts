@@ -1,6 +1,6 @@
 import { sha256 } from "@metadaoproject/futarchy";
-import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.4";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.5";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   createAssociatedTokenAccount,
@@ -20,7 +20,7 @@ export default function suite() {
   let underlyingTokenMint: PublicKey;
   let userUnderlyingTokenAccount: PublicKey;
   before(function () {
-    vaultClient = this.vaultClient;
+    vaultClient = this.conditionalVault;
   });
 
   beforeEach(async function () {
@@ -135,6 +135,9 @@ export default function suite() {
     ).then((acc) => acc.amount);
     await vaultClient
       .mergeTokensIx(question, vault, underlyingTokenMint, new BN(500), 2)
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .rpc();
     balanceAfter = await getAccount(
       this.banksClient,

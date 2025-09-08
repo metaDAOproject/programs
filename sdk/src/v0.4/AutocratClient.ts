@@ -74,13 +74,13 @@ export class AutocratClient {
     autocratProgramId: PublicKey,
     conditionalVaultProgramId: PublicKey,
     ammProgramId: PublicKey,
-    luts: AddressLookupTableAccount[]
+    luts: AddressLookupTableAccount[],
   ) {
     this.provider = provider;
     this.autocrat = new Program<Autocrat>(
       AutocratIDL,
       autocratProgramId,
-      provider
+      provider,
     );
     this.vaultClient = ConditionalVaultClient.createClient({
       provider,
@@ -91,7 +91,7 @@ export class AutocratClient {
   }
 
   public static createClient(
-    createAutocratClientParams: CreateClientParams
+    createAutocratClientParams: CreateClientParams,
   ): AutocratClient {
     let {
       provider,
@@ -107,7 +107,7 @@ export class AutocratClient {
       autocratProgramId || AUTOCRAT_PROGRAM_ID,
       conditionalVaultProgramId || CONDITIONAL_VAULT_PROGRAM_ID,
       ammProgramId || AMM_PROGRAM_ID,
-      luts
+      luts,
     );
   }
 
@@ -132,7 +132,7 @@ export class AutocratClient {
   }
 
   async deserializeProposal(
-    accountInfo: AccountInfo<Buffer>
+    accountInfo: AccountInfo<Buffer>,
   ): Promise<Proposal> {
     return this.autocrat.coder.accounts.decode("proposal", accountInfo.data);
   }
@@ -145,7 +145,7 @@ export class AutocratClient {
     proposal: PublicKey,
     baseMint: PublicKey,
     quoteMint: PublicKey,
-    dao: PublicKey
+    dao: PublicKey,
   ): {
     question: PublicKey;
     baseVault: PublicKey;
@@ -164,60 +164,60 @@ export class AutocratClient {
       vaultProgramId,
       sha256(`Will ${proposal} pass?/FAIL/PASS`),
       proposal,
-      2
+      2,
     );
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const [baseVault] = getVaultAddr(
       this.vaultClient.vaultProgram.programId,
       question,
-      baseMint
+      baseMint,
     );
     const [quoteVault] = getVaultAddr(
       this.vaultClient.vaultProgram.programId,
       question,
-      quoteMint
+      quoteMint,
     );
 
     const [failBaseMint] = getConditionalTokenMintAddr(
       vaultProgramId,
       baseVault,
-      0
+      0,
     );
     const [failQuoteMint] = getConditionalTokenMintAddr(
       vaultProgramId,
       quoteVault,
-      0
+      0,
     );
 
     const [passBaseMint] = getConditionalTokenMintAddr(
       vaultProgramId,
       baseVault,
-      1
+      1,
     );
     const [passQuoteMint] = getConditionalTokenMintAddr(
       vaultProgramId,
       quoteVault,
-      1
+      1,
     );
 
     const [passAmm] = getAmmAddr(
       this.ammClient.program.programId,
       passBaseMint,
-      passQuoteMint
+      passQuoteMint,
     );
     const [failAmm] = getAmmAddr(
       this.ammClient.program.programId,
       failBaseMint,
-      failQuoteMint
+      failQuoteMint,
     );
 
     const [passLp] = getAmmLpMintAddr(
       this.ammClient.program.programId,
-      passAmm
+      passAmm,
     );
     const [failLp] = getAmmLpMintAddr(
       this.ammClient.program.programId,
-      failAmm
+      failAmm,
     );
 
     return {
@@ -242,17 +242,17 @@ export class AutocratClient {
     minQuoteFutarchicLiquidity: number,
     usdcMint: PublicKey = MAINNET_USDC,
     daoKeypair: Keypair = Keypair.generate(),
-    twapStartDelaySlots: BN
+    twapStartDelaySlots: BN,
   ): Promise<PublicKey> {
     let tokenDecimals = unpackMint(
       tokenMint,
-      await this.provider.connection.getAccountInfo(tokenMint)
+      await this.provider.connection.getAccountInfo(tokenMint),
     ).decimals;
 
     let scaledPrice = PriceMath.getAmmPrice(
       tokenPriceUiAmount,
       tokenDecimals,
-      USDC_DECIMALS
+      USDC_DECIMALS,
     );
 
     // console.log(
@@ -267,15 +267,15 @@ export class AutocratClient {
         twapInitialObservation: scaledPrice,
         twapMaxObservationChangePerUpdate: scaledPrice.divn(50),
         minQuoteFutarchicLiquidity: new BN(minQuoteFutarchicLiquidity).mul(
-          new BN(10).pow(new BN(USDC_DECIMALS))
+          new BN(10).pow(new BN(USDC_DECIMALS)),
         ),
         minBaseFutarchicLiquidity: new BN(minBaseFutarchicLiquidity).mul(
-          new BN(10).pow(new BN(tokenDecimals))
+          new BN(10).pow(new BN(tokenDecimals)),
         ),
         passThresholdBps: null,
         slotsPerProposal: null,
       },
-      usdcMint
+      usdcMint,
     )
       .postInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({
@@ -294,7 +294,7 @@ export class AutocratClient {
     daoKeypair: Keypair,
     tokenMint: PublicKey,
     params: InitializeDaoParams,
-    usdcMint: PublicKey = MAINNET_USDC
+    usdcMint: PublicKey = MAINNET_USDC,
   ) {
     return this.autocrat.methods
       .initializeDao(params)
@@ -311,7 +311,7 @@ export class AutocratClient {
     descriptionUrl: string,
     instruction: ProposalInstruction,
     baseTokensToLP: BN,
-    quoteTokensToLP: BN
+    quoteTokensToLP: BN,
   ): Promise<PublicKey> {
     const storedDao = await this.getDao(dao);
 
@@ -320,13 +320,13 @@ export class AutocratClient {
     let [proposal] = getProposalAddr(
       this.autocrat.programId,
       this.provider.publicKey,
-      nonce
+      nonce,
     );
 
     await this.vaultClient.initializeQuestion(
       sha256(`Will ${proposal} pass?/FAIL/PASS`),
       proposal,
-      2
+      2,
     );
 
     const {
@@ -343,7 +343,7 @@ export class AutocratClient {
       proposal,
       storedDao.tokenMint,
       storedDao.usdcMint,
-      dao
+      dao,
     );
 
     // it's important that these happen in a single atomic transaction
@@ -357,16 +357,16 @@ export class AutocratClient {
             passQuoteMint,
             storedDao.twapStartDelaySlots,
             storedDao.twapInitialObservation,
-            storedDao.twapMaxObservationChangePerUpdate
+            storedDao.twapMaxObservationChangePerUpdate,
           ),
           this.ammClient.initializeAmmIx(
             failBaseMint,
             failQuoteMint,
             storedDao.twapStartDelaySlots,
             storedDao.twapInitialObservation,
-            storedDao.twapMaxObservationChangePerUpdate
-          )
-        )
+            storedDao.twapMaxObservationChangePerUpdate,
+          ),
+        ),
       )
       .rpc();
 
@@ -376,7 +376,7 @@ export class AutocratClient {
         baseVault,
         storedDao.tokenMint,
         baseTokensToLP,
-        2
+        2,
       )
       .postInstructions(
         await InstructionUtils.getInstructions(
@@ -385,9 +385,9 @@ export class AutocratClient {
             quoteVault,
             storedDao.usdcMint,
             quoteTokensToLP,
-            2
-          )
-        )
+            2,
+          ),
+        ),
       )
       .rpc();
 
@@ -398,7 +398,7 @@ export class AutocratClient {
         passQuoteMint,
         quoteTokensToLP,
         baseTokensToLP,
-        new BN(0)
+        new BN(0),
       )
       .postInstructions(
         await InstructionUtils.getInstructions(
@@ -408,9 +408,9 @@ export class AutocratClient {
             failQuoteMint,
             quoteTokensToLP,
             baseTokensToLP,
-            new BN(0)
-          )
-        )
+            new BN(0),
+          ),
+        ),
       )
       .rpc();
 
@@ -426,7 +426,7 @@ export class AutocratClient {
       lpTokens,
       lpTokens,
       nonce,
-      question
+      question,
     ).rpc();
 
     return proposal;
@@ -570,39 +570,36 @@ export class AutocratClient {
     passLpTokensToLock: BN,
     failLpTokensToLock: BN,
     nonce: BN,
-    question: PublicKey
+    question: PublicKey,
+    proposer: PublicKey = this.provider.publicKey,
   ) {
-    let [proposal] = getProposalAddr(
-      this.autocrat.programId,
-      this.provider.publicKey,
-      nonce
-    );
+    let [proposal] = getProposalAddr(this.autocrat.programId, proposer, nonce);
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
       proposal,
       baseMint,
       quoteMint,
-      dao
+      dao,
     );
 
     const [passLp] = getAmmLpMintAddr(
       this.ammClient.program.programId,
-      passAmm
+      passAmm,
     );
     const [failLp] = getAmmLpMintAddr(
       this.ammClient.program.programId,
-      failAmm
+      failAmm,
     );
 
     const passLpVaultAccount = getAssociatedTokenAddressSync(
       passLp,
       daoTreasury,
-      true
+      true,
     );
     const failLpVaultAccount = getAssociatedTokenAddressSync(
       failLp,
       daoTreasury,
-      true
+      true,
     );
 
     return this.autocrat.methods
@@ -625,28 +622,30 @@ export class AutocratClient {
         failLpMint: failLp,
         passLpUserAccount: getAssociatedTokenAddressSync(
           passLp,
-          this.provider.publicKey
+          proposer,
+          true,
         ),
         failLpUserAccount: getAssociatedTokenAddressSync(
           failLp,
-          this.provider.publicKey
+          proposer,
+          true,
         ),
         passLpVaultAccount,
         failLpVaultAccount,
-        proposer: this.provider.publicKey,
+        proposer,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
+          proposer,
           passLpVaultAccount,
           daoTreasury,
-          passLp
+          passLp,
         ),
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
+          proposer,
           failLpVaultAccount,
           daoTreasury,
-          failLp
+          failLp,
         ),
       ]);
   }
@@ -661,7 +660,7 @@ export class AutocratClient {
       storedProposal.dao,
       storedDao.tokenMint,
       storedDao.usdcMint,
-      storedProposal.proposer
+      storedProposal.proposer,
     ).rpc();
   }
 
@@ -671,7 +670,7 @@ export class AutocratClient {
     dao: PublicKey,
     daoToken: PublicKey,
     usdc: PublicKey,
-    proposer: PublicKey
+    proposer: PublicKey,
   ) {
     let vaultProgramId = this.vaultClient.vaultProgram.programId;
 
@@ -680,16 +679,16 @@ export class AutocratClient {
       proposal,
       daoToken,
       usdc,
-      dao
+      dao,
     );
 
     const [passLp] = getAmmLpMintAddr(
       this.ammClient.program.programId,
-      passAmm
+      passAmm,
     );
     const [failLp] = getAmmLpMintAddr(
       this.ammClient.program.programId,
-      failAmm
+      failAmm,
     );
 
     const [vaultEventAuthority] = getEventAuthorityAddr(vaultProgramId);
@@ -702,17 +701,17 @@ export class AutocratClient {
       question,
       // baseVault,
       // quoteVault,
-      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer),
-      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer),
+      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer, true),
+      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer, true),
       passLpVaultAccount: getAssociatedTokenAddressSync(
         passLp,
         daoTreasury,
-        true
+        true,
       ),
       failLpVaultAccount: getAssociatedTokenAddressSync(
         failLp,
         daoTreasury,
-        true
+        true,
       ),
       vaultProgram: this.vaultClient.vaultProgram.programId,
       treasury: daoTreasury,
@@ -726,7 +725,7 @@ export class AutocratClient {
     return this.executeProposalIx(
       proposal,
       storedProposal.dao,
-      storedProposal.instruction
+      storedProposal.instruction,
     ).rpc();
   }
 
@@ -749,8 +748,8 @@ export class AutocratClient {
           .map((meta: AccountMeta) =>
             meta.pubkey.equals(daoTreasury)
               ? { ...meta, isSigner: false }
-              : meta
-          )
+              : meta,
+          ),
       );
   }
 
@@ -759,7 +758,7 @@ export class AutocratClient {
   // there aren't enough proposals on devnet
   async crankProposalMarkets(
     proposals: PublicKey[],
-    priorityFeeMicroLamports: number
+    priorityFeeMicroLamports: number,
   ) {
     const amms: PublicKey[] = [];
 
@@ -778,12 +777,12 @@ export class AutocratClient {
 
       let tx = new Transaction();
       tx.add(
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 4_000 * ixs.length })
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 4_000 * ixs.length }),
       );
       tx.add(
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: priorityFeeMicroLamports,
-        })
+        }),
       );
       tx.add(...ixs);
       try {

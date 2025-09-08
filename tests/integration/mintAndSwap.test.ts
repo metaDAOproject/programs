@@ -5,7 +5,7 @@ import {
   getAmmAddr,
   SwapType,
   InstructionUtils,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { sha256 } from "@noble/hashes/sha256";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
@@ -42,13 +42,7 @@ export default async function test() {
 
   // Initialize AMM
   await ammClient
-    .initializeAmmIx(
-      YES,
-      NO,
-      new BN(0),
-      new BN(100), 
-      new BN(1000)
-    )
+    .initializeAmmIx(YES, NO, new BN(0), new BN(100), new BN(1000))
     .rpc();
   const amm = getAmmAddr(ammClient.getProgramId(), YES, NO)[0];
 

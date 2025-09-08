@@ -36,19 +36,19 @@ export class ConditionalVaultClient {
   constructor(
     provider: AnchorProvider,
     conditionalVaultProgramId: PublicKey,
-    luts: AddressLookupTableAccount[]
+    luts: AddressLookupTableAccount[],
   ) {
     this.provider = provider;
     this.vaultProgram = new Program<ConditionalVault>(
       ConditionalVaultIDL,
       conditionalVaultProgramId,
-      provider
+      provider,
     );
     this.luts = luts;
   }
 
   public static createClient(
-    createVaultClientParams: CreateVaultClientParams
+    createVaultClientParams: CreateVaultClientParams,
   ): ConditionalVaultClient {
     let { provider, conditionalVaultProgramId } = createVaultClientParams;
 
@@ -57,7 +57,7 @@ export class ConditionalVaultClient {
     return new ConditionalVaultClient(
       provider,
       conditionalVaultProgramId || CONDITIONAL_VAULT_PROGRAM_ID,
-      luts
+      luts,
     );
   }
 
@@ -68,7 +68,7 @@ export class ConditionalVaultClient {
   async mintConditionalTokens(
     vault: PublicKey,
     uiAmount: number,
-    user: PublicKey = this.provider.publicKey
+    user: PublicKey = this.provider.publicKey,
   ) {
     const storedVault = await this.getVault(vault);
 
@@ -77,7 +77,7 @@ export class ConditionalVaultClient {
         vault,
         storedVault.underlyingTokenMint,
         new BN(uiAmount).mul(new BN(10).pow(new BN(storedVault.decimals))),
-        user
+        user,
       )
         // .preInstructions([
         //   createAssociatedTokenAccountIdempotentInstruction(this.provider.publicKey, )
@@ -91,25 +91,25 @@ export class ConditionalVaultClient {
     underlyingTokenMint: PublicKey,
     amount: BN,
     user: PublicKey = this.provider.publicKey,
-    payer: PublicKey = this.provider.publicKey
+    payer: PublicKey = this.provider.publicKey,
   ) {
     const [conditionalOnFinalizeTokenMint] = getVaultFinalizeMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
     const [conditionalOnRevertTokenMint] = getVaultRevertMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
 
     let userConditionalOnFinalizeTokenAccount = getAssociatedTokenAddressSync(
       conditionalOnFinalizeTokenMint,
-      user
+      user,
     );
 
     let userConditionalOnRevertTokenAccount = getAssociatedTokenAddressSync(
       conditionalOnRevertTokenMint,
-      user
+      user,
     );
 
     let ix = this.vaultProgram.methods
@@ -120,12 +120,12 @@ export class ConditionalVaultClient {
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true
+          true,
         ),
         userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           user,
-          true
+          true,
         ),
         conditionalOnFinalizeTokenMint,
         userConditionalOnFinalizeTokenAccount,
@@ -137,13 +137,13 @@ export class ConditionalVaultClient {
           payer,
           userConditionalOnFinalizeTokenAccount,
           user,
-          conditionalOnFinalizeTokenMint
+          conditionalOnFinalizeTokenMint,
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           payer,
           userConditionalOnRevertTokenAccount,
           user,
-          conditionalOnRevertTokenMint
+          conditionalOnRevertTokenMint,
         ),
       ]);
 
@@ -153,27 +153,27 @@ export class ConditionalVaultClient {
   initializeVaultIx(
     settlementAuthority: PublicKey,
     underlyingTokenMint: PublicKey,
-    payer: PublicKey = this.provider.publicKey
+    payer: PublicKey = this.provider.publicKey,
   ) {
     const [vault] = getVaultAddr(
       this.vaultProgram.programId,
       settlementAuthority,
-      underlyingTokenMint
+      underlyingTokenMint,
     );
 
     const [conditionalOnFinalizeTokenMint] = getVaultFinalizeMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
     const [conditionalOnRevertTokenMint] = getVaultRevertMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
 
     const vaultUnderlyingTokenAccount = getAssociatedTokenAddressSync(
       underlyingTokenMint,
       vault,
-      true
+      true,
     );
 
     return this.vaultProgram.methods
@@ -190,7 +190,7 @@ export class ConditionalVaultClient {
           payer,
           vaultUnderlyingTokenAccount,
           vault,
-          underlyingTokenMint
+          underlyingTokenMint,
         ),
       ]);
   }
@@ -201,25 +201,25 @@ export class ConditionalVaultClient {
     proposalNumber: number,
     onFinalizeUri: string,
     onRevertUri: string,
-    payer: PublicKey = this.provider.publicKey
+    payer: PublicKey = this.provider.publicKey,
   ) {
     const [underlyingTokenMetadata] = getMetadataAddr(underlyingTokenMint);
 
     const [conditionalOnFinalizeTokenMint] = getVaultFinalizeMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
     const [conditionalOnRevertTokenMint] = getVaultRevertMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
 
     const [conditionalOnFinalizeTokenMetadata] = getMetadataAddr(
-      conditionalOnFinalizeTokenMint
+      conditionalOnFinalizeTokenMint,
     );
 
     const [conditionalOnRevertTokenMetadata] = getMetadataAddr(
-      conditionalOnRevertTokenMint
+      conditionalOnRevertTokenMint,
     );
 
     return this.vaultProgram.methods
@@ -244,15 +244,15 @@ export class ConditionalVaultClient {
   redeemConditionalTokensIx(
     vault: PublicKey,
     underlyingTokenMint: PublicKey,
-    user: PublicKey = this.provider.publicKey
+    user: PublicKey = this.provider.publicKey,
   ) {
     const [conditionalOnFinalizeTokenMint] = getVaultFinalizeMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
     const [conditionalOnRevertTokenMint] = getVaultRevertMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
 
     return this.vaultProgram.methods
@@ -263,22 +263,22 @@ export class ConditionalVaultClient {
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true
+          true,
         ),
         userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           user,
-          true
+          true,
         ),
         conditionalOnFinalizeTokenMint,
         userConditionalOnFinalizeTokenAccount: getAssociatedTokenAddressSync(
           conditionalOnFinalizeTokenMint,
-          user
+          user,
         ),
         conditionalOnRevertTokenMint,
         userConditionalOnRevertTokenAccount: getAssociatedTokenAddressSync(
           conditionalOnRevertTokenMint,
-          user
+          user,
         ),
       });
   }
@@ -287,15 +287,15 @@ export class ConditionalVaultClient {
     vault: PublicKey,
     underlyingTokenMint: PublicKey,
     amount: BN,
-    user: PublicKey = this.provider.publicKey
+    user: PublicKey = this.provider.publicKey,
   ) {
     const [conditionalOnFinalizeTokenMint] = getVaultFinalizeMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
     const [conditionalOnRevertTokenMint] = getVaultRevertMintAddr(
       this.vaultProgram.programId,
-      vault
+      vault,
     );
 
     return this.vaultProgram.methods
@@ -306,22 +306,22 @@ export class ConditionalVaultClient {
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true
+          true,
         ),
         userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           user,
-          true
+          true,
         ),
         conditionalOnFinalizeTokenMint,
         userConditionalOnFinalizeTokenAccount: getAssociatedTokenAddressSync(
           conditionalOnFinalizeTokenMint,
-          user
+          user,
         ),
         conditionalOnRevertTokenMint,
         userConditionalOnRevertTokenAccount: getAssociatedTokenAddressSync(
           conditionalOnRevertTokenMint,
-          user
+          user,
         ),
       });
   }
@@ -329,18 +329,18 @@ export class ConditionalVaultClient {
   async initializeVault(
     settlementAuthority: PublicKey,
     underlyingTokenMint: PublicKey,
-    payer: PublicKey = this.provider.publicKey
+    payer: PublicKey = this.provider.publicKey,
   ): Promise<PublicKey> {
     const [vault] = getVaultAddr(
       this.vaultProgram.programId,
       settlementAuthority,
-      underlyingTokenMint
+      underlyingTokenMint,
     );
 
     await this.initializeVaultIx(
       settlementAuthority,
       underlyingTokenMint,
-      payer
+      payer,
     ).rpc();
 
     return vault;

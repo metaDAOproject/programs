@@ -1,5 +1,5 @@
 import { sha256 } from "@metadaoproject/futarchy";
-import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.4";
+import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.5";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { expectError } from "../../utils.js";
@@ -10,7 +10,7 @@ export default function suite() {
   let settlementAuthority: Keypair;
 
   before(function () {
-    vaultClient = this.vaultClient;
+    vaultClient = this.conditionalVault;
   });
 
   beforeEach(async function () {

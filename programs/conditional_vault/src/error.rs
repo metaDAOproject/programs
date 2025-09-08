@@ -34,4 +34,6 @@ pub enum VaultError {
     QuestionAlreadyResolved,
     #[msg("Conditional token metadata already set")]
     ConditionalTokenMetadataAlreadySet,
+    #[msg("Conditional token account is not owned by the authority")]
+    UnauthorizedConditionalTokenAccount,
 }

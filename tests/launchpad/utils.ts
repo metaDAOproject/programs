@@ -1,14 +1,21 @@
-import { PublicKey, Signer, SystemProgram, Transaction } from '@solana/web3.js';
-import * as token from '@solana/spl-token';
-import { BanksClient } from 'solana-bankrun';
-import { LaunchpadClient } from '@metadaoproject/futarchy/v0.4';
-import { getLaunchAddr, getLaunchSignerAddr } from '@metadaoproject/futarchy/v0.4';
+import { PublicKey, Signer, SystemProgram, Transaction } from "@solana/web3.js";
+import * as token from "@solana/spl-token";
+import { BanksClient } from "solana-bankrun";
+import { LaunchpadClient } from "@metadaoproject/futarchy/v0.5";
+import {
+  getLaunchAddr,
+  getLaunchSignerAddr,
+} from "@metadaoproject/futarchy/v0.5";
 
 export async function initializeMintWithSeeds(
   banksClient: BanksClient,
   launchpadClient: LaunchpadClient,
   payer: Signer
-): Promise<{ tokenMint: PublicKey, launch: PublicKey, launchSigner: PublicKey }> {
+): Promise<{
+  tokenMint: PublicKey;
+  launch: PublicKey;
+  launchSigner: PublicKey;
+}> {
   const seed = Math.random().toString(36).substring(2, 15);
   const tokenMint = await PublicKey.createWithSeed(
     payer.publicKey,
@@ -46,6 +53,6 @@ export async function initializeMintWithSeeds(
   return {
     tokenMint,
     launch,
-    launchSigner
+    launchSigner,
   };
 }

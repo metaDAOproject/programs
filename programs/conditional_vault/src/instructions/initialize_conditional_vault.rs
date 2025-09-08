@@ -9,7 +9,7 @@ pub struct InitializeConditionalVault<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + std::mem::size_of::<ConditionalVault>() + (32 * question.num_outcomes()),
+        space = 8 + ConditionalVault::INIT_SPACE + (32 * question.num_outcomes()),
         seeds = [
             b"conditional_vault", 
             question.key().as_ref(),
@@ -34,6 +34,11 @@ pub struct InitializeConditionalVault<'info> {
 
 impl<'info, 'c: 'info> InitializeConditionalVault<'info> {
     pub fn handle(ctx: Context<'_, '_, 'c, 'info, Self>) -> Result<()> {
+        require!(
+            !ctx.accounts.question.is_resolved(),
+            VaultError::QuestionAlreadyResolved
+        );
+
         let vault = &mut ctx.accounts.vault;
 
         let decimals = ctx.accounts.underlying_token_mint.decimals;

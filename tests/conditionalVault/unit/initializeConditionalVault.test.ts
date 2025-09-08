@@ -2,20 +2,21 @@ import {
   ConditionalVaultClient,
   getVaultAddr,
   getConditionalTokenMintAddr,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { sha256 } from "@metadaoproject/futarchy";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, getMint } from "spl-token-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
+import { expectError } from "../../utils.js";
 
 export default function suite() {
   let vaultClient: ConditionalVaultClient;
   let underlyingTokenMint: PublicKey;
 
   before(async function () {
-    vaultClient = this.vaultClient;
+    vaultClient = this.conditionalVault;
     underlyingTokenMint = await createMint(
       this.banksClient,
       this.payer as Keypair,
@@ -33,19 +34,15 @@ export default function suite() {
 
   testCases.forEach(({ name, idArray, outcomes }) => {
     describe(name, function () {
-      let question: PublicKey;
-      let oracle: Keypair = Keypair.generate();
-
-      beforeEach(async function () {
+      it("initializes vaults correctly", async function () {
+        let oracle = Keypair.generate();
         let questionId = sha256(new Uint8Array(idArray));
-        question = await vaultClient.initializeQuestion(
+        let question = await vaultClient.initializeQuestion(
           questionId,
           oracle.publicKey,
           outcomes
         );
-      });
 
-      it("initializes vaults correctly", async function () {
         await vaultClient
           .initializeVaultIx(question, underlyingTokenMint, outcomes)
           .rpc();
@@ -88,6 +85,38 @@ export default function suite() {
           assert.equal(storedMint.decimals, 8);
           assert.isNull(storedMint.freezeAuthority);
         }
+      });
+
+      it("doesn't allow initializing vault for resolved question", async function () {
+        let oracle = Keypair.generate();
+        let questionId = sha256(new Uint8Array(idArray));
+        let question = await vaultClient.initializeQuestion(
+          questionId,
+          oracle.publicKey,
+          outcomes
+        );
+
+        await vaultClient
+          .resolveQuestionIx(question, oracle, Array(outcomes).fill(1))
+          .signers([oracle])
+          .rpc();
+
+        const resolvedQuestion = await vaultClient.fetchQuestion(question);
+        assert.notEqual(
+          resolvedQuestion.payoutDenominator.toString(),
+          "0",
+          "Question should be resolved"
+        );
+
+        const callbacks = expectError(
+          "QuestionAlreadyResolved",
+          "Vault initialized despite question being resolved"
+        );
+
+        await vaultClient
+          .initializeVaultIx(question, underlyingTokenMint, outcomes)
+          .rpc()
+          .then(callbacks[0], callbacks[1]);
       });
     });
   });

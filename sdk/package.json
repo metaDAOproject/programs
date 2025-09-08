@@ -1,6 +1,6 @@
 {
   "name": "@metadaoproject/futarchy",
-  "version": "0.4.0-alpha.58",
+  "version": "0.6.0-alpha.0",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -12,12 +12,14 @@
   "exports": {
     ".": "./dist/index.js",
     "./v0.3": "./dist/v0.3/index.js",
-    "./v0.4": "./dist/v0.4/index.js"
+    "./v0.4": "./dist/v0.4/index.js",
+    "./v0.5": "./dist/v0.5/index.js",
+    "./v0.6": "./dist/v0.6/index.js"
   },
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "build": "rm -rf ./dist && cp ../target/types/* ./src/v0.4/types && yarn lint:fix && yarn tsc"
+    "build": "rm -rf ./dist && cp ../target/types/* ./src/v0.6/types && yarn lint:fix && yarn tsc"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
@@ -26,7 +28,8 @@
     "@metaplex-foundation/umi-uploader-bundlr": "^0.9.2",
     "@noble/hashes": "^1.4.0",
     "@solana/spl-token": "^0.3.7",
-    "@solana/web3.js": "^1.74.0",
+    "@solana/web3.js": "^1.76.0",
+    "@sqds/multisig": "^2.1.4",
     "bn.js": "^5.2.1",
     "decimal.js": "^10.4.3",
     "esbuild": "^0.17.15"
@@ -37,10 +40,10 @@
     "@types/mocha": "^9.0.0",
     "chai": "^4.3.4",
     "mocha": "^9.0.3",
-    "prettier": "^2.6.2",
+    "prettier": "3.6.2",
     "solana-bankrun": "^0.2.0",
     "spl-token-bankrun": "0.2.3",
     "ts-mocha": "^10.0.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.5.5"
   }
 }

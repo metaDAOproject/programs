@@ -1,0 +1,6 @@
+{
+  "name": "Pass ISLAND",
+  "symbol": "pISLAND",
+  "description": "A token that redeems back to ISLAND if the proposal passes",
+  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/ISLAND/pISLAND.png"
+}

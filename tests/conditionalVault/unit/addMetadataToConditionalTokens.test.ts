@@ -3,7 +3,7 @@ import {
   ConditionalVaultClient,
   getConditionalTokenMintAddr,
   getMetadataAddr,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.5";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint } from "spl-token-bankrun";
@@ -24,7 +24,7 @@ export default function suite() {
   const metadataSerializer = getMetadataAccountDataSerializer();
 
   before(function () {
-    vaultClient = this.vaultClient;
+    vaultClient = this.conditionalVault;
   });
 
   async function setupVault(outcomes: number) {

@@ -8,10 +8,12 @@ pub enum VaultStatus {
 }
 
 #[account]
+#[derive(InitSpace)]
 pub struct ConditionalVault {
     pub question: Pubkey,
     pub underlying_token_mint: Pubkey,
     pub underlying_token_account: Pubkey,
+    #[max_len(0)]
     pub conditional_token_mints: Vec<Pubkey>,
     pub pda_bump: u8,
     pub decimals: u8,
@@ -42,14 +44,14 @@ impl ConditionalVault {
             // safe because conditional_token_supplies is non-empty
             *conditional_token_supplies.iter().max().unwrap()
         } else {
-            conditional_token_supplies
+            // Sum all numerators first, then divide once
+            let total_numerator: u128 = conditional_token_supplies
                 .iter()
                 .enumerate()
-                .map(|(i, supply)| {
-                    *supply as u128 * question.payout_numerators[i] as u128
-                        / question.payout_denominator as u128
-                })
-                .sum::<u128>() as u64
+                .map(|(i, supply)| *supply as u128 * question.payout_numerators[i] as u128)
+                .sum();
+
+            (total_numerator / question.payout_denominator as u128) as u64
         };
 
         require_gte!(
