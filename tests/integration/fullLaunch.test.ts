@@ -51,7 +51,7 @@ export default async function suite() {
     // Initialize the launch
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpadClient,
+      this.launchpad,
       this.payer
     );
 
@@ -79,7 +79,7 @@ export default async function suite() {
     );
 
     // Initialize launch
-    await this.launchpadClient
+    await this.launchpad
       .initializeLaunchIx(
         "META",
         "META",
@@ -94,19 +94,19 @@ export default async function suite() {
       .rpc();
 
     // Start launch
-    await this.launchpadClient.startLaunchIx(launch).rpc();
+    await this.launchpad.startLaunchIx(launch).rpc();
 
     // Fund from multiple sources
-    await this.launchpadClient
+    await this.launchpad
       .fundIx(launch, new BN(500_000_000000), funder1.publicKey, MAINNET_USDC)
       .signers([funder1])
       .rpc();
 
-    await this.launchpadClient
+    await this.launchpad
       .fundIx(launch, new BN(150_000_000000), undefined, MAINNET_USDC)
       .rpc();
 
-    await this.launchpadClient
+    await this.launchpad
       .fundIx(launch, new BN(350_000_000000), funder3.publicKey, MAINNET_USDC)
       .signers([funder3])
       .rpc();
@@ -114,7 +114,7 @@ export default async function suite() {
     // Advance time and complete launch
     await this.advanceBySeconds(launchPeriod + 3600);
 
-    const completeLaunchTx = await this.launchpadClient
+    const completeLaunchTx = await this.launchpad
       .completeLaunchIx(launch, MAINNET_USDC, META)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
@@ -138,17 +138,17 @@ export default async function suite() {
     await this.banksClient.processTransaction(tx);
 
     // Verify launch completion and DAO creation
-    const launchAccount = await this.launchpadClient.fetchLaunch(launch);
+    const launchAccount = await this.launchpad.fetchLaunch(launch);
     assert.exists(launchAccount.state.complete);
     assert.exists(launchAccount.dao);
     dao = launchAccount.dao;
 
     // Claim tokens for all funders
-    await this.launchpadClient.claimIx(launch, META, funder1.publicKey).rpc();
+    await this.launchpad.claimIx(launch, META, funder1.publicKey).rpc();
 
-    await this.launchpadClient.claimIx(launch, META).rpc();
+    await this.launchpad.claimIx(launch, META).rpc();
 
-    await this.launchpadClient.claimIx(launch, META, funder3.publicKey).rpc();
+    await this.launchpad.claimIx(launch, META, funder3.publicKey).rpc();
 
     // Verify token distributions
     const funder1Balance = await this.getTokenBalance(META, funder1.publicKey);
@@ -175,7 +175,7 @@ export default async function suite() {
     );
 
     // Two parts of the proposal: update DAO threshold to 5% and mint tokens to receiver
-    const updateDaoIx = await this.autocratClient
+    const updateDaoIx = await this.futarchy
       .updateDaoIx({
         dao,
         params: {
@@ -234,7 +234,7 @@ export default async function suite() {
     await this.banksClient.processTransaction(squadsTx);
 
     // Now initialize the autocrat proposal with the proper squads proposal
-    const proposal = await this.autocratClient.initializeProposal(
+    const proposal = await this.futarchy.initializeProposal(
       dao,
       "Mint 1M tokens to receiver",
       squadsProposalPda,
@@ -254,12 +254,12 @@ export default async function suite() {
       passLp,
       failLp,
       question,
-    } = this.autocratClient.getProposalPdas(proposal, META, MAINNET_USDC, dao);
+    } = this.futarchy.getProposalPdas(proposal, META, MAINNET_USDC, dao);
 
-    await this.vaultClient
+    await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
       .rpc();
-    await this.vaultClient
+    await this.conditionalVault
       .splitTokensIx(
         question,
         quoteVault,
@@ -297,9 +297,9 @@ export default async function suite() {
         .rpc({ skipPreflight: true });
     }
 
-    await this.autocratClient.finalizeProposal(proposal);
+    await this.futarchy.finalizeProposal(proposal);
 
-    const storedProposal = await this.autocratClient.getProposal(proposal);
+    const storedProposal = await this.futarchy.getProposal(proposal);
 
     assert.exists(storedProposal.state.passed);
 
@@ -319,7 +319,7 @@ export default async function suite() {
 
     await this.banksClient.processTransaction(txExecute);
 
-    const storedDao2 = await this.autocratClient.getDao(dao);
+    const storedDao2 = await this.futarchy.getDao(dao);
     assert.equal(storedDao2.passThresholdBps, 500);
 
     const storedMeta = await this.getMint(META);

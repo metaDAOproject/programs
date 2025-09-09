@@ -1,0 +1,63 @@
+use super::*;
+
+#[error_code]
+pub enum AutocratError {
+    #[msg("Amms must have been created within 5 minutes (counted in slots) of proposal initialization")]
+    AmmTooOld,
+    #[msg("An amm has an `initial_observation` that doesn't match the `dao`'s config")]
+    InvalidInitialObservation,
+    #[msg(
+        "An amm has a `max_observation_change_per_update` that doesn't match the `dao`'s config"
+    )]
+    InvalidMaxObservationChange,
+    #[msg("An amm has a `start_delay_slots` that doesn't match the `dao`'s config")]
+    InvalidStartDelaySlots,
+    #[msg("One of the vaults has an invalid `settlement_authority`")]
+    InvalidSettlementAuthority,
+    #[msg("Proposal is too young to be executed or rejected")]
+    ProposalTooYoung,
+    #[msg("Markets too young for proposal to be finalized. TWAP might need to be cranked")]
+    MarketsTooYoung,
+    #[msg("This proposal has already been finalized")]
+    ProposalAlreadyFinalized,
+    #[msg("A conditional vault has an invalid nonce. A nonce should encode the proposal number")]
+    InvalidVaultNonce,
+    #[msg("This proposal can't be executed because it isn't in the passed state")]
+    ProposalNotPassed,
+    #[msg("More liquidity needs to be in the AMM to launch this proposal")]
+    InsufficientLiquidity,
+    #[msg("Proposal duration must be longer than TWAP start delay")]
+    ProposalDurationTooShort,
+    #[msg("Question must have exactly 2 outcomes for binary futarchy")]
+    QuestionMustBeBinary,
+    #[msg("Squads proposal must be in Draft status")]
+    InvalidSquadsProposalStatus,
+    #[msg("Casting overflow. If you're seeing this, please report this")]
+    CastingOverflow,
+    #[msg("Insufficient balance")]
+    InsufficientBalance,
+    #[msg("Cannot remove zero liquidity")]
+    ZeroLiquidityRemove,
+    #[msg("Swap slippage exceeded")]
+    SwapSlippageExceeded,
+    #[msg("Assert failed")]
+    AssertFailed,
+    #[msg("Invalid admin")]
+    InvalidAdmin,
+    #[msg("Proposal is not in draft state")]
+    ProposalNotInDraftState,
+    #[msg("Insufficient token balance")]
+    InsufficientTokenBalance,
+    #[msg("Invalid amount")]
+    InvalidAmount,
+    #[msg("Insufficient stake to launch proposal")]
+    InsufficientStakeToLaunch,
+    #[msg("Staker not found in proposal")]
+    StakerNotFound,
+    #[msg("Pool must be in spot state")]
+    PoolNotInSpotState,
+    #[msg("If you're providing liquidity, you must provide both base and quote token accounts")]
+    InvalidDaoCreateLiquidity,
+    #[msg("Invalid stake account")]
+    InvalidStakeAccount,
+}

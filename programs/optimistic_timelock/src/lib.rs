@@ -16,7 +16,7 @@ security_txt! {
     project_url: "https://metadao.fi",
     contacts: "email:metaproph3t@protonmail.com",
     policy: "The market will decide whether we pay a bug bounty.",
-    source_code: "https://github.com/metaDAOproject/futarchy",
+    source_code: "https://github.com/metaDAOproject/programs",
     source_release: "v0.4",
     auditors: "None",
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"

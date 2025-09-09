@@ -37,7 +37,7 @@ export default function suite() {
       daoCreator: this.payer.publicKey,
     });
 
-    await this.autocratClient
+    await this.futarchy
       .initializeDaoIx({
         baseMint: META,
         quoteMint: USDC,
@@ -57,7 +57,7 @@ export default function suite() {
       })
       .rpc();
 
-    const storedDao = await this.autocratClient.getDao(dao);
+    const storedDao = await this.futarchy.getDao(dao);
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
@@ -79,7 +79,7 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx0);
 
-    const updateDaoIx1 = await this.autocratClient
+    const updateDaoIx1 = await this.futarchy
       .updateDaoIx({
         dao,
         params: {
@@ -93,7 +93,7 @@ export default function suite() {
       })
       .instruction();
 
-    const updateDaoIx2 = await this.autocratClient
+    const updateDaoIx2 = await this.futarchy
       .updateDaoIx({
         dao,
         params: {
@@ -189,7 +189,7 @@ export default function suite() {
       transactionIndex: 1n,
     });
 
-    const proposal = await this.autocratClient.initializeProposal(
+    const proposal = await this.futarchy.initializeProposal(
       dao,
       "",
       squadsProposalPda,
@@ -205,12 +205,12 @@ export default function suite() {
       question,
       baseVault,
       quoteVault,
-    } = this.autocratClient.getProposalPdas(proposal, META, USDC, dao);
+    } = this.futarchy.getProposalPdas(proposal, META, USDC, dao);
 
-    await this.vaultClient
+    await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
       .rpc();
-    await this.vaultClient
+    await this.conditionalVault
       .splitTokensIx(question, quoteVault, USDC, new BN(10_000 * 1_000_000), 2)
       .rpc();
 
@@ -241,7 +241,7 @@ export default function suite() {
         .rpc();
     }
 
-    await this.autocratClient.finalizeProposal(proposal);
+    await this.futarchy.finalizeProposal(proposal);
 
     const txExecuteIx1 = await multisig.instructions.batchExecuteTransaction({
       connection: this.squadsConnection,
@@ -268,7 +268,7 @@ export default function suite() {
 
     await this.banksClient.processTransaction(txExecute);
 
-    const storedDao2 = await this.autocratClient.getDao(dao);
+    const storedDao2 = await this.futarchy.getDao(dao);
     console.log("post update", storedDao2.passThresholdBps);
   });
 }

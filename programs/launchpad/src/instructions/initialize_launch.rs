@@ -5,7 +5,7 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchInitializedEvent};
 use crate::state::{Launch, LaunchState};
-use crate::usdc_mint; 
+use crate::usdc_mint;
 use crate::AVAILABLE_TOKENS;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
