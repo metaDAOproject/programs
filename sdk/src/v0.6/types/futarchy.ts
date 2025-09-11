@@ -2139,90 +2139,95 @@ export type Futarchy = {
     {
       code: 6011;
       name: "ProposalDurationTooShort";
-      msg: "Proposal duration must be longer than TWAP start delay";
+      msg: "Proposal duration must be longer 1 day and longer than 2 times the TWAP start delay";
     },
     {
       code: 6012;
+      name: "PassThresholdTooHigh";
+      msg: "Pass threshold must be less than 10%";
+    },
+    {
+      code: 6013;
       name: "QuestionMustBeBinary";
       msg: "Question must have exactly 2 outcomes for binary futarchy";
     },
     {
-      code: 6013;
+      code: 6014;
       name: "InvalidSquadsProposalStatus";
       msg: "Squads proposal must be in Draft status";
     },
     {
-      code: 6014;
+      code: 6015;
       name: "CastingOverflow";
       msg: "Casting overflow. If you're seeing this, please report this";
     },
     {
-      code: 6015;
+      code: 6016;
       name: "InsufficientBalance";
       msg: "Insufficient balance";
     },
     {
-      code: 6016;
+      code: 6017;
       name: "ZeroLiquidityRemove";
       msg: "Cannot remove zero liquidity";
     },
     {
-      code: 6017;
+      code: 6018;
       name: "SwapSlippageExceeded";
       msg: "Swap slippage exceeded";
     },
     {
-      code: 6018;
+      code: 6019;
       name: "AssertFailed";
       msg: "Assert failed";
     },
     {
-      code: 6019;
+      code: 6020;
       name: "InvalidAdmin";
       msg: "Invalid admin";
     },
     {
-      code: 6020;
+      code: 6021;
       name: "ProposalNotInDraftState";
       msg: "Proposal is not in draft state";
     },
     {
-      code: 6021;
+      code: 6022;
       name: "InsufficientTokenBalance";
       msg: "Insufficient token balance";
     },
     {
-      code: 6022;
+      code: 6023;
       name: "InvalidAmount";
       msg: "Invalid amount";
     },
     {
-      code: 6023;
+      code: 6024;
       name: "InsufficientStakeToLaunch";
       msg: "Insufficient stake to launch proposal";
     },
     {
-      code: 6024;
+      code: 6025;
       name: "StakerNotFound";
       msg: "Staker not found in proposal";
     },
     {
-      code: 6025;
+      code: 6026;
       name: "PoolNotInSpotState";
       msg: "Pool must be in spot state";
     },
     {
-      code: 6026;
+      code: 6027;
       name: "InvalidDaoCreateLiquidity";
       msg: "If you're providing liquidity, you must provide both base and quote token accounts";
     },
     {
-      code: 6027;
+      code: 6028;
       name: "InvalidStakeAccount";
       msg: "Invalid stake account";
     },
     {
-      code: 6028;
+      code: 6029;
       name: "InvariantViolated";
       msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this";
     },
@@ -4370,90 +4375,95 @@ export const IDL: Futarchy = {
     {
       code: 6011,
       name: "ProposalDurationTooShort",
-      msg: "Proposal duration must be longer than TWAP start delay",
+      msg: "Proposal duration must be longer 1 day and longer than 2 times the TWAP start delay",
     },
     {
       code: 6012,
+      name: "PassThresholdTooHigh",
+      msg: "Pass threshold must be less than 10%",
+    },
+    {
+      code: 6013,
       name: "QuestionMustBeBinary",
       msg: "Question must have exactly 2 outcomes for binary futarchy",
     },
     {
-      code: 6013,
+      code: 6014,
       name: "InvalidSquadsProposalStatus",
       msg: "Squads proposal must be in Draft status",
     },
     {
-      code: 6014,
+      code: 6015,
       name: "CastingOverflow",
       msg: "Casting overflow. If you're seeing this, please report this",
     },
     {
-      code: 6015,
+      code: 6016,
       name: "InsufficientBalance",
       msg: "Insufficient balance",
     },
     {
-      code: 6016,
+      code: 6017,
       name: "ZeroLiquidityRemove",
       msg: "Cannot remove zero liquidity",
     },
     {
-      code: 6017,
+      code: 6018,
       name: "SwapSlippageExceeded",
       msg: "Swap slippage exceeded",
     },
     {
-      code: 6018,
+      code: 6019,
       name: "AssertFailed",
       msg: "Assert failed",
     },
     {
-      code: 6019,
+      code: 6020,
       name: "InvalidAdmin",
       msg: "Invalid admin",
     },
     {
-      code: 6020,
+      code: 6021,
       name: "ProposalNotInDraftState",
       msg: "Proposal is not in draft state",
     },
     {
-      code: 6021,
+      code: 6022,
       name: "InsufficientTokenBalance",
       msg: "Insufficient token balance",
     },
     {
-      code: 6022,
+      code: 6023,
       name: "InvalidAmount",
       msg: "Invalid amount",
     },
     {
-      code: 6023,
+      code: 6024,
       name: "InsufficientStakeToLaunch",
       msg: "Insufficient stake to launch proposal",
     },
     {
-      code: 6024,
+      code: 6025,
       name: "StakerNotFound",
       msg: "Staker not found in proposal",
     },
     {
-      code: 6025,
+      code: 6026,
       name: "PoolNotInSpotState",
       msg: "Pool must be in spot state",
     },
     {
-      code: 6026,
+      code: 6027,
       name: "InvalidDaoCreateLiquidity",
       msg: "If you're providing liquidity, you must provide both base and quote token accounts",
     },
     {
-      code: 6027,
+      code: 6028,
       name: "InvalidStakeAccount",
       msg: "Invalid stake account",
     },
     {
-      code: 6028,
+      code: 6029,
       name: "InvariantViolated",
       msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this",
     },

@@ -56,3 +56,27 @@ pub struct InitialSpendingLimit {
     #[max_len(10)]
     pub members: Vec<Pubkey>,
 }
+
+impl Dao {
+    pub fn invariant(&self) -> Result<()> {
+        require_gte!(
+            self.slots_per_proposal,
+            self.twap_start_delay_slots * 2,
+            FutarchyError::ProposalDurationTooShort
+        );
+
+        require_gte!(
+            self.slots_per_proposal,
+            DAY_IN_SLOTS,
+            FutarchyError::ProposalDurationTooShort
+        );
+
+        require_gte!(
+            1_000,
+            self.pass_threshold_bps,
+            FutarchyError::PassThresholdTooHigh
+        );
+
+        Ok(())
+    }
+}
