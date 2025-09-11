@@ -26,7 +26,7 @@ pub struct CollectFees<'info> {
 impl CollectFees<'_> {
     pub fn validate(&self) -> Result<()> {
         #[cfg(feature = "production")]
-        require_keys_eq!(self.admin.key(), admin::ID, AutocratError::InvalidAdmin);
+        require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
 
         Ok(())
     }
