@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{LP_TAKER_FEE_BPS, MAX_BPS, PROTOCOL_TAKER_FEE_BPS};
+use crate::{FutarchyError, LP_TAKER_FEE_BPS, MAX_BPS, PROTOCOL_TAKER_FEE_BPS};
 use std::cmp::Ordering;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, InitSpace)]
@@ -34,13 +34,6 @@ impl std::fmt::Display for Market {
 
 impl PoolState {
     pub fn swap(&mut self, input_amount: u64, swap_type: SwapType, market: Market) -> Result<u64> {
-        // let input_amount_after_fee =
-        //     (input_amount as u128 * (MAX_BPS - TAKER_FEE_BPS) as u128 / MAX_BPS as u128) as u64;
-        // msg!("fee: {}", input_amount - input_amount_after_fee);
-        // msg!("input_amount_after_fee: {}", input_amount_after_fee);
-
-        // require_gt!(input_amount_after_fee, 0);
-
         let clock = Clock::get()?;
 
         match self {
@@ -52,6 +45,10 @@ impl PoolState {
                 spot.swap(input_amount, swap_type)
             }
             PoolState::Futarchy { spot, pass, fail } => {
+                let pre_spot = spot.clone();
+                let pre_pass = pass.clone();
+                let pre_fail = fail.clone();
+
                 spot.update_twap(clock.slot)?;
                 pass.update_twap(clock.slot)?;
                 fail.update_twap(clock.slot)?;
@@ -66,8 +63,6 @@ impl PoolState {
 
                         let arbitrage_result =
                             arbitrage_after_spot_swap(spot, pass, fail, spot_output, swap_type)?;
-
-                        msg!("arbitrage_result: {:?}", arbitrage_result);
 
                         match swap_type {
                             SwapType::Buy => {
@@ -102,17 +97,23 @@ impl PoolState {
                             market,
                         )?;
 
-                        // msg!("arbitrage_result: {:?}", arbitrage_result);
-
                         // Split the spot
                         let conditional_profit = match market {
                             Market::Pass => {
-                                fail.base_protocol_fee_balance += arbitrage_result.fail_profit;
+                                // We split the spot so we can maximize conditional profit, so we take the other side of the split
+                                // and add it to the protocol fee balance
+                                match swap_type {
+                                    SwapType::Buy => fail.base_protocol_fee_balance += arbitrage_result.fail_profit + arbitrage_result.spot_profit,
+                                    SwapType::Sell => fail.quote_protocol_fee_balance += arbitrage_result.fail_profit + arbitrage_result.spot_profit,
+                                }
 
                                 arbitrage_result.pass_profit + arbitrage_result.spot_profit
                             }
                             Market::Fail => {
-                                pass.quote_protocol_fee_balance += arbitrage_result.pass_profit;
+                                match swap_type {
+                                    SwapType::Buy => pass.base_protocol_fee_balance += arbitrage_result.pass_profit + arbitrage_result.spot_profit,
+                                    SwapType::Sell => pass.quote_protocol_fee_balance += arbitrage_result.pass_profit + arbitrage_result.spot_profit,
+                                }
 
                                 arbitrage_result.fail_profit + arbitrage_result.spot_profit
                             }
@@ -122,6 +123,48 @@ impl PoolState {
                         require_gte!(spot.k(), spot_k);
                         require_gte!(pass.k(), pass_k);
                         require_gte!(fail.k(), fail_k);
+
+                        fn get_total_reserves(spot: &Pool, conditional: &Pool) -> (u64, u64) {
+                            let total_quote = spot.quote_reserves + conditional.quote_reserves + 
+                                            spot.quote_protocol_fee_balance + conditional.quote_protocol_fee_balance;
+                            let total_base = spot.base_reserves + conditional.base_reserves + 
+                                            spot.base_protocol_fee_balance + conditional.base_protocol_fee_balance;
+                            (total_quote, total_base)
+                        }
+
+                        let (total_pass_quote_before, total_pass_base_before) = get_total_reserves(&pre_spot, &pre_pass);
+                        let (total_pass_quote_after, total_pass_base_after) = get_total_reserves(&spot, &pass);
+                        let (total_fail_quote_before, total_fail_base_before) = get_total_reserves(&pre_spot, &pre_fail);
+                        let (total_fail_quote_after, total_fail_base_after) = get_total_reserves(&spot, &fail);
+
+                        // these shouldn't be triggered, but just in case
+                        match (market, swap_type) {
+                            (Market::Pass, SwapType::Buy) => {
+                                require_eq!(total_pass_quote_after, total_pass_quote_before + input_amount, FutarchyError::InvariantViolated);
+                                require_eq!(total_fail_quote_after, total_fail_quote_before, FutarchyError::InvariantViolated);
+                                require_eq!(total_pass_base_after, total_pass_base_before - (conditional_output + conditional_profit), FutarchyError::InvariantViolated);
+                                require_eq!(total_fail_base_after, total_fail_base_before, FutarchyError::InvariantViolated);
+                            }
+                            (Market::Fail, SwapType::Buy) => {
+                                require_eq!(total_pass_quote_after, total_pass_quote_before, FutarchyError::InvariantViolated);
+                                require_eq!(total_fail_quote_after, total_fail_quote_before + input_amount, FutarchyError::InvariantViolated);
+                                require_eq!(total_pass_base_after, total_pass_base_before, FutarchyError::InvariantViolated);
+                                require_eq!(total_fail_base_after, total_fail_base_before - (conditional_output + conditional_profit), FutarchyError::InvariantViolated);
+                            }
+                            (Market::Pass, SwapType::Sell) => {
+                                require_eq!(total_pass_quote_after, total_pass_quote_before - (conditional_output + conditional_profit), FutarchyError::InvariantViolated);
+                                require_eq!(total_fail_quote_after, total_fail_quote_before, FutarchyError::InvariantViolated);
+                                require_eq!(total_pass_base_after, total_pass_base_before + input_amount, FutarchyError::InvariantViolated);
+                                require_eq!(total_fail_base_after, total_fail_base_before, FutarchyError::InvariantViolated);
+                            }
+                            (Market::Fail, SwapType::Sell) => {
+                                require_eq!(total_pass_quote_after, total_pass_quote_before, FutarchyError::InvariantViolated);
+                                require_eq!(total_fail_quote_after, total_fail_quote_before - (conditional_output + conditional_profit), FutarchyError::InvariantViolated);
+                                require_eq!(total_pass_base_after, total_pass_base_before, FutarchyError::InvariantViolated);
+                                require_eq!(total_fail_base_after, total_fail_base_before + input_amount, FutarchyError::InvariantViolated);
+                            }
+                            (Market::Spot, _) => unreachable!(),
+                        }
 
                         Ok(conditional_output + conditional_profit)
                     }

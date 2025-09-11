@@ -44,7 +44,7 @@ export type AutocratMigrator = {
           name: "lamportReceiver";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -110,10 +110,10 @@ export type AutocratMigrator = {
           name: "lamportReceiver";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [];
-    }
+    },
   ];
 };
 

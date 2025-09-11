@@ -1,7 +1,7 @@
 use super::*;
 
 #[error_code]
-pub enum AutocratError {
+pub enum FutarchyError {
     #[msg("Amms must have been created within 5 minutes (counted in slots) of proposal initialization")]
     AmmTooOld,
     #[msg("An amm has an `initial_observation` that doesn't match the `dao`'s config")]
@@ -60,4 +60,6 @@ pub enum AutocratError {
     InvalidDaoCreateLiquidity,
     #[msg("Invalid stake account")]
     InvalidStakeAccount,
+    #[msg("An invariant was violated. You should get in contact with the MetaDAO team if you see this")]
+    InvariantViolated,
 }

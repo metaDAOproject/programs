@@ -66,12 +66,12 @@ impl FinalizeProposal<'_> {
 
         require!(
             clock.slot >= self.proposal.slot_enqueued + self.proposal.duration_in_slots,
-            AutocratError::ProposalTooYoung
+            FutarchyError::ProposalTooYoung
         );
 
         require!(
             self.proposal.state == ProposalState::Pending,
-            AutocratError::ProposalAlreadyFinalized
+            FutarchyError::ProposalAlreadyFinalized
         );
 
         Ok(())
@@ -119,7 +119,7 @@ impl FinalizeProposal<'_> {
 
             require!(
                 slots_passed >= proposal.duration_in_slots,
-                AutocratError::MarketsTooYoung
+                FutarchyError::MarketsTooYoung
             );
 
             amm.get_twap()

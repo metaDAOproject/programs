@@ -90,7 +90,7 @@ impl InitializeDao<'_> {
 
         require!(
             slots_per_proposal > twap_start_delay_slots,
-            AutocratError::ProposalDurationTooShort
+            FutarchyError::ProposalDurationTooShort
         );
 
         let creator_key = ctx.accounts.dao_creator.key();

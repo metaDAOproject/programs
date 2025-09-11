@@ -9,7 +9,7 @@ pub mod events;
 pub mod instructions;
 pub mod state;
 
-pub use error::AutocratError;
+pub use error::FutarchyError;
 pub use events::*;
 pub use instructions::*;
 pub use state::*;

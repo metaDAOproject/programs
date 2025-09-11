@@ -45,7 +45,7 @@ impl InitializeProposal<'_> {
         require_eq!(
             self.question.num_outcomes(),
             2,
-            AutocratError::QuestionMustBeBinary
+            FutarchyError::QuestionMustBeBinary
         );
 
         require_keys_eq!(self.squads_proposal.multisig, self.dao.squads_multisig);
@@ -54,7 +54,7 @@ impl InitializeProposal<'_> {
             squads_multisig_program::ProposalStatus::Active { timestamp: _ } => {}
             _ => {
                 msg!("squads proposal status: {:?}", self.squads_proposal.status);
-                return Err(AutocratError::InvalidSquadsProposalStatus.into());
+                return Err(FutarchyError::InvalidSquadsProposalStatus.into());
             }
         }
 

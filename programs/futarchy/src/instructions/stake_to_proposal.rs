@@ -45,7 +45,7 @@ impl StakeToProposal<'_> {
     pub fn validate(&self, params: &StakeToProposalParams) -> Result<()> {
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
-            AutocratError::ProposalNotInDraftState
+            FutarchyError::ProposalNotInDraftState
         );
 
         require_keys_eq!(self.proposal.dao, self.dao.key());
@@ -53,10 +53,10 @@ impl StakeToProposal<'_> {
         require_gte!(
             self.staker_base_account.amount,
             params.amount,
-            AutocratError::InsufficientTokenBalance
+            FutarchyError::InsufficientTokenBalance
         );
 
-        require_gt!(params.amount, 0, AutocratError::InvalidAmount);
+        require_gt!(params.amount, 0, FutarchyError::InvalidAmount);
 
         Ok(())
     }

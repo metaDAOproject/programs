@@ -75,16 +75,16 @@ impl WithdrawLiquidity<'_> {
         require_gte!(
             amm_position.liquidity,
             liquidity_to_withdraw,
-            AutocratError::InsufficientBalance
+            FutarchyError::InsufficientBalance
         );
 
         require!(
             liquidity_to_withdraw > 0,
-            AutocratError::ZeroLiquidityRemove
+            FutarchyError::ZeroLiquidityRemove
         );
 
         let total_liquidity = dao.amm.total_liquidity;
-        require_gt!(total_liquidity, 0, AutocratError::AssertFailed);
+        require_gt!(total_liquidity, 0, FutarchyError::AssertFailed);
 
         let (base_to_withdraw, quote_to_withdraw) = {
             let PoolState::Spot { ref spot } = dao.amm.state else {
@@ -100,12 +100,12 @@ impl WithdrawLiquidity<'_> {
         require_gte!(
             base_to_withdraw,
             min_base_amount,
-            AutocratError::SwapSlippageExceeded
+            FutarchyError::SwapSlippageExceeded
         );
         require_gte!(
             quote_to_withdraw,
             min_quote_amount,
-            AutocratError::SwapSlippageExceeded
+            FutarchyError::SwapSlippageExceeded
         );
 
         // Update the AMM position
