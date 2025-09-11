@@ -11,9 +11,9 @@ import multiOptionPredictionMarket from "./integration/multiOptionPredictionMark
 
 // TODO add a many-outcome integration test
 export default function suite() {
-  it("binary prediction market", binaryPredictionMarket);
-  it("scalar grant market", scalarGrantMarket);
-  it("multi option prediction market", multiOptionPredictionMarket);
+  describe("binary prediction market", binaryPredictionMarket);
+  describe("scalar grant market", scalarGrantMarket);
+  describe("multi option prediction market", multiOptionPredictionMarket);
   describe("#initialize_question", initializeQuestion);
   describe("#initialize_conditional_vault", initializeConditionalVault);
   describe("#resolve_question", resolveQuestion);

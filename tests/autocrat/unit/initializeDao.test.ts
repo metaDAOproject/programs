@@ -26,8 +26,8 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         params: {
-          slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3),
-          twapStartDelaySlots: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24),
+          secondsPerProposal: 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 24,
           twapInitialObservation: THOUSAND_BUCK_PRICE,
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(1),
