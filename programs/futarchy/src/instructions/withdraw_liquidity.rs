@@ -1,5 +1,7 @@
 use super::*;
 
+// TODO: allow users to close their `AmmPosition` account for the 0.0015 SOL
+
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct WithdrawLiquidityParams {
     /// How much liquidity to withdraw
