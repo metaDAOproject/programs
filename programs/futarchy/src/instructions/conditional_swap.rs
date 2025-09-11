@@ -76,7 +76,7 @@ impl ConditionalSwap<'_> {
         require_gte!(
             self.user_input_account.amount,
             params.input_amount,
-            AutocratError::InsufficientBalance
+            FutarchyError::InsufficientBalance
         );
 
         require_eq!(self.proposal.state, ProposalState::Pending);
@@ -102,7 +102,7 @@ impl ConditionalSwap<'_> {
         require_gte!(
             output_amount,
             min_output_amount,
-            AutocratError::SwapSlippageExceeded
+            FutarchyError::SwapSlippageExceeded
         );
 
         // You need to transfer in before you can do merges of in

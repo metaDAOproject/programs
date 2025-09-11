@@ -1,7 +1,7 @@
 use super::*;
 
 #[error_code]
-pub enum AutocratError {
+pub enum FutarchyError {
     #[msg("Amms must have been created within 5 minutes (counted in slots) of proposal initialization")]
     AmmTooOld,
     #[msg("An amm has an `initial_observation` that doesn't match the `dao`'s config")]
@@ -26,8 +26,10 @@ pub enum AutocratError {
     ProposalNotPassed,
     #[msg("More liquidity needs to be in the AMM to launch this proposal")]
     InsufficientLiquidity,
-    #[msg("Proposal duration must be longer than TWAP start delay")]
+    #[msg("Proposal duration must be longer 1 day and longer than 2 times the TWAP start delay")]
     ProposalDurationTooShort,
+    #[msg("Pass threshold must be less than 10%")]
+    PassThresholdTooHigh,
     #[msg("Question must have exactly 2 outcomes for binary futarchy")]
     QuestionMustBeBinary,
     #[msg("Squads proposal must be in Draft status")]
@@ -60,4 +62,6 @@ pub enum AutocratError {
     InvalidDaoCreateLiquidity,
     #[msg("Invalid stake account")]
     InvalidStakeAccount,
+    #[msg("An invariant was violated. You should get in contact with the MetaDAO team if you see this")]
+    InvariantViolated,
 }

@@ -9,7 +9,7 @@ pub mod events;
 pub mod instructions;
 pub mod state;
 
-pub use error::AutocratError;
+pub use error::FutarchyError;
 pub use events::*;
 pub use instructions::*;
 pub use state::*;
@@ -59,7 +59,6 @@ pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 pub mod futarchy {
     use super::*;
 
-    #[access_control(ctx.accounts.validate())]
     pub fn initialize_dao(ctx: Context<InitializeDao>, params: InitializeDaoParams) -> Result<()> {
         InitializeDao::handle(ctx, params)
     }
@@ -67,9 +66,8 @@ pub mod futarchy {
     #[access_control(ctx.accounts.validate())]
     pub fn initialize_proposal(
         ctx: Context<InitializeProposal>,
-        params: InitializeProposalParams,
     ) -> Result<()> {
-        InitializeProposal::handle(ctx, params)
+        InitializeProposal::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate(&params))]

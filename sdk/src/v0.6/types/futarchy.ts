@@ -94,7 +94,7 @@ export type Futarchy = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -102,7 +102,7 @@ export type Futarchy = {
           type: {
             defined: "InitializeDaoParams";
           };
-        }
+        },
       ];
     },
     {
@@ -162,16 +162,9 @@ export type Futarchy = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "InitializeProposalParams";
-          };
-        }
-      ];
+      args: [];
     },
     {
       name: "stakeToProposal";
@@ -235,7 +228,7 @@ export type Futarchy = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -243,7 +236,7 @@ export type Futarchy = {
           type: {
             defined: "StakeToProposalParams";
           };
-        }
+        },
       ];
     },
     {
@@ -298,7 +291,7 @@ export type Futarchy = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -306,7 +299,7 @@ export type Futarchy = {
           type: {
             defined: "UnstakeFromProposalParams";
           };
-        }
+        },
       ];
     },
     {
@@ -401,7 +394,7 @@ export type Futarchy = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -532,7 +525,7 @@ export type Futarchy = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -558,7 +551,7 @@ export type Futarchy = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -566,7 +559,7 @@ export type Futarchy = {
           type: {
             defined: "UpdateDaoParams";
           };
-        }
+        },
       ];
     },
     {
@@ -616,7 +609,7 @@ export type Futarchy = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -624,7 +617,7 @@ export type Futarchy = {
           type: {
             defined: "SpotSwapParams";
           };
-        }
+        },
       ];
     },
     {
@@ -744,7 +737,7 @@ export type Futarchy = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -752,7 +745,7 @@ export type Futarchy = {
           type: {
             defined: "ConditionalSwapParams";
           };
-        }
+        },
       ];
     },
     {
@@ -807,7 +800,7 @@ export type Futarchy = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -815,7 +808,7 @@ export type Futarchy = {
           type: {
             defined: "ProvideLiquidityParams";
           };
-        }
+        },
       ];
     },
     {
@@ -860,7 +853,7 @@ export type Futarchy = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -868,7 +861,7 @@ export type Futarchy = {
           type: {
             defined: "WithdrawLiquidityParams";
           };
-        }
+        },
       ];
     },
     {
@@ -908,10 +901,10 @@ export type Futarchy = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
-    }
+    },
   ];
   accounts: [
     {
@@ -930,7 +923,7 @@ export type Futarchy = {
           {
             name: "liquidity";
             type: "u128";
-          }
+          },
         ];
       };
     },
@@ -996,7 +989,7 @@ export type Futarchy = {
               "observation of 400 (converted into the AMM prices) and a max observation change per",
               "update of 8 (also converted into the AMM prices). Observations can be updated once",
               "a minute, so 2% allows the proposal market to reach double the spot price or 0",
-              "in 50 minutes."
+              "in 50 minutes.",
             ];
             type: "u128";
           },
@@ -1007,7 +1000,7 @@ export type Futarchy = {
           {
             name: "twapStartDelaySlots";
             docs: [
-              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots"
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
             ];
             type: "u64";
           },
@@ -1019,7 +1012,7 @@ export type Futarchy = {
               "",
               "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
               "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
-              "10 * 1_000_000_000 (10 META)."
+              "10 * 1_000_000_000 (10 META).",
             ];
             type: "u64";
           },
@@ -1030,7 +1023,7 @@ export type Futarchy = {
           {
             name: "baseToStake";
             docs: [
-              "Minimum amount of base tokens that must be staked to launch a proposal"
+              "Minimum amount of base tokens that must be staked to launch a proposal",
             ];
             type: "u64";
           },
@@ -1052,7 +1045,7 @@ export type Futarchy = {
             type: {
               defined: "FutarchyAmm";
             };
-          }
+          },
         ];
       };
     },
@@ -1068,10 +1061,6 @@ export type Futarchy = {
           {
             name: "proposer";
             type: "publicKey";
-          },
-          {
-            name: "descriptionUrl";
-            type: "string";
           },
           {
             name: "slotEnqueued";
@@ -1126,7 +1115,7 @@ export type Futarchy = {
           {
             name: "failQuoteMint";
             type: "publicKey";
-          }
+          },
         ];
       };
     },
@@ -1150,10 +1139,10 @@ export type Futarchy = {
           {
             name: "bump";
             type: "u8";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   types: [
     {
@@ -1168,7 +1157,7 @@ export type Futarchy = {
           {
             name: "unixTimestamp";
             type: "i64";
-          }
+          },
         ];
       };
     },
@@ -1196,7 +1185,7 @@ export type Futarchy = {
           {
             name: "minOutputAmount";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1248,19 +1237,7 @@ export type Futarchy = {
                 defined: "InitialSpendingLimit";
               };
             };
-          }
-        ];
-      };
-    },
-    {
-      name: "InitializeProposalParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "descriptionUrl";
-            type: "string";
-          }
+          },
         ];
       };
     },
@@ -1286,9 +1263,12 @@ export type Futarchy = {
           },
           {
             name: "positionAuthority";
-            docs: ["The account that will own the LP position"];
+            docs: [
+              "The account that will own the LP position, usually the same as the",
+              "liquidity provider",
+            ];
             type: "publicKey";
-          }
+          },
         ];
       };
     },
@@ -1310,7 +1290,7 @@ export type Futarchy = {
           {
             name: "minOutputAmount";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1322,7 +1302,7 @@ export type Futarchy = {
           {
             name: "amount";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1334,7 +1314,7 @@ export type Futarchy = {
           {
             name: "amount";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1384,7 +1364,7 @@ export type Futarchy = {
             type: {
               option: "u64";
             };
-          }
+          },
         ];
       };
     },
@@ -1407,7 +1387,7 @@ export type Futarchy = {
             name: "minQuoteAmount";
             docs: ["Minimum quote tokens to receive"];
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1425,7 +1405,7 @@ export type Futarchy = {
             type: {
               vec: "publicKey";
             };
-          }
+          },
         ];
       };
     },
@@ -1459,7 +1439,7 @@ export type Futarchy = {
           {
             name: "ammQuoteVault";
             type: "publicKey";
-          }
+          },
         ];
       };
     },
@@ -1482,7 +1462,7 @@ export type Futarchy = {
               "A price is the number of quote units per base unit multiplied by 1e12.",
               "You cannot simply divide by 1e12 to get a price you can display in the UI",
               "because the base and quote decimals may be different. Instead, do:",
-              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
+              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12",
             ];
             type: "u128";
           },
@@ -1491,7 +1471,7 @@ export type Futarchy = {
             docs: [
               "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
               "a few extremely large outliers. So we use observations, which can only move",
-              "by `max_observation_change_per_update` per update."
+              "by `max_observation_change_per_update` per update.",
             ];
             type: "u128";
           },
@@ -1511,7 +1491,7 @@ export type Futarchy = {
               "",
               "So in the case of an overflow, the aggregator rolls back to 0. It's the",
               "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at T2 being smaller than an aggregator at T1."
+              "aggregator at T2 being smaller than an aggregator at T1.",
             ];
             type: "u128";
           },
@@ -1528,10 +1508,10 @@ export type Futarchy = {
           {
             name: "startDelaySlots";
             docs: [
-              "Number of slots after amm.created_at_slot to start recording TWAP"
+              "Number of slots after amm.created_at_slot to start recording TWAP",
             ];
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1561,7 +1541,7 @@ export type Futarchy = {
             type: {
               defined: "TwapOracle";
             };
-          }
+          },
         ];
       };
     },
@@ -1578,7 +1558,7 @@ export type Futarchy = {
                 type: {
                   defined: "Pool";
                 };
-              }
+              },
             ];
           },
           {
@@ -1601,9 +1581,9 @@ export type Futarchy = {
                 type: {
                   defined: "Pool";
                 };
-              }
+              },
             ];
-          }
+          },
         ];
       };
     },
@@ -1620,7 +1600,7 @@ export type Futarchy = {
           },
           {
             name: "Fail";
-          }
+          },
         ];
       };
     },
@@ -1634,7 +1614,7 @@ export type Futarchy = {
           },
           {
             name: "Sell";
-          }
+          },
         ];
       };
     },
@@ -1648,7 +1628,7 @@ export type Futarchy = {
           },
           {
             name: "Quote";
-          }
+          },
         ];
       };
     },
@@ -1663,7 +1643,7 @@ export type Futarchy = {
               {
                 name: "amountStaked";
                 type: "u64";
-              }
+              },
             ];
           },
           {
@@ -1674,10 +1654,10 @@ export type Futarchy = {
           },
           {
             name: "Failed";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   events: [
     {
@@ -1758,7 +1738,7 @@ export type Futarchy = {
           name: "squadsMultisigVault";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -1810,7 +1790,7 @@ export type Futarchy = {
           name: "baseToStake";
           type: "u64";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -1882,7 +1862,7 @@ export type Futarchy = {
           name: "squadsMultisigVault";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -1914,7 +1894,7 @@ export type Futarchy = {
           name: "totalStaked";
           type: "u64";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -1946,7 +1926,7 @@ export type Futarchy = {
           name: "totalStaked";
           type: "u64";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -1973,7 +1953,7 @@ export type Futarchy = {
           name: "totalStaked";
           type: "u64";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -2027,7 +2007,7 @@ export type Futarchy = {
           name: "squadsMultisig";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -2049,7 +2029,7 @@ export type Futarchy = {
           name: "dao";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -2096,9 +2076,9 @@ export type Futarchy = {
           name: "quoteAmount";
           type: "u64";
           index: false;
-        }
+        },
       ];
-    }
+    },
   ];
   errors: [
     {
@@ -2159,88 +2139,98 @@ export type Futarchy = {
     {
       code: 6011;
       name: "ProposalDurationTooShort";
-      msg: "Proposal duration must be longer than TWAP start delay";
+      msg: "Proposal duration must be longer 1 day and longer than 2 times the TWAP start delay";
     },
     {
       code: 6012;
+      name: "PassThresholdTooHigh";
+      msg: "Pass threshold must be less than 10%";
+    },
+    {
+      code: 6013;
       name: "QuestionMustBeBinary";
       msg: "Question must have exactly 2 outcomes for binary futarchy";
     },
     {
-      code: 6013;
+      code: 6014;
       name: "InvalidSquadsProposalStatus";
       msg: "Squads proposal must be in Draft status";
     },
     {
-      code: 6014;
+      code: 6015;
       name: "CastingOverflow";
       msg: "Casting overflow. If you're seeing this, please report this";
     },
     {
-      code: 6015;
+      code: 6016;
       name: "InsufficientBalance";
       msg: "Insufficient balance";
     },
     {
-      code: 6016;
+      code: 6017;
       name: "ZeroLiquidityRemove";
       msg: "Cannot remove zero liquidity";
     },
     {
-      code: 6017;
+      code: 6018;
       name: "SwapSlippageExceeded";
       msg: "Swap slippage exceeded";
     },
     {
-      code: 6018;
+      code: 6019;
       name: "AssertFailed";
       msg: "Assert failed";
     },
     {
-      code: 6019;
+      code: 6020;
       name: "InvalidAdmin";
       msg: "Invalid admin";
     },
     {
-      code: 6020;
+      code: 6021;
       name: "ProposalNotInDraftState";
       msg: "Proposal is not in draft state";
     },
     {
-      code: 6021;
+      code: 6022;
       name: "InsufficientTokenBalance";
       msg: "Insufficient token balance";
     },
     {
-      code: 6022;
+      code: 6023;
       name: "InvalidAmount";
       msg: "Invalid amount";
     },
     {
-      code: 6023;
+      code: 6024;
       name: "InsufficientStakeToLaunch";
       msg: "Insufficient stake to launch proposal";
     },
     {
-      code: 6024;
+      code: 6025;
       name: "StakerNotFound";
       msg: "Staker not found in proposal";
     },
     {
-      code: 6025;
+      code: 6026;
       name: "PoolNotInSpotState";
       msg: "Pool must be in spot state";
     },
     {
-      code: 6026;
+      code: 6027;
       name: "InvalidDaoCreateLiquidity";
       msg: "If you're providing liquidity, you must provide both base and quote token accounts";
     },
     {
-      code: 6027;
+      code: 6028;
       name: "InvalidStakeAccount";
       msg: "Invalid stake account";
-    }
+    },
+    {
+      code: 6029;
+      name: "InvariantViolated";
+      msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this";
+    },
   ];
 };
 
@@ -2410,14 +2400,7 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
       ],
-      args: [
-        {
-          name: "params",
-          type: {
-            defined: "InitializeProposalParams",
-          },
-        },
-      ],
+      args: [],
     },
     {
       name: "stakeToProposal",
@@ -3316,10 +3299,6 @@ export const IDL: Futarchy = {
             type: "publicKey",
           },
           {
-            name: "descriptionUrl",
-            type: "string",
-          },
-          {
             name: "slotEnqueued",
             type: "u64",
           },
@@ -3499,18 +3478,6 @@ export const IDL: Futarchy = {
       },
     },
     {
-      name: "InitializeProposalParams",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "descriptionUrl",
-            type: "string",
-          },
-        ],
-      },
-    },
-    {
       name: "ProvideLiquidityParams",
       type: {
         kind: "struct",
@@ -3532,7 +3499,10 @@ export const IDL: Futarchy = {
           },
           {
             name: "positionAuthority",
-            docs: ["The account that will own the LP position"],
+            docs: [
+              "The account that will own the LP position, usually the same as the",
+              "liquidity provider",
+            ],
             type: "publicKey",
           },
         ],
@@ -4405,87 +4375,97 @@ export const IDL: Futarchy = {
     {
       code: 6011,
       name: "ProposalDurationTooShort",
-      msg: "Proposal duration must be longer than TWAP start delay",
+      msg: "Proposal duration must be longer 1 day and longer than 2 times the TWAP start delay",
     },
     {
       code: 6012,
+      name: "PassThresholdTooHigh",
+      msg: "Pass threshold must be less than 10%",
+    },
+    {
+      code: 6013,
       name: "QuestionMustBeBinary",
       msg: "Question must have exactly 2 outcomes for binary futarchy",
     },
     {
-      code: 6013,
+      code: 6014,
       name: "InvalidSquadsProposalStatus",
       msg: "Squads proposal must be in Draft status",
     },
     {
-      code: 6014,
+      code: 6015,
       name: "CastingOverflow",
       msg: "Casting overflow. If you're seeing this, please report this",
     },
     {
-      code: 6015,
+      code: 6016,
       name: "InsufficientBalance",
       msg: "Insufficient balance",
     },
     {
-      code: 6016,
+      code: 6017,
       name: "ZeroLiquidityRemove",
       msg: "Cannot remove zero liquidity",
     },
     {
-      code: 6017,
+      code: 6018,
       name: "SwapSlippageExceeded",
       msg: "Swap slippage exceeded",
     },
     {
-      code: 6018,
+      code: 6019,
       name: "AssertFailed",
       msg: "Assert failed",
     },
     {
-      code: 6019,
+      code: 6020,
       name: "InvalidAdmin",
       msg: "Invalid admin",
     },
     {
-      code: 6020,
+      code: 6021,
       name: "ProposalNotInDraftState",
       msg: "Proposal is not in draft state",
     },
     {
-      code: 6021,
+      code: 6022,
       name: "InsufficientTokenBalance",
       msg: "Insufficient token balance",
     },
     {
-      code: 6022,
+      code: 6023,
       name: "InvalidAmount",
       msg: "Invalid amount",
     },
     {
-      code: 6023,
+      code: 6024,
       name: "InsufficientStakeToLaunch",
       msg: "Insufficient stake to launch proposal",
     },
     {
-      code: 6024,
+      code: 6025,
       name: "StakerNotFound",
       msg: "Staker not found in proposal",
     },
     {
-      code: 6025,
+      code: 6026,
       name: "PoolNotInSpotState",
       msg: "Pool must be in spot state",
     },
     {
-      code: 6026,
+      code: 6027,
       name: "InvalidDaoCreateLiquidity",
       msg: "If you're providing liquidity, you must provide both base and quote token accounts",
     },
     {
-      code: 6027,
+      code: 6028,
       name: "InvalidStakeAccount",
       msg: "Invalid stake account",
+    },
+    {
+      code: 6029,
+      name: "InvariantViolated",
+      msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this",
     },
   ],
 };

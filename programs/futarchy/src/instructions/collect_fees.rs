@@ -43,7 +43,7 @@ impl CollectFees<'_> {
         } = ctx.accounts;
 
         let PoolState::Spot { ref mut spot } = dao.amm.state else {
-            return err!(AutocratError::PoolNotInSpotState);
+            return err!(FutarchyError::PoolNotInSpotState);
         };
 
         let base_fee_balance = spot.base_protocol_fee_balance;

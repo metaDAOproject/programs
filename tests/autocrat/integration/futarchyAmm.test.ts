@@ -16,7 +16,7 @@ import * as multisig from "@sqds/multisig";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 const { Permissions, Permission } = multisig.types;
 
-const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
+const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey, proposal: PublicKey;
@@ -139,7 +139,6 @@ export default function suite() {
     // Now initialize the autocrat proposal
     proposal = await this.futarchy.initializeProposal(
       dao,
-      descriptionUrl,
       squadsProposalPda,
     );
 
@@ -238,10 +237,42 @@ export default function suite() {
     const daoAfterLaunch = await this.futarchy.autocrat.account.dao.fetch(dao);
     console.log("DAO state:", daoAfterLaunch);
 
+    await this.futarchy.conditionalSwapIx({ 
+        dao, 
+        baseMint: META, 
+        quoteMint: USDC, 
+        proposal, 
+        market: "fail", 
+        swapType: "buy", 
+        inputAmount: new BN(100 * 10 ** 6),
+        payer: this.payer.publicKey,
+      })
+        .rpc();
+
+    console.log("=== After conditional swap ===");
+    let daoAfterConditionalSwap = await this.futarchy.autocrat.account.dao.fetch(dao);
+    console.log("DAO state:", daoAfterConditionalSwap.amm.state.futarchy);
+
+    function printAmmState(dao: any) {
+      const ammState = dao.amm.state.futarchy;
+
+      function printPool(pool: any) {
+        const quoteReserves: BN = pool.quoteReserves;
+        const baseReserves: BN = pool.baseReserves;
+        const price = quoteReserves.toNumber() / baseReserves.toNumber();
+
+        console.log("price: ", price, " observation: ", pool.oracle.lastObservation.toNumber() / 1e12)
+      }
+
+      printPool(ammState.spot);
+      printPool(ammState.pass);
+      printPool(ammState.fail);
+    }
+
+    printAmmState(daoAfterConditionalSwap);
+
     // Perform spot swaps to generate TWAP data
     for (let i = 0; i < 100; i++) { // Reduced to 10 for faster testing
-      await this.advanceBySlots(20_000n);
-
       await this.futarchy.conditionalSwapIx({ 
         dao, 
         baseMint: META, 
@@ -249,11 +280,13 @@ export default function suite() {
         proposal, 
         market: "pass", 
         swapType: "buy", 
-        inputAmount: new BN(10),
+        inputAmount: new BN(100 * 10 ** 6),
         payer: this.payer.publicKey,
       })
         .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })])
         .rpc();
+
+      await this.advanceBySlots(10_000n);
 
       if (i % 5 === 0) {
         console.log(`=== After ${i + 1} swaps ===`);
@@ -262,9 +295,33 @@ export default function suite() {
       }
     }
 
+    await this.futarchy.conditionalSwapIx({ 
+        dao, 
+        baseMint: META, 
+        quoteMint: USDC, 
+        proposal, 
+        market: "pass", 
+        swapType: "sell", 
+        inputAmount: new BN(100 * 10 ** 6),
+      })
+      .rpc();
+
+    await this.futarchy.conditionalSwapIx({ 
+        dao, 
+        baseMint: META, 
+        quoteMint: USDC, 
+        proposal, 
+        market: "fail", 
+        swapType: "sell", 
+        inputAmount: new BN(100 * 10 ** 6),
+      })
+      .rpc();
+
     console.log("=== Final DAO state before finalization ===");
     const finalDaoState = await this.futarchy.autocrat.account.dao.fetch(dao);
     console.log("Final DAO state:", finalDaoState);
+
+    printAmmState(finalDaoState);
 
     // Temporary return to see results
     // Finalize the proposal
@@ -273,7 +330,6 @@ export default function suite() {
     const storedProposal = await this.futarchy.getProposal(proposal);
     console.log("Stored proposal:", storedProposal);
     console.log("AMM fUSDC Balance", await this.getTokenBalance(passQuoteMint, dao));
-    return;
     assert.exists(storedProposal.state.passed);
 
     // Collect fees

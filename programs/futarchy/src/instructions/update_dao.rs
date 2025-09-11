@@ -41,6 +41,8 @@ impl UpdateDao<'_> {
 
         dao.seq_num += 1;
 
+        dao.invariant()?;
+
         let clock = Clock::get()?;
         emit_cpi!(UpdateDaoEvent {
             common: CommonFields::new(&clock),

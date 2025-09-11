@@ -68,10 +68,6 @@ pub mod permissionless_account {
 }
 
 impl InitializeDao<'_> {
-    pub fn validate(&self) -> Result<()> {
-        Ok(())
-    }
-
     pub fn handle(ctx: Context<Self>, params: InitializeDaoParams) -> Result<()> {
         let InitializeDaoParams {
             twap_initial_observation,
@@ -87,11 +83,6 @@ impl InitializeDao<'_> {
         } = params;
 
         let dao = &mut ctx.accounts.dao;
-
-        require!(
-            slots_per_proposal > twap_start_delay_slots,
-            AutocratError::ProposalDurationTooShort
-        );
 
         let creator_key = ctx.accounts.dao_creator.key();
         let dao_seeds = &[
@@ -208,6 +199,8 @@ impl InitializeDao<'_> {
                 amm_quote_vault: ctx.accounts.futarchy_amm_quote_vault.key(),
             },
         });
+
+        dao.invariant()?;
 
         let clock = Clock::get()?;
         emit_cpi!(InitializeDaoEvent {

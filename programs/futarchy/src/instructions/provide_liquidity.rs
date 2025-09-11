@@ -95,7 +95,7 @@ impl ProvideLiquidity<'_> {
             // this should only panic in an extreme scenario: when (quote_amount * base_reserve) / quote_reserve > u64::MAX
             let base_amount: u64 = (((quote_amount as u128 * base_reserves) / quote_reserves) + 1)
                 .try_into()
-                .map_err(|_| AutocratError::CastingOverflow)?;
+                .map_err(|_| FutarchyError::CastingOverflow)?;
 
             let liquidity_to_mint = (quote_amount as u128 * total_liquidity) / quote_reserves;
 
