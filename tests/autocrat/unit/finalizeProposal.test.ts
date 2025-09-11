@@ -16,13 +16,13 @@ import * as multisig from "@sqds/multisig";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 const { Permissions, Permission } = multisig.types;
 
-const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
+const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey, proposal: PublicKey;
 
   beforeEach(async function () {
-    META = await this.createMint(this.payer.publicKey, 9);
+    META = await this.createMint(this.payer.publicKey, 6);
     USDC = await this.createMint(this.payer.publicKey, 6);
 
     await this.createTokenAccount(META, this.payer.publicKey);
@@ -33,7 +33,7 @@ export default function suite() {
       USDC,
       this.payer.publicKey,
       this.payer,
-      100_000 * 1_000_000
+      200_000 * 1_000_000
     );
 
     const nonce = new BN(Math.floor(Math.random() * 1000000));
@@ -65,6 +65,21 @@ export default function suite() {
       nonce,
       daoCreator: this.payer.publicKey,
     });
+
+    await this.futarchy.provideLiquidityIx({
+      dao,
+      baseMint: META,
+      quoteMint: USDC,
+      quoteAmount: new BN(100_000 * 10 ** 6), // 100,000 USDC
+      maxBaseAmount: new BN(100 * 10 ** 6), // 100 META
+      minLiquidity: new BN(0),
+      positionAuthority: this.payer.publicKey,
+      liquidityProvider: this.payer.publicKey,
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ])
+    .rpc();
 
     // Create a simple instruction for the proposal
     const updateDaoIx = await this.futarchy
@@ -162,29 +177,30 @@ export default function suite() {
     const { failBaseMint, failQuoteMint } = this.futarchy.getProposalPdas(proposal, META, USDC, dao);
 
     // await this.autocratClient.
-    await this.futarchy.autocrat.methods.launchProposal()
-      .accounts({
-        proposal,
-        dao,
-        baseVault,
-        quoteVault,
-        passBaseMint,
-        passQuoteMint,
-        failBaseMint,
-        failQuoteMint,
-        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
-        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, dao, true),
-        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
-        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, dao, true),
-        payer: this.payer.publicKey,
-      })
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })])
-      .rpc();
+    // await this.futarchy.autocrat.methods.launchProposal()
+    //   .accounts({
+    //     proposal,
+    //     dao,
+    //     baseVault,
+    //     quoteVault,
+    //     passBaseMint,
+    //     passQuoteMint,
+    //     failBaseMint,
+    //     failQuoteMint,
+    //     ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
+    //     ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, dao, true),
+    //     ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
+    //     ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, dao, true),
+    //     payer: this.payer.publicKey,
+    //   })
+    //   .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })])
+    //   .rpc();
 
     await this.futarchy.conditionalSwapIx({ dao, baseMint: META, quoteMint: USDC, proposal, market: "pass", swapType: "buy", inputAmount: new BN(10_000 * 1_000_000) }).rpc();
 
     for (let i = 0; i < 100; i++) {
-      await this.advanceBySlots(20_000n);
+      // await this.advanceBySlots(20_000n);
+      await this.advanceBySeconds(20_000);
 
       await this.futarchy.conditionalSwapIx({ dao, baseMint: META, quoteMint: USDC, proposal, market: "pass", swapType: "buy", inputAmount: new BN(10) })
         .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })]).rpc();
@@ -204,15 +220,6 @@ export default function suite() {
   });
 
   it("fails proposals when Pass TWAP < Fail TWAP", async function () {
-    // Split tokens into the vaults
-
-    await this.futarchy.launchProposalIx({
-      proposal,
-      dao,
-      baseMint: META,
-      quoteMint: USDC,
-    }).rpc();
-
     const { quoteVault, question } =
       this.futarchy.getProposalPdas(proposal, META, USDC, dao);
 
@@ -221,11 +228,11 @@ export default function suite() {
       .rpc();
 
     for (let i = 0; i < 100; i++) {
-      await this.advanceBySlots(20_000n);
-
       await this.futarchy.conditionalSwapIx({ dao, baseMint: META, quoteMint: USDC, proposal, market: "pass", swapType: "buy", inputAmount: new BN(10) })
         .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })])
         .rpc();
+
+      await this.advanceBySeconds(20_000);
 
       // await this.ammClient
       //   .crankThatTwapIx(passAmm)

@@ -34,6 +34,7 @@ pub struct LaunchProposal<'info> {
 
 impl LaunchProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        msg!("proposal state: {:?}", self.proposal.state);
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
             FutarchyError::ProposalNotInDraftState
