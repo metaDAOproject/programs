@@ -10,7 +10,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, ONE_MINUTE_IN_SLOTS } from "../../utils.js";
+import { expectError, ONE_MINUTE_IN_SLOTS, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
@@ -36,35 +36,7 @@ export default function suite() {
       1_000_000_000 * 1_000_000
     );
 
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
-
-    await this.futarchy
-      .initializeDaoIx({
-        baseMint: META,
-        quoteMint: USDC,
-        params: {
-          secondsPerProposal: 60 * 60 * 24 * 3,
-          twapStartDelaySeconds: 60 * 60 * 24,
-          twapInitialObservation: THOUSAND_BUCK_PRICE,
-          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
-          minQuoteFutarchicLiquidity: new BN(10_000),
-          minBaseFutarchicLiquidity: new BN(10_000),
-          passThresholdBps: 300,
-          nonce,
-          initialSpendingLimit: null,
-          baseToStake: new BN(100),
-        },
-        provideLiquidity: true,
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-      ])
-      .rpc();
-
-    [dao] = getDaoAddr({
-      nonce,
-      daoCreator: this.payer.publicKey,
-    });
+    dao = await setupBasicDao({ context: this, baseMint: META, quoteMint: USDC });
 
     await this.futarchy.provideLiquidityIx({
       dao,
@@ -80,8 +52,6 @@ export default function suite() {
       ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
     ])
     .rpc();
-
-    const descriptionUrl = "https://example.com/proposal";
 
     // Create a simple instruction for the proposal
     const updateDaoIx = await this.futarchy

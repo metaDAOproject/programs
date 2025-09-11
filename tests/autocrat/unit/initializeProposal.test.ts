@@ -5,7 +5,7 @@ import {
 } from "@metadaoproject/futarchy/v0.6";
 import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 import BN from "bn.js";
-import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
+import { ONE_MINUTE_IN_SLOTS, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -32,32 +32,7 @@ export default function suite() {
       100_000 * 1_000_000
     );
 
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
-
-    // Initialize a DAO first
-    await this.futarchy
-      .initializeDaoIx({
-        baseMint: META,
-        quoteMint: USDC,
-        params: {
-          secondsPerProposal: 60 * 60 * 24 * 3,
-          twapStartDelaySeconds: 60 * 60 * 24,
-          twapInitialObservation: THOUSAND_BUCK_PRICE,
-          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
-          minQuoteFutarchicLiquidity: new BN(1),
-          minBaseFutarchicLiquidity: new BN(1000),
-          passThresholdBps: 300,
-          baseToStake: new BN(1000),
-          nonce,
-          initialSpendingLimit: null, 
-        },
-      })
-      .rpc();
-
-    [dao] = getDaoAddr({
-      nonce,
-      daoCreator: this.payer.publicKey,
-    });
+    dao = await setupBasicDao({ context: this, baseMint: META, quoteMint: USDC });
   });
 
   it("should initialize a proposal", async function () {
