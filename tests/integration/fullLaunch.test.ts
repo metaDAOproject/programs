@@ -4,16 +4,10 @@ import {
   Transaction,
   TransactionMessage,
   VersionedTransaction,
-  SystemProgram,
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  FutarchyClient,
-  LaunchpadClient,
-  getDaoAddr,
-  getProposalAddr,
   MAINNET_USDC,
-  PriceMath,
   PERMISSIONLESS_ACCOUNT,
 } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
@@ -56,11 +50,19 @@ export default async function suite() {
 
     const createKey = Keypair.generate();
 
-    const [insiderMultisigPda] = multisig.getMultisigPda({ createKey: createKey.publicKey });
+    const [insiderMultisigPda] = multisig.getMultisigPda({
+      createKey: createKey.publicKey,
+    });
 
-    const programConfigPda = multisig.getProgramConfigPda({ programId: this.launchpad.getProgramId() })[0];
+    const programConfigPda = multisig.getProgramConfigPda({
+      programId: this.launchpad.getProgramId(),
+    })[0];
 
-    const programConfig = await multisig.accounts.ProgramConfig.fromAccountAddress(this.squadsConnection, programConfigPda);
+    const programConfig =
+      await multisig.accounts.ProgramConfig.fromAccountAddress(
+        this.squadsConnection,
+        programConfigPda
+      );
 
     const cofounder0 = Keypair.generate();
     const cofounder1 = Keypair.generate();
@@ -80,8 +82,12 @@ export default async function suite() {
       rentCollector: null,
     });
 
-    const insiderMultisigCreateTx = new Transaction().add(insiderMultisigCreateIx);
-    insiderMultisigCreateTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    const insiderMultisigCreateTx = new Transaction().add(
+      insiderMultisigCreateIx
+    );
+    insiderMultisigCreateTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
     insiderMultisigCreateTx.feePayer = this.payer.publicKey;
     insiderMultisigCreateTx.sign(this.payer, createKey);
     await this.banksClient.processTransaction(insiderMultisigCreateTx);
@@ -128,16 +134,30 @@ export default async function suite() {
 
     // Fund from multiple sources
     await this.launchpad
-      .fundIx({ launch, amount: new BN(500_000_000000), funder: funder1.publicKey, quoteMint: MAINNET_USDC })
+      .fundIx({
+        launch,
+        amount: new BN(500_000_000000),
+        funder: funder1.publicKey,
+        quoteMint: MAINNET_USDC,
+      })
       .signers([funder1])
       .rpc();
 
     await this.launchpad
-      .fundIx({ launch, amount: new BN(150_000_000000), quoteMint: MAINNET_USDC })
+      .fundIx({
+        launch,
+        amount: new BN(150_000_000000),
+        quoteMint: MAINNET_USDC,
+      })
       .rpc();
 
     await this.launchpad
-      .fundIx({ launch, amount: new BN(350_000_000000), funder: funder3.publicKey, quoteMint: MAINNET_USDC })
+      .fundIx({
+        launch,
+        amount: new BN(350_000_000000),
+        funder: funder3.publicKey,
+        quoteMint: MAINNET_USDC,
+      })
       .signers([funder3])
       .rpc();
 
@@ -267,7 +287,7 @@ export default async function suite() {
       squadsProposalPda
     );
 
-    let {
+    const {
       passBaseMint,
       passQuoteMint,
       failBaseMint,
@@ -279,20 +299,24 @@ export default async function suite() {
 
     // Stake tokens to meet the baseToStake requirement (100 billion = 100k META tokens)
     const stakeAmount = new BN(100_000 * 10 ** 6); // 100k META tokens
-    await this.futarchy.stakeToProposalIx({
-      proposal,
-      dao,
-      baseMint: META,
-      amount: stakeAmount,
-    }).rpc();
+    await this.futarchy
+      .stakeToProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        amount: stakeAmount,
+      })
+      .rpc();
 
     // Launch the proposal first
-    await this.futarchy.launchProposalIx({
-      proposal,
-      dao,
-      baseMint: META,
-      quoteMint: MAINNET_USDC,
-    }).rpc();
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+      })
+      .rpc();
 
     await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(100 * 10 ** 6), 2)
@@ -308,29 +332,33 @@ export default async function suite() {
       .rpc();
 
     // Make large buy in pass market to drive price up and make proposal pass
-    await this.futarchy.conditionalSwapIx({
-      dao,
-      baseMint: META,
-      quoteMint: MAINNET_USDC,
-      proposal,
-      market: "pass",
-      swapType: "buy",
-      inputAmount: new BN(5_000 * 1_000_000) // 5k USDC
-    }).rpc();
-
-    for (let i = 0; i < 100; i++) {
-      await this.advanceBySeconds(20_000); // Use seconds instead of slots
-
-      // Continue buying in pass market to maintain high TWAP
-      await this.futarchy.conditionalSwapIx({
+    await this.futarchy
+      .conditionalSwapIx({
         dao,
         baseMint: META,
         quoteMint: MAINNET_USDC,
         proposal,
         market: "pass",
         swapType: "buy",
-        inputAmount: new BN(100 * 1_000_000) // 100 USDC
-      }).rpc();
+        inputAmount: new BN(5_000 * 1_000_000), // 5k USDC
+      })
+      .rpc();
+
+    for (let i = 0; i < 100; i++) {
+      await this.advanceBySeconds(20_000); // Use seconds instead of slots
+
+      // Continue buying in pass market to maintain high TWAP
+      await this.futarchy
+        .conditionalSwapIx({
+          dao,
+          baseMint: META,
+          quoteMint: MAINNET_USDC,
+          proposal,
+          market: "pass",
+          swapType: "buy",
+          inputAmount: new BN(100 * 1_000_000), // 100 USDC
+        })
+        .rpc();
     }
 
     await this.futarchy.finalizeProposal(proposal);
@@ -403,8 +431,18 @@ export default async function suite() {
 
     assert.equal(spendingLimitUse.toString(), (10_000 * 10 ** 6).toString());
 
-    const storedSpendingLimit = await multisig.accounts.SpendingLimit.fromAccountAddress(this.squadsConnection, spendingLimit);
-    assert.equal(storedSpendingLimit.amount.toString(), (25_000 * 10 ** 6).toString());
-    assert.equal(storedSpendingLimit.remainingAmount.toString(), (15_000 * 10 ** 6).toString());
+    const storedSpendingLimit =
+      await multisig.accounts.SpendingLimit.fromAccountAddress(
+        this.squadsConnection,
+        spendingLimit
+      );
+    assert.equal(
+      storedSpendingLimit.amount.toString(),
+      (25_000 * 10 ** 6).toString()
+    );
+    assert.equal(
+      storedSpendingLimit.remainingAmount.toString(),
+      (15_000 * 10 ** 6).toString()
+    );
   });
 }

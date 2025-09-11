@@ -8,18 +8,23 @@ import BN from "bn.js";
 import { assert } from "chai";
 
 export default async function test() {
-  let vaultClient: ConditionalVaultClient = this.conditionalVault;
-  let futarchyClient: FutarchyClient = this.futarchy;
+  const vaultClient: ConditionalVaultClient = this.conditionalVault;
+  const futarchyClient: FutarchyClient = this.futarchy;
 
   // Create mints and token accounts
-  let META: PublicKey = await this.createMint(this.payer.publicKey, 6);
-  let USDC: PublicKey = await this.createMint(this.payer.publicKey, 6);
+  const META: PublicKey = await this.createMint(this.payer.publicKey, 6);
+  const USDC: PublicKey = await this.createMint(this.payer.publicKey, 6);
 
   await this.createTokenAccount(META, this.payer.publicKey);
   await this.createTokenAccount(USDC, this.payer.publicKey);
 
   await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
-  await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 1_000_000);
+  await this.mintTo(
+    USDC,
+    this.payer.publicKey,
+    this.payer,
+    100_000 * 1_000_000
+  );
 
   // Initialize DAO
   const nonce = new BN(Math.floor(Math.random() * 1000000));
@@ -54,20 +59,28 @@ export default async function test() {
   );
 
   // Provide liquidity to DAO AMM
-  await futarchyClient.provideLiquidityIx({
-    dao,
-    baseMint: META,
-    quoteMint: USDC,
-    quoteAmount: new BN(50_000 * 10 ** 6), // 50,000 USDC
-    maxBaseAmount: new BN(50 * 10 ** 6), // 50 META
-    minLiquidity: new BN(0),
-    positionAuthority: this.payer.publicKey,
-    liquidityProvider: this.payer.publicKey,
-  }).rpc();
+  await futarchyClient
+    .provideLiquidityIx({
+      dao,
+      baseMint: META,
+      quoteMint: USDC,
+      quoteAmount: new BN(50_000 * 10 ** 6), // 50,000 USDC
+      maxBaseAmount: new BN(50 * 10 ** 6), // 50 META
+      minLiquidity: new BN(0),
+      positionAuthority: this.payer.publicKey,
+      liquidityProvider: this.payer.publicKey,
+    })
+    .rpc();
 
   // Test spot swap functionality - buy META with USDC
-  const initialUsdcBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
-  const initialMetaBalance = await this.getTokenBalance(META, this.payer.publicKey);
+  const initialUsdcBalance = await this.getTokenBalance(
+    USDC,
+    this.payer.publicKey
+  );
+  const initialMetaBalance = await this.getTokenBalance(
+    META,
+    this.payer.publicKey
+  );
 
   const swapAmount = new BN(1_000 * 1_000_000); // 1,000 USDC
 
@@ -91,15 +104,21 @@ export default async function test() {
   await this.banksClient.processTransaction(tx);
 
   // Assert balances changed
-  const finalUsdcBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
-  const finalMetaBalance = await this.getTokenBalance(META, this.payer.publicKey);
+  const finalUsdcBalance = await this.getTokenBalance(
+    USDC,
+    this.payer.publicKey
+  );
+  const finalMetaBalance = await this.getTokenBalance(
+    META,
+    this.payer.publicKey
+  );
 
   assert.isBelow(
     Number(finalUsdcBalance),
     Number(initialUsdcBalance),
     "USDC balance should decrease after buying META"
   );
-  
+
   assert.isAbove(
     Number(finalMetaBalance),
     Number(initialMetaBalance),
@@ -122,15 +141,21 @@ export default async function test() {
   await sellTx.rpc();
 
   // Check balances changed again
-  const finalUsdcBalance2 = await this.getTokenBalance(USDC, this.payer.publicKey);
-  const finalMetaBalance2 = await this.getTokenBalance(META, this.payer.publicKey);
+  const finalUsdcBalance2 = await this.getTokenBalance(
+    USDC,
+    this.payer.publicKey
+  );
+  const finalMetaBalance2 = await this.getTokenBalance(
+    META,
+    this.payer.publicKey
+  );
 
   assert.isAbove(
     Number(finalUsdcBalance2),
     Number(finalUsdcBalance),
     "USDC balance should increase after selling META"
   );
-  
+
   assert.isBelow(
     Number(finalMetaBalance2),
     Number(finalMetaBalance),

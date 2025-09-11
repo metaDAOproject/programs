@@ -16,15 +16,15 @@ export default function suite() {
   });
 
   it("initializes 2-outcome questions", async function () {
-    let questionId = sha256(new Uint8Array([1, 2, 3]));
+    const questionId = sha256(new Uint8Array([1, 2, 3]));
 
-    let oracle = Keypair.generate();
+    const oracle = Keypair.generate();
 
     await vaultClient
       .initializeQuestionIx(questionId, oracle.publicKey, 2)
       .rpc();
 
-    let [question] = getQuestionAddr(
+    const [question] = getQuestionAddr(
       vaultClient.vaultProgram.programId,
       questionId,
       oracle.publicKey,

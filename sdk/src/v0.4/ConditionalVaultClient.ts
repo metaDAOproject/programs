@@ -42,18 +42,18 @@ export class ConditionalVaultClient {
     this.vaultProgram = new Program<ConditionalVaultProgram>(
       ConditionalVaultIDL,
       conditionalVaultProgramId,
-      provider,
+      provider
     );
   }
 
   public static createClient(
-    createVaultClientParams: CreateVaultClientParams,
+    createVaultClientParams: CreateVaultClientParams
   ): ConditionalVaultClient {
     let { provider, conditionalVaultProgramId } = createVaultClientParams;
 
     return new ConditionalVaultClient(
       provider,
-      conditionalVaultProgramId || CONDITIONAL_VAULT_PROGRAM_ID,
+      conditionalVaultProgramId || CONDITIONAL_VAULT_PROGRAM_ID
     );
   }
 
@@ -66,33 +66,33 @@ export class ConditionalVaultClient {
   }
 
   async deserializeQuestion(
-    accountInfo: AccountInfo<Buffer>,
+    accountInfo: AccountInfo<Buffer>
   ): Promise<Question> {
     return this.vaultProgram.coder.accounts.decode(
       "question",
-      accountInfo.data,
+      accountInfo.data
     );
   }
 
   async deserializeVault(
-    accountInfo: AccountInfo<Buffer>,
+    accountInfo: AccountInfo<Buffer>
   ): Promise<ConditionalVault> {
     return this.vaultProgram.coder.accounts.decode(
       "conditionalVault",
-      accountInfo.data,
+      accountInfo.data
     );
   }
 
   initializeQuestionIx(
     questionId: Uint8Array,
     oracle: PublicKey,
-    numOutcomes: number,
+    numOutcomes: number
   ) {
     const [question] = getQuestionAddr(
       this.vaultProgram.programId,
       questionId,
       oracle,
-      numOutcomes,
+      numOutcomes
     );
 
     return this.vaultProgram.methods
@@ -109,13 +109,13 @@ export class ConditionalVaultClient {
   async initializeQuestion(
     questionId: Uint8Array,
     oracle: PublicKey,
-    numOutcomes: number,
+    numOutcomes: number
   ): Promise<PublicKey> {
     const [question] = getQuestionAddr(
       this.vaultProgram.programId,
       questionId,
       oracle,
-      numOutcomes,
+      numOutcomes
     );
 
     await this.initializeQuestionIx(questionId, oracle, numOutcomes).rpc();
@@ -127,12 +127,12 @@ export class ConditionalVaultClient {
     question: PublicKey,
     underlyingTokenMint: PublicKey,
     numOutcomes: number,
-    payer: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const [vault] = getVaultAddr(
       this.vaultProgram.programId,
       question,
-      underlyingTokenMint,
+      underlyingTokenMint
     );
 
     let conditionalTokenMintAddrs = [];
@@ -140,7 +140,7 @@ export class ConditionalVaultClient {
       const [conditionalTokenMint] = getConditionalTokenMintAddr(
         this.vaultProgram.programId,
         vault,
-        i,
+        i
       );
       conditionalTokenMintAddrs.push(conditionalTokenMint);
     }
@@ -148,7 +148,7 @@ export class ConditionalVaultClient {
     const vaultUnderlyingTokenAccount = getAssociatedTokenAddressSync(
       underlyingTokenMint,
       vault,
-      true,
+      true
     );
 
     return this.vaultProgram.methods
@@ -164,7 +164,7 @@ export class ConditionalVaultClient {
           payer,
           vaultUnderlyingTokenAccount,
           vault,
-          underlyingTokenMint,
+          underlyingTokenMint
         ),
       ])
       .remainingAccounts(
@@ -174,7 +174,7 @@ export class ConditionalVaultClient {
             isWritable: true,
             isSigner: false,
           };
-        }),
+        })
       );
   }
 
@@ -183,18 +183,18 @@ export class ConditionalVaultClient {
   async initializeVault(
     question: PublicKey,
     underlyingTokenMint: PublicKey,
-    numOutcomes: number,
+    numOutcomes: number
   ): Promise<PublicKey> {
     const [vault] = getVaultAddr(
       this.vaultProgram.programId,
       question,
-      underlyingTokenMint,
+      underlyingTokenMint
     );
 
     await this.initializeVaultIx(
       question,
       underlyingTokenMint,
-      numOutcomes,
+      numOutcomes
     ).rpc();
 
     return vault;
@@ -203,7 +203,7 @@ export class ConditionalVaultClient {
   resolveQuestionIx(
     question: PublicKey,
     oracle: Keypair,
-    payoutNumerators: number[],
+    payoutNumerators: number[]
   ) {
     return this.vaultProgram.methods
       .resolveQuestion({
@@ -222,7 +222,7 @@ export class ConditionalVaultClient {
       const [conditionalTokenMint] = getConditionalTokenMintAddr(
         this.vaultProgram.programId,
         vault,
-        i,
+        i
       );
       conditionalTokenMintAddrs.push(conditionalTokenMint);
     }
@@ -231,7 +231,7 @@ export class ConditionalVaultClient {
 
   getRemainingAccounts(
     conditionalTokenMints: PublicKey[],
-    userConditionalAccounts: PublicKey[],
+    userConditionalAccounts: PublicKey[]
   ) {
     return conditionalTokenMints
       .concat(userConditionalAccounts)
@@ -247,14 +247,14 @@ export class ConditionalVaultClient {
     vault: PublicKey,
     numOutcomes: number,
     user: PublicKey = this.provider.publicKey,
-    payer: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const conditionalTokenMintAddrs = this.getConditionalTokenMints(
       vault,
-      numOutcomes,
+      numOutcomes
     );
     const userConditionalAccounts = conditionalTokenMintAddrs.map((mint) =>
-      getAssociatedTokenAddressSync(mint, user, true),
+      getAssociatedTokenAddressSync(mint, user, true)
     );
 
     const preInstructions = conditionalTokenMintAddrs.map((mint) =>
@@ -262,13 +262,13 @@ export class ConditionalVaultClient {
         payer,
         getAssociatedTokenAddressSync(mint, user, true),
         user,
-        mint,
-      ),
+        mint
+      )
     );
 
     const remainingAccounts = this.getRemainingAccounts(
       conditionalTokenMintAddrs,
-      userConditionalAccounts,
+      userConditionalAccounts
     );
 
     return { userConditionalAccounts, preInstructions, remainingAccounts };
@@ -281,14 +281,14 @@ export class ConditionalVaultClient {
     amount: BN,
     numOutcomes: number,
     user: PublicKey = this.provider.publicKey,
-    payer: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const { preInstructions, remainingAccounts } =
       this.getConditionalTokenAccountsAndInstructions(
         vault,
         numOutcomes,
         user,
-        payer,
+        payer
       );
 
     return this.vaultProgram.methods
@@ -300,12 +300,12 @@ export class ConditionalVaultClient {
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true,
+          true
         ),
         userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           user,
-          true,
+          true
         ),
       })
       .preInstructions(preInstructions)
@@ -319,17 +319,17 @@ export class ConditionalVaultClient {
     amount: BN,
     numOutcomes: number,
     user: PublicKey = this.provider.publicKey,
-    payer: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     let conditionalTokenMintAddrs = this.getConditionalTokenMints(
       vault,
-      numOutcomes,
+      numOutcomes
     );
 
     let userConditionalAccounts = [];
     for (let conditionalTokenMint of conditionalTokenMintAddrs) {
       userConditionalAccounts.push(
-        getAssociatedTokenAddressSync(conditionalTokenMint, user, true),
+        getAssociatedTokenAddressSync(conditionalTokenMint, user, true)
       );
     }
 
@@ -342,12 +342,12 @@ export class ConditionalVaultClient {
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true,
+          true
         ),
         userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           user,
-          true,
+          true
         ),
       })
       .preInstructions(
@@ -356,9 +356,9 @@ export class ConditionalVaultClient {
             payer,
             getAssociatedTokenAddressSync(conditionalTokenMint, user, true),
             user,
-            conditionalTokenMint,
+            conditionalTokenMint
           );
-        }),
+        })
       )
       .remainingAccounts(
         conditionalTokenMintAddrs
@@ -369,7 +369,7 @@ export class ConditionalVaultClient {
               isWritable: true,
               isSigner: false,
             };
-          }),
+          })
       );
 
     return ix;
@@ -381,14 +381,14 @@ export class ConditionalVaultClient {
     underlyingTokenMint: PublicKey,
     numOutcomes: number,
     user: PublicKey = this.provider.publicKey,
-    payer: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     let conditionalTokenMintAddrs = [];
     for (let i = 0; i < numOutcomes; i++) {
       const [conditionalTokenMint] = getConditionalTokenMintAddr(
         this.vaultProgram.programId,
         vault,
-        i,
+        i
       );
       conditionalTokenMintAddrs.push(conditionalTokenMint);
     }
@@ -396,7 +396,7 @@ export class ConditionalVaultClient {
     let userConditionalAccounts = [];
     for (let conditionalTokenMint of conditionalTokenMintAddrs) {
       userConditionalAccounts.push(
-        getAssociatedTokenAddressSync(conditionalTokenMint, user, true),
+        getAssociatedTokenAddressSync(conditionalTokenMint, user, true)
       );
     }
 
@@ -409,12 +409,12 @@ export class ConditionalVaultClient {
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true,
+          true
         ),
         userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           user,
-          true,
+          true
         ),
       })
       .preInstructions(
@@ -423,9 +423,9 @@ export class ConditionalVaultClient {
             payer,
             getAssociatedTokenAddressSync(conditionalTokenMint, user, true),
             user,
-            conditionalTokenMint,
+            conditionalTokenMint
           );
-        }),
+        })
       )
       .remainingAccounts(
         conditionalTokenMintAddrs
@@ -436,7 +436,7 @@ export class ConditionalVaultClient {
               isWritable: true,
               isSigner: false,
             };
-          }),
+          })
       );
 
     return ix;
@@ -448,12 +448,12 @@ export class ConditionalVaultClient {
     name: string,
     symbol: string,
     uri: string,
-    payer: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const [conditionalTokenMint] = getConditionalTokenMintAddr(
       this.vaultProgram.programId,
       vault,
-      index,
+      index
     );
 
     const [conditionalTokenMetadata] = getMetadataAddr(conditionalTokenMint);

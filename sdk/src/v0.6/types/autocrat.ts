@@ -106,7 +106,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -114,7 +114,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeDaoParams";
           };
-        },
+        }
       ];
     },
     {
@@ -174,7 +174,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -182,7 +182,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeProposalParams";
           };
-        },
+        }
       ];
     },
     {
@@ -232,7 +232,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -240,7 +240,7 @@ export type Autocrat = {
           type: {
             defined: "StakeToProposalParams";
           };
-        },
+        }
       ];
     },
     {
@@ -290,7 +290,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -298,7 +298,7 @@ export type Autocrat = {
           type: {
             defined: "UnstakeFromProposalParams";
           };
-        },
+        }
       ];
     },
     {
@@ -393,7 +393,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -454,7 +454,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -480,7 +480,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -488,7 +488,7 @@ export type Autocrat = {
           type: {
             defined: "UpdateDaoParams";
           };
-        },
+        }
       ];
     },
     {
@@ -538,7 +538,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -546,7 +546,7 @@ export type Autocrat = {
           type: {
             defined: "SpotSwapParams";
           };
-        },
+        }
       ];
     },
     {
@@ -666,7 +666,7 @@ export type Autocrat = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -674,7 +674,7 @@ export type Autocrat = {
           type: {
             defined: "ConditionalSwapParams";
           };
-        },
+        }
       ];
     },
     {
@@ -729,7 +729,7 @@ export type Autocrat = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -737,7 +737,7 @@ export type Autocrat = {
           type: {
             defined: "ProvideLiquidityParams";
           };
-        },
+        }
       ];
     },
     {
@@ -782,7 +782,7 @@ export type Autocrat = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -790,7 +790,7 @@ export type Autocrat = {
           type: {
             defined: "WithdrawLiquidityParams";
           };
-        },
+        }
       ];
     },
     {
@@ -830,10 +830,10 @@ export type Autocrat = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
-    },
+    }
   ];
   accounts: [
     {
@@ -852,7 +852,7 @@ export type Autocrat = {
           {
             name: "liquidity";
             type: "u128";
-          },
+          }
         ];
       };
     },
@@ -918,7 +918,7 @@ export type Autocrat = {
               "observation of 400 (converted into the AMM prices) and a max observation change per",
               "update of 8 (also converted into the AMM prices). Observations can be updated once",
               "a minute, so 2% allows the proposal market to reach double the spot price or 0",
-              "in 50 minutes.",
+              "in 50 minutes."
             ];
             type: "u128";
           },
@@ -929,7 +929,7 @@ export type Autocrat = {
           {
             name: "twapStartDelaySlots";
             docs: [
-              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots"
             ];
             type: "u64";
           },
@@ -941,7 +941,7 @@ export type Autocrat = {
               "",
               "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
               "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
-              "10 * 1_000_000_000 (10 META).",
+              "10 * 1_000_000_000 (10 META)."
             ];
             type: "u64";
           },
@@ -952,7 +952,7 @@ export type Autocrat = {
           {
             name: "baseToStake";
             docs: [
-              "Minimum amount of base tokens that must be staked to launch a proposal",
+              "Minimum amount of base tokens that must be staked to launch a proposal"
             ];
             type: "u64";
           },
@@ -974,7 +974,7 @@ export type Autocrat = {
             type: {
               defined: "FutarchyAmm";
             };
-          },
+          }
         ];
       };
     },
@@ -1052,17 +1052,17 @@ export type Autocrat = {
           {
             name: "stakers";
             docs: [
-              "Mapping of staker to amount staked (only used in Draft state)",
+              "Mapping of staker to amount staked (only used in Draft state)"
             ];
             type: {
               vec: {
                 defined: "StakerRecord";
               };
             };
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -1077,7 +1077,7 @@ export type Autocrat = {
           {
             name: "unixTimestamp";
             type: "i64";
-          },
+          }
         ];
       };
     },
@@ -1105,7 +1105,7 @@ export type Autocrat = {
           {
             name: "minOutputAmount";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1165,7 +1165,7 @@ export type Autocrat = {
                 defined: "InitialSpendingLimit";
               };
             };
-          },
+          }
         ];
       };
     },
@@ -1177,7 +1177,7 @@ export type Autocrat = {
           {
             name: "descriptionUrl";
             type: "string";
-          },
+          }
         ];
       };
     },
@@ -1200,7 +1200,7 @@ export type Autocrat = {
             name: "minLiquidity";
             docs: ["The minimum liquidity you will be assigned"];
             type: "u128";
-          },
+          }
         ];
       };
     },
@@ -1222,7 +1222,7 @@ export type Autocrat = {
           {
             name: "minOutputAmount";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1234,7 +1234,7 @@ export type Autocrat = {
           {
             name: "amount";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1246,7 +1246,7 @@ export type Autocrat = {
           {
             name: "amount";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1296,7 +1296,7 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
-          },
+          }
         ];
       };
     },
@@ -1319,7 +1319,7 @@ export type Autocrat = {
             name: "minQuoteAmount";
             docs: ["Minimum quote tokens to receive"];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1337,7 +1337,7 @@ export type Autocrat = {
             type: {
               vec: "publicKey";
             };
-          },
+          }
         ];
       };
     },
@@ -1371,7 +1371,7 @@ export type Autocrat = {
           {
             name: "ammQuoteVault";
             type: "publicKey";
-          },
+          }
         ];
       };
     },
@@ -1394,7 +1394,7 @@ export type Autocrat = {
               "A price is the number of quote units per base unit multiplied by 1e12.",
               "You cannot simply divide by 1e12 to get a price you can display in the UI",
               "because the base and quote decimals may be different. Instead, do:",
-              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12",
+              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
             ];
             type: "u128";
           },
@@ -1403,7 +1403,7 @@ export type Autocrat = {
             docs: [
               "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
               "a few extremely large outliers. So we use observations, which can only move",
-              "by `max_observation_change_per_update` per update.",
+              "by `max_observation_change_per_update` per update."
             ];
             type: "u128";
           },
@@ -1423,7 +1423,7 @@ export type Autocrat = {
               "",
               "So in the case of an overflow, the aggregator rolls back to 0. It's the",
               "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at T2 being smaller than an aggregator at T1.",
+              "aggregator at T2 being smaller than an aggregator at T1."
             ];
             type: "u128";
           },
@@ -1440,10 +1440,10 @@ export type Autocrat = {
           {
             name: "startDelaySlots";
             docs: [
-              "Number of slots after amm.created_at_slot to start recording TWAP",
+              "Number of slots after amm.created_at_slot to start recording TWAP"
             ];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1473,7 +1473,7 @@ export type Autocrat = {
             type: {
               defined: "TwapOracle";
             };
-          },
+          }
         ];
       };
     },
@@ -1489,7 +1489,7 @@ export type Autocrat = {
           {
             name: "amount";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1506,7 +1506,7 @@ export type Autocrat = {
                 type: {
                   defined: "Pool";
                 };
-              },
+              }
             ];
           },
           {
@@ -1529,9 +1529,9 @@ export type Autocrat = {
                 type: {
                   defined: "Pool";
                 };
-              },
+              }
             ];
-          },
+          }
         ];
       };
     },
@@ -1548,7 +1548,7 @@ export type Autocrat = {
           },
           {
             name: "Fail";
-          },
+          }
         ];
       };
     },
@@ -1562,7 +1562,7 @@ export type Autocrat = {
           },
           {
             name: "Sell";
-          },
+          }
         ];
       };
     },
@@ -1576,7 +1576,7 @@ export type Autocrat = {
           },
           {
             name: "Quote";
-          },
+          }
         ];
       };
     },
@@ -1591,7 +1591,7 @@ export type Autocrat = {
               {
                 name: "amountStaked";
                 type: "u64";
-              },
+              }
             ];
           },
           {
@@ -1602,10 +1602,10 @@ export type Autocrat = {
           },
           {
             name: "Failed";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   events: [
     {
@@ -1686,7 +1686,7 @@ export type Autocrat = {
           name: "squadsMultisigVault";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -1738,7 +1738,7 @@ export type Autocrat = {
           name: "baseToStake";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -1810,7 +1810,7 @@ export type Autocrat = {
           name: "squadsMultisigVault";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -1842,7 +1842,7 @@ export type Autocrat = {
           name: "totalStaked";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -1874,7 +1874,7 @@ export type Autocrat = {
           name: "totalStaked";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -1901,7 +1901,7 @@ export type Autocrat = {
           name: "totalStaked";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -1955,7 +1955,7 @@ export type Autocrat = {
           name: "squadsMultisig";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -1977,7 +1977,7 @@ export type Autocrat = {
           name: "dao";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -2024,9 +2024,9 @@ export type Autocrat = {
           name: "quoteAmount";
           type: "u64";
           index: false;
-        },
+        }
       ];
-    },
+    }
   ];
   errors: [
     {
@@ -2168,7 +2168,7 @@ export type Autocrat = {
       code: 6027;
       name: "InvalidDaoCreateLiquidity";
       msg: "If you're providing liquidity, you must provide both base and quote token accounts";
-    },
+    }
   ];
 };
 

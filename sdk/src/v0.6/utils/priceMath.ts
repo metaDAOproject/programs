@@ -45,10 +45,10 @@ export class AmmMath {
   public static getHumanPrice(
     ammPrice: BN,
     baseDecimals: number,
-    quoteDecimals: number,
+    quoteDecimals: number
   ): number {
     const decimalScalar = BN_TEN.pow(
-      new BN(quoteDecimals - baseDecimals).abs(),
+      new BN(quoteDecimals - baseDecimals).abs()
     );
     const price1e12 =
       quoteDecimals > baseDecimals
@@ -66,14 +66,14 @@ export class AmmMath {
 
   public static getTwap(amm: Amm): BN {
     return amm.oracle.aggregator.div(
-      amm.oracle.lastUpdatedSlot.sub(amm.createdAtSlot),
+      amm.oracle.lastUpdatedSlot.sub(amm.createdAtSlot)
     );
   }
 
   public static simulateSwapInner(
     inputAmount: BN,
     inputReserves: BN,
-    outputReserves: BN,
+    outputReserves: BN
   ): BN {
     if (inputReserves.eqn(0) || outputReserves.eqn(0)) {
       throw new Error("reserves must be non-zero");

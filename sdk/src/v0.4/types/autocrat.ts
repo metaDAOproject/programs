@@ -39,7 +39,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -47,7 +47,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeDaoParams";
           };
-        },
+        }
       ];
     },
     {
@@ -142,7 +142,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -150,7 +150,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeProposalParams";
           };
-        },
+        }
       ];
     },
     {
@@ -230,7 +230,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -256,7 +256,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -282,7 +282,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -290,9 +290,9 @@ export type Autocrat = {
           type: {
             defined: "UpdateDaoParams";
           };
-        },
+        }
       ];
-    },
+    }
   ];
   accounts: [
     {
@@ -344,7 +344,7 @@ export type Autocrat = {
               "observation of 400 (converted into the AMM prices) and a max observation change per",
               "update of 8 (also converted into the AMM prices). Observations can be updated once",
               "a minute, so 2% allows the proposal market to reach double the spot price or 0",
-              "in 50 minutes.",
+              "in 50 minutes."
             ];
             type: "u128";
           },
@@ -355,7 +355,7 @@ export type Autocrat = {
           {
             name: "twapStartDelaySlots";
             docs: [
-              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots"
             ];
             type: "u64";
           },
@@ -367,7 +367,7 @@ export type Autocrat = {
               "",
               "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
               "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
-              "10 * 1_000_000_000 (10 META).",
+              "10 * 1_000_000_000 (10 META)."
             ];
             type: "u64";
           },
@@ -378,7 +378,7 @@ export type Autocrat = {
           {
             name: "seqNum";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -449,7 +449,7 @@ export type Autocrat = {
               "We need to include a per-proposer nonce to prevent some weird proposal",
               "front-running edge cases. Using a `u64` means that proposers are unlikely",
               "to run into collisions, even if they generate nonces randomly - I've run",
-              "the math :D",
+              "the math :D"
             ];
             type: "u64";
           },
@@ -464,10 +464,10 @@ export type Autocrat = {
           {
             name: "durationInSlots";
             type: "u64";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -482,7 +482,7 @@ export type Autocrat = {
           {
             name: "unixTimestamp";
             type: "i64";
-          },
+          }
         ];
       };
     },
@@ -522,7 +522,7 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
-          },
+          }
         ];
       };
     },
@@ -552,7 +552,7 @@ export type Autocrat = {
           {
             name: "nonce";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -596,7 +596,7 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
-          },
+          }
         ];
       };
     },
@@ -616,7 +616,7 @@ export type Autocrat = {
           {
             name: "isWritable";
             type: "bool";
-          },
+          }
         ];
       };
     },
@@ -640,7 +640,7 @@ export type Autocrat = {
           {
             name: "data";
             type: "bytes";
-          },
+          }
         ];
       };
     },
@@ -660,10 +660,10 @@ export type Autocrat = {
           },
           {
             name: "Executed";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   events: [
     {
@@ -725,7 +725,7 @@ export type Autocrat = {
           name: "minBaseFutarchicLiquidity";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -772,7 +772,7 @@ export type Autocrat = {
           name: "minBaseFutarchicLiquidity";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -871,7 +871,7 @@ export type Autocrat = {
           name: "durationInSlots";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -915,7 +915,7 @@ export type Autocrat = {
             defined: "ProposalState";
           };
           index: false;
-        },
+        }
       ];
     },
     {
@@ -937,9 +937,9 @@ export type Autocrat = {
           name: "dao";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
-    },
+    }
   ];
   errors: [
     {
@@ -1001,7 +1001,7 @@ export type Autocrat = {
       code: 6011;
       name: "InsufficientLpTokenLock";
       msg: "The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`";
-    },
+    }
   ];
 };
 

@@ -84,7 +84,7 @@ export type Launchpad = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -92,7 +92,7 @@ export type Launchpad = {
           type: {
             defined: "InitializeLaunchArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -117,7 +117,7 @@ export type Launchpad = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -178,13 +178,13 @@ export type Launchpad = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "amount";
           type: "u64";
-        },
+        }
       ];
     },
     {
@@ -318,7 +318,7 @@ export type Launchpad = {
               isMut: true;
               isSigner: false;
               docs: [
-                "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config",
+                "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config"
               ];
             },
             {
@@ -366,7 +366,7 @@ export type Launchpad = {
               name: "squadsProgramConfigTreasury";
               isMut: true;
               isSigner: false;
-            },
+            }
           ];
         },
         {
@@ -378,7 +378,7 @@ export type Launchpad = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -434,7 +434,7 @@ export type Launchpad = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -500,10 +500,10 @@ export type Launchpad = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
-    },
+    }
   ];
   accounts: [
     {
@@ -534,10 +534,10 @@ export type Launchpad = {
           {
             name: "seqNum";
             docs: [
-              "The sequence number of this funding record. Useful for sorting events.",
+              "The sequence number of this funding record. Useful for sorting events."
             ];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -555,7 +555,7 @@ export type Launchpad = {
             name: "minimumRaiseAmount";
             docs: [
               "The minimum amount of USDC that must be raised, otherwise",
-              "everyone can get their USDC back.",
+              "everyone can get their USDC back."
             ];
             type: "u64";
           },
@@ -563,14 +563,14 @@ export type Launchpad = {
             name: "monthlySpendingLimitAmount";
             docs: [
               "The monthly spending limit the DAO allocates to the team. Must be",
-              "less than 1/6th of the minimum raise amount (so 6 months of burn).",
+              "less than 1/6th of the minimum raise amount (so 6 months of burn)."
             ];
             type: "u64";
           },
           {
             name: "monthlySpendingLimitMembers";
             docs: [
-              "The wallets that have access to the monthly spending limit.",
+              "The wallets that have access to the monthly spending limit."
             ];
             type: {
               vec: "publicKey";
@@ -584,7 +584,7 @@ export type Launchpad = {
           {
             name: "launchSigner";
             docs: [
-              "The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.",
+              "The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL."
             ];
             type: "publicKey";
           },
@@ -596,7 +596,7 @@ export type Launchpad = {
           {
             name: "launchQuoteVault";
             docs: [
-              "The USDC vault that will hold the USDC raised until the launch is over.",
+              "The USDC vault that will hold the USDC raised until the launch is over."
             ];
             type: "publicKey";
           },
@@ -608,7 +608,7 @@ export type Launchpad = {
           {
             name: "baseMint";
             docs: [
-              "The token that will be minted to funders and that will control the DAO.",
+              "The token that will be minted to funders and that will control the DAO."
             ];
             type: "publicKey";
           },
@@ -637,7 +637,7 @@ export type Launchpad = {
           {
             name: "seqNum";
             docs: [
-              "The sequence number of this launch. Useful for sorting events.",
+              "The sequence number of this launch. Useful for sorting events."
             ];
             type: "u64";
           },
@@ -656,15 +656,15 @@ export type Launchpad = {
           {
             name: "daoVault";
             docs: [
-              "The DAO treasury that USDC / LP is sent to, if the launch is complete.",
+              "The DAO treasury that USDC / LP is sent to, if the launch is complete."
             ];
             type: {
               option: "publicKey";
             };
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -683,7 +683,7 @@ export type Launchpad = {
           {
             name: "launchSeqNum";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -721,7 +721,7 @@ export type Launchpad = {
           {
             name: "tokenUri";
             type: "string";
-          },
+          }
         ];
       };
     },
@@ -741,10 +741,10 @@ export type Launchpad = {
           },
           {
             name: "Refunding";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   events: [
     {
@@ -811,7 +811,7 @@ export type Launchpad = {
           name: "secondsForLaunch";
           type: "u32";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -838,7 +838,7 @@ export type Launchpad = {
           name: "slotStarted";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -885,7 +885,7 @@ export type Launchpad = {
           name: "fundingRecordSeqNum";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -928,7 +928,7 @@ export type Launchpad = {
             option: "publicKey";
           };
           index: false;
-        },
+        }
       ];
     },
     {
@@ -960,7 +960,7 @@ export type Launchpad = {
           name: "fundingRecord";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -992,9 +992,9 @@ export type Launchpad = {
           name: "fundingRecord";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
-    },
+    }
   ];
   errors: [
     {
@@ -1056,7 +1056,7 @@ export type Launchpad = {
       code: 6011;
       name: "InvalidMonthlySpendingLimit";
       msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount";
-    },
+    }
   ];
 };
 

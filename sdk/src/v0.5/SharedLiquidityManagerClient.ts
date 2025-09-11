@@ -78,7 +78,7 @@ export class SharedLiquidityManagerClient {
       SharedLiquidityManagerIDL,
       params.sharedLiquidityManagerProgramId ||
         SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
-      this.provider,
+      this.provider
     );
     this.autocratClient = AutocratClient.createClient({
       provider: this.provider,
@@ -89,7 +89,7 @@ export class SharedLiquidityManagerClient {
   }
 
   public static createClient(
-    params: CreateSharedLiquidityManagerClientParams,
+    params: CreateSharedLiquidityManagerClientParams
   ): SharedLiquidityManagerClient {
     return new SharedLiquidityManagerClient(params);
   }

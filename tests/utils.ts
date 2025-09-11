@@ -22,7 +22,15 @@ export const toBN = (val: bigint): typeof BN.prototype =>
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
-export async function setupBasicDao({ context, baseMint, quoteMint }: { context: TestContext, baseMint: PublicKey, quoteMint: PublicKey }) {
+export async function setupBasicDao({
+  context,
+  baseMint,
+  quoteMint,
+}: {
+  context: TestContext;
+  baseMint: PublicKey;
+  quoteMint: PublicKey;
+}) {
   const nonce = new BN(Math.floor(Math.random() * 1000000));
 
   await context.futarchy
@@ -95,7 +103,7 @@ export async function createLookupTableForTransaction(
   const finalUniqueAddresses = [...new Set(allAddresses)] as PublicKey[];
 
   // Create the lookup table
-  let createLutTx = new Transaction().add(createTableIx);
+  const createLutTx = new Transaction().add(createTableIx);
   createLutTx.recentBlockhash = (
     await context.banksClient.getLatestBlockhash()
   )[0];
@@ -118,7 +126,7 @@ export async function createLookupTableForTransaction(
       addresses: batch,
     });
 
-    let extendLutTx = new Transaction().add(extendTableIx);
+    const extendLutTx = new Transaction().add(extendTableIx);
     extendLutTx.recentBlockhash = (
       await context.banksClient.getLatestBlockhash()
     )[0];
@@ -138,7 +146,7 @@ export async function createLookupTableForTransaction(
     addresses: [dummyAccount],
   });
 
-  let extendLutTx = new Transaction().add(extendTableIx);
+  const extendLutTx = new Transaction().add(extendTableIx);
   extendLutTx.recentBlockhash = (
     await context.banksClient.getLatestBlockhash()
   )[0];
@@ -149,7 +157,7 @@ export async function createLookupTableForTransaction(
   await context.advanceBySlots(1n);
 
   // Fetch and return the lookup table account
-  let rawStoredLookupTable = await context.banksClient.getAccount(
+  const rawStoredLookupTable = await context.banksClient.getAccount(
     lookupTableAddress
   );
 

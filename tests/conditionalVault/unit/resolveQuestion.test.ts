@@ -14,7 +14,7 @@ export default function suite() {
   });
 
   beforeEach(async function () {
-    let questionId = sha256(new Uint8Array([4, 2, 1]));
+    const questionId = sha256(new Uint8Array([4, 2, 1]));
     settlementAuthority = Keypair.generate();
     question = await vaultClient.initializeQuestion(
       questionId,

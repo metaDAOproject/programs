@@ -58,7 +58,7 @@ export class LaunchpadClient {
     this.launchpad = new Program(
       LaunchpadIDL,
       params.launchpadProgramId || LAUNCHPAD_PROGRAM_ID,
-      this.provider,
+      this.provider
     );
     this.autocratClient = AutocratClient.createClient({
       provider: this.provider,
@@ -93,19 +93,19 @@ export class LaunchpadClient {
   }
 
   async fetchFundingRecord(
-    fundingRecord: PublicKey,
+    fundingRecord: PublicKey
   ): Promise<FundingRecord | null> {
     return await this.launchpad.account.fundingRecord.fetchNullable(
-      fundingRecord,
+      fundingRecord
     );
   }
 
   async deserializeFundingRecord(
-    accountInfo: AccountInfo<Buffer>,
+    accountInfo: AccountInfo<Buffer>
   ): Promise<FundingRecord> {
     return this.launchpad.coder.accounts.decode(
       "fundingRecord",
-      accountInfo.data,
+      accountInfo.data
     );
   }
 
@@ -118,21 +118,21 @@ export class LaunchpadClient {
     tokenMint: PublicKey,
     launchAuthority: PublicKey = this.provider.publicKey,
     isDevnet: boolean = false,
-    payer: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
 
     const [launch] = getLaunchAddr(this.launchpad.programId, tokenMint);
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch,
+      launch
     );
     const usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
 
     const tokenVault = getAssociatedTokenAddressSync(
       tokenMint,
       launchSigner,
-      true,
+      true
     );
     const [tokenMetadata] = getMetadataAddr(tokenMint);
 
@@ -161,7 +161,7 @@ export class LaunchpadClient {
           payer,
           getAssociatedTokenAddressSync(USDC, launchSigner, true),
           launchSigner,
-          USDC,
+          USDC
         ),
       ]);
     // .signers([tokenMintKp]);
@@ -169,7 +169,7 @@ export class LaunchpadClient {
 
   startLaunchIx(
     launch: PublicKey,
-    launchAuthority: PublicKey = this.provider.publicKey,
+    launchAuthority: PublicKey = this.provider.publicKey
   ) {
     return this.launchpad.methods.startLaunch().accounts({
       launch,
@@ -181,24 +181,24 @@ export class LaunchpadClient {
     launch: PublicKey,
     amount: BN,
     funder: PublicKey = this.provider.publicKey,
-    isDevnet: boolean = false,
+    isDevnet: boolean = false
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
 
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch,
+      launch
     );
     const launchUsdcVault = getAssociatedTokenAddressSync(
       USDC,
       launchSigner,
-      true,
+      true
     );
     const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder, true);
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
-      funder,
+      funder
     );
 
     return this.launchpad.methods.fund(amount).accounts({
@@ -214,35 +214,35 @@ export class LaunchpadClient {
   completeLaunchIx(
     launch: PublicKey,
     tokenMint: PublicKey,
-    isDevnet: boolean = false,
+    isDevnet: boolean = false
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
 
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch,
+      launch
     );
     const launchUsdcVault = getAssociatedTokenAddressSync(
       USDC,
       launchSigner,
-      true,
+      true
     );
     const launchTokenVault = getAssociatedTokenAddressSync(
       tokenMint,
       launchSigner,
-      true,
+      true
     );
 
     // const daoKp = Keypair.generate();
     const [dao] = getLaunchDaoAddr(this.launchpad.programId, launch);
     const [daoTreasury] = getDaoTreasuryAddr(
       this.autocratClient.getProgramId(),
-      dao,
+      dao
     );
     const treasuryUsdcAccount = getAssociatedTokenAddressSync(
       USDC,
       daoTreasury,
-      true,
+      true
     );
 
     const [poolState] = getLiquidityPoolAddr(this.launchpad.programId, dao);
@@ -261,7 +261,7 @@ export class LaunchpadClient {
         poolState.toBuffer(),
         tokenMint.toBuffer(),
       ],
-      cpSwapProgramId,
+      cpSwapProgramId
     );
 
     const [poolUsdcVault] = PublicKey.findProgramAddressSync(
@@ -270,16 +270,16 @@ export class LaunchpadClient {
         poolState.toBuffer(),
         USDC.toBuffer(),
       ],
-      cpSwapProgramId,
+      cpSwapProgramId
     );
 
     const [observationState] = PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("observation"), poolState.toBuffer()],
-      cpSwapProgramId,
+      cpSwapProgramId
     );
 
     const [autocratEventAuthority] = getEventAuthorityAddr(
-      this.autocratClient.getProgramId(),
+      this.autocratClient.getProgramId()
     );
 
     const [tokenMetadata] = getMetadataAddr(tokenMint);
@@ -297,7 +297,7 @@ export class LaunchpadClient {
         treasuryLpAccount: getAssociatedTokenAddressSync(
           lpMint,
           daoTreasury,
-          true,
+          true
         ),
         usdcMint: USDC,
         tokenMint,
@@ -325,7 +325,7 @@ export class LaunchpadClient {
           this.provider.publicKey,
           treasuryUsdcAccount,
           daoTreasury,
-          USDC,
+          USDC
         ),
       ]);
   }
@@ -333,25 +333,25 @@ export class LaunchpadClient {
   refundIx(
     launch: PublicKey,
     funder: PublicKey = this.provider.publicKey,
-    isDevnet: boolean = false,
+    isDevnet: boolean = false
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
 
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch,
+      launch
     );
 
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
-      funder,
+      funder
     );
 
     const launchUsdcVault = getAssociatedTokenAddressSync(
       USDC,
       launchSigner,
-      true,
+      true
     );
     const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder, true);
 
@@ -368,16 +368,16 @@ export class LaunchpadClient {
   claimIx(
     launch: PublicKey,
     tokenMint: PublicKey,
-    funder: PublicKey = this.provider.publicKey,
+    funder: PublicKey = this.provider.publicKey
   ) {
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
-      launch,
+      launch
     );
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
-      funder,
+      funder
     );
 
     return this.launchpad.methods
@@ -390,13 +390,13 @@ export class LaunchpadClient {
         funderTokenAccount: getAssociatedTokenAddressSync(
           tokenMint,
           funder,
-          true,
+          true
         ),
         tokenMint,
         launchTokenVault: getAssociatedTokenAddressSync(
           tokenMint,
           launchSigner,
-          true,
+          true
         ),
       })
       .preInstructions([
@@ -404,7 +404,7 @@ export class LaunchpadClient {
           this.provider.publicKey,
           getAssociatedTokenAddressSync(tokenMint, funder, true),
           funder,
-          tokenMint,
+          tokenMint
         ),
       ]);
   }

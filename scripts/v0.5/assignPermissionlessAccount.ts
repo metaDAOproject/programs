@@ -1,6 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
 import { SystemProgram, Transaction } from "@solana/web3.js";
-import { AutocratClient, PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
+import {
+  AutocratClient,
+  PERMISSIONLESS_ACCOUNT,
+} from "@metadaoproject/futarchy/v0.5";
 
 async function main() {
   const provider = anchor.AnchorProvider.env();
@@ -15,21 +18,25 @@ async function main() {
   let allocateIx = SystemProgram.allocate({
     accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
     space: 8,
-  })
+  });
 
   let transferIx = SystemProgram.transfer({
     fromPubkey: payer.publicKey,
     toPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
     lamports: 10_000_000,
-  })
+  });
   console.log("assigning permissionless account to autocrat program");
   let assignTx = new Transaction().add(allocateIx, assignIx, transferIx);
-  assignTx.recentBlockhash = (await provider.connection.getLatestBlockhash())[0];
+  assignTx.recentBlockhash = (
+    await provider.connection.getLatestBlockhash()
+  )[0];
   assignTx.feePayer = payer.publicKey;
-//   assignTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+  //   assignTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
 
-  await provider.connection.sendTransaction(assignTx, [payer, PERMISSIONLESS_ACCOUNT]);
-
+  await provider.connection.sendTransaction(assignTx, [
+    payer,
+    PERMISSIONLESS_ACCOUNT,
+  ]);
 }
 
 main().catch((error) => {

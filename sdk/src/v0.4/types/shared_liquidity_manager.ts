@@ -94,7 +94,7 @@ export type SharedLiquidityManager = {
               name: "tokenProgram";
               isMut: false;
               isSigner: false;
-            },
+            }
           ];
         },
         {
@@ -156,7 +156,7 @@ export type SharedLiquidityManager = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -164,7 +164,7 @@ export type SharedLiquidityManager = {
           type: {
             defined: "InitializeSharedLiquidityPoolParams";
           };
-        },
+        }
       ];
     },
     {
@@ -219,7 +219,7 @@ export type SharedLiquidityManager = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -227,7 +227,7 @@ export type SharedLiquidityManager = {
           type: {
             defined: "InitializeDraftProposalParams";
           };
-        },
+        }
       ];
     },
     {
@@ -282,7 +282,7 @@ export type SharedLiquidityManager = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -290,7 +290,7 @@ export type SharedLiquidityManager = {
           type: {
             defined: "StakeToDraftProposalParams";
           };
-        },
+        }
       ];
     },
     {
@@ -335,7 +335,7 @@ export type SharedLiquidityManager = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -343,7 +343,7 @@ export type SharedLiquidityManager = {
           type: {
             defined: "UnstakeFromDraftProposalParams";
           };
-        },
+        }
       ];
     },
     {
@@ -458,7 +458,7 @@ export type SharedLiquidityManager = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -466,7 +466,7 @@ export type SharedLiquidityManager = {
           type: {
             defined: "DepositSharedLiquidityParams";
           };
-        },
+        }
       ];
     },
     {
@@ -581,7 +581,7 @@ export type SharedLiquidityManager = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -589,7 +589,7 @@ export type SharedLiquidityManager = {
           type: {
             defined: "WithdrawSharedLiquidityParams";
           };
-        },
+        }
       ];
     },
     {
@@ -682,7 +682,7 @@ export type SharedLiquidityManager = {
               name: "memoProgram";
               isMut: false;
               isSigner: false;
-            },
+            }
           ];
         },
         {
@@ -782,7 +782,7 @@ export type SharedLiquidityManager = {
               name: "slPoolSigner";
               isMut: true;
               isSigner: false;
-            },
+            }
           ];
         },
         {
@@ -887,7 +887,7 @@ export type SharedLiquidityManager = {
               name: "slPoolSigner";
               isMut: false;
               isSigner: false;
-            },
+            }
           ];
         },
         {
@@ -929,7 +929,7 @@ export type SharedLiquidityManager = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -937,7 +937,7 @@ export type SharedLiquidityManager = {
           type: {
             defined: "InitializeProposalWithLiquidityParams";
           };
-        },
+        }
       ];
     },
     {
@@ -1015,7 +1015,7 @@ export type SharedLiquidityManager = {
               name: "tokenProgram";
               isMut: false;
               isSigner: false;
-            },
+            }
           ];
         },
         {
@@ -1105,7 +1105,7 @@ export type SharedLiquidityManager = {
               name: "quoteMint";
               isMut: false;
               isSigner: false;
-            },
+            }
           ];
         },
         {
@@ -1195,7 +1195,7 @@ export type SharedLiquidityManager = {
               name: "slPoolSigner";
               isMut: true;
               isSigner: false;
-            },
+            }
           ];
         },
         {
@@ -1265,7 +1265,7 @@ export type SharedLiquidityManager = {
               name: "slPoolSigner";
               isMut: false;
               isSigner: false;
-            },
+            }
           ];
         },
         {
@@ -1292,10 +1292,10 @@ export type SharedLiquidityManager = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
-    },
+    }
   ];
   accounts: [
     {
@@ -1326,7 +1326,7 @@ export type SharedLiquidityManager = {
           {
             name: "stakedTokenAmount";
             docs: [
-              "The amount of tokens that have been staked on this draft proposal",
+              "The amount of tokens that have been staked on this draft proposal"
             ];
             type: "u64";
           },
@@ -1343,7 +1343,7 @@ export type SharedLiquidityManager = {
           {
             name: "pdaBump";
             type: "u8";
-          },
+          }
         ];
       };
     },
@@ -1365,7 +1365,7 @@ export type SharedLiquidityManager = {
           {
             name: "underlyingSpotLpShares";
             docs: [
-              "The amount of underlying spot LP shares this position represents",
+              "The amount of underlying spot LP shares this position represents"
             ];
             type: "u64";
           },
@@ -1373,7 +1373,7 @@ export type SharedLiquidityManager = {
             name: "bump";
             docs: ["The PDA bump"];
             type: "u8";
-          },
+          }
         ];
       };
     },
@@ -1405,7 +1405,7 @@ export type SharedLiquidityManager = {
           {
             name: "slPoolSigner";
             docs: [
-              "The signer of this pool, used because Raydium pools need a SOL payer and this PDA can't hold SOL.",
+              "The signer of this pool, used because Raydium pools need a SOL payer and this PDA can't hold SOL."
             ];
             type: "publicKey";
           },
@@ -1417,14 +1417,14 @@ export type SharedLiquidityManager = {
           {
             name: "slPoolBaseVault";
             docs: [
-              "Holds the base tokens for the shared liquidity pool when it's moving liquidity around.",
+              "Holds the base tokens for the shared liquidity pool when it's moving liquidity around."
             ];
             type: "publicKey";
           },
           {
             name: "slPoolQuoteVault";
             docs: [
-              "Holds the quote tokens for the shared liquidity pool when it's moving liquidity around.",
+              "Holds the quote tokens for the shared liquidity pool when it's moving liquidity around."
             ];
             type: "publicKey";
           },
@@ -1444,38 +1444,38 @@ export type SharedLiquidityManager = {
             name: "proposalStakeRateThresholdBps";
             docs: [
               "The percentage of a token's supply, in basis points, that needs to be",
-              "staked to a draft proposal before it can be initialized.",
+              "staked to a draft proposal before it can be initialized."
             ];
             type: "u16";
           },
           {
             name: "seqNum";
             docs: [
-              "The sequence number of this shared liquidity pool. Useful for sorting events.",
+              "The sequence number of this shared liquidity pool. Useful for sorting events."
             ];
             type: "u64";
           },
           {
             name: "activeSpotPool";
             docs: [
-              "The current Raydium spot pool. Changes when a proposal is removed.",
+              "The current Raydium spot pool. Changes when a proposal is removed."
             ];
             type: "publicKey";
           },
           {
             name: "activeSpotPoolIndex";
             docs: [
-              "The index of the current Raydium spot pool. Starts at 0 and increments by 1 for each new spot pool.",
+              "The index of the current Raydium spot pool. Starts at 0 and increments by 1 for each new spot pool."
             ];
             type: "u32";
           },
           {
             name: "isBaseToken0";
             docs: [
-              "Whether the base token is token0 in the current Raydium spot pool (otherwise it's token1).",
+              "Whether the base token is token0 in the current Raydium spot pool (otherwise it's token1)."
             ];
             type: "bool";
-          },
+          }
         ];
       };
     },
@@ -1491,10 +1491,10 @@ export type SharedLiquidityManager = {
           {
             name: "amount";
             type: "u64";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -1516,7 +1516,7 @@ export type SharedLiquidityManager = {
             name: "maxBaseTokenAmount";
             docs: ["The maximum amount of base tokens to deposit"];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1534,10 +1534,10 @@ export type SharedLiquidityManager = {
           {
             name: "draftProposalNonce";
             docs: [
-              "The nonce for the draft proposal, not used for anything aside from the PDA",
+              "The nonce for the draft proposal, not used for anything aside from the PDA"
             ];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1549,7 +1549,7 @@ export type SharedLiquidityManager = {
           {
             name: "nonce";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1569,7 +1569,7 @@ export type SharedLiquidityManager = {
           {
             name: "proposalStakeRateThresholdBps";
             type: "u16";
-          },
+          }
         ];
       };
     },
@@ -1581,7 +1581,7 @@ export type SharedLiquidityManager = {
           {
             name: "amount";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1593,7 +1593,7 @@ export type SharedLiquidityManager = {
           {
             name: "amount";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1616,7 +1616,7 @@ export type SharedLiquidityManager = {
             name: "minimumToken1Amount";
             docs: ["The minimum amount of token1 to receive"];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -1636,7 +1636,7 @@ export type SharedLiquidityManager = {
           {
             name: "isWritable";
             type: "bool";
-          },
+          }
         ];
       };
     },
@@ -1660,7 +1660,7 @@ export type SharedLiquidityManager = {
           {
             name: "data";
             type: "bytes";
-          },
+          }
         ];
       };
     },
@@ -1674,10 +1674,10 @@ export type SharedLiquidityManager = {
           },
           {
             name: "Initialized";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   errors: [
     {
@@ -1759,7 +1759,7 @@ export type SharedLiquidityManager = {
       code: 6015;
       name: "QuestionAlreadyResolved";
       msg: "Question already resolved";
-    },
+    }
   ];
 };
 

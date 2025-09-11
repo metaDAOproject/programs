@@ -16,7 +16,7 @@ export const uploadConditionalTokenMetadataJson = async (
   connection: Connection,
   identityPlugin: UmiPlugin,
   proposalNumber: number,
-  symbol: string,
+  symbol: string
   //   proposal: BN,
   //   conditionalToken: string,
   //   image: string

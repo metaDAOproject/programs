@@ -2,39 +2,26 @@ import { ConditionalVaultClient, sha256 } from "@metadaoproject/futarchy";
 import {
   Keypair,
   PublicKey,
-  AddressLookupTableProgram,
-  TransactionInstruction,
-  Connection,
-  Transaction,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { assert } from "chai";
-import {
-  createMint,
-  getMint,
-  mintTo,
-  createAssociatedTokenAccount,
-  transfer,
-  getAccount,
-} from "spl-token-bankrun";
-import * as token from "@solana/spl-token";
-import { BanksClient } from "solana-bankrun";
+
+
 
 export default async function test() {
   // A 10-option prediction market test. Alice, Bob, and Charlie are betting on
   // which of 10 candidates will win the next election. Each splits 100 USDC into
   // 10 different token types (CAND1, CAND2, ..., CAND10).
 
-  let vaultClient: ConditionalVaultClient = this.vaultClient;
+  const vaultClient: ConditionalVaultClient = this.vaultClient;
 
-  let alice: Keypair = Keypair.generate();
-  let bob: Keypair = Keypair.generate();
-  let charlie: Keypair = Keypair.generate();
-  let operator: Keypair = Keypair.generate();
+  const alice: Keypair = Keypair.generate();
+  const bob: Keypair = Keypair.generate();
+  const charlie: Keypair = Keypair.generate();
+  const operator: Keypair = Keypair.generate();
 
   const numCandidates = 9;
 
-  let question: PublicKey = await vaultClient.initializeQuestion(
+  const question: PublicKey = await vaultClient.initializeQuestion(
     sha256(
       new TextEncoder().encode(
         "Who's going to win the next election?/CAND1/CAND2/CAND3/CAND4/CAND5/CAND6/CAND7/CAND8/CAND9/CAND10"
@@ -44,7 +31,7 @@ export default async function test() {
     numCandidates
   );
 
-  let USDC: PublicKey = await this.createMint(operator.publicKey, 6);
+  const USDC: PublicKey = await this.createMint(operator.publicKey, 6);
 
   await this.createTokenAccount(USDC, alice.publicKey);
   await this.createTokenAccount(USDC, bob.publicKey);

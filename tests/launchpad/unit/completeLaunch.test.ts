@@ -1,16 +1,16 @@
 import {
-  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
 import { assert } from "chai";
-import { getLiquidityPoolAddr, getRaydiumCpmmLpMintAddr } from "@metadaoproject/futarchy/v0.5";
+import {
+  getLiquidityPoolAddr,
+  getRaydiumCpmmLpMintAddr,
+} from "@metadaoproject/futarchy/v0.5";
 import {
   FutarchyClient,
-  getLaunchAddr,
-  getLaunchSignerAddr,
   getMetadataAddr,
   LaunchpadClient,
   MAINNET_USDC,
@@ -18,7 +18,6 @@ import {
 import { BN } from "bn.js";
 import {
   deserializeMetadata,
-  Metadata,
 } from "@metaplex-foundation/mpl-token-metadata";
 import {
   fromWeb3JsPublicKey,
@@ -26,7 +25,6 @@ import {
 } from "@metaplex-foundation/umi-web3js-adapters";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
-import { Clock } from "solana-bankrun";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -38,11 +36,10 @@ export default function suite() {
 
   const minRaise = new BN(1000_000000); // 1000 USDC
   const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
-  const monthlySpend = new BN(100_000000)
+  const monthlySpend = new BN(100_000000);
   const recipientAddress = Keypair.generate().publicKey;
   const premineAmount = new BN(500_000_000);
   const unlockThreshold = new BN(2000_000000);
-
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -74,20 +71,18 @@ export default function suite() {
         monthlySpendingLimitMembers: [this.payer.publicKey],
         priceBasedUnlockAddress: recipientAddress,
         priceBasedPremineAmount: premineAmount,
-        priceBasedUnlockThreshold: unlockThreshold
+        priceBasedUnlockThreshold: unlockThreshold,
       })
       .rpc();
 
-    await launchpadClient.startLaunchIx({launch}).rpc();
+    await launchpadClient.startLaunchIx({ launch }).rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
   });
 
   it("completes launch successfully when minimum raise is met and time has passed", async function () {
     // Fund the launch with exactly minimum raise
 
-    await launchpadClient
-      .fundIx({launch, amount: minRaise})
-      .rpc();
+    await launchpadClient.fundIx({ launch, amount: minRaise }).rpc();
 
     const [tokenMetadata] = getMetadataAddr(META);
 
@@ -96,8 +91,14 @@ export default function suite() {
       ...rawStoredMetadata,
       publicKey: fromWeb3JsPublicKey(tokenMetadata),
       owner: fromWeb3JsPublicKey(rawStoredMetadata.owner),
-      lamports: { basisPoints: BigInt(rawStoredMetadata.lamports), identifier: 'SOL', decimals: 9 },
-      rentEpoch: rawStoredMetadata.rentEpoch ? BigInt(rawStoredMetadata.rentEpoch) : undefined,
+      lamports: {
+        basisPoints: BigInt(rawStoredMetadata.lamports),
+        identifier: "SOL",
+        decimals: 9,
+      },
+      rentEpoch: rawStoredMetadata.rentEpoch
+        ? BigInt(rawStoredMetadata.rentEpoch)
+        : undefined,
     });
     assert.ok(
       toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(launchSigner)
@@ -107,7 +108,7 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
+      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -151,15 +152,21 @@ export default function suite() {
     const mint = await this.getMint(META);
     assert.isTrue(mint.mintAuthority.equals(launchAccount.daoVault));
     assert.exists(launchAccount.dao);
-    assert.equal(mint.supply, (12_000_000 * 10 ** 6) + Number(premineAmount));
+    assert.equal(mint.supply, 12_000_000 * 10 ** 6 + Number(premineAmount));
 
     rawStoredMetadata = await this.banksClient.getAccount(tokenMetadata);
     storedMetadata = deserializeMetadata({
       ...rawStoredMetadata,
       publicKey: fromWeb3JsPublicKey(tokenMetadata),
       owner: fromWeb3JsPublicKey(rawStoredMetadata.owner),
-      lamports: { basisPoints: BigInt(rawStoredMetadata.lamports), identifier: 'SOL', decimals: 9 },
-      rentEpoch: rawStoredMetadata.rentEpoch ? BigInt(rawStoredMetadata.rentEpoch) : undefined,
+      lamports: {
+        basisPoints: BigInt(rawStoredMetadata.lamports),
+        identifier: "SOL",
+        decimals: 9,
+      },
+      rentEpoch: rawStoredMetadata.rentEpoch
+        ? BigInt(rawStoredMetadata.rentEpoch)
+        : undefined,
     });
     assert.ok(
       toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(
@@ -171,12 +178,10 @@ export default function suite() {
   it("fails when launch period has not passed", async function () {
     // Fund the launch with exactly minimum raise
 
-    await launchpadClient
-      .fundIx({launch, amount: minRaise})
-      .rpc();
+    await launchpadClient.fundIx({ launch, amount: minRaise }).rpc();
 
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
+      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -198,7 +203,10 @@ export default function suite() {
       assert.fail("Should have thrown error");
     } catch (error) {
       // LaunchPeriodNotOver error code is 6006, which is 0x1776 in hex
-      assert.isTrue(error.message.includes("0x1776"), `Expected error message to contain 0x1776, got: ${error.message}`);
+      assert.isTrue(
+        error.message.includes("0x1776"),
+        `Expected error message to contain 0x1776, got: ${error.message}`
+      );
     }
 
     // Advance by 9 days (still not enough)
@@ -218,7 +226,7 @@ export default function suite() {
       await this.banksClient.processTransaction(tx2);
       assert.fail("Should have thrown error");
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   });
 
@@ -226,15 +234,13 @@ export default function suite() {
     // Fund the launch with less than minimum raise
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient
-      .fundIx({launch, amount: partialAmount})
-      .rpc();
+    await launchpadClient.fundIx({ launch, amount: partialAmount }).rpc();
 
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     // Complete the launch
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
+      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -264,7 +270,7 @@ export default function suite() {
 
     // Complete launch first time
     const completeLaunchTx1 = await launchpadClient
-      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
+      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
       .transaction();
 
     const completeLaunchLut1 = await createLookupTableForTransaction(
@@ -285,7 +291,7 @@ export default function suite() {
 
     // Try to complete again
     const completeLaunchTx2 = await launchpadClient
-      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
+      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
       .transaction();
 
     const completeLaunchLut2 = await createLookupTableForTransaction(

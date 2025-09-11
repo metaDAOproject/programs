@@ -1,5 +1,4 @@
 import {
-  getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
 } from "@metadaoproject/futarchy/v0.6";
@@ -10,10 +9,11 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, ONE_MINUTE_IN_SLOTS, setupBasicDao } from "../../utils.js";
+import {
+  setupBasicDao,
+} from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 const { Permissions, Permission } = multisig.types;
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
@@ -28,7 +28,12 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
 
-    await this.mintTo(META, this.payer.publicKey, this.payer, 1000_000_000 * 10 ** 9);
+    await this.mintTo(
+      META,
+      this.payer.publicKey,
+      this.payer,
+      1000_000_000 * 10 ** 9
+    );
     await this.mintTo(
       USDC,
       this.payer.publicKey,
@@ -36,22 +41,27 @@ export default function suite() {
       1_000_000_000 * 1_000_000
     );
 
-    dao = await setupBasicDao({ context: this, baseMint: META, quoteMint: USDC });
-
-    await this.futarchy.provideLiquidityIx({
-      dao,
+    dao = await setupBasicDao({
+      context: this,
       baseMint: META,
       quoteMint: USDC,
-      quoteAmount: new BN(100_000 * 10 ** 6), // 100,000 USDC
-      maxBaseAmount: new BN(100 * 10 ** 6), // 100 META
-      minLiquidity: new BN(0),
-      positionAuthority: this.payer.publicKey,
-      liquidityProvider: this.payer.publicKey,
-    })
-    .preInstructions([
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-    ])
-    .rpc();
+    });
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6), // 100,000 USDC
+        maxBaseAmount: new BN(100 * 10 ** 6), // 100 META
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
 
     // Create a simple instruction for the proposal
     const updateDaoIx = await this.futarchy
@@ -107,54 +117,74 @@ export default function suite() {
     await this.banksClient.processTransaction(tx);
 
     // Now initialize the autocrat proposal
-    proposal = await this.futarchy.initializeProposal(
-      dao,
-      squadsProposalPda,
-    );
+    proposal = await this.futarchy.initializeProposal(dao, squadsProposalPda);
 
-    await this.futarchy.stakeToProposalIx({
-      proposal,
-      dao,
-      baseMint: META,
-      amount: new BN(100),
-      staker: this.payer.publicKey,
-      payer: this.payer.publicKey,
-    })
-    .rpc();
+    await this.futarchy
+      .stakeToProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        amount: new BN(100),
+        staker: this.payer.publicKey,
+        payer: this.payer.publicKey,
+      })
+      .rpc();
   });
 
   it("futarchy amm", async function () {
     // Get initial state before spot swap (before launching proposal)
-    const daoBeforeSpotSwap = await this.futarchy.autocrat.account.dao.fetch(dao);
+    const daoBeforeSpotSwap = await this.futarchy.autocrat.account.dao.fetch(
+      dao
+    );
 
-    const initialUserBaseBalance = await this.getTokenBalance(META, this.payer.publicKey);
-    const initialUserQuoteBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
+    const initialUserBaseBalance = await this.getTokenBalance(
+      META,
+      this.payer.publicKey
+    );
+    const initialUserQuoteBalance = await this.getTokenBalance(
+      USDC,
+      this.payer.publicKey
+    );
 
     // Perform a spot swap before launching the proposal
-    await this.futarchy.spotSwapIx({
-      dao,
-      baseMint: META,
-      quoteMint: USDC,
-      swapType: "buy",
-      inputAmount: new BN(1 * 10 ** 6), // Buy 1 USDC of META
-      minOutputAmount: new BN(0),
-      trader: this.payer.publicKey,
-    }).rpc();
+    await this.futarchy
+      .spotSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        swapType: "buy",
+        inputAmount: new BN(1 * 10 ** 6), // Buy 1 USDC of META
+        minOutputAmount: new BN(0),
+        trader: this.payer.publicKey,
+      })
+      .rpc();
 
     // Get state after spot swap
-    const daoAfterSpotSwap = await this.futarchy.autocrat.account.dao.fetch(dao);
+    const daoAfterSpotSwap = await this.futarchy.autocrat.account.dao.fetch(
+      dao
+    );
 
-    const finalUserBaseBalance = await this.getTokenBalance(META, this.payer.publicKey);
-    const finalUserQuoteBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
+    const finalUserBaseBalance = await this.getTokenBalance(
+      META,
+      this.payer.publicKey
+    );
+    const finalUserQuoteBalance = await this.getTokenBalance(
+      USDC,
+      this.payer.publicKey
+    );
     // // Assert that the spot swap worked correctly
-    // assert(daoAfterSpotSwap.amm.state.spot.spot.baseReserves.gt(daoBeforeSpotSwap.amm.state.spot.spot.baseReserves), 
+    // assert(daoAfterSpotSwap.amm.state.spot.spot.baseReserves.gt(daoBeforeSpotSwap.amm.state.spot.spot.baseReserves),
     //        "Base reserves should increase after selling base tokens");
-    // assert(daoAfterSpotSwap.amm.state.spot.spot.quoteReserves.lt(daoBeforeSpotSwap.amm.state.spot.spot.quoteReserves), 
+    // assert(daoAfterSpotSwap.amm.state.spot.spot.quoteReserves.lt(daoBeforeSpotSwap.amm.state.spot.spot.quoteReserves),
     //        "Quote reserves should decrease after selling base tokens");
 
     // Split tokens into the vaults
-    const { baseVault, quoteVault, question } =
-      this.futarchy.getProposalPdas(proposal, META, USDC, dao);
+    const { baseVault, quoteVault, question } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao
+    );
 
     await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
@@ -163,30 +193,55 @@ export default function suite() {
       .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
       .rpc();
 
-    const { passBaseMint, passQuoteMint } =
-      this.futarchy.getProposalPdas(proposal, META, USDC, dao);
+    const { passBaseMint, passQuoteMint } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao
+    );
 
-    const { failBaseMint, failQuoteMint } = this.futarchy.getProposalPdas(proposal, META, USDC, dao);
+    const { failBaseMint, failQuoteMint } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao
+    );
 
-    await this.futarchy.launchProposalIx({ proposal, dao, baseMint: META, quoteMint: USDC }).rpc();
+    await this.futarchy
+      .launchProposalIx({ proposal, dao, baseMint: META, quoteMint: USDC })
+      .rpc();
 
-    await this.futarchy.conditionalSwapIx({ dao, baseMint: META, quoteMint: USDC, proposal, market: "pass", swapType: "buy", inputAmount: new BN(10_000 * 1_000_000) }).rpc();
+    await this.futarchy
+      .conditionalSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        proposal,
+        market: "pass",
+        swapType: "buy",
+        inputAmount: new BN(10_000 * 1_000_000),
+      })
+      .rpc();
 
     // Perform spot swaps to generate TWAP data
-    for (let i = 0; i < 100; i++) { // Reduced to 10 for faster testing
+    for (let i = 0; i < 100; i++) {
+      // Reduced to 10 for faster testing
       await this.advanceBySeconds(20_000);
 
-      await this.futarchy.conditionalSwapIx({ 
-        dao, 
-        baseMint: META, 
-        quoteMint: USDC, 
-        proposal, 
-        market: "pass", 
-        swapType: "buy", 
-        inputAmount: new BN(10),
-        payer: this.payer.publicKey,
-      })
-        .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })])
+      await this.futarchy
+        .conditionalSwapIx({
+          dao,
+          baseMint: META,
+          quoteMint: USDC,
+          proposal,
+          market: "pass",
+          swapType: "buy",
+          inputAmount: new BN(10),
+          payer: this.payer.publicKey,
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+        ])
         .rpc();
     }
 
@@ -196,10 +251,12 @@ export default function suite() {
     assert.exists(storedProposal.state.passed);
 
     // Collect fees
-    await this.futarchy.collectFeesIx({
-      dao,
-      baseMint: META,
-      quoteMint: USDC,
-    }).rpc();
+    await this.futarchy
+      .collectFeesIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+      })
+      .rpc();
   });
 }

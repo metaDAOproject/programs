@@ -2,28 +2,21 @@ import * as anchor from "@coral-xyz/anchor";
 import { BN, Program, web3 } from "@coral-xyz/anchor";
 import {
   MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
-  createMetadataAccountV3,
 } from "@metaplex-foundation/mpl-token-metadata";
 import {
   Umi,
-  createSignerFromKeypair,
   keypairIdentity,
-  none,
 } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
   fromWeb3JsKeypair,
-  fromWeb3JsPublicKey,
-  toWeb3JsLegacyTransaction,
   toWeb3JsPublicKey,
 } from "@metaplex-foundation/umi-web3js-adapters";
 import * as token from "@solana/spl-token";
-import { SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
 import { assert } from "chai";
 import { BanksClient, ProgramTestContext, startAnchor } from "solana-bankrun";
 import {
-  createAccount,
   createAssociatedTokenAccount,
   createMint,
   getAccount,
@@ -38,18 +31,14 @@ import {
   ConditionalVault,
   IDL as ConditionalVaultIDL,
 } from "../../target/types/conditional_vault";
-import { expectError } from "../utils";
 import {
   CONDITIONAL_VAULT_PROGRAM_ID,
   ConditionalVaultClient,
   getConditionalTokenMintAddr,
   getQuestionAddr,
   getVaultAddr,
-  getVaultFinalizeMintAddr,
-  getVaultRevertMintAddr,
   sha256,
 } from "@metadaoproject/futarchy";
-import { set } from "@metaplex-foundation/umi/serializers";
 
 export type VaultProgram = anchor.Program<ConditionalVault>;
 export type PublicKey = anchor.web3.PublicKey;
@@ -152,13 +141,13 @@ describe("conditional_vault", async function () {
 
   describe("#initialize_question", async function () {
     it("initializes 2-outcome questions", async function () {
-      let questionId = sha256(new Uint8Array([1, 2, 3]));
+      const questionId = sha256(new Uint8Array([1, 2, 3]));
 
       await vaultClient
         .initializeQuestionIx(questionId, settlementAuthority.publicKey, 2)
         .rpc();
 
-      let [question] = getQuestionAddr(
+      const [question] = getQuestionAddr(
         vaultProgram.programId,
         questionId,
         settlementAuthority.publicKey,
@@ -185,7 +174,7 @@ describe("conditional_vault", async function () {
         let question: PublicKey;
 
         beforeEach(async function () {
-          let questionId = sha256(new Uint8Array(idArray));
+          const questionId = sha256(new Uint8Array(idArray));
           question = await vaultClient.initializeQuestion(
             questionId,
             settlementAuthority.publicKey,
@@ -233,7 +222,7 @@ describe("conditional_vault", async function () {
           assert.equal(storedVault.pdaBump, pdaBump);
           assert.equal(storedVault.decimals, 8);
 
-          for (let mint of storedConditionalTokenMints) {
+          for (const mint of storedConditionalTokenMints) {
             const storedMint = await getMint(banksClient, mint);
             assert.ok(storedMint.mintAuthority.equals(vault));
             assert.equal(storedMint.supply.toString(), "0");
@@ -249,7 +238,7 @@ describe("conditional_vault", async function () {
     let question: PublicKey;
 
     beforeEach(async function () {
-      let questionId = sha256(new Uint8Array([4, 2, 1]));
+      const questionId = sha256(new Uint8Array([4, 2, 1]));
 
       question = await vaultClient.initializeQuestion(
         questionId,
@@ -280,7 +269,7 @@ describe("conditional_vault", async function () {
     let vault: PublicKey;
 
     beforeEach(async function () {
-      let questionId = sha256(new Uint8Array([5, 2, 1]));
+      const questionId = sha256(new Uint8Array([5, 2, 1]));
 
       question = await vaultClient.initializeQuestion(
         questionId,
@@ -293,7 +282,7 @@ describe("conditional_vault", async function () {
         2
       );
 
-      let userUnderlyingTokenAccount = await createAssociatedTokenAccount(
+      const userUnderlyingTokenAccount = await createAssociatedTokenAccount(
         banksClient,
         payer,
         underlyingTokenMint,
@@ -317,17 +306,17 @@ describe("conditional_vault", async function () {
 
       const storedVault = await vaultClient.fetchVault(vault);
 
-      let storedVaultUnderlyingAcc = await getAccount(
+      const storedVaultUnderlyingAcc = await getAccount(
         banksClient,
         storedVault.underlyingTokenAccount
       );
       assert.equal(storedVaultUnderlyingAcc.amount.toString(), "1000");
 
       const storedConditionalTokenMints = storedVault.conditionalTokenMints;
-      for (let mint of storedConditionalTokenMints) {
-        let storedMint = await getMint(banksClient, mint);
+      for (const mint of storedConditionalTokenMints) {
+        const storedMint = await getMint(banksClient, mint);
         assert.equal(storedMint.supply.toString(), "1000");
-        let storedTokenAcc = await getAccount(
+        const storedTokenAcc = await getAccount(
           banksClient,
           token.getAssociatedTokenAddressSync(mint, payer.publicKey)
         );
@@ -341,7 +330,7 @@ describe("conditional_vault", async function () {
     let vault: PublicKey;
 
     beforeEach(async function () {
-      let questionId = sha256(new Uint8Array([9, 2, 1]));
+      const questionId = sha256(new Uint8Array([9, 2, 1]));
 
       question = await vaultClient.initializeQuestion(
         questionId,
@@ -388,7 +377,7 @@ describe("conditional_vault", async function () {
     let vault: PublicKey;
 
     beforeEach(async function () {
-      let questionId = sha256(new Uint8Array([9, 28, 2, 1]));
+      const questionId = sha256(new Uint8Array([9, 28, 2, 1]));
 
       question = await vaultClient.initializeQuestion(
         questionId,
@@ -451,7 +440,7 @@ describe("conditional_vault", async function () {
 
       const outcome0Tokens = storedVault.conditionalTokenMints[0];
 
-      let burne = Keypair.generate();
+      const burne = Keypair.generate();
       await createAssociatedTokenAccount(
         banksClient,
         payer,

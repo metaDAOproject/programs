@@ -29,7 +29,7 @@ export type Autocrat = {
           name: "usdcMint";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -37,7 +37,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeDaoParams";
           };
-        },
+        }
       ];
     },
     {
@@ -117,7 +117,7 @@ export type Autocrat = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -125,7 +125,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeProposalParams";
           };
-        },
+        }
       ];
     },
     {
@@ -195,7 +195,7 @@ export type Autocrat = {
           name: "vaultProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -211,7 +211,7 @@ export type Autocrat = {
           name: "dao";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -227,7 +227,7 @@ export type Autocrat = {
           name: "treasury";
           isMut: false;
           isSigner: true;
-        },
+        }
       ];
       args: [
         {
@@ -235,9 +235,9 @@ export type Autocrat = {
           type: {
             defined: "UpdateDaoParams";
           };
-        },
+        }
       ];
-    },
+    }
   ];
   accounts: [
     {
@@ -289,7 +289,7 @@ export type Autocrat = {
               "observation of 400 (converted into the AMM prices) and a max observation change per",
               "update of 8 (also converted into the AMM prices). Observations can be updated once",
               "a minute, so 2% allows the proposal market to reach double the spot price or 0",
-              "in 50 minutes.",
+              "in 50 minutes."
             ];
             type: "u128";
           },
@@ -305,14 +305,14 @@ export type Autocrat = {
               "",
               "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
               "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
-              "10 * 1_000_000_000 (10 META).",
+              "10 * 1_000_000_000 (10 META)."
             ];
             type: "u64";
           },
           {
             name: "minBaseFutarchicLiquidity";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -383,17 +383,17 @@ export type Autocrat = {
               "We need to include a per-proposer nonce to prevent some weird proposal",
               "front-running edge cases. Using a `u64` means that proposers are unlikely",
               "to run into collisions, even if they generate nonces randomly - I've run",
-              "the math :D",
+              "the math :D"
             ];
             type: "u64";
           },
           {
             name: "pdaBump";
             type: "u8";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -428,7 +428,7 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
-          },
+          }
         ];
       };
     },
@@ -458,7 +458,7 @@ export type Autocrat = {
           {
             name: "nonce";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -502,7 +502,7 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
-          },
+          }
         ];
       };
     },
@@ -522,7 +522,7 @@ export type Autocrat = {
           {
             name: "isWritable";
             type: "bool";
-          },
+          }
         ];
       };
     },
@@ -546,7 +546,7 @@ export type Autocrat = {
           {
             name: "data";
             type: "bytes";
-          },
+          }
         ];
       };
     },
@@ -566,10 +566,10 @@ export type Autocrat = {
           },
           {
             name: "Executed";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   errors: [
     {
@@ -626,7 +626,7 @@ export type Autocrat = {
       code: 6010;
       name: "InsufficientLpTokenLock";
       msg: "The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`";
-    },
+    }
   ];
 };
 

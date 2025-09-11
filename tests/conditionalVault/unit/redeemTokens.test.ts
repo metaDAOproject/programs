@@ -8,7 +8,6 @@ import {
   getAccount,
   mintTo,
 } from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
 import { BN } from "bn.js";
 
@@ -25,7 +24,7 @@ export default function suite() {
   });
 
   beforeEach(async function () {
-    let questionId = sha256(new Uint8Array([9, 28, 2, 1]));
+    const questionId = sha256(new Uint8Array([9, 28, 2, 1]));
     settlementAuthority = Keypair.generate();
 
     question = await vaultClient.initializeQuestion(

@@ -54,7 +54,7 @@ export type Amm = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -62,7 +62,7 @@ export type Amm = {
           type: {
             defined: "CreateAmmArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -112,7 +112,7 @@ export type Amm = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -120,7 +120,7 @@ export type Amm = {
           type: {
             defined: "AddLiquidityArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -170,7 +170,7 @@ export type Amm = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -178,7 +178,7 @@ export type Amm = {
           type: {
             defined: "RemoveLiquidityArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -218,7 +218,7 @@ export type Amm = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -226,7 +226,7 @@ export type Amm = {
           type: {
             defined: "SwapArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -236,10 +236,10 @@ export type Amm = {
           name: "amm";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [];
-    },
+    }
   ];
   accounts: [
     {
@@ -288,10 +288,10 @@ export type Amm = {
             type: {
               defined: "TwapOracle";
             };
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -313,7 +313,7 @@ export type Amm = {
             name: "minLpTokens";
             docs: ["The minimum LP token you will get back"];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -329,7 +329,7 @@ export type Amm = {
           {
             name: "twapMaxObservationChangePerUpdate";
             type: "u128";
-          },
+          }
         ];
       };
     },
@@ -349,7 +349,7 @@ export type Amm = {
           {
             name: "minBaseAmount";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -371,7 +371,7 @@ export type Amm = {
           {
             name: "outputAmountMin";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -390,7 +390,7 @@ export type Amm = {
               "A price is the number of quote units per base unit multiplied by 1e12.",
               "You cannot simply divide by 1e12 to get a price you can display in the UI",
               "because the base and quote decimals may be different. Instead, do:",
-              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12",
+              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
             ];
             type: "u128";
           },
@@ -399,7 +399,7 @@ export type Amm = {
             docs: [
               "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
               "a few extremely large outliers. So we use observations, which can only move",
-              "by `max_observation_change_per_update` per update.",
+              "by `max_observation_change_per_update` per update."
             ];
             type: "u128";
           },
@@ -419,7 +419,7 @@ export type Amm = {
               "",
               "So in the case of an overflow, the aggregator rolls back to 0. It's the",
               "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at t2 being smaller than an aggregator at t1.",
+              "aggregator at t2 being smaller than an aggregator at t1."
             ];
             type: "u128";
           },
@@ -432,7 +432,7 @@ export type Amm = {
             name: "initialObservation";
             docs: ["What the initial `latest_observation` is set to."];
             type: "u128";
-          },
+          }
         ];
       };
     },
@@ -446,10 +446,10 @@ export type Amm = {
           },
           {
             name: "Sell";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   errors: [
     {
@@ -536,7 +536,7 @@ export type Amm = {
       code: 6016;
       name: "CastingOverflow";
       msg: "Casting has caused an overflow";
-    },
+    }
   ];
 };
 

@@ -1,6 +1,10 @@
-import { CompiledInstruction, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import {
+  CompiledInstruction,
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import bs58 from "bs58";
-
 
 const blockEngineAddress = "https://mainnet.block-engine.jito.wtf";
 
@@ -31,7 +35,7 @@ type JitoBundleStatusResponse = {
 };
 
 export const getBundleStatuses = async (
-  bundleId: string,
+  bundleId: string
 ): Promise<JitoBundleStatusResponse> => {
   const response = await fetch(`${blockEngineAddress}/api/v1/bundles`, {
     method: "POST",
@@ -52,9 +56,8 @@ export const getBundleStatuses = async (
 };
 
 export const sendBundle = async (transactions: Transaction[]) => {
-
   const serializedTransactions = transactions.map((tx) =>
-    bs58.encode(Uint8Array.from(tx.serialize())),
+    bs58.encode(Uint8Array.from(tx.serialize()))
   );
 
   const response = await fetch(`${blockEngineAddress}/api/v1/bundles`, {
@@ -72,8 +75,7 @@ export const sendBundle = async (transactions: Transaction[]) => {
   });
 
   return await response.json();
-
-}
+};
 
 export const getTipFloor = async () => {
   const response = await fetch(
@@ -83,11 +85,11 @@ export const getTipFloor = async () => {
         Accept: "application/json",
         "User-Agent": "MetaDAO",
       },
-    },
+    }
   );
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch Jito fees: ${response.status} ${response.statusText}`,
+      `Failed to fetch Jito fees: ${response.status} ${response.statusText}`
     );
   }
   // Convert the ReadableStream to text, then parse as JSON
@@ -96,7 +98,7 @@ export const getTipFloor = async () => {
 
   // Return empty data structure if no data is available
   if (!data || !data[0]) {
-    return ({
+    return {
       time: new Date().toISOString(),
       landed_tips_25th_percentile: 0,
       landed_tips_50th_percentile: 0,
@@ -104,12 +106,11 @@ export const getTipFloor = async () => {
       landed_tips_95th_percentile: 0,
       landed_tips_99th_percentile: 0,
       ema_landed_tips_50th_percentile: 0,
-    });
+    };
   }
 
   return data[0].ema_landed_tips_50th_percentile;
-}
-
+};
 
 export const getTipAccounts = async () => {
   const response = await fetch(`${blockEngineAddress}/api/v1/bundles`, {
@@ -127,15 +128,15 @@ export const getTipAccounts = async () => {
   });
 
   const result = await response.json();
-  return result.result
-}
+  return result.result;
+};
 
 export function convertTransactionInstruction(
   instruction: TransactionInstruction,
-  accountKeys: PublicKey[],
+  accountKeys: PublicKey[]
 ): CompiledInstruction {
   const accountIndices = instruction.keys.map((keyObj) =>
-    accountKeys.findIndex((pubkey) => pubkey.equals(keyObj.pubkey)),
+    accountKeys.findIndex((pubkey) => pubkey.equals(keyObj.pubkey))
   );
 
   if (accountIndices.includes(-1)) {
@@ -143,7 +144,7 @@ export function convertTransactionInstruction(
   }
 
   const programIdIndex = accountKeys.findIndex((pubkey) =>
-    pubkey.equals(instruction.programId),
+    pubkey.equals(instruction.programId)
   );
 
   if (programIdIndex === -1) {
@@ -161,7 +162,7 @@ export function convertTransactionInstruction(
 export function convertCompiledInstruction(
   compiledInstruction: CompiledInstruction,
   programId: PublicKey,
-  accountKeys: PublicKey[],
+  accountKeys: PublicKey[]
 ): TransactionInstruction {
   const keys = compiledInstruction.accounts.map((index) => ({
     pubkey: accountKeys[index],

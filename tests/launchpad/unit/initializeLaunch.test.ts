@@ -12,11 +12,8 @@ import {
   getMetadataAddr,
   LaunchpadClient,
 } from "@metadaoproject/futarchy/v0.6";
-import { createMint, mintTo } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
-  createMintToInstruction,
-  createTransferInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import * as token from "@solana/spl-token";
@@ -25,7 +22,6 @@ import {
   MPL_TOKEN_METADATA_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.6";
 import { initializeMintWithSeeds } from "../utils.js";
-import { Key } from "@metaplex-foundation/mpl-token-metadata";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -54,7 +50,7 @@ export default function suite() {
   it("initializes a launch with valid parameters", async function () {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
-    const monthlySpend = new BN(100_000000)
+    const monthlySpend = new BN(100_000000);
     const recipientAddress = Keypair.generate().publicKey;
     const premineAmount = new BN(500_000_000);
 
@@ -129,7 +125,7 @@ export default function suite() {
       await launchpadClient
         .initializeLaunchIx({
           tokenName: "META",
-          tokenSymbol: "META", 
+          tokenSymbol: "META",
           tokenUri: "https://example.com",
           minimumRaiseAmount: minRaise,
           secondsForLaunch: secondsForLaunch,
@@ -176,14 +172,17 @@ export default function suite() {
       .rpc();
 
     const storedLaunch = await launchpadClient.fetchLaunch(launch);
-    assert.equal(storedLaunch.priceBasedUnlockThreshold.toString(), exactMinThreshold.toString());
+    assert.equal(
+      storedLaunch.priceBasedUnlockThreshold.toString(),
+      exactMinThreshold.toString()
+    );
   });
 
   it("fails when launch signer is faked", async function () {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
     const fakeLaunchSigner = Keypair.generate();
-    const monthlySpend = new BN(100_000000)
+    const monthlySpend = new BN(100_000000);
     const recipientAddress = Keypair.generate().publicKey;
     const premineAmount = new BN(500_000_000);
 

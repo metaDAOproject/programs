@@ -1,5 +1,4 @@
 import {
-  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   TransactionMessage,
@@ -9,8 +8,6 @@ import { assert } from "chai";
 import {
   FutarchyClient,
   getFundingRecordAddr,
-  getLaunchAddr,
-  getLaunchSignerAddr,
   LaunchpadClient,
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.6";
@@ -34,7 +31,7 @@ export default function suite() {
 
   const minRaise = new BN(100_000_000); // 1000 USDCC
   const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
-  const monthlySpend = new BN(10_000_000)
+  const monthlySpend = new BN(10_000_000);
   const recipientAddress = Keypair.generate().publicKey;
   const premineAmount = new BN(600_000_000_000_0);
 
@@ -53,7 +50,7 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
-    
+
     // Create second funder
     secondFunder = Keypair.generate();
     quoteVault = getAssociatedTokenAddressSync(
@@ -84,23 +81,21 @@ export default function suite() {
       })
       .rpc();
 
-    await launchpadClient.startLaunchIx({launch}).rpc();
+    await launchpadClient.startLaunchIx({ launch }).rpc();
 
     await this.createTokenAccount(META, this.payer.publicKey);
 
     const fundAmount = new BN(100_000_000_000); // 100K USDC
 
     // Fund the launch
-    await launchpadClient
-      .fundIx({launch, amount: fundAmount})
-      .rpc();
+    await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
   });
 
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
-    await this.advanceBySeconds((60 * 60 * 24 * 7) + 100);
+    await this.advanceBySeconds(60 * 60 * 24 * 7 + 100);
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
+      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -122,13 +117,21 @@ export default function suite() {
     // Add logging to understand token distribution
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     console.log("=== POST LAUNCH COMPLETION DEBUG ===");
-    console.log("Launch total committed amount:", launchAccount.totalCommittedAmount.toString());
-    console.log("Launch minimum raise:", launchAccount.minimumRaiseAmount.toString());
-    
+    console.log(
+      "Launch total committed amount:",
+      launchAccount.totalCommittedAmount.toString()
+    );
+    console.log(
+      "Launch minimum raise:",
+      launchAccount.minimumRaiseAmount.toString()
+    );
+
     // Check launch base vault balance
     console.log("=== LAUNCH BASE VAULT BALANCE CHECK ===");
     try {
-      const accountInfo = await this.context.banksClient.getAccount(launchAccount.launchBaseVault);
+      const accountInfo = await this.context.banksClient.getAccount(
+        launchAccount.launchBaseVault
+      );
       if (accountInfo && accountInfo.data && accountInfo.data.length >= 72) {
         const balanceBuffer = accountInfo.data.slice(64, 72);
         const balance = Buffer.from(balanceBuffer).readBigUInt64LE(0);
@@ -139,7 +142,7 @@ export default function suite() {
     } catch (error) {
       console.log("Launch base vault account not found");
     }
-    
+
     // Check total supply
     try {
       const mint = await this.getMint(META);
@@ -161,9 +164,21 @@ export default function suite() {
       launch,
       this.payer.publicKey
     );
-    const fundingRecordAccount = await launchpadClient.fetchFundingRecord(fundingRecord);
-    console.log("Payer committed amount:", fundingRecordAccount.committedAmount.toString());
-    console.log("Expected claim percentage:", (fundingRecordAccount.committedAmount.toNumber() / launchAccount.totalCommittedAmount.toNumber() * 100).toFixed(2) + "%");
+    const fundingRecordAccount = await launchpadClient.fetchFundingRecord(
+      fundingRecord
+    );
+    console.log(
+      "Payer committed amount:",
+      fundingRecordAccount.committedAmount.toString()
+    );
+    console.log(
+      "Expected claim percentage:",
+      (
+        (fundingRecordAccount.committedAmount.toNumber() /
+          launchAccount.totalCommittedAmount.toNumber()) *
+        100
+      ).toFixed(2) + "%"
+    );
 
     // Claim tokens
     console.log("=== ATTEMPTING CLAIM ===");

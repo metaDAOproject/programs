@@ -49,7 +49,7 @@ export type ConditionalVault = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -57,7 +57,7 @@ export type ConditionalVault = {
           type: {
             defined: "InitializeConditionalVaultArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -117,7 +117,7 @@ export type ConditionalVault = {
           name: "rent";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -125,7 +125,7 @@ export type ConditionalVault = {
           type: {
             defined: "AddMetadataToConditionalTokensArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -140,7 +140,7 @@ export type ConditionalVault = {
           name: "vault";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -148,7 +148,7 @@ export type ConditionalVault = {
           type: {
             defined: "VaultStatus";
           };
-        },
+        }
       ];
     },
     {
@@ -198,13 +198,13 @@ export type ConditionalVault = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "amount";
           type: "u64";
-        },
+        }
       ];
     },
     {
@@ -254,13 +254,13 @@ export type ConditionalVault = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "amount";
           type: "u64";
-        },
+        }
       ];
     },
     {
@@ -310,10 +310,10 @@ export type ConditionalVault = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
-    },
+    }
   ];
   accounts: [
     {
@@ -332,7 +332,7 @@ export type ConditionalVault = {
             docs: [
               "The account that can either finalize the vault to make conditional tokens",
               "redeemable for underlying tokens or revert the vault to make deposit",
-              "slips redeemable for underlying tokens.",
+              "slips redeemable for underlying tokens."
             ];
             type: "publicKey";
           },
@@ -361,10 +361,10 @@ export type ConditionalVault = {
           {
             name: "decimals";
             type: "u8";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -383,7 +383,7 @@ export type ConditionalVault = {
           {
             name: "onRevertUri";
             type: "string";
-          },
+          }
         ];
       };
     },
@@ -395,7 +395,7 @@ export type ConditionalVault = {
           {
             name: "settlementAuthority";
             type: "publicKey";
-          },
+          }
         ];
       };
     },
@@ -412,10 +412,10 @@ export type ConditionalVault = {
           },
           {
             name: "Reverted";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   errors: [
     {
@@ -442,7 +442,7 @@ export type ConditionalVault = {
       code: 6004;
       name: "VaultAlreadySettled";
       msg: "Once a vault has been settled, its status as either finalized or reverted cannot be changed";
-    },
+    }
   ];
 };
 

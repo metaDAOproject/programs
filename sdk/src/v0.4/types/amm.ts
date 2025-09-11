@@ -64,7 +64,7 @@ export type Amm = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -72,7 +72,7 @@ export type Amm = {
           type: {
             defined: "CreateAmmArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -132,7 +132,7 @@ export type Amm = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -140,7 +140,7 @@ export type Amm = {
           type: {
             defined: "AddLiquidityArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -200,7 +200,7 @@ export type Amm = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -208,7 +208,7 @@ export type Amm = {
           type: {
             defined: "RemoveLiquidityArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -258,7 +258,7 @@ export type Amm = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -266,7 +266,7 @@ export type Amm = {
           type: {
             defined: "SwapArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -286,10 +286,10 @@ export type Amm = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
-    },
+    }
   ];
   accounts: [
     {
@@ -342,10 +342,10 @@ export type Amm = {
           {
             name: "seqNum";
             type: "u64";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -392,7 +392,7 @@ export type Amm = {
           {
             name: "seqNum";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -415,7 +415,7 @@ export type Amm = {
             name: "minLpTokens";
             docs: ["The minimum LP token you will get back"];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -435,7 +435,7 @@ export type Amm = {
           {
             name: "twapStartDelaySlots";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -455,7 +455,7 @@ export type Amm = {
           {
             name: "minBaseAmount";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -477,7 +477,7 @@ export type Amm = {
           {
             name: "outputAmountMin";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -496,7 +496,7 @@ export type Amm = {
               "A price is the number of quote units per base unit multiplied by 1e12.",
               "You cannot simply divide by 1e12 to get a price you can display in the UI",
               "because the base and quote decimals may be different. Instead, do:",
-              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12",
+              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
             ];
             type: "u128";
           },
@@ -505,7 +505,7 @@ export type Amm = {
             docs: [
               "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
               "a few extremely large outliers. So we use observations, which can only move",
-              "by `max_observation_change_per_update` per update.",
+              "by `max_observation_change_per_update` per update."
             ];
             type: "u128";
           },
@@ -525,7 +525,7 @@ export type Amm = {
               "",
               "So in the case of an overflow, the aggregator rolls back to 0. It's the",
               "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at T2 being smaller than an aggregator at T1.",
+              "aggregator at T2 being smaller than an aggregator at T1."
             ];
             type: "u128";
           },
@@ -542,10 +542,10 @@ export type Amm = {
           {
             name: "startDelaySlots";
             docs: [
-              "Number of slots after amm.created_at_slot to start recording TWAP",
+              "Number of slots after amm.created_at_slot to start recording TWAP"
             ];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -559,10 +559,10 @@ export type Amm = {
           },
           {
             name: "Sell";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   events: [
     {
@@ -591,7 +591,7 @@ export type Amm = {
             defined: "SwapType";
           };
           index: false;
-        },
+        }
       ];
     },
     {
@@ -628,7 +628,7 @@ export type Amm = {
           name: "lpTokensMinted";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -665,7 +665,7 @@ export type Amm = {
           name: "quoteAmount";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -712,7 +712,7 @@ export type Amm = {
           name: "vaultAtaQuote";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -724,9 +724,9 @@ export type Amm = {
             defined: "CommonFields";
           };
           index: false;
-        },
+        }
       ];
-    },
+    }
   ];
   errors: [
     {
@@ -818,7 +818,7 @@ export type Amm = {
       code: 6017;
       name: "CastingOverflow";
       msg: "Casting has caused an overflow";
-    },
+    }
   ];
 };
 

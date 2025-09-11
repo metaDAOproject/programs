@@ -8,18 +8,24 @@ const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const DAO_ADDRESS = new PublicKey("");
-const PROPOSAL_PDA = new PublicKey("HDyg2gbibGfDf672KN9MU38Z5dnNVaSiTsVQw33WnY5Q");
+const PROPOSAL_PDA = new PublicKey(
+  "HDyg2gbibGfDf672KN9MU38Z5dnNVaSiTsVQw33WnY5Q"
+);
 
 async function main() {
   const { multisigPda, vaultPda } = await getSquadsPdasFromDao(DAO_ADDRESS);
 
-  const proposalAccountInfo = await multisig.accounts.Proposal.fromAccountAddress(
-    provider.connection,
-    PROPOSAL_PDA
-  );
+  const proposalAccountInfo =
+    await multisig.accounts.Proposal.fromAccountAddress(
+      provider.connection,
+      PROPOSAL_PDA
+    );
 
   const proposalTransactionIndex = Number(proposalAccountInfo.transactionIndex);
-  console.log("Proposal transaction index:", proposalTransactionIndex.toString());
+  console.log(
+    "Proposal transaction index:",
+    proposalTransactionIndex.toString()
+  );
 
   console.log("Vault address:", vaultPda.toBase58());
 
@@ -38,16 +44,21 @@ async function main() {
 
   // Add both instructions to create the proposal
   const vaultTxExecuteIxResolved = await vaultTxExecuteIx;
-  const tx = new Transaction().add(proposalApproveIx, vaultTxExecuteIxResolved.instruction);
-  tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
+  const tx = new Transaction().add(
+    proposalApproveIx,
+    vaultTxExecuteIxResolved.instruction
+  );
+  tx.recentBlockhash = (
+    await provider.connection.getLatestBlockhash()
+  ).blockhash;
   tx.feePayer = payer.publicKey;
-  
+
   // Sign with both accounts
   tx.sign(payer, PERMISSIONLESS_ACCOUNT);
-  
+
   const txHash = await provider.connection.sendRawTransaction(tx.serialize());
   await provider.connection.confirmTransaction(txHash, "confirmed");
-  
+
   console.log("USDC transfer proposal executed successfully!");
   console.log("Transaction hash:", txHash);
   console.log("Proposal index:", proposalTransactionIndex.toString());

@@ -21,10 +21,15 @@ import {
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_ID,
   PERMISSIONLESS_ACCOUNT,
-  AUTOCRAT_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.6";
 
-import { PublicKey, Keypair, Connection, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  Connection,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -40,8 +45,6 @@ import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } fr
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import * as fs from "fs";
 import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
-import { LiteSVM } from "litesvm";
-import { fromWorkspace, LiteSVMProvider } from "anchor-litesvm";
 import { AccountInfo } from "@solana/web3.js";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
@@ -52,8 +55,6 @@ const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
 );
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
-import scalarMarkets from "./integration/scalarMarkets.test.js";
-import twap from "./integration/twap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
 
 // Export the test context interface for use in other files
@@ -66,10 +67,7 @@ export interface TestContext {
   priceBasedUnlock: PriceBasedUnlockClient;
   payer: Keypair;
   squadsConnection: Connection;
-  createTokenAccount: (
-    mint: PublicKey,
-    owner: PublicKey
-  ) => Promise<PublicKey>;
+  createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
   createMint: (
     mintAuthority: PublicKey,
     decimals: number
@@ -163,7 +161,7 @@ before(async function () {
     ]
   );
   this.banksClient = this.context.banksClient;
-  let provider = new BankrunProvider(this.context);
+  const provider = new BankrunProvider(this.context);
   anchor.setProvider(provider);
 
   this.conditionalVault = ConditionalVaultClient.createClient({
@@ -183,8 +181,8 @@ before(async function () {
 
   this.squadsConnection = {
     getAccountInfo: async (address: PublicKey) => {
-      let rawAccount = await this.banksClient.getAccount(address);
-      let accountInfo: AccountInfo<Buffer> = {
+      const rawAccount = await this.banksClient.getAccount(address);
+      const accountInfo: AccountInfo<Buffer> = {
         executable: false,
         owner: rawAccount.owner,
         lamports: rawAccount.lamports,
@@ -194,22 +192,22 @@ before(async function () {
     },
   } as Connection;
 
-  let assignIx = SystemProgram.assign({
+  const assignIx = SystemProgram.assign({
     accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
     programId: SystemProgram.programId,
   });
 
-  let allocateIx = SystemProgram.allocate({
+  const allocateIx = SystemProgram.allocate({
     accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
     space: 8,
-  })
+  });
 
-  let transferIx = SystemProgram.transfer({
+  const transferIx = SystemProgram.transfer({
     fromPubkey: this.payer.publicKey,
     toPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
     lamports: 1000000000,
-  })
-  let assignTx = new Transaction().add(allocateIx, assignIx, transferIx);
+  });
+  const assignTx = new Transaction().add(allocateIx, assignIx, transferIx);
   assignTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
   assignTx.feePayer = this.payer.publicKey;
   assignTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);

@@ -1,9 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { AutocratClient, getDaoAddr } from "@metadaoproject/futarchy/v0.6";
-import {
-  Keypair,
-  PublicKey,
-} from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";
 import { SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET } from "../sdk/src/v0.6/constants.js";
@@ -101,9 +98,7 @@ async function main() {
         twapInitialObservation: new BN(0),
         twapMaxObservationChangePerUpdate: new BN("1000000000000000000"),
         minQuoteFutarchicLiquidity: new BN(0),
-        slotsPerProposal: new BN(
-          (ONE_MINUTE_IN_SLOTS * 60n * 24n).toString()
-        ),
+        slotsPerProposal: new BN((ONE_MINUTE_IN_SLOTS * 60n * 24n).toString()),
         passThresholdBps: 300,
         minBaseFutarchicLiquidity: new BN(0),
         initialSpendingLimit: null,
@@ -117,20 +112,31 @@ async function main() {
   // Step 6: Initialize Futarchy AMM
   console.log("\n6. Initializing Futarchy AMM...");
   const [futarchyAmm] = PublicKey.findProgramAddressSync(
-    [Buffer.from("futarchy_amm")], 
+    [Buffer.from("futarchy_amm")],
     autocratClient.getProgramId()
   );
 
-  await autocratClient.autocrat.methods.initializeFutarchyAmm().accounts({
-    futarchyAmm,
-    createKey: payer.publicKey,
-    payer: payer.publicKey,
-    dao,
-    baseMint: META,
-    quoteMint: USDC,
-    ammBaseVault: token.getAssociatedTokenAddressSync(META, futarchyAmm, true),
-    ammQuoteVault: token.getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-  }).rpc();
+  await autocratClient.autocrat.methods
+    .initializeFutarchyAmm()
+    .accounts({
+      futarchyAmm,
+      createKey: payer.publicKey,
+      payer: payer.publicKey,
+      dao,
+      baseMint: META,
+      quoteMint: USDC,
+      ammBaseVault: token.getAssociatedTokenAddressSync(
+        META,
+        futarchyAmm,
+        true
+      ),
+      ammQuoteVault: token.getAssociatedTokenAddressSync(
+        USDC,
+        futarchyAmm,
+        true
+      ),
+    })
+    .rpc();
 
   console.log("Futarchy AMM initialized:", futarchyAmm.toString());
 
@@ -138,38 +144,68 @@ async function main() {
   console.log("\n7. Providing liquidity to AMM...");
   const [ammPosition] = PublicKey.findProgramAddressSync(
     [
-      Buffer.from("amm_position"), 
-      futarchyAmm.toBuffer(), 
-      payer.publicKey.toBuffer()
-    ], 
+      Buffer.from("amm_position"),
+      futarchyAmm.toBuffer(),
+      payer.publicKey.toBuffer(),
+    ],
     autocratClient.getProgramId()
   );
 
-  await autocratClient.autocrat.methods.provideLiquidity({
-    quoteAmount: new BN(100_000 * 1_000_000), // 100,000 USDC
-    maxBaseAmount: new BN(100_000 * 1_000_000), // 100,000 META equivalent
-    minLiquidity: new BN(0),
-  }).accounts({
-    futarchyAmm,
-    payer: payer.publicKey,
-    ammBaseVault: token.getAssociatedTokenAddressSync(META, futarchyAmm, true),
-    ammQuoteVault: token.getAssociatedTokenAddressSync(USDC, futarchyAmm, true),
-    liquidityProvider: payer.publicKey,
-    liquidityProviderBaseAccount: token.getAssociatedTokenAddressSync(META, payer.publicKey),
-    liquidityProviderQuoteAccount: token.getAssociatedTokenAddressSync(USDC, payer.publicKey),
-    ammPosition,
-  }).rpc();
+  await autocratClient.autocrat.methods
+    .provideLiquidity({
+      quoteAmount: new BN(100_000 * 1_000_000), // 100,000 USDC
+      maxBaseAmount: new BN(100_000 * 1_000_000), // 100,000 META equivalent
+      minLiquidity: new BN(0),
+    })
+    .accounts({
+      futarchyAmm,
+      payer: payer.publicKey,
+      ammBaseVault: token.getAssociatedTokenAddressSync(
+        META,
+        futarchyAmm,
+        true
+      ),
+      ammQuoteVault: token.getAssociatedTokenAddressSync(
+        USDC,
+        futarchyAmm,
+        true
+      ),
+      liquidityProvider: payer.publicKey,
+      liquidityProviderBaseAccount: token.getAssociatedTokenAddressSync(
+        META,
+        payer.publicKey
+      ),
+      liquidityProviderQuoteAccount: token.getAssociatedTokenAddressSync(
+        USDC,
+        payer.publicKey
+      ),
+      ammPosition,
+    })
+    .rpc();
 
   console.log("Liquidity provided to AMM");
 
   // Step 8: Fetch and display results
   console.log("\n8. Fetching results...");
-  const storedAmmPosition = await autocratClient.autocrat.account.ammPosition.fetch(ammPosition);
-  console.log("AMM Position liquidity:", storedAmmPosition.liquidity.toString());
+  const storedAmmPosition =
+    await autocratClient.autocrat.account.ammPosition.fetch(ammPosition);
+  console.log(
+    "AMM Position liquidity:",
+    storedAmmPosition.liquidity.toString()
+  );
 
-  const futarchyAmmData = await autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm);
-  console.log("Total AMM liquidity:", futarchyAmmData.totalLiquidity.toString());
-  console.log("Spot reserves - Base:", futarchyAmmData.state.spot.spot.baseReserves.toString(), "Quote:", futarchyAmmData.state.spot.spot.quoteReserves.toString());
+  const futarchyAmmData =
+    await autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm);
+  console.log(
+    "Total AMM liquidity:",
+    futarchyAmmData.totalLiquidity.toString()
+  );
+  console.log(
+    "Spot reserves - Base:",
+    futarchyAmmData.state.spot.spot.baseReserves.toString(),
+    "Quote:",
+    futarchyAmmData.state.spot.spot.quoteReserves.toString()
+  );
 
   const storedDao = await autocratClient.getDao(dao);
   console.log("DAO data fetched successfully");
@@ -186,4 +222,4 @@ async function main() {
 main().catch((error) => {
   console.error("Error:", error);
   process.exit(1);
-}); 
+});

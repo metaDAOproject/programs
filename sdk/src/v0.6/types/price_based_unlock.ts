@@ -6,7 +6,7 @@ export type PriceBasedUnlock = {
       name: "SEED";
       type: "string";
       value: '"anchor"';
-    },
+    }
   ];
   instructions: [
     {
@@ -76,7 +76,7 @@ export type PriceBasedUnlock = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -84,7 +84,7 @@ export type PriceBasedUnlock = {
           type: {
             defined: "InitializeLockerParams";
           };
-        },
+        }
       ];
     },
     {
@@ -109,7 +109,7 @@ export type PriceBasedUnlock = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -152,7 +152,7 @@ export type PriceBasedUnlock = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -178,7 +178,7 @@ export type PriceBasedUnlock = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -186,7 +186,7 @@ export type PriceBasedUnlock = {
           type: {
             defined: "ProposeChangeParams";
           };
-        },
+        }
       ];
     },
     {
@@ -207,12 +207,12 @@ export type PriceBasedUnlock = {
           isMut: true;
           isSigner: true;
           docs: [
-            "The party executing the change (must be opposite of proposer)",
+            "The party executing the change (must be opposite of proposer)"
           ];
-        },
+        }
       ];
       args: [];
-    },
+    }
   ];
   accounts: [
     {
@@ -278,7 +278,7 @@ export type PriceBasedUnlock = {
             name: "lockerAuthority";
             docs: ["The authorized locker authority that can execute changes"];
             type: "publicKey";
-          },
+          }
         ];
       };
     },
@@ -314,7 +314,7 @@ export type PriceBasedUnlock = {
           {
             name: "proposer";
             docs: [
-              "Who proposed this change (either token_recipient or locker_authority)",
+              "Who proposed this change (either token_recipient or locker_authority)"
             ];
             type: "publicKey";
           },
@@ -327,10 +327,10 @@ export type PriceBasedUnlock = {
             name: "pdaBump";
             docs: ["The PDA bump"];
             type: "u8";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -367,7 +367,7 @@ export type PriceBasedUnlock = {
           {
             name: "lockerAuthority";
             type: "publicKey";
-          },
+          }
         ];
       };
     },
@@ -385,7 +385,7 @@ export type PriceBasedUnlock = {
           {
             name: "createKey";
             type: "publicKey";
-          },
+          }
         ];
       };
     },
@@ -406,7 +406,7 @@ export type PriceBasedUnlock = {
         "",
         "This allows our program to read a TWAP over a time period by reading the",
         "aggregator value at the beginning and at the end, and dividing the difference",
-        "by the number of seconds between the two.",
+        "by the number of seconds between the two."
       ];
       type: {
         kind: "struct";
@@ -418,7 +418,7 @@ export type PriceBasedUnlock = {
           {
             name: "byteOffset";
             type: "u32";
-          },
+          }
         ];
       };
     },
@@ -442,7 +442,7 @@ export type PriceBasedUnlock = {
                 name: "startTimestamp";
                 docs: ["The timestamp when unlocking started"];
                 type: "i64";
-              },
+              }
             ];
           },
           {
@@ -455,9 +455,9 @@ export type PriceBasedUnlock = {
                 name: "changeRequest";
                 docs: ["The change request PDA address"];
                 type: "publicKey";
-              },
+              }
             ];
-          },
+          }
         ];
       };
     },
@@ -474,7 +474,7 @@ export type PriceBasedUnlock = {
                 type: {
                   defined: "OracleConfig";
                 };
-              },
+              }
             ];
           },
           {
@@ -483,12 +483,12 @@ export type PriceBasedUnlock = {
               {
                 name: "newRecipient";
                 type: "publicKey";
-              },
+              }
             ];
-          },
+          }
         ];
       };
-    },
+    }
   ];
   events: [
     {
@@ -525,7 +525,7 @@ export type PriceBasedUnlock = {
           name: "tokenRecipient";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -545,7 +545,7 @@ export type PriceBasedUnlock = {
           name: "startTimestamp";
           type: "i64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -575,7 +575,7 @@ export type PriceBasedUnlock = {
           name: "priceThreshold";
           type: "u128";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -615,9 +615,9 @@ export type PriceBasedUnlock = {
           name: "unlockPercentage";
           type: "u128";
           index: false;
-        },
+        }
       ];
-    },
+    }
   ];
   errors: [
     {
@@ -659,7 +659,7 @@ export type PriceBasedUnlock = {
       code: 6007;
       name: "UnauthorizedLockerAuthority";
       msg: "Unauthorized locker authority";
-    },
+    }
   ];
 };
 

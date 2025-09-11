@@ -29,7 +29,7 @@ export type ConditionalVault = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -37,7 +37,7 @@ export type ConditionalVault = {
           type: {
             defined: "InitializeQuestionArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -62,7 +62,7 @@ export type ConditionalVault = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -70,7 +70,7 @@ export type ConditionalVault = {
           type: {
             defined: "ResolveQuestionArgs";
           };
-        },
+        }
       ];
     },
     {
@@ -125,7 +125,7 @@ export type ConditionalVault = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -171,13 +171,13 @@ export type ConditionalVault = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "amount";
           type: "u64";
-        },
+        }
       ];
     },
     {
@@ -222,13 +222,13 @@ export type ConditionalVault = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "amount";
           type: "u64";
-        },
+        }
       ];
     },
     {
@@ -273,7 +273,7 @@ export type ConditionalVault = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -324,7 +324,7 @@ export type ConditionalVault = {
           name: "program";
           isMut: false;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -332,9 +332,9 @@ export type ConditionalVault = {
           type: {
             defined: "AddMetadataToConditionalTokensArgs";
           };
-        },
+        }
       ];
-    },
+    }
   ];
   accounts: [
     {
@@ -371,7 +371,7 @@ export type ConditionalVault = {
           {
             name: "seqNum";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -397,7 +397,7 @@ export type ConditionalVault = {
         'effective, the "effective" outcome would resolve to 0.7 and the "ineffective"',
         "outcome would resolve to 0.3.",
         "",
-        "Once resolved, the sum of all outcome resolutions is exactly 1.",
+        "Once resolved, the sum of all outcome resolutions is exactly 1."
       ];
       type: {
         kind: "struct";
@@ -421,10 +421,10 @@ export type ConditionalVault = {
           {
             name: "payoutDenominator";
             type: "u32";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -439,7 +439,7 @@ export type ConditionalVault = {
           {
             name: "unixTimestamp";
             type: "i64";
-          },
+          }
         ];
       };
     },
@@ -459,7 +459,7 @@ export type ConditionalVault = {
           {
             name: "uri";
             type: "string";
-          },
+          }
         ];
       };
     },
@@ -481,7 +481,7 @@ export type ConditionalVault = {
           {
             name: "numOutcomes";
             type: "u8";
-          },
+          }
         ];
       };
     },
@@ -495,7 +495,7 @@ export type ConditionalVault = {
             type: {
               vec: "u32";
             };
-          },
+          }
         ];
       };
     },
@@ -512,10 +512,10 @@ export type ConditionalVault = {
           },
           {
             name: "Reverted";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   events: [
     {
@@ -562,7 +562,7 @@ export type ConditionalVault = {
           name: "seqNum";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -611,7 +611,7 @@ export type ConditionalVault = {
           name: "seqNum";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -645,7 +645,7 @@ export type ConditionalVault = {
           name: "question";
           type: "publicKey";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -701,7 +701,7 @@ export type ConditionalVault = {
           name: "seqNum";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -750,7 +750,7 @@ export type ConditionalVault = {
           name: "seqNum";
           type: "u64";
           index: false;
-        },
+        }
       ];
     },
     {
@@ -774,7 +774,7 @@ export type ConditionalVault = {
             vec: "u32";
           };
           index: false;
-        },
+        }
       ];
     },
     {
@@ -830,9 +830,9 @@ export type ConditionalVault = {
           name: "seqNum";
           type: "u64";
           index: false;
-        },
+        }
       ];
-    },
+    }
   ];
   errors: [
     {
@@ -914,7 +914,7 @@ export type ConditionalVault = {
       code: 6015;
       name: "ConditionalTokenMetadataAlreadySet";
       msg: "Conditional token metadata already set";
-    },
+    }
   ];
 };
 

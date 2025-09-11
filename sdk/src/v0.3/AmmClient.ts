@@ -30,7 +30,7 @@ export class AmmClient {
   constructor(
     provider: AnchorProvider,
     ammProgramId: PublicKey,
-    luts: AddressLookupTableAccount[],
+    luts: AddressLookupTableAccount[]
   ) {
     this.provider = provider;
     this.program = new Program<AmmIDLType>(AmmIDL, ammProgramId, provider);
@@ -38,7 +38,7 @@ export class AmmClient {
   }
 
   public static createClient(
-    createAutocratClientParams: CreateAmmClientParams,
+    createAutocratClientParams: CreateAmmClientParams
   ): AmmClient {
     let { provider, ammProgramId: programId } = createAutocratClientParams;
 
@@ -56,7 +56,7 @@ export class AmmClient {
     baseMint: PublicKey,
     quoteMint: PublicKey,
     twapInitialObservation: number,
-    twapMaxObservationChangePerUpdate?: number,
+    twapMaxObservationChangePerUpdate?: number
   ): Promise<PublicKey> {
     if (!twapMaxObservationChangePerUpdate) {
       twapMaxObservationChangePerUpdate = twapInitialObservation * 0.02;
@@ -65,11 +65,11 @@ export class AmmClient {
 
     let baseDecimals = unpackMint(
       baseMint,
-      await this.provider.connection.getAccountInfo(baseMint),
+      await this.provider.connection.getAccountInfo(baseMint)
     ).decimals;
     let quoteDecimals = unpackMint(
       quoteMint,
-      await this.provider.connection.getAccountInfo(quoteMint),
+      await this.provider.connection.getAccountInfo(quoteMint)
     ).decimals;
 
     let [twapFirstObservationScaled, twapMaxObservationChangePerUpdateScaled] =
@@ -77,14 +77,14 @@ export class AmmClient {
         baseDecimals,
         quoteDecimals,
         twapInitialObservation,
-        twapMaxObservationChangePerUpdate,
+        twapMaxObservationChangePerUpdate
       );
 
     await this.createAmmIx(
       baseMint,
       quoteMint,
       twapFirstObservationScaled,
-      twapMaxObservationChangePerUpdateScaled,
+      twapMaxObservationChangePerUpdateScaled
     ).rpc();
 
     return amm;
@@ -95,7 +95,7 @@ export class AmmClient {
     baseMint: PublicKey,
     quoteMint: PublicKey,
     twapInitialObservation: BN,
-    twapMaxObservationChangePerUpdate: BN,
+    twapMaxObservationChangePerUpdate: BN
   ) {
     let [amm] = getAmmAddr(this.getProgramId(), baseMint, quoteMint);
     let [lpMint] = getAmmLpMintAddr(this.getProgramId(), amm);
@@ -122,13 +122,13 @@ export class AmmClient {
   async addLiquidity(
     amm: PublicKey,
     quoteAmount?: number,
-    baseAmount?: number,
+    baseAmount?: number
   ) {
     let storedAmm = await this.getAmm(amm);
 
     let lpMintSupply = unpackMint(
       storedAmm.lpMint,
-      await this.provider.connection.getAccountInfo(storedAmm.lpMint),
+      await this.provider.connection.getAccountInfo(storedAmm.lpMint)
     ).supply;
 
     let quoteAmountCasted: BN | undefined;
@@ -137,27 +137,27 @@ export class AmmClient {
     if (quoteAmount != undefined) {
       let quoteDecimals = unpackMint(
         storedAmm.quoteMint,
-        await this.provider.connection.getAccountInfo(storedAmm.quoteMint),
+        await this.provider.connection.getAccountInfo(storedAmm.quoteMint)
       ).decimals;
       quoteAmountCasted = new BN(quoteAmount).mul(
-        new BN(10).pow(new BN(quoteDecimals)),
+        new BN(10).pow(new BN(quoteDecimals))
       );
     }
 
     if (baseAmount != undefined) {
       let baseDecimals = unpackMint(
         storedAmm.baseMint,
-        await this.provider.connection.getAccountInfo(storedAmm.baseMint),
+        await this.provider.connection.getAccountInfo(storedAmm.baseMint)
       ).decimals;
       baseAmountCasted = new BN(baseAmount).mul(
-        new BN(10).pow(new BN(baseDecimals)),
+        new BN(10).pow(new BN(baseDecimals))
       );
     }
 
     if (lpMintSupply == 0n) {
       if (quoteAmount == undefined || baseAmount == undefined) {
         throw new Error(
-          "No pool created yet, you need to specify both base and quote",
+          "No pool created yet, you need to specify both base and quote"
         );
       }
 
@@ -170,7 +170,7 @@ export class AmmClient {
         storedAmm.quoteMint,
         quoteAmountCasted as BN,
         baseAmountCasted as BN,
-        new BN(0),
+        new BN(0)
       ).rpc();
     }
 
@@ -183,7 +183,7 @@ export class AmmClient {
       storedAmm.quoteAmount,
       Number(lpMintSupply),
       baseAmountCasted,
-      quoteAmountCasted,
+      quoteAmountCasted
     );
 
     await this.addLiquidityIx(
@@ -192,7 +192,7 @@ export class AmmClient {
       storedAmm.quoteMint,
       sim.quoteAmount,
       sim.baseAmount,
-      sim.expectedLpTokens,
+      sim.expectedLpTokens
     ).rpc();
   }
 
@@ -203,7 +203,7 @@ export class AmmClient {
     quoteAmount: BN,
     maxBaseAmount: BN,
     minLpTokens: BN,
-    user: PublicKey = this.provider.publicKey,
+    user: PublicKey = this.provider.publicKey
   ) {
     const [lpMint] = getAmmLpMintAddr(this.program.programId, amm);
 
@@ -230,7 +230,7 @@ export class AmmClient {
           this.provider.publicKey,
           userLpAccount,
           this.provider.publicKey,
-          lpMint,
+          lpMint
         ),
       ]);
   }
@@ -241,7 +241,7 @@ export class AmmClient {
     quoteMint: PublicKey,
     lpTokensToBurn: BN,
     minBaseAmount: BN,
-    minQuoteAmount: BN,
+    minQuoteAmount: BN
   ) {
     const [lpMint] = getAmmLpMintAddr(this.program.programId, ammAddr);
 
@@ -257,15 +257,15 @@ export class AmmClient {
         lpMint,
         userLpAccount: getAssociatedTokenAddressSync(
           lpMint,
-          this.provider.publicKey,
+          this.provider.publicKey
         ),
         userBaseAccount: getAssociatedTokenAddressSync(
           baseMint,
-          this.provider.publicKey,
+          this.provider.publicKey
         ),
         userQuoteAccount: getAssociatedTokenAddressSync(
           quoteMint,
-          this.provider.publicKey,
+          this.provider.publicKey
         ),
         vaultAtaBase: getAssociatedTokenAddressSync(baseMint, ammAddr, true),
         vaultAtaQuote: getAssociatedTokenAddressSync(quoteMint, ammAddr, true),
@@ -276,7 +276,7 @@ export class AmmClient {
     amm: PublicKey,
     swapType: SwapType,
     inputAmount: number,
-    outputAmountMin: number,
+    outputAmountMin: number
   ) {
     const storedAmm = await this.getAmm(amm);
 
@@ -299,7 +299,7 @@ export class AmmClient {
       storedAmm.quoteMint,
       swapType,
       inputAmountScaled,
-      outputAmountMinScaled,
+      outputAmountMinScaled
     ).rpc();
   }
 
@@ -311,7 +311,7 @@ export class AmmClient {
     inputAmount: BN,
     outputAmountMin: BN,
     user: PublicKey = this.provider.publicKey,
-    payer: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const receivingToken = swapType.buy ? baseMint : quoteMint;
 
@@ -335,7 +335,7 @@ export class AmmClient {
           payer,
           getAssociatedTokenAddressSync(receivingToken, user),
           user,
-          receivingToken,
+          receivingToken
         ),
       ]);
   }

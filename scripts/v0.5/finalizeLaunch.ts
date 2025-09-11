@@ -16,8 +16,9 @@ dotenv.config();
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const LAUNCH_TO_FINALIZE = new PublicKey("EmAQS3qhcETCd9gXNavjwbMKgcybJajhHmcn7BoXiP8E");
-
+const LAUNCH_TO_FINALIZE = new PublicKey(
+  "EmAQS3qhcETCd9gXNavjwbMKgcybJajhHmcn7BoXiP8E"
+);
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
@@ -25,7 +26,12 @@ async function main() {
   const launch = await launchpad.getLaunch(LAUNCH_TO_FINALIZE);
 
   const tx = await launchpad
-    .completeLaunchIx(LAUNCH_TO_FINALIZE, launch.quoteMint, launch.baseMint, true)
+    .completeLaunchIx(
+      LAUNCH_TO_FINALIZE,
+      launch.quoteMint,
+      launch.baseMint,
+      true
+    )
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
       ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
@@ -43,20 +49,16 @@ main().catch((error) => {
   process.exit(1);
 });
 
-async function sendAndConfirmTransaction(
-  tx: Transaction,
-  label: string,
-) {
-
+async function sendAndConfirmTransaction(tx: Transaction, label: string) {
   const completeLaunchLut = await createLookupTableForTransaction(
     tx,
     payer,
     provider
   );
 
-  console.log('Complete launch lookup table:', completeLaunchLut);
-  new Promise(resolve => setTimeout(resolve, 4000));
-  let blockhash = await provider.connection.getLatestBlockhash()
+  console.log("Complete launch lookup table:", completeLaunchLut);
+  new Promise((resolve) => setTimeout(resolve, 4000));
+  let blockhash = await provider.connection.getLatestBlockhash();
 
   const messageV0 = new TransactionMessage({
     payerKey: payer.publicKey,
@@ -66,7 +68,9 @@ async function sendAndConfirmTransaction(
 
   const transactionV0 = new VersionedTransaction(messageV0);
   transactionV0.sign([payer]);
-  const txHash = await provider.connection.sendRawTransaction(transactionV0.serialize());
+  const txHash = await provider.connection.sendRawTransaction(
+    transactionV0.serialize()
+  );
   console.log(`${label} transaction sent:`, txHash);
 
   await provider.connection.confirmTransaction(txHash, "confirmed");

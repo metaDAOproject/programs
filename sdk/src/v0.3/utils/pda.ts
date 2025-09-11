@@ -14,7 +14,7 @@ import { MPL_TOKEN_METADATA_PROGRAM_ID } from "../constants.js";
 export const getVaultAddr = (
   programId: PublicKey,
   settlementAuthority: PublicKey,
-  underlyingTokenMint: PublicKey,
+  underlyingTokenMint: PublicKey
 ) => {
   return PublicKey.findProgramAddressSync(
     [
@@ -22,13 +22,13 @@ export const getVaultAddr = (
       settlementAuthority.toBuffer(),
       underlyingTokenMint.toBuffer(),
     ],
-    programId,
+    programId
   );
 };
 
 export const getVaultFinalizeMintAddr = (
   programId: PublicKey,
-  vault: PublicKey,
+  vault: PublicKey
 ) => {
   return getVaultMintAddr(programId, vault, "conditional_on_finalize_mint");
 };
@@ -40,13 +40,13 @@ export const getMetadataAddr = (mint: PublicKey) => {
       MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    MPL_TOKEN_METADATA_PROGRAM_ID,
+    MPL_TOKEN_METADATA_PROGRAM_ID
   );
 };
 
 export const getVaultRevertMintAddr = (
   programId: PublicKey,
-  vault: PublicKey,
+  vault: PublicKey
 ) => {
   return getVaultMintAddr(programId, vault, "conditional_on_revert_mint");
 };
@@ -54,17 +54,17 @@ export const getVaultRevertMintAddr = (
 const getVaultMintAddr = (
   programId: PublicKey,
   vault: PublicKey,
-  seed: string,
+  seed: string
 ) => {
   return PublicKey.findProgramAddressSync(
     [utils.bytes.utf8.encode(seed), vault.toBuffer()],
-    programId,
+    programId
   );
 };
 
 export const getDaoTreasuryAddr = (
   programId: PublicKey,
-  dao: PublicKey,
+  dao: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync([dao.toBuffer()], programId);
 };
@@ -72,7 +72,7 @@ export const getDaoTreasuryAddr = (
 export const getProposalAddr = (
   programId: PublicKey,
   proposer: PublicKey,
-  nonce: BN,
+  nonce: BN
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
@@ -80,14 +80,14 @@ export const getProposalAddr = (
       proposer.toBuffer(),
       nonce.toArrayLike(Buffer, "le", 8),
     ],
-    programId,
+    programId
   );
 };
 
 export const getAmmAddr = (
   programId: PublicKey,
   baseMint: PublicKey,
-  quoteMint: PublicKey,
+  quoteMint: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
@@ -95,16 +95,16 @@ export const getAmmAddr = (
       baseMint.toBuffer(),
       quoteMint.toBuffer(),
     ],
-    programId,
+    programId
   );
 };
 
 export const getAmmLpMintAddr = (
   programId: PublicKey,
-  amm: PublicKey,
+  amm: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [utils.bytes.utf8.encode("amm_lp_mint"), amm.toBuffer()],
-    programId,
+    programId
   );
 };

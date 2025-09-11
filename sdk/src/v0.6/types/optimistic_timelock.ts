@@ -14,7 +14,7 @@ export type OptimisticTimelock = {
           name: "timelock";
           isMut: true;
           isSigner: true;
-        },
+        }
       ];
       args: [
         {
@@ -34,7 +34,7 @@ export type OptimisticTimelock = {
         {
           name: "enqueuerCooldownSlots";
           type: "u64";
-        },
+        }
       ];
     },
     {
@@ -49,13 +49,13 @@ export type OptimisticTimelock = {
           name: "timelock";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "delayInSlots";
           type: "u64";
-        },
+        }
       ];
     },
     {
@@ -70,13 +70,13 @@ export type OptimisticTimelock = {
           name: "timelock";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "authority";
           type: "publicKey";
-        },
+        }
       ];
     },
     {
@@ -91,13 +91,13 @@ export type OptimisticTimelock = {
           name: "timelock";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "cooldownSlots";
           type: "u64";
-        },
+        }
       ];
     },
     {
@@ -112,13 +112,13 @@ export type OptimisticTimelock = {
           name: "timelock";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "enqueuer";
           type: "publicKey";
-        },
+        }
       ];
     },
     {
@@ -133,13 +133,13 @@ export type OptimisticTimelock = {
           name: "timelock";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
           name: "optimisticProposer";
           type: "publicKey";
-        },
+        }
       ];
     },
     {
@@ -159,7 +159,7 @@ export type OptimisticTimelock = {
           name: "transactionBatch";
           isMut: true;
           isSigner: true;
-        },
+        }
       ];
       args: [];
     },
@@ -175,7 +175,7 @@ export type OptimisticTimelock = {
           name: "transactionBatch";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [
         {
@@ -193,7 +193,7 @@ export type OptimisticTimelock = {
         {
           name: "data";
           type: "bytes";
-        },
+        }
       ];
     },
     {
@@ -208,7 +208,7 @@ export type OptimisticTimelock = {
           name: "transactionBatch";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -229,7 +229,7 @@ export type OptimisticTimelock = {
           name: "transactionBatch";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -250,7 +250,7 @@ export type OptimisticTimelock = {
           name: "transactionBatch";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [];
     },
@@ -271,10 +271,10 @@ export type OptimisticTimelock = {
           name: "transactionBatch";
           isMut: true;
           isSigner: false;
-        },
+        }
       ];
       args: [];
-    },
+    }
   ];
   accounts: [
     {
@@ -305,10 +305,10 @@ export type OptimisticTimelock = {
           {
             name: "optimisticProposerCooldownSlots";
             docs: [
-              "The cooldown period for enqueuers to prevent spamming the timelock.",
+              "The cooldown period for enqueuers to prevent spamming the timelock."
             ];
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -348,10 +348,10 @@ export type OptimisticTimelock = {
             type: {
               defined: "AuthorityType";
             };
-          },
+          }
         ];
       };
-    },
+    }
   ];
   types: [
     {
@@ -366,7 +366,7 @@ export type OptimisticTimelock = {
           {
             name: "lastSlotEnqueued";
             type: "u64";
-          },
+          }
         ];
       };
     },
@@ -394,7 +394,7 @@ export type OptimisticTimelock = {
           {
             name: "didExecute";
             type: "bool";
-          },
+          }
         ];
       };
     },
@@ -414,7 +414,7 @@ export type OptimisticTimelock = {
           {
             name: "isWritable";
             type: "bool";
-          },
+          }
         ];
       };
     },
@@ -428,7 +428,7 @@ export type OptimisticTimelock = {
           },
           {
             name: "TimelockAuthority";
-          },
+          }
         ];
       };
     },
@@ -451,10 +451,10 @@ export type OptimisticTimelock = {
           },
           {
             name: "Executed";
-          },
+          }
         ];
       };
-    },
+    }
   ];
   errors: [
     {
@@ -506,7 +506,7 @@ export type OptimisticTimelock = {
       code: 6009;
       name: "OptimisticProposerCooldown";
       msg: "This optimistic proposer is still in its cooldown period";
-    },
+    }
   ];
 };
 

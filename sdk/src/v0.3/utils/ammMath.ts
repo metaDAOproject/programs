@@ -33,18 +33,18 @@ export class AmmMath {
     baseReserves: BN,
     quoteReserves: BN,
     baseDecimals: number,
-    quoteDecimals: number,
+    quoteDecimals: number
   ): number {
     return this.getHumanPrice(
       this.getAmmPriceFromReserves(baseReserves, quoteReserves),
       baseDecimals,
-      quoteDecimals,
+      quoteDecimals
     );
   }
 
   public static getAmmPriceFromReserves(
     baseReserves: BN,
-    quoteReserves: BN,
+    quoteReserves: BN
   ): BN {
     return quoteReserves.mul(PRICE_SCALE).div(baseReserves);
   }
@@ -67,7 +67,7 @@ export class AmmMath {
   public static getHumanPrice(
     ammPrice: BN,
     baseDecimals: number,
-    quoteDecimals: number,
+    quoteDecimals: number
   ): number {
     let decimalScalar = BN_TEN.pow(new BN(quoteDecimals - baseDecimals).abs());
 
@@ -82,7 +82,7 @@ export class AmmMath {
   public static getAmmPrice(
     humanPrice: number,
     baseDecimals: number,
-    quoteDecimals: number,
+    quoteDecimals: number
   ): BN {
     let price1e12 = new BN(humanPrice * PRICE_SCALE_NUMBER);
 
@@ -103,7 +103,7 @@ export class AmmMath {
   ): BN[] {
     // Map through each price, scaling it using the scalePrice method
     return prices.map((price) =>
-      this.getAmmPrice(price, baseDecimals, quoteDecimals),
+      this.getAmmPrice(price, baseDecimals, quoteDecimals)
     );
   }
 
@@ -122,7 +122,7 @@ export class AmmMath {
 
   public static getTwap(amm: AmmAccount): BN {
     return amm.oracle.aggregator.div(
-      amm.oracle.lastUpdatedSlot.sub(amm.createdAtSlot),
+      amm.oracle.lastUpdatedSlot.sub(amm.createdAtSlot)
     );
   }
 
@@ -132,11 +132,11 @@ export class AmmMath {
     lpMintSupply: number,
     baseAmount?: BN,
     quoteAmount?: BN,
-    slippageBps?: BN,
+    slippageBps?: BN
   ): AddLiquiditySimulation {
     if (lpMintSupply == 0) {
       throw new Error(
-        "This AMM doesn't have existing liquidity so we can't fill in the blanks",
+        "This AMM doesn't have existing liquidity so we can't fill in the blanks"
       );
     }
 
@@ -175,7 +175,7 @@ export class AmmMath {
     swapType: SwapType,
     baseReserves: BN,
     quoteReserves: BN,
-    slippageBps?: BN,
+    slippageBps?: BN
   ): SwapSimulation {
     if (baseReserves.eqn(0) || quoteReserves.eqn(0)) {
       throw new Error("reserves must be non-zero");
@@ -223,7 +223,7 @@ export class AmmMath {
     baseReserves: BN,
     quoteReserves: BN,
     lpTotalSupply: BN,
-    slippageBps?: BN,
+    slippageBps?: BN
   ): RemoveLiquiditySimulation {
     const expectedBaseOut = lpTokensToBurn.mul(baseReserves).div(lpTotalSupply);
     const expectedQuoteOut = lpTokensToBurn
