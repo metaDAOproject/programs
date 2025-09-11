@@ -2325,14 +2325,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "timelock"
-version = "0.3.0"
-dependencies = [
- "anchor-lang",
- "solana-security-txt",
-]
-
-[[package]]
 name = "tiny-bip39"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
