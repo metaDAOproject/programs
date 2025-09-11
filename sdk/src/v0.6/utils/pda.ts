@@ -125,6 +125,9 @@ export const getDaoAddr = ({
   );
 };
 
+/**
+ * @deprecated Use getAutocratProposalAddr instead
+ */
 export const getProposalAddr = (
   programId: PublicKey,
   squadsProposal: PublicKey,
@@ -133,6 +136,16 @@ export const getProposalAddr = (
     [utils.bytes.utf8.encode("proposal"), squadsProposal.toBuffer()],
     programId,
   );
+};
+
+export const getProposalAddrV2 = ({
+  programId = AUTOCRAT_PROGRAM_ID,
+  squadsProposal,
+}: {
+  programId?: PublicKey;
+  squadsProposal: PublicKey;
+}): [PublicKey, number] => {
+  return getProposalAddr(programId, squadsProposal);
 };
 
 export function getLaunchAddr(

@@ -76,7 +76,7 @@ impl SpotSwap<'_> {
                 ),
             };
 
-        require_gte!(user_input_account.amount, input_amount);
+        require_gte!(user_input_account.amount, input_amount, FutarchyError::InsufficientBalance);
 
         let output_amount = dao.amm.state.swap(input_amount, swap_type, Market::Spot)?;
 
