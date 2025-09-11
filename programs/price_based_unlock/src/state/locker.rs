@@ -89,8 +89,8 @@ pub struct ChangeRequest {
     pub previous_state: LockerState,
     /// Who proposed this change (either token_recipient or locker_authority)
     pub proposer: Pubkey,
-    /// Used to derive the PDA
-    pub create_key: Pubkey,
+    /// Used to derive the PDA along with the proposer
+    pub pda_nonce: u32,
     /// The PDA bump
     pub pda_bump: u8,
 }

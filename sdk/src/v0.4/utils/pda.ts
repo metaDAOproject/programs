@@ -19,7 +19,7 @@ import { LAUNCHPAD_PROGRAM_ID } from "../constants.js";
 export const getEventAuthorityAddr = (programId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("__event_authority")],
-    programId
+    programId,
   );
 };
 
@@ -27,7 +27,7 @@ export const getQuestionAddr = (
   programId: PublicKey,
   questionId: Uint8Array,
   oracle: PublicKey,
-  numOutcomes: number
+  numOutcomes: number,
 ) => {
   if (questionId.length != 32) {
     throw new Error("questionId must be 32 bytes");
@@ -40,14 +40,14 @@ export const getQuestionAddr = (
       oracle.toBuffer(),
       new BN(numOutcomes).toArrayLike(Buffer, "le", 1),
     ],
-    programId
+    programId,
   );
 };
 
 export const getVaultAddr = (
   programId: PublicKey,
   question: PublicKey,
-  underlyingTokenMint: PublicKey
+  underlyingTokenMint: PublicKey,
 ) => {
   return PublicKey.findProgramAddressSync(
     [
@@ -55,14 +55,14 @@ export const getVaultAddr = (
       question.toBuffer(),
       underlyingTokenMint.toBuffer(),
     ],
-    programId
+    programId,
   );
 };
 
 export const getConditionalTokenMintAddr = (
   programId: PublicKey,
   vault: PublicKey,
-  index: number
+  index: number,
 ) => {
   return PublicKey.findProgramAddressSync(
     [
@@ -70,13 +70,13 @@ export const getConditionalTokenMintAddr = (
       vault.toBuffer(),
       new BN(index).toArrayLike(Buffer, "le", 1),
     ],
-    programId
+    programId,
   );
 };
 
 export const getDownAndUpMintAddrs = (
   programId: PublicKey,
-  vault: PublicKey
+  vault: PublicKey,
 ): { down: PublicKey; up: PublicKey } => {
   return {
     down: getConditionalTokenMintAddr(programId, vault, 0)[0],
@@ -86,7 +86,7 @@ export const getDownAndUpMintAddrs = (
 
 export const getFailAndPassMintAddrs = (
   programId: PublicKey,
-  vault: PublicKey
+  vault: PublicKey,
 ): { fail: PublicKey; pass: PublicKey } => {
   return {
     fail: getConditionalTokenMintAddr(programId, vault, 0)[0],
@@ -101,13 +101,13 @@ export const getMetadataAddr = (mint: PublicKey) => {
       MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    MPL_TOKEN_METADATA_PROGRAM_ID
+    MPL_TOKEN_METADATA_PROGRAM_ID,
   );
 };
 
 export const getDaoTreasuryAddr = (
   programId: PublicKey,
-  dao: PublicKey
+  dao: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync([dao.toBuffer()], programId);
 };
@@ -115,7 +115,7 @@ export const getDaoTreasuryAddr = (
 export const getProposalAddr = (
   programId: PublicKey,
   proposer: PublicKey,
-  nonce: BN
+  nonce: BN,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
@@ -123,14 +123,14 @@ export const getProposalAddr = (
       proposer.toBuffer(),
       nonce.toArrayLike(Buffer, "le", 8),
     ],
-    programId
+    programId,
   );
 };
 
 export const getAmmAddr = (
   programId: PublicKey,
   baseMint: PublicKey,
-  quoteMint: PublicKey
+  quoteMint: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
@@ -138,80 +138,80 @@ export const getAmmAddr = (
       baseMint.toBuffer(),
       quoteMint.toBuffer(),
     ],
-    programId
+    programId,
   );
 };
 
 export const getAmmLpMintAddr = (
   programId: PublicKey,
-  amm: PublicKey
+  amm: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [utils.bytes.utf8.encode("amm_lp_mint"), amm.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export function getLaunchAddr(
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
-  tokenMint: PublicKey
+  tokenMint: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("launch"), tokenMint.toBuffer()],
-    programId
+    programId,
   );
 }
 
 export const getLaunchSignerAddr = (
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
-  launch: PublicKey
+  launch: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("launch_signer"), launch.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getFundingRecordAddr = (
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
   launch: PublicKey,
-  funder: PublicKey
+  funder: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("funding_record"), launch.toBuffer(), funder.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getLaunchDaoAddr = (
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
-  launch: PublicKey
+  launch: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("launch_dao"), launch.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getLiquidityPoolAddr = (
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
-  dao: PublicKey
+  dao: PublicKey,
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("pool_state"), dao.toBuffer()],
-    programId
+    programId,
   );
 };
 
 export const getRaydiumCpmmLpMintAddr = (
   poolState: PublicKey,
-  isDevnet: boolean
+  isDevnet: boolean,
 ): [PublicKey, number] => {
   const programId = isDevnet
     ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
     : RAYDIUM_CP_SWAP_PROGRAM_ID;
   return PublicKey.findProgramAddressSync(
     [Buffer.from("pool_lp_mint"), poolState.toBuffer()],
-    programId
+    programId,
   );
 };

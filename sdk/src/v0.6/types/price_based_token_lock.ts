@@ -6,7 +6,7 @@ export type PriceBasedTokenLock = {
       name: "SEED";
       type: "string";
       value: '"anchor"';
-    }
+    },
   ];
   instructions: [
     {
@@ -52,7 +52,7 @@ export type PriceBasedTokenLock = {
           isMut: false;
           isSigner: false;
           docs: [
-            "The recipient's token account where tokens will be sent when unlocked"
+            "The recipient's token account where tokens will be sent when unlocked",
           ];
         },
         {
@@ -84,7 +84,7 @@ export type PriceBasedTokenLock = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -92,7 +92,7 @@ export type PriceBasedTokenLock = {
           type: {
             defined: "InitializeLockerParams";
           };
-        }
+        },
       ];
     },
     {
@@ -117,7 +117,7 @@ export type PriceBasedTokenLock = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -160,10 +160,10 @@ export type PriceBasedTokenLock = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
-    }
+    },
   ];
   accounts: [
     {
@@ -174,7 +174,7 @@ export type PriceBasedTokenLock = {
           {
             name: "priceThreshold";
             docs: [
-              "The price threshold that must be met for tokens to be unlocked"
+              "The price threshold that must be met for tokens to be unlocked",
             ];
             type: "u128";
           },
@@ -221,10 +221,10 @@ export type PriceBasedTokenLock = {
             name: "pdaBump";
             docs: ["The PDA bump"];
             type: "u8";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   types: [
     {
@@ -257,7 +257,7 @@ export type PriceBasedTokenLock = {
           {
             name: "tokenRecipient";
             type: "publicKey";
-          }
+          },
         ];
       };
     },
@@ -278,7 +278,7 @@ export type PriceBasedTokenLock = {
         "",
         "This allows our program to read a TWAP over a time period by reading the",
         "aggregator value at the beginning and at the end, and dividing the difference",
-        "by the number of seconds between the two."
+        "by the number of seconds between the two.",
       ];
       type: {
         kind: "struct";
@@ -290,7 +290,7 @@ export type PriceBasedTokenLock = {
           {
             name: "byteOffset";
             type: "u32";
-          }
+          },
         ];
       };
     },
@@ -314,15 +314,15 @@ export type PriceBasedTokenLock = {
                 name: "startTimestamp";
                 docs: ["The timestamp when unlocking started"];
                 type: "i64";
-              }
+              },
             ];
           },
           {
             name: "Unlocked";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   events: [
     {
@@ -359,7 +359,7 @@ export type PriceBasedTokenLock = {
           name: "tokenRecipient";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -379,7 +379,7 @@ export type PriceBasedTokenLock = {
           name: "startTimestamp";
           type: "i64";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -409,9 +409,9 @@ export type PriceBasedTokenLock = {
           name: "priceThreshold";
           type: "u128";
           index: false;
-        }
+        },
       ];
-    }
+    },
   ];
   errors: [
     {
@@ -438,7 +438,7 @@ export type PriceBasedTokenLock = {
       code: 6004;
       name: "InvalidOracleData";
       msg: "Invalid oracle account data";
-    }
+    },
   ];
 };
 

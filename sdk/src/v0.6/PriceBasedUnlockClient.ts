@@ -30,19 +30,19 @@ export class PriceBasedUnlockClient {
 
   constructor(
     provider: AnchorProvider,
-    priceBasedTokenLockProgramId: PublicKey
+    priceBasedTokenLockProgramId: PublicKey,
   ) {
     this.provider = provider;
     this.programId = priceBasedTokenLockProgramId;
     this.program = new Program<PriceBasedUnlock>(
       PriceBasedUnlockIDL,
       priceBasedTokenLockProgramId,
-      provider
+      provider,
     );
   }
 
   public static createClient(
-    createClientParams: CreatePriceBasedTokenLockClientParams
+    createClientParams: CreatePriceBasedTokenLockClientParams,
   ): PriceBasedUnlockClient {
     let { provider, priceBasedTokenLockProgramId } = createClientParams;
 
@@ -70,7 +70,7 @@ export class PriceBasedUnlockClient {
     payer: PublicKey;
   }) {
     const lockerTokenAccount = this.getLockerTokenAccountAddress(
-      this.getLockerAddress(params.createKey)
+      this.getLockerAddress(params.createKey),
     );
 
     return this.program.methods
@@ -131,7 +131,7 @@ export class PriceBasedUnlockClient {
   }) {
     const changeRequestAddress = this.getChangeRequestAddress(
       params.locker,
-      params.params.createKey
+      params.params.createKey,
     );
 
     return this.program.methods.proposeChange(params.params).accounts({
@@ -165,18 +165,18 @@ export class PriceBasedUnlockClient {
   public getLockerAddress(createKey: PublicKey): PublicKey {
     const [lockerAddress] = PublicKey.findProgramAddressSync(
       [Buffer.from("locker"), createKey.toBuffer()],
-      this.programId
+      this.programId,
     );
     return lockerAddress;
   }
 
   public getChangeRequestAddress(
     locker: PublicKey,
-    createKey: PublicKey
+    createKey: PublicKey,
   ): PublicKey {
     const [changeRequestAddress] = PublicKey.findProgramAddressSync(
       [Buffer.from("change_request"), locker.toBuffer(), createKey.toBuffer()],
-      this.programId
+      this.programId,
     );
     return changeRequestAddress;
   }
@@ -184,7 +184,7 @@ export class PriceBasedUnlockClient {
   public getLockerTokenAccountAddress(locker: PublicKey): PublicKey {
     const [lockerTokenAccountAddress] = PublicKey.findProgramAddressSync(
       [Buffer.from("locker_token_account"), locker.toBuffer()],
-      this.programId
+      this.programId,
     );
     return lockerTokenAccountAddress;
   }

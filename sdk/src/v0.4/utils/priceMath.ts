@@ -46,10 +46,10 @@ export class AmmMath {
   public static getHumanPrice(
     ammPrice: BN,
     baseDecimals: number,
-    quoteDecimals: number
+    quoteDecimals: number,
   ): number {
     const decimalScalar = BN_TEN.pow(
-      new BN(quoteDecimals - baseDecimals).abs()
+      new BN(quoteDecimals - baseDecimals).abs(),
     );
     const price1e12 =
       quoteDecimals > baseDecimals
@@ -67,14 +67,14 @@ export class AmmMath {
 
   public static getTwap(amm: Amm): BN {
     return amm.oracle.aggregator.div(
-      amm.oracle.lastUpdatedSlot.sub(amm.createdAtSlot)
+      amm.oracle.lastUpdatedSlot.sub(amm.createdAtSlot),
     );
   }
 
   public static simulateSwapInner(
     inputAmount: BN,
     inputReserves: BN,
-    outputReserves: BN
+    outputReserves: BN,
   ): BN {
     if (inputReserves.eqn(0) || outputReserves.eqn(0)) {
       throw new Error("reserves must be non-zero");
@@ -93,7 +93,7 @@ export class AmmMath {
     swapType: SwapType,
     baseReserves: BN,
     quoteReserves: BN,
-    slippageBps?: BN
+    slippageBps?: BN,
   ): SwapSimulation {
     let inputReserves: BN, outputReserves: BN;
     if (swapType.buy) {
@@ -107,7 +107,7 @@ export class AmmMath {
     let expectedOut = this.simulateSwapInner(
       inputAmount,
       inputReserves,
-      outputReserves
+      outputReserves,
     );
 
     let minExpectedOut;
@@ -144,7 +144,7 @@ export class AmmMath {
     userBalanceIn: BN,
     ammReserveIn: BN,
     ammReserveOut: BN,
-    slippageBps: BN
+    slippageBps: BN,
   ): {
     optimalSwapAmount: BN;
     userInAfterSwap: BN;
@@ -181,7 +181,7 @@ export class AmmMath {
     let expectedOut = this.simulateSwapInner(
       new BN(swapAmount),
       ammReserveIn,
-      ammReserveOut
+      ammReserveOut,
     );
     let minimumExpectedOut =
       Number(expectedOut) - (Number(expectedOut) * Number(slippageBps)) / 10000;

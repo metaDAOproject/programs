@@ -75,9 +75,10 @@ impl InitializeLocker<'_> {
         let clock = Clock::get()?;
 
         // Validate that unlock timestamp is in the future
-        require!(
-            unlock_timestamp > clock.unix_timestamp,
-            PriceBasedUnlockError::UnlockTimestampNotReached
+        require_gt!(
+            unlock_timestamp,
+            clock.unix_timestamp,
+            PriceBasedUnlockError::UnlockTimestampInThePast
         );
 
         // Validate that token amount is greater than 0

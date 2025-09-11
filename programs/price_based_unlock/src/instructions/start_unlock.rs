@@ -37,8 +37,9 @@ impl StartUnlock<'_> {
         let offset = locker.oracle_config.byte_offset as usize;
         
         // Ensure we have enough data to read 24 bytes (16 bytes for aggregator, 8 bytes for last updated slot)
-        require!(
-            offset + 16 + 8 <= oracle_data.len(),
+        require_gte!(
+            oracle_data.len(),
+            offset + 16 + 8,
             PriceBasedUnlockError::InvalidOracleData
         );
 

@@ -26,7 +26,16 @@ pub struct CompleteUnlock<'info> {
 
 impl CompleteUnlock<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let locker = &mut ctx.accounts.locker;
+        let Self {
+            locker,
+            oracle_account,
+            locker_token_account,
+            recipient_token_account,
+            token_program: _,
+            event_authority: _,
+            program: _,
+        } = ctx.accounts;
+
         let clock = Clock::get()?;
 
         // Verify that the locker is in the Unlocking state
@@ -126,8 +135,10 @@ impl CompleteUnlock<'_> {
             });
         }
 
+        require_gte!(locker.token_amount, locker.tokens_already_unlocked, PriceBasedUnlockError::InvariantViolated);
+
         // Only set to Unlocked if all tokens have been unlocked
-        if locker.tokens_already_unlocked >= locker.token_amount {
+        if locker.tokens_already_unlocked == locker.token_amount {
             locker.state = LockerState::Unlocked;
         }
         // Otherwise stay in Unlocking state for future unlock calls
