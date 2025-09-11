@@ -19,8 +19,6 @@ impl std::fmt::Display for ProposalState {
 pub struct Proposal {
     pub number: u32,
     pub proposer: Pubkey,
-    #[max_len(40)]
-    pub description_url: String,
     pub slot_enqueued: u64,
     pub state: ProposalState,
     pub base_vault: Pubkey,

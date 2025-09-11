@@ -139,7 +139,6 @@ export default function suite() {
     // Now initialize the autocrat proposal
     proposal = await this.futarchy.initializeProposal(
       dao,
-      descriptionUrl,
       squadsProposalPda,
     );
 

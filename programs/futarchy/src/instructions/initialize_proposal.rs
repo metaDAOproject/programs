@@ -1,12 +1,6 @@
 use super::*;
 
-#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
-pub struct InitializeProposalParams {
-    pub description_url: String,
-}
-
 #[derive(Accounts)]
-#[instruction(args: InitializeProposalParams)]
 #[event_cpi]
 pub struct InitializeProposal<'info> {
     #[account(
@@ -64,7 +58,7 @@ impl InitializeProposal<'_> {
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>, params: InitializeProposalParams) -> Result<()> {
+    pub fn handle(ctx: Context<Self>) -> Result<()> {
         let Self {
             base_vault,
             quote_vault,
@@ -79,8 +73,6 @@ impl InitializeProposal<'_> {
             program: _,
         } = ctx.accounts;
 
-        let InitializeProposalParams { description_url } = params;
-
         let clock = Clock::get()?;
 
         dao.proposal_count += 1;
@@ -89,7 +81,6 @@ impl InitializeProposal<'_> {
             number: dao.proposal_count,
             squads_proposal: squads_proposal.key(),
             proposer: proposer.key(),
-            description_url,
             slot_enqueued: clock.slot,
             state: ProposalState::Draft { amount_staked: 0 },
             base_vault: base_vault.key(),

@@ -164,14 +164,7 @@ export type Futarchy = {
           isSigner: false;
         },
       ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "InitializeProposalParams";
-          };
-        },
-      ];
+      args: [];
     },
     {
       name: "stakeToProposal";
@@ -1070,10 +1063,6 @@ export type Futarchy = {
             type: "publicKey";
           },
           {
-            name: "descriptionUrl";
-            type: "string";
-          },
-          {
             name: "slotEnqueued";
             type: "u64";
           },
@@ -1248,18 +1237,6 @@ export type Futarchy = {
                 defined: "InitialSpendingLimit";
               };
             };
-          },
-        ];
-      };
-    },
-    {
-      name: "InitializeProposalParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "descriptionUrl";
-            type: "string";
           },
         ];
       };
@@ -2418,14 +2395,7 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
       ],
-      args: [
-        {
-          name: "params",
-          type: {
-            defined: "InitializeProposalParams",
-          },
-        },
-      ],
+      args: [],
     },
     {
       name: "stakeToProposal",
@@ -3324,10 +3294,6 @@ export const IDL: Futarchy = {
             type: "publicKey",
           },
           {
-            name: "descriptionUrl",
-            type: "string",
-          },
-          {
             name: "slotEnqueued",
             type: "u64",
           },
@@ -3502,18 +3468,6 @@ export const IDL: Futarchy = {
                 defined: "InitialSpendingLimit",
               },
             },
-          },
-        ],
-      },
-    },
-    {
-      name: "InitializeProposalParams",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "descriptionUrl",
-            type: "string",
           },
         ],
       },

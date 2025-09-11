@@ -67,9 +67,8 @@ pub mod futarchy {
     #[access_control(ctx.accounts.validate())]
     pub fn initialize_proposal(
         ctx: Context<InitializeProposal>,
-        params: InitializeProposalParams,
     ) -> Result<()> {
-        InitializeProposal::handle(ctx, params)
+        InitializeProposal::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate(&params))]
