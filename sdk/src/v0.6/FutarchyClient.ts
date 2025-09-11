@@ -573,7 +573,6 @@ export class FutarchyClient {
 
   async initializeProposal(
     dao: PublicKey,
-    descriptionUrl: string,
     squadsProposal: PublicKey,
   ): Promise<PublicKey> {
     const storedDao = await this.getDao(dao);
@@ -604,7 +603,6 @@ export class FutarchyClient {
       .rpc();
 
     await this.initializeProposalIx(
-      descriptionUrl,
       squadsProposal,
       dao,
       storedDao.baseMint,
@@ -620,7 +618,6 @@ export class FutarchyClient {
   }
 
   initializeProposalIx(
-    descriptionUrl: string,
     squadsProposal: PublicKey,
     dao: PublicKey,
     baseMint: PublicKey,
@@ -644,9 +641,7 @@ export class FutarchyClient {
     );
 
     return this.autocrat.methods
-      .initializeProposal({
-        descriptionUrl,
-      })
+      .initializeProposal()
       .accounts({
         question,
         proposal,

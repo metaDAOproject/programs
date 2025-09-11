@@ -36,7 +36,7 @@ impl LaunchProposal<'_> {
     pub fn validate(&self) -> Result<()> {
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
-            AutocratError::ProposalNotInDraftState
+            FutarchyError::ProposalNotInDraftState
         );
 
         require_keys_eq!(self.proposal.dao, self.dao.key());
@@ -46,7 +46,7 @@ impl LaunchProposal<'_> {
             require_gte!(
                 amount_staked,
                 self.dao.base_to_stake,
-                AutocratError::InsufficientStakeToLaunch
+                FutarchyError::InsufficientStakeToLaunch
             );
         }
 
@@ -84,7 +84,7 @@ impl LaunchProposal<'_> {
 
         // Set up the futarchy AMM by splitting the spot pool reserves
         let PoolState::Spot { mut spot } = dao.amm.state.to_owned() else {
-            return Err(AutocratError::PoolNotInSpotState.into());
+            return Err(FutarchyError::PoolNotInSpotState.into());
         };
 
         let base_to_lp = spot.base_reserves / 2;
@@ -96,12 +96,12 @@ impl LaunchProposal<'_> {
         require_gte!(
             base_to_lp,
             dao.min_base_futarchic_liquidity,
-            AutocratError::InsufficientLiquidity
+            FutarchyError::InsufficientLiquidity
         );
         require_gte!(
             quote_to_lp,
             dao.min_quote_futarchic_liquidity,
-            AutocratError::InsufficientLiquidity
+            FutarchyError::InsufficientLiquidity
         );
 
         let clock = Clock::get()?;

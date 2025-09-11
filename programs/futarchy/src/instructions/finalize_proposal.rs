@@ -67,12 +67,12 @@ impl FinalizeProposal<'_> {
         require_gte!(
             clock.unix_timestamp,
             self.proposal.timestamp_enqueued + self.proposal.duration_in_seconds as i64,
-            AutocratError::ProposalTooYoung
+            FutarchyError::ProposalTooYoung
         );
 
         require!(
             self.proposal.state == ProposalState::Pending,
-            AutocratError::ProposalAlreadyFinalized
+            FutarchyError::ProposalAlreadyFinalized
         );
 
         Ok(())
@@ -121,7 +121,7 @@ impl FinalizeProposal<'_> {
             require_gte!(
                 seconds_passed,
                 proposal.duration_in_seconds as i64,
-                AutocratError::MarketsTooYoung
+                FutarchyError::MarketsTooYoung
             );
 
             amm.get_twap()

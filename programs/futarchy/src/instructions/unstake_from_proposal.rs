@@ -40,13 +40,13 @@ impl UnstakeFromProposal<'_> {
     pub fn validate(&self, params: &UnstakeFromProposalParams) -> Result<()> {
         require_keys_eq!(self.proposal.dao, self.dao.key());
 
-        require_gt!(params.amount, 0, AutocratError::InvalidAmount);
+        require_gt!(params.amount, 0, FutarchyError::InvalidAmount);
 
         // Check if staker has enough staked
         require_gte!(
             self.stake_account.amount,
             params.amount,
-            AutocratError::InsufficientTokenBalance
+            FutarchyError::InsufficientTokenBalance
         );
 
         Ok(())
