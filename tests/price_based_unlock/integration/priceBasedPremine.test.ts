@@ -83,8 +83,6 @@ export default function () {
             trader: this.payer.publicKey,
         }).rpc();
 
-        console.log((await this.futarchy.autocrat.account.dao.fetch(dao)).amm.state.spot);
-
         await this.priceBasedUnlock.startUnlockIx({ locker, oracleAccount: dao }).rpc();
 
         await this.advanceBySeconds(300);

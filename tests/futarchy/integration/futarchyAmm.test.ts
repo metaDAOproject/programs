@@ -126,14 +126,9 @@ export default function suite() {
   it("futarchy amm", async function () {
     // Get initial state before spot swap (before launching proposal)
     const daoBeforeSpotSwap = await this.futarchy.autocrat.account.dao.fetch(dao);
-    console.log("=== Before spot swap (initial AMM state) ===");
-    console.log("Initial base reserves:", daoBeforeSpotSwap.amm.state.spot.spot.baseReserves.toString());
-    console.log("Initial quote reserves:", daoBeforeSpotSwap.amm.state.spot.spot.quoteReserves.toString());
 
     const initialUserBaseBalance = await this.getTokenBalance(META, this.payer.publicKey);
     const initialUserQuoteBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
-    console.log("Initial user base balance:", initialUserBaseBalance);
-    console.log("Initial user quote balance:", initialUserQuoteBalance);
 
     // Perform a spot swap before launching the proposal
     await this.futarchy.spotSwapIx({
@@ -148,24 +143,14 @@ export default function suite() {
 
     // Get state after spot swap
     const daoAfterSpotSwap = await this.futarchy.autocrat.account.dao.fetch(dao);
-    console.log("=== After spot swap ===");
-    console.log("Final base reserves:", daoAfterSpotSwap.amm.state.spot.spot.baseReserves.toString());
-    console.log("Final quote reserves:", daoAfterSpotSwap.amm.state.spot.spot.quoteReserves.toString());
 
     const finalUserBaseBalance = await this.getTokenBalance(META, this.payer.publicKey);
     const finalUserQuoteBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
-    console.log("Final user base balance:", finalUserBaseBalance);
-    console.log("Final user quote balance:", finalUserQuoteBalance);
-    console.log("User base balance change:", finalUserBaseBalance - initialUserBaseBalance);
-    console.log("User quote balance change:", finalUserQuoteBalance - initialUserQuoteBalance);
-
     // // Assert that the spot swap worked correctly
     // assert(daoAfterSpotSwap.amm.state.spot.spot.baseReserves.gt(daoBeforeSpotSwap.amm.state.spot.spot.baseReserves), 
     //        "Base reserves should increase after selling base tokens");
     // assert(daoAfterSpotSwap.amm.state.spot.spot.quoteReserves.lt(daoBeforeSpotSwap.amm.state.spot.spot.quoteReserves), 
     //        "Quote reserves should decrease after selling base tokens");
-
-    console.log("=== Spot swap assertions passed ===");
 
     // Split tokens into the vaults
     const { baseVault, quoteVault, question } =
@@ -183,29 +168,9 @@ export default function suite() {
 
     const { failBaseMint, failQuoteMint } = this.futarchy.getProposalPdas(proposal, META, USDC, dao);
 
-    // Launch the proposal
-    await this.futarchy.autocrat.methods.launchProposal()
-      .accounts({
-        proposal,
-        dao,
-        baseVault,
-        quoteVault,
-        passBaseMint,
-        passQuoteMint,
-        failBaseMint,
-        failQuoteMint,
-        ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
-        ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, dao, true),
-        ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
-        ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, dao, true),
-        payer: this.payer.publicKey,
-      })
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })])
-      .rpc();
+    await this.futarchy.launchProposalIx({ proposal, dao, baseMint: META, quoteMint: USDC }).rpc();
 
-    console.log("=== After launching proposal ===");
-    const daoAfterLaunch = await this.futarchy.autocrat.account.dao.fetch(dao);
-    console.log("DAO state:", daoAfterLaunch);
+    await this.futarchy.conditionalSwapIx({ dao, baseMint: META, quoteMint: USDC, proposal, market: "pass", swapType: "buy", inputAmount: new BN(10_000 * 1_000_000) }).rpc();
 
     // Perform spot swaps to generate TWAP data
     for (let i = 0; i < 100; i++) { // Reduced to 10 for faster testing
@@ -223,26 +188,11 @@ export default function suite() {
       })
         .preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i })])
         .rpc();
-
-      if (i % 5 === 0) {
-        console.log(`=== After ${i + 1} swaps ===`);
-        const daoAfterSwaps = await this.futarchy.autocrat.account.dao.fetch(dao);
-        console.log("DAO state after swaps:", daoAfterSwaps);
-      }
     }
 
-    console.log("=== Final DAO state before finalization ===");
-    const finalDaoState = await this.futarchy.autocrat.account.dao.fetch(dao);
-    console.log("Final DAO state:", finalDaoState);
-
-    // Temporary return to see results
-    // Finalize the proposal
     await this.futarchy.finalizeProposal(proposal);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
-    console.log("Stored proposal:", storedProposal);
-    console.log("AMM fUSDC Balance", await this.getTokenBalance(passQuoteMint, dao));
-    return;
     assert.exists(storedProposal.state.passed);
 
     // Collect fees

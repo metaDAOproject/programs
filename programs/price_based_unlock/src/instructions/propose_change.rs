@@ -23,10 +23,7 @@ pub struct ProposeChange<'info> {
     )]
     pub change_request: Account<'info, ChangeRequest>,
 
-    #[account(
-        mut,
-        constraint = (locker.token_recipient == proposer.key() || locker.locker_authority == proposer.key()) @ PriceBasedUnlockError::UnauthorizedChangeRequest
-    )]
+    #[account(mut)]
     pub locker: Account<'info, Locker>,
 
     #[account(mut)]
@@ -36,6 +33,15 @@ pub struct ProposeChange<'info> {
 }
 
 impl<'info> ProposeChange<'info> {
+    pub fn validate(&self) -> Result<()> {
+        if self.proposer.key() != self.locker.token_recipient && self.proposer.key() != self.locker.locker_authority {
+            msg!("proposer ({}) is not the token recipient ({}) or locker authority ({})", self.proposer.key(), self.locker.token_recipient, self.locker.locker_authority);
+            return Err(PriceBasedUnlockError::UnauthorizedChangeRequest.into());
+        }
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, params: ProposeChangeParams) -> Result<()> {
         let change_request = &mut ctx.accounts.change_request;
         let locker = &mut ctx.accounts.locker;

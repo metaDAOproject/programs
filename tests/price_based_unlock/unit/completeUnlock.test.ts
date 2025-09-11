@@ -64,51 +64,51 @@ export default function () {
     lockerTokenAccount = this.priceBasedUnlock.getLockerTokenAccountAddress(locker);
 
     // Create fresh token accounts for each test
-    console.log("=== BEFOREEACH DEBUG ===");
-    console.log("Creating token account for tokenAuthority:", tokenAuthority.publicKey.toString());
+    // console.log("=== BEFOREEACH DEBUG ===");
+    // console.log("Creating token account for tokenAuthority:", tokenAuthority.publicKey.toString());
     
     // Use associated token accounts for consistency
     tokenAccount = token.getAssociatedTokenAddressSync(tokenMint, tokenAuthority.publicKey, true);
     await this.createTokenAccount(tokenMint, tokenAuthority.publicKey);
-    console.log("Created tokenAccount address:", tokenAccount.toString());
+    // console.log("Created tokenAccount address:", tokenAccount.toString());
     
     recipientTokenAccount = token.getAssociatedTokenAddressSync(tokenMint, recipient.publicKey, true);
     await this.createTokenAccount(tokenMint, recipient.publicKey);
-    console.log("Created recipientTokenAccount address:", recipientTokenAccount.toString());
+    // console.log("Created recipientTokenAccount address:", recipientTokenAccount.toString());
 
     // Mint fresh tokens for each test
-    console.log("Minting 1000000 tokens to tokenAuthority");
-    console.log("TokenAuthority public key:", tokenAuthority.publicKey.toString());
-    console.log("Token account address:", tokenAccount.toString());
-    console.log("Token mint address:", tokenMint.toString());
+    // console.log("Minting 1000000 tokens to tokenAuthority");
+    // console.log("TokenAuthority public key:", tokenAuthority.publicKey.toString());
+    // console.log("Token account address:", tokenAccount.toString());
+    // console.log("Token mint address:", tokenMint.toString());
     
     try {
       await this.mintTo(tokenMint, tokenAuthority.publicKey, tokenAuthority, 1000000);
-      console.log("Minting completed successfully");
+      // console.log("Minting completed successfully");
     } catch (error) {
-      console.log("Minting failed:", error.message, error);
-      console.log("Full error:", JSON.stringify(error, null, 2));
+      // console.log("Minting failed:", error.message, error);
+      // console.log("Full error:", JSON.stringify(error, null, 2));
     }
     
     // Verify minting worked - try direct account check
     try {
       const accountInfo = await this.context.banksClient.getAccount(tokenAccount);
       if (accountInfo) {
-        console.log("Token account exists with", accountInfo.lamports, "lamports");
+        // console.log("Token account exists with", accountInfo.lamports, "lamports");
         // Parse token account data to get balance
         if (accountInfo.data && accountInfo.data.length >= 64) {
           // Token account balance is stored as u64 at offset 64 in the account data
           const balanceBuffer = accountInfo.data.slice(64, 72);
           const balance = Buffer.from(balanceBuffer).readBigUInt64LE(0);
-          console.log("Token account balance after minting:", balance.toString());
+          // console.log("Token account balance after minting:", balance.toString());
         } else {
-          console.log("Token account data is too small or missing");
+          // console.log("Token account data is too small or missing");
         }
       } else {
-        console.log("Token account does not exist after minting");
+        // console.log("Token account does not exist after minting");
       }
     } catch (error) {
-      console.log("Could not check token account after minting:", error.message);
+      // console.log("Could not check token account after minting:", error.message);
     }
   });
 
@@ -201,14 +201,14 @@ export default function () {
 
     // Verify locker state changed to Unlocked
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
-    console.log("=== COMPLETE UNLOCK TEST DEBUG ===");
-    console.log("Locker state:", JSON.stringify(lockerAccount.state, null, 2));
-    console.log("Tokens already unlocked:", lockerAccount.tokensAlreadyUnlocked.toString());
-    console.log("Total token amount:", lockerAccount.tokenAmount.toString());
+    // console.log("=== COMPLETE UNLOCK TEST DEBUG ===");
+    // console.log("Locker state:", JSON.stringify(lockerAccount.state, null, 2));
+    // console.log("Tokens already unlocked:", lockerAccount.tokensAlreadyUnlocked.toString());
+    // console.log("Total token amount:", lockerAccount.tokenAmount.toString());
     
     // Verify tokens were transferred to recipient
     const recipientBalance = await this.getTokenBalance(tokenMint, recipient.publicKey);
-    console.log("Recipient balance:", recipientBalance.toString());
+    // console.log("Recipient balance:", recipientBalance.toString());
     
     // Verify locker token account is empty (may not exist if all tokens transferred)
     let lockerBalance = "0";

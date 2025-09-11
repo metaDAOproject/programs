@@ -103,14 +103,14 @@ export default function () {
     
     // Debug: verify locker initialization
     const initialLocker = await this.priceBasedUnlock.getLocker(locker);
-    console.log("=== LOCKER INITIALIZATION DEBUG ===");
-    console.log("Locker address:", locker.toString());
-    console.log("Stored token_recipient:", initialLocker.tokenRecipient.toString());
-    console.log("Stored locker_authority:", initialLocker.lockerAuthority.toString());
-    console.log("Expected recipient:", recipient.publicKey.toString());
-    console.log("Expected authority:", squadsMultisigVault.publicKey.toString());
-    console.log("Recipient matches:", initialLocker.tokenRecipient.toString() === recipient.publicKey.toString());
-    console.log("Authority matches:", initialLocker.lockerAuthority.toString() === squadsMultisigVault.publicKey.toString());
+    // console.log("=== LOCKER INITIALIZATION DEBUG ===");
+    // console.log("Locker address:", locker.toString());
+    // console.log("Stored token_recipient:", initialLocker.tokenRecipient.toString());
+    // console.log("Stored locker_authority:", initialLocker.lockerAuthority.toString());
+    // console.log("Expected recipient:", recipient.publicKey.toString());
+    // console.log("Expected authority:", squadsMultisigVault.publicKey.toString());
+    // console.log("Recipient matches:", initialLocker.tokenRecipient.toString() === recipient.publicKey.toString());
+    // console.log("Authority matches:", initialLocker.lockerAuthority.toString() === squadsMultisigVault.publicKey.toString());
   });
 
   it("should allow recipient to propose a change (recipient → locker authority execution flow)", async function () {
@@ -118,12 +118,12 @@ export default function () {
     
     // Debug: check locker state before proposing
     const lockerBeforePropose = await this.priceBasedUnlock.getLocker(locker);
-    console.log("=== BEFORE PROPOSE CHANGE DEBUG ===");
-    console.log("Locker token_recipient:", lockerBeforePropose.tokenRecipient.toString());
-    console.log("Locker locker_authority:", lockerBeforePropose.lockerAuthority.toString());
-    console.log("Proposer (should be recipient):", recipient.publicKey.toString());
-    console.log("Match check: token_recipient == proposer:", lockerBeforePropose.tokenRecipient.toString() === recipient.publicKey.toString());
-    console.log("Match check: locker_authority == proposer:", lockerBeforePropose.lockerAuthority.toString() === recipient.publicKey.toString());
+    // console.log("=== BEFORE PROPOSE CHANGE DEBUG ===");
+    // console.log("Locker token_recipient:", lockerBeforePropose.tokenRecipient.toString());
+    // console.log("Locker locker_authority:", lockerBeforePropose.lockerAuthority.toString());
+    // console.log("Proposer (should be recipient):", recipient.publicKey.toString());
+    // console.log("Match check: token_recipient == proposer:", lockerBeforePropose.tokenRecipient.toString() === recipient.publicKey.toString());
+    // console.log("Match check: locker_authority == proposer:", lockerBeforePropose.lockerAuthority.toString() === recipient.publicKey.toString());
     
     const tx = await this.priceBasedUnlock.proposeChangeIx({
       params: {
@@ -143,14 +143,14 @@ export default function () {
 
     // Verify locker state changed to PendingChange
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
-    console.log("Recipient proposal test - proposer:", recipient.publicKey.toString().slice(0, 8));
-    console.log("State transition: Locked -> PendingChange");
+    // console.log("Recipient proposal test - proposer:", recipient.publicKey.toString().slice(0, 8));
+    // console.log("State transition: Locked -> PendingChange");
     assert.equal(lockerAccount.state.pendingChange !== undefined, true);
     
     // Verify change request was created with correct proposer
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(locker, changeKey.publicKey);
     const changeRequest = await this.priceBasedUnlock.getChangeRequest(changeRequestAddr);
-    console.log("Proposer stored correctly:", changeRequest.proposer.toString() === recipient.publicKey.toString());
+    // console.log("Proposer stored correctly:", changeRequest.proposer.toString() === recipient.publicKey.toString());
     
     assert.equal(changeRequest.proposer.toString(), recipient.publicKey.toString());
     assert.equal(changeRequest.locker.toString(), locker.toString());
@@ -183,8 +183,8 @@ export default function () {
 
     // Verify locker state changed to PendingChange
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
-    console.log("Authority proposal test - proposer:", squadsMultisigVault.publicKey.toString().slice(0, 8));
-    console.log("State transition: Locked -> PendingChange");
+    // console.log("Authority proposal test - proposer:", squadsMultisigVault.publicKey.toString().slice(0, 8));
+    // console.log("State transition: Locked -> PendingChange");
     assert.equal(lockerAccount.state.pendingChange !== undefined, true);
     
     // Verify change request was created with correct proposer
@@ -212,7 +212,7 @@ export default function () {
     fundTx.sign(this.payer);
     await this.banksClient.processTransaction(fundTx);
 
-    console.log("Testing unauthorized proposer rejection - wallet:", unauthorizedWallet.publicKey.toString().slice(0, 8));
+    // console.log("Testing unauthorized proposer rejection - wallet:", unauthorizedWallet.publicKey.toString().slice(0, 8));
 
     try {
       const tx = await this.priceBasedUnlock.proposeChangeIx({
@@ -268,14 +268,14 @@ export default function () {
     const changeRequest = await this.priceBasedUnlock.getChangeRequest(changeRequestAddr);
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
     
-    console.log("=== ORACLE CHANGE PROPOSAL ===");
-    console.log("Original oracle account:", lockerAccount.oracleConfig.oracleAccount.toString());
-    console.log("Original byte offset:", lockerAccount.oracleConfig.byteOffset);
-    console.log("Proposed new oracle account:", newOracleAccount.publicKey.toString());
-    console.log("Proposed new byte offset:", 8);
-    console.log("Change request oracle details:", JSON.stringify(changeRequest.changeType.oracle, null, 2));
-    console.log("Change request stored oracle account:", changeRequest.changeType.oracle.newOracleConfig.oracleAccount.toString());
-    console.log("Change request stored byte offset:", changeRequest.changeType.oracle.newOracleConfig.byteOffset);
+    // console.log("=== ORACLE CHANGE PROPOSAL ===");
+    // console.log("Original oracle account:", lockerAccount.oracleConfig.oracleAccount.toString());
+    // console.log("Original byte offset:", lockerAccount.oracleConfig.byteOffset);
+    // console.log("Proposed new oracle account:", newOracleAccount.publicKey.toString());
+    // console.log("Proposed new byte offset:", 8);
+    // console.log("Change request oracle details:", JSON.stringify(changeRequest.changeType.oracle, null, 2));
+    // console.log("Change request stored oracle account:", changeRequest.changeType.oracle.newOracleConfig.oracleAccount.toString());
+    // console.log("Change request stored byte offset:", changeRequest.changeType.oracle.newOracleConfig.byteOffset);
     
     assert.equal(changeRequest.changeType.oracle.newOracleConfig.oracleAccount.toString(), newOracleAccount.publicKey.toString());
     assert.equal(changeRequest.changeType.oracle.newOracleConfig.byteOffset, 8);

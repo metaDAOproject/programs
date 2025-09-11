@@ -394,7 +394,6 @@ export class FutarchyClient {
     positionAuthority?: PublicKey;
     liquidityProvider?: PublicKey;
   }) {
-    console.log(positionAuthority);
     const ammPosition = PublicKey.findProgramAddressSync(
       [
         Buffer.from("amm_position"),
@@ -720,7 +719,6 @@ export class FutarchyClient {
       .finalizeProposal()
       .accounts({
         proposal,
-        // futarchyAmm,
         dao,
         squadsProposal,
         squadsMultisig: multisigPda,
@@ -764,8 +762,6 @@ export class FutarchyClient {
           baseVault,
           true,
         ),
-        // baseVault,
-        // quoteVault,
         vaultProgram: this.vaultClient.vaultProgram.programId,
         vaultEventAuthority,
       })
@@ -773,40 +769,6 @@ export class FutarchyClient {
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ]);
   }
-
-  // async executeProposal(proposal: PublicKey) {
-  //   let storedProposal = await this.getProposal(proposal);
-
-  //   return this.executeProposalIx(
-  //     proposal,
-  //     storedProposal.dao,
-  //     storedProposal.instruction
-  //   ).rpc();
-  // }
-
-  // executeProposalIx(proposal: PublicKey, dao: PublicKey, instruction: any) {
-  //   const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
-  //   return this.autocrat.methods
-  //     .executeProposal()
-  //     .accounts({
-  //       proposal,
-  //       dao,
-  //       // daoTreasury,
-  //     })
-  //     .remainingAccounts(
-  //       instruction.accounts
-  //         .concat({
-  //           pubkey: instruction.programId,
-  //           isWritable: false,
-  //           isSigner: false,
-  //         })
-  //         .map((meta: AccountMeta) =>
-  //           meta.pubkey.equals(daoTreasury)
-  //             ? { ...meta, isSigner: false }
-  //             : meta
-  //         )
-  //     );
-  // }
 
   updateDaoIx({ dao, params }: { dao: PublicKey; params: UpdateDaoParams }) {
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
@@ -907,46 +869,4 @@ export class FutarchyClient {
       quoteTokenAccount,
     });
   }
-
-  // cranks the TWAPs of multiple proposals' markets. there's a limit on the
-  // number of proposals you can pass in, which I can't determine rn because
-  // there aren't enough proposals on devnet
-  // async crankProposalMarkets(
-  //   proposals: PublicKey[],
-  //   priorityFeeMicroLamports: number
-  // ) {
-  //   const amms: PublicKey[] = [];
-
-  //   for (const proposal of proposals) {
-  //     const storedProposal = await this.getProposal(proposal);
-  //     amms.push(storedProposal.passAmm);
-  //     amms.push(storedProposal.failAmm);
-  //   }
-
-  //   while (true) {
-  //     let ixs: TransactionInstruction[] = [];
-
-  //     for (const amm of amms) {
-  //       ixs.push(await this.ammClient.crankThatTwapIx(amm).instruction());
-  //     }
-
-  //     let tx = new Transaction();
-  //     tx.add(
-  //       ComputeBudgetProgram.setComputeUnitLimit({ units: 4_000 * ixs.length })
-  //     );
-  //     tx.add(
-  //       ComputeBudgetProgram.setComputeUnitPrice({
-  //         microLamports: priorityFeeMicroLamports,
-  //       })
-  //     );
-  //     tx.add(...ixs);
-  //     try {
-  //       await this.provider.sendAndConfirm(tx);
-  //     } catch (err) {
-  //       console.log("err", err);
-  //     }
-
-  //     await new Promise((resolve) => setTimeout(resolve, 65 * 1000)); // 65,000 milliseconds = 1 minute and 5 seconds
-  //   }
-  // }
 }

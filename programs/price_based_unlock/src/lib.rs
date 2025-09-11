@@ -33,6 +33,7 @@ pub mod price_based_unlock {
         CompleteUnlock::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate())]
     pub fn propose_change(
         ctx: Context<ProposeChange>,
         params: ProposeChangeParams,

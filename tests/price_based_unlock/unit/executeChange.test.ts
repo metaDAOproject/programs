@@ -109,7 +109,7 @@ export default function () {
     
     // Debug: check locker state before proposing
     const lockerBeforePropose = await this.priceBasedUnlock.getLocker(locker);
-    console.log("Execute test setup - recipient matches:", lockerBeforePropose.tokenRecipient.toString() === recipient.publicKey.toString());
+    // console.log("Execute test setup - recipient matches:", lockerBeforePropose.tokenRecipient.toString() === recipient.publicKey.toString());
     
     // First, recipient proposes the change
     const proposeTx = await this.priceBasedUnlock.proposeChangeIx({
@@ -143,9 +143,9 @@ export default function () {
 
     // Verify the change was applied
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
-    console.log("Recipient proposed -> Authority executed");
-    console.log("Change applied correctly:", lockerAccount.tokenRecipient.toString() === newRecipient.publicKey.toString());
-    console.log("State transition: PendingChange -> Locked");
+    // console.log("Recipient proposed -> Authority executed");
+    // console.log("Change applied correctly:", lockerAccount.tokenRecipient.toString() === newRecipient.publicKey.toString());
+    // console.log("State transition: PendingChange -> Locked");
     
     assert.equal(lockerAccount.tokenRecipient.toString(), newRecipient.publicKey.toString());
     assert.equal(lockerAccount.state.locked !== undefined, true); // Should be back to Locked state
@@ -155,7 +155,7 @@ export default function () {
       await this.priceBasedUnlock.getChangeRequest(changeRequestAddr);
       assert.fail("Change request should have been closed");
     } catch (error) {
-      console.log("Change request account properly closed");
+      // console.log("Change request account properly closed");
       // Expected - account should be closed
     }
   });
@@ -201,9 +201,9 @@ export default function () {
 
     // Verify the change was applied
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
-    console.log("Authority proposed -> Recipient executed");
-    console.log("Oracle change applied correctly:", lockerAccount.oracleConfig.oracleAccount.toString() === newOracleAccount.publicKey.toString());
-    console.log("Byte offset applied correctly:", lockerAccount.oracleConfig.byteOffset === 16);
+    // console.log("Authority proposed -> Recipient executed");
+    // console.log("Oracle change applied correctly:", lockerAccount.oracleConfig.oracleAccount.toString() === newOracleAccount.publicKey.toString());
+    // console.log("Byte offset applied correctly:", lockerAccount.oracleConfig.byteOffset === 16);
     
     assert.equal(lockerAccount.oracleConfig.oracleAccount.toString(), newOracleAccount.publicKey.toString());
     assert.equal(lockerAccount.oracleConfig.byteOffset, 16);
@@ -251,9 +251,9 @@ export default function () {
     // Verify oracle config was updated
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
     
-    console.log("Oracle change execution test");
-    console.log("Oracle account updated:", lockerAccount.oracleConfig.oracleAccount.toString() === newOracleAccount.publicKey.toString());
-    console.log("Byte offset updated:", lockerAccount.oracleConfig.byteOffset === 8);
+    // console.log("Oracle change execution test");
+    // console.log("Oracle account updated:", lockerAccount.oracleConfig.oracleAccount.toString() === newOracleAccount.publicKey.toString());
+    // console.log("Byte offset updated:", lockerAccount.oracleConfig.byteOffset === 8);
     
     assert.equal(lockerAccount.oracleConfig.oracleAccount.toString(), newOracleAccount.publicKey.toString());
     assert.equal(lockerAccount.oracleConfig.byteOffset, 8);
@@ -289,7 +289,7 @@ export default function () {
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(locker, changeKey.publicKey);
     
     try {
-      console.log("Testing wrong executor rejection - using:", wrongVault.publicKey.toString().slice(0, 8));
+      // console.log("Testing wrong executor rejection - using:", wrongVault.publicKey.toString().slice(0, 8));
       
       const executeTx = await this.priceBasedUnlock.executeChangeIx({
         locker,
@@ -349,8 +349,8 @@ export default function () {
     // Verify the change was applied
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
     
-    console.log("Authority proposed recipient change -> Recipient executed");
-    console.log("Recipient change applied correctly:", lockerAccount.tokenRecipient.toString() === newRecipient.publicKey.toString());
+    // console.log("Authority proposed recipient change -> Recipient executed");
+    // console.log("Recipient change applied correctly:", lockerAccount.tokenRecipient.toString() === newRecipient.publicKey.toString());
     
     assert.equal(lockerAccount.tokenRecipient.toString(), newRecipient.publicKey.toString());
     assert.equal(lockerAccount.state.locked !== undefined, true);
@@ -361,7 +361,7 @@ export default function () {
     const testChangeKey4 = Keypair.generate();
     const newOracleAccount2 = Keypair.generate();
     
-    console.log("Recipient proposes oracle change test");
+    // console.log("Recipient proposes oracle change test");
     
     // First, recipient proposes oracle change
     const proposeTx = await this.priceBasedUnlock.proposeChangeIx({
@@ -385,7 +385,7 @@ export default function () {
     proposeTx.sign(recipient);
     await this.banksClient.processTransaction(proposeTx);
 
-    console.log("Recipient proposal successful");
+    // console.log("Recipient proposal successful");
 
     // Now authority executes the change
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(locker, testChangeKey4.publicKey);
@@ -403,9 +403,9 @@ export default function () {
     // Verify the change was applied
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
     
-    console.log("Recipient proposed oracle change -> Authority executed");
-    console.log("Oracle change applied correctly:", lockerAccount.oracleConfig.oracleAccount.toString() === newOracleAccount2.publicKey.toString());
-    console.log("Byte offset applied correctly:", lockerAccount.oracleConfig.byteOffset === 24);
+    // console.log("Recipient proposed oracle change -> Authority executed");
+    // console.log("Oracle change applied correctly:", lockerAccount.oracleConfig.oracleAccount.toString() === newOracleAccount2.publicKey.toString());
+    // console.log("Byte offset applied correctly:", lockerAccount.oracleConfig.byteOffset === 24);
     
     assert.equal(lockerAccount.oracleConfig.oracleAccount.toString(), newOracleAccount2.publicKey.toString());
     assert.equal(lockerAccount.oracleConfig.byteOffset, 24);
@@ -416,7 +416,7 @@ export default function () {
     // Generate a fresh changeKey for this test
     const testChangeKey5 = Keypair.generate();
     
-    console.log("Self-execution rejection test");
+    // console.log("Self-execution rejection test");
     
     // First, recipient proposes a change
     const proposeTx = await this.priceBasedUnlock.proposeChangeIx({
@@ -435,16 +435,16 @@ export default function () {
     proposeTx.sign(recipient);
     await this.banksClient.processTransaction(proposeTx);
 
-    console.log("Recipient proposal successful");
+    // console.log("Recipient proposal successful");
 
     // Now try to execute with same recipient (should fail)
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(locker, testChangeKey5.publicKey);
     
     try {
-      console.log("Proposer was:", "recipient");
-      console.log("Expected executor:", "locker authority");
-      console.log("Trying to execute with:", "recipient (same as proposer)");
-      console.log("Should fail - no self-execution allowed");
+      // console.log("Proposer was:", "recipient");
+      // console.log("Expected executor:", "locker authority");
+      // console.log("Trying to execute with:", "recipient (same as proposer)");
+      // console.log("Should fail - no self-execution allowed");
       
       const executeTx = await this.priceBasedUnlock.executeChangeIx({
         locker,
@@ -458,7 +458,7 @@ export default function () {
       
       assert.fail("Should have failed with self-execution");
     } catch (error) {
-      console.log("Self-execution correctly rejected");
+      // console.log("Self-execution correctly rejected");
       // Should fail with UnauthorizedLockerAuthority since recipient != authority
       assert.include(error.message.toLowerCase(), "0x1777");
     }
@@ -468,7 +468,7 @@ export default function () {
     // Generate a fresh changeKey for this test
     const testChangeKey6 = Keypair.generate();
     
-    console.log("Authority self-execution rejection test");
+    // console.log("Authority self-execution rejection test");
     
     // First, authority proposes a change
     const proposeTx = await this.priceBasedUnlock.proposeChangeIx({
@@ -566,7 +566,7 @@ export default function () {
 
     // Check intermediate state after proposal
     const lockerAfterProposal = await this.priceBasedUnlock.getLocker(locker);
-    console.log("Intermediate state after proposal:", JSON.stringify(lockerAfterProposal.state, null, 2));
+    // console.log("Intermediate state after proposal:", JSON.stringify(lockerAfterProposal.state, null, 2));
 
     // Execute change
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(locker, changeKey.publicKey);
@@ -584,15 +584,15 @@ export default function () {
     // Verify it's back in Locked state (the original state)
     const lockerAfter = await this.priceBasedUnlock.getLocker(locker);
     
-    console.log("State restoration test");
-    console.log("1️⃣ Original state before proposal:", JSON.stringify(lockerBefore.state, null, 2));
-    console.log("2️⃣ Intermediate state after proposal:", JSON.stringify(lockerAfterProposal.state, null, 2));
-    console.log("3️⃣ Final state after execution:", JSON.stringify(lockerAfter.state, null, 2));
-    console.log("State transition: Locked -> PendingChange -> Locked");
-    console.log("Recipient change applied:", lockerAfter.tokenRecipient.toString());
-    console.log("Expected new recipient:", newRecipient.publicKey.toString());
-    console.log("State restored to Locked:", lockerAfter.state.locked !== undefined);
-    console.log("Change applied:", lockerAfter.tokenRecipient.toString() === newRecipient.publicKey.toString());
+    // console.log("State restoration test");
+    // console.log("1️⃣ Original state before proposal:", JSON.stringify(lockerBefore.state, null, 2));
+    // console.log("2️⃣ Intermediate state after proposal:", JSON.stringify(lockerAfterProposal.state, null, 2));
+    // console.log("3️⃣ Final state after execution:", JSON.stringify(lockerAfter.state, null, 2));
+    // console.log("State transition: Locked -> PendingChange -> Locked");
+    // console.log("Recipient change applied:", lockerAfter.tokenRecipient.toString());
+    // console.log("Expected new recipient:", newRecipient.publicKey.toString());
+    // console.log("State restored to Locked:", lockerAfter.state.locked !== undefined);
+    // console.log("Change applied:", lockerAfter.tokenRecipient.toString() === newRecipient.publicKey.toString());
     
     assert.equal(lockerAfter.state.locked !== undefined, true);
     assert.equal(lockerAfter.tokenRecipient.toString(), newRecipient.publicKey.toString());
@@ -633,7 +633,7 @@ export default function () {
       
       assert.fail("Should have failed with wrong change request");
     } catch (error) {
-      console.log(error)
+      // console.log(error)
     }
   });
 }

@@ -194,8 +194,6 @@ before(async function () {
     },
   } as Connection;
 
-  console.log("assigning permissionless account to autocrat program");
-
   let assignIx = SystemProgram.assign({
     accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
     programId: SystemProgram.programId,
@@ -211,29 +209,12 @@ before(async function () {
     toPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
     lamports: 1000000000,
   })
-  console.log("assigning permissionless account to autocrat program");
   let assignTx = new Transaction().add(allocateIx, assignIx, transferIx);
   assignTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
   assignTx.feePayer = this.payer.publicKey;
   assignTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
-  console.log("assigning permissionless account to autocrat program");
 
   await this.banksClient.processTransaction(assignTx);
-  // console.log("assigning permissionless account to autocrat program");
-
-  // const assignTx2 = new Transaction().add(SystemProgram.assign({
-  //   accountPubkey: PERMISSIONLESS_ACCOUNT.publicKey,
-  //   programId: SQUADS_PROGRAM_ID,
-  // }));
-  // assignTx2.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
-  // assignTx2.feePayer = this.payer.publicKey;
-  // assignTx2.sign(this.payer, PERMISSIONLESS_ACCOUNT);
-  // await this.banksClient.processTransaction(assignTx2);
-
-  // console.log(await this.banksClient.getAccount(PERMISSIONLESS_ACCOUNT.publicKey));
-
-  // throw new Error("stop here");
-
 
   this.createTokenAccount = async (mint: PublicKey, owner: PublicKey) => {
     return await createAssociatedTokenAccount(
