@@ -43,14 +43,12 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         params: {
-          slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3),
-          twapStartDelaySlots: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24),
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
           twapInitialObservation: THOUSAND_BUCK_PRICE,
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(10_000),
           minBaseFutarchicLiquidity: new BN(10_000),
-          baseLiquidityToLp: new BN(10 * 10 ** 9),
-          quoteLiquidityToLp: new BN(5000 * 10 ** 6),
           passThresholdBps: 300,
           nonce,
           initialSpendingLimit: null,
@@ -68,17 +66,14 @@ export default function suite() {
       daoCreator: this.payer.publicKey,
     });
 
-    const descriptionUrl = "https://example.com/proposal";
-    const baseTokensToLP = new BN(10 * 10 ** 9); // 10 META
-    const quoteTokensToLP = new BN(5000 * 10 ** 6); // 5000 USDC
-
     // Create a simple instruction for the proposal
     const updateDaoIx = await this.futarchy
       .updateDaoIx({
         dao,
         params: {
           passThresholdBps: 500,
-          slotsPerProposal: null,
+          secondsPerProposal: null,
+          baseToStake: null,
           twapInitialObservation: null,
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
@@ -127,11 +122,15 @@ export default function suite() {
     // Now initialize the autocrat proposal
     proposal = await this.futarchy.initializeProposal(
       dao,
-      descriptionUrl,
       squadsProposalPda,
-      baseTokensToLP,
-      quoteTokensToLP
     );
+
+    await this.futarchy.launchProposalIx({
+      proposal,
+      dao,
+      baseMint: META,
+      quoteMint: USDC,
+    }).rpc();
   });
 
   it("doesn't finalize proposals that are too young", async function () {

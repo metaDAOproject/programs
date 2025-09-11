@@ -40,8 +40,8 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         params: {
-          slotsPerProposal: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24 * 3),
-          twapStartDelaySlots: new BN(ONE_MINUTE_IN_SLOTS).muln(60 * 24),
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
           twapInitialObservation: THOUSAND_BUCK_PRICE,
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(1),
@@ -61,17 +61,13 @@ export default function suite() {
   });
 
   it("should initialize a proposal", async function () {
-    const descriptionUrl = "https://example.com/proposal";
-    const baseTokensToLP = new BN(10 * 10 ** 9); // 10 META
-    const quoteTokensToLP = new BN(5000 * 10 ** 6); // 5000 USDC
-
     // Create a simple instruction for the proposal
     const updateDaoIx = await this.futarchy
       .updateDaoIx({
         dao,
         params: {
           passThresholdBps: 500,
-          slotsPerProposal: null,
+          secondsPerProposal: null,
           baseToStake: null,
           twapInitialObservation: null,
           twapMaxObservationChangePerUpdate: null,
@@ -120,10 +116,7 @@ export default function suite() {
     // Now initialize the autocrat proposal
     const proposal = await this.futarchy.initializeProposal(
       dao,
-      descriptionUrl,
       squadsProposalPda,
-      baseTokensToLP,
-      quoteTokensToLP
     );
 
     // Split tokens into the vaults (as in the integration test)
@@ -139,7 +132,6 @@ export default function suite() {
 
     const storedProposal = await this.futarchy.getProposal(proposal);
 
-    assert.equal(storedProposal.descriptionUrl, descriptionUrl);
     assert.equal(storedProposal.number, 1);
     assert.ok(storedProposal.dao.equals(dao));
     assert.ok(storedProposal.proposer.equals(this.payer.publicKey));

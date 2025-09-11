@@ -146,7 +146,6 @@ export class LaunchpadClient {
     launchAuthority?: PublicKey;
     payer?: PublicKey;
   }) {
-
     const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,

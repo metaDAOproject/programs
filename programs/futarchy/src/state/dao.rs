@@ -60,14 +60,14 @@ pub struct InitialSpendingLimit {
 impl Dao {
     pub fn invariant(&self) -> Result<()> {
         require_gte!(
-            self.slots_per_proposal,
-            self.twap_start_delay_slots * 2,
+            self.seconds_per_proposal,
+            self.twap_start_delay_seconds * 2,
             FutarchyError::ProposalDurationTooShort
         );
 
         require_gte!(
-            self.slots_per_proposal,
-            DAY_IN_SLOTS,
+            self.seconds_per_proposal,
+            60 * 60 * 24,
             FutarchyError::ProposalDurationTooShort
         );
 

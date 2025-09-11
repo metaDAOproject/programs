@@ -164,14 +164,6 @@ export type Futarchy = {
           isSigner: false;
         },
       ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "InitializeProposalParams";
-          };
-        },
-      ];
       args: [];
     },
     {
@@ -1054,13 +1046,6 @@ export type Futarchy = {
               };
             };
           },
-          {
-            name: "amm";
-            docs: ["Embedded FutarchyAmm - 1:1 relationship"];
-            type: {
-              defined: "FutarchyAmm";
-            };
-          },
         ];
       };
     },
@@ -1252,18 +1237,6 @@ export type Futarchy = {
                 defined: "InitialSpendingLimit";
               };
             };
-          },
-        ];
-      };
-    },
-    {
-      name: "InitializeProposalParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "descriptionUrl";
-            type: "string";
           },
         ];
       };
@@ -1523,26 +1496,6 @@ export type Futarchy = {
             type: "u128";
           },
           {
-            name: "aggregator";
-            docs: [
-              "Running sum of slots_per_last_update * last_observation.",
-              "",
-              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
-              "we can store 18 million slots worth of observations, which turns out to",
-              "be ~85 days worth of slots.",
-              "",
-              "Assuming that latest observations are 100x smaller than they could theoretically",
-              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
-              "very conservative assumption - META/USDC prices should be between 1e9 and",
-              "1e15, which would overflow after 1e15 years worth of slots.",
-              "",
-              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
-              "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at T2 being smaller than an aggregator at T1.",
-            ];
-            type: "u128";
-          },
-          {
             name: "maxObservationChangePerUpdate";
             docs: ["The most that an observation can change per update."];
             type: "u128";
@@ -1588,12 +1541,6 @@ export type Futarchy = {
           {
             name: "baseProtocolFeeBalance";
             type: "u64";
-          },
-          {
-            name: "oracle";
-            type: {
-              defined: "TwapOracle";
-            };
           },
         ];
       };
@@ -3351,7 +3298,6 @@ export const IDL: Futarchy = {
             name: "proposer",
             type: "publicKey",
           },
-          {
           {
             name: "timestampEnqueued",
             type: "i64",
