@@ -24,10 +24,12 @@ pub struct OracleConfig {
 #[account]
 #[derive(InitSpace)]
 pub struct Locker {
-    /// The price threshold that must be met for tokens to be unlocked
+    /// The price threshold for 100% unlocking (max price target)
     pub price_threshold: u128,
     /// The amount of tokens locked
     pub token_amount: u64,
+    /// The amount of tokens already unlocked
+    pub tokens_already_unlocked: u64,
     /// The timestamp when unlocking can begin
     pub unlock_timestamp: i64,
     /// Where to pull price data from

@@ -109,7 +109,6 @@ export class PriceBasedUnlockClient {
 
   public completeUnlockIx(params: {
     locker: PublicKey;
-    lockerAuthority: PublicKey;
     oracleAccount: PublicKey;
     recipientTokenAccount: PublicKey;
   }) {

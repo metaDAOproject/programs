@@ -127,6 +127,7 @@ export class LaunchpadClient {
     monthlySpendingLimitMembers,
     priceBasedUnlockAddress,
     priceBasedPremineAmount,
+    priceBasedUnlockThreshold,
     launchAuthority = this.provider.publicKey,
     payer = this.provider.publicKey,
   }: {
@@ -141,6 +142,7 @@ export class LaunchpadClient {
     monthlySpendingLimitMembers: PublicKey[];
     priceBasedUnlockAddress: PublicKey;
     priceBasedPremineAmount: BN;
+    priceBasedUnlockThreshold: BN;
     launchAuthority?: PublicKey;
     payer?: PublicKey;
   }) {
@@ -173,6 +175,7 @@ export class LaunchpadClient {
         monthlySpendingLimitMembers,
         priceBasedUnlockAddress,
         priceBasedPremineAmount,
+        priceBasedUnlockThreshold,
       })
       .accounts({
         launch,

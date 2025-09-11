@@ -7,6 +7,7 @@ use crate::events::{CommonFields, LaunchInitializedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::usdc_mint;
 use crate::TOKENS_TO_PARTICIPANTS;
+use crate::MAX_PREMINE;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, CreateMetadataAccountsV3, Metadata,
@@ -23,6 +24,7 @@ pub struct InitializeLaunchArgs {
     pub token_uri: String,
     pub price_based_unlock_address: Pubkey,
     pub price_based_premine_amount: u64,
+    pub price_based_unlock_threshold: u128,
 }
 
 #[event_cpi]
@@ -119,9 +121,18 @@ impl InitializeLaunch<'_> {
         );
 
         require_gte!(
-            TOKENS_TO_PARTICIPANTS,
+            MAX_PREMINE,
             args.price_based_premine_amount,
             LaunchpadError::InvalidPriceBasedPremineAmount
+        );
+
+        // Require threshold to be at least 2x the minimum possible launch price
+        // minimum_price = minimum_raise_amount / TOKENS_TO_PARTICIPANTS
+        let min_threshold = ((args.minimum_raise_amount as u128) * 2 * 1_000_000_000_000) / (TOKENS_TO_PARTICIPANTS as u128);
+        require_gte!(
+            args.price_based_unlock_threshold,
+            min_threshold,
+            LaunchpadError::InvalidPriceBasedUnlockThreshold
         );
 
         require!(self.base_mint.supply == 0, LaunchpadError::SupplyNonZero);
@@ -158,6 +169,7 @@ impl InitializeLaunch<'_> {
             dao_vault: None,
             price_based_unlock_recipient: args.price_based_unlock_address,
             price_based_premine_amount: args.price_based_premine_amount,
+            price_based_unlock_threshold: args.price_based_unlock_threshold,
         });
 
         let clock = Clock::get()?;
@@ -214,6 +226,7 @@ impl InitializeLaunch<'_> {
         )?;
 
         // Mint total tokens to launch token vault
+        // Include premine amount since complete_launch will transfer it to price-based unlock
         token::mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -224,7 +237,7 @@ impl InitializeLaunch<'_> {
                 },
                 signer,
             ),
-            TOKENS_TO_PARTICIPANTS,
+            TOKENS_TO_PARTICIPANTS + args.price_based_premine_amount,
         )?;
 
         Ok(())

@@ -54,4 +54,6 @@ pub struct Launch {
     pub price_based_unlock_recipient: Pubkey,
     /// The price-based premine amount.
     pub price_based_premine_amount: u64,
+    /// The price threshold for price-based unlock.
+    pub price_based_unlock_threshold: u128,
 }

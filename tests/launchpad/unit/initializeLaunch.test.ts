@@ -6,12 +6,12 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  AutocratClient,
+  FutarchyClient,
   getLaunchAddr,
   getLaunchSignerAddr,
   getMetadataAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 import { createMint, mintTo } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
@@ -23,18 +23,19 @@ import * as token from "@solana/spl-token";
 import {
   MAINNET_USDC,
   MPL_TOKEN_METADATA_PROGRAM_ID,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 import { initializeMintWithSeeds } from "../utils.js";
+import { Key } from "@metaplex-foundation/mpl-token-metadata";
 
 export default function suite() {
-  let autocratClient: AutocratClient;
+  let futarchyClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
 
   before(async function () {
-    autocratClient = this.futarchy;
+    futarchyClient = this.futarchy;
     launchpadClient = this.launchpad;
   });
 
@@ -53,6 +54,9 @@ export default function suite() {
   it("initializes a launch with valid parameters", async function () {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
+    const monthlySpend = new BN(100_000000)
+    const recipientAddress = Keypair.generate().publicKey;
+    const premineAmount = new BN(500_000_000);
 
     const [, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), META);
     const [, launchSignerPdaBump] = getLaunchSignerAddr(
@@ -61,17 +65,20 @@ export default function suite() {
     );
 
     await launchpadClient
-      .initializeLaunchIx(
-        "META",
-        "META",
-        "https://example.com",
-        minRaise,
-        secondsForLaunch,
-        META,
-        MAINNET_USDC,
-        new BN(100_000000), // 100 USDC burn
-        [this.payer.publicKey]
-      )
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: secondsForLaunch,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: monthlySpend, // 100 USDC burn
+        monthlySpendingLimitMembers: [this.payer.publicKey],
+        priceBasedUnlockAddress: recipientAddress,
+        priceBasedPremineAmount: premineAmount,
+        priceBasedUnlockThreshold: new BN("1500000000000"), // 1.5e12 price threshold
+      })
       .rpc();
 
     const storedLaunch = await launchpadClient.fetchLaunch(launch);
@@ -102,10 +109,83 @@ export default function suite() {
     assert.equal(storedLaunch.dao, null);
   });
 
+  it("fails when price threshold is too low", async function () {
+    // Create a fresh mint for this test to avoid conflicts
+    const result = await initializeMintWithSeeds(
+      this.banksClient,
+      this.launchpad,
+      this.payer
+    );
+    const freshMeta = result.tokenMint;
+
+    const minRaise = new BN(1000_000000); // 1000 USDC
+    const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
+    const monthlySpend = new BN(100_000000);
+    const recipientAddress = Keypair.generate().publicKey;
+    const premineAmount = new BN(500_000_000);
+    const lowThreshold = new BN("100000000"); // 1e8 - too low (less than required 2e8)
+
+    try {
+      await launchpadClient
+        .initializeLaunchIx({
+          tokenName: "META",
+          tokenSymbol: "META", 
+          tokenUri: "https://example.com",
+          minimumRaiseAmount: minRaise,
+          secondsForLaunch: secondsForLaunch,
+          baseMint: freshMeta,
+          quoteMint: MAINNET_USDC,
+          monthlySpendingLimitAmount: monthlySpend,
+          monthlySpendingLimitMembers: [this.payer.publicKey],
+          priceBasedUnlockAddress: recipientAddress,
+          priceBasedPremineAmount: premineAmount,
+          priceBasedUnlockThreshold: lowThreshold,
+        })
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      console.log("Error caught:", e.message);
+      assert.include(e.message, "InvalidPriceBasedUnlockThreshold");
+    }
+  });
+
+  it("succeeds when price threshold is exactly at minimum", async function () {
+    const minRaise = new BN(1000_000000); // 1000 USDC
+    const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
+    const monthlySpend = new BN(100_000000);
+    const recipientAddress = Keypair.generate().publicKey;
+    const premineAmount = new BN(500_000_000);
+    const exactMinThreshold = new BN("200000000"); // 2e8 - exactly 2x minimum price
+
+    // Should not throw error
+    await launchpadClient
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: secondsForLaunch,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: monthlySpend,
+        monthlySpendingLimitMembers: [this.payer.publicKey],
+        priceBasedUnlockAddress: recipientAddress,
+        priceBasedPremineAmount: premineAmount,
+        priceBasedUnlockThreshold: exactMinThreshold,
+      })
+      .rpc();
+
+    const storedLaunch = await launchpadClient.fetchLaunch(launch);
+    assert.equal(storedLaunch.priceBasedUnlockThreshold.toString(), exactMinThreshold.toString());
+  });
+
   it("fails when launch signer is faked", async function () {
-    const minimumRaiseAmount = new BN(1000_000000); // 1000 USDC
+    const minRaise = new BN(1000_000000); // 1000 USDC
     const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
     const fakeLaunchSigner = Keypair.generate();
+    const monthlySpend = new BN(100_000000)
+    const recipientAddress = Keypair.generate().publicKey;
+    const premineAmount = new BN(500_000_000);
 
     META = await PublicKey.createWithSeed(
       this.payer.publicKey,
@@ -143,15 +223,20 @@ export default function suite() {
     const [tokenMetadata] = getMetadataAddr(META);
 
     try {
-      await launchpadClient.launchpad.methods
-        .initializeLaunch({
-          tokenName: "MetaDAO",
+      await launchpadClient
+        .initializeLaunchIx({
+          tokenName: "META",
           tokenSymbol: "META",
           tokenUri: "https://example.com",
-          minimumRaiseAmount,
-          secondsForLaunch,
-          monthlySpendingLimitAmount: new BN(100_000000),
+          minimumRaiseAmount: minRaise,
+          secondsForLaunch: secondsForLaunch,
+          baseMint: META,
+          quoteMint: MAINNET_USDC,
+          monthlySpendingLimitAmount: monthlySpend, // 100 USDC burn
           monthlySpendingLimitMembers: [this.payer.publicKey],
+          priceBasedUnlockAddress: recipientAddress,
+          priceBasedPremineAmount: premineAmount,
+          priceBasedUnlockThreshold: new BN("1500000000000"), // 1.5e12 price threshold
         })
         .accounts({
           launch,

@@ -222,14 +222,17 @@ export type PriceBasedUnlock = {
         fields: [
           {
             name: "priceThreshold";
-            docs: [
-              "The price threshold that must be met for tokens to be unlocked",
-            ];
+            docs: ["The price threshold for 100% unlocking (max price target)"];
             type: "u128";
           },
           {
             name: "tokenAmount";
             docs: ["The amount of tokens locked"];
+            type: "u64";
+          },
+          {
+            name: "tokensAlreadyUnlocked";
+            docs: ["The amount of tokens already unlocked"];
             type: "u64";
           },
           {
@@ -575,6 +578,46 @@ export type PriceBasedUnlock = {
         },
       ];
     },
+    {
+      name: "TokensClaimed";
+      fields: [
+        {
+          name: "locker";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "recipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "tokensClaimed";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "tokensAlreadyUnlocked";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "totalTokenAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "currentPrice";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "unlockPercentage";
+          type: "u128";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -844,14 +887,17 @@ export const IDL: PriceBasedUnlock = {
         fields: [
           {
             name: "priceThreshold",
-            docs: [
-              "The price threshold that must be met for tokens to be unlocked",
-            ],
+            docs: ["The price threshold for 100% unlocking (max price target)"],
             type: "u128",
           },
           {
             name: "tokenAmount",
             docs: ["The amount of tokens locked"],
+            type: "u64",
+          },
+          {
+            name: "tokensAlreadyUnlocked",
+            docs: ["The amount of tokens already unlocked"],
             type: "u64",
           },
           {
@@ -1192,6 +1238,46 @@ export const IDL: PriceBasedUnlock = {
         },
         {
           name: "priceThreshold",
+          type: "u128",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "TokensClaimed",
+      fields: [
+        {
+          name: "locker",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "recipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "tokensClaimed",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "tokensAlreadyUnlocked",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "totalTokenAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "currentPrice",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "unlockPercentage",
           type: "u128",
           index: false,
         },

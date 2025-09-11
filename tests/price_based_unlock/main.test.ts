@@ -1,6 +1,6 @@
 // import initializeLocker from "./unit/initializeLocker.test.ts";
 // import startUnlock from "./unit/startUnlock.test.ts";
-// import completeUnlock from "./unit/completeUnlock.test.ts";
+import completeUnlock from "./unit/completeUnlock.test.ts";
 import proposalChange from "./unit/proposeChange.test.js";
 import executeChange from "./unit/executeChange.test.js";
 
@@ -9,7 +9,7 @@ import priceBasedPremine from "./integration/priceBasedPremine.test.ts";
 export default function suite() {
   // describe("#initialize_locker", initializeLocker);
   // describe("#start_unlock", startUnlock);
-  // describe("#complete_unlock", completeUnlock);
+  describe("#complete_unlock", completeUnlock);
   describe("#proposal_change", proposalChange);
   describe("#execute_change", executeChange);
 

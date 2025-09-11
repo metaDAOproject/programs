@@ -1,34 +1,30 @@
-import { PublicKey, Keypair, Transaction } from "@solana/web3.js";
+import { PublicKey, Keypair } from "@solana/web3.js";
 import { assert } from "chai";
 import * as token from "@solana/spl-token";
 import { mintTo } from "spl-token-bankrun";
-import { PriceBasedTokenLockClient } from "@metadaoproject/futarchy/v0.6";
 import BN from "bn.js";
 
 export default function () {
   let createKey: Keypair;
   let tokenMint: PublicKey;
-  let tokenAuthority: PublicKey;
+  let tokenAuthority: Keypair;
   let tokenAccount: PublicKey;
   let recipient: Keypair;
-  let recipientTokenAccount: PublicKey;
   let locker: PublicKey;
-  let lockerTokenAccount: PublicKey;
   let oracleAccount: Keypair;
 
   beforeEach(async function () {
     // Create test accounts
     createKey = Keypair.generate();
-    tokenAuthority = this.payer.publicKey;
+    tokenAuthority = Keypair.generate();
     recipient = Keypair.generate();
     oracleAccount = Keypair.generate();
 
     // Create token mint
-    tokenMint = await this.createMint(tokenAuthority, 6);
+    tokenMint = await this.createMint(tokenAuthority.publicKey, 6);
 
-    // Create token accounts
-    tokenAccount = await this.createTokenAccount(tokenMint, tokenAuthority);
-    recipientTokenAccount = await this.createTokenAccount(tokenMint, recipient.publicKey);
+    // Create token account
+    tokenAccount = await this.createTokenAccount(tokenMint, tokenAuthority.publicKey);
 
     // Mint some tokens to the token account
     await mintTo(
@@ -36,7 +32,7 @@ export default function () {
       this.payer,
       tokenMint,
       tokenAccount,
-      this.payer,
+      tokenAuthority,
       1000000
     );
 
@@ -49,8 +45,6 @@ export default function () {
     );
     locker = lockerPda;
 
-    // Derive associated token account for locker
-    lockerTokenAccount = token.getAssociatedTokenAddressSync(tokenMint, locker, true);
   });
 
   it("should initialize a locker successfully", async function () {
@@ -58,25 +52,26 @@ export default function () {
       priceThreshold: new BN(1000000), // 1.0 with 6 decimals
       tokenAmount: new BN(100000), // 0.1 tokens
       unlockTimestamp: new BN(Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600), // 1 hour from now
-      oracleAccount: oracleAccount.publicKey,
-      aggregatorByteOffset: 0,
+      oracleConfig: {
+        oracleAccount: oracleAccount.publicKey,
+        byteOffset: 0,
+      },
       twapLengthSeconds: new BN(300), // 5 minutes
       tokenRecipient: recipient.publicKey,
+      lockerAuthority: this.payer.publicKey,
     };
 
-    const tx = await this.priceBasedUnlock.initializeLocker({
+    const tx = await this.priceBasedUnlock.initializeLockerIx({
       params,
       createKey: createKey.publicKey,
       tokenMint,
-      tokenAccount,
-      tokenAuthority: tokenAuthority,
-      lockerTokenAccount,
-      recipientTokenAccount,
+      fromTokenAccount: tokenAccount,
+      tokenAuthority: tokenAuthority.publicKey,
       payer: this.payer.publicKey,
-    });
+    }).transaction();
 
     tx.recentBlockhash = (await this.context.banksClient.getLatestBlockhash())[0];
-    tx.sign(createKey, this.payer);
+    tx.sign(createKey, this.payer, tokenAuthority);
     await this.banksClient.processTransaction(tx);
 
     // Verify locker was created
@@ -84,11 +79,12 @@ export default function () {
     assert.equal(lockerAccount.priceThreshold.toString(), "1000000");
     assert.equal(lockerAccount.tokenAmount.toString(), "100000");
     assert.equal(lockerAccount.unlockTimestamp.toString(), params.unlockTimestamp.toString());
-    assert.equal(lockerAccount.oracleAccount.toString(), oracleAccount.publicKey.toString());
-    assert.equal(lockerAccount.aggregatorByteOffset, 0);
+    assert.equal(lockerAccount.oracleConfig.oracleAccount.toString(), oracleAccount.publicKey.toString());
+    assert.equal(lockerAccount.oracleConfig.byteOffset, 0);
     assert.equal(lockerAccount.twapLengthSeconds.toString(), "300");
     assert.equal(lockerAccount.tokenRecipient.toString(), recipient.publicKey.toString());
-    assert.equal(lockerAccount.state.locked, undefined);
+    assert.equal(lockerAccount.lockerAuthority.toString(), this.payer.publicKey.toString());
+    assert.exists(lockerAccount.state.locked);
 
     // Verify tokens were transferred
     const lockerBalance = await this.getTokenBalance(tokenMint, locker);
@@ -99,66 +95,70 @@ export default function () {
   });
 
   it("should fail if unlock timestamp is in the past", async function () {
+    const pastCreateKey = Keypair.generate();
     const params = {
       priceThreshold: new BN(1000000),
       tokenAmount: new BN(100000),
       unlockTimestamp: new BN(Number((await this.context.banksClient.getClock()).unixTimestamp) - 3600), // 1 hour ago
-      oracleAccount: oracleAccount.publicKey,
-      aggregatorByteOffset: 0,
+      oracleConfig: {
+        oracleAccount: oracleAccount.publicKey,
+        byteOffset: 0,
+      },
       twapLengthSeconds: new BN(300),
       tokenRecipient: recipient.publicKey,
+      lockerAuthority: this.payer.publicKey,
     };
 
     try {
-      const tx = await this.priceBasedUnlock.initializeLocker({
+      const tx = await this.priceBasedUnlock.initializeLockerIx({
         params,
-        createKey: createKey.publicKey,
+        createKey: pastCreateKey.publicKey,
         tokenMint,
-        tokenAccount,
-        tokenAuthority: tokenAuthority,
-        lockerTokenAccount,
-        recipientTokenAccount,
+        fromTokenAccount: tokenAccount,
+        tokenAuthority: tokenAuthority.publicKey,
         payer: this.payer.publicKey,
-      });
+      }).transaction();
 
       tx.recentBlockhash = (await this.context.banksClient.getLatestBlockhash())[0];
-      tx.sign(createKey, this.payer);
+      tx.sign(pastCreateKey, this.payer, tokenAuthority);
       await this.banksClient.processTransaction(tx);
       assert.fail("Expected transaction to fail");
     } catch (error) {
-      assert.include(error.message, "UnlockTimestampNotReached");
+      assert.include(error.message, "UnlockTimestampInPast");
     }
   });
 
   it("should fail if token amount is zero", async function () {
+    const zeroCreateKey = Keypair.generate();
     const params = {
       priceThreshold: new BN(1000000),
       tokenAmount: new BN(0),
       unlockTimestamp: new BN(Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600),
-      oracleAccount: oracleAccount.publicKey,
-      aggregatorByteOffset: 0,
+      oracleConfig: {
+        oracleAccount: oracleAccount.publicKey,
+        byteOffset: 0,
+      },
       twapLengthSeconds: new BN(300),
       tokenRecipient: recipient.publicKey,
+      lockerAuthority: this.payer.publicKey,
     };
 
     try {
-      const tx = await this.priceBasedUnlock.initializeLocker({
+      const tx = await this.priceBasedUnlock.initializeLockerIx({
         params,
-        createKey: createKey.publicKey,
+        createKey: zeroCreateKey.publicKey,
         tokenMint,
-        tokenAccount,
-        tokenAuthority: tokenAuthority,
-        lockerTokenAccount,
-        recipientTokenAccount,
+        fromTokenAccount: tokenAccount,
+        tokenAuthority: tokenAuthority.publicKey,
         payer: this.payer.publicKey,
-      });
+      }).transaction();
 
       tx.recentBlockhash = (await this.context.banksClient.getLatestBlockhash())[0];
-      tx.sign(createKey, this.payer);
+      tx.sign(zeroCreateKey, this.payer, tokenAuthority);
       await this.banksClient.processTransaction(tx);
       assert.fail("Expected transaction to fail");
     } catch (error) {
-      assert.include(error.message, "InvalidOracleData");
+      assert.include(error.message, "TokenAmountZero");
     }
   });
 }

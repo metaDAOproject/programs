@@ -1,13 +1,13 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  AutocratClient,
+  FutarchyClient,
   getFundingRecordAddr,
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 import { createMint, mintTo, getAccount } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
@@ -19,7 +19,7 @@ import {
 import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {
-  let autocratClient: AutocratClient;
+  let autocratClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
   let META: PublicKey;
   let launch: PublicKey;
@@ -30,6 +30,12 @@ export default function suite() {
   let funderQuoteAccount: PublicKey;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
+  const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
+  const monthlySpend = new BN(100_000000)
+  const recipientAddress = Keypair.generate().publicKey;
+  const premineAmount = new BN(500_000_000);
+  const unlockThreshold = new BN(2000_000000);
+
 
   before(async function () {
     autocratClient = this.futarchy;
@@ -62,19 +68,23 @@ export default function suite() {
       this.payer.publicKey
     );
 
+
     // Initialize launch
     await launchpadClient
-      .initializeLaunchIx(
-        "MTN",
-        "MTN",
-        "https://example.com",
-        minRaise,
-        60 * 60,
-        META,
-        MAINNET_USDC,
-        new BN(100_000000), // 100 USDC burn
-        [this.payer.publicKey]
-      )
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: secondsForLaunch,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: monthlySpend, // 100 USDC burn
+        monthlySpendingLimitMembers: [this.payer.publicKey],
+        priceBasedUnlockAddress: recipientAddress,
+        priceBasedPremineAmount: premineAmount,
+        priceBasedUnlockThreshold: unlockThreshold
+      })
       .rpc();
   });
 
@@ -84,7 +94,7 @@ export default function suite() {
 
     try {
       await launchpadClient
-        .fundIx(launch, fundAmount, undefined, MAINNET_USDC)
+        .fundIx({launch, amount: fundAmount })
         .rpc();
       assert.fail("Expected fund instruction to fail");
     } catch (e) {
@@ -93,13 +103,13 @@ export default function suite() {
   });
 
   it("successfully funds the launch", async function () {
-    await launchpadClient.startLaunchIx(launch).rpc();
+    await launchpadClient.startLaunchIx({launch}).rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
 
     const fundAmount = new BN(100_000000); // 100 USDC
 
     await launchpadClient
-      .fundIx(launch, fundAmount, undefined, MAINNET_USDC)
+      .fundIx({launch, amount: fundAmount})
       .rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
@@ -130,7 +140,7 @@ export default function suite() {
   });
 
   it("successfully funds the launch multiple times", async function () {
-    await launchpadClient.startLaunchIx(launch).rpc();
+    await launchpadClient.startLaunchIx({launch}).rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
 
     const fundAmount1 = new BN(100_000000); // 100 USDC
@@ -139,12 +149,12 @@ export default function suite() {
 
     // First funding
     await launchpadClient
-      .fundIx(launch, fundAmount1, undefined, MAINNET_USDC)
+      .fundIx({launch, amount: fundAmount1})
       .rpc();
 
     // Second funding
     await launchpadClient
-      .fundIx(launch, fundAmount2, undefined, MAINNET_USDC)
+      .fundIx({launch, amount: fundAmount2 })
       .rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
@@ -173,17 +183,17 @@ export default function suite() {
   });
 
   it("fails to fund the launch after time expires", async function () {
-    await launchpadClient.startLaunchIx(launch).rpc();
+    await launchpadClient.startLaunchIx({launch}).rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
 
     const fundAmount = new BN(100_000000); // 100 USDC
 
     // Fast forward time past the launch period (60 * 60 seconds)
-    await this.advanceBySeconds(60 * 60 * 2);
+    await this.advanceBySeconds((60 * 60 * 24 * 7) + 10);
 
     try {
       await launchpadClient
-        .fundIx(launch, fundAmount, undefined, MAINNET_USDC)
+        .fundIx({launch, amount:fundAmount })
         .rpc();
       assert.fail("Expected fund instruction to fail");
     } catch (e) {

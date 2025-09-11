@@ -12,6 +12,13 @@ export default function () {
 
         const alice = Keypair.generate();
 
+        const minRaise = new BN(1000_000000); // 1000 USDC
+        const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
+        const monthlySpend = new BN(100_000000)
+        const recipientAddress = Keypair.generate().publicKey;
+        const premineAmount = new BN(500_000_000);
+        
+
         const tokenMint = await this.createMint(this.payer.publicKey, 6);
 
         // Do the premine
@@ -32,23 +39,26 @@ export default function () {
         await this.banksClient.processTransaction(tx);
 
         await this.launchpad.initializeLaunchIx({
-            tokenName: "Test Project",
-            tokenSymbol: "TPJ",
+            tokenName: "META",
+            tokenSymbol: "META",
             tokenUri: "https://example.com",
-            secondsForLaunch: DAY_IN_SECONDS,
-            minimumRaiseAmount: new BN(1 * 10 ** 6),
+            minimumRaiseAmount: minRaise,
+            secondsForLaunch: secondsForLaunch,
             baseMint: tokenMint,
-            monthlySpendingLimitAmount: new BN(1),
+            quoteMint: MAINNET_USDC,
+            monthlySpendingLimitAmount: monthlySpend, // 100 USDC burn
             monthlySpendingLimitMembers: [this.payer.publicKey],
-            priceBasedUnlockAddress: this.payer.publicKey,
-            priceBasedPremineAmount: new BN(1 * 10 ** 6),
-        }).rpc();
+            priceBasedUnlockAddress: recipientAddress,
+            priceBasedPremineAmount: premineAmount,
+            priceBasedUnlockThreshold: new BN("1500000000000"), // 1.5e12 price threshold
+            })
+            .rpc();
 
         await this.launchpad.startLaunchIx({ launch }).rpc();
 
-        await this.launchpad.fundIx({ launch, amount: new BN(1 * 10 ** 6) }).rpc();
+        await this.launchpad.fundIx({ launch, amount: minRaise }).rpc(); // Fund with full minimum raise
 
-        await this.advanceBySeconds(DAY_IN_SECONDS + 100);
+        await this.advanceBySeconds(DAY_IN_SECONDS * 7 + 100); // Advance past the 7-day launch period
 
         await this.launchpad.completeLaunchIx({ launch, baseMint: tokenMint }).rpc();
 
@@ -93,7 +103,7 @@ export default function () {
 
         await this.priceBasedUnlock.completeUnlockIx({
             locker,
-            lockerAuthority: this.payer.publicKey,
+
             oracleAccount: dao,
             recipientTokenAccount: aliceTokenAccount,
         }).rpc();

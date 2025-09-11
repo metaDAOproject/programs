@@ -6,12 +6,12 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  AutocratClient,
+  FutarchyClient,
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
@@ -23,7 +23,7 @@ import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
 
 export default function suite() {
-  let autocratClient: AutocratClient;
+  let futarchyClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
   let METAKP: Keypair;
   let META: PublicKey;
@@ -35,7 +35,7 @@ export default function suite() {
   const minRaise = new BN(1000_000000); // 1000 USDC
 
   before(async function () {
-    autocratClient = this.futarchy;
+    futarchyClient = this.futarchy;
     launchpadClient = this.launchpad;
   });
 
@@ -61,20 +61,23 @@ export default function suite() {
 
     // Initialize launch
     await launchpadClient
-      .initializeLaunchIx(
-        "META",
-        "MTA",
-        "https://example.com",
-        minRaise,
-        60 * 60 * 24 * 6,
-        META,
-        MAINNET_USDC, 
-        new BN(100_000000), // 100 USDC burn
-        [this.payer.publicKey]
-      )
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "MTA",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: 60 * 60 * 24 * 6,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: new BN(100_000000), // 100 USDC burn
+        monthlySpendingLimitMembers: [this.payer.publicKey],
+        priceBasedUnlockAddress: Keypair.generate().publicKey,
+        priceBasedPremineAmount: new BN(500_000),
+        priceBasedUnlockThreshold: new BN(1_000_000_000_000), // 1e12 price threshold
+      })
       .rpc();
 
-    await launchpadClient.startLaunchIx(launch).rpc();
+    await launchpadClient.startLaunchIx({launch}).rpc();
 
     // Setup funder accounts
     await this.createTokenAccount(META, this.payer.publicKey);
@@ -85,7 +88,7 @@ export default function suite() {
     const partialAmount = minRaise.divn(2);
 
     await launchpadClient
-      .fundIx(launch, partialAmount, undefined, MAINNET_USDC)
+      .fundIx({launch, amount: partialAmount})
       .rpc();
 
     // Advance clock past 7 days
@@ -93,7 +96,7 @@ export default function suite() {
 
     // Complete the launch (moves to refunding state)
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx(launch, MAINNET_USDC, META)
+      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -148,7 +151,7 @@ export default function suite() {
     const partialAmount = minRaise.divn(2);
 
     await launchpadClient
-      .fundIx(launch, partialAmount, undefined, MAINNET_USDC)
+      .fundIx({launch, amount: partialAmount})
       .rpc();
 
     try {
@@ -163,7 +166,7 @@ export default function suite() {
     // Move to refunding state without any funding
     await this.advanceBySeconds(60 * 60 * 24 * 7);
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx(launch, MAINNET_USDC, META)
+      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(

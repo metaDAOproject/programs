@@ -74,35 +74,67 @@ impl CompleteUnlock<'_> {
         let aggregator_change = current_aggregator.saturating_sub(start_aggregator);
         let twap_price = aggregator_change / time_passed as u128;
 
-        // Check if the TWAP price meets the threshold
-        require_gte!(
-            twap_price,
-            locker.price_threshold,
-            PriceBasedUnlockError::PriceThresholdNotMet
-        );
+        // Calculate linear unlock percentage: current_price / price_threshold * 100
+        // Cap at 100% if price exceeds threshold
+        let unlock_percentage = if twap_price >= locker.price_threshold {
+            100u128
+        } else {
+            (twap_price * 100) / locker.price_threshold
+        };
 
-        // Transfer tokens to recipient using PDA signature
-        let seeds = &[b"locker", locker.create_key.as_ref(), &[locker.pda_bump]];
-        let signer = &[&seeds[..]];
+        // Calculate total tokens that should be unlocked based on current price
+        let total_unlockable = (locker.token_amount as u128 * unlock_percentage / 100) as u64;
 
-        let transfer_ctx = CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            token::Transfer {
-                from: ctx.accounts.locker_token_account.to_account_info(),
-                to: ctx.accounts.recipient_token_account.to_account_info(),
-                authority: locker.to_account_info(),
-            },
-            signer,
-        );
+        // Calculate tokens to unlock this time = total_unlockable - already_unlocked
+        // If price decreased and total_unlockable < already_unlocked, no additional tokens to unlock
+        let tokens_to_unlock = if total_unlockable > locker.tokens_already_unlocked {
+            total_unlockable - locker.tokens_already_unlocked
+        } else {
+            0
+        };
 
-        token::transfer(transfer_ctx, locker.token_amount)?;
+        // Only transfer if there are tokens to unlock
+        if tokens_to_unlock > 0 {
+            // Transfer tokens to recipient using PDA signature
+            let seeds = &[b"locker", locker.create_key.as_ref(), &[locker.pda_bump]];
+            let signer = &[&seeds[..]];
 
-        // Update locker state to Unlocked
-        locker.state = LockerState::Unlocked;
+            let transfer_ctx = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                token::Transfer {
+                    from: ctx.accounts.locker_token_account.to_account_info(),
+                    to: ctx.accounts.recipient_token_account.to_account_info(),
+                    authority: locker.to_account_info(),
+                },
+                signer,
+            );
+
+            token::transfer(transfer_ctx, tokens_to_unlock)?;
+
+            // Update tokens already unlocked
+            locker.tokens_already_unlocked = total_unlockable;
+
+            // Emit tokens claimed event
+            emit_cpi!(TokensClaimed {
+                locker: locker.key(),
+                recipient: locker.token_recipient,
+                tokens_claimed: tokens_to_unlock,
+                tokens_already_unlocked: locker.tokens_already_unlocked,
+                total_token_amount: locker.token_amount,
+                current_price: twap_price,
+                unlock_percentage,
+            });
+        }
+
+        // Only set to Unlocked if all tokens have been unlocked
+        if locker.tokens_already_unlocked >= locker.token_amount {
+            locker.state = LockerState::Unlocked;
+        }
+        // Otherwise stay in Unlocking state for future unlock calls
 
         emit_cpi!(UnlockCompleted {
             locker: locker.key(),
-            token_amount: locker.token_amount,
+            token_amount: tokens_to_unlock,
             recipient: locker.token_recipient,
             twap_price,
             price_threshold: locker.price_threshold,

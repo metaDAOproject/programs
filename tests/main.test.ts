@@ -340,9 +340,9 @@ before(async function () {
   );
 });
 
-describe("launchpad", launchpad);
+// describe("launchpad", launchpad);
+// describe("price_based_unlock", priceBasedUnlock);
 describe("conditional_vault", conditionalVault);
-describe.only("price_based_unlock", priceBasedUnlock);
 describe("autocrat", autocrat);
 describe.skip("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);

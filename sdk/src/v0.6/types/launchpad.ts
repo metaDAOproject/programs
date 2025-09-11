@@ -648,6 +648,11 @@ export type Launchpad = {
             docs: ["The price-based premine amount."];
             type: "u64";
           },
+          {
+            name: "priceBasedUnlockThreshold";
+            docs: ["The price threshold for price-based unlock."];
+            type: "u128";
+          },
         ];
       };
     },
@@ -715,6 +720,10 @@ export type Launchpad = {
           {
             name: "priceBasedPremineAmount";
             type: "u64";
+          },
+          {
+            name: "priceBasedUnlockThreshold";
+            type: "u128";
           },
         ];
       };
@@ -1055,6 +1064,11 @@ export type Launchpad = {
       code: 6012;
       name: "InvalidPriceBasedPremineAmount";
       msg: "Cannot do more than a 50% premine";
+    },
+    {
+      code: 6013;
+      name: "InvalidPriceBasedUnlockThreshold";
+      msg: "Price-based unlock threshold must be at least 2x the minimum launch price";
     },
   ];
 };
@@ -1709,6 +1723,11 @@ export const IDL: Launchpad = {
             docs: ["The price-based premine amount."],
             type: "u64",
           },
+          {
+            name: "priceBasedUnlockThreshold",
+            docs: ["The price threshold for price-based unlock."],
+            type: "u128",
+          },
         ],
       },
     },
@@ -1776,6 +1795,10 @@ export const IDL: Launchpad = {
           {
             name: "priceBasedPremineAmount",
             type: "u64",
+          },
+          {
+            name: "priceBasedUnlockThreshold",
+            type: "u128",
           },
         ],
       },
@@ -2116,6 +2139,11 @@ export const IDL: Launchpad = {
       code: 6012,
       name: "InvalidPriceBasedPremineAmount",
       msg: "Cannot do more than a 50% premine",
+    },
+    {
+      code: 6013,
+      name: "InvalidPriceBasedUnlockThreshold",
+      msg: "Price-based unlock threshold must be at least 2x the minimum launch price",
     },
   ],
 };

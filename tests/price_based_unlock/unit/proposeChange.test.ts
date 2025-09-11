@@ -91,7 +91,6 @@ export default function () {
       tokenMint,
       fromTokenAccount: tokenAccount,
       tokenAuthority: tokenAuthority,
-      recipientTokenAccount: recipientTokenAccount,
       payer: this.payer.publicKey,
     }).transaction();
 

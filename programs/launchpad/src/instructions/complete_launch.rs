@@ -324,8 +324,8 @@ impl CompleteLaunch<'_> {
                         locker_token_account: ctx.accounts.locker_token_account.to_account_info(),
                     }, launch_signer),
                     InitializeLockerParams {
-                        price_threshold: price_1e12,
-                        token_amount: token_to_lp,
+                        price_threshold: launch.price_based_unlock_threshold,
+                        token_amount: launch.price_based_premine_amount,
                         unlock_timestamp: clock.unix_timestamp + 60 * 60 * 24,
                         oracle_config: OracleConfig {
                             oracle_account: ctx.accounts.dao.key(),
@@ -334,7 +334,7 @@ impl CompleteLaunch<'_> {
                             byte_offset: 8 + 1,
                         },
                         twap_length_seconds: 300,
-                        beneficiary: ctx.accounts.treasury_quote_account.key(),
+                        beneficiary: launch.price_based_unlock_recipient,
                         locker_authority: ctx.accounts.squads_multisig_vault.key(),
                     },
             )?;

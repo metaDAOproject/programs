@@ -98,6 +98,7 @@ impl InitializeLocker<'_> {
         locker.set_inner(Locker {
             price_threshold,
             token_amount,
+            tokens_already_unlocked: 0,
             unlock_timestamp,
             oracle_config,
             twap_length_seconds,
