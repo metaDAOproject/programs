@@ -13,7 +13,8 @@ export default function suite() {
   describe("#initialize_proposal", initializeProposal);
   describe("#finalize_proposal", finalizeProposal);
 
-  describe.only("#collect_fees", collectFees);
+  describe("#collect_fees", collectFees);
+
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);
