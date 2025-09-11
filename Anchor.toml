@@ -6,10 +6,8 @@ skip-lint = false
 
 [programs.localnet]
 futarchy = "GYX6b1pvoy329fHHH6Btb6qzwxc4WGp3J9WeAT3dWCb9"
-autocrat_migrator = "MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt"
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 launchpad = "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA"
-optimistic_timelock = "tiME1hz9F5C5ZecbvE5z6Msjy8PKfTqo1UuRYXfndKF"
 price_based_unlock = "GP3gUFqHgdz9tB5bosCqmnu7qnkFa1gjUMFs8uCkwWQr"
 
 [registry]
