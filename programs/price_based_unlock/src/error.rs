@@ -12,4 +12,10 @@ pub enum PriceBasedUnlockError {
     PriceThresholdNotMet,
     #[msg("Invalid oracle account data")]
     InvalidOracleData,
+    #[msg("Unauthorized to create or execute change request")]
+    UnauthorizedChangeRequest,
+    #[msg("Change request does not match locker")]
+    InvalidChangeRequest,
+    #[msg("Unauthorized locker authority")]
+    UnauthorizedLockerAuthority,
 }

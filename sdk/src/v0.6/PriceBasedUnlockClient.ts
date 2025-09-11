@@ -10,9 +10,9 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
-  PriceBasedTokenLock,
-  IDL as PriceBasedTokenLockIDL,
-} from "./types/price_based_token_lock.js";
+  PriceBasedUnlock,
+  IDL as PriceBasedUnlockIDL,
+} from "./types/price_based_unlock.js";
 import { PRICE_BASED_TOKEN_LOCK_PROGRAM_ID } from "./constants.js";
 import BN from "bn.js";
 import { OracleConfig } from "./types/index.js";
@@ -25,7 +25,7 @@ export type CreatePriceBasedTokenLockClientParams = {
 
 export class PriceBasedUnlockClient {
   public readonly provider: AnchorProvider;
-  public readonly program: Program<PriceBasedTokenLock>;
+  public readonly program: Program<PriceBasedUnlock>;
   public readonly programId: PublicKey;
 
   constructor(
@@ -34,8 +34,8 @@ export class PriceBasedUnlockClient {
   ) {
     this.provider = provider;
     this.programId = priceBasedTokenLockProgramId;
-    this.program = new Program<PriceBasedTokenLock>(
-      PriceBasedTokenLockIDL,
+    this.program = new Program<PriceBasedUnlock>(
+      PriceBasedUnlockIDL,
       priceBasedTokenLockProgramId,
       provider,
     );
@@ -61,12 +61,12 @@ export class PriceBasedUnlockClient {
       oracleConfig: OracleConfig;
       twapLengthSeconds: BN;
       tokenRecipient: PublicKey;
+      lockerAuthority: PublicKey;
     };
     createKey: PublicKey;
     tokenMint: PublicKey;
     fromTokenAccount: PublicKey;
     tokenAuthority: PublicKey;
-    recipientTokenAccount: PublicKey;
     payer: PublicKey;
   }) {
     const lockerTokenAccount = this.getLockerTokenAccountAddress(
@@ -80,7 +80,8 @@ export class PriceBasedUnlockClient {
         unlockTimestamp: params.params.unlockTimestamp,
         oracleConfig: params.params.oracleConfig,
         twapLengthSeconds: params.params.twapLengthSeconds,
-        tokenRecipient: params.params.tokenRecipient,
+        beneficiary: params.params.tokenRecipient,
+        lockerAuthority: params.params.lockerAuthority,
       })
       .accounts({
         locker: this.getLockerAddress(params.createKey),
@@ -89,7 +90,6 @@ export class PriceBasedUnlockClient {
         fromTokenAccount: params.fromTokenAccount,
         tokenAuthority: params.tokenAuthority,
         lockerTokenAccount,
-        recipientTokenAccount: params.recipientTokenAccount,
         payer: params.payer,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -121,8 +121,46 @@ export class PriceBasedUnlockClient {
     });
   }
 
+  public proposeChangeIx(params: {
+    params: {
+      changeType: any;
+      createKey: PublicKey;
+    };
+    locker: PublicKey;
+    proposer: PublicKey;
+    payer: PublicKey;
+  }) {
+    const changeRequestAddress = this.getChangeRequestAddress(
+      params.locker,
+      params.params.createKey,
+    );
+
+    return this.program.methods.proposeChange(params.params).accounts({
+      changeRequest: changeRequestAddress,
+      locker: params.locker,
+      proposer: params.proposer,
+      systemProgram: SystemProgram.programId,
+    });
+  }
+
+  public executeChangeIx(params: {
+    locker: PublicKey;
+    changeRequest: PublicKey;
+    executor: PublicKey;
+  }) {
+    return this.program.methods.executeChange().accounts({
+      changeRequest: params.changeRequest,
+      locker: params.locker,
+      executor: params.executor,
+    });
+  }
+
   public async getLocker(lockerAddress: PublicKey) {
     return await this.program.account.locker.fetch(lockerAddress);
+  }
+
+  public async getChangeRequest(changeRequestAddress: PublicKey) {
+    return await this.program.account.changeRequest.fetch(changeRequestAddress);
   }
 
   public getLockerAddress(createKey: PublicKey): PublicKey {
@@ -131,6 +169,17 @@ export class PriceBasedUnlockClient {
       this.programId,
     );
     return lockerAddress;
+  }
+
+  public getChangeRequestAddress(
+    locker: PublicKey,
+    createKey: PublicKey,
+  ): PublicKey {
+    const [changeRequestAddress] = PublicKey.findProgramAddressSync(
+      [Buffer.from("change_request"), locker.toBuffer(), createKey.toBuffer()],
+      this.programId,
+    );
+    return changeRequestAddress;
   }
 
   public getLockerTokenAccountAddress(locker: PublicKey): PublicKey {

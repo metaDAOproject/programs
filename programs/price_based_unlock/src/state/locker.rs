@@ -42,6 +42,8 @@ pub struct Locker {
     pub create_key: Pubkey,
     /// The PDA bump
     pub pda_bump: u8,
+    /// The authorized locker authority that can execute changes
+    pub locker_authority: Pubkey,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
@@ -57,4 +59,36 @@ pub enum LockerState {
     },
     /// Tokens have been unlocked and sent to recipient
     Unlocked,
+    /// A change has been proposed and is pending recipient approval
+    PendingChange {
+        /// The change request PDA address
+        change_request: Pubkey,
+    },
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
+pub enum ChangeType {
+    /// Change the oracle configuration
+    Oracle { new_oracle_config: OracleConfig },
+    /// Change the token recipient
+    Recipient { new_recipient: Pubkey },
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct ChangeRequest {
+    /// The locker this change applies to
+    pub locker: Pubkey,
+    /// What is being changed
+    pub change_type: ChangeType,
+    /// When the change was proposed
+    pub proposed_at: i64,
+    /// The locker state before the change was proposed
+    pub previous_state: LockerState,
+    /// Who proposed this change (either token_recipient or locker_authority)
+    pub proposer: Pubkey,
+    /// Used to derive the PDA
+    pub create_key: Pubkey,
+    /// The PDA bump
+    pub pda_bump: u8,
 }

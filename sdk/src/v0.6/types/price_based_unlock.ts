@@ -156,6 +156,63 @@ export type PriceBasedUnlock = {
       ];
       args: [];
     },
+    {
+      name: "proposeChange";
+      accounts: [
+        {
+          name: "changeRequest";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "locker";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "proposer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "ProposeChangeParams";
+          };
+        },
+      ];
+    },
+    {
+      name: "executeChange";
+      accounts: [
+        {
+          name: "changeRequest";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "locker";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "executor";
+          isMut: true;
+          isSigner: true;
+          docs: [
+            "The party executing the change (must be opposite of proposer)",
+          ];
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -214,6 +271,60 @@ export type PriceBasedUnlock = {
             docs: ["The PDA bump"];
             type: "u8";
           },
+          {
+            name: "lockerAuthority";
+            docs: ["The authorized locker authority that can execute changes"];
+            type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "changeRequest";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "locker";
+            docs: ["The locker this change applies to"];
+            type: "publicKey";
+          },
+          {
+            name: "changeType";
+            docs: ["What is being changed"];
+            type: {
+              defined: "ChangeType";
+            };
+          },
+          {
+            name: "proposedAt";
+            docs: ["When the change was proposed"];
+            type: "i64";
+          },
+          {
+            name: "previousState";
+            docs: ["The locker state before the change was proposed"];
+            type: {
+              defined: "LockerState";
+            };
+          },
+          {
+            name: "proposer";
+            docs: [
+              "Who proposed this change (either token_recipient or locker_authority)",
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "createKey";
+            docs: ["Used to derive the PDA"];
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            docs: ["The PDA bump"];
+            type: "u8";
+          },
         ];
       };
     },
@@ -248,6 +359,28 @@ export type PriceBasedUnlock = {
           },
           {
             name: "beneficiary";
+            type: "publicKey";
+          },
+          {
+            name: "lockerAuthority";
+            type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "ProposeChangeParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "changeType";
+            type: {
+              defined: "ChangeType";
+            };
+          },
+          {
+            name: "createKey";
             type: "publicKey";
           },
         ];
@@ -311,6 +444,44 @@ export type PriceBasedUnlock = {
           },
           {
             name: "Unlocked";
+          },
+          {
+            name: "PendingChange";
+            fields: [
+              {
+                name: "changeRequest";
+                docs: ["The change request PDA address"];
+                type: "publicKey";
+              },
+            ];
+          },
+        ];
+      };
+    },
+    {
+      name: "ChangeType";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Oracle";
+            fields: [
+              {
+                name: "newOracleConfig";
+                type: {
+                  defined: "OracleConfig";
+                };
+              },
+            ];
+          },
+          {
+            name: "Recipient";
+            fields: [
+              {
+                name: "newRecipient";
+                type: "publicKey";
+              },
+            ];
           },
         ];
       };
@@ -430,6 +601,21 @@ export type PriceBasedUnlock = {
       code: 6004;
       name: "InvalidOracleData";
       msg: "Invalid oracle account data";
+    },
+    {
+      code: 6005;
+      name: "UnauthorizedChangeRequest";
+      msg: "Unauthorized to create or execute change request";
+    },
+    {
+      code: 6006;
+      name: "InvalidChangeRequest";
+      msg: "Change request does not match locker";
+    },
+    {
+      code: 6007;
+      name: "UnauthorizedLockerAuthority";
+      msg: "Unauthorized locker authority";
     },
   ];
 };
@@ -592,6 +778,63 @@ export const IDL: PriceBasedUnlock = {
       ],
       args: [],
     },
+    {
+      name: "proposeChange",
+      accounts: [
+        {
+          name: "changeRequest",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "locker",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "proposer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "ProposeChangeParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "executeChange",
+      accounts: [
+        {
+          name: "changeRequest",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "locker",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "executor",
+          isMut: true,
+          isSigner: true,
+          docs: [
+            "The party executing the change (must be opposite of proposer)",
+          ],
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -650,6 +893,60 @@ export const IDL: PriceBasedUnlock = {
             docs: ["The PDA bump"],
             type: "u8",
           },
+          {
+            name: "lockerAuthority",
+            docs: ["The authorized locker authority that can execute changes"],
+            type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "changeRequest",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "locker",
+            docs: ["The locker this change applies to"],
+            type: "publicKey",
+          },
+          {
+            name: "changeType",
+            docs: ["What is being changed"],
+            type: {
+              defined: "ChangeType",
+            },
+          },
+          {
+            name: "proposedAt",
+            docs: ["When the change was proposed"],
+            type: "i64",
+          },
+          {
+            name: "previousState",
+            docs: ["The locker state before the change was proposed"],
+            type: {
+              defined: "LockerState",
+            },
+          },
+          {
+            name: "proposer",
+            docs: [
+              "Who proposed this change (either token_recipient or locker_authority)",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "createKey",
+            docs: ["Used to derive the PDA"],
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            docs: ["The PDA bump"],
+            type: "u8",
+          },
         ],
       },
     },
@@ -684,6 +981,28 @@ export const IDL: PriceBasedUnlock = {
           },
           {
             name: "beneficiary",
+            type: "publicKey",
+          },
+          {
+            name: "lockerAuthority",
+            type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "ProposeChangeParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "changeType",
+            type: {
+              defined: "ChangeType",
+            },
+          },
+          {
+            name: "createKey",
             type: "publicKey",
           },
         ],
@@ -747,6 +1066,44 @@ export const IDL: PriceBasedUnlock = {
           },
           {
             name: "Unlocked",
+          },
+          {
+            name: "PendingChange",
+            fields: [
+              {
+                name: "changeRequest",
+                docs: ["The change request PDA address"],
+                type: "publicKey",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      name: "ChangeType",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Oracle",
+            fields: [
+              {
+                name: "newOracleConfig",
+                type: {
+                  defined: "OracleConfig",
+                },
+              },
+            ],
+          },
+          {
+            name: "Recipient",
+            fields: [
+              {
+                name: "newRecipient",
+                type: "publicKey",
+              },
+            ],
           },
         ],
       },
@@ -866,6 +1223,21 @@ export const IDL: PriceBasedUnlock = {
       code: 6004,
       name: "InvalidOracleData",
       msg: "Invalid oracle account data",
+    },
+    {
+      code: 6005,
+      name: "UnauthorizedChangeRequest",
+      msg: "Unauthorized to create or execute change request",
+    },
+    {
+      code: 6006,
+      name: "InvalidChangeRequest",
+      msg: "Change request does not match locker",
+    },
+    {
+      code: 6007,
+      name: "UnauthorizedLockerAuthority",
+      msg: "Unauthorized locker authority",
     },
   ],
 };

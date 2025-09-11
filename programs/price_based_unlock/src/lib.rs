@@ -32,4 +32,15 @@ pub mod price_based_unlock {
     pub fn complete_unlock(ctx: Context<CompleteUnlock>) -> Result<()> {
         CompleteUnlock::handle(ctx)
     }
+
+    pub fn propose_change(
+        ctx: Context<ProposeChange>,
+        params: ProposeChangeParams,
+    ) -> Result<()> {
+        ProposeChange::handle(ctx, params)
+    }
+
+    pub fn execute_change(ctx: Context<ExecuteChange>) -> Result<()> {
+        ExecuteChange::handle(ctx)
+    }
 }

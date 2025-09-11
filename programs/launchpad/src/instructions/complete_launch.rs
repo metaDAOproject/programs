@@ -335,6 +335,7 @@ impl CompleteLaunch<'_> {
                         },
                         twap_length_seconds: 300,
                         beneficiary: ctx.accounts.treasury_quote_account.key(),
+                        locker_authority: ctx.accounts.squads_multisig_vault.key(),
                     },
             )?;
 

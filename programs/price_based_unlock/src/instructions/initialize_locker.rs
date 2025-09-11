@@ -12,6 +12,7 @@ pub struct InitializeLockerParams {
     pub oracle_config: OracleConfig,
     pub twap_length_seconds: u64,
     pub beneficiary: Pubkey,
+    pub locker_authority: Pubkey,
 }
 
 #[derive(Accounts)]
@@ -67,6 +68,7 @@ impl InitializeLocker<'_> {
             oracle_config,
             twap_length_seconds,
             beneficiary: token_recipient,
+            locker_authority,
         } = params;
 
         let locker = &mut ctx.accounts.locker;
@@ -103,6 +105,7 @@ impl InitializeLocker<'_> {
             state: LockerState::Locked,
             create_key: ctx.accounts.create_key.key(),
             pda_bump: ctx.bumps.locker,
+            locker_authority,
         });
 
         emit_cpi!(LockerInitialized {
