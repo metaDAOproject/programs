@@ -17,15 +17,12 @@ import {
   PERMISSIONLESS_ACCOUNT,
 } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
-import {
-  getAssociatedTokenAddressSync,
-  createAssociatedTokenAccount,
-  getAccount,
-} from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../launchpad/utils.js";
 import { createLookupTableForTransaction } from "../utils.js";
 import * as token from "@solana/spl-token";
 import * as multisig from "@sqds/multisig";
+
+const { Permissions, Permission } = multisig.types;
 
 export default async function suite() {
   it("launch a DAO, have a multi-ix proposal pass, and execute it", async function () {
@@ -44,7 +41,6 @@ export default async function suite() {
     const minRaise = new BN(300_000 * 10 ** 6); // 300k USDC
     const launchPeriod = 60 * 60 * 24 * 2; // 2 days
     const monthlySpendingLimitAmount = new BN(25_000 * 10 ** 6); // 25k / month spending limit
-    const priceBasedUnlockAddress = Keypair.generate().publicKey;
     const priceBasedPremineAmount = new BN(500_000 * 10 ** 6); // 500k tokens premine
 
     // Initialize the launch
@@ -57,6 +53,38 @@ export default async function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
+
+    const createKey = Keypair.generate();
+
+    const [insiderMultisigPda] = multisig.getMultisigPda({ createKey: createKey.publicKey });
+
+    const programConfigPda = multisig.getProgramConfigPda({ programId: this.launchpad.getProgramId() })[0];
+
+    const programConfig = await multisig.accounts.ProgramConfig.fromAccountAddress(this.squadsConnection, programConfigPda);
+
+    const cofounder0 = Keypair.generate();
+    const cofounder1 = Keypair.generate();
+
+    const insiderMultisigCreateIx = multisig.instructions.multisigCreateV2({
+      treasury: programConfig.treasury,
+      creator: this.payer.publicKey,
+      multisigPda: insiderMultisigPda,
+      configAuthority: null,
+      createKey: createKey.publicKey,
+      threshold: 1,
+      members: [
+        { key: cofounder0.publicKey, permissions: Permissions.all() },
+        { key: cofounder1.publicKey, permissions: Permissions.all() },
+      ],
+      timeLock: 0,
+      rentCollector: null,
+    });
+
+    const insiderMultisigCreateTx = new Transaction().add(insiderMultisigCreateIx);
+    insiderMultisigCreateTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    insiderMultisigCreateTx.feePayer = this.payer.publicKey;
+    insiderMultisigCreateTx.sign(this.payer, createKey);
+    await this.banksClient.processTransaction(insiderMultisigCreateTx);
 
     // Setup token accounts for funders
     await this.createTokenAccount(MAINNET_USDC, funder1.publicKey);
@@ -89,7 +117,7 @@ export default async function suite() {
         quoteMint: MAINNET_USDC,
         monthlySpendingLimitAmount,
         monthlySpendingLimitMembers: [spender.publicKey],
-        priceBasedUnlockAddress,
+        priceBasedUnlockAddress: insiderMultisigPda,
         priceBasedPremineAmount,
         priceBasedUnlockThreshold: new BN("120000000000"), // 2x minimum launch price
       })

@@ -353,7 +353,7 @@ export class LaunchpadClient {
         lockerTokenAccount,
       })
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 540_000 }),
       ]);
   }
 
