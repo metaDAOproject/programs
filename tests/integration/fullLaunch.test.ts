@@ -1,7 +1,6 @@
 import {
   Keypair,
   PublicKey,
-  ComputeBudgetProgram,
   Transaction,
   TransactionMessage,
   VersionedTransaction,
@@ -9,16 +8,14 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  AutocratClient,
+  FutarchyClient,
   LaunchpadClient,
-  getFundingRecordAddr,
-  getLaunchAddr,
-  getLaunchSignerAddr,
+  getDaoAddr,
   getProposalAddr,
   MAINNET_USDC,
   PriceMath,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
 import {
   getAssociatedTokenAddressSync,
@@ -47,6 +44,8 @@ export default async function suite() {
     const minRaise = new BN(300_000 * 10 ** 6); // 300k USDC
     const launchPeriod = 60 * 60 * 24 * 2; // 2 days
     const monthlySpendingLimitAmount = new BN(25_000 * 10 ** 6); // 25k / month spending limit
+    const priceBasedUnlockAddress = Keypair.generate().publicKey;
+    const priceBasedPremineAmount = new BN(500_000 * 10 ** 6); // 500k tokens premine
 
     // Initialize the launch
     const result = await initializeMintWithSeeds(
@@ -80,34 +79,37 @@ export default async function suite() {
 
     // Initialize launch
     await this.launchpad
-      .initializeLaunchIx(
-        "META",
-        "META",
-        "https://example.com",
-        minRaise,
-        launchPeriod,
-        META,
-        MAINNET_USDC,
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: launchPeriod,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
         monthlySpendingLimitAmount,
-        [spender.publicKey]
-      )
+        monthlySpendingLimitMembers: [spender.publicKey],
+        priceBasedUnlockAddress,
+        priceBasedPremineAmount,
+        priceBasedUnlockThreshold: new BN("120000000000"), // 2x minimum launch price
+      })
       .rpc();
 
     // Start launch
-    await this.launchpad.startLaunchIx(launch).rpc();
+    await this.launchpad.startLaunchIx({ launch }).rpc();
 
     // Fund from multiple sources
     await this.launchpad
-      .fundIx(launch, new BN(500_000_000000), funder1.publicKey, MAINNET_USDC)
+      .fundIx({ launch, amount: new BN(500_000_000000), funder: funder1.publicKey, quoteMint: MAINNET_USDC })
       .signers([funder1])
       .rpc();
 
     await this.launchpad
-      .fundIx(launch, new BN(150_000_000000), undefined, MAINNET_USDC)
+      .fundIx({ launch, amount: new BN(150_000_000000), quoteMint: MAINNET_USDC })
       .rpc();
 
     await this.launchpad
-      .fundIx(launch, new BN(350_000_000000), funder3.publicKey, MAINNET_USDC)
+      .fundIx({ launch, amount: new BN(350_000_000000), funder: funder3.publicKey, quoteMint: MAINNET_USDC })
       .signers([funder3])
       .rpc();
 
@@ -115,10 +117,7 @@ export default async function suite() {
     await this.advanceBySeconds(launchPeriod + 3600);
 
     const completeLaunchTx = await this.launchpad
-      .completeLaunchIx(launch, MAINNET_USDC, META)
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
-      ])
+      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -180,7 +179,8 @@ export default async function suite() {
         dao,
         params: {
           passThresholdBps: 500,
-          slotsPerProposal: null,
+          secondsPerProposal: null,
+          baseToStake: new BN(0),
           twapInitialObservation: null,
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
@@ -236,65 +236,73 @@ export default async function suite() {
     // Now initialize the autocrat proposal with the proper squads proposal
     const proposal = await this.futarchy.initializeProposal(
       dao,
-      "Mint 1M tokens to receiver",
-      squadsProposalPda,
-      PriceMath.getChainAmount(100_000, 6), // 100k tokens
-      PriceMath.getChainAmount(10_000, 6) // 10k USDC
+      squadsProposalPda
     );
 
     let {
-      passAmm,
-      failAmm,
       passBaseMint,
       passQuoteMint,
       failBaseMint,
       failQuoteMint,
       baseVault,
       quoteVault,
-      passLp,
-      failLp,
       question,
     } = this.futarchy.getProposalPdas(proposal, META, MAINNET_USDC, dao);
 
+    // Stake tokens to meet the baseToStake requirement (100 billion = 100k META tokens)
+    const stakeAmount = new BN(100_000 * 10 ** 6); // 100k META tokens
+    await this.futarchy.stakeToProposalIx({
+      proposal,
+      dao,
+      baseMint: META,
+      amount: stakeAmount,
+    }).rpc();
+
+    // Launch the proposal first
+    await this.futarchy.launchProposalIx({
+      proposal,
+      dao,
+      baseMint: META,
+      quoteMint: MAINNET_USDC,
+    }).rpc();
+
     await this.conditionalVault
-      .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
+      .splitTokensIx(question, baseVault, META, new BN(100 * 10 ** 6), 2)
       .rpc();
     await this.conditionalVault
       .splitTokensIx(
         question,
         quoteVault,
         MAINNET_USDC,
-        new BN(10_000 * 1_000_000),
+        new BN(100_000 * 1_000_000),
         2
       )
       .rpc();
 
-    // swap $500 in the pass market, make it pass
-    await this.ammClient
-      .swapIx(
-        passAmm,
-        passBaseMint,
-        passQuoteMint,
-        { buy: {} },
-        new BN(500).muln(1_000_000),
-        new BN(0)
-      )
-      .rpc();
+    // Make large buy in pass market to drive price up and make proposal pass
+    await this.futarchy.conditionalSwapIx({
+      dao,
+      baseMint: META,
+      quoteMint: MAINNET_USDC,
+      proposal,
+      market: "pass",
+      swapType: "buy",
+      inputAmount: new BN(5_000 * 1_000_000) // 5k USDC
+    }).rpc();
 
     for (let i = 0; i < 100; i++) {
-      await this.advanceBySlots(10_000n);
+      await this.advanceBySeconds(20_000); // Use seconds instead of slots
 
-      await this.ammClient
-        .crankThatTwapIx(passAmm)
-        .postInstructions([
-          // this is to get around bankrun thinking we've processed the same transaction multiple times
-          ComputeBudgetProgram.setComputeUnitPrice({
-            microLamports: i,
-          }),
-          await this.ammClient.crankThatTwapIx(failAmm).instruction(),
-        ])
-        .signers([this.payer])
-        .rpc({ skipPreflight: true });
+      // Continue buying in pass market to maintain high TWAP
+      await this.futarchy.conditionalSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        proposal,
+        market: "pass",
+        swapType: "buy",
+        inputAmount: new BN(100 * 1_000_000) // 100 USDC
+      }).rpc();
     }
 
     await this.futarchy.finalizeProposal(proposal);
@@ -324,7 +332,7 @@ export default async function suite() {
 
     const storedMeta = await this.getMint(META);
 
-    assert.equal(storedMeta.supply, 13_000_000 * 10 ** 6);
+    assert.equal(storedMeta.supply, 13_500_000 * 10 ** 6); // 13M base + 500k premine
 
     const receiverBalance = await this.getTokenBalance(
       META,

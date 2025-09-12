@@ -32,8 +32,6 @@ declare_id!("GYX6b1pvoy329fHHH6Btb6qzwxc4WGp3J9WeAT3dWCb9");
 
 pub const SLOTS_PER_10_SECS: u64 = 25;
 pub const ONE_MINUTE_IN_SLOTS: u64 = 6 * SLOTS_PER_10_SECS;
-pub const DAY_IN_SLOTS: u64 = 24 * 60 * 6 * SLOTS_PER_10_SECS;
-pub const THREE_DAYS_IN_SLOTS: u64 = 3 * DAY_IN_SLOTS;
 
 pub const TEN_DAYS_IN_SECONDS: i64 = 10 * 24 * 60 * 60;
 

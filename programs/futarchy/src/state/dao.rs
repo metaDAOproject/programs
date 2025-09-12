@@ -3,6 +3,8 @@ pub use super::*;
 #[account]
 #[derive(InitSpace)]
 pub struct Dao {
+    /// Embedded FutarchyAmm - 1:1 relationship
+    pub amm: FutarchyAmm,
     /// `nonce` + `dao_creator` are PDA seeds
     pub nonce: u64,
     pub dao_creator: Pubkey,
@@ -15,7 +17,7 @@ pub struct Dao {
     // the percentage, in basis points, the pass price needs to be above the
     // fail price in order for the proposal to pass
     pub pass_threshold_bps: u16,
-    pub slots_per_proposal: u64,
+    pub seconds_per_proposal: u32,
     /// For manipulation-resistance the TWAP is a time-weighted average observation,
     /// where observation tries to approximate price but can only move by
     /// `twap_max_observation_change_per_update` per update. Because it can only move
@@ -32,8 +34,8 @@ pub struct Dao {
     /// in 50 minutes.
     pub twap_initial_observation: u128,
     pub twap_max_observation_change_per_update: u128,
-    /// Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots
-    pub twap_start_delay_slots: u64,
+    /// Forces TWAP calculation to start after `twap_start_delay_seconds` seconds
+    pub twap_start_delay_seconds: u32,
     /// As an anti-spam measure and to help liquidity, you need to lock up some liquidity
     /// in both futarchic markets in order to create a proposal.
     ///
@@ -46,8 +48,6 @@ pub struct Dao {
     pub base_to_stake: u64,
     pub seq_num: u64,
     pub initial_spending_limit: Option<InitialSpendingLimit>,
-    /// Embedded FutarchyAmm - 1:1 relationship
-    pub amm: FutarchyAmm,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
@@ -60,14 +60,14 @@ pub struct InitialSpendingLimit {
 impl Dao {
     pub fn invariant(&self) -> Result<()> {
         require_gte!(
-            self.slots_per_proposal,
-            self.twap_start_delay_slots * 2,
+            self.seconds_per_proposal,
+            self.twap_start_delay_seconds * 2,
             FutarchyError::ProposalDurationTooShort
         );
 
         require_gte!(
-            self.slots_per_proposal,
-            DAY_IN_SLOTS,
+            self.seconds_per_proposal,
+            60 * 60 * 24,
             FutarchyError::ProposalDurationTooShort
         );
 

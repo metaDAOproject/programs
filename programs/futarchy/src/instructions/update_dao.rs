@@ -3,7 +3,7 @@ use super::*;
 #[derive(Debug, Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub struct UpdateDaoParams {
     pub pass_threshold_bps: Option<u16>,
-    pub slots_per_proposal: Option<u64>,
+    pub seconds_per_proposal: Option<u32>,
     pub twap_initial_observation: Option<u128>,
     pub twap_max_observation_change_per_update: Option<u128>,
     pub min_quote_futarchic_liquidity: Option<u64>,
@@ -32,7 +32,7 @@ impl UpdateDao<'_> {
         }
 
         update_dao_if_passed!(pass_threshold_bps);
-        update_dao_if_passed!(slots_per_proposal);
+        update_dao_if_passed!(seconds_per_proposal);
         update_dao_if_passed!(twap_initial_observation);
         update_dao_if_passed!(twap_max_observation_change_per_update);
         update_dao_if_passed!(min_quote_futarchic_liquidity);
@@ -48,7 +48,7 @@ impl UpdateDao<'_> {
             common: CommonFields::new(&clock),
             dao: dao.key(),
             pass_threshold_bps: dao.pass_threshold_bps,
-            slots_per_proposal: dao.slots_per_proposal,
+            seconds_per_proposal: dao.seconds_per_proposal,
             twap_initial_observation: dao.twap_initial_observation,
             twap_max_observation_change_per_update: dao.twap_max_observation_change_per_update,
             min_quote_futarchic_liquidity: dao.min_quote_futarchic_liquidity,

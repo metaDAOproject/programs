@@ -64,8 +64,9 @@ impl FinalizeProposal<'_> {
     pub fn validate(&self) -> Result<()> {
         let clock = Clock::get()?;
 
-        require!(
-            clock.slot >= self.proposal.slot_enqueued + self.proposal.duration_in_slots,
+        require_gte!(
+            clock.unix_timestamp,
+            self.proposal.timestamp_enqueued + self.proposal.duration_in_seconds as i64,
             FutarchyError::ProposalTooYoung
         );
 
@@ -115,10 +116,11 @@ impl FinalizeProposal<'_> {
         let proposal_signer = &[&proposal_seeds[..]];
 
         let calculate_twap = |amm: &Pool| -> Result<u128> {
-            let slots_passed = amm.oracle.last_updated_slot - proposal.slot_enqueued;
+            let seconds_passed = amm.oracle.last_updated_timestamp - proposal.timestamp_enqueued;
 
-            require!(
-                slots_passed >= proposal.duration_in_slots,
+            require_gte!(
+                seconds_passed,
+                proposal.duration_in_seconds as i64,
                 FutarchyError::MarketsTooYoung
             );
 

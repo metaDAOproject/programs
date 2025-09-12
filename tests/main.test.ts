@@ -1,6 +1,7 @@
 import conditionalVault from "./conditionalVault/main.test.js";
-import autocrat from "./autocrat/main.test.js";
+import futarchy from "./futarchy/main.test.js";
 import launchpad from "./launchpad/main.test.js";
+import priceBasedUnlock from "./price_based_unlock/main.test.js";
 
 import {
   BanksClient,
@@ -14,6 +15,7 @@ import {
   FutarchyClient,
   ConditionalVaultClient,
   LaunchpadClient,
+  PriceBasedUnlockClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SQUADS_PROGRAM_CONFIG,
@@ -54,46 +56,50 @@ import scalarMarkets from "./integration/scalarMarkets.test.js";
 import twap from "./integration/twap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
 
+// Export the test context interface for use in other files
+export interface TestContext {
+  context: ProgramTestContext;
+  banksClient: BanksClient;
+  conditionalVault: ConditionalVaultClient;
+  futarchy: FutarchyClient;
+  launchpad: LaunchpadClient;
+  priceBasedUnlock: PriceBasedUnlockClient;
+  payer: Keypair;
+  squadsConnection: Connection;
+  createTokenAccount: (
+    mint: PublicKey,
+    owner: PublicKey
+  ) => Promise<PublicKey>;
+  createMint: (
+    mintAuthority: PublicKey,
+    decimals: number
+  ) => Promise<PublicKey>;
+  mintTo: (
+    mint: PublicKey,
+    to: PublicKey,
+    mintAuthority: Keypair,
+    amount: number
+  ) => Promise<any>;
+  getTokenBalance: (mint: PublicKey, owner: PublicKey) => Promise<bigint>;
+  getMint: (mint: PublicKey) => Promise<any>;
+  assertBalance: (
+    mint: PublicKey,
+    owner: PublicKey,
+    amount: number
+  ) => Promise<void>;
+  transfer: (
+    mint: PublicKey,
+    from: Keypair,
+    to: PublicKey,
+    amount: number
+  ) => Promise<any>;
+  advanceBySlots: (slots: bigint) => Promise<void>;
+  advanceBySeconds: (seconds: number) => Promise<void>;
+}
+
 // Extend the Mocha context to include our test properties
 declare module "mocha" {
-  interface Context {
-    context: ProgramTestContext;
-    banksClient: BanksClient;
-    conditionalVault: ConditionalVaultClient;
-    futarchy: FutarchyClient;
-    launchpad: LaunchpadClient;
-    payer: Keypair;
-    squadsConnection: Connection;
-    createTokenAccount: (
-      mint: PublicKey,
-      owner: PublicKey
-    ) => Promise<PublicKey>;
-    createMint: (
-      mintAuthority: PublicKey,
-      decimals: number
-    ) => Promise<PublicKey>;
-    mintTo: (
-      mint: PublicKey,
-      to: PublicKey,
-      mintAuthority: Keypair,
-      amount: number
-    ) => Promise<any>;
-    getTokenBalance: (mint: PublicKey, owner: PublicKey) => Promise<bigint>;
-    getMint: (mint: PublicKey) => Promise<any>;
-    assertBalance: (
-      mint: PublicKey,
-      owner: PublicKey,
-      amount: number
-    ) => Promise<void>;
-    transfer: (
-      mint: PublicKey,
-      from: Keypair,
-      to: PublicKey,
-      amount: number
-    ) => Promise<any>;
-    advanceBySlots: (slots: bigint) => Promise<void>;
-    advanceBySeconds: (seconds: number) => Promise<void>;
-  }
+  interface Context extends TestContext {}
 }
 
 before(async function () {
@@ -167,6 +173,9 @@ before(async function () {
     provider: provider as any,
   });
   this.launchpad = LaunchpadClient.createClient({
+    provider: provider as any,
+  });
+  this.priceBasedUnlock = PriceBasedUnlockClient.createClient({
     provider: provider as any,
   });
   this.provider = provider;
@@ -335,14 +344,10 @@ before(async function () {
 });
 
 describe("launchpad", launchpad);
+describe("price_based_unlock", priceBasedUnlock);
 describe("conditional_vault", conditionalVault);
-describe.only("autocrat", autocrat);
+describe("futarchy", futarchy);
 describe.skip("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
-  it(
-    "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
-    scalarMarkets
-  );
-  it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
   describe("full launch", fullLaunch);
 });

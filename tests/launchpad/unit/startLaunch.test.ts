@@ -1,11 +1,11 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  AutocratClient,
+  FutarchyClient,
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
@@ -14,10 +14,10 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
-import { MAINNET_USDC } from "@metadaoproject/futarchy/v0.3";
+import { MAINNET_USDC } from "@metadaoproject/futarchy/v0.6";
 
 export default function suite() {
-  let autocratClient: AutocratClient;
+  let futarchyClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
   let dao: PublicKey;
   let METAKP: Keypair;
@@ -27,7 +27,7 @@ export default function suite() {
   const minRaise = new BN(1000_000000); // 1000 USDC
 
   before(async function () {
-    autocratClient = this.futarchy;
+    futarchyClient = this.futarchy;
     launchpadClient = this.launchpad;
   });
 
@@ -42,19 +42,29 @@ export default function suite() {
     launch = result.launch;
     launchSigner = result.launchSigner;
 
+    const minRaise = new BN(1000_000000); // 1000 USDC
+    const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
+    const monthlySpend = new BN(100_000000)
+    const recipientAddress = Keypair.generate().publicKey;
+    const premineAmount = new BN(500_000_000);
+    const unlockThreshold = new BN(2000_000000);
+
     // Initialize launch
     await launchpadClient
-      .initializeLaunchIx(
-        "META",
-        "MTA",
-        "https://example.com",
-        minRaise,
-        60 * 60 * 24 * 2,
-        META,
-        MAINNET_USDC,
-        new BN(100_000000), // 100 USDC burn
-        [this.payer.publicKey]
-      )
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: secondsForLaunch,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: monthlySpend, // 100 USDC burn
+        monthlySpendingLimitMembers: [this.payer.publicKey],
+        priceBasedUnlockAddress: recipientAddress,
+        priceBasedPremineAmount: premineAmount,
+        priceBasedUnlockThreshold: unlockThreshold
+      })
       .rpc();
   });
 
@@ -68,7 +78,7 @@ export default function suite() {
     const clock = await this.banksClient.getClock();
 
     // Start the launch
-    await launchpadClient.startLaunchIx(launch).rpc();
+    await launchpadClient.startLaunchIx({ launch }).rpc();
 
     // Check final state
     launchAccount = await launchpadClient.fetchLaunch(launch);

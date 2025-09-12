@@ -21,6 +21,12 @@ import {
 } from "./shared_liquidity_manager.js";
 export { SharedLiquidityManagerProgram, SharedLiquidityManagerIDL };
 
+import {
+  PriceBasedTokenLock as PriceBasedTokenLockProgram,
+  IDL as PriceBasedTokenLockIDL,
+} from "./price_based_token_lock.js";
+export { PriceBasedTokenLockProgram, PriceBasedTokenLockIDL };
+
 export { LowercaseKeys } from "./utils.js";
 
 import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
@@ -39,6 +45,8 @@ export type Proposal = IdlAccounts<FutarchyProgram>["proposal"];
 export type Amm = IdlAccounts<AmmProgram>["amm"];
 export type Launch = IdlAccounts<LaunchpadProgram>["launch"];
 export type FundingRecord = IdlAccounts<LaunchpadProgram>["fundingRecord"];
+
+export type OracleConfig = IdlTypes<PriceBasedTokenLockProgram>["OracleConfig"];
 // export type SharedLiquidityPool =
 //   IdlAccounts<SharedLiquidityManagerProgram>["sharedLiquidityPool"];
 // export type SharedLiquidityPoolPosition =

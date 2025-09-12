@@ -392,14 +392,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
-name = "autocrat_migrator"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
-]
-
-[[package]]
 name = "base64"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1149,6 +1141,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "futarchy",
+ "price_based_unlock",
  "solana-program",
  "solana-security-txt",
  "spl-memo",
@@ -1469,6 +1462,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
 dependencies = [
  "zerocopy 0.8.26",
+]
+
+[[package]]
+name = "price_based_unlock"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
 ]
 
 [[package]]
@@ -2321,14 +2322,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.104",
-]
-
-[[package]]
-name = "timelock"
-version = "0.3.0"
-dependencies = [
- "anchor-lang",
- "solana-security-txt",
 ]
 
 [[package]]

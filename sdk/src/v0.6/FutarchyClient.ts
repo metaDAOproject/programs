@@ -327,7 +327,7 @@ export class FutarchyClient {
   spotSwapIx({
     dao,
     baseMint,
-    quoteMint,
+    quoteMint = MAINNET_USDC,
     swapType,
     inputAmount,
     minOutputAmount = new BN(0),
@@ -335,7 +335,7 @@ export class FutarchyClient {
   }: {
     dao: PublicKey;
     baseMint: PublicKey;
-    quoteMint: PublicKey;
+    quoteMint?: PublicKey;
     swapType: "buy" | "sell";
     inputAmount: BN;
     minOutputAmount?: BN;

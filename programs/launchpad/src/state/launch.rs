@@ -50,4 +50,10 @@ pub struct Launch {
     pub dao: Option<Pubkey>,
     /// The DAO treasury that USDC / LP is sent to, if the launch is complete.
     pub dao_vault: Option<Pubkey>,
+    /// The price-based unlock address.
+    pub price_based_unlock_recipient: Pubkey,
+    /// The price-based premine amount.
+    pub price_based_premine_amount: u64,
+    /// The price threshold for price-based unlock.
+    pub price_based_unlock_threshold: u128,
 }

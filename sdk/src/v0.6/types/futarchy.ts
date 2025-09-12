@@ -933,6 +933,13 @@ export type Futarchy = {
         kind: "struct";
         fields: [
           {
+            name: "amm";
+            docs: ["Embedded FutarchyAmm - 1:1 relationship"];
+            type: {
+              defined: "FutarchyAmm";
+            };
+          },
+          {
             name: "nonce";
             docs: ["`nonce` + `dao_creator` are PDA seeds"];
             type: "u64";
@@ -970,8 +977,8 @@ export type Futarchy = {
             type: "u16";
           },
           {
-            name: "slotsPerProposal";
-            type: "u64";
+            name: "secondsPerProposal";
+            type: "u32";
           },
           {
             name: "twapInitialObservation";
@@ -998,11 +1005,11 @@ export type Futarchy = {
             type: "u128";
           },
           {
-            name: "twapStartDelaySlots";
+            name: "twapStartDelaySeconds";
             docs: [
-              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
+              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds",
             ];
-            type: "u64";
+            type: "u32";
           },
           {
             name: "minQuoteFutarchicLiquidity";
@@ -1039,13 +1046,6 @@ export type Futarchy = {
               };
             };
           },
-          {
-            name: "amm";
-            docs: ["Embedded FutarchyAmm - 1:1 relationship"];
-            type: {
-              defined: "FutarchyAmm";
-            };
-          },
         ];
       };
     },
@@ -1063,8 +1063,8 @@ export type Futarchy = {
             type: "publicKey";
           },
           {
-            name: "slotEnqueued";
-            type: "u64";
+            name: "timestampEnqueued";
+            type: "i64";
           },
           {
             name: "state";
@@ -1093,8 +1093,8 @@ export type Futarchy = {
             type: "publicKey";
           },
           {
-            name: "durationInSlots";
-            type: "u64";
+            name: "durationInSeconds";
+            type: "u32";
           },
           {
             name: "squadsProposal";
@@ -1203,8 +1203,8 @@ export type Futarchy = {
             type: "u128";
           },
           {
-            name: "twapStartDelaySlots";
-            type: "u64";
+            name: "twapStartDelaySeconds";
+            type: "u32";
           },
           {
             name: "minQuoteFutarchicLiquidity";
@@ -1223,8 +1223,8 @@ export type Futarchy = {
             type: "u16";
           },
           {
-            name: "slotsPerProposal";
-            type: "u64";
+            name: "secondsPerProposal";
+            type: "u32";
           },
           {
             name: "nonce";
@@ -1330,9 +1330,9 @@ export type Futarchy = {
             };
           },
           {
-            name: "slotsPerProposal";
+            name: "secondsPerProposal";
             type: {
-              option: "u64";
+              option: "u32";
             };
           },
           {
@@ -1449,12 +1449,32 @@ export type Futarchy = {
         kind: "struct";
         fields: [
           {
-            name: "createdAtSlot";
-            type: "u64";
+            name: "aggregator";
+            docs: [
+              "Running sum of slots_per_last_update * last_observation.",
+              "",
+              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
+              "we can store 18 million slots worth of observations, which turns out to",
+              "be ~85 days worth of slots.",
+              "",
+              "Assuming that latest observations are 100x smaller than they could theoretically",
+              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
+              "very conservative assumption - META/USDC prices should be between 1e9 and",
+              "1e15, which would overflow after 1e15 years worth of slots.",
+              "",
+              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
+              "client's responsibility to sanity check the assets or to handle an",
+              "aggregator at T2 being smaller than an aggregator at T1.",
+            ];
+            type: "u128";
           },
           {
-            name: "lastUpdatedSlot";
-            type: "u64";
+            name: "lastUpdatedTimestamp";
+            type: "i64";
+          },
+          {
+            name: "createdAtTimestamp";
+            type: "i64";
           },
           {
             name: "lastPrice";
@@ -1476,26 +1496,6 @@ export type Futarchy = {
             type: "u128";
           },
           {
-            name: "aggregator";
-            docs: [
-              "Running sum of slots_per_last_update * last_observation.",
-              "",
-              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
-              "we can store 18 million slots worth of observations, which turns out to",
-              "be ~85 days worth of slots.",
-              "",
-              "Assuming that latest observations are 100x smaller than they could theoretically",
-              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
-              "very conservative assumption - META/USDC prices should be between 1e9 and",
-              "1e15, which would overflow after 1e15 years worth of slots.",
-              "",
-              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
-              "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at T2 being smaller than an aggregator at T1.",
-            ];
-            type: "u128";
-          },
-          {
             name: "maxObservationChangePerUpdate";
             docs: ["The most that an observation can change per update."];
             type: "u128";
@@ -1506,11 +1506,11 @@ export type Futarchy = {
             type: "u128";
           },
           {
-            name: "startDelaySlots";
+            name: "startDelaySeconds";
             docs: [
-              "Number of slots after amm.created_at_slot to start recording TWAP",
+              "Number of seconds after amm.created_at_slot to start recording TWAP",
             ];
-            type: "u64";
+            type: "u32";
           },
         ];
       };
@@ -1520,6 +1520,12 @@ export type Futarchy = {
       type: {
         kind: "struct";
         fields: [
+          {
+            name: "oracle";
+            type: {
+              defined: "TwapOracle";
+            };
+          },
           {
             name: "quoteReserves";
             type: "u64";
@@ -1535,12 +1541,6 @@ export type Futarchy = {
           {
             name: "baseProtocolFeeBalance";
             type: "u64";
-          },
-          {
-            name: "oracle";
-            type: {
-              defined: "TwapOracle";
-            };
           },
         ];
       };
@@ -1691,8 +1691,8 @@ export type Futarchy = {
           index: false;
         },
         {
-          name: "slotsPerProposal";
-          type: "u64";
+          name: "secondsPerProposal";
+          type: "u32";
           index: false;
         },
         {
@@ -1762,8 +1762,8 @@ export type Futarchy = {
           index: false;
         },
         {
-          name: "slotsPerProposal";
-          type: "u64";
+          name: "secondsPerProposal";
+          type: "u32";
           index: false;
         },
         {
@@ -1844,8 +1844,8 @@ export type Futarchy = {
           index: false;
         },
         {
-          name: "durationInSlots";
-          type: "u64";
+          name: "durationInSeconds";
+          type: "u32";
           index: false;
         },
         {
@@ -3169,6 +3169,13 @@ export const IDL: Futarchy = {
         kind: "struct",
         fields: [
           {
+            name: "amm",
+            docs: ["Embedded FutarchyAmm - 1:1 relationship"],
+            type: {
+              defined: "FutarchyAmm",
+            },
+          },
+          {
             name: "nonce",
             docs: ["`nonce` + `dao_creator` are PDA seeds"],
             type: "u64",
@@ -3206,8 +3213,8 @@ export const IDL: Futarchy = {
             type: "u16",
           },
           {
-            name: "slotsPerProposal",
-            type: "u64",
+            name: "secondsPerProposal",
+            type: "u32",
           },
           {
             name: "twapInitialObservation",
@@ -3234,11 +3241,11 @@ export const IDL: Futarchy = {
             type: "u128",
           },
           {
-            name: "twapStartDelaySlots",
+            name: "twapStartDelaySeconds",
             docs: [
-              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
+              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds",
             ],
-            type: "u64",
+            type: "u32",
           },
           {
             name: "minQuoteFutarchicLiquidity",
@@ -3275,13 +3282,6 @@ export const IDL: Futarchy = {
               },
             },
           },
-          {
-            name: "amm",
-            docs: ["Embedded FutarchyAmm - 1:1 relationship"],
-            type: {
-              defined: "FutarchyAmm",
-            },
-          },
         ],
       },
     },
@@ -3299,8 +3299,8 @@ export const IDL: Futarchy = {
             type: "publicKey",
           },
           {
-            name: "slotEnqueued",
-            type: "u64",
+            name: "timestampEnqueued",
+            type: "i64",
           },
           {
             name: "state",
@@ -3329,8 +3329,8 @@ export const IDL: Futarchy = {
             type: "publicKey",
           },
           {
-            name: "durationInSlots",
-            type: "u64",
+            name: "durationInSeconds",
+            type: "u32",
           },
           {
             name: "squadsProposal",
@@ -3439,8 +3439,8 @@ export const IDL: Futarchy = {
             type: "u128",
           },
           {
-            name: "twapStartDelaySlots",
-            type: "u64",
+            name: "twapStartDelaySeconds",
+            type: "u32",
           },
           {
             name: "minQuoteFutarchicLiquidity",
@@ -3459,8 +3459,8 @@ export const IDL: Futarchy = {
             type: "u16",
           },
           {
-            name: "slotsPerProposal",
-            type: "u64",
+            name: "secondsPerProposal",
+            type: "u32",
           },
           {
             name: "nonce",
@@ -3566,9 +3566,9 @@ export const IDL: Futarchy = {
             },
           },
           {
-            name: "slotsPerProposal",
+            name: "secondsPerProposal",
             type: {
-              option: "u64",
+              option: "u32",
             },
           },
           {
@@ -3685,12 +3685,32 @@ export const IDL: Futarchy = {
         kind: "struct",
         fields: [
           {
-            name: "createdAtSlot",
-            type: "u64",
+            name: "aggregator",
+            docs: [
+              "Running sum of slots_per_last_update * last_observation.",
+              "",
+              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
+              "we can store 18 million slots worth of observations, which turns out to",
+              "be ~85 days worth of slots.",
+              "",
+              "Assuming that latest observations are 100x smaller than they could theoretically",
+              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
+              "very conservative assumption - META/USDC prices should be between 1e9 and",
+              "1e15, which would overflow after 1e15 years worth of slots.",
+              "",
+              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
+              "client's responsibility to sanity check the assets or to handle an",
+              "aggregator at T2 being smaller than an aggregator at T1.",
+            ],
+            type: "u128",
           },
           {
-            name: "lastUpdatedSlot",
-            type: "u64",
+            name: "lastUpdatedTimestamp",
+            type: "i64",
+          },
+          {
+            name: "createdAtTimestamp",
+            type: "i64",
           },
           {
             name: "lastPrice",
@@ -3712,26 +3732,6 @@ export const IDL: Futarchy = {
             type: "u128",
           },
           {
-            name: "aggregator",
-            docs: [
-              "Running sum of slots_per_last_update * last_observation.",
-              "",
-              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
-              "we can store 18 million slots worth of observations, which turns out to",
-              "be ~85 days worth of slots.",
-              "",
-              "Assuming that latest observations are 100x smaller than they could theoretically",
-              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
-              "very conservative assumption - META/USDC prices should be between 1e9 and",
-              "1e15, which would overflow after 1e15 years worth of slots.",
-              "",
-              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
-              "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at T2 being smaller than an aggregator at T1.",
-            ],
-            type: "u128",
-          },
-          {
             name: "maxObservationChangePerUpdate",
             docs: ["The most that an observation can change per update."],
             type: "u128",
@@ -3742,11 +3742,11 @@ export const IDL: Futarchy = {
             type: "u128",
           },
           {
-            name: "startDelaySlots",
+            name: "startDelaySeconds",
             docs: [
-              "Number of slots after amm.created_at_slot to start recording TWAP",
+              "Number of seconds after amm.created_at_slot to start recording TWAP",
             ],
-            type: "u64",
+            type: "u32",
           },
         ],
       },
@@ -3756,6 +3756,12 @@ export const IDL: Futarchy = {
       type: {
         kind: "struct",
         fields: [
+          {
+            name: "oracle",
+            type: {
+              defined: "TwapOracle",
+            },
+          },
           {
             name: "quoteReserves",
             type: "u64",
@@ -3771,12 +3777,6 @@ export const IDL: Futarchy = {
           {
             name: "baseProtocolFeeBalance",
             type: "u64",
-          },
-          {
-            name: "oracle",
-            type: {
-              defined: "TwapOracle",
-            },
           },
         ],
       },
@@ -3927,8 +3927,8 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
-          name: "slotsPerProposal",
-          type: "u64",
+          name: "secondsPerProposal",
+          type: "u32",
           index: false,
         },
         {
@@ -3998,8 +3998,8 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
-          name: "slotsPerProposal",
-          type: "u64",
+          name: "secondsPerProposal",
+          type: "u32",
           index: false,
         },
         {
@@ -4080,8 +4080,8 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
-          name: "durationInSlots",
-          type: "u64",
+          name: "durationInSeconds",
+          type: "u32",
           index: false,
         },
         {

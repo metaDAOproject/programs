@@ -1,11 +1,11 @@
 import { PublicKey, Signer, SystemProgram, Transaction } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { BanksClient } from "solana-bankrun";
-import { LaunchpadClient } from "@metadaoproject/futarchy/v0.5";
+import { LaunchpadClient } from "@metadaoproject/futarchy/v0.6";
 import {
   getLaunchAddr,
   getLaunchSignerAddr,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/futarchy/v0.6";
 
 export async function initializeMintWithSeeds(
   banksClient: BanksClient,

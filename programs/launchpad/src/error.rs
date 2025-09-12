@@ -26,4 +26,8 @@ pub enum LaunchpadError {
     FreezeAuthoritySet,
     #[msg("Monthly spending limit must be less than 1/6th of the minimum raise amount")]
     InvalidMonthlySpendingLimit,
+    #[msg("Cannot do more than a 50% premine")]
+    InvalidPriceBasedPremineAmount,
+    #[msg("Price-based unlock threshold must be at least 2x the minimum launch price")]
+    InvalidPriceBasedUnlockThreshold,
 }
