@@ -4,10 +4,13 @@ import { BN } from "bn.js";
 import {
   AddressLookupTableAccount,
   AddressLookupTableProgram,
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   Transaction,
 } from "@solana/web3.js";
+import { TestContext } from "./main.test.js";
+import { getDaoAddr, PriceMath } from "@metadaoproject/futarchy/v0.6";
 
 export const TEN_SECONDS_IN_SLOTS = 25n;
 export const ONE_MINUTE_IN_SLOTS = TEN_SECONDS_IN_SLOTS * 6n;
@@ -16,6 +19,42 @@ export const DAY_IN_SLOTS = HOUR_IN_SLOTS * 24n;
 
 export const toBN = (val: bigint): typeof BN.prototype =>
   new BN(val.toString());
+
+const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
+
+export async function setupBasicDao({ context, baseMint, quoteMint }: { context: TestContext, baseMint: PublicKey, quoteMint: PublicKey }) {
+  const nonce = new BN(Math.floor(Math.random() * 1000000));
+
+  await context.futarchy
+    .initializeDaoIx({
+      baseMint,
+      quoteMint,
+      params: {
+        secondsPerProposal: 60 * 60 * 24 * 3,
+        twapStartDelaySeconds: 60 * 60 * 24,
+        twapInitialObservation: THOUSAND_BUCK_PRICE,
+        twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+        minQuoteFutarchicLiquidity: new BN(10_000),
+        minBaseFutarchicLiquidity: new BN(10_000),
+        passThresholdBps: 300,
+        nonce,
+        initialSpendingLimit: null,
+        baseToStake: new BN(0),
+      },
+      provideLiquidity: true,
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ])
+    .rpc();
+
+  const [dao] = getDaoAddr({
+    nonce,
+    daoCreator: context.payer.publicKey,
+  });
+
+  return dao;
+}
 
 /**
  * Creates a lookup table for all unique accounts in a transaction

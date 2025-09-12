@@ -1,8 +1,8 @@
-# Futarchy
+# MetaDAO Programs
 
 ![License BSLv1.1](https://img.shields.io/badge/License-BSLv1.1-lightgray.svg)
 
-Programs for market-driven governance
+Programs for unruggable ICOs and market-driven governance.
 
 ## Deployments
 
