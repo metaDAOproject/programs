@@ -340,16 +340,11 @@ before(async function () {
   );
 });
 
-// describe("launchpad", launchpad);
-// describe("price_based_unlock", priceBasedUnlock);
+describe("launchpad", launchpad);
+describe("price_based_unlock", priceBasedUnlock);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", autocrat);
-describe.skip("project-wide integration tests", function () {
+describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
-  it(
-    "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
-    scalarMarkets
-  );
-  it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
   describe("full launch", fullLaunch);
 });

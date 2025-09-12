@@ -1,223 +1,139 @@
 import {
   ConditionalVaultClient,
-  AmmClient,
-  AmmMath,
-  getAmmAddr,
-  SwapType,
+  FutarchyClient,
   InstructionUtils,
-} from "@metadaoproject/futarchy/v0.5";
-import { sha256 } from "@noble/hashes/sha256";
-import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
+} from "@metadaoproject/futarchy/v0.6";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
 
 export default async function test() {
-  let vaultClient: ConditionalVaultClient = this.vaultClient;
-  let ammClient: AmmClient = this.ammClient;
+  let vaultClient: ConditionalVaultClient = this.conditionalVault;
+  let futarchyClient: FutarchyClient = this.futarchy;
 
-  let alice: Keypair = Keypair.generate();
-  let operator: Keypair = Keypair.generate();
+  // Create mints and token accounts
+  let META: PublicKey = await this.createMint(this.payer.publicKey, 6);
+  let USDC: PublicKey = await this.createMint(this.payer.publicKey, 6);
 
-  const numOutcomes = 2;
+  await this.createTokenAccount(META, this.payer.publicKey);
+  await this.createTokenAccount(USDC, this.payer.publicKey);
 
-  let question: PublicKey = await vaultClient.initializeQuestion(
-    sha256(new TextEncoder().encode("Will it rain tomorrow?/YES/NO")),
-    operator.publicKey,
-    numOutcomes
-  );
+  await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+  await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000 * 1_000_000);
 
-  let USDC: PublicKey = await this.createMint(operator.publicKey, 6);
+  // Initialize DAO
+  const nonce = new BN(Math.floor(Math.random() * 1000000));
 
-  const usdcAccount = await this.createTokenAccount(USDC, this.payer.publicKey);
-  await this.mintTo(USDC, this.payer.publicKey, operator, 10000 * 10 ** 6);
-
-  this.createTokenAccount(USDC, alice.publicKey);
-  await this.mintTo(USDC, alice.publicKey, operator, 10000 * 10 ** 6);
-
-  const vault = await vaultClient.initializeVault(question, USDC, numOutcomes);
-  const storedVault = await vaultClient.fetchVault(vault);
-
-  const YES = storedVault.conditionalTokenMints[0];
-  const NO = storedVault.conditionalTokenMints[1];
-
-  // Initialize AMM
-  await ammClient
-    .initializeAmmIx(YES, NO, new BN(0), new BN(100), new BN(1000))
-    .rpc();
-  const amm = getAmmAddr(ammClient.getProgramId(), YES, NO)[0];
-
-  // Create token accounts for Alice
-  //   await this.createTokenAccount(YES, alice.publicKey);
-  //   await this.createTokenAccount(NO, alice.publicKey);
-
-  // Add initial liquidity to AMM
-  await vaultClient
-    .splitTokensIx(
-      question,
-      vault,
-      USDC,
-      new BN(10_000 * 10 ** 6),
-      numOutcomes,
-      this.payer.publicKey
-    )
-    .rpc();
-  await ammClient
-    .addLiquidityIx(
-      amm,
-      YES,
-      NO,
-      new BN(5_000 * 10 ** 6),
-      new BN(5_000 * 10 ** 6),
-      new BN(0)
-    )
+  await futarchyClient
+    .initializeDaoIx({
+      baseMint: META,
+      quoteMint: USDC,
+      params: {
+        secondsPerProposal: 60 * 60 * 24 * 3,
+        twapStartDelaySeconds: 60 * 60 * 24,
+        twapInitialObservation: new BN(1000 * 10 ** 6),
+        twapMaxObservationChangePerUpdate: new BN(10 * 10 ** 6),
+        minQuoteFutarchicLiquidity: new BN(10_000),
+        minBaseFutarchicLiquidity: new BN(10_000),
+        passThresholdBps: 300,
+        nonce,
+        initialSpendingLimit: null,
+        baseToStake: new BN(0),
+      },
+      provideLiquidity: false,
+    })
     .rpc();
 
-  // Perform mint and swap in the same transaction
-  const mintAmount = new BN(500 * 10 ** 6);
-  const swapAmount = new BN(500 * 10 ** 6);
-
-  const mintTx = vaultClient.splitTokensIx(
-    question,
-    vault,
-    USDC,
-    mintAmount,
-    numOutcomes,
-    alice.publicKey
+  const [dao] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("dao"),
+      this.payer.publicKey.toBuffer(),
+      nonce.toArrayLike(Buffer, "le", 8),
+    ],
+    futarchyClient.getProgramId()
   );
 
-  const swapTx = ammClient.swapIx(
-    amm,
-    YES,
-    NO,
-    { buy: {} },
-    swapAmount,
-    new BN(1),
-    alice.publicKey
-  );
+  // Provide liquidity to DAO AMM
+  await futarchyClient.provideLiquidityIx({
+    dao,
+    baseMint: META,
+    quoteMint: USDC,
+    quoteAmount: new BN(50_000 * 10 ** 6), // 50,000 USDC
+    maxBaseAmount: new BN(50 * 10 ** 6), // 50 META
+    minLiquidity: new BN(0),
+    positionAuthority: this.payer.publicKey,
+    liquidityProvider: this.payer.publicKey,
+  }).rpc();
 
-  const instructions = await InstructionUtils.getInstructions(mintTx, swapTx);
+  // Test spot swap functionality - buy META with USDC
+  const initialUsdcBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
+  const initialMetaBalance = await this.getTokenBalance(META, this.payer.publicKey);
+
+  const swapAmount = new BN(1_000 * 1_000_000); // 1,000 USDC
+
+  const swapTx = futarchyClient.spotSwapIx({
+    dao,
+    baseMint: META,
+    quoteMint: USDC,
+    swapType: "buy",
+    inputAmount: swapAmount,
+    minOutputAmount: new BN(0),
+    trader: this.payer.publicKey,
+  });
+
+  const instructions = await InstructionUtils.getInstructions(swapTx);
 
   const tx = new Transaction().add(...instructions);
   tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
   tx.feePayer = this.payer.publicKey;
-  tx.sign(this.payer, alice);
+  tx.sign(this.payer);
 
   await this.banksClient.processTransaction(tx);
 
-  // Assert balances
-  let usdcBalance = await this.getTokenBalance(USDC, alice.publicKey);
-  let yesBalance = await this.getTokenBalance(YES, alice.publicKey);
-  let noBalance = await this.getTokenBalance(NO, alice.publicKey);
+  // Assert balances changed
+  const finalUsdcBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
+  const finalMetaBalance = await this.getTokenBalance(META, this.payer.publicKey);
 
-  assert.equal(
-    usdcBalance,
-    9500 * 10 ** 6,
-    "Alice's USDC balance should be 9500000000"
-  );
-
-  // there's a decent amount of liquidity, so Alice should receive at least 900 YES but less than 1000
-  assert.isAbove(
-    Number(yesBalance),
-    900 * 10 ** 6,
-    "Alice's YES balance should be more than 900"
-  );
   assert.isBelow(
-    Number(yesBalance),
-    1000 * 10 ** 6,
-    "Alice's YES balance should be less than 1000"
+    Number(finalUsdcBalance),
+    Number(initialUsdcBalance),
+    "USDC balance should decrease after buying META"
   );
-  assert.equal(Number(noBalance), 0, "Alice's NO balance should be 0");
-
-  const storedAmm = await ammClient.fetchAmm(amm);
-
-  let { optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
-    AmmMath.calculateOptimalSwapForMerge(
-      new BN(yesBalance),
-      storedAmm.baseAmount,
-      storedAmm.quoteAmount,
-      new BN(100) //1% slippage
-    );
-
-  let swapIx2 = ammClient.swapIx(
-    amm,
-    YES,
-    NO,
-    { sell: {} },
-    optimalSwapAmount,
-    new BN(0),
-    alice.publicKey
+  
+  assert.isAbove(
+    Number(finalMetaBalance),
+    Number(initialMetaBalance),
+    "META balance should increase after buying META"
   );
 
-  await swapIx2.signers([alice]).rpc();
+  // Test sell swap as well
+  const sellAmount = new BN(1 * 10 ** 6); // 1 META
 
-  yesBalance = await this.getTokenBalance(YES, alice.publicKey);
-  noBalance = await this.getTokenBalance(NO, alice.publicKey);
+  const sellTx = futarchyClient.spotSwapIx({
+    dao,
+    baseMint: META,
+    quoteMint: USDC,
+    swapType: "sell",
+    inputAmount: sellAmount,
+    minOutputAmount: new BN(0),
+    trader: this.payer.publicKey,
+  });
 
-  //test edge cases for calculateOptimalSwapForMerge
-  //small reserves, large balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
-    AmmMath.calculateOptimalSwapForMerge(
-      new BN(1_000_000_000 * 1e6),
-      new BN(10),
-      new BN(20),
-      new BN(100) //1% slippage
-    ));
-  assert.isTrue(
-    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
-      Number(userInAfterSwap) <= Number(expectedOut) + 1
+  await sellTx.rpc();
+
+  // Check balances changed again
+  const finalUsdcBalance2 = await this.getTokenBalance(USDC, this.payer.publicKey);
+  const finalMetaBalance2 = await this.getTokenBalance(META, this.payer.publicKey);
+
+  assert.isAbove(
+    Number(finalUsdcBalance2),
+    Number(finalUsdcBalance),
+    "USDC balance should increase after selling META"
   );
-
-  //large reserves, small balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
-    AmmMath.calculateOptimalSwapForMerge(
-      new BN(100),
-      new BN(1_000_000_000 * 1e6),
-      new BN(2_000_000_000 * 1e6),
-      new BN(100) //1% slippage
-    ));
-  assert.isTrue(
-    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
-      Number(userInAfterSwap) <= Number(expectedOut) + 1
+  
+  assert.isBelow(
+    Number(finalMetaBalance2),
+    Number(finalMetaBalance),
+    "META balance should decrease after selling META"
   );
-
-  //small reserves, small balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
-    AmmMath.calculateOptimalSwapForMerge(
-      new BN(10),
-      new BN(20),
-      new BN(30),
-      new BN(100) //1% slippage
-    ));
-  assert.isTrue(
-    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
-      Number(userInAfterSwap) <= Number(expectedOut) + 1
-  );
-
-  //large reserves, large balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
-    AmmMath.calculateOptimalSwapForMerge(
-      new BN(1_000_000_000 * 1e6),
-      new BN(1_000_000_000 * 1e6),
-      new BN(2_000_000_000 * 1e6),
-      new BN(100) //1% slippage
-    ));
-  assert.isTrue(
-    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
-      Number(userInAfterSwap) <= Number(expectedOut) + 1
-  );
-
-  //skewed reserves (one reserve large, one small)
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
-    AmmMath.calculateOptimalSwapForMerge(
-      new BN(1_000_000_000 * 1e6),
-      new BN(10),
-      new BN(1_000_000_000 * 1e6),
-      new BN(100) //1% slippage
-    ));
-  assert.isTrue(
-    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
-      Number(userInAfterSwap) <= Number(expectedOut) + 1
-  );
-
-  // now we do the trecherous part: selling Alice's YES for USDC
 }
