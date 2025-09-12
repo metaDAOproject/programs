@@ -12,11 +12,33 @@ pub struct StartUnlock<'info> {
     #[account(address = locker.oracle_config.oracle_account)]
     pub oracle_account: UncheckedAccount<'info>,
     
+    /// Only the token recipient can start unlock
+    pub recipient: Signer<'info>,
 }
 
 impl StartUnlock<'_> {
+    pub fn validate(&self) -> Result<()> {
+        // Verify that the signer is the token recipient
+        if self.recipient.key() != self.locker.token_recipient {
+            return Err(PriceBasedUnlockError::UnauthorizedChangeRequest.into());
+        }
+
+        // Verify that the locker is in the Locked state
+        if !matches!(self.locker.state, LockerState::Locked) {
+            return Err(PriceBasedUnlockError::InvalidLockerState.into());
+        }
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let locker = &mut ctx.accounts.locker;
+        let Self {
+            locker,
+            oracle_account: _,
+            recipient: _,
+            event_authority: _,
+            program: _,
+        } = ctx.accounts;
 
         let clock = Clock::get()?;
 
@@ -24,12 +46,6 @@ impl StartUnlock<'_> {
         require!(
             clock.unix_timestamp >= locker.unlock_timestamp,
             PriceBasedUnlockError::UnlockTimestampNotReached
-        );
-
-        // Verify that the locker is in the Locked state
-        require!(
-            matches!(locker.state, LockerState::Locked),
-            PriceBasedUnlockError::InvalidLockerState
         );
 
         // Read the current aggregator value from the oracle account

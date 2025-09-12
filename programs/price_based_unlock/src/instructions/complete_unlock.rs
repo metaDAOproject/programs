@@ -1,12 +1,18 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{self, Mint, Token, TokenAccount}
+};
 
 use super::*;
 
 #[derive(Accounts)]
 #[event_cpi]
 pub struct CompleteUnlock<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        has_one = token_mint
+    )]
     pub locker: Box<Account<'info, Locker>>,
     
     /// CHECK: We will read the aggregator value from this account
@@ -17,28 +23,65 @@ pub struct CompleteUnlock<'info> {
     #[account(mut)]
     pub locker_token_account: Box<Account<'info, TokenAccount>>,
     
-    /// The recipient's token account where tokens will be sent
-    #[account(mut)]
+    /// The token mint - validated via has_one constraint on locker
+    pub token_mint: Account<'info, Mint>,
+    
+    /// The recipient's ATA where tokens will be sent - created if needed
+    #[account(
+        init_if_needed,
+        payer = payer,
+        associated_token::mint = token_mint,
+        associated_token::authority = token_recipient
+    )]
     pub recipient_token_account: Box<Account<'info, TokenAccount>>,
     
+    /// CHECK: validated in handler to match locker.token_recipient  
+    pub token_recipient: UncheckedAccount<'info>,
+    
+    /// Payer for creating the ATA if needed
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    
+    pub system_program: Program<'info, System>,
+    
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl CompleteUnlock<'_> {
+    pub fn validate(&self) -> Result<()> {
+        // Validate that the token recipient matches locker's token_recipient
+        if self.token_recipient.key() != self.locker.token_recipient {
+            return Err(PriceBasedUnlockError::UnauthorizedChangeRequest.into());
+        }
+
+        // Verify that the locker is in the Unlocking state
+        if !matches!(self.locker.state, LockerState::Unlocking { .. }) {
+            return Err(PriceBasedUnlockError::InvalidLockerState.into());
+        }
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let Self {
             locker,
-            oracle_account,
-            locker_token_account,
-            recipient_token_account,
+            oracle_account: _,
+            locker_token_account: _,
+            token_mint: _,
+            recipient_token_account: _,
+            token_recipient: _,
+            payer: _,
+            system_program: _,
             token_program: _,
+            associated_token_program: _,
             event_authority: _,
             program: _,
         } = ctx.accounts;
 
         let clock = Clock::get()?;
 
-        // Verify that the locker is in the Unlocking state
+        // Get the start values from the Unlocking state
         let (start_aggregator, start_timestamp) = match &locker.state {
             LockerState::Unlocking { start_aggregator, start_timestamp } => {
                 (*start_aggregator, *start_timestamp)
@@ -137,11 +180,8 @@ impl CompleteUnlock<'_> {
 
         require_gte!(locker.token_amount, locker.tokens_already_unlocked, PriceBasedUnlockError::InvariantViolated);
 
-        // Only set to Unlocked if all tokens have been unlocked
-        if locker.tokens_already_unlocked == locker.token_amount {
-            locker.state = LockerState::Unlocked;
-        }
-        // Otherwise stay in Unlocking state for future unlock calls
+        // Reset locker state back to Locked for next unlock cycle
+        locker.state = LockerState::Locked;
 
         emit_cpi!(UnlockCompleted {
             locker: locker.key(),

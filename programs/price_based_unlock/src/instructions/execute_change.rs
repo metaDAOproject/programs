@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{ChangeRequest, ChangeType, Locker, LockerState, PriceBasedUnlockError};
+use crate::{ChangeRequest, ChangeType, Locker, PriceBasedUnlockError};
 
 #[derive(Accounts)]
 pub struct ExecuteChange<'info> {
@@ -22,17 +22,6 @@ impl<'info> ExecuteChange<'info> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let locker = &mut ctx.accounts.locker;
         let change_request = &ctx.accounts.change_request;
-
-        // Verify locker is in PendingChange state
-        match &locker.state {
-            LockerState::PendingChange { change_request: pending_request } => {
-                require!(
-                    *pending_request == change_request.key(),
-                    PriceBasedUnlockError::InvalidChangeRequest
-                );
-            }
-            _ => return Err(PriceBasedUnlockError::InvalidLockerState.into()),
-        }
 
         // Dynamic validation: executor must be the opposite party from who proposed
         let executor_key = ctx.accounts.executor.key();
@@ -70,6 +59,16 @@ impl<'info> ExecuteChange<'info> {
 
         // Restore previous state
         locker.state = previous_state;
+
+        // Emit event
+        let clock = Clock::get()?;
+        emit!(crate::events::ChangeExecuted {
+            locker: locker.key(),
+            change_request: change_request.key(),
+            executor: ctx.accounts.executor.key(),
+            change_type: change_request.change_type.clone(),
+            executed_at: clock.unix_timestamp,
+        });
 
         Ok(())
     }

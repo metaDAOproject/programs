@@ -1,7 +1,6 @@
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { PublicKey, Keypair, Transaction, SystemProgram, TransactionInstruction } from "@solana/web3.js";
 import { assert } from "chai";
 import * as token from "@solana/spl-token";
-import { MAINNET_USDC } from "@metadaoproject/futarchy/v0.6";
 import BN from "bn.js";
 
 export default function () {
@@ -49,25 +48,34 @@ export default function () {
       1000000
     );
 
-    // Fund the create key, recipient, and locker authority
-    await this.transfer(
-      MAINNET_USDC,
-      this.payer,
-      createKey.publicKey,
-      1000000000
+    // Fund accounts with SOL using SystemProgram
+    const fundingTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: createKey.publicKey,
+        lamports: 1000000000, // 1 SOL
+      }),
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: tokenAuthority.publicKey,
+        lamports: 1000000000, // 1 SOL
+      }),
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: 1000000000, // 1 SOL
+      }),
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: lockerAuthority.publicKey,
+        lamports: 1000000000, // 1 SOL
+      })
     );
-    await this.transfer(
-      MAINNET_USDC,
-      this.payer,
-      recipient.publicKey,
-      1000000000
-    );
-    await this.transfer(
-      MAINNET_USDC,
-      this.payer,
-      lockerAuthority.publicKey,
-      1000000000
-    );
+    fundingTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    fundingTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundingTx);
   });
 
   beforeEach(async function () {
@@ -146,13 +154,14 @@ export default function () {
       .startUnlockIx({
         locker,
         oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
       })
       .transaction();
 
     startTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
     )[0];
-    startTx.sign(lockerAuthority, this.payer);
+    startTx.sign(recipient);
     await this.banksClient.processTransaction(startTx);
 
     // Verify locker state changed to Unlocking
@@ -170,6 +179,21 @@ export default function () {
   it("should fail if unlock timestamp has not been reached", async function () {
     // Initialize locker with future timestamp
     const futureCreateKey = Keypair.generate();
+    
+    // Fund the futureCreateKey with SOL
+    const fundingTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: futureCreateKey.publicKey,
+        lamports: 1000000000, // 1 SOL
+      })
+    );
+    fundingTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    fundingTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundingTx);
+    
     const params = {
       priceThreshold: new BN(1000000),
       tokenAmount: new BN(100000),
@@ -212,23 +236,39 @@ export default function () {
         .startUnlockIx({
           locker: futureLocker,
           oracleAccount: oracleAccount.publicKey,
+          recipient: recipient.publicKey,
         })
         .transaction();
 
       startTx.recentBlockhash = (
         await this.context.banksClient.getLatestBlockhash()
       )[0];
-      startTx.sign(lockerAuthority, this.payer);
+      startTx.sign(recipient);
       await this.banksClient.processTransaction(startTx);
       assert.fail("Expected transaction to fail");
     } catch (error) {
-      assert.include(error.message, "UnlockTimestampNotReached");
+      assert.include(error.message, "0x1770");
     }
   });
 
   it("should fail if locker is not in Locked state", async function () {
     // Initialize locker
     const doubleCreateKey = Keypair.generate();
+    
+    // Fund the doubleCreateKey with SOL
+    const fundingTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: doubleCreateKey.publicKey,
+        lamports: 1000000000, // 1 SOL
+      })
+    );
+    fundingTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    fundingTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundingTx);
+    
     const params = {
       priceThreshold: new BN(1000000),
       tokenAmount: new BN(100000),
@@ -287,14 +327,18 @@ export default function () {
       .startUnlockIx({
         locker: doubleLocker,
         oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
       })
       .transaction();
 
     startTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
     )[0];
-    startTx.sign(lockerAuthority, this.payer);
+    startTx.sign(recipient);
     await this.banksClient.processTransaction(startTx);
+
+    // Advance time slightly to make the next transaction different
+    await this.advanceBySeconds(1);
 
     // Try to start unlock again (should fail)
     try {
@@ -302,17 +346,28 @@ export default function () {
         .startUnlockIx({
           locker: doubleLocker,
           oracleAccount: oracleAccount.publicKey,
+          recipient: recipient.publicKey,
         })
         .transaction();
+
+      // Add unique memo to ensure transaction uniqueness
+      const uniqueMemo = new TransactionInstruction({
+        keys: [],
+        programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+        data: Buffer.from(`second-start-unlock-${Date.now()}`, "utf8"),
+      });
+      startTx2.add(uniqueMemo);
 
       startTx2.recentBlockhash = (
         await this.context.banksClient.getLatestBlockhash()
       )[0];
-      startTx2.sign(lockerAuthority, this.payer);
+      startTx2.sign(recipient);
       await this.banksClient.processTransaction(startTx2);
       assert.fail("Expected transaction to fail");
     } catch (error) {
-      assert.include(error.message, "InvalidLockerState");
+      console.log("Error:", error.message);
+      // This should fail because locker is in Unlocking state, not Locked
+      assert.include(error.message.toLowerCase(), "0x1772");
     }
   });
 }

@@ -46,6 +46,8 @@ pub struct Locker {
     pub pda_bump: u8,
     /// The authorized locker authority that can execute changes
     pub locker_authority: Pubkey,
+    /// The mint of the locked tokens
+    pub token_mint: Pubkey,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
@@ -61,11 +63,6 @@ pub enum LockerState {
     },
     /// Tokens have been unlocked and sent to recipient
     Unlocked,
-    /// A change has been proposed and is pending recipient approval
-    PendingChange {
-        /// The change request PDA address
-        change_request: Pubkey,
-    },
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]

@@ -101,6 +101,12 @@ export type PriceBasedUnlock = {
           isSigner: false;
         },
         {
+          name: "recipient";
+          isMut: false;
+          isSigner: true;
+          docs: ["Only the token recipient can start unlock"];
+        },
+        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -133,13 +139,42 @@ export type PriceBasedUnlock = {
           docs: ["The token account where locked tokens are stored"];
         },
         {
+          name: "tokenMint";
+          isMut: false;
+          isSigner: false;
+          docs: ["The token mint - validated via has_one constraint on locker"];
+        },
+        {
           name: "recipientTokenAccount";
           isMut: true;
           isSigner: false;
-          docs: ["The recipient's token account where tokens will be sent"];
+          docs: [
+            "The recipient's ATA where tokens will be sent - created if needed",
+          ];
+        },
+        {
+          name: "tokenRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+          docs: ["Payer for creating the ATA if needed"];
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
         },
         {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -223,6 +258,32 @@ export type PriceBasedUnlock = {
       ];
       args: [];
     },
+    {
+      name: "changeLockerAuthority";
+      accounts: [
+        {
+          name: "locker";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "currentAuthority";
+          isMut: false;
+          isSigner: true;
+          docs: [
+            "Only the current locker authority can change the locker authority",
+          ];
+        },
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "ChangeLockerAuthorityParams";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -289,6 +350,11 @@ export type PriceBasedUnlock = {
             docs: ["The authorized locker authority that can execute changes"];
             type: "publicKey";
           },
+          {
+            name: "tokenMint";
+            docs: ["The mint of the locked tokens"];
+            type: "publicKey";
+          },
         ];
       };
     },
@@ -343,6 +409,18 @@ export type PriceBasedUnlock = {
     },
   ];
   types: [
+    {
+      name: "ChangeLockerAuthorityParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newLockerAuthority";
+            type: "publicKey";
+          },
+        ];
+      };
+    },
     {
       name: "InitializeLockerParams";
       type: {
@@ -457,16 +535,6 @@ export type PriceBasedUnlock = {
           },
           {
             name: "Unlocked";
-          },
-          {
-            name: "PendingChange";
-            fields: [
-              {
-                name: "changeRequest";
-                docs: ["The change request PDA address"];
-                type: "publicKey";
-              },
-            ];
           },
         ];
       };
@@ -624,6 +692,95 @@ export type PriceBasedUnlock = {
         {
           name: "unlockPercentage";
           type: "u128";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "ChangeProposed";
+      fields: [
+        {
+          name: "locker";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "changeRequest";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "proposer";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "changeType";
+          type: {
+            defined: "ChangeType";
+          };
+          index: false;
+        },
+        {
+          name: "proposedAt";
+          type: "i64";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "ChangeExecuted";
+      fields: [
+        {
+          name: "locker";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "changeRequest";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "executor";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "changeType";
+          type: {
+            defined: "ChangeType";
+          };
+          index: false;
+        },
+        {
+          name: "executedAt";
+          type: "i64";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "LockerAuthorityChanged";
+      fields: [
+        {
+          name: "locker";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oldAuthority";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newAuthority";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "changedAt";
+          type: "i64";
           index: false;
         },
       ];
@@ -786,6 +943,12 @@ export const IDL: PriceBasedUnlock = {
           isSigner: false,
         },
         {
+          name: "recipient",
+          isMut: false,
+          isSigner: true,
+          docs: ["Only the token recipient can start unlock"],
+        },
+        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -818,13 +981,42 @@ export const IDL: PriceBasedUnlock = {
           docs: ["The token account where locked tokens are stored"],
         },
         {
+          name: "tokenMint",
+          isMut: false,
+          isSigner: false,
+          docs: ["The token mint - validated via has_one constraint on locker"],
+        },
+        {
           name: "recipientTokenAccount",
           isMut: true,
           isSigner: false,
-          docs: ["The recipient's token account where tokens will be sent"],
+          docs: [
+            "The recipient's ATA where tokens will be sent - created if needed",
+          ],
+        },
+        {
+          name: "tokenRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+          docs: ["Payer for creating the ATA if needed"],
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -908,6 +1100,32 @@ export const IDL: PriceBasedUnlock = {
       ],
       args: [],
     },
+    {
+      name: "changeLockerAuthority",
+      accounts: [
+        {
+          name: "locker",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "currentAuthority",
+          isMut: false,
+          isSigner: true,
+          docs: [
+            "Only the current locker authority can change the locker authority",
+          ],
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "ChangeLockerAuthorityParams",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -974,6 +1192,11 @@ export const IDL: PriceBasedUnlock = {
             docs: ["The authorized locker authority that can execute changes"],
             type: "publicKey",
           },
+          {
+            name: "tokenMint",
+            docs: ["The mint of the locked tokens"],
+            type: "publicKey",
+          },
         ],
       },
     },
@@ -1028,6 +1251,18 @@ export const IDL: PriceBasedUnlock = {
     },
   ],
   types: [
+    {
+      name: "ChangeLockerAuthorityParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "newLockerAuthority",
+            type: "publicKey",
+          },
+        ],
+      },
+    },
     {
       name: "InitializeLockerParams",
       type: {
@@ -1142,16 +1377,6 @@ export const IDL: PriceBasedUnlock = {
           },
           {
             name: "Unlocked",
-          },
-          {
-            name: "PendingChange",
-            fields: [
-              {
-                name: "changeRequest",
-                docs: ["The change request PDA address"],
-                type: "publicKey",
-              },
-            ],
           },
         ],
       },
@@ -1309,6 +1534,95 @@ export const IDL: PriceBasedUnlock = {
         {
           name: "unlockPercentage",
           type: "u128",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "ChangeProposed",
+      fields: [
+        {
+          name: "locker",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "changeRequest",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "proposer",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "changeType",
+          type: {
+            defined: "ChangeType",
+          },
+          index: false,
+        },
+        {
+          name: "proposedAt",
+          type: "i64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "ChangeExecuted",
+      fields: [
+        {
+          name: "locker",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "changeRequest",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "executor",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "changeType",
+          type: {
+            defined: "ChangeType",
+          },
+          index: false,
+        },
+        {
+          name: "executedAt",
+          type: "i64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "LockerAuthorityChanged",
+      fields: [
+        {
+          name: "locker",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oldAuthority",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newAuthority",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "changedAt",
+          type: "i64",
           index: false,
         },
       ],

@@ -71,6 +71,8 @@ impl InitializeLocker<'_> {
             locker_authority,
         } = params;
 
+        let token_mint = ctx.accounts.token_mint.key();
+
         let locker = &mut ctx.accounts.locker;
         let clock = Clock::get()?;
 
@@ -108,6 +110,7 @@ impl InitializeLocker<'_> {
             create_key: ctx.accounts.create_key.key(),
             pda_bump: ctx.bumps.locker,
             locker_authority,
+            token_mint,
         });
 
         emit_cpi!(LockerInitialized {

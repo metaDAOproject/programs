@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{ChangeRequest, ChangeType, Locker, LockerState, PriceBasedUnlockError};
+use crate::{ChangeRequest, ChangeType, Locker, PriceBasedUnlockError};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct ProposeChangeParams {
@@ -63,20 +63,22 @@ impl<'info> ProposeChange<'info> {
 
         change_request.set_inner(ChangeRequest {
             locker: locker.key(),
-            change_type,
+            change_type: change_type.clone(),
             proposed_at: clock.unix_timestamp,
             previous_state,
             proposer: proposer.key(),
             pda_nonce: pda_nonce,
             pda_bump: ctx.bumps.change_request,
         });
-
-        // Update locker state to indicate pending change
-        locker.state = LockerState::PendingChange {
-            change_request: change_request.key(),
-        };
         
-        // TODO: Emit event
+        // Emit event
+        emit!(crate::events::ChangeProposed {
+            locker: locker.key(),
+            change_request: change_request.key(),
+            proposer: proposer.key(),
+            change_type,
+            proposed_at: clock.unix_timestamp,
+        });
 
         Ok(())
     }

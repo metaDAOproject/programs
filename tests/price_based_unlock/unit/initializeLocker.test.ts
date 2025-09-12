@@ -1,6 +1,6 @@
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { PublicKey, Keypair, Transaction, SystemProgram } from "@solana/web3.js";
 import { assert } from "chai";
-import { mintTo } from "spl-token-bankrun";
+import { mintTo, getAccount } from "spl-token-bankrun";
 import BN from "bn.js";
 
 export default function () {
@@ -18,6 +18,30 @@ export default function () {
     tokenAuthority = Keypair.generate();
     recipient = Keypair.generate();
     oracleAccount = Keypair.generate();
+
+    // Fund accounts with SOL using SystemProgram
+    const fundingTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: createKey.publicKey,
+        lamports: 1000000000, // 1 SOL
+      }),
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: tokenAuthority.publicKey,
+        lamports: 1000000000, // 1 SOL
+      }),
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: recipient.publicKey,
+        lamports: 1000000000, // 1 SOL
+      })
+    );
+    fundingTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    fundingTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundingTx);
 
     // Create token mint
     tokenMint = await this.createMint(tokenAuthority.publicKey, 6);
@@ -101,11 +125,16 @@ export default function () {
       lockerAccount.lockerAuthority.toString(),
       this.payer.publicKey.toString()
     );
+    assert.equal(
+      lockerAccount.tokenMint.toString(),
+      tokenMint.toString()
+    );
     assert.exists(lockerAccount.state.locked);
 
     // Verify tokens were transferred
-    const lockerBalance = await this.getTokenBalance(tokenMint, locker);
-    assert.equal(lockerBalance.toString(), "100000");
+    const lockerTokenAccount = this.priceBasedUnlock.getLockerTokenAccountAddress(locker);
+    const storedLockerTokenAccount = await getAccount(this.banksClient, lockerTokenAccount);
+    assert.equal(storedLockerTokenAccount.amount.toString(), "100000");
 
     const authorityBalance = await this.getTokenBalance(
       tokenMint,
@@ -116,6 +145,21 @@ export default function () {
 
   it("should fail if unlock timestamp is in the past", async function () {
     const pastCreateKey = Keypair.generate();
+    
+    // Fund the pastCreateKey with SOL
+    const fundingTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: pastCreateKey.publicKey,
+        lamports: 1000000000, // 1 SOL
+      })
+    );
+    fundingTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    fundingTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundingTx);
+    
     const params = {
       priceThreshold: new BN(1000000),
       tokenAmount: new BN(100000),
@@ -150,12 +194,27 @@ export default function () {
       await this.banksClient.processTransaction(tx);
       assert.fail("Expected transaction to fail");
     } catch (error) {
-      assert.include(error.message, "UnlockTimestampInPast");
+      assert.include(error.message.toLowerCase(), "0x1771");
     }
   });
 
   it("should fail if token amount is zero", async function () {
     const zeroCreateKey = Keypair.generate();
+    
+    // Fund the zeroCreateKey with SOL
+    const fundingTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: zeroCreateKey.publicKey,
+        lamports: 1000000000, // 1 SOL
+      })
+    );
+    fundingTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    fundingTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundingTx);
+    
     const params = {
       priceThreshold: new BN(1000000),
       tokenAmount: new BN(0),
@@ -190,7 +249,7 @@ export default function () {
       await this.banksClient.processTransaction(tx);
       assert.fail("Expected transaction to fail");
     } catch (error) {
-      assert.include(error.message, "TokenAmountZero");
+      assert.include(error.message.toLowerCase(), "0x1775");
     }
   });
 }

@@ -193,14 +193,15 @@ export default function () {
       .startUnlockIx({
         locker,
         oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
       })
       .transaction();
 
     startTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
     )[0];
-    startTx.feePayer = this.payer.publicKey;
-    startTx.sign(this.payer);
+    startTx.feePayer = recipient.publicKey;
+    startTx.sign(recipient);
     await this.banksClient.processTransaction(startTx);
 
     // Advance time past TWAP calculation period
@@ -229,7 +230,9 @@ export default function () {
       .completeUnlockIx({
         locker,
         oracleAccount: oracleAccount.publicKey,
-        recipientTokenAccount,
+        tokenMint,
+        tokenRecipient: recipient.publicKey,
+        payer: this.payer.publicKey,
       })
       .transaction();
 
@@ -240,7 +243,7 @@ export default function () {
     completeTx.sign(this.payer);
     await this.banksClient.processTransaction(completeTx);
 
-    // Verify locker state changed to Unlocked
+    // Verify locker state changed back to Locked (allows repeated unlock cycles)
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
     // console.log("=== COMPLETE UNLOCK TEST DEBUG ===");
     // console.log("Locker state:", JSON.stringify(lockerAccount.state, null, 2));
@@ -268,8 +271,8 @@ export default function () {
     console.log("Locker token account balance:", lockerBalance);
 
     assert(
-      lockerAccount.state.unlocked !== undefined,
-      "Locker should be in Unlocked state"
+      lockerAccount.state.locked !== undefined,
+      "Locker should be back in Locked state for repeated cycles"
     );
     assert.equal(
       recipientBalance.toString(),
@@ -319,7 +322,9 @@ export default function () {
         .completeUnlockIx({
           locker,
           oracleAccount: oracleAccount.publicKey,
-          recipientTokenAccount,
+          tokenMint,
+          tokenRecipient: recipient.publicKey,
+          payer: this.payer.publicKey,
         })
         .transaction();
 
@@ -331,7 +336,7 @@ export default function () {
       await this.banksClient.processTransaction(completeTx);
       assert.fail("Expected transaction to fail");
     } catch (error) {
-      assert.include(error.message.toLowerCase(), "0x1771");
+      assert.include(error.message.toLowerCase(), "0x1772");
     }
   });
 
@@ -392,14 +397,15 @@ export default function () {
       .startUnlockIx({
         locker,
         oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
       })
       .transaction();
 
     startTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
     )[0];
-    startTx.feePayer = this.payer.publicKey;
-    startTx.sign(this.payer);
+    startTx.feePayer = recipient.publicKey;
+    startTx.sign(recipient);
     await this.banksClient.processTransaction(startTx);
 
     // Try to complete unlock before TWAP period elapses
@@ -410,7 +416,9 @@ export default function () {
         .completeUnlockIx({
           locker,
           oracleAccount: oracleAccount.publicKey,
-          recipientTokenAccount,
+          tokenMint,
+          tokenRecipient: recipient.publicKey,
+          payer: this.payer.publicKey,
         })
         .transaction();
 
@@ -422,7 +430,7 @@ export default function () {
       await this.banksClient.processTransaction(completeTx);
       assert.fail("Expected transaction to fail");
     } catch (error) {
-      assert.include(error.message.toLowerCase(), "0x1772");
+      assert.include(error.message.toLowerCase(), "0x1773");
     }
   });
 
@@ -537,14 +545,15 @@ export default function () {
       .startUnlockIx({
         locker,
         oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
       })
       .transaction();
 
     startTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
     )[0];
-    startTx.feePayer = this.payer.publicKey;
-    startTx.sign(this.payer);
+    startTx.feePayer = recipient.publicKey;
+    startTx.sign(recipient);
     await this.banksClient.processTransaction(startTx);
 
     // Advance time past TWAP calculation period
@@ -573,7 +582,9 @@ export default function () {
       .completeUnlockIx({
         locker,
         oracleAccount: oracleAccount.publicKey,
-        recipientTokenAccount,
+        tokenMint,
+        tokenRecipient: recipient.publicKey,
+        payer: this.payer.publicKey,
       })
       .transaction();
 
@@ -610,7 +621,7 @@ export default function () {
     }
     console.log("Recipient balance:", recipientBalance.toString());
 
-    assert(lockerAccount.state.unlocking !== undefined);
+    assert(lockerAccount.state.locked !== undefined);
     assert.equal(recipientBalance.toString(), "50000");
 
     // Verify tokens_already_unlocked is tracked correctly
@@ -694,14 +705,15 @@ export default function () {
       .startUnlockIx({
         locker,
         oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
       })
       .transaction();
 
     startTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
     )[0];
-    startTx.feePayer = this.payer.publicKey;
-    startTx.sign(this.payer);
+    startTx.feePayer = recipient.publicKey;
+    startTx.sign(recipient);
     await this.banksClient.processTransaction(startTx);
 
     // First unlock at 30% price (30,000 tokens)
@@ -729,9 +741,10 @@ export default function () {
     const firstCompleteTx = await this.priceBasedUnlock
       .completeUnlockIx({
         locker,
-        lockerAuthority: this.payer.publicKey,
         oracleAccount: oracleAccount.publicKey,
-        recipientTokenAccount,
+        tokenMint,
+        tokenRecipient: recipient.publicKey,
+        payer: this.payer.publicKey,
       })
       .transaction();
 
@@ -779,24 +792,70 @@ export default function () {
     assert.equal(recipientBalance.toString(), "30000");
     assert.equal(lockerAccount.tokensAlreadyUnlocked.toString(), "30000");
     assert(
-      lockerAccount.state.unlocking !== undefined,
-      "Should still be in unlocking state"
+      lockerAccount.state.locked !== undefined,
+      "Should be back in locked state after each unlock cycle"
     );
 
     // Second unlock at 80% price (80,000 total, so 50,000 more tokens)
+    await this.advanceBySeconds(2);
+
+    // First set initial oracle data for the second cycle
+    const secondInitialTimestamp = await this.context.banksClient
+      .getClock()
+      .then((c) => c.unixTimestamp);
+
+    const secondInitialData = Buffer.alloc(24);
+    // Set a known starting aggregator value for predictable TWAP calculation
+    const startAggregator = BigInt(1000000);
+    secondInitialData.writeBigUInt64LE(startAggregator, 0);
+    secondInitialData.writeBigUInt64LE(BigInt(0), 8);
+    secondInitialData.writeBigInt64LE(BigInt(secondInitialTimestamp), 16);
+    
+    await this.context.setAccount(oracleAccount.publicKey, {
+      executable: false,
+      owner: SystemProgram.programId,
+      lamports: 1000000000,
+      data: secondInitialData,
+    });
+
+    // Start the second unlock cycle
+    const secondStartTx = await this.priceBasedUnlock
+      .startUnlockIx({
+        locker,
+        oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
+      })
+      .transaction();
+
+    // Add unique memo to prevent "transaction already processed" errors
+    const secondStartMemo = new TransactionInstruction({
+      keys: [],
+      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      data: Buffer.from(`start-unlock2-${Date.now()}-${Math.random()}`, "utf8"),
+    });
+    secondStartTx.add(secondStartMemo);
+
+    secondStartTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    secondStartTx.feePayer = recipient.publicKey;
+    secondStartTx.sign(recipient);
+    await this.banksClient.processTransaction(secondStartTx);
+
+    // Advance time past TWAP calculation period (need at least 5 seconds for TWAP)
     await this.advanceBySeconds(6);
 
-    const secondUnlockData = Buffer.alloc(24);
-    // Get current timestamp first
+    // Now set oracle data with timestamp after the start unlock
     const secondCurrentTimestamp = await this.context.banksClient
       .getClock()
       .then((c) => c.unixTimestamp);
 
+    const secondUnlockData = Buffer.alloc(24);
     // Write aggregator value (u128 little endian) - price results in TWAP of 0.8
-    // With minimal slot advances, time should be closer to original ~8 seconds
-    // For 80% unlock: twap_price = 800,000, time = 8s, aggregator_change = 800,000 * 8 = 6,400,000
-    // current_aggregator = 1,000,000 + 6,400,000 = 7,400,000
-    const currentAggregator = BigInt(10660000);
+    // For 80% unlock: TWAP should be 800,000. With ~6 seconds and start_aggregator = 1,000,000:
+    // aggregator_change = 800,000 * 6 = 4,800,000
+    // current_aggregator = start_aggregator + aggregator_change = 1,000,000 + 4,800,000 = 5,800,000
+    const currentAggregator = startAggregator + BigInt(800000 * 6);
     console.log(
       "Setting aggregator for 80% unlock:",
       currentAggregator.toString()
@@ -805,12 +864,7 @@ export default function () {
     secondUnlockData.writeBigUInt64LE(BigInt(0), 8);
     // Write current timestamp (i64 little endian)
     secondUnlockData.writeBigInt64LE(BigInt(secondCurrentTimestamp), 16);
-    console.log("=== SECOND UNLOCK DEBUG ===");
-    console.log("Second unlock timestamp:", secondCurrentTimestamp);
-    console.log(
-      "Time difference should be 12 seconds:",
-      secondCurrentTimestamp - firstCurrentTimestamp
-    );
+    
     await this.context.setAccount(oracleAccount.publicKey, {
       executable: false,
       owner: SystemProgram.programId,
@@ -821,9 +875,10 @@ export default function () {
     const secondCompleteTx = await this.priceBasedUnlock
       .completeUnlockIx({
         locker,
-        lockerAuthority: this.payer.publicKey,
         oracleAccount: oracleAccount.publicKey,
-        recipientTokenAccount,
+        tokenMint,
+        tokenRecipient: recipient.publicKey,
+        payer: this.payer.publicKey,
       })
       .transaction();
 
@@ -871,24 +926,74 @@ export default function () {
     assert.equal(recipientBalance.toString(), "80000");
     assert.equal(lockerAccount.tokensAlreadyUnlocked.toString(), "80000");
     assert(
-      lockerAccount.state.unlocking !== undefined,
-      "Should still be in unlocking state"
+      lockerAccount.state.locked !== undefined,
+      "Should be back in locked state after each unlock cycle"
     );
 
     // Third unlock at 100% price (all remaining 20,000 tokens)
+    await this.advanceBySeconds(2);
+
+    // First set initial oracle data for the third cycle
+    const thirdInitialTimestamp = await this.context.banksClient
+      .getClock()
+      .then((c) => c.unixTimestamp);
+
+    const thirdInitialData = Buffer.alloc(24);
+    // Set a known starting aggregator value for predictable TWAP calculation
+    const thirdStartAggregator = BigInt(1000000);
+    thirdInitialData.writeBigUInt64LE(thirdStartAggregator, 0);
+    thirdInitialData.writeBigUInt64LE(BigInt(0), 8);
+    thirdInitialData.writeBigInt64LE(BigInt(thirdInitialTimestamp), 16);
+    
+    await this.context.setAccount(oracleAccount.publicKey, {
+      executable: false,
+      owner: SystemProgram.programId,
+      lamports: 1000000000,
+      data: thirdInitialData,
+    });
+
+    // Start the third unlock cycle
+    const thirdStartTx = await this.priceBasedUnlock
+      .startUnlockIx({
+        locker,
+        oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
+      })
+      .transaction();
+
+    // Add unique memo to prevent "transaction already processed" errors
+    const thirdStartMemo = new TransactionInstruction({
+      keys: [],
+      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      data: Buffer.from(`start-unlock3-${Date.now()}-${Math.random()}`, "utf8"),
+    });
+    thirdStartTx.add(thirdStartMemo);
+
+    thirdStartTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    thirdStartTx.feePayer = recipient.publicKey;
+    thirdStartTx.sign(recipient);
+    await this.banksClient.processTransaction(thirdStartTx);
+
+    // Advance time past TWAP calculation period (need at least 5 seconds for TWAP)
     await this.advanceBySeconds(6);
-    const thirdUnlockData = Buffer.alloc(24);
-    // Write aggregator value (u128 little endian) - price results in TWAP of 1.0
-    // Based on debug, time will be ~19+ seconds from start
-    // For 100% unlock: twap_price = 1,000,000, time = 20s, aggregator_change = 1,000,000 * 20 = 20,000,000
-    // current_aggregator = 1,000,000 + 20,000,000 = 21,000,000
-    thirdUnlockData.writeBigUInt64LE(BigInt(21000000), 0);
-    thirdUnlockData.writeBigUInt64LE(BigInt(0), 8);
-    // Write current timestamp (i64 little endian)
+
+    // Now set oracle data with timestamp after the start unlock
     const thirdCurrentTimestamp = await this.context.banksClient
       .getClock()
       .then((c) => c.unixTimestamp);
+
+    const thirdUnlockData = Buffer.alloc(24);
+    // Write aggregator value (u128 little endian) - price results in TWAP of 1.0
+    // For 100% unlock: TWAP should be 1,000,000. With ~6 seconds and start_aggregator = 1,000,000:
+    // aggregator_change = 1,000,000 * 6 = 6,000,000
+    // current_aggregator = start_aggregator + aggregator_change = 1,000,000 + 6,000,000 = 7,000,000
+    thirdUnlockData.writeBigUInt64LE(thirdStartAggregator + BigInt(1000000 * 6), 0);
+    thirdUnlockData.writeBigUInt64LE(BigInt(0), 8);
+    // Write current timestamp (i64 little endian)
     thirdUnlockData.writeBigInt64LE(BigInt(thirdCurrentTimestamp), 16);
+    
     await this.context.setAccount(oracleAccount.publicKey, {
       executable: false,
       owner: SystemProgram.programId,
@@ -899,9 +1004,10 @@ export default function () {
     const thirdCompleteTx = await this.priceBasedUnlock
       .completeUnlockIx({
         locker,
-        lockerAuthority: this.payer.publicKey,
         oracleAccount: oracleAccount.publicKey,
-        recipientTokenAccount,
+        tokenMint,
+        tokenRecipient: recipient.publicKey,
+        payer: this.payer.publicKey,
       })
       .transaction();
 
@@ -944,8 +1050,8 @@ export default function () {
     lockerAccount = await this.priceBasedUnlock.getLocker(locker);
     assert.equal(lockerAccount.tokensAlreadyUnlocked.toString(), "100000");
     assert(
-      lockerAccount.state.unlocked !== undefined,
-      "Should now be fully unlocked"
+      lockerAccount.state.locked !== undefined,
+      "Should be back to locked state after full unlock"
     );
 
     // Verify locker is empty
@@ -1015,14 +1121,15 @@ export default function () {
       .startUnlockIx({
         locker,
         oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
       })
       .transaction();
 
     startTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
     )[0];
-    startTx.feePayer = this.payer.publicKey;
-    startTx.sign(this.payer);
+    startTx.feePayer = recipient.publicKey;
+    startTx.sign(recipient);
     await this.banksClient.processTransaction(startTx);
 
     // First unlock at 60% price (60,000 tokens)
@@ -1045,9 +1152,10 @@ export default function () {
     const firstCompleteTx = await this.priceBasedUnlock
       .completeUnlockIx({
         locker,
-        lockerAuthority: this.payer.publicKey,
         oracleAccount: oracleAccount.publicKey,
-        recipientTokenAccount,
+        tokenMint,
+        tokenRecipient: recipient.publicKey,
+        payer: this.payer.publicKey,
       })
       .transaction();
 
@@ -1077,7 +1185,35 @@ export default function () {
     assert.equal(recipientBalance.toString(), "60000");
 
     // Try to unlock again - same aggregator but more time = lower TWAP (should not unlock additional tokens)
+    await this.advanceBySeconds(2);
+
+    // Start the second unlock cycle first
+    const secondStartTx = await this.priceBasedUnlock
+      .startUnlockIx({
+        locker,
+        oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
+      })
+      .transaction();
+
+    // Add unique memo to prevent "transaction already processed" errors
+    const decreaseTestStartMemo = new TransactionInstruction({
+      keys: [],
+      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      data: Buffer.from(`decrease-start-${Date.now()}-${Math.random()}`, "utf8"),
+    });
+    secondStartTx.add(decreaseTestStartMemo);
+
+    secondStartTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    secondStartTx.feePayer = recipient.publicKey;
+    secondStartTx.sign(recipient);
+    await this.banksClient.processTransaction(secondStartTx);
+
+    // Advance time past TWAP period
     await this.advanceBySeconds(6);
+
     const secondUnlockData = Buffer.alloc(24);
     const secondAggregatorValue = BigInt(4600000); // Same aggregator but more time elapsed = lower TWAP
     secondUnlockData.writeBigUInt64LE(secondAggregatorValue, 0);
@@ -1096,9 +1232,10 @@ export default function () {
     const secondCompleteTx = await this.priceBasedUnlock
       .completeUnlockIx({
         locker,
-        lockerAuthority: this.payer.publicKey,
         oracleAccount: oracleAccount.publicKey,
-        recipientTokenAccount,
+        tokenMint,
+        tokenRecipient: recipient.publicKey,
+        payer: this.payer.publicKey,
       })
       .transaction();
 

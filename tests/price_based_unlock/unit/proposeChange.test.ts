@@ -131,16 +131,21 @@ export default function () {
   });
 
   it("should allow recipient to propose a change (recipient → locker authority execution flow)", async function () {
-    const changeKey = Keypair.generate();
+    // Fund the newRecipient with SOL
+    const fundingTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: newRecipient.publicKey,
+        lamports: 1000000000, // 1 SOL
+      })
+    );
+    fundingTx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    fundingTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundingTx);
 
-    // Debug: check locker state before proposing
-    const lockerBeforePropose = await this.priceBasedUnlock.getLocker(locker);
-    // console.log("=== BEFORE PROPOSE CHANGE DEBUG ===");
-    // console.log("Locker token_recipient:", lockerBeforePropose.tokenRecipient.toString());
-    // console.log("Locker locker_authority:", lockerBeforePropose.lockerAuthority.toString());
-    // console.log("Proposer (should be recipient):", recipient.publicKey.toString());
-    // console.log("Match check: token_recipient == proposer:", lockerBeforePropose.tokenRecipient.toString() === recipient.publicKey.toString());
-    // console.log("Match check: locker_authority == proposer:", lockerBeforePropose.lockerAuthority.toString() === recipient.publicKey.toString());
+    const pdaNonce = Math.floor(Math.random() * 1000000);
 
     const tx = await this.priceBasedUnlock
       .proposeChangeIx({
@@ -148,7 +153,7 @@ export default function () {
           changeType: {
             recipient: { newRecipient: newRecipient.publicKey },
           },
-          createKey: changeKey.publicKey,
+          pdaNonce: pdaNonce,
         },
         locker,
         proposer: recipient.publicKey, // Recipient proposes
@@ -162,21 +167,19 @@ export default function () {
     tx.sign(recipient);
     await this.banksClient.processTransaction(tx);
 
-    // Verify locker state changed to PendingChange
-    const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
-    // console.log("Recipient proposal test - proposer:", recipient.publicKey.toString().slice(0, 8));
-    // console.log("State transition: Locked -> PendingChange");
-    assert.equal(lockerAccount.state.pendingChange !== undefined, true);
-
     // Verify change request was created with correct proposer
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey.publicKey
+      recipient.publicKey,
+      pdaNonce
     );
     const changeRequest = await this.priceBasedUnlock.getChangeRequest(
       changeRequestAddr
     );
-    // console.log("Proposer stored correctly:", changeRequest.proposer.toString() === recipient.publicKey.toString());
+    
+    // Verify the change request was created correctly
+    assert.equal(changeRequest.proposer.toString(), recipient.publicKey.toString());
+    assert.equal(changeRequest.locker.toString(), locker.toString());
 
     assert.equal(
       changeRequest.proposer.toString(),
@@ -190,7 +193,7 @@ export default function () {
   });
 
   it("should allow locker authority to propose a change (locker authority → recipient execution flow)", async function () {
-    const changeKey = Keypair.generate();
+    const pdaNonce = Math.floor(Math.random() * 1000000);
 
     const tx = await this.priceBasedUnlock
       .proposeChangeIx({
@@ -203,7 +206,7 @@ export default function () {
               },
             },
           },
-          createKey: changeKey.publicKey,
+          pdaNonce: pdaNonce,
         },
         locker,
         proposer: squadsMultisigVault.publicKey, // Locker authority proposes
@@ -217,16 +220,17 @@ export default function () {
     tx.sign(squadsMultisigVault);
     await this.banksClient.processTransaction(tx);
 
-    // Verify locker state changed to PendingChange
+    // Verify locker state remains Locked (no more PendingChange state)
     const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
     // console.log("Authority proposal test - proposer:", squadsMultisigVault.publicKey.toString().slice(0, 8));
-    // console.log("State transition: Locked -> PendingChange");
-    assert.equal(lockerAccount.state.pendingChange !== undefined, true);
+    // console.log("State remains: Locked (no PendingChange state)");
+    assert.equal(lockerAccount.state.locked !== undefined, true);
 
     // Verify change request was created with correct proposer
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey.publicKey
+      squadsMultisigVault.publicKey,
+      pdaNonce
     );
     const changeRequest = await this.priceBasedUnlock.getChangeRequest(
       changeRequestAddr
@@ -271,7 +275,7 @@ export default function () {
             changeType: {
               recipient: { newRecipient: newRecipient.publicKey },
             },
-            createKey: changeKey.publicKey,
+            pdaNonce: Math.floor(Math.random() * 1000000),
           },
           locker,
           proposer: unauthorizedWallet.publicKey, // Neither recipient nor authority
@@ -288,13 +292,13 @@ export default function () {
       assert.fail("Should have failed with unauthorized proposer");
     } catch (error) {
       console.log("Unauthorized proposer correctly rejected");
-      assert.include(error.message.toLowerCase(), "0x1775");
+      assert.include(error.message.toLowerCase(), "0x1776");
     }
   });
 
   it("should propose an oracle change successfully", async function () {
-    const changeKey = Keypair.generate();
     const newOracleAccount = Keypair.generate();
+    const pdaNonce = Math.floor(Math.random() * 1000000);
 
     const tx = await this.priceBasedUnlock
       .proposeChangeIx({
@@ -307,7 +311,7 @@ export default function () {
               },
             },
           },
-          createKey: changeKey.publicKey,
+          pdaNonce: pdaNonce,
         },
         locker,
         proposer: recipient.publicKey,
@@ -324,7 +328,8 @@ export default function () {
     // Verify change request
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey.publicKey
+      recipient.publicKey,
+      pdaNonce
     );
     const changeRequest = await this.priceBasedUnlock.getChangeRequest(
       changeRequestAddr
@@ -348,7 +353,7 @@ export default function () {
   });
 
   it("should overwrite existing change request with init_if_needed", async function () {
-    const changeKey = Keypair.generate();
+    const pdaNonce = Math.floor(Math.random() * 1000000);
 
     // First proposal
     const tx1 = await this.priceBasedUnlock
@@ -357,7 +362,7 @@ export default function () {
           changeType: {
             recipient: { newRecipient: newRecipient.publicKey },
           },
-          createKey: changeKey.publicKey,
+          pdaNonce: pdaNonce,
         },
         locker,
         proposer: recipient.publicKey,
@@ -379,7 +384,7 @@ export default function () {
           changeType: {
             recipient: { newRecipient: newerRecipient.publicKey },
           },
-          createKey: changeKey.publicKey, // Same create key
+          pdaNonce: pdaNonce, // Same pdaNonce to overwrite
         },
         locker,
         proposer: recipient.publicKey,
@@ -396,7 +401,8 @@ export default function () {
     // Verify the change request has the newer recipient
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey.publicKey
+      recipient.publicKey,
+      pdaNonce
     );
     const changeRequest = await this.priceBasedUnlock.getChangeRequest(
       changeRequestAddr
@@ -413,14 +419,14 @@ export default function () {
     assert.equal(lockerBefore.state.locked !== undefined, true);
 
     // Propose change from Locked state
-    const changeKey = Keypair.generate();
+    const pdaNonce = Math.floor(Math.random() * 1000000);
     const tx = await this.priceBasedUnlock
       .proposeChangeIx({
         params: {
           changeType: {
             recipient: { newRecipient: newRecipient.publicKey },
           },
-          createKey: changeKey.publicKey,
+          pdaNonce: pdaNonce,
         },
         locker,
         proposer: recipient.publicKey,
@@ -437,7 +443,8 @@ export default function () {
     // Verify change request stored the previous Locked state
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey.publicKey
+      recipient.publicKey,
+      pdaNonce
     );
     const changeRequest = await this.priceBasedUnlock.getChangeRequest(
       changeRequestAddr

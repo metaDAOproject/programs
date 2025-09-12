@@ -121,8 +121,8 @@ export default function () {
   });
 
   it("should execute change when recipient proposed and authority executes", async function () {
-    // Generate a fresh changeKey for this test
-    const testChangeKey = Keypair.generate();
+    // Generate a fresh pdaNonce for this test
+    const pdaNonce = Math.floor(Math.random() * 1000000);
 
     // Debug: check locker state before proposing
     const lockerBeforePropose = await this.priceBasedUnlock.getLocker(locker);
@@ -135,7 +135,7 @@ export default function () {
           changeType: {
             recipient: { newRecipient: newRecipient.publicKey },
           },
-          createKey: testChangeKey.publicKey,
+          pdaNonce: pdaNonce,
         },
         locker,
         proposer: recipient.publicKey,
@@ -152,7 +152,8 @@ export default function () {
     // Now DAO executes the change after governance approval
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      testChangeKey.publicKey
+      recipient.publicKey,
+      pdaNonce
     );
 
     const executeTx = await this.priceBasedUnlock
@@ -192,7 +193,7 @@ export default function () {
   });
 
   it("should execute change when authority proposed and recipient executes", async function () {
-    const changeKey2 = Keypair.generate();
+    const pdaNonce2 = Math.floor(Math.random() * 1000000);
     const newOracleAccount = Keypair.generate();
 
     // First, locker authority proposes the change
@@ -207,7 +208,7 @@ export default function () {
               },
             },
           },
-          createKey: changeKey2.publicKey,
+          pdaNonce: pdaNonce2,
         },
         locker,
         proposer: squadsMultisigVault.publicKey, // Authority proposes
@@ -224,7 +225,8 @@ export default function () {
     // Now recipient executes the change
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey2.publicKey
+      squadsMultisigVault.publicKey,
+      pdaNonce2
     );
 
     const executeTx = await this.priceBasedUnlock
@@ -257,6 +259,7 @@ export default function () {
 
   it("should execute oracle change successfully", async function () {
     const newOracleAccount = Keypair.generate();
+    const pdaNonce3 = Math.floor(Math.random() * 1000000);
 
     // Recipient proposes oracle change
     const proposeTx = await this.priceBasedUnlock
@@ -270,7 +273,7 @@ export default function () {
               },
             },
           },
-          createKey: changeKey.publicKey,
+          pdaNonce: pdaNonce3,
         },
         locker,
         proposer: recipient.publicKey,
@@ -287,7 +290,8 @@ export default function () {
     // DAO executes the change
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey.publicKey
+      recipient.publicKey,
+      pdaNonce3
     );
 
     const executeTx = await this.priceBasedUnlock
@@ -320,13 +324,14 @@ export default function () {
 
   it("should fail if wrong vault tries to execute", async function () {
     // Recipient proposes change (correct pattern)
+    const pdaNonce4 = Math.floor(Math.random() * 1000000);
     const proposeTx = await this.priceBasedUnlock
       .proposeChangeIx({
         params: {
           changeType: {
             recipient: { newRecipient: newRecipient.publicKey },
           },
-          createKey: changeKey.publicKey,
+          pdaNonce: pdaNonce4,
         },
         locker,
         proposer: recipient.publicKey,
@@ -351,7 +356,8 @@ export default function () {
 
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey.publicKey
+      recipient.publicKey,
+      pdaNonce4
     );
 
     try {
@@ -374,13 +380,14 @@ export default function () {
       assert.fail("Should have failed with wrong vault");
     } catch (error) {
       console.log("Wrong executor correctly rejected");
-      assert.include(error.message.toLowerCase(), "0x1777");
+      assert.include(error.message.toLowerCase(), "0x1778");
     }
   });
 
   it("should execute recipient change when authority proposed and recipient executes", async function () {
     // Generate a fresh changeKey for this test
     const testChangeKey3 = Keypair.generate();
+    const pdaNonce5 = Math.floor(Math.random() * 1000000);
 
     console.log("Authority proposes recipient change test");
 
@@ -391,7 +398,7 @@ export default function () {
           changeType: {
             recipient: { newRecipient: newRecipient.publicKey },
           },
-          createKey: testChangeKey3.publicKey,
+          pdaNonce: pdaNonce5,
         },
         locker,
         proposer: squadsMultisigVault.publicKey, // Authority proposes
@@ -410,7 +417,8 @@ export default function () {
     // Now recipient executes the change
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      testChangeKey3.publicKey
+      squadsMultisigVault.publicKey,
+      pdaNonce5
     );
 
     const executeTx = await this.priceBasedUnlock
@@ -444,6 +452,7 @@ export default function () {
     // Generate a fresh changeKey for this test
     const testChangeKey4 = Keypair.generate();
     const newOracleAccount2 = Keypair.generate();
+    const pdaNonce6 = Math.floor(Math.random() * 1000000);
 
     // console.log("Recipient proposes oracle change test");
 
@@ -459,7 +468,7 @@ export default function () {
               },
             },
           },
-          createKey: testChangeKey4.publicKey,
+          pdaNonce: pdaNonce6,
         },
         locker,
         proposer: recipient.publicKey, // Recipient proposes
@@ -478,7 +487,8 @@ export default function () {
     // Now authority executes the change
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      testChangeKey4.publicKey
+      recipient.publicKey,
+      pdaNonce6
     );
 
     const executeTx = await this.priceBasedUnlock
@@ -513,6 +523,7 @@ export default function () {
   it("should fail if recipient tries to execute their own proposal", async function () {
     // Generate a fresh changeKey for this test
     const testChangeKey5 = Keypair.generate();
+    const pdaNonce7 = Math.floor(Math.random() * 1000000);
 
     // console.log("Self-execution rejection test");
 
@@ -523,7 +534,7 @@ export default function () {
           changeType: {
             recipient: { newRecipient: newRecipient.publicKey },
           },
-          createKey: testChangeKey5.publicKey,
+          pdaNonce: pdaNonce7,
         },
         locker,
         proposer: recipient.publicKey, // Recipient proposes
@@ -542,7 +553,8 @@ export default function () {
     // Now try to execute with same recipient (should fail)
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      testChangeKey5.publicKey
+      recipient.publicKey,
+      pdaNonce7
     );
 
     try {
@@ -569,13 +581,14 @@ export default function () {
     } catch (error) {
       // console.log("Self-execution correctly rejected");
       // Should fail with UnauthorizedLockerAuthority since recipient != authority
-      assert.include(error.message.toLowerCase(), "0x1777");
+      assert.include(error.message.toLowerCase(), "0x1778");
     }
   });
 
   it("should fail if authority tries to execute their own proposal", async function () {
     // Generate a fresh changeKey for this test
     const testChangeKey6 = Keypair.generate();
+    const pdaNonce8 = Math.floor(Math.random() * 1000000);
 
     // console.log("Authority self-execution rejection test");
 
@@ -591,7 +604,7 @@ export default function () {
               },
             },
           },
-          createKey: testChangeKey6.publicKey,
+          pdaNonce: pdaNonce8,
         },
         locker,
         proposer: squadsMultisigVault.publicKey, // Authority proposes
@@ -610,7 +623,8 @@ export default function () {
     // Now try to execute with same authority (should fail)
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      testChangeKey6.publicKey
+      squadsMultisigVault.publicKey,
+      pdaNonce8
     );
 
     try {
@@ -640,15 +654,17 @@ export default function () {
     } catch (error) {
       console.log("Authority self-execution correctly rejected");
       // Should fail with UnauthorizedChangeRequest since authority != recipient
-      assert.include(error.message.toLowerCase(), "0x1775");
+      assert.include(error.message.toLowerCase(), "0x1776");
     }
   });
 
   it("should fail if locker is not in PendingChange state", async function () {
     // Don't propose any change, try to execute directly
+    const pdaNonce9 = Math.floor(Math.random() * 1000000);
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey.publicKey
+      recipient.publicKey,
+      pdaNonce9
     );
 
     try {
@@ -678,13 +694,14 @@ export default function () {
     assert.equal(lockerBefore.state.locked !== undefined, true);
 
     // Propose change (this puts it in PendingChange state)
+    const pdaNonce10 = Math.floor(Math.random() * 1000000);
     const proposeTx = await this.priceBasedUnlock
       .proposeChangeIx({
         params: {
           changeType: {
             recipient: { newRecipient: newRecipient.publicKey },
           },
-          createKey: changeKey.publicKey,
+          pdaNonce: pdaNonce10,
         },
         locker,
         proposer: recipient.publicKey,
@@ -705,7 +722,8 @@ export default function () {
     // Execute change
     const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
       locker,
-      changeKey.publicKey
+      recipient.publicKey,
+      pdaNonce10
     );
 
     const executeTx = await this.priceBasedUnlock
@@ -744,13 +762,14 @@ export default function () {
 
   it("should fail with mismatched change request", async function () {
     // Propose one change
+    const pdaNonce11 = Math.floor(Math.random() * 1000000);
     const proposeTx = await this.priceBasedUnlock
       .proposeChangeIx({
         params: {
           changeType: {
             recipient: { newRecipient: newRecipient.publicKey },
           },
-          createKey: changeKey.publicKey,
+          pdaNonce: pdaNonce11,
         },
         locker,
         proposer: recipient.publicKey,
@@ -769,7 +788,8 @@ export default function () {
     const wrongChangeRequestAddr =
       this.priceBasedUnlock.getChangeRequestAddress(
         locker,
-        wrongChangeKey.publicKey
+        wrongChangeKey.publicKey,
+        Math.floor(Math.random() * 1000000)
       );
 
     try {

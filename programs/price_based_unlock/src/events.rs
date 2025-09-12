@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::OracleConfig;
+use crate::{OracleConfig, ChangeType};
 
 #[event]
 pub struct LockerInitialized {
@@ -36,4 +36,30 @@ pub struct TokensClaimed {
     pub total_token_amount: u64,
     pub current_price: u128,
     pub unlock_percentage: u128,
+}
+
+#[event]
+pub struct ChangeProposed {
+    pub locker: Pubkey,
+    pub change_request: Pubkey,
+    pub proposer: Pubkey,
+    pub change_type: ChangeType,
+    pub proposed_at: i64,
+}
+
+#[event]
+pub struct ChangeExecuted {
+    pub locker: Pubkey,
+    pub change_request: Pubkey,
+    pub executor: Pubkey,
+    pub change_type: ChangeType,
+    pub executed_at: i64,
+}
+
+#[event]
+pub struct LockerAuthorityChanged {
+    pub locker: Pubkey,
+    pub old_authority: Pubkey,
+    pub new_authority: Pubkey,
+    pub changed_at: i64,
 }
