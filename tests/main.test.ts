@@ -22,9 +22,14 @@ import {
   SQUADS_PROGRAM_ID,
   PERMISSIONLESS_ACCOUNT,
   AUTOCRAT_PROGRAM_ID,
+  getDaoAddr,
+  PriceMath,
+  getProposalAddr,
+  getProposalAddrV2,
+  InstructionUtils,
 } from "@metadaoproject/futarchy/v0.6";
 
-import { PublicKey, Keypair, Connection, SystemProgram, Transaction } from "@solana/web3.js";
+import { PublicKey, Keypair, Connection, SystemProgram, Transaction, ComputeBudgetProgram, TransactionInstruction } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -55,6 +60,10 @@ import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
 import twap from "./integration/twap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
+import { BN } from "bn.js";
+import { sha256 } from "@metadaoproject/futarchy";
+
+const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
 // Export the test context interface for use in other files
 export interface TestContext {
@@ -93,13 +102,17 @@ export interface TestContext {
     to: PublicKey,
     amount: number
   ) => Promise<any>;
+  setupBasicDao: ({ baseMint, quoteMint }: { baseMint: PublicKey, quoteMint: PublicKey }) => Promise<PublicKey>;
+  setupBasicDaoWithLiquidity: ({ baseMint, quoteMint }: { baseMint: PublicKey, quoteMint: PublicKey }) => Promise<PublicKey>;
+  initializeProposal: ({ dao, instructions }: { dao: PublicKey, instructions: TransactionInstruction[] }) => Promise<{ proposal: PublicKey, question: PublicKey, baseVault: PublicKey, quoteVault: PublicKey, squadsProposal: PublicKey }>;
+  initializeAndLaunchProposal: ({ dao, instructions }: { dao: PublicKey, instructions: TransactionInstruction[] }) => Promise<{ proposal: PublicKey, question: PublicKey, baseVault: PublicKey, quoteVault: PublicKey, squadsProposal: PublicKey }>;
   advanceBySlots: (slots: bigint) => Promise<void>;
   advanceBySeconds: (seconds: number) => Promise<void>;
 }
 
 // Extend the Mocha context to include our test properties
 declare module "mocha" {
-  interface Context extends TestContext {}
+  interface Context extends TestContext { }
 }
 
 before(async function () {
@@ -261,6 +274,19 @@ before(async function () {
     amount: number
   ) => {
     const tokenAccount = token.getAssociatedTokenAddressSync(mint, to, true);
+
+    const tx = new Transaction();
+
+    tx.add(token.createAssociatedTokenAccountIdempotentInstruction(this.payer.publicKey, tokenAccount, to, mint));
+    tx.add(token.createMintToInstruction(mint, tokenAccount, mintAuthority.publicKey, amount));
+
+    tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = this.payer.publicKey;
+    tx.sign(this.payer);
+    await this.banksClient.processTransaction(tx);
+
+    return;
+
     return await mintTo(
       this.banksClient,
       this.payer,
@@ -333,6 +359,124 @@ before(async function () {
         BigInt(currentClock.unixTimestamp + BigInt(seconds))
       )
     );
+  };
+
+  this.setupBasicDao = async ({ baseMint, quoteMint }: { baseMint: PublicKey, quoteMint: PublicKey }) => {
+    const nonce = new BN(Math.floor(Math.random() * 1000000));
+
+    await this.futarchy
+      .initializeDaoIx({
+        baseMint,
+        quoteMint,
+        params: {
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(10_000),
+          minBaseFutarchicLiquidity: new BN(10_000),
+          passThresholdBps: 300,
+          nonce,
+          initialSpendingLimit: null,
+          baseToStake: new BN(0),
+        },
+        provideLiquidity: true,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const [dao] = getDaoAddr({
+      nonce,
+      daoCreator: this.payer.publicKey,
+    });
+
+    return dao;
+  };
+
+  this.setupBasicDaoWithLiquidity = async ({ baseMint, quoteMint }: { baseMint: PublicKey, quoteMint: PublicKey }) => {
+    const dao = await this.setupBasicDao({ baseMint, quoteMint });
+
+    await this.mintTo(baseMint, this.payer.publicKey, this.payer, 100 * 10 ** 6);
+    await this.mintTo(quoteMint, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
+
+    await this.futarchy.provideLiquidityIx({
+      dao,
+      baseMint,
+      quoteMint,
+      maxBaseAmount: new BN(100 * 10 ** 6),
+      quoteAmount: new BN(100_000 * 10 ** 6),
+    }).rpc();
+
+    return dao;
+  };
+
+  this.initializeProposal = async ({ dao, instructions }: { dao: PublicKey, instructions: TransactionInstruction[] }): Promise<{ proposal: PublicKey, question: PublicKey, baseVault: PublicKey, quoteVault: PublicKey, squadsProposal: PublicKey }> => {
+    const storedDao = await this.futarchy.getDao(dao);
+
+    const { tx: squadsProposalCreateTx, squadsProposal } = this.futarchy.squadsProposalCreateTx({
+      dao,
+      instructions,
+      transactionIndex: 1n,
+    });
+
+    squadsProposalCreateTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    squadsProposalCreateTx.feePayer = this.payer.publicKey;
+    squadsProposalCreateTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+
+    this.banksClient.processTransaction(squadsProposalCreateTx);
+
+    let [proposal] = getProposalAddrV2({ squadsProposal });
+
+    await this.conditionalVault.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2,
+    );
+
+    const { question, baseVault, quoteVault } = this.futarchy.getProposalPdas(
+      proposal,
+      storedDao.baseMint,
+      storedDao.quoteMint,
+      dao,
+    );
+
+    await this.conditionalVault
+      .initializeVaultIx(question, storedDao.baseMint, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.conditionalVault.initializeVaultIx(question, storedDao.quoteMint, 2),
+        ),
+      )
+      .rpc();
+
+    await this.futarchy.initializeProposalIx(
+      squadsProposal,
+      dao,
+      storedDao.baseMint,
+      storedDao.quoteMint,
+      question,
+    )
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    return { proposal, question, baseVault, quoteVault, squadsProposal };
+  };
+
+  this.initializeAndLaunchProposal = async ({ dao, instructions }: { dao: PublicKey, instructions: TransactionInstruction[] }): Promise<{ proposal: PublicKey, question: PublicKey, baseVault: PublicKey, quoteVault: PublicKey, squadsProposal: PublicKey }> => {
+    const { proposal, question, baseVault, quoteVault, squadsProposal } = await this.initializeProposal({ dao, instructions });
+    const storedDao = await this.futarchy.getDao(dao);
+    await this.futarchy.launchProposalIx({
+      proposal,
+      dao,
+      baseMint: storedDao.baseMint,
+      quoteMint: storedDao.quoteMint,
+    }).rpc();
+
+    return { proposal, question, baseVault, quoteVault, squadsProposal };
   };
 
   await this.createTokenAccount(MAINNET_USDC, this.payer.publicKey);
