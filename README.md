@@ -1,6 +1,6 @@
 # MetaDAO Programs
 
-![License BSLv1.1](https://img.shields.io/badge/License-BSLv1.1-lightgray.svg)
+![License BUSLv1.1](https://img.shields.io/badge/License-BUSLv1.1-lightgray.svg)
 
 Programs for unruggable ICOs and market-driven governance.
 
