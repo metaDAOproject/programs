@@ -15,7 +15,7 @@ export default function suite() {
   describe("#finalize_proposal", finalizeProposal);
 
   describe("#collect_fees", collectFees);
-  describe.only("#conditional_swap", conditionalSwap);
+  describe("#conditional_swap", conditionalSwap);
 
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
