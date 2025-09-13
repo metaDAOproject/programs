@@ -7,7 +7,7 @@ on:
       - develop
 
 jobs:
-  generate-verifiable-autocrat:
+  generate-verifiable-futarchy:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
         with:
           default_author: github_actions
           message: 'Update futarchy verifiable build'
-  generate-verifiable-vault:
+  generate-verifiable-conditional-vault:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -58,4 +58,20 @@ jobs:
         with:
           default_author: github_actions
           message: 'Update launchpad verifiable build'
+  generate-verifiable-price-based-unlock:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: metadaoproject/anchor-verifiable-build@v0.4
+        with:
+          program: price_based_unlock
+          anchor-version: '0.29.0'
+          solana-cli-version: '1.17.16'
+      - run: 'git pull --rebase'
+      - run: cp target/deploy/price_based_unlock.so ./verifiable-builds
+      - name: Commit verifiable build back to mainline
+        uses: EndBug/add-and-commit@v9.1.4
+        with:
+          default_author: github_actions
+          message: 'Update price_based_unlock verifiable build'
 
