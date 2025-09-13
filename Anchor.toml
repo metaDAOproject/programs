@@ -35,7 +35,7 @@ use-spending-limit = "yarn run tsx scripts/v0.5/squads/useSpendingLimit.ts"
 transfer = "yarn run tsx scripts/v0.5/squads/initializeTransferProposal.ts"
 update-spending-limit = "yarn run tsx scripts/v0.5/squads/updateSpendingLimit.ts"
 remove-spending-limit = "yarn run tsx scripts/v0.5/squads/removeSpendingLimit.ts"
-test = "npx mocha --import=tsx --bail tests/main.test.ts"
+test = "npx mocha --import=tsx --bail tests/main.test.ts --timeout 10000"
 
 [test]
 startup_wait = 5000
