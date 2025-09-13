@@ -2,8 +2,8 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { BN } from "bn.js";
 
-export const AUTOCRAT_PROGRAM_ID = new PublicKey(
-  "GYX6b1pvoy329fHHH6Btb6qzwxc4WGp3J9WeAT3dWCb9",
+export const FUTARCHY_PROGRAM_ID = new PublicKey(
+  "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq",
 );
 export const AMM_PROGRAM_ID = new PublicKey(
   "AMMJdEiCCa8mdugg6JPF7gFirmmxisTfDJoSNSUi5zDJ",
@@ -42,6 +42,9 @@ export const MAINNET_USDC = new PublicKey(
 
 export const DEVNET_USDC = new PublicKey(
   "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+);
+export const DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY = new PublicKey(
+  "HM5y4mz3Bt9JY9mr1hkyhnvqxSH4H2u2451j7Hc2dtvK",
 );
 
 export const USDC_DECIMALS = 6;

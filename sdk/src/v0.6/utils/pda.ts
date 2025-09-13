@@ -15,7 +15,7 @@ import {
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
 } from "../constants.js";
-import { LAUNCHPAD_PROGRAM_ID, AUTOCRAT_PROGRAM_ID } from "../constants.js";
+import { LAUNCHPAD_PROGRAM_ID, FUTARCHY_PROGRAM_ID } from "../constants.js";
 
 export const getEventAuthorityAddr = (programId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
@@ -109,7 +109,7 @@ export const getMetadataAddr = (mint: PublicKey) => {
 export const getDaoAddr = ({
   nonce,
   daoCreator,
-  programId = AUTOCRAT_PROGRAM_ID,
+  programId = FUTARCHY_PROGRAM_ID,
 }: {
   nonce: BN;
   daoCreator: PublicKey;
@@ -125,6 +125,9 @@ export const getDaoAddr = ({
   );
 };
 
+/**
+ * @deprecated Use getAutocratProposalAddr instead
+ */
 export const getProposalAddr = (
   programId: PublicKey,
   squadsProposal: PublicKey,
@@ -133,6 +136,16 @@ export const getProposalAddr = (
     [utils.bytes.utf8.encode("proposal"), squadsProposal.toBuffer()],
     programId,
   );
+};
+
+export const getProposalAddrV2 = ({
+  programId = FUTARCHY_PROGRAM_ID,
+  squadsProposal,
+}: {
+  programId?: PublicKey;
+  squadsProposal: PublicKey;
+}): [PublicKey, number] => {
+  return getProposalAddr(programId, squadsProposal);
 };
 
 export function getLaunchAddr(

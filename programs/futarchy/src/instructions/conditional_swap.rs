@@ -79,7 +79,9 @@ impl ConditionalSwap<'_> {
             FutarchyError::InsufficientBalance
         );
 
-        require_eq!(self.proposal.state, ProposalState::Pending);
+        require_eq!(self.proposal.state, ProposalState::Pending, FutarchyError::ProposalNotActive);
+
+        require_eq!(self.dao.proposal_count, self.proposal.number);
 
         Ok(())
     }

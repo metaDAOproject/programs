@@ -935,8 +935,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@metadaoproject/futarchy@./sdk":
-  version "0.6.0-alpha.3"
+"@metadaoproject/futarchy@0.6.0-alpha.6":
+  version "0.6.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.6.0-alpha.6.tgz#b2c33a013ffad9b75e62ca3ab87ebb51a8de8a64"
+  integrity sha512-VJ/BULFswLBUwYcsPCf+AGgTKD+pSo2fqInL3JUUMSyFQVjyi3S89+TMaX0i+fbH2COE6UNZ62c6PHsNRq1CfQ==
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@metaplex-foundation/umi" "^0.9.2"

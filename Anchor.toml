@@ -5,7 +5,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-futarchy = "GYX6b1pvoy329fHHH6Btb6qzwxc4WGp3J9WeAT3dWCb9"
+futarchy = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 launchpad = "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA"
 price_based_unlock = "GP3gUFqHgdz9tB5bosCqmnu7qnkFa1gjUMFs8uCkwWQr"
@@ -28,7 +28,7 @@ initialize-proposal = "yarn run tsx scripts/v0.5/initializeProposal.ts"
 finalize-launch = "yarn run tsx scripts/v0.5/finalizeLaunch.ts"
 claim-all-launch = "yarn run tsx scripts/v0.5/claimAllLaunch.ts"
 start-launch = "yarn run tsx scripts/v0.5/startLaunch.ts"
-initialize-dao = "yarn run tsx scripts/v0.5/initializeDao.ts"
+initialize-dao = "yarn run tsx scripts/v0.6/initializeDao.ts"
 migrate-meta = "yarn run tsx scripts/v0.5/migrateMeta.ts"
 execute-proposal = "yarn run tsx scripts/v0.5/squads/executeProposal.ts"
 use-spending-limit = "yarn run tsx scripts/v0.5/squads/useSpendingLimit.ts"

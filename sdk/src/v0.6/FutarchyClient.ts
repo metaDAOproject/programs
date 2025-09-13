@@ -23,7 +23,7 @@ import {
 import BN from "bn.js";
 import {
   AMM_PROGRAM_ID,
-  AUTOCRAT_PROGRAM_ID,
+  FUTARCHY_PROGRAM_ID,
   CONDITIONAL_VAULT_PROGRAM_ID,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
@@ -40,6 +40,7 @@ import {
   getDaoAddr,
   getEventAuthorityAddr,
   getProposalAddr,
+  getProposalAddrV2,
   getQuestionAddr,
   getVaultAddr,
 } from "./utils/index.js";
@@ -103,7 +104,7 @@ export class FutarchyClient {
 
     return new FutarchyClient(
       provider,
-      autocratProgramId || AUTOCRAT_PROGRAM_ID,
+      autocratProgramId || FUTARCHY_PROGRAM_ID,
       conditionalVaultProgramId || CONDITIONAL_VAULT_PROGRAM_ID,
       luts,
     );
@@ -455,6 +456,7 @@ export class FutarchyClient {
     market,
     swapType,
     inputAmount,
+    minOutputAmount,
   }: {
     dao: PublicKey;
     trader?: PublicKey;
@@ -465,6 +467,7 @@ export class FutarchyClient {
     market: "pass" | "fail";
     swapType: "buy" | "sell";
     inputAmount: BN;
+    minOutputAmount: BN;
   }) {
     const {
       passBaseMint,
@@ -501,7 +504,7 @@ export class FutarchyClient {
         market: market == "pass" ? { pass: {} } : { fail: {} },
         swapType: swapType == "buy" ? { buy: {} } : { sell: {} },
         inputAmount,
-        minOutputAmount: new BN(0),
+        minOutputAmount,
       })
       .accounts({
         dao,
@@ -568,6 +571,52 @@ export class FutarchyClient {
           outputMint,
         ),
       ]);
+  }
+
+  squadsProposalCreateTx({
+    dao,
+    instructions,
+    transactionIndex,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    instructions: TransactionInstruction[];
+    transactionIndex: bigint;
+    payer?: PublicKey;
+  }): { tx: Transaction; squadsProposal: PublicKey } {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+
+    const transactionMessage = new TransactionMessage({
+      payerKey: payer,
+      recentBlockhash: "", // this doesn't get used
+      instructions,
+    });
+
+    const vaultTxCreate = multisig.instructions.vaultTransactionCreate({
+      multisigPda,
+      transactionIndex,
+      creator: PERMISSIONLESS_ACCOUNT.publicKey,
+      rentPayer: payer,
+      vaultIndex: 0,
+      ephemeralSigners: 0,
+      transactionMessage,
+    });
+
+    const proposalCreate = multisig.instructions.proposalCreate({
+      multisigPda,
+      transactionIndex,
+      creator: PERMISSIONLESS_ACCOUNT.publicKey,
+      rentPayer: payer,
+    });
+
+    const [squadsProposal] = multisig.getProposalPda({
+      multisigPda,
+      transactionIndex: transactionIndex,
+    });
+
+    const tx = new Transaction().add(vaultTxCreate, proposalCreate);
+
+    return { tx, squadsProposal };
   }
 
   async initializeProposal(
@@ -688,17 +737,40 @@ export class FutarchyClient {
       storedProposal.dao,
       storedDao.baseMint,
       storedDao.quoteMint,
-      storedProposal.proposer,
     ).rpc();
   }
 
+  finalizeProposalIxV2({
+    squadsProposal,
+    dao,
+    baseMint,
+    quoteMint = MAINNET_USDC,
+  }: {
+    squadsProposal: PublicKey;
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint?: PublicKey;
+  }) {
+    const [proposal] = getProposalAddrV2({ squadsProposal });
+
+    return this.finalizeProposalIx(
+      proposal,
+      squadsProposal,
+      dao,
+      baseMint,
+      quoteMint,
+    );
+  }
+
+  /**
+   * @deprecated use `finalizeProposalIxV2` instead
+   */
   finalizeProposalIx(
     proposal: PublicKey,
     squadsProposal: PublicKey,
     dao: PublicKey,
     daoToken: PublicKey,
     usdc: PublicKey,
-    proposer: PublicKey,
   ) {
     let vaultProgramId = this.vaultClient.vaultProgram.programId;
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];

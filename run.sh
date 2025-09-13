@@ -65,7 +65,15 @@ deploy_verifiable() {
     solana program deploy --use-rpc -u "$CLUSTER" --program-id ./target/deploy/"$PROGRAM_NAME"-keypair.json ./verifiable-builds/"$PROGRAM_NAME".so --with-compute-unit-price 5 --max-sign-attempts 15 && 
     PROGRAM_ID=$(solana-keygen pubkey ./target/deploy/"$PROGRAM_NAME"-keypair.json) && 
     anchor idl init --filepath ./target/idl/"$PROGRAM_NAME".json $PROGRAM_ID --provider.cluster "$CLUSTER" &&
-    solana-verify verify-from-repo --remote -u "$CLUSTER" --program-id $PROGRAM_ID https://github.com/metaDAOproject/futarchy --library-name $PROGRAM_NAME -b ellipsislabs/solana:1.17.16 -y -- --features $FEATURES
+    solana-verify verify-from-repo --remote -u "$CLUSTER" --program-id $PROGRAM_ID https://github.com/metaDAOproject/programs --library-name $PROGRAM_NAME -b ellipsislabs/solana:1.17.16 -y -- --features $FEATURES
+}
+
+verify() {
+    PROGRAM_NAME=$1
+    PROGRAM_ID=$2
+    CLUSTER=$3
+    FEATURES=$4
+    solana-verify verify-from-repo --remote -u "$CLUSTER" --program-id $PROGRAM_ID https://github.com/metaDAOproject/programs --library-name $PROGRAM_NAME -b ellipsislabs/solana:1.17.16 -y -- --features $FEATURES
 }
 
 assign_to_multisig() {
@@ -94,10 +102,10 @@ verify_local() {
     solana-verify verify-from-repo --remote -um --program-id $PROGRAM_ID https://github.com/metaDAOproject/futarchy --library-name $PROGRAM_NAME -b ellipsislabs/solana:1.17.16 -- --features $FEATURES
 }
 
-verify() {
-    PROGRAM_ID=$1
-    solana-verify remote submit-job --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf
-}
+# verify() {
+#     PROGRAM_ID=$1
+#     solana-verify remote submit-job --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf
+# }
 
 upgrade() {
     PROGRAM_NAME=$1
@@ -185,7 +193,7 @@ case "$1" in
     write_buffer_verifiable) write_buffer_verifiable "$2" "$3" ;;
     export_verifiable) export_verifiable "$2" "$3" "$4" ;;
     verify_local) verify_local "$2" "$3" "$4" ;;
-    verify) verify "$2" ;;
+    verify) verify "$2" "$3" "$4" "$5" ;;
     assign_to_multisig) assign_to_multisig "$2" "$3" ;;
     upgrade) upgrade "$2" "$3" "$4" ;;
     upgrade_idl) upgrade_idl "$2" "$3" "$4" ;;

@@ -64,4 +64,6 @@ pub enum FutarchyError {
     InvalidStakeAccount,
     #[msg("An invariant was violated. You should get in contact with the MetaDAO team if you see this")]
     InvariantViolated,
+    #[msg("Proposal needs to be active to perform a conditional swap")]
+    ProposalNotActive,
 }

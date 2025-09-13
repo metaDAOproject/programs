@@ -28,7 +28,7 @@ security_txt! {
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
 
-declare_id!("GYX6b1pvoy329fHHH6Btb6qzwxc4WGp3J9WeAT3dWCb9");
+declare_id!("FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq");
 
 pub const SLOTS_PER_10_SECS: u64 = 25;
 pub const ONE_MINUTE_IN_SLOTS: u64 = 6 * SLOTS_PER_10_SECS;
@@ -41,8 +41,8 @@ pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 pub const DEFAULT_PASS_THRESHOLD_BPS: u16 = 300;
 
 // MetaDAO takes 0.2%, LP takes 0.4%
-pub const LP_TAKER_FEE_BPS: u16 = 40;
-pub const PROTOCOL_TAKER_FEE_BPS: u16 = 20;
+pub const LP_TAKER_FEE_BPS: u16 = 25;
+pub const PROTOCOL_TAKER_FEE_BPS: u16 = 25;
 pub const MAX_BPS: u16 = 10_000;
 
 // the index of the fail and pass outcomes in the question and the index of
