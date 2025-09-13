@@ -23,7 +23,7 @@ import {
 import BN from "bn.js";
 import {
   AMM_PROGRAM_ID,
-  AUTOCRAT_PROGRAM_ID,
+  FUTARCHY_PROGRAM_ID,
   CONDITIONAL_VAULT_PROGRAM_ID,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
@@ -104,7 +104,7 @@ export class FutarchyClient {
 
     return new FutarchyClient(
       provider,
-      autocratProgramId || AUTOCRAT_PROGRAM_ID,
+      autocratProgramId || FUTARCHY_PROGRAM_ID,
       conditionalVaultProgramId || CONDITIONAL_VAULT_PROGRAM_ID,
       luts,
     );

@@ -28,7 +28,7 @@ security_txt! {
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
 
-declare_id!("GYX6b1pvoy329fHHH6Btb6qzwxc4WGp3J9WeAT3dWCb9");
+declare_id!("FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq");
 
 pub const SLOTS_PER_10_SECS: u64 = 25;
 pub const ONE_MINUTE_IN_SLOTS: u64 = 6 * SLOTS_PER_10_SECS;
