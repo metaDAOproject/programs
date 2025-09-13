@@ -255,6 +255,16 @@ export type PriceBasedUnlock = {
             "The party executing the change (must be opposite of proposer)",
           ];
         },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [];
     },
@@ -273,6 +283,16 @@ export type PriceBasedUnlock = {
           docs: [
             "Only the current locker authority can change the locker authority",
           ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         },
       ];
       args: [
@@ -1097,6 +1117,16 @@ export const IDL: PriceBasedUnlock = {
             "The party executing the change (must be opposite of proposer)",
           ],
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [],
     },
@@ -1115,6 +1145,16 @@ export const IDL: PriceBasedUnlock = {
           docs: [
             "Only the current locker authority can change the locker authority",
           ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
         },
       ],
       args: [

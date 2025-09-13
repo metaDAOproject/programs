@@ -259,7 +259,7 @@ before(async function () {
 
     tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     tx.feePayer = this.payer.publicKey;
-    tx.sign(this.payer);
+    tx.sign(this.payer, mintAuthority);
     await this.banksClient.processTransaction(tx);
 
     return;

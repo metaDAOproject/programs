@@ -15,7 +15,7 @@
     "dependencies": {
         "@coral-xyz/anchor": "=0.29.0",
         "@inquirer/prompts": "^7.3.3",
-        "@metadaoproject/futarchy": "0.6.0-alpha.6",
+        "@metadaoproject/futarchy": "0.6.0-alpha.7",
         "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
         "@metaplex-foundation/umi": "^0.9.1",
         "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
@@ -32,6 +32,7 @@
         "arweave": "^1.14.4",
         "bs58": "^6.0.0",
         "litesvm": "^0.2.0",
+        "rpc-websockets": "7.5.0",
         "solana-bankrun": "^0.3.0",
         "spl-token-bankrun": "0.2.6"
     },

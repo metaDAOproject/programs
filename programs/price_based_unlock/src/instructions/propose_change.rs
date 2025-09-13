@@ -72,7 +72,7 @@ impl<'info> ProposeChange<'info> {
         });
         
         // Emit event
-        emit!(crate::events::ChangeProposed {
+        emit_cpi!(crate::events::ChangeProposed {
             locker: locker.key(),
             change_request: change_request.key(),
             proposer: proposer.key(),

@@ -95,6 +95,8 @@ export class PriceBasedUnlockClient {
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        eventAuthority: this.getEventAuthorityAddress(),
+        program: this.programId,
       });
   }
 
@@ -107,6 +109,8 @@ export class PriceBasedUnlockClient {
       locker: params.locker,
       oracleAccount: params.oracleAccount,
       recipient: params.recipient,
+      eventAuthority: this.getEventAuthorityAddress(),
+      program: this.programId,
     });
   }
 
@@ -131,6 +135,8 @@ export class PriceBasedUnlockClient {
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      eventAuthority: this.getEventAuthorityAddress(),
+      program: this.programId,
     });
   }
 
@@ -154,6 +160,8 @@ export class PriceBasedUnlockClient {
       locker: params.locker,
       proposer: params.proposer,
       systemProgram: SystemProgram.programId,
+      eventAuthority: this.getEventAuthorityAddress(),
+      program: this.programId,
     });
   }
 
@@ -166,6 +174,8 @@ export class PriceBasedUnlockClient {
       changeRequest: params.changeRequest,
       locker: params.locker,
       executor: params.executor,
+      eventAuthority: this.getEventAuthorityAddress(),
+      program: this.programId,
     });
   }
 
@@ -181,6 +191,8 @@ export class PriceBasedUnlockClient {
       .accounts({
         locker: params.locker,
         currentAuthority: params.currentAuthority,
+        eventAuthority: this.getEventAuthorityAddress(),
+        program: this.programId,
       });
   }
 

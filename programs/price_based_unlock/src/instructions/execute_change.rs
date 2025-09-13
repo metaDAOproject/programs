@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use crate::{ChangeRequest, ChangeType, Locker, PriceBasedUnlockError};
 
 #[derive(Accounts)]
+#[event_cpi]
 pub struct ExecuteChange<'info> {
     #[account(
         mut,
@@ -62,7 +63,7 @@ impl<'info> ExecuteChange<'info> {
 
         // Emit event
         let clock = Clock::get()?;
-        emit!(crate::events::ChangeExecuted {
+        emit_cpi!(crate::events::ChangeExecuted {
             locker: locker.key(),
             change_request: change_request.key(),
             executor: ctx.accounts.executor.key(),

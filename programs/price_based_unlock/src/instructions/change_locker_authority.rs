@@ -7,6 +7,7 @@ pub struct ChangeLockerAuthorityParams {
 }
 
 #[derive(Accounts)]
+#[event_cpi]
 pub struct ChangeLockerAuthority<'info> {
     #[account(mut)]
     pub locker: Account<'info, Locker>,
@@ -29,6 +30,8 @@ impl<'info> ChangeLockerAuthority<'info> {
         let Self {
             locker,
             current_authority: _,
+            event_authority: _,
+            program: _,
         } = ctx.accounts;
         
         let ChangeLockerAuthorityParams {
@@ -42,7 +45,7 @@ impl<'info> ChangeLockerAuthority<'info> {
         locker.locker_authority = new_locker_authority;
         
         // Emit event
-        emit!(crate::events::LockerAuthorityChanged {
+        emit_cpi!(crate::events::LockerAuthorityChanged {
             locker: locker.key(),
             old_authority,
             new_authority: new_locker_authority,
