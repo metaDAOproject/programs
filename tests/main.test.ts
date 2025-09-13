@@ -126,10 +126,6 @@ before(async function () {
         programId: MPL_TOKEN_METADATA_PROGRAM_ID,
       },
       {
-        name: "raydium_cp_swap",
-        programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
-      },
-      {
         name: "squads_multisig",
         programId: SQUADS_PROGRAM_ID,
       },
