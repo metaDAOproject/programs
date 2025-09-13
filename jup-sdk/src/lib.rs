@@ -1,6 +1,6 @@
 use anchor_lang::prelude::{Pubkey, AnchorDeserialize, Space};
 
-use jupiter_amm_interface::{AccountMap, Amm, AmmContext, KeyedAccount, Quote, Swap, SwapAndAccountMetas, SwapMode, SwapParams};
+use jupiter_amm_interface::{AccountMap, Amm, AmmContext, AmmProgramIdToLabel, KeyedAccount, Quote, Swap, SwapAndAccountMetas, SwapMode, SwapParams};
 use anyhow::{bail, Context, Result};
 
 pub mod futarchy_amm;
@@ -8,11 +8,17 @@ pub mod futarchy_amm;
 pub use futarchy_amm::FutarchyAmm;
 use rust_decimal::Decimal;
 
-use crate::futarchy_amm::{Dao, FutarchyAmmSwap, SwapType};
+use crate::futarchy_amm::{FutarchyAmmSwap, SwapType};
 
 pub const FUTARCHY_PROGRAM_ID: Pubkey = Pubkey::from_str_const("FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq");
 pub const SPL_TOKEN_PROGRAM_ID: Pubkey = Pubkey::from_str_const("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 pub const FUTARCHY_EVENT_AUTHORITY_KEY: Pubkey = Pubkey::from_str_const("DGEympSS4qLvdr9r3uGHTfACdN8snShk4iGdJtZPxuBC");
+
+impl AmmProgramIdToLabel for FutarchyAmmClient {
+    const PROGRAM_ID_TO_LABELS: &[(Pubkey, jupiter_amm_interface::AmmLabel)] = &[
+        (FUTARCHY_PROGRAM_ID, "MetaDAO AMM"),
+    ];
+}
 
 #[derive(Debug, Clone)]
 pub struct FutarchyAmmClient {
@@ -196,5 +202,7 @@ mod tests {
         }).unwrap();
         
         println!("res: {:?}", res);
+
+
     }
 }

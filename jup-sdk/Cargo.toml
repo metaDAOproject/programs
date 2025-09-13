@@ -2,7 +2,7 @@
 name = "futarchy-amm-jup-sdk"
 description = "SDK for interacting with Futarchy AMM, built for Jupiter"
 license = "BUSL-1.1"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 
 [dependencies]
