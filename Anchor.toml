@@ -39,7 +39,7 @@ test = "npx mocha --import=tsx --bail tests/main.test.ts"
 
 [test]
 startup_wait = 5000
-shutdown_wait = 2000
+shutdown_wait = 5000
 upgradeable = false
 
 [[test.genesis]]
