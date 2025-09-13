@@ -14,7 +14,7 @@
     "dependencies": {
         "@coral-xyz/anchor": "=0.29.0",
         "@inquirer/prompts": "^7.3.3",
-        "@metadaoproject/futarchy": "0.6.0-alpha.5",
+        "@metadaoproject/futarchy": "0.6.0-alpha.6",
         "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
         "@metaplex-foundation/umi": "^0.9.1",
         "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
