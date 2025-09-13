@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{InitialSpendingLimit, ProposalState, Market, SwapType};
+use crate::{FutarchyAmm, InitialSpendingLimit, Market, ProposalState, SwapType};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {
@@ -31,6 +31,7 @@ pub struct CollectFeesEvent {
     pub base_mint: Pubkey,
     pub quote_fees_collected: u64,
     pub base_fees_collected: u64,
+    pub post_amm_state: FutarchyAmm,
 }
 
 #[event]
@@ -105,6 +106,7 @@ pub struct LaunchProposalEvent {
     pub proposal: Pubkey,
     pub dao: Pubkey,
     pub total_staked: u64,
+    pub post_amm_state: FutarchyAmm,
 }
 
 #[event]
@@ -118,6 +120,7 @@ pub struct FinalizeProposalEvent {
     pub state: ProposalState,
     pub squads_proposal: Pubkey,
     pub squads_multisig: Pubkey,
+    pub post_amm_state: FutarchyAmm,
 }
 
 #[event]
@@ -129,6 +132,7 @@ pub struct SpotSwapEvent {
     pub input_amount: u64,
     pub output_amount: u64,
     pub min_output_amount: u64,
+    pub post_amm_state: FutarchyAmm,
 }
 
 #[event]
@@ -142,6 +146,7 @@ pub struct ConditionalSwapEvent {
     pub input_amount: u64,
     pub output_amount: u64,
     pub min_output_amount: u64,
+    pub post_amm_state: FutarchyAmm,
 }
 
 #[event]
@@ -154,6 +159,7 @@ pub struct ProvideLiquidityEvent {
     pub base_amount: u64,
     pub liquidity_minted: u128,
     pub min_liquidity: u128,
+    pub post_amm_state: FutarchyAmm,
 }
 
 #[event]
@@ -166,4 +172,5 @@ pub struct WithdrawLiquidityEvent {
     pub min_quote_amount: u64,
     pub base_amount: u64,
     pub quote_amount: u64,
+    pub post_amm_state: FutarchyAmm,
 }

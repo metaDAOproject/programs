@@ -173,6 +173,7 @@ impl ProvideLiquidity<'_> {
             base_amount,
             liquidity_minted: liquidity_to_mint,
             min_liquidity,
+            post_amm_state: dao.amm.clone(),
         });
 
         Ok(())

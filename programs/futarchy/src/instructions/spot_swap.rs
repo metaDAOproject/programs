@@ -127,6 +127,7 @@ impl SpotSwap<'_> {
             input_amount,
             output_amount,
             min_output_amount,
+            post_amm_state: dao.amm.clone(),
         });
 
         Ok(())

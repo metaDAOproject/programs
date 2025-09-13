@@ -97,6 +97,7 @@ impl CollectFees<'_> {
             base_mint: dao.base_mint,
             quote_fees_collected: quote_fee_balance,
             base_fees_collected: base_fee_balance,
+            post_amm_state: dao.amm.clone(),
         });
 
         Ok(())

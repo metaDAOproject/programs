@@ -261,6 +261,7 @@ impl FinalizeProposal<'_> {
             state: new_proposal_state,
             squads_proposal: squads_proposal.key(),
             squads_multisig: dao.squads_multisig,
+            post_amm_state: dao.amm.clone(),
         });
 
         Ok(())

@@ -4,7 +4,6 @@ import BN from "bn.js";
 import { assert } from "chai";
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.6";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
-import { ComputeBudget } from "litesvm";
 
 export default function suite() {
     let META: PublicKey, USDC: PublicKey, dao: PublicKey;

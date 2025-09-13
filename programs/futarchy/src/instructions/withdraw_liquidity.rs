@@ -173,6 +173,7 @@ impl WithdrawLiquidity<'_> {
             min_quote_amount,
             base_amount: base_to_withdraw,
             quote_amount: quote_to_withdraw,
+            post_amm_state: dao.amm.clone(),
         });
 
         Ok(())

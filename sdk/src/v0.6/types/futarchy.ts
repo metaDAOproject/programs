@@ -1759,6 +1759,13 @@ export type Futarchy = {
           type: "u64";
           index: false;
         },
+        {
+          name: "postAmmState";
+          type: {
+            defined: "FutarchyAmm";
+          };
+          index: false;
+        },
       ];
     },
     {
@@ -2055,6 +2062,13 @@ export type Futarchy = {
           type: "u64";
           index: false;
         },
+        {
+          name: "postAmmState";
+          type: {
+            defined: "FutarchyAmm";
+          };
+          index: false;
+        },
       ];
     },
     {
@@ -2109,6 +2123,13 @@ export type Futarchy = {
           type: "publicKey";
           index: false;
         },
+        {
+          name: "postAmmState";
+          type: {
+            defined: "FutarchyAmm";
+          };
+          index: false;
+        },
       ];
     },
     {
@@ -2151,6 +2172,13 @@ export type Futarchy = {
         {
           name: "minOutputAmount";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "postAmmState";
+          type: {
+            defined: "FutarchyAmm";
+          };
           index: false;
         },
       ];
@@ -2209,6 +2237,13 @@ export type Futarchy = {
           type: "u64";
           index: false;
         },
+        {
+          name: "postAmmState";
+          type: {
+            defined: "FutarchyAmm";
+          };
+          index: false;
+        },
       ];
     },
     {
@@ -2256,6 +2291,13 @@ export type Futarchy = {
           type: "u128";
           index: false;
         },
+        {
+          name: "postAmmState";
+          type: {
+            defined: "FutarchyAmm";
+          };
+          index: false;
+        },
       ];
     },
     {
@@ -2301,6 +2343,13 @@ export type Futarchy = {
         {
           name: "quoteAmount";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "postAmmState";
+          type: {
+            defined: "FutarchyAmm";
+          };
           index: false;
         },
       ];
@@ -4226,6 +4275,13 @@ export const IDL: Futarchy = {
           type: "u64",
           index: false,
         },
+        {
+          name: "postAmmState",
+          type: {
+            defined: "FutarchyAmm",
+          },
+          index: false,
+        },
       ],
     },
     {
@@ -4522,6 +4578,13 @@ export const IDL: Futarchy = {
           type: "u64",
           index: false,
         },
+        {
+          name: "postAmmState",
+          type: {
+            defined: "FutarchyAmm",
+          },
+          index: false,
+        },
       ],
     },
     {
@@ -4576,6 +4639,13 @@ export const IDL: Futarchy = {
           type: "publicKey",
           index: false,
         },
+        {
+          name: "postAmmState",
+          type: {
+            defined: "FutarchyAmm",
+          },
+          index: false,
+        },
       ],
     },
     {
@@ -4618,6 +4688,13 @@ export const IDL: Futarchy = {
         {
           name: "minOutputAmount",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "postAmmState",
+          type: {
+            defined: "FutarchyAmm",
+          },
           index: false,
         },
       ],
@@ -4676,6 +4753,13 @@ export const IDL: Futarchy = {
           type: "u64",
           index: false,
         },
+        {
+          name: "postAmmState",
+          type: {
+            defined: "FutarchyAmm",
+          },
+          index: false,
+        },
       ],
     },
     {
@@ -4723,6 +4807,13 @@ export const IDL: Futarchy = {
           type: "u128",
           index: false,
         },
+        {
+          name: "postAmmState",
+          type: {
+            defined: "FutarchyAmm",
+          },
+          index: false,
+        },
       ],
     },
     {
@@ -4768,6 +4859,13 @@ export const IDL: Futarchy = {
         {
           name: "quoteAmount",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "postAmmState",
+          type: {
+            defined: "FutarchyAmm",
+          },
           index: false,
         },
       ],

@@ -145,6 +145,7 @@ impl LaunchProposal<'_> {
             proposal: proposal.key(),
             dao: dao.key(),
             total_staked,
+            post_amm_state: dao.amm.clone(),
         });
 
         Ok(())
