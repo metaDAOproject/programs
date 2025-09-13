@@ -457,6 +457,7 @@ export class FutarchyClient {
     market,
     swapType,
     inputAmount,
+    minOutputAmount,
   }: {
     dao: PublicKey;
     trader?: PublicKey;
@@ -467,6 +468,7 @@ export class FutarchyClient {
     market: "pass" | "fail";
     swapType: "buy" | "sell";
     inputAmount: BN;
+    minOutputAmount: BN;
   }) {
     const {
       passBaseMint,
@@ -503,7 +505,7 @@ export class FutarchyClient {
         market: market == "pass" ? { pass: {} } : { fail: {} },
         swapType: swapType == "buy" ? { buy: {} } : { sell: {} },
         inputAmount,
-        minOutputAmount: new BN(0),
+        minOutputAmount,
       })
       .accounts({
         dao,

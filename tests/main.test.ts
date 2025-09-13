@@ -299,8 +299,15 @@ before(async function () {
 
   this.getTokenBalance = async (mint: PublicKey, owner: PublicKey) => {
     const tokenAccount = token.getAssociatedTokenAddressSync(mint, owner, true);
-    const storedTokenAccount = await getAccount(this.banksClient, tokenAccount);
-    return storedTokenAccount.amount;
+    try {
+      const storedTokenAccount = await getAccount(this.banksClient, tokenAccount);
+      return storedTokenAccount.amount;
+    } catch (error) {
+      if (error.toString().includes("TokenAccountNotFoundError")) {
+        return 0n;
+      }
+      throw error;
+    }
   };
 
   this.getMint = async (mint: PublicKey) => {
@@ -398,14 +405,14 @@ before(async function () {
   this.setupBasicDaoWithLiquidity = async ({ baseMint, quoteMint }: { baseMint: PublicKey, quoteMint: PublicKey }) => {
     const dao = await this.setupBasicDao({ baseMint, quoteMint });
 
-    await this.mintTo(baseMint, this.payer.publicKey, this.payer, 100 * 10 ** 6);
+    await this.mintTo(baseMint, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
     await this.mintTo(quoteMint, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
 
     await this.futarchy.provideLiquidityIx({
       dao,
       baseMint,
       quoteMint,
-      maxBaseAmount: new BN(100 * 10 ** 6),
+      maxBaseAmount: new BN(100_000 * 10 ** 6),
       quoteAmount: new BN(100_000 * 10 ** 6),
     }).rpc();
 
