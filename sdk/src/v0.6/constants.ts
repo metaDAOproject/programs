@@ -43,6 +43,9 @@ export const MAINNET_USDC = new PublicKey(
 export const DEVNET_USDC = new PublicKey(
   "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
 );
+export const DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY = new PublicKey(
+  "HM5y4mz3Bt9JY9mr1hkyhnvqxSH4H2u2451j7Hc2dtvK",
+);
 
 export const USDC_DECIMALS = 6;
 

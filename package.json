@@ -9,7 +9,8 @@
         "launch-start": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchStart.ts",
         "launch-complete": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchComplete.ts",
         "redeem-launch": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/redeemLaunch.ts",
-        "setup-futarchy-amm": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/setupFutarchyAmm.ts"
+        "setup-futarchy-amm": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/setupFutarchyAmm.ts",
+        "initialize-dao": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/v0.6/initializeDao.ts"
     },
     "dependencies": {
         "@coral-xyz/anchor": "=0.29.0",

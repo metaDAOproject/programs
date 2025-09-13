@@ -2231,11 +2231,6 @@ export type Futarchy = {
       name: "InvariantViolated";
       msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this";
     },
-    {
-      code: 6030;
-      name: "ProposalNotActive";
-      msg: "Proposal needs to be active to perform a conditional swap";
-    },
   ];
 };
 
@@ -4471,11 +4466,6 @@ export const IDL: Futarchy = {
       code: 6029,
       name: "InvariantViolated",
       msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this",
-    },
-    {
-      code: 6030,
-      name: "ProposalNotActive",
-      msg: "Proposal needs to be active to perform a conditional swap",
     },
   ],
 };
