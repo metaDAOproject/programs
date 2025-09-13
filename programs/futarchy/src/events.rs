@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{InitialSpendingLimit, ProposalState};
+use crate::{InitialSpendingLimit, ProposalState, Market, SwapType};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {
@@ -15,6 +15,20 @@ impl CommonFields {
             unix_timestamp: clock.unix_timestamp,
         }
     }
+}
+
+#[event]
+pub struct CollectFeesEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub base_token_account: Pubkey,
+    pub quote_token_account: Pubkey,
+    pub amm_base_vault: Pubkey,
+    pub amm_quote_vault: Pubkey,
+    pub quote_mint: Pubkey,
+    pub base_mint: Pubkey,
+    pub quote_fees_collected: u64,
+    pub base_fees_collected: u64,
 }
 
 #[event]
@@ -109,6 +123,42 @@ pub struct ExecuteProposalEvent {
     pub common: CommonFields,
     pub proposal: Pubkey,
     pub dao: Pubkey,
+}
+
+#[event]
+pub struct SpotSwapEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub user: Pubkey,
+    pub swap_type: SwapType,
+    pub input_amount: u64,
+    pub output_amount: u64,
+    pub min_output_amount: u64,
+}
+
+#[event]
+pub struct ConditionalSwapEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub proposal: Pubkey,
+    pub trader: Pubkey,
+    pub market: Market,
+    pub swap_type: SwapType,
+    pub input_amount: u64,
+    pub output_amount: u64,
+    pub min_output_amount: u64,
+}
+
+#[event]
+pub struct ProvideLiquidityEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub liquidity_provider: Pubkey,
+    pub position_authority: Pubkey,
+    pub quote_amount: u64,
+    pub base_amount: u64,
+    pub liquidity_minted: u128,
+    pub min_liquidity: u128,
 }
 
 #[event]

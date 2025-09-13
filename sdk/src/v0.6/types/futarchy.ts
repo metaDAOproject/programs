@@ -738,6 +738,16 @@ export type Futarchy = {
           isMut: false;
           isSigner: false;
         },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [
         {
@@ -801,6 +811,16 @@ export type Futarchy = {
           isMut: false;
           isSigner: false;
         },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [
         {
@@ -854,6 +874,16 @@ export type Futarchy = {
           isMut: false;
           isSigner: false;
         },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [
         {
@@ -899,6 +929,16 @@ export type Futarchy = {
         },
         {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         },
@@ -1661,6 +1701,63 @@ export type Futarchy = {
   ];
   events: [
     {
+      name: "CollectFeesEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "baseTokenAccount";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "quoteTokenAccount";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "ammBaseVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "ammQuoteVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "quoteMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "baseMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "quoteFeesCollected";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "baseFeesCollected";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+    {
       name: "InitializeDaoEvent";
       fields: [
         {
@@ -2028,6 +2125,153 @@ export type Futarchy = {
         {
           name: "dao";
           type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "SpotSwapEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "user";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "swapType";
+          type: {
+            defined: "SwapType";
+          };
+          index: false;
+        },
+        {
+          name: "inputAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "outputAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "minOutputAmount";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "ConditionalSwapEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "trader";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "market";
+          type: {
+            defined: "Market";
+          };
+          index: false;
+        },
+        {
+          name: "swapType";
+          type: {
+            defined: "SwapType";
+          };
+          index: false;
+        },
+        {
+          name: "inputAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "outputAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "minOutputAmount";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "ProvideLiquidityEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "liquidityProvider";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "positionAuthority";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "quoteAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "baseAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "liquidityMinted";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "minLiquidity";
+          type: "u128";
           index: false;
         },
       ];
@@ -2979,6 +3223,16 @@ export const IDL: Futarchy = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [
         {
@@ -3042,6 +3296,16 @@ export const IDL: Futarchy = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [
         {
@@ -3095,6 +3359,16 @@ export const IDL: Futarchy = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [
         {
@@ -3140,6 +3414,16 @@ export const IDL: Futarchy = {
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -3902,6 +4186,63 @@ export const IDL: Futarchy = {
   ],
   events: [
     {
+      name: "CollectFeesEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "baseTokenAccount",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "quoteTokenAccount",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "ammBaseVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "ammQuoteVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "quoteMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "baseMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "quoteFeesCollected",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "baseFeesCollected",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
       name: "InitializeDaoEvent",
       fields: [
         {
@@ -4269,6 +4610,153 @@ export const IDL: Futarchy = {
         {
           name: "dao",
           type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "SpotSwapEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "user",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "swapType",
+          type: {
+            defined: "SwapType",
+          },
+          index: false,
+        },
+        {
+          name: "inputAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "outputAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "minOutputAmount",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "ConditionalSwapEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "trader",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "market",
+          type: {
+            defined: "Market",
+          },
+          index: false,
+        },
+        {
+          name: "swapType",
+          type: {
+            defined: "SwapType",
+          },
+          index: false,
+        },
+        {
+          name: "inputAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "outputAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "minOutputAmount",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "ProvideLiquidityEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "liquidityProvider",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "positionAuthority",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "quoteAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "baseAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "liquidityMinted",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "minLiquidity",
+          type: "u128",
           index: false,
         },
       ],

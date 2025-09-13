@@ -15,6 +15,7 @@ pub struct ProvideLiquidityParams {
 
 #[derive(Accounts)]
 #[instruction(params: ProvideLiquidityParams)]
+#[event_cpi]
 pub struct ProvideLiquidity<'info> {
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
@@ -77,6 +78,8 @@ impl ProvideLiquidity<'_> {
             amm_quote_vault,
             amm_position,
             token_program,
+            event_authority: _,
+            program: _,
         } = ctx.accounts;
 
         let total_liquidity = dao.amm.total_liquidity;
@@ -156,6 +159,19 @@ impl ProvideLiquidity<'_> {
             ),
             quote_amount,
         )?;
+
+        let clock = Clock::get()?;
+
+        emit_cpi!(ProvideLiquidityEvent {
+            common: CommonFields::new(&clock),
+            dao: dao.key(),
+            liquidity_provider: liquidity_provider.key(),
+            position_authority: params.position_authority,
+            quote_amount,
+            base_amount,
+            liquidity_minted: liquidity_to_mint,
+            min_liquidity,
+        });
 
         Ok(())
     }

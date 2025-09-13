@@ -9,13 +9,14 @@ pub struct ConditionalSwapParams {
 }
 
 #[derive(Accounts)]
+#[event_cpi]
 pub struct ConditionalSwap<'info> {
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut, associated_token::mint = dao.base_mint, associated_token::authority = dao)]
-    pub amm_base_vault: Account<'info, TokenAccount>,
+    pub amm_base_vault: Box<Account<'info, TokenAccount>>,
     #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = dao)]
-    pub amm_quote_vault: Account<'info, TokenAccount>,
+    pub amm_quote_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         has_one = dao, has_one = base_vault, has_one = quote_vault,
@@ -64,7 +65,7 @@ pub struct ConditionalSwap<'info> {
     /// CHECK: checked by conditional vault program
     pub vault_event_authority: UncheckedAccount<'info>,
 
-    pub question: Account<'info, Question>,
+    pub question: Box<Account<'info, Question>>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -256,6 +257,20 @@ impl ConditionalSwap<'_> {
             ),
             output_amount,
         )?;
+
+        let clock = Clock::get()?;
+
+        emit_cpi!(ConditionalSwapEvent {
+            common: CommonFields::new(&clock),
+            dao: ctx.accounts.dao.key(),
+            proposal: ctx.accounts.proposal.key(),
+            trader: ctx.accounts.trader.key(),
+            market,
+            swap_type,
+            input_amount,
+            output_amount,
+            min_output_amount,
+        });
 
         Ok(())
     }

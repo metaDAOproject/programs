@@ -13,6 +13,7 @@ pub struct WithdrawLiquidityParams {
 }
 
 #[derive(Accounts)]
+#[event_cpi]
 pub struct WithdrawLiquidity<'info> {
     #[account(mut)]
     pub dao: Account<'info, Dao>,
@@ -69,6 +70,8 @@ impl WithdrawLiquidity<'_> {
             amm_quote_vault,
             amm_position,
             token_program,
+            event_authority: _,
+            program: _,
         } = ctx.accounts;
 
         // Get the key before any borrows
@@ -159,7 +162,7 @@ impl WithdrawLiquidity<'_> {
         }
 
         let clock = Clock::get()?;
-        emit!(WithdrawLiquidityEvent {
+        emit_cpi!(WithdrawLiquidityEvent {
             common: CommonFields::new(&clock),
             dao: dao.key(),
             liquidity_provider: liquidity_provider_key,

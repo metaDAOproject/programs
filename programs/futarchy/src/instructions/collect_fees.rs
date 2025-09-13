@@ -8,6 +8,7 @@ pub mod admin {
 }
 
 #[derive(Accounts)]
+#[event_cpi]
 pub struct CollectFees<'info> {
     #[account(mut)]
     pub dao: Account<'info, Dao>,
@@ -40,6 +41,8 @@ impl CollectFees<'_> {
             amm_base_vault,
             amm_quote_vault,
             token_program,
+            event_authority: _,
+            program: _,
         } = ctx.accounts;
 
         let PoolState::Spot { ref mut spot } = dao.amm.state else {
@@ -62,8 +65,8 @@ impl CollectFees<'_> {
         ];
 
         for (amount_to_send, from, to) in [
-            (base_fee_balance, amm_base_vault, base_token_account),
-            (quote_fee_balance, amm_quote_vault, quote_token_account),
+            (base_fee_balance, &amm_base_vault, &base_token_account),
+            (quote_fee_balance, &amm_quote_vault, &quote_token_account),
         ] {
             token::transfer(
                 CpiContext::new_with_signer(
@@ -78,6 +81,21 @@ impl CollectFees<'_> {
                 amount_to_send,
             )?;
         }
+
+        let clock = Clock::get()?;
+
+        emit_cpi!(CollectFeesEvent {
+            common: CommonFields::new(&clock),
+            dao: dao.key(),
+            base_token_account: base_token_account.key(),
+            quote_token_account: quote_token_account.key(),
+            amm_base_vault: amm_base_vault.key(),
+            amm_quote_vault: amm_quote_vault.key(),
+            quote_mint: dao.quote_mint,
+            base_mint: dao.base_mint,
+            quote_fees_collected: quote_fee_balance,
+            base_fees_collected: base_fee_balance,
+        });
 
         Ok(())
     }
