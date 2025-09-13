@@ -15,5 +15,5 @@ export default function suite() {
   describe("#change_locker_authority", changeLockerAuthority);
   describe("#execute_change", executeChange);
 
-  // describe("price based premine", priceBasedPremine);
+  describe("price based premine", priceBasedPremine);
 }
