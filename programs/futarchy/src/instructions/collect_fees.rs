@@ -84,8 +84,10 @@ impl CollectFees<'_> {
 
         let clock = Clock::get()?;
 
+        dao.seq_num += 1;
+
         emit_cpi!(CollectFeesEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             dao: dao.key(),
             base_token_account: base_token_account.key(),
             quote_token_account: quote_token_account.key(),

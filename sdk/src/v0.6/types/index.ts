@@ -114,11 +114,8 @@ export type InitializeProposalEvent =
   IdlEvents<FutarchyProgram>["InitializeProposalEvent"];
 export type FinalizeProposalEvent =
   IdlEvents<FutarchyProgram>["FinalizeProposalEvent"];
-export type ExecuteProposalEvent =
-  IdlEvents<FutarchyProgram>["ExecuteProposalEvent"];
 export type FutarchyEvent =
   | InitializeDaoEvent
   | UpdateDaoEvent
   | InitializeProposalEvent
-  | FinalizeProposalEvent
-  | ExecuteProposalEvent;
+  | FinalizeProposalEvent;

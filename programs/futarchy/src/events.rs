@@ -6,13 +6,15 @@ use crate::{InitialSpendingLimit, ProposalState, Market, SwapType};
 pub struct CommonFields {
     pub slot: u64,
     pub unix_timestamp: i64,
+    pub dao_seq_num: u64,
 }
 
 impl CommonFields {
-    pub fn new(clock: &Clock) -> Self {
+    pub fn new(clock: &Clock, dao_seq_num: u64) -> Self {
         Self {
             slot: clock.slot,
             unix_timestamp: clock.unix_timestamp,
+            dao_seq_num,
         }
     }
 }
@@ -116,13 +118,6 @@ pub struct FinalizeProposalEvent {
     pub state: ProposalState,
     pub squads_proposal: Pubkey,
     pub squads_multisig: Pubkey,
-}
-
-#[event]
-pub struct ExecuteProposalEvent {
-    pub common: CommonFields,
-    pub proposal: Pubkey,
-    pub dao: Pubkey,
 }
 
 #[event]

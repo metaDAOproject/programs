@@ -161,9 +161,11 @@ impl WithdrawLiquidity<'_> {
             )?;
         }
 
+        dao.seq_num += 1;
+
         let clock = Clock::get()?;
         emit_cpi!(WithdrawLiquidityEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             dao: dao.key(),
             liquidity_provider: liquidity_provider_key,
             liquidity_withdrawn: liquidity_to_withdraw,

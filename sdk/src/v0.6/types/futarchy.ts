@@ -1198,6 +1198,10 @@ export type Futarchy = {
             name: "unixTimestamp";
             type: "i64";
           },
+          {
+            name: "daoSeqNum";
+            type: "u64";
+          },
         ];
       };
     },
@@ -2102,28 +2106,6 @@ export type Futarchy = {
         },
         {
           name: "squadsMultisig";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "ExecuteProposalEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "proposal";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "dao";
           type: "publicKey";
           index: false;
         },
@@ -3683,6 +3665,10 @@ export const IDL: Futarchy = {
             name: "unixTimestamp",
             type: "i64",
           },
+          {
+            name: "daoSeqNum",
+            type: "u64",
+          },
         ],
       },
     },
@@ -4587,28 +4573,6 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisig",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "ExecuteProposalEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "proposal",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "dao",
           type: "publicKey",
           index: false,
         },

@@ -64,7 +64,7 @@ impl StakeToProposal<'_> {
     pub fn handle(ctx: Context<Self>, params: StakeToProposalParams) -> Result<()> {
         let Self {
             proposal,
-            dao: _,
+            dao,
             staker_base_account,
             proposal_base_account,
             stake_account,
@@ -108,10 +108,12 @@ impl StakeToProposal<'_> {
             stake_account.amount += amount;
         }
 
+        dao.seq_num += 1;
+
         let clock = Clock::get()?;
 
         emit_cpi!(StakeToProposalEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             proposal: proposal.key(),
             staker: staker.key(),
             amount,

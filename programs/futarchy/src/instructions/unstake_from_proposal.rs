@@ -55,7 +55,7 @@ impl UnstakeFromProposal<'_> {
     pub fn handle(ctx: Context<Self>, params: UnstakeFromProposalParams) -> Result<()> {
         let Self {
             proposal,
-            dao: _,
+            dao,
             staker_base_account,
             proposal_base_account,
             stake_account,
@@ -96,10 +96,12 @@ impl UnstakeFromProposal<'_> {
         // Update stake account
         stake_account.amount = stake_account.amount.saturating_sub(amount);
 
+        dao.seq_num += 1;
+
         let clock = Clock::get()?;
 
         emit_cpi!(UnstakeFromProposalEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             proposal: proposal.key(),
             staker: staker.key(),
             amount,

@@ -247,10 +247,12 @@ impl FinalizeProposal<'_> {
 
         dao.amm.state = PoolState::Spot { spot };
 
+        dao.seq_num += 1;
+
         let clock = Clock::get()?;
 
         emit_cpi!(FinalizeProposalEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             proposal: proposal.key(),
             dao: dao.key(),
             pass_market_twap,

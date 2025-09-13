@@ -115,10 +115,12 @@ impl SpotSwap<'_> {
             output_amount,
         )?;
 
+        dao.seq_num += 1;
+
         let clock = Clock::get()?;
 
         emit_cpi!(SpotSwapEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             dao: dao.key(),
             user: user.key(),
             swap_type,

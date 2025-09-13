@@ -202,9 +202,11 @@ impl InitializeDao<'_> {
 
         dao.invariant()?;
 
+        dao.seq_num += 1;
+
         let clock = Clock::get()?;
         emit_cpi!(InitializeDaoEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             dao: dao.key(),
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),

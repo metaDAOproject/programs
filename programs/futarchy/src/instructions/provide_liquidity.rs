@@ -60,13 +60,6 @@ pub struct ProvideLiquidity<'info> {
 
 impl ProvideLiquidity<'_> {
     pub fn handle(ctx: Context<Self>, params: ProvideLiquidityParams) -> Result<()> {
-        let ProvideLiquidityParams {
-            quote_amount,
-            max_base_amount,
-            min_liquidity,
-            position_authority: _,
-        } = params;
-
         let Self {
             dao,
             liquidity_provider,
@@ -81,6 +74,13 @@ impl ProvideLiquidity<'_> {
             event_authority: _,
             program: _,
         } = ctx.accounts;
+
+        let ProvideLiquidityParams {
+            quote_amount,
+            max_base_amount,
+            min_liquidity,
+            position_authority: _,
+        } = params;
 
         let total_liquidity = dao.amm.total_liquidity;
         let PoolState::Spot { ref mut spot } = dao.amm.state else {
@@ -160,10 +160,12 @@ impl ProvideLiquidity<'_> {
             quote_amount,
         )?;
 
+        dao.seq_num += 1;
+
         let clock = Clock::get()?;
 
         emit_cpi!(ProvideLiquidityEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             dao: dao.key(),
             liquidity_provider: liquidity_provider.key(),
             position_authority: params.position_authority,

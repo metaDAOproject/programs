@@ -138,8 +138,10 @@ impl LaunchProposal<'_> {
         // Update proposal state to Pending
         proposal.state = ProposalState::Pending;
 
+        dao.seq_num += 1;
+
         emit_cpi!(LaunchProposalEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             proposal: proposal.key(),
             dao: dao.key(),
             total_staked,

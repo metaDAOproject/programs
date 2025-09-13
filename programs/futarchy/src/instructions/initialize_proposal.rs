@@ -95,8 +95,10 @@ impl InitializeProposal<'_> {
             fail_quote_mint: quote_vault.conditional_token_mints[0],
         });
 
+        dao.seq_num += 1;
+
         emit_cpi!(InitializeProposalEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             proposal: proposal.key(),
             dao: dao.key(),
             question: question.key(),

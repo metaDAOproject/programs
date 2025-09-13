@@ -45,7 +45,7 @@ impl UpdateDao<'_> {
 
         let clock = Clock::get()?;
         emit_cpi!(UpdateDaoEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, dao.seq_num),
             dao: dao.key(),
             pass_threshold_bps: dao.pass_threshold_bps,
             seconds_per_proposal: dao.seconds_per_proposal,
