@@ -80,7 +80,7 @@ async function main() {
     minQuoteFutarchicLiquidity,
     usdcMint,
     daoKeypair,
-    new BN(100000),
+    new BN(100000)
   );
 
   console.log("DAO created with address:", dao.toString());

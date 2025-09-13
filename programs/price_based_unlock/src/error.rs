@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub enum PriceBasedUnlockError {
     #[msg("Unlock timestamp has not been reached yet")]
     UnlockTimestampNotReached,
+    #[msg("Unlock timestamp must be in the future")]
+    UnlockTimestampInThePast,
     #[msg("Locker is not in the expected state")]
     InvalidLockerState,
     #[msg("TWAP calculation failed")]
@@ -18,4 +20,6 @@ pub enum PriceBasedUnlockError {
     InvalidChangeRequest,
     #[msg("Unauthorized locker authority")]
     UnauthorizedLockerAuthority,
+    #[msg("An invariant was violated. You should get in contact with the MetaDAO team if you see this")]
+    InvariantViolated,
 }

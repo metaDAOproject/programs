@@ -9,12 +9,14 @@ dotenv.config();
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const LAUNCH_TO_START = new PublicKey("7DzBXBYSKhrXHPWT6mAKq394vKupaKaqLn9bK1wscpBz");
+const LAUNCH_TO_START = new PublicKey(
+  "7DzBXBYSKhrXHPWT6mAKq394vKupaKaqLn9bK1wscpBz"
+);
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
 async function main() {
-  const launchAuthorityKeypair = payer
+  const launchAuthorityKeypair = payer;
 
   console.log(
     "Launch authority public key:",

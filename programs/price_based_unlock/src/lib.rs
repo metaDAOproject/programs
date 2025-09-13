@@ -25,14 +25,17 @@ pub mod price_based_unlock {
         InitializeLocker::handle(ctx, params)
     }
 
+    #[access_control(ctx.accounts.validate())]
     pub fn start_unlock(ctx: Context<StartUnlock>) -> Result<()> {
         StartUnlock::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate())]
     pub fn complete_unlock(ctx: Context<CompleteUnlock>) -> Result<()> {
         CompleteUnlock::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate())]
     pub fn propose_change(
         ctx: Context<ProposeChange>,
         params: ProposeChangeParams,
@@ -42,5 +45,13 @@ pub mod price_based_unlock {
 
     pub fn execute_change(ctx: Context<ExecuteChange>) -> Result<()> {
         ExecuteChange::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn change_locker_authority(
+        ctx: Context<ChangeLockerAuthority>,
+        params: ChangeLockerAuthorityParams,
+    ) -> Result<()> {
+        ChangeLockerAuthority::handle(ctx, params)
     }
 }

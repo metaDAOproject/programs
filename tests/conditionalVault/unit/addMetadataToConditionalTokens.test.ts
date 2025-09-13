@@ -7,11 +7,8 @@ import {
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint } from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
 import { expectError } from "../../utils.js";
 import {
-  Metadata,
-  deserializeMetadata,
   getMetadataAccountDataSerializer,
 } from "@metaplex-foundation/mpl-token-metadata";
 
@@ -28,8 +25,8 @@ export default function suite() {
   });
 
   async function setupVault(outcomes: number) {
-    let questionId = sha256(new Uint8Array([1, 2, 3]));
-    let oracle = Keypair.generate();
+    const questionId = sha256(new Uint8Array([1, 2, 3]));
+    const oracle = Keypair.generate();
 
     question = await vaultClient.initializeQuestion(
       questionId,

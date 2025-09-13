@@ -9,11 +9,13 @@ import { USDC } from "../consts.js";
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const DAO_ADDRESS = new PublicKey("9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo");
+const DAO_ADDRESS = new PublicKey(
+  "9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo"
+);
 const MINT = USDC;
 const MEMBERS_TO_ADD = [
-    new PublicKey("CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf"), 
-    new PublicKey("FWAVLoePxNurdxanrEnd9d7cSYpRzFYAE2CNFPotz15K"), 
+  new PublicKey("CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf"),
+  new PublicKey("FWAVLoePxNurdxanrEnd9d7cSYpRzFYAE2CNFPotz15K"),
 ];
 const PERIOD = multisig.generated.Period.Week;
 
@@ -21,21 +23,19 @@ const PERIOD = multisig.generated.Period.Week;
 const AMOUNT = 20_000_000; // 20 USDC (6 decimals)
 
 async function main() {
-  const { multisigPda, spendingLimitPda, vaultPda } = await getSquadsPdasFromDao(DAO_ADDRESS);
-  
+  const { multisigPda, spendingLimitPda, vaultPda } =
+    await getSquadsPdasFromDao(DAO_ADDRESS);
+
   // Get multisig account info
-  const multisigAccountInfo = await multisig.accounts.Multisig.fromAccountAddress(
-    provider.connection,
-    multisigPda
-  );
+  const multisigAccountInfo =
+    await multisig.accounts.Multisig.fromAccountAddress(
+      provider.connection,
+      multisigPda
+    );
 
   const destinations = await Promise.all(
-    MEMBERS_TO_ADD.map(member => 
-      getAssociatedTokenAddress(
-        MINT,
-        member,
-        true 
-      )
+    MEMBERS_TO_ADD.map((member) =>
+      getAssociatedTokenAddress(MINT, member, true)
     )
   );
 
@@ -43,36 +43,36 @@ async function main() {
   console.log("Current transaction index:", currentTransactionIndex.toString());
   const transactionIndex = currentTransactionIndex + 1;
 
-
   console.log("Vault address (config authority):", vaultPda.toBase58());
 
   // Create the remove spending limit instruction
-  const removeSpendingLimitIx = multisig.instructions.multisigRemoveSpendingLimit({
-    multisigPda,
-    configAuthority: DAO_ADDRESS, 
-    spendingLimit: spendingLimitPda[0],
-    rentCollector: vaultPda, 
-    memo: "Removing spending limit",
-  });
+  const removeSpendingLimitIx =
+    multisig.instructions.multisigRemoveSpendingLimit({
+      multisigPda,
+      configAuthority: DAO_ADDRESS,
+      spendingLimit: spendingLimitPda[0],
+      rentCollector: vaultPda,
+      memo: "Removing spending limit",
+    });
 
-  const addSpendingLimitIx = multisig.instructions.multisigAddSpendingLimit ({
+  const addSpendingLimitIx = multisig.instructions.multisigAddSpendingLimit({
     multisigPda,
     spendingLimit: spendingLimitPda[0],
     configAuthority: DAO_ADDRESS,
     rentPayer: vaultPda,
     createKey: DAO_ADDRESS,
     vaultIndex: 0, // again assumes we're 0th index for the vault
-    mint:  MINT,
+    mint: MINT,
     amount: BigInt(AMOUNT),
     period: PERIOD,
     members: MEMBERS_TO_ADD,
-    destinations: destinations, 
-    memo: "Adding spending limit"
-  })
+    destinations: destinations,
+    memo: "Adding spending limit",
+  });
 
   // Create the transaction message for the vault
   const transactionMessage = new TransactionMessage({
-    payerKey: payer.publicKey, 
+    payerKey: payer.publicKey,
     recentBlockhash: (await provider.connection.getLatestBlockhash()).blockhash,
     instructions: [removeSpendingLimitIx, addSpendingLimitIx],
   });
@@ -91,7 +91,7 @@ async function main() {
   // Create proposal
   const proposalCreateIx = multisig.instructions.proposalCreate({
     multisigPda,
-    transactionIndex: BigInt((transactionIndex ).toString()),
+    transactionIndex: BigInt(transactionIndex.toString()),
     creator: PERMISSIONLESS_ACCOUNT.publicKey,
     rentPayer: vaultPda,
     isDraft: false,
@@ -99,15 +99,17 @@ async function main() {
 
   // Add both instructions to create the proposal
   const tx = new Transaction().add(vaultTxCreateIx, proposalCreateIx);
-  tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
+  tx.recentBlockhash = (
+    await provider.connection.getLatestBlockhash()
+  ).blockhash;
   tx.feePayer = payer.publicKey;
-  
+
   // Sign with both accounts
-  tx.sign(payer, PERMISSIONLESS_ACCOUNT); 
-  
+  tx.sign(payer, PERMISSIONLESS_ACCOUNT);
+
   const txHash = await provider.connection.sendRawTransaction(tx.serialize());
   await provider.connection.confirmTransaction(txHash, "confirmed");
-  
+
   console.log("Updating spending limit proposal created successfully!");
   console.log("Transaction hash:", txHash);
   console.log("Proposal index:", transactionIndex.toString());

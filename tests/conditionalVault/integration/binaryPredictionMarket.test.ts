@@ -1,17 +1,9 @@
 import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.6";
-import { sha256 } from "@metadaoproject/futarchy"
+import { sha256 } from "@metadaoproject/futarchy";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import { assert } from "chai";
-import {
-  createMint,
-  getMint,
-  mintTo,
-  createAssociatedTokenAccount,
-  transfer,
-  getAccount,
-} from "spl-token-bankrun";
-import * as token from "@solana/spl-token";
+
+
 
 export default function suite() {
   it("binary prediction market", async function () {
@@ -34,14 +26,14 @@ export default function suite() {
     // The market resolves in favor of Harris. When redeeming, Alice should get 15
     // USDC, Bob should get nothing, and Charlie should get 30 USDC.
 
-    let vaultClient: ConditionalVaultClient = this.conditionalVault;
+    const vaultClient: ConditionalVaultClient = this.conditionalVault;
 
-    let alice: Keypair = Keypair.generate();
-    let bob: Keypair = Keypair.generate();
-    let charlie: Keypair = Keypair.generate();
-    let operator: Keypair = Keypair.generate();
+    const alice: Keypair = Keypair.generate();
+    const bob: Keypair = Keypair.generate();
+    const charlie: Keypair = Keypair.generate();
+    const operator: Keypair = Keypair.generate();
 
-    let question: PublicKey = await vaultClient.initializeQuestion(
+    const question: PublicKey = await vaultClient.initializeQuestion(
       sha256(
         new TextEncoder().encode(
           "Who's going to win the next election?/TRUMP/HARRIS"
@@ -51,7 +43,7 @@ export default function suite() {
       2
     );
 
-    let USDC: PublicKey = await this.createMint(operator.publicKey, 6);
+    const USDC: PublicKey = await this.createMint(operator.publicKey, 6);
 
     await this.createTokenAccount(USDC, alice.publicKey);
     await this.createTokenAccount(USDC, bob.publicKey);

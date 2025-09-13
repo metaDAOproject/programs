@@ -8,6 +8,7 @@ import {
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
   PriceBasedUnlock,
@@ -100,30 +101,43 @@ export class PriceBasedUnlockClient {
   public startUnlockIx(params: {
     locker: PublicKey;
     oracleAccount: PublicKey;
+    recipient: PublicKey;
   }) {
     return this.program.methods.startUnlock().accounts({
       locker: params.locker,
       oracleAccount: params.oracleAccount,
+      recipient: params.recipient,
     });
   }
 
   public completeUnlockIx(params: {
     locker: PublicKey;
     oracleAccount: PublicKey;
-    recipientTokenAccount: PublicKey;
+    tokenMint: PublicKey;
+    tokenRecipient: PublicKey;
+    payer: PublicKey;
   }) {
     return this.program.methods.completeUnlock().accounts({
       locker: params.locker,
       oracleAccount: params.oracleAccount,
       lockerTokenAccount: this.getLockerTokenAccountAddress(params.locker),
-      recipientTokenAccount: params.recipientTokenAccount,
+      tokenMint: params.tokenMint,
+      recipientTokenAccount: getAssociatedTokenAddressSync(
+        params.tokenMint,
+        params.tokenRecipient,
+      ),
+      tokenRecipient: params.tokenRecipient,
+      payer: params.payer,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     });
   }
 
   public proposeChangeIx(params: {
     params: {
       changeType: any;
-      createKey: PublicKey;
+      pdaNonce: number;
     };
     locker: PublicKey;
     proposer: PublicKey;
@@ -131,7 +145,8 @@ export class PriceBasedUnlockClient {
   }) {
     const changeRequestAddress = this.getChangeRequestAddress(
       params.locker,
-      params.params.createKey,
+      params.proposer,
+      params.params.pdaNonce,
     );
 
     return this.program.methods.proposeChange(params.params).accounts({
@@ -154,6 +169,21 @@ export class PriceBasedUnlockClient {
     });
   }
 
+  public changeLockerAuthorityIx(params: {
+    locker: PublicKey;
+    currentAuthority: PublicKey;
+    newLockerAuthority: PublicKey;
+  }) {
+    return this.program.methods
+      .changeLockerAuthority({
+        newLockerAuthority: params.newLockerAuthority,
+      })
+      .accounts({
+        locker: params.locker,
+        currentAuthority: params.currentAuthority,
+      });
+  }
+
   public async getLocker(lockerAddress: PublicKey) {
     return await this.program.account.locker.fetch(lockerAddress);
   }
@@ -172,10 +202,16 @@ export class PriceBasedUnlockClient {
 
   public getChangeRequestAddress(
     locker: PublicKey,
-    createKey: PublicKey,
+    proposer: PublicKey,
+    pdaNonce: number,
   ): PublicKey {
     const [changeRequestAddress] = PublicKey.findProgramAddressSync(
-      [Buffer.from("change_request"), locker.toBuffer(), createKey.toBuffer()],
+      [
+        Buffer.from("change_request"),
+        locker.toBuffer(),
+        proposer.toBuffer(),
+        Buffer.from(new Uint8Array(new Uint32Array([pdaNonce]).buffer)),
+      ],
       this.programId,
     );
     return changeRequestAddress;

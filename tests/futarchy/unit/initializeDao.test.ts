@@ -5,7 +5,7 @@ import {
 } from "@metadaoproject/futarchy/v0.6";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, ONE_MINUTE_IN_SLOTS } from "../../utils.js";
+import { expectError } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission, Period } = multisig.types;
@@ -26,7 +26,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         params: {
-          secondsPerProposal: 60 * 60 *  24 * 3,
+          secondsPerProposal: 60 * 60 * 24 * 3,
           twapStartDelaySeconds: 60 * 60 * 24,
           twapInitialObservation: THOUSAND_BUCK_PRICE,
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
@@ -39,7 +39,7 @@ export default function suite() {
         },
       })
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
       .rpc();
 
@@ -56,14 +56,8 @@ export default function suite() {
     assert.equal(storedDao.proposalCount, 0);
 
     assert.equal(storedDao.nonce.toString(), "1337");
-    assert.equal(
-      storedDao.secondsPerProposal,
-      60 * 60 * 24 * 3
-    );
-    assert.equal(
-      storedDao.twapStartDelaySeconds,
-      60 * 60 * 24
-    );
+    assert.equal(storedDao.secondsPerProposal, 60 * 60 * 24 * 3);
+    assert.equal(storedDao.twapStartDelaySeconds, 60 * 60 * 24);
     assert.equal(
       storedDao.twapInitialObservation.toString(),
       THOUSAND_BUCK_PRICE.toString()
@@ -95,7 +89,7 @@ export default function suite() {
     assert.equal(storedMultisig.timeLock, 0);
     assert.equal(storedMultisig.transactionIndex.toString(), "0");
 
-    let daoMember = storedMultisig.members.find((member) =>
+    const daoMember = storedMultisig.members.find((member) =>
       member.key.equals(dao)
     );
     assert.ok(daoMember);
@@ -104,7 +98,7 @@ export default function suite() {
       Permissions.fromPermissions([Permission.Vote]).mask
     );
 
-    let permissionlessMember = storedMultisig.members.find((member) =>
+    const permissionlessMember = storedMultisig.members.find((member) =>
       member.key.equals(PERMISSIONLESS_ACCOUNT.publicKey)
     );
     assert.ok(permissionlessMember);
@@ -149,18 +143,27 @@ export default function suite() {
     const storedDao = await this.futarchy.getDao(dao);
 
     assert.exists(storedDao.initialSpendingLimit);
-    assert.equal(storedDao.initialSpendingLimit.amountPerMonth.toString(), "10000000000");
+    assert.equal(
+      storedDao.initialSpendingLimit.amountPerMonth.toString(),
+      "10000000000"
+    );
     assert.equal(storedDao.initialSpendingLimit.members.length, 1);
-    assert.ok(storedDao.initialSpendingLimit.members[0].equals(spender.publicKey));
+    assert.ok(
+      storedDao.initialSpendingLimit.members[0].equals(spender.publicKey)
+    );
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
-    const spendingLimitPda = multisig.getSpendingLimitPda({ multisigPda, createKey: dao })[0];
+    const spendingLimitPda = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    })[0];
 
-    const storedSpendingLimit = await multisig.accounts.SpendingLimit.fromAccountAddress(
-      this.squadsConnection,
-      spendingLimitPda
-    );
+    const storedSpendingLimit =
+      await multisig.accounts.SpendingLimit.fromAccountAddress(
+        this.squadsConnection,
+        spendingLimitPda
+      );
 
     assert.ok(storedSpendingLimit.multisig.equals(multisigPda));
     assert.ok(storedSpendingLimit.createKey.equals(dao));

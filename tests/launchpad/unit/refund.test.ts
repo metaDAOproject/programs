@@ -7,17 +7,12 @@ import {
 import { assert } from "chai";
 import {
   FutarchyClient,
-  getLaunchAddr,
-  getLaunchSignerAddr,
   LaunchpadClient,
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.6";
-import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import {
   getAssociatedTokenAddressSync,
-  createSetAuthorityInstruction,
-  AuthorityType,
 } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
@@ -77,7 +72,7 @@ export default function suite() {
       })
       .rpc();
 
-    await launchpadClient.startLaunchIx({launch}).rpc();
+    await launchpadClient.startLaunchIx({ launch }).rpc();
 
     // Setup funder accounts
     await this.createTokenAccount(META, this.payer.publicKey);
@@ -87,16 +82,14 @@ export default function suite() {
     // Fund the launch with less than minimum raise
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient
-      .fundIx({launch, amount: partialAmount})
-      .rpc();
+    await launchpadClient.fundIx({ launch, amount: partialAmount }).rpc();
 
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 7);
 
     // Complete the launch (moves to refunding state)
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
+      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -150,9 +143,7 @@ export default function suite() {
   it("fails when launch is not in refunding state", async function () {
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient
-      .fundIx({launch, amount: partialAmount})
-      .rpc();
+    await launchpadClient.fundIx({ launch, amount: partialAmount }).rpc();
 
     try {
       await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();
@@ -166,7 +157,7 @@ export default function suite() {
     // Move to refunding state without any funding
     await this.advanceBySeconds(60 * 60 * 24 * 7);
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({launch, quoteMint: MAINNET_USDC, baseMint: META})
+      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(

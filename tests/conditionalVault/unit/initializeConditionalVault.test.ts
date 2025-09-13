@@ -7,7 +7,6 @@ import { sha256 } from "@metadaoproject/futarchy";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, getMint } from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
 import { expectError } from "../../utils.js";
 
@@ -35,9 +34,9 @@ export default function suite() {
   testCases.forEach(({ name, idArray, outcomes }) => {
     describe(name, function () {
       it("initializes vaults correctly", async function () {
-        let oracle = Keypair.generate();
-        let questionId = sha256(new Uint8Array(idArray));
-        let question = await vaultClient.initializeQuestion(
+        const oracle = Keypair.generate();
+        const questionId = sha256(new Uint8Array(idArray));
+        const question = await vaultClient.initializeQuestion(
           questionId,
           oracle.publicKey,
           outcomes
@@ -78,7 +77,7 @@ export default function suite() {
         assert.equal(storedVault.decimals, 8);
         assert.equal(storedVault.seqNum.toString(), "0");
 
-        for (let mint of storedConditionalTokenMints) {
+        for (const mint of storedConditionalTokenMints) {
           const storedMint = await getMint(this.banksClient, mint);
           assert.ok(storedMint.mintAuthority.equals(vault));
           assert.equal(storedMint.supply.toString(), "0");
@@ -88,9 +87,9 @@ export default function suite() {
       });
 
       it("doesn't allow initializing vault for resolved question", async function () {
-        let oracle = Keypair.generate();
-        let questionId = sha256(new Uint8Array(idArray));
-        let question = await vaultClient.initializeQuestion(
+        const oracle = Keypair.generate();
+        const questionId = sha256(new Uint8Array(idArray));
+        const question = await vaultClient.initializeQuestion(
           questionId,
           oracle.publicKey,
           outcomes

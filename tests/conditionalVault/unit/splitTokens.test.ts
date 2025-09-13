@@ -3,13 +3,8 @@ import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.5";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  createAssociatedTokenAccount,
-  createMint,
-  getAccount,
   getMint,
-  mintTo,
 } from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
 import { expectError } from "../../utils.js";
 import { BN } from "bn.js";
@@ -25,8 +20,8 @@ export default function suite() {
   });
 
   beforeEach(async function () {
-    let questionId = sha256(new Uint8Array([5, 2, 1]));
-    let oracle = Keypair.generate();
+    const questionId = sha256(new Uint8Array([5, 2, 1]));
+    const oracle = Keypair.generate();
 
     question = await vaultClient.initializeQuestion(
       questionId,
@@ -60,15 +55,15 @@ export default function suite() {
     this.assertBalance(underlyingTokenMint, vault, 1000);
 
     const storedConditionalTokenMints = storedVault.conditionalTokenMints;
-    for (let mint of storedConditionalTokenMints) {
-      let storedMint = await getMint(this.banksClient, mint);
+    for (const mint of storedConditionalTokenMints) {
+      const storedMint = await getMint(this.banksClient, mint);
       assert.equal(storedMint.supply.toString(), "1000");
       await this.assertBalance(mint, this.payer.publicKey, 1000);
     }
   });
 
   it("throws error if conditional token accounts don't exist", async function () {
-    let { remainingAccounts } =
+    const { remainingAccounts } =
       vaultClient.getConditionalTokenAccountsAndInstructions(
         vault,
         2,
@@ -218,8 +213,8 @@ export default function suite() {
     this.assertBalance(underlyingTokenMint, vault, 1000);
 
     let storedConditionalTokenMints = storedVault.conditionalTokenMints;
-    for (let mint of storedConditionalTokenMints) {
-      let storedMint = await getMint(this.banksClient, mint);
+    for (const mint of storedConditionalTokenMints) {
+      const storedMint = await getMint(this.banksClient, mint);
       assert.equal(storedMint.supply.toString(), "1000");
       await this.assertBalance(mint, this.payer.publicKey, 1000);
     }
@@ -239,8 +234,8 @@ export default function suite() {
     this.assertBalance(underlyingTokenMint, vault, 2000);
 
     storedConditionalTokenMints = storedVault.conditionalTokenMints;
-    for (let mint of storedConditionalTokenMints) {
-      let storedMint = await getMint(this.banksClient, mint);
+    for (const mint of storedConditionalTokenMints) {
+      const storedMint = await getMint(this.banksClient, mint);
       assert.equal(storedMint.supply.toString(), "2000");
       await this.assertBalance(mint, this.payer.publicKey, 2000);
     }

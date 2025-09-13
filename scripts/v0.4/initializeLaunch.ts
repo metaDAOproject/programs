@@ -124,7 +124,7 @@ async function main() {
   );
 
   console.log("Creating mint...");
-  
+
   const mint = await token.createMint(
     provider.connection,
     payer,
@@ -137,7 +137,7 @@ async function main() {
       commitment: "finalized",
     }
   );
-  
+
   console.log("Mint created:", mint.toBase58());
 
   console.log("Launching...");

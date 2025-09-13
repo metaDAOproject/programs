@@ -1,8 +1,6 @@
-import { AutocratClient, getDaoAddr } from "@metadaoproject/futarchy/v0.5";
+import { getDaoAddr } from "@metadaoproject/futarchy/v0.5";
 import {
   ComputeBudgetProgram,
-  Keypair,
-  PublicKey,
   SystemProgram,
   Transaction,
   TransactionMessage,
@@ -11,8 +9,6 @@ import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
 import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
-import { AccountInfo } from "@solana/web3.js";
-import { Connection } from "@solana/web3.js";
 
 export default function suite() {
   it("should enable creation, passing, and execution of a proposal with a squads batch tx", async function () {
@@ -142,7 +138,6 @@ export default function suite() {
       isDraft: true,
     });
 
-
     const batchTxAddIx1 = multisig.instructions.batchAddTransaction({
       multisigPda,
       member: PERMISSIONLESS_ACCOUNT.publicKey,
@@ -171,7 +166,12 @@ export default function suite() {
       member: PERMISSIONLESS_ACCOUNT.publicKey,
     });
 
-    const batchTx = new Transaction().add(batchTxCreateIx, batchProposalCreateIx, batchTxAddIx1, batchTxAddIx2);
+    const batchTx = new Transaction().add(
+      batchTxCreateIx,
+      batchProposalCreateIx,
+      batchTxAddIx1,
+      batchTxAddIx2
+    );
     batchTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     batchTx.feePayer = this.payer.publicKey;
     batchTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
@@ -259,7 +259,10 @@ export default function suite() {
       member: PERMISSIONLESS_ACCOUNT.publicKey,
     });
 
-    const txExecute = new Transaction().add(txExecuteIx1.instruction, txExecuteIx2.instruction);
+    const txExecute = new Transaction().add(
+      txExecuteIx1.instruction,
+      txExecuteIx2.instruction
+    );
     txExecute.recentBlockhash = (
       await this.banksClient.getLatestBlockhash()
     )[0];

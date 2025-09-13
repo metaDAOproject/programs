@@ -1,29 +1,21 @@
 import { ConditionalVaultClient, sha256 } from "@metadaoproject/futarchy";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import { assert } from "chai";
-import {
-  createMint,
-  getMint,
-  mintTo,
-  createAssociatedTokenAccount,
-  transfer,
-  getAccount,
-} from "spl-token-bankrun";
-import * as token from "@solana/spl-token";
+
+
 
 export default async function test() {
   // A scalar grant market test. Alice splits 100 USDC into E-UP and E-DOWN tokens.
   // She sends 30 E-UPs to Bob. The grant committee resolves the question with 60% effectiveness.
   // Alice and Bob redeem their tokens.
 
-  let vaultClient: ConditionalVaultClient = this.vaultClient;
+  const vaultClient: ConditionalVaultClient = this.vaultClient;
 
-  let alice: Keypair = Keypair.generate();
-  let bob: Keypair = Keypair.generate();
-  let grantCommittee: Keypair = Keypair.generate();
+  const alice: Keypair = Keypair.generate();
+  const bob: Keypair = Keypair.generate();
+  const grantCommittee: Keypair = Keypair.generate();
 
-  let question: PublicKey = await vaultClient.initializeQuestion(
+  const question: PublicKey = await vaultClient.initializeQuestion(
     sha256(
       new TextEncoder().encode(
         "What is the effectiveness of the grant?/E-UP/E-DOWN"
@@ -33,7 +25,7 @@ export default async function test() {
     2
   );
 
-  let USDC: PublicKey = await this.createMint(this.payer.publicKey, 6);
+  const USDC: PublicKey = await this.createMint(this.payer.publicKey, 6);
 
   await this.createTokenAccount(USDC, alice.publicKey);
   await this.createTokenAccount(USDC, bob.publicKey);

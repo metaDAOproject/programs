@@ -1,8 +1,6 @@
-import { AutocratClient, getDaoAddr } from "@metadaoproject/futarchy/v0.5";
+import { getDaoAddr } from "@metadaoproject/futarchy/v0.5";
 import {
   ComputeBudgetProgram,
-  Keypair,
-  PublicKey,
   SystemProgram,
   Transaction,
   TransactionMessage,
@@ -11,8 +9,6 @@ import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
 import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
-import { AccountInfo } from "@solana/web3.js";
-import { Connection } from "@solana/web3.js";
 
 export default function suite() {
   it("should enable creation, passing, and execution of a proposal", async function () {

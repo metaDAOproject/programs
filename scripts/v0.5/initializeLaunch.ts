@@ -27,24 +27,26 @@ const MIN_RAISE_AMOUNT = 300_000;
 const FOUNDER_REQUESTED_SPENDING_LIMIT = 10_000;
 const FOUNDER_KEYS = [
   new PublicKey("5jRqFejxKHWMfR69dbYF2A9TnpnBPjz7iaRQS44imcMi"),
-  new PublicKey("A4juvYuvaAqhefj8BFkz2QZHxmVZRSf1nmLj8QvKUX4B")
+  new PublicKey("A4juvYuvaAqhefj8BFkz2QZHxmVZRSf1nmLj8QvKUX4B"),
 ];
 const TOKEN_SEED = "Ck2w0N97Nkr886o8"; // Thanks Caveycool!
 
 // Safetychecks / processes data
 const MAX_MONTHLY_SPENDING_LIMIT = MIN_RAISE_AMOUNT / 6;
-const SPENDING_LIMIT = Math.min(FOUNDER_REQUESTED_SPENDING_LIMIT, MAX_MONTHLY_SPENDING_LIMIT);
+const SPENDING_LIMIT = Math.min(
+  FOUNDER_REQUESTED_SPENDING_LIMIT,
+  MAX_MONTHLY_SPENDING_LIMIT
+);
 const ONE_MINUTE_IN_SECONDS = 60; // Devnet only
 const ONE_HOUR_IN_SECONDS = ONE_MINUTE_IN_SECONDS * 60;
 const ONE_DAY_IN_SECONDS = ONE_HOUR_IN_SECONDS * 24;
 const SEVEN_DAYS_IN_SECONDS = ONE_DAY_IN_SECONDS * 7;
 
 async function main() {
-  
-  console.log('Payer address:', payer.publicKey.toBase58());
-  console.log('Authorized launcher key address:', START_LAUNCH_KEY.toBase58());
-  console.log('Spending limit: $', SPENDING_LIMIT);
-  console.log('Minimum raise amount: $', MIN_RAISE_AMOUNT);
+  console.log("Payer address:", payer.publicKey.toBase58());
+  console.log("Authorized launcher key address:", START_LAUNCH_KEY.toBase58());
+  console.log("Spending limit: $", SPENDING_LIMIT);
+  console.log("Minimum raise amount: $", MIN_RAISE_AMOUNT);
 
   const seed = TOKEN_SEED;
   const TOKEN = await PublicKey.createWithSeed(
@@ -53,12 +55,12 @@ async function main() {
     token.TOKEN_PROGRAM_ID
   );
 
-  console.log('Token address:', TOKEN.toBase58());
+  console.log("Token address:", TOKEN.toBase58());
 
   const [launch] = getLaunchAddr(launchpad.getProgramId(), TOKEN);
   const [launchSigner] = getLaunchSignerAddr(launchpad.getProgramId(), launch);
 
-  console.log('Launch address:', launch.toBase58());
+  console.log("Launch address:", launch.toBase58());
 
   const lamports = await provider.connection.getMinimumBalanceForRentExemption(
     token.MINT_SIZE

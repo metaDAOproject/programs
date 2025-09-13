@@ -12,11 +12,33 @@ pub struct StartUnlock<'info> {
     #[account(address = locker.oracle_config.oracle_account)]
     pub oracle_account: UncheckedAccount<'info>,
     
+    /// Only the token recipient can start unlock
+    pub recipient: Signer<'info>,
 }
 
 impl StartUnlock<'_> {
+    pub fn validate(&self) -> Result<()> {
+        // Verify that the signer is the token recipient
+        if self.recipient.key() != self.locker.token_recipient {
+            return Err(PriceBasedUnlockError::UnauthorizedChangeRequest.into());
+        }
+
+        // Verify that the locker is in the Locked state
+        if !matches!(self.locker.state, LockerState::Locked) {
+            return Err(PriceBasedUnlockError::InvalidLockerState.into());
+        }
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let locker = &mut ctx.accounts.locker;
+        let Self {
+            locker,
+            oracle_account: _,
+            recipient: _,
+            event_authority: _,
+            program: _,
+        } = ctx.accounts;
 
         let clock = Clock::get()?;
 
@@ -26,19 +48,14 @@ impl StartUnlock<'_> {
             PriceBasedUnlockError::UnlockTimestampNotReached
         );
 
-        // Verify that the locker is in the Locked state
-        require!(
-            matches!(locker.state, LockerState::Locked),
-            PriceBasedUnlockError::InvalidLockerState
-        );
-
         // Read the current aggregator value from the oracle account
         let oracle_data = ctx.accounts.oracle_account.try_borrow_data()?;
         let offset = locker.oracle_config.byte_offset as usize;
         
         // Ensure we have enough data to read 24 bytes (16 bytes for aggregator, 8 bytes for last updated slot)
-        require!(
-            offset + 16 + 8 <= oracle_data.len(),
+        require_gte!(
+            oracle_data.len(),
+            offset + 16 + 8,
             PriceBasedUnlockError::InvalidOracleData
         );
 

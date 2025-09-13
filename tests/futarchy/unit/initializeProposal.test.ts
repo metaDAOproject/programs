@@ -1,11 +1,10 @@
 import {
-  getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
 } from "@metadaoproject/futarchy/v0.6";
 import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 import BN from "bn.js";
-import { ONE_MINUTE_IN_SLOTS, setupBasicDao } from "../../utils.js";
+import { setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -32,7 +31,11 @@ export default function suite() {
       100_000 * 1_000_000
     );
 
-    dao = await setupBasicDao({ context: this, baseMint: META, quoteMint: USDC });
+    dao = await setupBasicDao({
+      context: this,
+      baseMint: META,
+      quoteMint: USDC,
+    });
   });
 
   it("should initialize a proposal", async function () {
@@ -91,12 +94,16 @@ export default function suite() {
     // Now initialize the autocrat proposal
     const proposal = await this.futarchy.initializeProposal(
       dao,
-      squadsProposalPda,
+      squadsProposalPda
     );
 
     // Split tokens into the vaults (as in the integration test)
-    const { baseVault, quoteVault, question } =
-      this.futarchy.getProposalPdas(proposal, META, USDC, dao);
+    const { baseVault, quoteVault, question } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao
+    );
 
     await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
