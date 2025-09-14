@@ -66,4 +66,6 @@ pub enum FutarchyError {
     InvariantViolated,
     #[msg("Proposal needs to be active to perform a conditional swap")]
     ProposalNotActive,
+    #[msg("This Squads transaction should only contain calls to update spending limits")]
+    InvalidTransaction,
 }

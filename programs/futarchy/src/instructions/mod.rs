@@ -12,6 +12,7 @@ pub mod stake_to_proposal;
 pub mod unstake_from_proposal;
 pub mod update_dao;
 pub mod withdraw_liquidity;
+pub mod execute_spending_limit_change;
 
 pub use collect_fees::*;
 pub use conditional_swap::*;
@@ -25,3 +26,4 @@ pub use stake_to_proposal::*;
 pub use unstake_from_proposal::*;
 pub use update_dao::*;
 pub use withdraw_liquidity::*;
+pub use execute_spending_limit_change::*;

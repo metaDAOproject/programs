@@ -945,6 +945,52 @@ export type Futarchy = {
       ];
       args: [];
     },
+    {
+      name: "executeSpendingLimitChange";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "vaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -2511,6 +2557,11 @@ export type Futarchy = {
       name: "ProposalNotActive";
       msg: "Proposal needs to be active to perform a conditional swap";
     },
+    {
+      code: 6031;
+      name: "InvalidTransaction";
+      msg: "This Squads transaction should only contain calls to update spending limits";
+    },
   ];
 };
 
@@ -3445,6 +3496,52 @@ export const IDL: Futarchy = {
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "executeSpendingLimitChange",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "vaultTransaction",
           isMut: false,
           isSigner: false,
         },
@@ -5026,6 +5123,11 @@ export const IDL: Futarchy = {
       code: 6030,
       name: "ProposalNotActive",
       msg: "Proposal needs to be active to perform a conditional swap",
+    },
+    {
+      code: 6031,
+      name: "InvalidTransaction",
+      msg: "This Squads transaction should only contain calls to update spending limits",
     },
   ],
 };
