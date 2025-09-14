@@ -95,7 +95,7 @@ export default function suite() {
     assert.ok(daoMember);
     assert.equal(
       daoMember.permissions.mask,
-      Permissions.fromPermissions([Permission.Vote]).mask
+      Permissions.fromPermissions([Permission.Vote, Permission.Execute]).mask
     );
 
     const permissionlessMember = storedMultisig.members.find((member) =>

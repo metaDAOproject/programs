@@ -7,6 +7,8 @@ import finalizeProposal from "./unit/finalizeProposal.test.js";
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
 
+import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
+
 export default function suite() {
   describe("#initialize_dao", initializeDao);
   describe("#initialize_proposal", initializeProposal);
@@ -14,6 +16,7 @@ export default function suite() {
 
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);
+  describe("#execute_spending_limit_change", executeSpendingLimitChange);
 
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);

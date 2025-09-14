@@ -36,6 +36,7 @@ import {
   SystemProgram,
   Transaction,
   ComputeBudgetProgram,
+  TransactionInstruction,
 } from "@solana/web3.js";
   
 import {
@@ -67,7 +68,7 @@ import fullLaunch from "./integration/fullLaunch.test.js";
 import { BN } from "bn.js";
 import { sha256 } from "@metadaoproject/futarchy";
 
-const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
+const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
 // Export the test context interface for use in other files
 export interface TestContext {
@@ -356,8 +357,8 @@ before(async function () {
         params: {
           secondsPerProposal: 60 * 60 * 24 * 3,
           twapStartDelaySeconds: 60 * 60 * 24,
-          twapInitialObservation: THOUSAND_BUCK_PRICE,
-          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          twapInitialObservation: ONE_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: ONE_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(10_000),
           minBaseFutarchicLiquidity: new BN(10_000),
           passThresholdBps: 300,

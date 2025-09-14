@@ -114,7 +114,7 @@ impl InitializeDao<'_> {
                 members: vec![
                     Member {
                         key: dao.key(),
-                        permissions: Permissions::from_vec(&[Permission::Vote]),
+                        permissions: Permissions::from_vec(&[Permission::Vote, Permission::Execute]),
                     },
                     Member {
                         key: permissionless_account::id(),
