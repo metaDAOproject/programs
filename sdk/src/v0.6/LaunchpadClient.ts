@@ -256,10 +256,12 @@ export class LaunchpadClient {
     launch,
     quoteMint = MAINNET_USDC,
     baseMint,
+    finalRaiseAmount,
   }: {
     launch: PublicKey;
     quoteMint?: PublicKey;
     baseMint: PublicKey;
+    finalRaiseAmount: BN;
   }) {
     const launchSigner = this.getLaunchSignerAddress({ launch });
 
@@ -313,12 +315,13 @@ export class LaunchpadClient {
       this.priceBasedUnlock.getLockerTokenAccountAddress(locker);
 
     return this.launchpad.methods
-      .completeLaunch()
+      .completeLaunch({ finalRaiseAmount })
       .accounts({
         launch,
         launchSigner,
         launchQuoteVault,
         launchBaseVault,
+        launchAuthority: null,
         dao,
         treasuryQuoteAccount,
         quoteMint,
@@ -353,7 +356,7 @@ export class LaunchpadClient {
         lockerTokenAccount,
       })
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 540_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 560_000 }),
       ]);
   }
 

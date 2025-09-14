@@ -43,7 +43,8 @@ pub struct Refund<'info> {
 impl Refund<'_> {
     pub fn validate(&self) -> Result<()> {
         require!(
-            self.launch.state == LaunchState::Refunding,
+            self.launch.state == LaunchState::Refunding || 
+                (self.launch.state == LaunchState::Complete && self.launch.final_raise_amount.unwrap() < self.launch.total_committed_amount),
             LaunchpadError::LaunchNotRefunding
         );
         Ok(())
@@ -52,7 +53,14 @@ impl Refund<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let launch = &mut ctx.accounts.launch;
         let launch_key = launch.key();
-        let funding_record = &ctx.accounts.funding_record;
+        let funding_record = &mut ctx.accounts.funding_record;
+
+        let amount_to_refund = match launch.state {
+            LaunchState::Refunding => funding_record.committed_amount,
+            LaunchState::Complete => ((launch.final_raise_amount.unwrap() as u128) * funding_record.committed_amount as u128 / launch.total_committed_amount as u128) as u64,
+            _ => unreachable!(),
+        };
+        funding_record.committed_amount = 0;
 
         let seeds = &[
             b"launch_signer",
@@ -72,7 +80,7 @@ impl Refund<'_> {
                 },
                 signer,
             ),
-            funding_record.committed_amount,
+            amount_to_refund,
         )?;
 
         launch.seq_num += 1;
