@@ -94,7 +94,6 @@ export default function suite() {
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
     await this.advanceBySeconds(60 * 60 * 24 * 7 + 100);
-    // await launchpadClient.launchpad.methods.closeLaunch().accounts({ launch }).rpc();
     await launchpadClient.closeLaunchIx({ launch }).rpc();
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META, finalRaiseAmount: minRaise })

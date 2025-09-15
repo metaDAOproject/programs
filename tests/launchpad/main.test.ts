@@ -4,6 +4,7 @@ import fund from "./unit/fund.test.js";
 import completeLaunch from "./unit/completeLaunch.test.js";
 import claim from "./unit/claim.test.js";
 import refund from "./unit/refund.test.js";
+import closeLaunch from "./unit/closeLaunch.test.js";
 
 // TODO add a many-outcome integration test
 export default function suite() {
@@ -13,4 +14,5 @@ export default function suite() {
   describe("#complete_launch", completeLaunch);
   describe("#claim", claim);
   describe("#refund", refund);
+  describe("#close_launch", closeLaunch);
 }
