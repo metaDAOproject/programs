@@ -88,7 +88,7 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 24 * 7);
 
     // Close the launch (moves to refunding state)
-    await launchpadClient.launchpad.methods.closeLaunch().accounts({ launch }).rpc();
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
 
     const initialUsdcBalance = await this.getTokenBalance(
       MAINNET_USDC,
@@ -138,7 +138,7 @@ export default function suite() {
   it("fails when user has no tokens to refund", async function () {
     // Move to refunding state without any funding
     await this.advanceBySeconds(60 * 60 * 24 * 7);
-    await launchpadClient.launchpad.methods.closeLaunch().accounts({ launch }).rpc();
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
 
     try {
       await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();

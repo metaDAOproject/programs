@@ -107,7 +107,7 @@ export default function suite() {
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
-    await launchpadClient.launchpad.methods.closeLaunch().accounts({ launch }).rpc();
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
 
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
@@ -270,7 +270,7 @@ export default function suite() {
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
-    await launchpadClient.launchpad.methods.closeLaunch().accounts({ launch }).rpc();
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
     // Try to complete again
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META, finalRaiseAmount: minRaise })

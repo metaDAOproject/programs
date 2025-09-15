@@ -252,6 +252,12 @@ export class LaunchpadClient {
     });
   }
 
+  closeLaunchIx({ launch }: { launch: PublicKey }) {
+    return this.launchpad.methods.closeLaunch().accounts({
+      launch,
+    });
+  }
+
   completeLaunchIx({
     launch,
     quoteMint = MAINNET_USDC,
