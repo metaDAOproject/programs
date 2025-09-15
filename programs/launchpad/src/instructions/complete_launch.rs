@@ -20,6 +20,11 @@ use price_based_unlock::{InitializeLockerParams, OracleConfig};
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
+pub struct CompleteLaunchArgs {
+    pub final_raise_amount: u64,
+}
+
 /// Static accounts for completing a launch, used to reduce code duplication
 /// and conserve stack space.
 #[derive(Accounts)]
@@ -61,6 +66,8 @@ pub struct CompleteLaunch<'info> {
         has_one = quote_mint,
     )]
     pub launch: Box<Account<'info, Launch>>,
+
+    pub launch_authority: Option<Signer<'info>>,
 
     /// CHECK: Token metadata
     #[account(
@@ -150,22 +157,31 @@ impl CompleteLaunch<'_> {
         let clock = Clock::get()?;
 
         require!(
-            self.launch.state == LaunchState::Live,
+            self.launch.state == LaunchState::Closed,
             LaunchpadError::InvalidLaunchState
         );
 
-        require_gte!(
-            clock.unix_timestamp,
-            self.launch
-                .unix_timestamp_started
-                .saturating_add(self.launch.seconds_for_launch.try_into().unwrap()),
-            LaunchpadError::LaunchPeriodNotOver
-        );
+        // if the launch was closed within 2 days, the launch authority must be the one
+        // to complete the launch
+        if self.launch.unix_timestamp_closed.unwrap() + 60 * 60 * 24 * 2 < clock.unix_timestamp {
+            require!(self.launch_authority.is_some(), LaunchpadError::LaunchAuthorityNotSet);
+
+            require_keys_eq!(self.launch_authority.as_ref().unwrap().key(), self.launch.launch_authority, LaunchpadError::LaunchAuthorityNotSet);
+        }
 
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>) -> Result<()> {
+    pub fn handle(ctx: Context<Self>, args: CompleteLaunchArgs) -> Result<()> {
+        let CompleteLaunchArgs{ mut final_raise_amount, } = args;
+
+        // if the launch authority hasn't come back, ignore whatever the user put in
+        if ctx.accounts.launch_authority.is_none() {
+            final_raise_amount = ctx.accounts.launch.total_committed_amount;
+        }
+
+        require_gte!(final_raise_amount, ctx.accounts.launch.minimum_raise_amount);
+
         let launch = &mut ctx.accounts.launch;
 
         launch.dao = Some(ctx.accounts.dao.key());
@@ -179,228 +195,222 @@ impl CompleteLaunch<'_> {
         ];
         let launch_signer = &[&launch_signer_seeds[..]];
 
-        let total_committed_amount = launch.total_committed_amount;
-
-        msg!("total_committed_amount: {}", total_committed_amount);
-
         // For the DAO, we want proposals to start at the price of the launch,
         // for the lagging TWAP to be able to move its latest observation by 5%
         // per update (300% per hour), and for proposers to need to lock up 1%
         // of the supply and an equivalent value of USDC.
 
         let price_1e12 =
-            ((total_committed_amount as u128) * PRICE_SCALE) / (TOKENS_TO_PARTICIPANTS as u128);
+            ((final_raise_amount as u128) * PRICE_SCALE) / (TOKENS_TO_PARTICIPANTS as u128);
 
-        let usdc_to_lp = total_committed_amount.saturating_div(5);
-        let usdc_to_dao = total_committed_amount.saturating_sub(usdc_to_lp);
+        let usdc_to_lp = final_raise_amount.saturating_div(5);
+        let usdc_to_dao = final_raise_amount.saturating_sub(usdc_to_lp);
         let token_to_lp = TOKENS_TO_PARTICIPANTS / 5;
 
-        if total_committed_amount >= launch.minimum_raise_amount {
-            futarchy::cpi::initialize_dao(
-                CpiContext::new_with_signer(
-                    ctx.accounts
+        futarchy::cpi::initialize_dao(
+            CpiContext::new_with_signer(
+                ctx.accounts
+                    .static_accounts
+                    .futarchy_program
+                    .to_account_info(),
+                futarchy::cpi::accounts::InitializeDao {
+                    dao: ctx.accounts.dao.to_account_info(),
+                    dao_creator: ctx.accounts.launch_signer.to_account_info(),
+                    payer: ctx.accounts.payer.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                    base_mint: ctx.accounts.base_mint.to_account_info(),
+                    quote_mint: ctx.accounts.quote_mint.to_account_info(),
+                    event_authority: ctx
+                        .accounts
+                        .static_accounts
+                        .autocrat_event_authority
+                        .to_account_info(),
+                    program: ctx
+                        .accounts
                         .static_accounts
                         .futarchy_program
                         .to_account_info(),
-                    futarchy::cpi::accounts::InitializeDao {
-                        dao: ctx.accounts.dao.to_account_info(),
-                        dao_creator: ctx.accounts.launch_signer.to_account_info(),
-                        payer: ctx.accounts.payer.to_account_info(),
-                        system_program: ctx.accounts.system_program.to_account_info(),
-                        base_mint: ctx.accounts.base_mint.to_account_info(),
-                        quote_mint: ctx.accounts.quote_mint.to_account_info(),
-                        event_authority: ctx
-                            .accounts
-                            .static_accounts
-                            .autocrat_event_authority
-                            .to_account_info(),
-                        program: ctx
-                            .accounts
-                            .static_accounts
-                            .futarchy_program
-                            .to_account_info(),
-                        squads_multisig: ctx.accounts.squads_multisig.to_account_info(),
-                        squads_multisig_vault: ctx.accounts.squads_multisig_vault.to_account_info(),
-                        squads_program: ctx
-                            .accounts
-                            .static_accounts
-                            .squads_program
-                            .to_account_info(),
-                        squads_program_config: ctx
-                            .accounts
-                            .static_accounts
-                            .squads_program_config
-                            .to_account_info(),
-                        squads_program_config_treasury: ctx
-                            .accounts
-                            .static_accounts
-                            .squads_program_config_treasury
-                            .to_account_info(),
-                        spending_limit: ctx.accounts.spending_limit.to_account_info(),
-                        futarchy_amm_base_vault: ctx
-                            .accounts
-                            .futarchy_amm_base_vault
-                            .to_account_info(),
-                        futarchy_amm_quote_vault: ctx
-                            .accounts
-                            .futarchy_amm_quote_vault
-                            .to_account_info(),
-                        associated_token_program: ctx
-                            .accounts
-                            .associated_token_program
-                            .to_account_info(),
-                        token_program: ctx.accounts.token_program.to_account_info(),
-                    },
-                    launch_signer,
-                ),
-                InitializeDaoParams {
-                    twap_initial_observation: price_1e12,
-                    twap_max_observation_change_per_update: price_1e12 / 20,
-                    min_quote_futarchic_liquidity: total_committed_amount / 100,
-                    min_base_futarchic_liquidity: TOKENS_TO_PARTICIPANTS / 100,
-                    pass_threshold_bps: 300,
-                    base_to_stake: TOKENS_TO_PARTICIPANTS / 100,
-                    seconds_per_proposal: 3 * 24 * 60 * 60,
-                    twap_start_delay_seconds: 24 * 60 * 60,
-                    nonce: 0,
-                    initial_spending_limit: Some(InitialSpendingLimit {
-                        amount_per_month: launch.monthly_spending_limit_amount,
-                        members: launch.monthly_spending_limit_members.clone(),
-                    }),
-                },
-            )?;
-
-            futarchy::cpi::provide_liquidity(
-                CpiContext::new_with_signer(
-                    ctx.accounts
+                    squads_multisig: ctx.accounts.squads_multisig.to_account_info(),
+                    squads_multisig_vault: ctx.accounts.squads_multisig_vault.to_account_info(),
+                    squads_program: ctx
+                        .accounts
                         .static_accounts
-                        .futarchy_program
+                        .squads_program
                         .to_account_info(),
-                    futarchy::cpi::accounts::ProvideLiquidity {
-                        dao: ctx.accounts.dao.to_account_info(),
-                        liquidity_provider: ctx.accounts.launch_signer.to_account_info(),
-                        liquidity_provider_base_account: ctx
-                            .accounts
-                            .launch_base_vault
-                            .to_account_info(),
-                        liquidity_provider_quote_account: ctx
-                            .accounts
-                            .launch_quote_vault
-                            .to_account_info(),
-                        payer: ctx.accounts.payer.to_account_info(),
-                        system_program: ctx.accounts.system_program.to_account_info(),
-                        amm_base_vault: ctx.accounts.futarchy_amm_base_vault.to_account_info(),
-                        amm_quote_vault: ctx.accounts.futarchy_amm_quote_vault.to_account_info(),
-                        amm_position: ctx.accounts.dao_owned_lp_position.to_account_info(),
-                        token_program: ctx.accounts.token_program.to_account_info(),
-                    },
-                    launch_signer,
-                ),
-                ProvideLiquidityParams {
-                    max_base_amount: token_to_lp,
-                    quote_amount: usdc_to_lp,
-                    min_liquidity: 0,
-                    position_authority: ctx.accounts.squads_multisig_vault.key(),
-                },
-            )?;
-
-            let clock = Clock::get()?;
-
-            price_based_unlock::cpi::initialize_locker(
-                CpiContext::new_with_signer(
-                    ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
-                    price_based_unlock::cpi::accounts::InitializeLocker {
-                        locker: ctx.accounts.locker.to_account_info(),
-                        create_key: ctx.accounts.launch_signer.to_account_info(),
-                        token_mint: ctx.accounts.base_mint.to_account_info(),
-                        from_token_account: ctx.accounts.launch_base_vault.to_account_info(),
-                        token_authority: ctx.accounts.launch_signer.to_account_info(),
-                        payer: ctx.accounts.payer.to_account_info(),
-                        system_program: ctx.accounts.system_program.to_account_info(),
-                        token_program: ctx.accounts.token_program.to_account_info(),
-                        associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-                        event_authority: ctx.accounts.static_accounts.price_based_unlock_event_authority.to_account_info(),
-                        program: ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
-                        locker_token_account: ctx.accounts.locker_token_account.to_account_info(),
-                    }, launch_signer),
-                    InitializeLockerParams {
-                        price_threshold: launch.price_based_unlock_threshold,
-                        token_amount: launch.price_based_premine_amount,
-                        unlock_timestamp: clock.unix_timestamp + 60 * 60 * 24,
-                        oracle_config: OracleConfig {
-                            oracle_account: ctx.accounts.dao.key(),
-                            // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
-                            // spot `Pool` is always first and has the TWAP oracle
-                            byte_offset: 8 + 1,
-                        },
-                        twap_length_seconds: 300,
-                        beneficiary: launch.price_based_unlock_recipient,
-                        locker_authority: ctx.accounts.squads_multisig_vault.key(),
-                    },
-            )?;
-
-            token::mint_to(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    MintTo {
-                        mint: ctx.accounts.base_mint.to_account_info(),
-                        to: ctx.accounts.launch_base_vault.to_account_info(),
-                        authority: ctx.accounts.launch_signer.to_account_info(),
-                    },
-                    launch_signer,
-                ),
-                token_to_lp,
-            )?;
-
-            token::set_authority(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    SetAuthority {
-                        account_or_mint: ctx.accounts.base_mint.to_account_info(),
-                        current_authority: ctx.accounts.launch_signer.to_account_info(),
-                    },
-                    launch_signer,
-                ),
-                AuthorityType::MintTokens,
-                Some(ctx.accounts.squads_multisig_vault.key()),
-            )?;
-
-            token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    Transfer {
-                        from: ctx.accounts.launch_quote_vault.to_account_info(),
-                        to: ctx.accounts.treasury_quote_account.to_account_info(),
-                        authority: ctx.accounts.launch_signer.to_account_info(),
-                    },
-                    launch_signer,
-                ),
-                usdc_to_dao,
-            )?;
-
-            update_metadata_accounts_v2(
-                CpiContext::new_with_signer(
-                    ctx.accounts
+                    squads_program_config: ctx
+                        .accounts
                         .static_accounts
-                        .token_metadata_program
+                        .squads_program_config
                         .to_account_info(),
-                    UpdateMetadataAccountsV2 {
-                        metadata: ctx.accounts.token_metadata.to_account_info(),
-                        update_authority: ctx.accounts.launch_signer.to_account_info(),
+                    squads_program_config_treasury: ctx
+                        .accounts
+                        .static_accounts
+                        .squads_program_config_treasury
+                        .to_account_info(),
+                    spending_limit: ctx.accounts.spending_limit.to_account_info(),
+                    futarchy_amm_base_vault: ctx
+                        .accounts
+                        .futarchy_amm_base_vault
+                        .to_account_info(),
+                    futarchy_amm_quote_vault: ctx
+                        .accounts
+                        .futarchy_amm_quote_vault
+                        .to_account_info(),
+                    associated_token_program: ctx
+                        .accounts
+                        .associated_token_program
+                        .to_account_info(),
+                    token_program: ctx.accounts.token_program.to_account_info(),
+                },
+                launch_signer,
+            ),
+            InitializeDaoParams {
+                twap_initial_observation: price_1e12,
+                twap_max_observation_change_per_update: price_1e12 / 20,
+                min_quote_futarchic_liquidity: final_raise_amount / 100,
+                min_base_futarchic_liquidity: TOKENS_TO_PARTICIPANTS / 100,
+                pass_threshold_bps: 300,
+                base_to_stake: TOKENS_TO_PARTICIPANTS / 100,
+                seconds_per_proposal: 3 * 24 * 60 * 60,
+                twap_start_delay_seconds: 24 * 60 * 60,
+                nonce: 0,
+                initial_spending_limit: Some(InitialSpendingLimit {
+                    amount_per_month: launch.monthly_spending_limit_amount,
+                    members: launch.monthly_spending_limit_members.clone(),
+                }),
+            },
+        )?;
+
+        futarchy::cpi::provide_liquidity(
+            CpiContext::new_with_signer(
+                ctx.accounts
+                    .static_accounts
+                    .futarchy_program
+                    .to_account_info(),
+                futarchy::cpi::accounts::ProvideLiquidity {
+                    dao: ctx.accounts.dao.to_account_info(),
+                    liquidity_provider: ctx.accounts.launch_signer.to_account_info(),
+                    liquidity_provider_base_account: ctx
+                        .accounts
+                        .launch_base_vault
+                        .to_account_info(),
+                    liquidity_provider_quote_account: ctx
+                        .accounts
+                        .launch_quote_vault
+                        .to_account_info(),
+                    payer: ctx.accounts.payer.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                    amm_base_vault: ctx.accounts.futarchy_amm_base_vault.to_account_info(),
+                    amm_quote_vault: ctx.accounts.futarchy_amm_quote_vault.to_account_info(),
+                    amm_position: ctx.accounts.dao_owned_lp_position.to_account_info(),
+                    token_program: ctx.accounts.token_program.to_account_info(),
+                    program: ctx.accounts.static_accounts.futarchy_program.to_account_info(),
+                    event_authority: ctx.accounts.static_accounts.autocrat_event_authority.to_account_info(),
+                },
+                launch_signer,
+            ),
+            ProvideLiquidityParams {
+                max_base_amount: token_to_lp,
+                quote_amount: usdc_to_lp,
+                min_liquidity: 0,
+                position_authority: ctx.accounts.squads_multisig_vault.key(),
+            },
+        )?;
+
+        let clock = Clock::get()?;
+
+        price_based_unlock::cpi::initialize_locker(
+            CpiContext::new_with_signer(
+                ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
+                price_based_unlock::cpi::accounts::InitializeLocker {
+                    locker: ctx.accounts.locker.to_account_info(),
+                    create_key: ctx.accounts.launch_signer.to_account_info(),
+                    token_mint: ctx.accounts.base_mint.to_account_info(),
+                    from_token_account: ctx.accounts.launch_base_vault.to_account_info(),
+                    token_authority: ctx.accounts.launch_signer.to_account_info(),
+                    payer: ctx.accounts.payer.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                    token_program: ctx.accounts.token_program.to_account_info(),
+                    associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+                    event_authority: ctx.accounts.static_accounts.price_based_unlock_event_authority.to_account_info(),
+                    program: ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
+                    locker_token_account: ctx.accounts.locker_token_account.to_account_info(),
+                }, launch_signer),
+                InitializeLockerParams {
+                    price_threshold: launch.price_based_unlock_threshold,
+                    token_amount: launch.price_based_premine_amount,
+                    unlock_timestamp: clock.unix_timestamp + 60 * 60 * 24,
+                    oracle_config: OracleConfig {
+                        oracle_account: ctx.accounts.dao.key(),
+                        // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
+                        // spot `Pool` is always first and has the TWAP oracle
+                        byte_offset: 8 + 1,
                     },
-                    launch_signer,
-                ),
-                Some(ctx.accounts.squads_multisig_vault.key()),
-                None,
-                None,
-                None,
-            )?;
+                    twap_length_seconds: 300,
+                    beneficiary: launch.price_based_unlock_recipient,
+                    locker_authority: ctx.accounts.squads_multisig_vault.key(),
+                },
+        )?;
 
-            launch.state = LaunchState::Complete;
-        } else {
-            launch.state = LaunchState::Refunding;
-        }
+        token::mint_to(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                MintTo {
+                    mint: ctx.accounts.base_mint.to_account_info(),
+                    to: ctx.accounts.launch_base_vault.to_account_info(),
+                    authority: ctx.accounts.launch_signer.to_account_info(),
+                },
+                launch_signer,
+            ),
+            token_to_lp,
+        )?;
 
+        token::set_authority(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                SetAuthority {
+                    account_or_mint: ctx.accounts.base_mint.to_account_info(),
+                    current_authority: ctx.accounts.launch_signer.to_account_info(),
+                },
+                launch_signer,
+            ),
+            AuthorityType::MintTokens,
+            Some(ctx.accounts.squads_multisig_vault.key()),
+        )?;
+
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.launch_quote_vault.to_account_info(),
+                    to: ctx.accounts.treasury_quote_account.to_account_info(),
+                    authority: ctx.accounts.launch_signer.to_account_info(),
+                },
+                launch_signer,
+            ),
+            usdc_to_dao,
+        )?;
+
+        update_metadata_accounts_v2(
+            CpiContext::new_with_signer(
+                ctx.accounts
+                    .static_accounts
+                    .token_metadata_program
+                    .to_account_info(),
+                UpdateMetadataAccountsV2 {
+                    metadata: ctx.accounts.token_metadata.to_account_info(),
+                    update_authority: ctx.accounts.launch_signer.to_account_info(),
+                },
+                launch_signer,
+            ),
+            Some(ctx.accounts.squads_multisig_vault.key()),
+            None,
+            None,
+            None,
+        )?;
+
+        launch.state = LaunchState::Complete;
+        launch.final_raise_amount = Some(final_raise_amount);
         launch.seq_num += 1;
 
         let clock = Clock::get()?;

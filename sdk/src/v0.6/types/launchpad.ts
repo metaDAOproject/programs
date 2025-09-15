@@ -196,6 +196,12 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "launchAuthority";
+          isMut: false;
+          isSigner: true;
+          isOptional: true;
+        },
+        {
           name: "tokenMetadata";
           isMut: true;
           isSigner: false;
@@ -356,7 +362,14 @@ export type Launchpad = {
           isSigner: false;
         },
       ];
-      args: [];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "CompleteLaunchArgs";
+          };
+        },
+      ];
     },
     {
       name: "refund";
@@ -465,6 +478,27 @@ export type Launchpad = {
         {
           name: "systemProgram";
           isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "closeLaunch";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -596,12 +630,30 @@ export type Launchpad = {
           {
             name: "unixTimestampStarted";
             docs: ["The unix timestamp when the launch was started."];
-            type: "i64";
+            type: {
+              option: "i64";
+            };
+          },
+          {
+            name: "unixTimestampClosed";
+            docs: [
+              "The unix timestamp when the launch stopped taking new contributions.",
+            ];
+            type: {
+              option: "i64";
+            };
           },
           {
             name: "totalCommittedAmount";
             docs: ["The amount of USDC that has been committed by the users."];
             type: "u64";
+          },
+          {
+            name: "finalRaiseAmount";
+            docs: ["The final raise amount."];
+            type: {
+              option: "u64";
+            };
           },
           {
             name: "state";
@@ -679,6 +731,18 @@ export type Launchpad = {
       };
     },
     {
+      name: "CompleteLaunchArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "finalRaiseAmount";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
       name: "InitializeLaunchArgs";
       type: {
         kind: "struct";
@@ -738,6 +802,9 @@ export type Launchpad = {
           },
           {
             name: "Live";
+          },
+          {
+            name: "Closed";
           },
           {
             name: "Complete";
@@ -998,6 +1065,30 @@ export type Launchpad = {
         },
       ];
     },
+    {
+      name: "LaunchCloseEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newState";
+          type: {
+            defined: "LaunchState";
+          };
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -1043,7 +1134,7 @@ export type Launchpad = {
     {
       code: 6008;
       name: "LaunchNotRefunding";
-      msg: "Launch needs to be in refunding state to get a refund";
+      msg: "For you to get a refund, either the launch needs to be in a refunding state or the launch must have been over-committed";
     },
     {
       code: 6009;
@@ -1069,6 +1160,11 @@ export type Launchpad = {
       code: 6013;
       name: "InvalidPriceBasedUnlockThreshold";
       msg: "Price-based unlock threshold must be at least 2x the minimum launch price";
+    },
+    {
+      code: 6014;
+      name: "LaunchAuthorityNotSet";
+      msg: "Launch authority must be set to complete the launch until 2 days after closing";
     },
   ];
 };
@@ -1271,6 +1367,12 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "launchAuthority",
+          isMut: false,
+          isSigner: true,
+          isOptional: true,
+        },
+        {
           name: "tokenMetadata",
           isMut: true,
           isSigner: false,
@@ -1431,7 +1533,14 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
       ],
-      args: [],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "CompleteLaunchArgs",
+          },
+        },
+      ],
     },
     {
       name: "refund",
@@ -1540,6 +1649,27 @@ export const IDL: Launchpad = {
         {
           name: "systemProgram",
           isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "closeLaunch",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1671,12 +1801,30 @@ export const IDL: Launchpad = {
           {
             name: "unixTimestampStarted",
             docs: ["The unix timestamp when the launch was started."],
-            type: "i64",
+            type: {
+              option: "i64",
+            },
+          },
+          {
+            name: "unixTimestampClosed",
+            docs: [
+              "The unix timestamp when the launch stopped taking new contributions.",
+            ],
+            type: {
+              option: "i64",
+            },
           },
           {
             name: "totalCommittedAmount",
             docs: ["The amount of USDC that has been committed by the users."],
             type: "u64",
+          },
+          {
+            name: "finalRaiseAmount",
+            docs: ["The final raise amount."],
+            type: {
+              option: "u64",
+            },
           },
           {
             name: "state",
@@ -1754,6 +1902,18 @@ export const IDL: Launchpad = {
       },
     },
     {
+      name: "CompleteLaunchArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "finalRaiseAmount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "InitializeLaunchArgs",
       type: {
         kind: "struct",
@@ -1813,6 +1973,9 @@ export const IDL: Launchpad = {
           },
           {
             name: "Live",
+          },
+          {
+            name: "Closed",
           },
           {
             name: "Complete",
@@ -2073,6 +2236,30 @@ export const IDL: Launchpad = {
         },
       ],
     },
+    {
+      name: "LaunchCloseEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newState",
+          type: {
+            defined: "LaunchState",
+          },
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -2118,7 +2305,7 @@ export const IDL: Launchpad = {
     {
       code: 6008,
       name: "LaunchNotRefunding",
-      msg: "Launch needs to be in refunding state to get a refund",
+      msg: "For you to get a refund, either the launch needs to be in a refunding state or the launch must have been over-committed",
     },
     {
       code: 6009,
@@ -2144,6 +2331,11 @@ export const IDL: Launchpad = {
       code: 6013,
       name: "InvalidPriceBasedUnlockThreshold",
       msg: "Price-based unlock threshold must be at least 2x the minimum launch price",
+    },
+    {
+      code: 6014,
+      name: "LaunchAuthorityNotSet",
+      msg: "Launch authority must be set to complete the launch until 2 days after closing",
     },
   ],
 };

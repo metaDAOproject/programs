@@ -18,7 +18,7 @@ pub enum LaunchpadError {
     LaunchPeriodNotOver,
     #[msg("Launch is complete, no more funding allowed")]
     LaunchExpired,
-    #[msg("Launch needs to be in refunding state to get a refund")]
+    #[msg("For you to get a refund, either the launch needs to be in a refunding state or the launch must have been over-committed")]
     LaunchNotRefunding,
     #[msg("Launch must be initialized to be started")]
     LaunchNotInitialized,
@@ -30,4 +30,6 @@ pub enum LaunchpadError {
     InvalidPriceBasedPremineAmount,
     #[msg("Price-based unlock threshold must be at least 2x the minimum launch price")]
     InvalidPriceBasedUnlockThreshold,
+    #[msg("Launch authority must be set to complete the launch until 2 days after closing")]
+    LaunchAuthorityNotSet,
 }

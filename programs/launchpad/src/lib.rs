@@ -66,8 +66,8 @@ pub mod launchpad {
     }
 
     #[access_control(ctx.accounts.validate())]
-    pub fn complete_launch(ctx: Context<CompleteLaunch>) -> Result<()> {
-        CompleteLaunch::handle(ctx)
+    pub fn complete_launch(ctx: Context<CompleteLaunch>, args: CompleteLaunchArgs) -> Result<()> {
+        CompleteLaunch::handle(ctx, args)
     }
 
     #[access_control(ctx.accounts.validate())]
@@ -78,5 +78,10 @@ pub mod launchpad {
     #[access_control(ctx.accounts.validate())]
     pub fn claim(ctx: Context<Claim>) -> Result<()> {
         Claim::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn close_launch(ctx: Context<CloseLaunch>) -> Result<()> {
+        CloseLaunch::handle(ctx)
     }
 }

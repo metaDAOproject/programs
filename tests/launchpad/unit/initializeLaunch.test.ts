@@ -101,8 +101,8 @@ export default function suite() {
     assert.equal(storedLaunch.totalCommittedAmount.toString(), "0");
     assert.equal(storedLaunch.seqNum.toString(), "0");
     assert.exists(storedLaunch.state.initialized);
-    assert.equal(storedLaunch.unixTimestampStarted.toString(), "0");
-    assert.equal(storedLaunch.dao, null);
+    assert.isNull(storedLaunch.unixTimestampStarted);
+    assert.isNull(storedLaunch.dao);
   });
 
   it("fails when price threshold is too low", async function () {

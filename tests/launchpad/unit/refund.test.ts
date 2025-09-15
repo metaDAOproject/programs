@@ -87,26 +87,8 @@ export default function suite() {
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 7);
 
-    // Complete the launch (moves to refunding state)
-    const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
-      .transaction();
-
-    const completeLaunchLut = await createLookupTableForTransaction(
-      completeLaunchTx,
-      this
-    );
-
-    const completeLaunchMessage = new TransactionMessage({
-      payerKey: this.payer.publicKey,
-      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-      instructions: completeLaunchTx.instructions,
-    }).compileToV0Message([completeLaunchLut]);
-
-    const tx = new VersionedTransaction(completeLaunchMessage);
-    tx.sign([this.payer]);
-
-    await this.banksClient.processTransaction(tx);
+    // Close the launch (moves to refunding state)
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
 
     const initialUsdcBalance = await this.getTokenBalance(
       MAINNET_USDC,
@@ -156,30 +138,13 @@ export default function suite() {
   it("fails when user has no tokens to refund", async function () {
     // Move to refunding state without any funding
     await this.advanceBySeconds(60 * 60 * 24 * 7);
-    const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
-      .transaction();
-
-    const completeLaunchLut = await createLookupTableForTransaction(
-      completeLaunchTx,
-      this
-    );
-
-    const completeLaunchMessage = new TransactionMessage({
-      payerKey: this.payer.publicKey,
-      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-      instructions: completeLaunchTx.instructions,
-    }).compileToV0Message([completeLaunchLut]);
-
-    const tx = new VersionedTransaction(completeLaunchMessage);
-    tx.sign([this.payer]);
-
-    await this.banksClient.processTransaction(tx);
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
 
     try {
       await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
+      // console.log(e);
       // assert.include(e.message, "InvalidAmount");
     }
   });

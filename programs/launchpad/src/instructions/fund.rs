@@ -63,7 +63,7 @@ impl Fund<'_> {
         let clock = Clock::get()?;
 
         require_gte!(
-            self.launch.unix_timestamp_started + self.launch.seconds_for_launch as i64,
+            self.launch.unix_timestamp_started.unwrap() + self.launch.seconds_for_launch as i64,
             clock.unix_timestamp,
             LaunchpadError::LaunchExpired
         );

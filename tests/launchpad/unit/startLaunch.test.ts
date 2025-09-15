@@ -65,7 +65,7 @@ export default function suite() {
   it("starts launch correctly", async function () {
     // Check initial state
     let launchAccount = await launchpadClient.fetchLaunch(launch);
-    assert.equal(launchAccount.unixTimestampStarted.toString(), "0");
+    assert.isNull(launchAccount.unixTimestampStarted);
     assert.exists(launchAccount.state.initialized);
 
     // Get current slot for comparison

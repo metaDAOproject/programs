@@ -30,7 +30,7 @@ impl StartLaunch<'_> {
         let clock = Clock::get()?;
 
         launch.state = LaunchState::Live;
-        launch.unix_timestamp_started = clock.unix_timestamp;
+        launch.unix_timestamp_started = Some(clock.unix_timestamp);
 
         launch.seq_num += 1;
 
