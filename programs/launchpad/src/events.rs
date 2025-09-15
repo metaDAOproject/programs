@@ -81,3 +81,10 @@ pub struct LaunchClaimEvent {
     pub tokens_claimed: u64,
     pub funding_record: Pubkey,
 }
+
+#[event]
+pub struct LaunchCloseEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub new_state: LaunchState,
+}

@@ -1065,6 +1065,30 @@ export type Launchpad = {
         },
       ];
     },
+    {
+      name: "LaunchCloseEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newState";
+          type: {
+            defined: "LaunchState";
+          };
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -2208,6 +2232,30 @@ export const IDL: Launchpad = {
         {
           name: "fundingRecord",
           type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "LaunchCloseEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newState",
+          type: {
+            defined: "LaunchState",
+          },
           index: false,
         },
       ],

@@ -1,6 +1,6 @@
 
 use crate::error::LaunchpadError;
-use crate::events::{CommonFields, LaunchStartedEvent};
+use crate::events::{CommonFields, LaunchCloseEvent};
 use crate::state::{Launch, LaunchState};
 use anchor_lang::prelude::*;
 
@@ -46,12 +46,11 @@ impl CloseLaunch<'_> {
 
         launch.seq_num += 1;
 
-        // emit_cpi!(LaunchStartedEvent {
-        //     common: CommonFields::new(&clock, launch.seq_num),
-        //     launch: ctx.accounts.launch.key(),
-        //     launch_authority: ctx.accounts.launch_authority.key(),
-        //     slot_started: clock.slot,
-        // });
+        emit_cpi!(LaunchCloseEvent {
+            common: CommonFields::new(&clock, launch.seq_num),
+            launch: launch.key(),
+            new_state: launch.state,
+        });
 
         Ok(())
     }
