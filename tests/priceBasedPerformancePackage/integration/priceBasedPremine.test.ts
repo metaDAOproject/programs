@@ -157,8 +157,10 @@ export default function () {
 
     await this.advanceBySeconds(DAY_IN_SECONDS * 7 + 100); // Advance past the 7-day launch period
 
+    await this.launchpad.closeLaunchIx({ launch }).rpc();
+
     await this.launchpad
-      .completeLaunchIx({ launch, baseMint: tokenMint })
+      .completeLaunchIx({ launch, baseMint: tokenMint, finalRaiseAmount: minRaise })
       .rpc();
 
     // Claim tokens from the launch participation
@@ -172,7 +174,7 @@ export default function () {
 
     await this.advanceBySeconds(10);
 
-    const locker = this.priceBasedUnlock.getLockerAddress(launchSigner);
+    const performancePackage = this.priceBasedPerformancePackage.getPerformancePackageAddress(launchSigner);
 
     // Create a new DAO with governance capabilities after launch
     const newDaoNonce = new BN(Math.random() * 2 ** 50);
@@ -229,13 +231,13 @@ export default function () {
 
     // The DAO already has real TWAP data from the futarchy trading, no need to mock
 
-    // Create the instruction to change locker authority
+    // Create the instruction to change performancePackage authority
     // The current authority is the vault PDA, not the dao (as set in complete_launch.rs line 338)
-    const changeAuthorityIx = await this.priceBasedUnlock
-      .changeLockerAuthorityIx({
-        locker,
+    const changeAuthorityIx = await this.priceBasedPerformancePackage
+      .changePerformancePackageAuthorityIx({
+        performancePackage,
         currentAuthority: vaultPda,
-        newLockerAuthority: newDao,
+        newPerformancePackageAuthority: newDao,
       })
       .instruction();
       
@@ -408,8 +410,8 @@ export default function () {
     console.log("squads tx executed");
 
     // Recipient multisig votes to start the unlock process
-    const startUnlockIx = await this.priceBasedUnlock
-      .startUnlockIx({ locker, oracleAccount: dao, recipient: recipientAddress })
+    const startUnlockIx = await this.priceBasedPerformancePackage
+      .startUnlockIx({ performancePackage, oracleAccount: dao, recipient: recipientAddress })
       .instruction();
 
     // Create multisig transaction message for starting unlock
@@ -528,12 +530,12 @@ export default function () {
     console.log("Recipient address (vault PDA):", recipientAddress.toString());
 
     // Use raw program methods to override the recipient token account
-    await this.priceBasedUnlock.program.methods
+    await this.priceBasedPerformancePackage.program.methods
       .completeUnlock()
       .accounts({
-        locker,
+        performancePackage,
         oracleAccount: dao,
-        lockerTokenAccount: this.priceBasedUnlock.getLockerTokenAccountAddress(locker),
+        performancePackageTokenAccount: this.priceBasedPerformancePackage.getPerformancePackageTokenAccountAddress(performancePackage),
         tokenMint,
         recipientTokenAccount: recipientTokenAccount, // Use our manually created token account
         tokenRecipient: recipientAddress,
@@ -546,9 +548,9 @@ export default function () {
     
     console.log("Complete unlock executed successfully");
 
-    // Verify the unlock was successful and locker authority was changed
-    const finalLocker = await this.priceBasedUnlock.getLocker(locker);
-    assert.equal(finalLocker.lockerAuthority.toString(), newDao.toString(), "Locker authority is transferred to newDao");
+    // Verify the unlock was successful and performancePackage authority was changed
+    const finalPerformancePackage = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    assert.equal(finalPerformancePackage.performancePackageAuthority.toString(), newDao.toString(), "PerformancePackage authority is transferred to newDao");
     
     // Verify tokens were unlocked to the multisig vault  
     // Check balance using the manually created token account directly

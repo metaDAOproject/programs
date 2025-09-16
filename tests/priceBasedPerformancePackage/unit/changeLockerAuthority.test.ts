@@ -15,7 +15,7 @@ export default function () {
   let recipient: Keypair;
   let currentAuthority: Keypair;
   let newAuthority: Keypair;
-  let locker: PublicKey;
+  let performancePackage: PublicKey;
   let oracleAccount: Keypair;
 
   beforeEach(async function () {
@@ -63,7 +63,7 @@ export default function () {
     // Mint tokens to the authority's account
     await this.mintTo(tokenMint, tokenAuthority, this.payer, 1000000); // 1M tokens
 
-    // Initialize a locker
+    // Initialize a performancePackage
     const params = {
       priceThreshold: new BN(1000000),
       tokenAmount: new BN(100000),
@@ -76,11 +76,11 @@ export default function () {
       },
       twapLengthSeconds: new BN(300),
       tokenRecipient: recipient.publicKey,
-      lockerAuthority: currentAuthority.publicKey,
+      performancePackageAuthority: currentAuthority.publicKey,
     };
 
-    const tx = await this.priceBasedUnlock
-      .initializeLockerIx({
+    const tx = await this.priceBasedPerformancePackage
+      .initializePerformancePackageIx({
         params,
         createKey: createKey.publicKey,
         tokenMint,
@@ -96,24 +96,24 @@ export default function () {
     tx.sign(createKey, this.payer);
     await this.banksClient.processTransaction(tx);
 
-    // Get locker address
-    locker = this.priceBasedUnlock.getLockerAddress(createKey.publicKey);
+    // Get performancePackage address
+    performancePackage = this.priceBasedPerformancePackage.getPerformancePackageAddress(createKey.publicKey);
   });
 
-  it("should change locker authority successfully", async function () {
+  it("should change performancePackage authority successfully", async function () {
     // Verify initial authority
-    const initialLocker = await this.priceBasedUnlock.getLocker(locker);
+    const initialPerformancePackage = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
     assert.equal(
-      initialLocker.lockerAuthority.toString(),
+      initialPerformancePackage.performancePackageAuthority.toString(),
       currentAuthority.publicKey.toString()
     );
 
-    // Change the locker authority
-    const tx = await this.priceBasedUnlock
-      .changeLockerAuthorityIx({
-        locker,
+    // Change the performancePackage authority
+    const tx = await this.priceBasedPerformancePackage
+      .changePerformancePackageAuthorityIx({
+        performancePackage,
         currentAuthority: currentAuthority.publicKey,
-        newLockerAuthority: newAuthority.publicKey,
+        newPerformancePackageAuthority: newAuthority.publicKey,
       })
       .transaction();
 
@@ -125,9 +125,9 @@ export default function () {
     await this.banksClient.processTransaction(tx);
 
     // Verify authority was changed
-    const updatedLocker = await this.priceBasedUnlock.getLocker(locker);
+    const updatedPerformancePackage = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
     assert.equal(
-      updatedLocker.lockerAuthority.toString(),
+      updatedPerformancePackage.performancePackageAuthority.toString(),
       newAuthority.publicKey.toString()
     );
   });
@@ -150,11 +150,11 @@ export default function () {
     await this.banksClient.processTransaction(fundTx);
 
     try {
-      const tx = await this.priceBasedUnlock
-        .changeLockerAuthorityIx({
-          locker,
+      const tx = await this.priceBasedPerformancePackage
+        .changePerformancePackageAuthorityIx({
+          performancePackage,
           currentAuthority: unauthorizedWallet.publicKey,
-          newLockerAuthority: newAuthority.publicKey,
+          newPerformancePackageAuthority: newAuthority.publicKey,
         })
         .transaction();
 
@@ -171,7 +171,7 @@ export default function () {
     }
   });
 
-  it("should fail if current authority doesn't match locker authority", async function () {
+  it("should fail if current authority doesn't match performancePackage authority", async function () {
     const wrongAuthority = Keypair.generate();
 
     // Fund the wrong authority
@@ -189,11 +189,11 @@ export default function () {
     await this.banksClient.processTransaction(fundTx);
 
     try {
-      const tx = await this.priceBasedUnlock
-        .changeLockerAuthorityIx({
-          locker,
+      const tx = await this.priceBasedPerformancePackage
+        .changePerformancePackageAuthorityIx({
+          performancePackage,
           currentAuthority: wrongAuthority.publicKey,
-          newLockerAuthority: newAuthority.publicKey,
+          newPerformancePackageAuthority: newAuthority.publicKey,
         })
         .transaction();
 
@@ -212,11 +212,11 @@ export default function () {
 
   it("should allow new authority to perform authority actions", async function () {
     // First change the authority
-    const changeTx = await this.priceBasedUnlock
-      .changeLockerAuthorityIx({
-        locker,
+    const changeTx = await this.priceBasedPerformancePackage
+      .changePerformancePackageAuthorityIx({
+        performancePackage,
         currentAuthority: currentAuthority.publicKey,
-        newLockerAuthority: newAuthority.publicKey,
+        newPerformancePackageAuthority: newAuthority.publicKey,
       })
       .transaction();
 
@@ -229,7 +229,7 @@ export default function () {
 
     // Now try to propose a change using the new authority
     const pdaNonce = Math.floor(Math.random() * 1000000);
-    const proposeTx = await this.priceBasedUnlock
+    const proposeTx = await this.priceBasedPerformancePackage
       .proposeChangeIx({
         params: {
           changeType: {
@@ -242,7 +242,7 @@ export default function () {
           },
           pdaNonce: pdaNonce,
         },
-        locker,
+        performancePackage,
         proposer: newAuthority.publicKey, // New authority proposes
         payer: newAuthority.publicKey,
       })
@@ -256,12 +256,12 @@ export default function () {
     await this.banksClient.processTransaction(proposeTx);
 
     // Verify the change request was created successfully
-    const changeRequestAddr = this.priceBasedUnlock.getChangeRequestAddress(
-      locker,
+    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
+      performancePackage,
       newAuthority.publicKey,
       pdaNonce
     );
-    const changeRequest = await this.priceBasedUnlock.getChangeRequest(
+    const changeRequest = await this.priceBasedPerformancePackage.getChangeRequest(
       changeRequestAddr
     );
     assert.equal(

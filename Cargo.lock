@@ -1141,7 +1141,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "futarchy",
- "price_based_unlock",
+ "price_based_performance_package",
  "solana-program",
  "solana-security-txt",
  "spl-memo",
@@ -1465,7 +1465,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "price_based_unlock"
+name = "price_based_performance_package"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",

@@ -36,11 +36,12 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   getMetadataAddr,
+  getPerformancePackageAddr,
 } from "./utils/pda.js";
 import { FutarchyClient } from "./FutarchyClient.js";
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
-import { PriceBasedUnlockClient } from "./PriceBasedUnlockClient.js";
+import { PriceBasedPerformancePackageClient } from "./PriceBasedPerformancePackageClient.js";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
@@ -54,7 +55,7 @@ export class LaunchpadClient {
   public launchpad: Program<Launchpad>;
   public provider: AnchorProvider;
   public autocratClient: FutarchyClient;
-  public priceBasedUnlock: PriceBasedUnlockClient;
+  public priceBasedUnlock: PriceBasedPerformancePackageClient;
 
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
@@ -68,7 +69,7 @@ export class LaunchpadClient {
       autocratProgramId: params.autocratProgramId,
       conditionalVaultProgramId: params.conditionalVaultProgramId,
     });
-    this.priceBasedUnlock = PriceBasedUnlockClient.createClient({
+    this.priceBasedUnlock = PriceBasedPerformancePackageClient.createClient({
       provider: this.provider,
       priceBasedTokenLockProgramId: params.priceBasedUnlockProgramId,
     });
@@ -316,9 +317,14 @@ export class LaunchpadClient {
       this.autocratClient.getProgramId(),
     );
 
-    const locker = this.priceBasedUnlock.getLockerAddress(launchSigner);
-    const lockerTokenAccount =
-      this.priceBasedUnlock.getLockerTokenAccountAddress(locker);
+    const [performancePackage] = getPerformancePackageAddr({
+      createKey: launchSigner,
+    });
+    const performancePackageTokenAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      performancePackage,
+      true,
+    );
 
     return this.launchpad.methods
       .completeLaunch({ finalRaiseAmount })
@@ -351,15 +357,15 @@ export class LaunchpadClient {
           squadsProgram: SQUADS_PROGRAM_ID,
           squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
           squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
-          priceBasedUnlockProgram: this.priceBasedUnlock.programId,
-          priceBasedUnlockEventAuthority:
+          priceBasedPerformancePackageProgram: this.priceBasedUnlock.programId,
+          priceBasedPerformancePackageEventAuthority:
             this.priceBasedUnlock.getEventAuthorityAddress(),
         },
         squadsMultisig: multisigPda,
         squadsMultisigVault: multisigVault,
         spendingLimit,
-        locker,
-        lockerTokenAccount,
+        performancePackage,
+        performancePackageTokenAccount,
       })
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 560_000 }),

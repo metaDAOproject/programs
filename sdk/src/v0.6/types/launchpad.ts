@@ -277,12 +277,12 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "locker";
+          name: "performancePackage";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "lockerTokenAccount";
+          name: "performancePackageTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -340,12 +340,12 @@ export type Launchpad = {
               isSigner: false;
             },
             {
-              name: "priceBasedUnlockProgram";
+              name: "priceBasedPerformancePackageProgram";
               isMut: false;
               isSigner: false;
             },
             {
-              name: "priceBasedUnlockEventAuthority";
+              name: "priceBasedPerformancePackageEventAuthority";
               isMut: false;
               isSigner: false;
             },
@@ -1448,12 +1448,12 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "locker",
+          name: "performancePackage",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "lockerTokenAccount",
+          name: "performancePackageTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1511,12 +1511,12 @@ export const IDL: Launchpad = {
               isSigner: false,
             },
             {
-              name: "priceBasedUnlockProgram",
+              name: "priceBasedPerformancePackageProgram",
               isMut: false,
               isSigner: false,
             },
             {
-              name: "priceBasedUnlockEventAuthority",
+              name: "priceBasedPerformancePackageEventAuthority",
               isMut: false,
               isSigner: false,
             },

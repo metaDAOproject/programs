@@ -1,15 +1,15 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum PriceBasedUnlockError {
+pub enum PriceBasedPerformancePackageError {
     #[msg("Unlock timestamp has not been reached yet")]
     UnlockTimestampNotReached,
     #[msg("Unlock timestamp must be in the future")]
     UnlockTimestampInThePast,
-    #[msg("Locker is not in the expected state")]
-    InvalidLockerState,
+    #[msg("Performance package is not in the expected state")]
+    InvalidPerformancePackageState,
     #[msg("TWAP calculation failed")]
-    TwapCalculationFailed,
+    TwapPeriodNotElapsed,
     #[msg("Price threshold not met")]
     PriceThresholdNotMet,
     #[msg("Invalid oracle account data")]
@@ -22,4 +22,8 @@ pub enum PriceBasedUnlockError {
     UnauthorizedLockerAuthority,
     #[msg("An invariant was violated. You should get in contact with the MetaDAO team if you see this")]
     InvariantViolated,
+    #[msg("Tranche price thresholds must be monotonically increasing")]
+    TranchePriceThresholdsNotMonotonic,
+    #[msg("Tranche token amount must be greater than 0")]
+    TrancheTokenAmountZero,
 }

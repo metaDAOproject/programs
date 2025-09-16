@@ -1,7 +1,7 @@
 import conditionalVault from "./conditionalVault/main.test.js";
 import futarchy from "./futarchy/main.test.js";
 import launchpad from "./launchpad/main.test.js";
-import priceBasedUnlock from "./price_based_unlock/main.test.js";
+import priceBasedPerformancePackage from "./priceBasedPerformancePackage/main.test.js";
 
 import {
   BanksClient,
@@ -15,7 +15,7 @@ import {
   FutarchyClient,
   ConditionalVaultClient,
   LaunchpadClient,
-  PriceBasedUnlockClient,
+  PriceBasedPerformancePackageClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   SQUADS_PROGRAM_CONFIG,
@@ -27,6 +27,7 @@ import {
   getProposalAddr,
   getProposalAddrV2,
   InstructionUtils,
+  getPerformancePackageAddr,
 } from "@metadaoproject/futarchy/v0.6";
 
 import {
@@ -77,7 +78,7 @@ export interface TestContext {
   conditionalVault: ConditionalVaultClient;
   futarchy: FutarchyClient;
   launchpad: LaunchpadClient;
-  priceBasedUnlock: PriceBasedUnlockClient;
+  priceBasedPerformancePackage: PriceBasedPerformancePackageClient;
   payer: Keypair;
   squadsConnection: Connection;
   createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
@@ -186,7 +187,7 @@ before(async function () {
   this.launchpad = LaunchpadClient.createClient({
     provider: provider as any,
   });
-  this.priceBasedUnlock = PriceBasedUnlockClient.createClient({
+  this.priceBasedPerformancePackage = PriceBasedPerformancePackageClient.createClient({
     provider: provider as any,
   });
   this.provider = provider;
@@ -261,19 +262,8 @@ before(async function () {
 
     tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     tx.feePayer = this.payer.publicKey;
-    tx.sign(this.payer);
+    tx.sign(this.payer, mintAuthority);
     await this.banksClient.processTransaction(tx);
-
-    return;
-
-    return await mintTo(
-      this.banksClient,
-      this.payer,
-      mint,
-      tokenAccount,
-      mintAuthority,
-      amount
-    );
   };
 
   this.getTokenBalance = async (mint: PublicKey, owner: PublicKey) => {
@@ -465,6 +455,42 @@ before(async function () {
     return { proposal, question, baseVault, quoteVault, squadsProposal };
   };
 
+  this.setupBasicPerformancePackage = async ({ tokenMint, oracleAccount, recipient }: { tokenMint: PublicKey, oracleAccount: PublicKey, recipient: PublicKey }): Promise<PublicKey> => {
+    const createKey = Keypair.generate();
+
+    await this.priceBasedPerformancePackage.initializePerformancePackageIx({
+      params: {
+        tranches: [
+          {
+            priceThreshold: new BN(1e12),
+            tokenAmount: new BN(100 * 10 ** 6),
+          },
+          {
+            priceThreshold: new BN(2e12),
+            tokenAmount: new BN(100 * 10 ** 6),
+          }
+        ],
+        grantee: recipient,
+        performancePackageAuthority: this.payer.publicKey,
+        unlockTimestamp: new BN(
+          Number((await this.context.banksClient.getClock()).unixTimestamp) + 1
+        ),
+        oracleConfig: {
+          oracleAccount,
+          byteOffset: 0,
+        },
+        twapLengthSeconds: new BN(5), // 5 seconds for faster testing
+      },
+      createKey: createKey.publicKey,
+      tokenMint,
+      grantor: this.payer.publicKey,
+    }).signers([createKey]).rpc();
+
+    return getPerformancePackageAddr({
+      createKey: createKey.publicKey,
+    })[0];
+  };
+
   await this.createTokenAccount(MAINNET_USDC, this.payer.publicKey);
   await mintToOverride(
     this.context,
@@ -474,7 +500,7 @@ before(async function () {
 });
 
 describe("launchpad", launchpad);
-describe("price_based_unlock", priceBasedUnlock);
+describe.only("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);
 // describe.skip("project-wide integration tests", function () {

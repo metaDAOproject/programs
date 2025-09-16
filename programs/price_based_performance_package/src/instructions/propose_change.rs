@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{ChangeRequest, ChangeType, Locker, PriceBasedUnlockError};
+use crate::{ChangeProposed, ChangeRequest, ChangeType, PerformancePackage, PriceBasedPerformancePackageError};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct ProposeChangeParams {
@@ -12,12 +12,12 @@ pub struct ProposeChangeParams {
 #[event_cpi]
 pub struct ProposeChange<'info> {
     #[account(
-        init_if_needed,
-        payer = proposer,
+        init,
+        payer = payer,
         space = 8 + ChangeRequest::INIT_SPACE,
         seeds = [
             b"change_request",
-            locker.key().as_ref(),
+            performance_package.key().as_ref(),
             proposer.key().as_ref(),
             params.pda_nonce.to_le_bytes().as_ref()
         ],
@@ -25,17 +25,18 @@ pub struct ProposeChange<'info> {
     )]
     pub change_request: Account<'info, ChangeRequest>,
     #[account(mut)]
-    pub locker: Account<'info, Locker>,
-    #[account(mut)]
+    pub performance_package: Account<'info, PerformancePackage>,
     pub proposer: Signer<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> ProposeChange<'info> {
     pub fn validate(&self) -> Result<()> {
-        if self.proposer.key() != self.locker.token_recipient && self.proposer.key() != self.locker.locker_authority {
-            msg!("proposer ({}) is not the token recipient ({}) or locker authority ({})", self.proposer.key(), self.locker.token_recipient, self.locker.locker_authority);
-            return Err(PriceBasedUnlockError::UnauthorizedChangeRequest.into());
+        if self.proposer.key() != self.performance_package.recipient && self.proposer.key() != self.performance_package.performance_package_authority {
+            msg!("proposer ({}) is not the token recipient ({}) or performance package authority ({})", self.proposer.key(), self.performance_package.recipient, self.performance_package.performance_package_authority);
+            return Err(PriceBasedPerformancePackageError::UnauthorizedChangeRequest.into());
         }
 
         Ok(())
@@ -44,8 +45,9 @@ impl<'info> ProposeChange<'info> {
     pub fn handle(ctx: Context<Self>, params: ProposeChangeParams) -> Result<()> {
         let Self {
             change_request,
-            locker,
+            performance_package,
             proposer,
+            payer: _,
             system_program: _,
             event_authority: _,
             program: _,
@@ -58,26 +60,21 @@ impl<'info> ProposeChange<'info> {
 
         let clock = Clock::get()?;
 
-        // Store the current state before changing it and locker key
-        let previous_state = locker.state.clone();
-
         change_request.set_inner(ChangeRequest {
-            locker: locker.key(),
+            performance_package: performance_package.key(),
             change_type: change_type.clone(),
             proposed_at: clock.unix_timestamp,
-            previous_state,
             proposer: proposer.key(),
             pda_nonce: pda_nonce,
             pda_bump: ctx.bumps.change_request,
         });
         
         // Emit event
-        emit!(crate::events::ChangeProposed {
-            locker: locker.key(),
+        emit!(ChangeProposed {
+            locker: performance_package.key(),
             change_request: change_request.key(),
             proposer: proposer.key(),
             change_type,
-            proposed_at: clock.unix_timestamp,
         });
 
         Ok(())

@@ -1,7 +1,9 @@
-import { PublicKey, Keypair, Transaction, SystemProgram, TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, Keypair, Transaction, SystemProgram, TransactionInstruction, ComputeBudgetInstruction, ComputeBudgetProgram } from "@solana/web3.js";
 import { assert } from "chai";
 import * as token from "@solana/spl-token";
 import BN from "bn.js";
+import { getPerformancePackageAddr } from "@metadaoproject/futarchy/v0.6";
+import { expectError } from "../../utils.js";
 
 export default function () {
   let createKey: Keypair;
@@ -10,7 +12,7 @@ export default function () {
   let tokenAccount: PublicKey;
   let recipient: Keypair;
   let recipientTokenAccount: PublicKey;
-  let locker: PublicKey;
+  let performancePackage: PublicKey;
   let lockerTokenAccount: PublicKey;
   let oracleAccount: Keypair;
   let lockerAuthority: Keypair;
@@ -79,17 +81,14 @@ export default function () {
   });
 
   beforeEach(async function () {
-    // Derive PDA for locker
-    const [lockerPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("locker"), createKey.publicKey.toBuffer()],
-      this.priceBasedUnlock.programId
-    );
-    locker = lockerPda;
+    performancePackage = getPerformancePackageAddr({
+      createKey: createKey.publicKey,
+    })[0];
 
     // Derive associated token account for locker
     lockerTokenAccount = token.getAssociatedTokenAddressSync(
       tokenMint,
-      locker,
+      performancePackage,
       true
     );
   });
@@ -97,8 +96,14 @@ export default function () {
   it("should start unlock successfully when timestamp is reached", async function () {
     // First initialize the locker
     const params = {
-      priceThreshold: new BN(1000000),
-      tokenAmount: new BN(100000),
+      tranches: [
+        {
+          priceThreshold: new BN(1000000),
+          tokenAmount: new BN(100000),
+        }
+      ],
+      grantee: recipient.publicKey,
+      performancePackageAuthority: lockerAuthority.publicKey,
       unlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 1
       ), // 1 second from now
@@ -111,22 +116,15 @@ export default function () {
       lockerAuthority: lockerAuthority.publicKey,
     };
 
-    const initTx = await this.priceBasedUnlock
-      .initializeLockerIx({
+    await this.priceBasedPerformancePackage
+      .initializePerformancePackageIx({
         params,
         createKey: createKey.publicKey,
         tokenMint,
-        fromTokenAccount: tokenAccount,
-        tokenAuthority: tokenAuthority.publicKey,
-        payer: this.payer.publicKey,
+        grantor: tokenAuthority.publicKey,
       })
-      .transaction();
-
-    initTx.recentBlockhash = (
-      await this.context.banksClient.getLatestBlockhash()
-    )[0];
-    initTx.sign(createKey, this.payer, tokenAuthority);
-    await this.banksClient.processTransaction(initTx);
+      .signers([createKey, tokenAuthority])
+      .rpc();
 
     // Advance time past unlock timestamp
     await this.advanceBySeconds(2);
@@ -144,28 +142,24 @@ export default function () {
 
     await this.context.setAccount(oracleAccount.publicKey, {
       executable: false,
-      owner: this.priceBasedUnlock.programId,
+      owner: this.priceBasedPerformancePackage.programId,
       lamports: 1000000000,
       data: oracleData,
     });
 
     // Start unlock
-    const startTx = await this.priceBasedUnlock
+    await this.priceBasedPerformancePackage
       .startUnlockIx({
-        locker,
+        performancePackage,
         oracleAccount: oracleAccount.publicKey,
         recipient: recipient.publicKey,
       })
-      .transaction();
+      .signers([recipient])
+      .rpc();
 
-    startTx.recentBlockhash = (
-      await this.context.banksClient.getLatestBlockhash()
-    )[0];
-    startTx.sign(recipient);
-    await this.banksClient.processTransaction(startTx);
 
     // Verify locker state changed to Unlocking
-    const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
+    const lockerAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
     assert(lockerAccount.state.unlocking !== undefined);
     if (lockerAccount.state.unlocking) {
       assert.equal(
@@ -195,8 +189,16 @@ export default function () {
     await this.banksClient.processTransaction(fundingTx);
     
     const params = {
-      priceThreshold: new BN(1000000),
-      tokenAmount: new BN(100000),
+      // priceThreshold: new BN(1000000),
+      // tokenAmount: new BN(100000),
+      tranches: [
+        {
+          priceThreshold: new BN(1000000),
+          tokenAmount: new BN(100000),
+        }
+      ],
+      grantee: recipient.publicKey,
+      performancePackageAuthority: lockerAuthority.publicKey,
       unlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600
       ), // 1 hour from now
@@ -209,46 +211,47 @@ export default function () {
       lockerAuthority: lockerAuthority.publicKey,
     };
 
-    const initTx = await this.priceBasedUnlock
-      .initializeLockerIx({
+    await this.priceBasedPerformancePackage
+      .initializePerformancePackageIx({
         params,
         createKey: futureCreateKey.publicKey,
         tokenMint,
-        fromTokenAccount: tokenAccount,
-        tokenAuthority: tokenAuthority.publicKey,
-        payer: this.payer.publicKey,
+        grantor: tokenAuthority.publicKey,
       })
-      .transaction();
+      .signers([futureCreateKey, tokenAuthority])
+      .rpc();
 
-    initTx.recentBlockhash = (
-      await this.context.banksClient.getLatestBlockhash()
-    )[0];
-    initTx.sign(futureCreateKey, this.payer, tokenAuthority);
-    await this.banksClient.processTransaction(initTx);
+    // initTx.recentBlockhash = (
+    //   await this.context.banksClient.getLatestBlockhash()
+    // )[0];
+    // initTx.sign(futureCreateKey, this.payer, tokenAuthority);
+    // await this.banksClient.processTransaction(initTx);
 
-    const futureLocker = this.priceBasedUnlock.getLockerAddress(
-      futureCreateKey.publicKey
-    );
+    const futureLocker = getPerformancePackageAddr({
+        createKey: futureCreateKey.publicKey
+    })[0];
 
+    const callbacks = expectError("UnlockTimestampNotReached", "Unlock timestamp has not been reached yet");
     // Try to start unlock before timestamp
-    try {
-      const startTx = await this.priceBasedUnlock
-        .startUnlockIx({
-          locker: futureLocker,
-          oracleAccount: oracleAccount.publicKey,
-          recipient: recipient.publicKey,
-        })
-        .transaction();
+    await this.priceBasedPerformancePackage
+      .startUnlockIx({
+        performancePackage: futureLocker,
+        oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
+      })
+      .signers([recipient])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
 
-      startTx.recentBlockhash = (
-        await this.context.banksClient.getLatestBlockhash()
-      )[0];
-      startTx.sign(recipient);
-      await this.banksClient.processTransaction(startTx);
-      assert.fail("Expected transaction to fail");
-    } catch (error) {
-      assert.include(error.message, "0x1770");
-    }
+    //   // startTx.recentBlockhash = (
+    //   //   await this.context.banksClient.getLatestBlockhash()
+    //   // )[0];
+    //   // startTx.sign(recipient);
+    //   // await this.banksClient.processTransaction(startTx);
+    //   assert.fail("Expected transaction to fail");
+    // } catch (error) {
+    //   assert.include(error.message, "0x1770");
+    // }
   });
 
   it("should fail if locker is not in Locked state", async function () {
@@ -270,8 +273,14 @@ export default function () {
     await this.banksClient.processTransaction(fundingTx);
     
     const params = {
-      priceThreshold: new BN(1000000),
-      tokenAmount: new BN(100000),
+      tranches: [
+        {
+          priceThreshold: new BN(1000000),
+          tokenAmount: new BN(100000),
+        }
+      ],
+      grantee: recipient.publicKey,
+      performancePackageAuthority: lockerAuthority.publicKey,
       unlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 1
       ),
@@ -284,26 +293,19 @@ export default function () {
       lockerAuthority: lockerAuthority.publicKey,
     };
 
-    const initTx = await this.priceBasedUnlock
-      .initializeLockerIx({
+    const initTx = await this.priceBasedPerformancePackage
+      .initializePerformancePackageIx({
         params,
         createKey: doubleCreateKey.publicKey,
         tokenMint,
-        fromTokenAccount: tokenAccount,
-        tokenAuthority: tokenAuthority.publicKey,
-        payer: this.payer.publicKey,
+        grantor: tokenAuthority.publicKey,
       })
-      .transaction();
+      .signers([doubleCreateKey, tokenAuthority])
+      .rpc();
 
-    initTx.recentBlockhash = (
-      await this.context.banksClient.getLatestBlockhash()
-    )[0];
-    initTx.sign(doubleCreateKey, this.payer, tokenAuthority);
-    await this.banksClient.processTransaction(initTx);
-
-    const doubleLocker = this.priceBasedUnlock.getLockerAddress(
-      doubleCreateKey.publicKey
-    );
+    const doubleLocker = getPerformancePackageAddr({
+      createKey: doubleCreateKey.publicKey
+    })[0];
 
     // Advance time and start unlock
     await this.advanceBySeconds(2);
@@ -318,56 +320,38 @@ export default function () {
 
     await this.context.setAccount(oracleAccount.publicKey, {
       executable: false,
-      owner: this.priceBasedUnlock.programId,
+      owner: this.priceBasedPerformancePackage.programId,
       lamports: 1000000000,
       data: oracleData,
     });
 
-    const startTx = await this.priceBasedUnlock
+    await this.priceBasedPerformancePackage
       .startUnlockIx({
-        locker: doubleLocker,
+        performancePackage: doubleLocker,
         oracleAccount: oracleAccount.publicKey,
         recipient: recipient.publicKey,
       })
-      .transaction();
+      .signers([recipient])
+      .rpc();
 
-    startTx.recentBlockhash = (
-      await this.context.banksClient.getLatestBlockhash()
-    )[0];
-    startTx.sign(recipient);
-    await this.banksClient.processTransaction(startTx);
 
     // Advance time slightly to make the next transaction different
     await this.advanceBySeconds(1);
 
+    const callbacks = expectError("InvalidPerformancePackageState", "Performance package is not in the expected state");
+
     // Try to start unlock again (should fail)
-    try {
-      const startTx2 = await this.priceBasedUnlock
-        .startUnlockIx({
-          locker: doubleLocker,
-          oracleAccount: oracleAccount.publicKey,
-          recipient: recipient.publicKey,
-        })
-        .transaction();
-
-      // Add unique memo to ensure transaction uniqueness
-      const uniqueMemo = new TransactionInstruction({
-        keys: [],
-        programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
-        data: Buffer.from(`second-start-unlock-${Date.now()}`, "utf8"),
-      });
-      startTx2.add(uniqueMemo);
-
-      startTx2.recentBlockhash = (
-        await this.context.banksClient.getLatestBlockhash()
-      )[0];
-      startTx2.sign(recipient);
-      await this.banksClient.processTransaction(startTx2);
-      assert.fail("Expected transaction to fail");
-    } catch (error) {
-      console.log("Error:", error.message);
-      // This should fail because locker is in Unlocking state, not Locked
-      assert.include(error.message.toLowerCase(), "0x1772");
-    }
+    await this.priceBasedPerformancePackage
+      .startUnlockIx({
+        performancePackage: doubleLocker,
+        oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
+      })
+      .signers([recipient])
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })
+      ])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

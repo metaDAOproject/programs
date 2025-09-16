@@ -2,6 +2,8 @@ import { PublicKey, Keypair, Transaction, SystemProgram } from "@solana/web3.js"
 import { assert } from "chai";
 import { mintTo, getAccount } from "spl-token-bankrun";
 import BN from "bn.js";
+import { getPerformancePackageAddr, Tranche } from "@metadaoproject/futarchy/v0.6";
+import { expectError } from "../../utils.js";
 
 export default function () {
   let createKey: Keypair;
@@ -9,7 +11,7 @@ export default function () {
   let tokenAuthority: Keypair;
   let tokenAccount: PublicKey;
   let recipient: Keypair;
-  let locker: PublicKey;
+  let performancePackage: PublicKey;
   let oracleAccount: Keypair;
 
   beforeEach(async function () {
@@ -62,18 +64,26 @@ export default function () {
       1000000
     );
 
-    // Derive PDA for locker
-    const [lockerPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("locker"), createKey.publicKey.toBuffer()],
-      this.priceBasedUnlock.programId
-    );
-    locker = lockerPda;
+    performancePackage = getPerformancePackageAddr({
+      createKey: createKey.publicKey,
+    })[0];
   });
 
-  it("should initialize a locker successfully", async function () {
+  it("should initialize a performance package successfully", async function () {
+    let tranches: Tranche[] = [
+      {
+        priceThreshold: new BN(1000000),
+        tokenAmount: new BN(100000),
+      },
+      {
+        priceThreshold: new BN(2000000),
+        tokenAmount: new BN(200000),
+      }
+    ]
     const params = {
-      priceThreshold: new BN(1000000), // 1.0 with 6 decimals
-      tokenAmount: new BN(100000), // 0.1 tokens
+      tranches,
+      grantee: recipient.publicKey,
+      performancePackageAuthority: this.payer.publicKey,
       unlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600
       ), // 1 hour from now
@@ -83,17 +93,15 @@ export default function () {
       },
       twapLengthSeconds: new BN(300), // 5 minutes
       tokenRecipient: recipient.publicKey,
-      lockerAuthority: this.payer.publicKey,
     };
 
-    const tx = await this.priceBasedUnlock
-      .initializeLockerIx({
+    const tx = await this.priceBasedPerformancePackage
+      .initializePerformancePackageIx({
         params,
         createKey: createKey.publicKey,
         tokenMint,
-        fromTokenAccount: tokenAccount,
-        tokenAuthority: tokenAuthority.publicKey,
-        payer: this.payer.publicKey,
+        grantorTokenAccount: tokenAccount,
+        grantor: tokenAuthority.publicKey,
       })
       .transaction();
 
@@ -103,44 +111,45 @@ export default function () {
     tx.sign(createKey, this.payer, tokenAuthority);
     await this.banksClient.processTransaction(tx);
 
-    // Verify locker was created
-    const lockerAccount = await this.priceBasedUnlock.getLocker(locker);
-    assert.equal(lockerAccount.priceThreshold.toString(), "1000000");
-    assert.equal(lockerAccount.tokenAmount.toString(), "100000");
+    // Verify performance package was created
+    const storedPerformancePackage = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    assert.equal(storedPerformancePackage.tranches[0].priceThreshold.toString(), "1000000");
+    assert.equal(storedPerformancePackage.tranches[0].tokenAmount.toString(), "100000");
+    assert.equal(storedPerformancePackage.tranches[1].priceThreshold.toString(), "2000000");
+    assert.equal(storedPerformancePackage.tranches[1].tokenAmount.toString(), "200000");
     assert.equal(
-      lockerAccount.unlockTimestamp.toString(),
+      storedPerformancePackage.unlockTimestamp.toString(),
       params.unlockTimestamp.toString()
     );
     assert.equal(
-      lockerAccount.oracleConfig.oracleAccount.toString(),
+      storedPerformancePackage.oracleConfig.oracleAccount.toString(),
       oracleAccount.publicKey.toString()
     );
-    assert.equal(lockerAccount.oracleConfig.byteOffset, 0);
-    assert.equal(lockerAccount.twapLengthSeconds.toString(), "300");
+    assert.equal(storedPerformancePackage.oracleConfig.byteOffset, 0);
+    assert.equal(storedPerformancePackage.twapLengthSeconds.toString(), "300");
     assert.equal(
-      lockerAccount.tokenRecipient.toString(),
+      storedPerformancePackage.recipient.toString(),
       recipient.publicKey.toString()
     );
     assert.equal(
-      lockerAccount.lockerAuthority.toString(),
+      storedPerformancePackage.performancePackageAuthority.toString(),
       this.payer.publicKey.toString()
     );
     assert.equal(
-      lockerAccount.tokenMint.toString(),
+      storedPerformancePackage.tokenMint.toString(),
       tokenMint.toString()
     );
-    assert.exists(lockerAccount.state.locked);
+    assert.exists(storedPerformancePackage.state.locked);
 
     // Verify tokens were transferred
-    const lockerTokenAccount = this.priceBasedUnlock.getLockerTokenAccountAddress(locker);
-    const storedLockerTokenAccount = await getAccount(this.banksClient, lockerTokenAccount);
-    assert.equal(storedLockerTokenAccount.amount.toString(), "100000");
+    const storedPerformancePackageTokenAccount = await getAccount(this.banksClient, storedPerformancePackage.performancePackageTokenVault);
+    assert.equal(storedPerformancePackageTokenAccount.amount.toString(), "300000");
 
     const authorityBalance = await this.getTokenBalance(
       tokenMint,
       tokenAuthority.publicKey
     );
-    assert.equal(authorityBalance.toString(), "900000"); // 1000000 - 100000
+    assert.equal(authorityBalance.toString(), "700000"); // 1000000 - 100000 - 200000
   });
 
   it("should fail if unlock timestamp is in the past", async function () {
@@ -161,8 +170,14 @@ export default function () {
     await this.banksClient.processTransaction(fundingTx);
     
     const params = {
-      priceThreshold: new BN(1000000),
-      tokenAmount: new BN(100000),
+      tranches: [
+        {
+          priceThreshold: new BN(1000000),
+          tokenAmount: new BN(100000),
+        }
+      ],
+      grantee: recipient.publicKey,
+      performancePackageAuthority: this.payer.publicKey,
       unlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) - 3600
       ), // 1 hour ago
@@ -172,18 +187,15 @@ export default function () {
       },
       twapLengthSeconds: new BN(300),
       tokenRecipient: recipient.publicKey,
-      lockerAuthority: this.payer.publicKey,
     };
 
     try {
-      const tx = await this.priceBasedUnlock
-        .initializeLockerIx({
+      const tx = await this.priceBasedPerformancePackage
+        .initializePerformancePackageIx({
           params,
           createKey: pastCreateKey.publicKey,
           tokenMint,
-          fromTokenAccount: tokenAccount,
-          tokenAuthority: tokenAuthority.publicKey,
-          payer: this.payer.publicKey,
+          grantor: tokenAuthority.publicKey,
         })
         .transaction();
 
@@ -216,8 +228,14 @@ export default function () {
     await this.banksClient.processTransaction(fundingTx);
     
     const params = {
-      priceThreshold: new BN(1000000),
-      tokenAmount: new BN(0),
+      tranches: [
+        {
+          priceThreshold: new BN(1000000),
+          tokenAmount: new BN(0),
+        }
+      ],
+      grantee: recipient.publicKey,
+      performancePackageAuthority: this.payer.publicKey,
       unlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600
       ),
@@ -227,29 +245,19 @@ export default function () {
       },
       twapLengthSeconds: new BN(300),
       tokenRecipient: recipient.publicKey,
-      lockerAuthority: this.payer.publicKey,
     };
 
-    try {
-      const tx = await this.priceBasedUnlock
-        .initializeLockerIx({
-          params,
-          createKey: zeroCreateKey.publicKey,
-          tokenMint,
-          fromTokenAccount: tokenAccount,
-          tokenAuthority: tokenAuthority.publicKey,
-          payer: this.payer.publicKey,
-        })
-        .transaction();
+    const callbacks = expectError("TrancheTokenAmountZero", "Tranche token amount must be greater than 0");
 
-      tx.recentBlockhash = (
-        await this.context.banksClient.getLatestBlockhash()
-      )[0];
-      tx.sign(zeroCreateKey, this.payer, tokenAuthority);
-      await this.banksClient.processTransaction(tx);
-      assert.fail("Expected transaction to fail");
-    } catch (error) {
-      assert.include(error.message.toLowerCase(), "0x1775");
-    }
+    await this.priceBasedPerformancePackage
+      .initializePerformancePackageIx({
+        params,
+        createKey: zeroCreateKey.publicKey,
+        tokenMint,
+        grantor: tokenAuthority.publicKey,
+      })
+      .signers([zeroCreateKey, tokenAuthority])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

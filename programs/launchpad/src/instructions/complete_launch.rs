@@ -15,8 +15,8 @@ use anchor_spl::metadata::{
 use futarchy::program::Futarchy;
 use futarchy::{InitialSpendingLimit, InitializeDaoParams, ProvideLiquidityParams};
 
-use price_based_unlock::program::PriceBasedUnlock;
-use price_based_unlock::{InitializeLockerParams, OracleConfig};
+use price_based_performance_package::program::PriceBasedPerformancePackage;
+use price_based_performance_package::{InitializePerformancePackageParams, OracleConfig};
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
@@ -41,9 +41,9 @@ pub struct StaticCompleteLaunchAccounts<'info> {
     /// CHECK: checked by squads multisig program
     #[account(mut)]
     pub squads_program_config_treasury: UncheckedAccount<'info>,
-    pub price_based_unlock_program: Program<'info, PriceBasedUnlock>,
-    /// CHECK: checked by price based unlock program
-    pub price_based_unlock_event_authority: UncheckedAccount<'info>,
+    pub price_based_performance_package_program: Program<'info, PriceBasedPerformancePackage>,
+    /// CHECK: checked by price based performance package program
+    pub price_based_performance_package_event_authority: UncheckedAccount<'info>,
 }
 
 /// Completes a launch, which if the minimum raise is met:
@@ -138,13 +138,13 @@ pub struct CompleteLaunch<'info> {
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
     pub spending_limit: UncheckedAccount<'info>,
 
-    /// CHECK: initialized by price based unlock program
-    #[account(mut, seeds = [b"locker", launch_signer.key().as_ref()], bump, seeds::program = static_accounts.price_based_unlock_program)]
-    pub locker: UncheckedAccount<'info>,
+    /// CHECK: initialized by price based performance package program
+    #[account(mut, seeds = [b"performance_package", launch_signer.key().as_ref()], bump, seeds::program = static_accounts.price_based_performance_package_program)]
+    pub performance_package: UncheckedAccount<'info>,
 
-    /// CHECK: initialized by price based unlock program
-    #[account(mut, seeds = [b"locker_token_account", locker.key().as_ref()], bump, seeds::program = static_accounts.price_based_unlock_program)]
-    pub locker_token_account: UncheckedAccount<'info>,
+    /// CHECK: initialized by price based performance package program
+    #[account(mut)]
+    pub performance_package_token_account: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -319,38 +319,38 @@ impl CompleteLaunch<'_> {
 
         let clock = Clock::get()?;
 
-        price_based_unlock::cpi::initialize_locker(
-            CpiContext::new_with_signer(
-                ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
-                price_based_unlock::cpi::accounts::InitializeLocker {
-                    locker: ctx.accounts.locker.to_account_info(),
-                    create_key: ctx.accounts.launch_signer.to_account_info(),
-                    token_mint: ctx.accounts.base_mint.to_account_info(),
-                    from_token_account: ctx.accounts.launch_base_vault.to_account_info(),
-                    token_authority: ctx.accounts.launch_signer.to_account_info(),
-                    payer: ctx.accounts.payer.to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    token_program: ctx.accounts.token_program.to_account_info(),
-                    associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-                    event_authority: ctx.accounts.static_accounts.price_based_unlock_event_authority.to_account_info(),
-                    program: ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
-                    locker_token_account: ctx.accounts.locker_token_account.to_account_info(),
-                }, launch_signer),
-                InitializeLockerParams {
-                    price_threshold: launch.price_based_unlock_threshold,
-                    token_amount: launch.price_based_premine_amount,
-                    unlock_timestamp: clock.unix_timestamp + 60 * 60 * 24,
-                    oracle_config: OracleConfig {
-                        oracle_account: ctx.accounts.dao.key(),
-                        // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
-                        // spot `Pool` is always first and has the TWAP oracle
-                        byte_offset: 8 + 1,
-                    },
-                    twap_length_seconds: 300,
-                    beneficiary: launch.price_based_unlock_recipient,
-                    locker_authority: ctx.accounts.squads_multisig_vault.key(),
-                },
-        )?;
+        // price_based_unlock::cpi::initialize_locker(
+        //     CpiContext::new_with_signer(
+        //         ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
+        //         price_based_unlock::cpi::accounts::InitializeLocker {
+        //             locker: ctx.accounts.locker.to_account_info(),
+        //             create_key: ctx.accounts.launch_signer.to_account_info(),
+        //             token_mint: ctx.accounts.base_mint.to_account_info(),
+        //             from_token_account: ctx.accounts.launch_base_vault.to_account_info(),
+        //             token_authority: ctx.accounts.launch_signer.to_account_info(),
+        //             payer: ctx.accounts.payer.to_account_info(),
+        //             system_program: ctx.accounts.system_program.to_account_info(),
+        //             token_program: ctx.accounts.token_program.to_account_info(),
+        //             associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+        //             event_authority: ctx.accounts.static_accounts.price_based_unlock_event_authority.to_account_info(),
+        //             program: ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
+        //             locker_token_account: ctx.accounts.locker_token_account.to_account_info(),
+        //         }, launch_signer),
+        //         InitializePackageParams {
+        //             price_threshold: launch.price_based_unlock_threshold,
+        //             token_amount: launch.price_based_premine_amount,
+        //             unlock_timestamp: clock.unix_timestamp + 60 * 60 * 24,
+        //             oracle_config: OracleConfig {
+        //                 oracle_account: ctx.accounts.dao.key(),
+        //                 // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
+        //                 // spot `Pool` is always first and has the TWAP oracle
+        //                 byte_offset: 8 + 1,
+        //             },
+        //             twap_length_seconds: 300,
+        //             beneficiary: launch.price_based_unlock_recipient,
+        //             locker_authority: ctx.accounts.squads_multisig_vault.key(),
+        //         },
+        // )?;
 
         token::mint_to(
             CpiContext::new_with_signer(
