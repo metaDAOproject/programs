@@ -79,7 +79,7 @@ export default function () {
       performancePackageAuthority: currentAuthority.publicKey,
     };
 
-    const tx = await this.priceBasedPerformancePackage
+    await this.priceBasedPerformancePackage
       .initializePerformancePackageIx({
         params,
         createKey: createKey.publicKey,
@@ -88,16 +88,10 @@ export default function () {
         tokenAuthority: tokenAuthority,
         payer: this.payer.publicKey,
       })
-      .transaction();
-
-    tx.recentBlockhash = (
-      await this.context.banksClient.getLatestBlockhash()
-    )[0];
-    tx.sign(createKey, this.payer);
-    await this.banksClient.processTransaction(tx);
+      .rpc();
 
     // Get performancePackage address
-    performancePackage = this.priceBasedPerformancePackage.getPerformancePackageAddress(createKey.publicKey);
+    performancePackage = this.priceBasedPerformancePackage.getPerformancePackage(createKey.publicKey);
   });
 
   it("should change performancePackage authority successfully", async function () {

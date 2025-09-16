@@ -65,12 +65,12 @@ impl InitializePerformancePackage<'_> {
             grantor_token_account,
             grantor,
             performance_package_token_vault,
-            payer,
-            system_program,
+            payer: _,
+            system_program: _,
             token_program,
-            associated_token_program,
-            event_authority,
-            program,
+            associated_token_program: _,
+            event_authority: _,
+            program: _,
         } = ctx.accounts;
 
         let InitializePerformancePackageParams {
@@ -81,6 +81,8 @@ impl InitializePerformancePackage<'_> {
             grantee,
             performance_package_authority,
         } = params;
+
+        require_eq!(tranches.len(), 0);
 
         // validate that the tranches are sorted by price threshold
         for i in 1..tranches.len() {
@@ -95,9 +97,6 @@ impl InitializePerformancePackage<'_> {
             require_gt!(tranche.token_amount, 0, PriceBasedPerformancePackageError::TrancheTokenAmountZero);
         }
 
-        let token_mint = ctx.accounts.token_mint.key();
-
-        let performance_package = &mut ctx.accounts.performance_package;
         let clock = Clock::get()?;
 
         // Validate that unlock timestamp is in the future
@@ -132,10 +131,10 @@ impl InitializePerformancePackage<'_> {
             twap_length_seconds,
             recipient: grantee,
             state: PerformancePackageState::Locked,
-            create_key: ctx.accounts.create_key.key(),
+            create_key: create_key.key(),
             pda_bump: ctx.bumps.performance_package,
             performance_package_authority,
-            token_mint,
+            token_mint: token_mint.key(),
             total_token_amount,
             already_unlocked_amount: 0,
             performance_package_token_vault: performance_package_token_vault.key(),

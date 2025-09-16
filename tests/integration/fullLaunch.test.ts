@@ -19,7 +19,7 @@ import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
 
 export default async function suite() {
-  it("launch a DAO, have a multi-ix proposal pass, and execute it", async function () {
+  it("launch a DAO, have a multi-ix proposal pass, execute it, and have insiders vest their first 2 tranches", async function () {
     // Create multiple funders
     const funder1 = Keypair.generate();
     const funder2 = Keypair.generate();
