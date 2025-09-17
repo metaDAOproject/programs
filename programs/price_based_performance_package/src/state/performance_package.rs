@@ -57,7 +57,7 @@ pub struct PerformancePackage {
     /// Amount of tokens already unlocked
     pub already_unlocked_amount: u64,
     /// The timestamp when unlocking can begin
-    pub unlock_timestamp: i64,
+    pub min_unlock_timestamp: i64,
     /// Where to pull price data from
     pub oracle_config: OracleConfig,
     /// Length of time in seconds for TWAP calculation

@@ -30,6 +30,14 @@ pub enum LaunchpadError {
     InvalidPriceBasedPremineAmount,
     #[msg("Price-based unlock threshold must be at least 2x the minimum launch price")]
     InvalidPriceBasedUnlockThreshold,
+    #[msg("Insiders must be forced to wait at least 18 months before unlocking their tokens")]
+    InvalidPerformancePackageMinUnlockTime,
     #[msg("Launch authority must be set to complete the launch until 2 days after closing")]
     LaunchAuthorityNotSet,
+    #[msg("The final amount raised must be greater than or equal to the minimum raise amount")]
+    FinalRaiseAmountTooLow,
+    #[msg("Tokens already claimed")]
+    TokensAlreadyClaimed,
+    #[msg("Money already refunded")]
+    MoneyAlreadyRefunded,
 }

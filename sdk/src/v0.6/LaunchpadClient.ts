@@ -126,9 +126,9 @@ export class LaunchpadClient {
     quoteMint = MAINNET_USDC,
     monthlySpendingLimitAmount,
     monthlySpendingLimitMembers,
-    priceBasedUnlockAddress,
-    priceBasedPremineAmount,
-    priceBasedUnlockThreshold,
+    performancePackageGrantee,
+    performancePackageTokenAmount,
+    monthsUntilInsidersCanUnlock,
     launchAuthority = this.provider.publicKey,
     payer = this.provider.publicKey,
   }: {
@@ -141,9 +141,9 @@ export class LaunchpadClient {
     quoteMint?: PublicKey;
     monthlySpendingLimitAmount: BN;
     monthlySpendingLimitMembers: PublicKey[];
-    priceBasedUnlockAddress: PublicKey;
-    priceBasedPremineAmount: BN;
-    priceBasedUnlockThreshold: BN;
+    performancePackageGrantee: PublicKey;
+    performancePackageTokenAmount: BN;
+    monthsUntilInsidersCanUnlock: number;
     launchAuthority?: PublicKey;
     payer?: PublicKey;
   }) {
@@ -174,9 +174,9 @@ export class LaunchpadClient {
         tokenUri,
         monthlySpendingLimitAmount,
         monthlySpendingLimitMembers,
-        priceBasedUnlockAddress,
-        priceBasedPremineAmount,
-        priceBasedUnlockThreshold,
+        performancePackageGrantee,
+        performancePackageTokenAmount,
+        monthsUntilInsidersCanUnlock,
       })
       .accounts({
         launch,
@@ -264,11 +264,13 @@ export class LaunchpadClient {
     quoteMint = MAINNET_USDC,
     baseMint,
     finalRaiseAmount,
+    launchAuthority,
   }: {
     launch: PublicKey;
     quoteMint?: PublicKey;
     baseMint: PublicKey;
     finalRaiseAmount: BN;
+    launchAuthority: PublicKey | null;
   }) {
     const launchSigner = this.getLaunchSignerAddress({ launch });
 
@@ -333,7 +335,7 @@ export class LaunchpadClient {
         launchSigner,
         launchQuoteVault,
         launchBaseVault,
-        launchAuthority: null,
+        launchAuthority,
         dao,
         treasuryQuoteAccount,
         quoteMint,
@@ -372,12 +374,15 @@ export class LaunchpadClient {
       ]);
   }
 
-  refundIx(
-    launch: PublicKey,
-    funder: PublicKey = this.provider.publicKey,
-    quoteMint: PublicKey,
-    isDevnet: boolean = false,
-  ) {
+  refundIx({
+    launch,
+    funder = this.provider.publicKey,
+    quoteMint = MAINNET_USDC,
+  }: {
+    launch: PublicKey;
+    funder?: PublicKey;
+    quoteMint?: PublicKey;
+  }) {
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch,

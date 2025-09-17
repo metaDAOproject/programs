@@ -7,7 +7,7 @@ use super::*;
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub struct InitializePerformancePackageParams {
     pub tranches: Vec<Tranche>,
-    pub unlock_timestamp: i64,
+    pub min_unlock_timestamp: i64,
     pub oracle_config: OracleConfig,
     pub twap_length_seconds: u64,
     pub grantee: Pubkey,
@@ -75,14 +75,14 @@ impl InitializePerformancePackage<'_> {
 
         let InitializePerformancePackageParams {
             tranches,
-            unlock_timestamp,
+            min_unlock_timestamp,
             oracle_config,
             twap_length_seconds,
             grantee,
             performance_package_authority,
         } = params;
 
-        require_eq!(tranches.len(), 0);
+        require_neq!(tranches.len(), 0);
 
         // validate that the tranches are sorted by price threshold
         for i in 1..tranches.len() {
@@ -101,7 +101,7 @@ impl InitializePerformancePackage<'_> {
 
         // Validate that unlock timestamp is in the future
         require_gt!(
-            unlock_timestamp,
+            min_unlock_timestamp,
             clock.unix_timestamp,
             PriceBasedPerformancePackageError::UnlockTimestampInThePast
         );
@@ -126,7 +126,7 @@ impl InitializePerformancePackage<'_> {
         
         performance_package.set_inner(PerformancePackage {
             tranches: tranches.into_iter().map(|tranche| tranche.into()).collect(),
-            unlock_timestamp,
+            min_unlock_timestamp,
             oracle_config,
             twap_length_seconds,
             recipient: grantee,

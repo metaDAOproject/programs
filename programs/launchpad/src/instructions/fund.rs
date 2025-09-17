@@ -97,6 +97,8 @@ impl Fund<'_> {
                 launch: ctx.accounts.launch.key(),
                 committed_amount: amount,
                 seq_num: 0,
+                is_tokens_claimed: false,
+                is_usdc_refunded: false,
             });
         }
 

@@ -17,7 +17,6 @@ pub struct Refund<'info> {
 
     #[account(
         mut,
-        close = funder,
         has_one = funder,
         seeds = [b"funding_record", launch.key().as_ref(), funder.key().as_ref()],
         bump = funding_record.pda_bump
@@ -30,10 +29,10 @@ pub struct Refund<'info> {
     /// CHECK: just a signer
     pub launch_signer: UncheckedAccount<'info>,
 
-    #[account(mut)]
-    pub funder: Signer<'info>,
+    /// CHECK: not used, just for constraints
+    pub funder: UncheckedAccount<'info>,
 
-    #[account(mut)]
+    #[account(mut, associated_token::mint = launch.quote_mint, associated_token::authority = funder)]
     pub funder_quote_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -47,6 +46,12 @@ impl Refund<'_> {
                 (self.launch.state == LaunchState::Complete && self.launch.final_raise_amount.unwrap() < self.launch.total_committed_amount),
             LaunchpadError::LaunchNotRefunding
         );
+
+        require!(
+            !self.funding_record.is_usdc_refunded,
+            LaunchpadError::MoneyAlreadyRefunded
+        );
+
         Ok(())
     }
 
@@ -60,7 +65,6 @@ impl Refund<'_> {
             LaunchState::Complete => ((launch.final_raise_amount.unwrap() as u128) * funding_record.committed_amount as u128 / launch.total_committed_amount as u128) as u64,
             _ => unreachable!(),
         };
-        funding_record.committed_amount = 0;
 
         let seeds = &[
             b"launch_signer",
@@ -68,6 +72,8 @@ impl Refund<'_> {
             &[launch.launch_signer_pda_bump],
         ];
         let signer = &[&seeds[..]];
+
+        funding_record.is_usdc_refunded = true;
 
         // Transfer USDC back to the user
         token::transfer(

@@ -19,7 +19,6 @@ pub struct Claim<'info> {
 
     #[account(
         mut,
-        close = payer,
         has_one = funder,
         seeds = [b"funding_record", launch.key().as_ref(), funder.key().as_ref()],
         bump = funding_record.pda_bump
@@ -37,9 +36,6 @@ pub struct Claim<'info> {
 
     /// CHECK: not used, just for constraints
     pub funder: UncheckedAccount<'info>,
-
-    #[account(mut)]
-    pub payer: Signer<'info>,
 
     #[account(
         mut,
@@ -59,12 +55,17 @@ impl Claim<'_> {
             LaunchpadError::InvalidLaunchState
         );
 
+        require!(
+            !self.funding_record.is_tokens_claimed,
+            LaunchpadError::TokensAlreadyClaimed
+        );
+
         Ok(())
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let launch = &ctx.accounts.launch;
-        let funding_record = &ctx.accounts.funding_record;
+        let launch = &mut ctx.accounts.launch;
+        let funding_record = &mut ctx.accounts.funding_record;
         let launch_key = launch.key();
 
         // Calculate tokens to transfer based on contribution percentage
@@ -81,6 +82,8 @@ impl Claim<'_> {
         ];
         let signer = &[&seeds[..]];
 
+        funding_record.is_tokens_claimed = true;
+
         // Transfer tokens from vault to funder
         token::transfer(
             CpiContext::new_with_signer(
@@ -94,6 +97,8 @@ impl Claim<'_> {
             ),
             token_amount,
         )?;
+
+        launch.seq_num += 1;
 
         let clock = Clock::get()?;
         emit_cpi!(LaunchClaimEvent {

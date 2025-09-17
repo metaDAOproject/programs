@@ -500,10 +500,10 @@ before(async function () {
 });
 
 describe("launchpad", launchpad);
-describe.only("price_based_performance_package", priceBasedPerformancePackage);
+describe("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);
-// describe.skip("project-wide integration tests", function () {
-//   it("mint and swap in a single transaction", mintAndSwap);
-//   describe("full launch", fullLaunch);
-// });
+describe.only("project-wide integration tests", function () {
+  it.skip("mint and swap in a single transaction", mintAndSwap);
+  describe("full launch", fullLaunch);
+});

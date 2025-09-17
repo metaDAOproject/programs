@@ -37,7 +37,7 @@ impl StartUnlock<'_> {
         // Verify that the current time is past the unlock timestamp
         require_gte!(
             clock.unix_timestamp,
-            performance_package.unlock_timestamp,
+            performance_package.min_unlock_timestamp,
             PriceBasedPerformancePackageError::UnlockTimestampNotReached
         );
 
@@ -63,7 +63,7 @@ impl StartUnlock<'_> {
 
         // The last updated timestamp should be greater than or equal to the unlock timestamp
         // and less than or equal to the current time
-        require_gte!(last_updated_timestamp, performance_package.unlock_timestamp, PriceBasedPerformancePackageError::InvalidOracleData);
+        require_gte!(last_updated_timestamp, performance_package.min_unlock_timestamp, PriceBasedPerformancePackageError::InvalidOracleData);
         require_gte!(clock.unix_timestamp, last_updated_timestamp, PriceBasedPerformancePackageError::InvalidOracleData);
 
         performance_package.state = PerformancePackageState::Unlocking {

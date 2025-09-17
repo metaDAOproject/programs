@@ -313,7 +313,7 @@ export type PriceBasedPerformancePackage = {
             type: "u64";
           },
           {
-            name: "unlockTimestamp";
+            name: "minUnlockTimestamp";
             docs: ["The timestamp when unlocking can begin"];
             type: "i64";
           },
@@ -468,7 +468,7 @@ export type PriceBasedPerformancePackage = {
             };
           },
           {
-            name: "unlockTimestamp";
+            name: "minUnlockTimestamp";
             type: "i64";
           },
           {
@@ -1184,7 +1184,7 @@ export const IDL: PriceBasedPerformancePackage = {
             type: "u64",
           },
           {
-            name: "unlockTimestamp",
+            name: "minUnlockTimestamp",
             docs: ["The timestamp when unlocking can begin"],
             type: "i64",
           },
@@ -1339,7 +1339,7 @@ export const IDL: PriceBasedPerformancePackage = {
             },
           },
           {
-            name: "unlockTimestamp",
+            name: "minUnlockTimestamp",
             type: "i64",
           },
           {

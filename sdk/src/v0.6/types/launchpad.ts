@@ -396,8 +396,8 @@ export type Launchpad = {
         },
         {
           name: "funder";
-          isMut: true;
-          isSigner: true;
+          isMut: false;
+          isSigner: false;
         },
         {
           name: "funderQuoteAccount";
@@ -459,11 +459,6 @@ export type Launchpad = {
           name: "funder";
           isMut: false;
           isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
         },
         {
           name: "funderTokenAccount";
@@ -547,6 +542,16 @@ export type Launchpad = {
               "The sequence number of this funding record. Useful for sorting events.",
             ];
             type: "u64";
+          },
+          {
+            name: "isTokensClaimed";
+            docs: ["Whether the tokens have been claimed."];
+            type: "bool";
+          },
+          {
+            name: "isUsdcRefunded";
+            docs: ["Whether the USDC has been refunded."];
+            type: "bool";
           },
         ];
       };
@@ -691,19 +696,25 @@ export type Launchpad = {
             };
           },
           {
-            name: "priceBasedUnlockRecipient";
-            docs: ["The price-based unlock address."];
+            name: "performancePackageGrantee";
+            docs: [
+              "The address that will receive the performance package tokens.",
+            ];
             type: "publicKey";
           },
           {
-            name: "priceBasedPremineAmount";
-            docs: ["The price-based premine amount."];
+            name: "performancePackageTokenAmount";
+            docs: [
+              "The amount of tokens to be granted to the performance package grantee.",
+            ];
             type: "u64";
           },
           {
-            name: "priceBasedUnlockThreshold";
-            docs: ["The price threshold for price-based unlock."];
-            type: "u128";
+            name: "monthsUntilInsidersCanUnlock";
+            docs: [
+              "The number of months that insiders must wait before unlocking their tokens.",
+            ];
+            type: "u8";
           },
         ];
       };
@@ -778,16 +789,16 @@ export type Launchpad = {
             type: "string";
           },
           {
-            name: "priceBasedUnlockAddress";
+            name: "performancePackageGrantee";
             type: "publicKey";
           },
           {
-            name: "priceBasedPremineAmount";
+            name: "performancePackageTokenAmount";
             type: "u64";
           },
           {
-            name: "priceBasedUnlockThreshold";
-            type: "u128";
+            name: "monthsUntilInsidersCanUnlock";
+            type: "u8";
           },
         ];
       };
@@ -1163,8 +1174,28 @@ export type Launchpad = {
     },
     {
       code: 6014;
+      name: "InvalidPerformancePackageMinUnlockTime";
+      msg: "Insiders must be forced to wait at least 18 months before unlocking their tokens";
+    },
+    {
+      code: 6015;
       name: "LaunchAuthorityNotSet";
       msg: "Launch authority must be set to complete the launch until 2 days after closing";
+    },
+    {
+      code: 6016;
+      name: "FinalRaiseAmountTooLow";
+      msg: "The final amount raised must be greater than or equal to the minimum raise amount";
+    },
+    {
+      code: 6017;
+      name: "TokensAlreadyClaimed";
+      msg: "Tokens already claimed";
+    },
+    {
+      code: 6018;
+      name: "MoneyAlreadyRefunded";
+      msg: "Money already refunded";
     },
   ];
 };
@@ -1567,8 +1598,8 @@ export const IDL: Launchpad = {
         },
         {
           name: "funder",
-          isMut: true,
-          isSigner: true,
+          isMut: false,
+          isSigner: false,
         },
         {
           name: "funderQuoteAccount",
@@ -1630,11 +1661,6 @@ export const IDL: Launchpad = {
           name: "funder",
           isMut: false,
           isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
         },
         {
           name: "funderTokenAccount",
@@ -1718,6 +1744,16 @@ export const IDL: Launchpad = {
               "The sequence number of this funding record. Useful for sorting events.",
             ],
             type: "u64",
+          },
+          {
+            name: "isTokensClaimed",
+            docs: ["Whether the tokens have been claimed."],
+            type: "bool",
+          },
+          {
+            name: "isUsdcRefunded",
+            docs: ["Whether the USDC has been refunded."],
+            type: "bool",
           },
         ],
       },
@@ -1862,19 +1898,25 @@ export const IDL: Launchpad = {
             },
           },
           {
-            name: "priceBasedUnlockRecipient",
-            docs: ["The price-based unlock address."],
+            name: "performancePackageGrantee",
+            docs: [
+              "The address that will receive the performance package tokens.",
+            ],
             type: "publicKey",
           },
           {
-            name: "priceBasedPremineAmount",
-            docs: ["The price-based premine amount."],
+            name: "performancePackageTokenAmount",
+            docs: [
+              "The amount of tokens to be granted to the performance package grantee.",
+            ],
             type: "u64",
           },
           {
-            name: "priceBasedUnlockThreshold",
-            docs: ["The price threshold for price-based unlock."],
-            type: "u128",
+            name: "monthsUntilInsidersCanUnlock",
+            docs: [
+              "The number of months that insiders must wait before unlocking their tokens.",
+            ],
+            type: "u8",
           },
         ],
       },
@@ -1949,16 +1991,16 @@ export const IDL: Launchpad = {
             type: "string",
           },
           {
-            name: "priceBasedUnlockAddress",
+            name: "performancePackageGrantee",
             type: "publicKey",
           },
           {
-            name: "priceBasedPremineAmount",
+            name: "performancePackageTokenAmount",
             type: "u64",
           },
           {
-            name: "priceBasedUnlockThreshold",
-            type: "u128",
+            name: "monthsUntilInsidersCanUnlock",
+            type: "u8",
           },
         ],
       },
@@ -2334,8 +2376,28 @@ export const IDL: Launchpad = {
     },
     {
       code: 6014,
+      name: "InvalidPerformancePackageMinUnlockTime",
+      msg: "Insiders must be forced to wait at least 18 months before unlocking their tokens",
+    },
+    {
+      code: 6015,
       name: "LaunchAuthorityNotSet",
       msg: "Launch authority must be set to complete the launch until 2 days after closing",
+    },
+    {
+      code: 6016,
+      name: "FinalRaiseAmountTooLow",
+      msg: "The final amount raised must be greater than or equal to the minimum raise amount",
+    },
+    {
+      code: 6017,
+      name: "TokensAlreadyClaimed",
+      msg: "Tokens already claimed",
+    },
+    {
+      code: 6018,
+      name: "MoneyAlreadyRefunded",
+      msg: "Money already refunded",
     },
   ],
 };
