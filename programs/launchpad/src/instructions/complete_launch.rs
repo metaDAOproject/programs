@@ -15,8 +15,8 @@ use anchor_spl::metadata::{
 use futarchy::program::Futarchy;
 use futarchy::{InitialSpendingLimit, InitializeDaoParams, ProvideLiquidityParams};
 
-use price_based_unlock::program::PriceBasedUnlock;
-use price_based_unlock::{InitializeLockerParams, OracleConfig};
+use price_based_performance_package::program::PriceBasedPerformancePackage;
+use price_based_performance_package::{InitializePerformancePackageParams, OracleConfig, Tranche};
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
@@ -41,9 +41,9 @@ pub struct StaticCompleteLaunchAccounts<'info> {
     /// CHECK: checked by squads multisig program
     #[account(mut)]
     pub squads_program_config_treasury: UncheckedAccount<'info>,
-    pub price_based_unlock_program: Program<'info, PriceBasedUnlock>,
-    /// CHECK: checked by price based unlock program
-    pub price_based_unlock_event_authority: UncheckedAccount<'info>,
+    pub price_based_performance_package_program: Program<'info, PriceBasedPerformancePackage>,
+    /// CHECK: checked by price based performance package program
+    pub price_based_performance_package_event_authority: UncheckedAccount<'info>,
 }
 
 /// Completes a launch, which if the minimum raise is met:
@@ -138,13 +138,13 @@ pub struct CompleteLaunch<'info> {
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
     pub spending_limit: UncheckedAccount<'info>,
 
-    /// CHECK: initialized by price based unlock program
-    #[account(mut, seeds = [b"locker", launch_signer.key().as_ref()], bump, seeds::program = static_accounts.price_based_unlock_program)]
-    pub locker: UncheckedAccount<'info>,
+    /// CHECK: initialized by price based performance package program
+    #[account(mut, seeds = [b"performance_package", launch_signer.key().as_ref()], bump, seeds::program = static_accounts.price_based_performance_package_program)]
+    pub performance_package: UncheckedAccount<'info>,
 
-    /// CHECK: initialized by price based unlock program
-    #[account(mut, seeds = [b"locker_token_account", locker.key().as_ref()], bump, seeds::program = static_accounts.price_based_unlock_program)]
-    pub locker_token_account: UncheckedAccount<'info>,
+    /// CHECK: initialized by price based performance package program
+    #[account(mut)]
+    pub performance_package_token_account: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -156,15 +156,20 @@ impl CompleteLaunch<'_> {
     pub fn validate(&self) -> Result<()> {
         let clock = Clock::get()?;
 
-        require!(
-            self.launch.state == LaunchState::Closed,
+        require_eq!(
+            self.launch.state,
+            LaunchState::Closed,
             LaunchpadError::InvalidLaunchState
         );
 
         // if the launch was closed within 2 days, the launch authority must be the one
         // to complete the launch
-        if self.launch.unix_timestamp_closed.unwrap() + 60 * 60 * 24 * 2 < clock.unix_timestamp {
-            require!(self.launch_authority.is_some(), LaunchpadError::LaunchAuthorityNotSet);
+        let two_days_after_close = self.launch.unix_timestamp_closed.unwrap() + 60 * 60 * 24 * 2;
+        if two_days_after_close > clock.unix_timestamp {
+            if self.launch_authority.is_none() {
+                msg!("Launch authority must complete launch until unix timestamp {}. Current time is {}.", two_days_after_close, clock.unix_timestamp);
+                return Err(LaunchpadError::LaunchAuthorityNotSet.into());
+            }
 
             require_keys_eq!(self.launch_authority.as_ref().unwrap().key(), self.launch.launch_authority, LaunchpadError::LaunchAuthorityNotSet);
         }
@@ -180,7 +185,7 @@ impl CompleteLaunch<'_> {
             final_raise_amount = ctx.accounts.launch.total_committed_amount;
         }
 
-        require_gte!(final_raise_amount, ctx.accounts.launch.minimum_raise_amount);
+        require_gte!(final_raise_amount, ctx.accounts.launch.minimum_raise_amount, LaunchpadError::FinalRaiseAmountTooLow);
 
         let launch = &mut ctx.accounts.launch;
 
@@ -267,9 +272,10 @@ impl CompleteLaunch<'_> {
             InitializeDaoParams {
                 twap_initial_observation: price_1e12,
                 twap_max_observation_change_per_update: price_1e12 / 20,
-                min_quote_futarchic_liquidity: final_raise_amount / 100,
-                min_base_futarchic_liquidity: TOKENS_TO_PARTICIPANTS / 100,
-                pass_threshold_bps: 300,
+                // We're providing liquidity, so that can be used for proposals
+                min_quote_futarchic_liquidity: 0,
+                min_base_futarchic_liquidity: 0,
+                pass_threshold_bps: 150,
                 base_to_stake: TOKENS_TO_PARTICIPANTS / 100,
                 seconds_per_proposal: 3 * 24 * 60 * 60,
                 twap_start_delay_seconds: 24 * 60 * 60,
@@ -319,36 +325,57 @@ impl CompleteLaunch<'_> {
 
         let clock = Clock::get()?;
 
-        price_based_unlock::cpi::initialize_locker(
+        price_based_performance_package::cpi::initialize_performance_package(
             CpiContext::new_with_signer(
-                ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
-                price_based_unlock::cpi::accounts::InitializeLocker {
-                    locker: ctx.accounts.locker.to_account_info(),
+                ctx.accounts.static_accounts.price_based_performance_package_program.to_account_info(),
+                price_based_performance_package::cpi::accounts::InitializePerformancePackage {
+                    performance_package: ctx.accounts.performance_package.to_account_info(),
                     create_key: ctx.accounts.launch_signer.to_account_info(),
                     token_mint: ctx.accounts.base_mint.to_account_info(),
-                    from_token_account: ctx.accounts.launch_base_vault.to_account_info(),
-                    token_authority: ctx.accounts.launch_signer.to_account_info(),
+                    grantor_token_account: ctx.accounts.launch_base_vault.to_account_info(),
+                    grantor: ctx.accounts.launch_signer.to_account_info(),
                     payer: ctx.accounts.payer.to_account_info(),
                     system_program: ctx.accounts.system_program.to_account_info(),
                     token_program: ctx.accounts.token_program.to_account_info(),
                     associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-                    event_authority: ctx.accounts.static_accounts.price_based_unlock_event_authority.to_account_info(),
-                    program: ctx.accounts.static_accounts.price_based_unlock_program.to_account_info(),
-                    locker_token_account: ctx.accounts.locker_token_account.to_account_info(),
+                    event_authority: ctx.accounts.static_accounts.price_based_performance_package_event_authority.to_account_info(),
+                    program: ctx.accounts.static_accounts.price_based_performance_package_program.to_account_info(),
+                    performance_package_token_vault: ctx.accounts.performance_package_token_account.to_account_info(),
                 }, launch_signer),
-                InitializeLockerParams {
-                    price_threshold: launch.price_based_unlock_threshold,
-                    token_amount: launch.price_based_premine_amount,
-                    unlock_timestamp: clock.unix_timestamp + 60 * 60 * 24,
+                InitializePerformancePackageParams {
+                    tranches: vec![
+                        Tranche {
+                            price_threshold: price_1e12 * 2,
+                            token_amount: launch.performance_package_token_amount / 5,
+                        },
+                        Tranche {
+                            price_threshold: price_1e12 * 4,
+                            token_amount: launch.performance_package_token_amount / 5,
+                        },
+                        Tranche {
+                            price_threshold: price_1e12 * 8,
+                            token_amount: launch.performance_package_token_amount / 5,
+                        },
+                        Tranche {
+                            price_threshold: price_1e12 * 16,
+                            token_amount: launch.performance_package_token_amount / 5,
+                        },
+                        Tranche {
+                            price_threshold: price_1e12 * 32,
+                            token_amount: launch.performance_package_token_amount / 5,
+                        },
+                    ],
+                    min_unlock_timestamp: clock.unix_timestamp + (launch.months_until_insiders_can_unlock as i64 * 30 * 24 * 60 * 60),
                     oracle_config: OracleConfig {
                         oracle_account: ctx.accounts.dao.key(),
                         // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
                         // spot `Pool` is always first and has the TWAP oracle
                         byte_offset: 8 + 1,
                     },
-                    twap_length_seconds: 300,
-                    beneficiary: launch.price_based_unlock_recipient,
-                    locker_authority: ctx.accounts.squads_multisig_vault.key(),
+                    // 3 month TWAP
+                    twap_length_seconds: 3 * 30 * 24 * 60 * 60,
+                    grantee: launch.performance_package_grantee,
+                    performance_package_authority: ctx.accounts.squads_multisig_vault.key(),
                 },
         )?;
 

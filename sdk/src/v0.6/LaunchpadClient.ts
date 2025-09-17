@@ -36,11 +36,12 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   getMetadataAddr,
+  getPerformancePackageAddr,
 } from "./utils/pda.js";
 import { FutarchyClient } from "./FutarchyClient.js";
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
-import { PriceBasedUnlockClient } from "./PriceBasedUnlockClient.js";
+import { PriceBasedPerformancePackageClient } from "./PriceBasedPerformancePackageClient.js";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
@@ -54,7 +55,7 @@ export class LaunchpadClient {
   public launchpad: Program<Launchpad>;
   public provider: AnchorProvider;
   public autocratClient: FutarchyClient;
-  public priceBasedUnlock: PriceBasedUnlockClient;
+  public priceBasedUnlock: PriceBasedPerformancePackageClient;
 
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
@@ -68,7 +69,7 @@ export class LaunchpadClient {
       autocratProgramId: params.autocratProgramId,
       conditionalVaultProgramId: params.conditionalVaultProgramId,
     });
-    this.priceBasedUnlock = PriceBasedUnlockClient.createClient({
+    this.priceBasedUnlock = PriceBasedPerformancePackageClient.createClient({
       provider: this.provider,
       priceBasedTokenLockProgramId: params.priceBasedUnlockProgramId,
     });
@@ -125,9 +126,9 @@ export class LaunchpadClient {
     quoteMint = MAINNET_USDC,
     monthlySpendingLimitAmount,
     monthlySpendingLimitMembers,
-    priceBasedUnlockAddress,
-    priceBasedPremineAmount,
-    priceBasedUnlockThreshold,
+    performancePackageGrantee,
+    performancePackageTokenAmount,
+    monthsUntilInsidersCanUnlock,
     launchAuthority = this.provider.publicKey,
     payer = this.provider.publicKey,
   }: {
@@ -140,9 +141,9 @@ export class LaunchpadClient {
     quoteMint?: PublicKey;
     monthlySpendingLimitAmount: BN;
     monthlySpendingLimitMembers: PublicKey[];
-    priceBasedUnlockAddress: PublicKey;
-    priceBasedPremineAmount: BN;
-    priceBasedUnlockThreshold: BN;
+    performancePackageGrantee: PublicKey;
+    performancePackageTokenAmount: BN;
+    monthsUntilInsidersCanUnlock: number;
     launchAuthority?: PublicKey;
     payer?: PublicKey;
   }) {
@@ -173,9 +174,9 @@ export class LaunchpadClient {
         tokenUri,
         monthlySpendingLimitAmount,
         monthlySpendingLimitMembers,
-        priceBasedUnlockAddress,
-        priceBasedPremineAmount,
-        priceBasedUnlockThreshold,
+        performancePackageGrantee,
+        performancePackageTokenAmount,
+        monthsUntilInsidersCanUnlock,
       })
       .accounts({
         launch,
@@ -263,11 +264,13 @@ export class LaunchpadClient {
     quoteMint = MAINNET_USDC,
     baseMint,
     finalRaiseAmount,
+    launchAuthority,
   }: {
     launch: PublicKey;
     quoteMint?: PublicKey;
     baseMint: PublicKey;
     finalRaiseAmount: BN;
+    launchAuthority: PublicKey | null;
   }) {
     const launchSigner = this.getLaunchSignerAddress({ launch });
 
@@ -316,9 +319,14 @@ export class LaunchpadClient {
       this.autocratClient.getProgramId(),
     );
 
-    const locker = this.priceBasedUnlock.getLockerAddress(launchSigner);
-    const lockerTokenAccount =
-      this.priceBasedUnlock.getLockerTokenAccountAddress(locker);
+    const [performancePackage] = getPerformancePackageAddr({
+      createKey: launchSigner,
+    });
+    const performancePackageTokenAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      performancePackage,
+      true,
+    );
 
     return this.launchpad.methods
       .completeLaunch({ finalRaiseAmount })
@@ -327,7 +335,7 @@ export class LaunchpadClient {
         launchSigner,
         launchQuoteVault,
         launchBaseVault,
-        launchAuthority: null,
+        launchAuthority,
         dao,
         treasuryQuoteAccount,
         quoteMint,
@@ -351,27 +359,30 @@ export class LaunchpadClient {
           squadsProgram: SQUADS_PROGRAM_ID,
           squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
           squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
-          priceBasedUnlockProgram: this.priceBasedUnlock.programId,
-          priceBasedUnlockEventAuthority:
+          priceBasedPerformancePackageProgram: this.priceBasedUnlock.programId,
+          priceBasedPerformancePackageEventAuthority:
             this.priceBasedUnlock.getEventAuthorityAddress(),
         },
         squadsMultisig: multisigPda,
         squadsMultisigVault: multisigVault,
         spendingLimit,
-        locker,
-        lockerTokenAccount,
+        performancePackage,
+        performancePackageTokenAccount,
       })
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 560_000 }),
       ]);
   }
 
-  refundIx(
-    launch: PublicKey,
-    funder: PublicKey = this.provider.publicKey,
-    quoteMint: PublicKey,
-    isDevnet: boolean = false,
-  ) {
+  refundIx({
+    launch,
+    funder = this.provider.publicKey,
+    quoteMint = MAINNET_USDC,
+  }: {
+    launch: PublicKey;
+    funder?: PublicKey;
+    quoteMint?: PublicKey;
+  }) {
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch,

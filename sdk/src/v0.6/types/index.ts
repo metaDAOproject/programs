@@ -15,22 +15,27 @@ import {
 } from "./conditional_vault.js";
 export { ConditionalVaultProgram, ConditionalVaultIDL };
 
-import {
-  SharedLiquidityManager as SharedLiquidityManagerProgram,
-  IDL as SharedLiquidityManagerIDL,
-} from "./shared_liquidity_manager.js";
-export { SharedLiquidityManagerProgram, SharedLiquidityManagerIDL };
+// import {
+//   SharedLiquidityManager as SharedLiquidityManagerProgram,
+//   IDL as SharedLiquidityManagerIDL,
+// } from "./shared_liquidity_manager.js";
+// export { SharedLiquidityManagerProgram, SharedLiquidityManagerIDL };
+
+// import {
+//   PriceBasedTokenLock as PriceBasedTokenLockProgram,
+//   IDL as PriceBasedTokenLockIDL,
+// } from "./price_based_token_lock.js";
+// export { PriceBasedTokenLockProgram, PriceBasedTokenLockIDL };
 
 import {
-  PriceBasedTokenLock as PriceBasedTokenLockProgram,
-  IDL as PriceBasedTokenLockIDL,
-} from "./price_based_token_lock.js";
-export { PriceBasedTokenLockProgram, PriceBasedTokenLockIDL };
+  PriceBasedPerformancePackage as PriceBasedPerformancePackageProgram,
+  IDL as PriceBasedPerformancePackageIDL,
+} from "./price_based_performance_package.js";
+export { PriceBasedPerformancePackageProgram, PriceBasedPerformancePackageIDL };
 
 export { LowercaseKeys } from "./utils.js";
 
 import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
 
 export type Question = IdlAccounts<ConditionalVaultProgram>["question"];
 export type ConditionalVault =
@@ -39,14 +44,22 @@ export type ConditionalVault =
 export type InitializeDaoParams =
   IdlTypes<FutarchyProgram>["InitializeDaoParams"];
 export type UpdateDaoParams = IdlTypes<FutarchyProgram>["UpdateDaoParams"];
+export type InitializePerformancePackageParams =
+  IdlTypes<PriceBasedPerformancePackageProgram>["InitializePerformancePackageParams"];
 
 export type Dao = IdlAccounts<FutarchyProgram>["dao"];
 export type Proposal = IdlAccounts<FutarchyProgram>["proposal"];
 export type Amm = IdlAccounts<AmmProgram>["amm"];
 export type Launch = IdlAccounts<LaunchpadProgram>["launch"];
 export type FundingRecord = IdlAccounts<LaunchpadProgram>["fundingRecord"];
+export type PerformancePackage =
+  IdlAccounts<PriceBasedPerformancePackageProgram>["performancePackage"];
 
-export type OracleConfig = IdlTypes<PriceBasedTokenLockProgram>["OracleConfig"];
+export type OracleConfig =
+  IdlTypes<PriceBasedPerformancePackageProgram>["OracleConfig"];
+export type Tranche = IdlTypes<PriceBasedPerformancePackageProgram>["Tranche"];
+
+// export type OracleConfig = IdlTypes<PriceBasedTokenLockProgram>["OracleConfig"];
 // export type SharedLiquidityPool =
 //   IdlAccounts<SharedLiquidityManagerProgram>["sharedLiquidityPool"];
 // export type SharedLiquidityPoolPosition =

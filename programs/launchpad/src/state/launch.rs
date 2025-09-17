@@ -9,6 +9,18 @@ pub enum LaunchState {
     Refunding,
 }
 
+impl ToString for LaunchState {
+    fn to_string(&self) -> String {
+        match self {
+            LaunchState::Initialized => "Initialized",
+            LaunchState::Live => "Live",
+            LaunchState::Closed => "Closed",
+            LaunchState::Complete => "Complete",
+            LaunchState::Refunding => "Refunding",
+        }.to_string()
+    }
+}
+
 #[account]
 #[derive(InitSpace)]
 pub struct Launch {
@@ -55,10 +67,10 @@ pub struct Launch {
     pub dao: Option<Pubkey>,
     /// The DAO treasury that USDC / LP is sent to, if the launch is complete.
     pub dao_vault: Option<Pubkey>,
-    /// The price-based unlock address.
-    pub price_based_unlock_recipient: Pubkey,
-    /// The price-based premine amount.
-    pub price_based_premine_amount: u64,
-    /// The price threshold for price-based unlock.
-    pub price_based_unlock_threshold: u128,
+    /// The address that will receive the performance package tokens.
+    pub performance_package_grantee: Pubkey,
+    /// The amount of tokens to be granted to the performance package grantee.
+    pub performance_package_token_amount: u64,
+    /// The number of months that insiders must wait before unlocking their tokens.
+    pub months_until_insiders_can_unlock: u8,
 }

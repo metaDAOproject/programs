@@ -22,9 +22,9 @@ pub struct InitializeLaunchArgs {
     pub token_name: String,
     pub token_symbol: String,
     pub token_uri: String,
-    pub price_based_unlock_address: Pubkey,
-    pub price_based_premine_amount: u64,
-    pub price_based_unlock_threshold: u128,
+    pub performance_package_grantee: Pubkey,
+    pub performance_package_token_amount: u64,
+    pub months_until_insiders_can_unlock: u8,
 }
 
 #[event_cpi]
@@ -122,17 +122,14 @@ impl InitializeLaunch<'_> {
 
         require_gte!(
             MAX_PREMINE,
-            args.price_based_premine_amount,
+            args.performance_package_token_amount,
             LaunchpadError::InvalidPriceBasedPremineAmount
         );
 
-        // Require threshold to be at least 2x the minimum possible launch price
-        // minimum_price = minimum_raise_amount / TOKENS_TO_PARTICIPANTS
-        let min_threshold = ((args.minimum_raise_amount as u128) * 2 * 1_000_000_000_000) / (TOKENS_TO_PARTICIPANTS as u128);
         require_gte!(
-            args.price_based_unlock_threshold,
-            min_threshold,
-            LaunchpadError::InvalidPriceBasedUnlockThreshold
+            args.months_until_insiders_can_unlock,
+            18,
+            LaunchpadError::InvalidPerformancePackageMinUnlockTime
         );
 
         require!(self.base_mint.supply == 0, LaunchpadError::SupplyNonZero);
@@ -169,9 +166,9 @@ impl InitializeLaunch<'_> {
             seconds_for_launch: args.seconds_for_launch,
             dao: None,
             dao_vault: None,
-            price_based_unlock_recipient: args.price_based_unlock_address,
-            price_based_premine_amount: args.price_based_premine_amount,
-            price_based_unlock_threshold: args.price_based_unlock_threshold,
+            performance_package_grantee: args.performance_package_grantee,
+            performance_package_token_amount: args.performance_package_token_amount,
+            months_until_insiders_can_unlock: args.months_until_insiders_can_unlock,
         });
 
         let clock = Clock::get()?;
@@ -239,7 +236,7 @@ impl InitializeLaunch<'_> {
                 },
                 signer,
             ),
-            TOKENS_TO_PARTICIPANTS + args.price_based_premine_amount,
+            TOKENS_TO_PARTICIPANTS + args.performance_package_token_amount,
         )?;
 
         Ok(())

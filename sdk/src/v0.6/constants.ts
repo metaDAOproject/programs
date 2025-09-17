@@ -17,7 +17,7 @@ export const LAUNCHPAD_PROGRAM_ID = new PublicKey(
 export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
   "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d",
 );
-export const PRICE_BASED_TOKEN_LOCK_PROGRAM_ID = new PublicKey(
+export const PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID = new PublicKey(
   "GP3gUFqHgdz9tB5bosCqmnu7qnkFa1gjUMFs8uCkwWQr",
 );
 

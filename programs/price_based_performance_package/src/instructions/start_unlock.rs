@@ -5,11 +5,11 @@ use super::*;
 #[derive(Accounts)]
 #[event_cpi]
 pub struct StartUnlock<'info> {
-    #[account(mut)]
-    pub locker: Account<'info, Locker>,
+    #[account(mut, has_one = recipient)]
+    pub performance_package: Account<'info, PerformancePackage>,
     
     /// CHECK: We will read the aggregator value from this account
-    #[account(address = locker.oracle_config.oracle_account)]
+    #[account(address = performance_package.oracle_config.oracle_account)]
     pub oracle_account: UncheckedAccount<'info>,
     
     /// Only the token recipient can start unlock
@@ -18,22 +18,14 @@ pub struct StartUnlock<'info> {
 
 impl StartUnlock<'_> {
     pub fn validate(&self) -> Result<()> {
-        // Verify that the signer is the token recipient
-        if self.recipient.key() != self.locker.token_recipient {
-            return Err(PriceBasedUnlockError::UnauthorizedChangeRequest.into());
-        }
-
-        // Verify that the locker is in the Locked state
-        if !matches!(self.locker.state, LockerState::Locked) {
-            return Err(PriceBasedUnlockError::InvalidLockerState.into());
-        }
+        require_eq!(self.performance_package.state, PerformancePackageState::Locked, PriceBasedPerformancePackageError::InvalidPerformancePackageState);
 
         Ok(())
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let Self {
-            locker,
+            performance_package,
             oracle_account: _,
             recipient: _,
             event_authority: _,
@@ -43,20 +35,21 @@ impl StartUnlock<'_> {
         let clock = Clock::get()?;
 
         // Verify that the current time is past the unlock timestamp
-        require!(
-            clock.unix_timestamp >= locker.unlock_timestamp,
-            PriceBasedUnlockError::UnlockTimestampNotReached
+        require_gte!(
+            clock.unix_timestamp,
+            performance_package.min_unlock_timestamp,
+            PriceBasedPerformancePackageError::UnlockTimestampNotReached
         );
 
         // Read the current aggregator value from the oracle account
         let oracle_data = ctx.accounts.oracle_account.try_borrow_data()?;
-        let offset = locker.oracle_config.byte_offset as usize;
+        let offset = performance_package.oracle_config.byte_offset as usize;
         
         // Ensure we have enough data to read 24 bytes (16 bytes for aggregator, 8 bytes for last updated slot)
         require_gte!(
             oracle_data.len(),
             offset + 16 + 8,
-            PriceBasedUnlockError::InvalidOracleData
+            PriceBasedPerformancePackageError::InvalidOracleData
         );
 
         // Read the aggregator value (assuming it's stored as u128)
@@ -70,17 +63,20 @@ impl StartUnlock<'_> {
 
         // The last updated timestamp should be greater than or equal to the unlock timestamp
         // and less than or equal to the current time
-        require_gte!(last_updated_timestamp, locker.unlock_timestamp, PriceBasedUnlockError::InvalidOracleData);
-        require_gte!(clock.unix_timestamp, last_updated_timestamp, PriceBasedUnlockError::InvalidOracleData);
+        require_gte!(last_updated_timestamp, performance_package.min_unlock_timestamp, PriceBasedPerformancePackageError::InvalidOracleData);
+        require_gte!(clock.unix_timestamp, last_updated_timestamp, PriceBasedPerformancePackageError::InvalidOracleData);
 
-        locker.state = LockerState::Unlocking {
+        performance_package.state = PerformancePackageState::Unlocking {
             start_aggregator,
             // We use the last updated timestamp to keep the aggregator and timestamp in sync
             start_timestamp: last_updated_timestamp,
         };
 
+        performance_package.seq_num += 1;
+
         emit_cpi!(UnlockStarted {
-            locker: locker.key(),
+            common: CommonFields::new(&clock, performance_package.seq_num),
+            performance_package: performance_package.key(),
             start_aggregator,
             start_timestamp: last_updated_timestamp,
         });

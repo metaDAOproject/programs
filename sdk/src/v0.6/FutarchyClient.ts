@@ -451,7 +451,7 @@ export class FutarchyClient {
     trader = this.provider.publicKey,
     payer = this.provider.publicKey,
     baseMint,
-    quoteMint,
+    quoteMint = MAINNET_USDC,
     proposal,
     market,
     swapType,
@@ -462,7 +462,7 @@ export class FutarchyClient {
     trader?: PublicKey;
     payer?: PublicKey;
     baseMint: PublicKey;
-    quoteMint: PublicKey;
+    quoteMint?: PublicKey;
     proposal: PublicKey;
     market: "pass" | "fail";
     swapType: "buy" | "sell";

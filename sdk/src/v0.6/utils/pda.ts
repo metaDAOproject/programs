@@ -12,6 +12,7 @@ import {
 import {
   DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
   MPL_TOKEN_METADATA_PROGRAM_ID,
+  PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
 } from "../constants.js";
@@ -186,6 +187,19 @@ export const getStakeRecordAddr = (
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("stake_record"), draftProposal.toBuffer(), staker.toBuffer()],
+    programId,
+  );
+};
+
+export const getPerformancePackageAddr = ({
+  programId = PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
+  createKey,
+}: {
+  programId?: PublicKey;
+  createKey: PublicKey;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("performance_package"), createKey.toBuffer()],
     programId,
   );
 };

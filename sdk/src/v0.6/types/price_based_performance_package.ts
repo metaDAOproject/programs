@@ -1,6 +1,6 @@
-export type PriceBasedUnlock = {
+export type PriceBasedPerformancePackage = {
   version: "0.1.0";
-  name: "price_based_unlock";
+  name: "price_based_performance_package";
   constants: [
     {
       name: "SEED";
@@ -10,10 +10,10 @@ export type PriceBasedUnlock = {
   ];
   instructions: [
     {
-      name: "initializeLocker";
+      name: "initializePerformancePackage";
       accounts: [
         {
-          name: "locker";
+          name: "performancePackage";
           isMut: true;
           isSigner: false;
         },
@@ -30,19 +30,19 @@ export type PriceBasedUnlock = {
           docs: ["The mint of the tokens to be locked"];
         },
         {
-          name: "fromTokenAccount";
+          name: "grantorTokenAccount";
           isMut: true;
           isSigner: false;
           docs: ["The token account containing the tokens to be locked"];
         },
         {
-          name: "tokenAuthority";
+          name: "grantor";
           isMut: false;
           isSigner: true;
           docs: ["The authority of the token account"];
         },
         {
-          name: "lockerTokenAccount";
+          name: "performancePackageTokenVault";
           isMut: true;
           isSigner: false;
           docs: ["The locker's token account where tokens will be stored"];
@@ -82,7 +82,7 @@ export type PriceBasedUnlock = {
         {
           name: "params";
           type: {
-            defined: "InitializeLockerParams";
+            defined: "InitializePerformancePackageParams";
           };
         },
       ];
@@ -91,7 +91,7 @@ export type PriceBasedUnlock = {
       name: "startUnlock";
       accounts: [
         {
-          name: "locker";
+          name: "performancePackage";
           isMut: true;
           isSigner: false;
         },
@@ -123,7 +123,7 @@ export type PriceBasedUnlock = {
       name: "completeUnlock";
       accounts: [
         {
-          name: "locker";
+          name: "performancePackage";
           isMut: true;
           isSigner: false;
         },
@@ -133,7 +133,7 @@ export type PriceBasedUnlock = {
           isSigner: false;
         },
         {
-          name: "lockerTokenAccount";
+          name: "performancePackageTokenVault";
           isMut: true;
           isSigner: false;
           docs: ["The token account where locked tokens are stored"];
@@ -200,12 +200,17 @@ export type PriceBasedUnlock = {
           isSigner: false;
         },
         {
-          name: "locker";
+          name: "performancePackage";
           isMut: true;
           isSigner: false;
         },
         {
           name: "proposer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "payer";
           isMut: true;
           isSigner: true;
         },
@@ -243,7 +248,7 @@ export type PriceBasedUnlock = {
           isSigner: false;
         },
         {
-          name: "locker";
+          name: "performancePackage";
           isMut: true;
           isSigner: false;
         },
@@ -259,10 +264,10 @@ export type PriceBasedUnlock = {
       args: [];
     },
     {
-      name: "changeLockerAuthority";
+      name: "changePerformancePackageAuthority";
       accounts: [
         {
-          name: "locker";
+          name: "performancePackage";
           isMut: true;
           isSigner: false;
         },
@@ -276,7 +281,7 @@ export type PriceBasedUnlock = {
         {
           name: "params";
           type: {
-            defined: "ChangeLockerAuthorityParams";
+            defined: "ChangePerformancePackageAuthorityParams";
           };
         },
       ];
@@ -284,27 +289,31 @@ export type PriceBasedUnlock = {
   ];
   accounts: [
     {
-      name: "locker";
+      name: "performancePackage";
       type: {
         kind: "struct";
         fields: [
           {
-            name: "priceThreshold";
-            docs: ["The price threshold for 100% unlocking (max price target)"];
-            type: "u128";
+            name: "tranches";
+            docs: ["The tranches that make up the performance package"];
+            type: {
+              vec: {
+                defined: "StoredTranche";
+              };
+            };
           },
           {
-            name: "tokenAmount";
-            docs: ["The amount of tokens locked"];
+            name: "totalTokenAmount";
+            docs: ["Total amount of tokens in the performance package"];
             type: "u64";
           },
           {
-            name: "tokensAlreadyUnlocked";
-            docs: ["The amount of tokens already unlocked"];
+            name: "alreadyUnlockedAmount";
+            docs: ["Amount of tokens already unlocked"];
             type: "u64";
           },
           {
-            name: "unlockTimestamp";
+            name: "minUnlockTimestamp";
             docs: ["The timestamp when unlocking can begin"];
             type: "i64";
           },
@@ -321,7 +330,7 @@ export type PriceBasedUnlock = {
             type: "u64";
           },
           {
-            name: "tokenRecipient";
+            name: "recipient";
             docs: ["The recipient of the tokens when unlocked"];
             type: "publicKey";
           },
@@ -329,7 +338,7 @@ export type PriceBasedUnlock = {
             name: "state";
             docs: ["The current state of the locker"];
             type: {
-              defined: "LockerState";
+              defined: "PerformancePackageState";
             };
           },
           {
@@ -343,13 +352,27 @@ export type PriceBasedUnlock = {
             type: "u8";
           },
           {
-            name: "lockerAuthority";
-            docs: ["The authorized locker authority that can execute changes"];
+            name: "performancePackageAuthority";
+            docs: [
+              "The authorized locker authority that can execute changes, usually the organization",
+            ];
             type: "publicKey";
           },
           {
             name: "tokenMint";
             docs: ["The mint of the locked tokens"];
+            type: "publicKey";
+          },
+          {
+            name: "seqNum";
+            docs: [
+              "The sequence number of the performance package, used for indexing events",
+            ];
+            type: "u64";
+          },
+          {
+            name: "performancePackageTokenVault";
+            docs: ["The vault that stores the tokens"];
             type: "publicKey";
           },
         ];
@@ -361,8 +384,8 @@ export type PriceBasedUnlock = {
         kind: "struct";
         fields: [
           {
-            name: "locker";
-            docs: ["The locker this change applies to"];
+            name: "performancePackage";
+            docs: ["The performance package this change applies to"];
             type: "publicKey";
           },
           {
@@ -376,13 +399,6 @@ export type PriceBasedUnlock = {
             name: "proposedAt";
             docs: ["When the change was proposed"];
             type: "i64";
-          },
-          {
-            name: "previousState";
-            docs: ["The locker state before the change was proposed"];
-            type: {
-              defined: "LockerState";
-            };
           },
           {
             name: "proposer";
@@ -420,39 +436,39 @@ export type PriceBasedUnlock = {
             type: "i64";
           },
           {
-            name: "lockerSeqNum";
+            name: "performancePackageSeqNum";
             type: "u64";
           },
         ];
       };
     },
     {
-      name: "ChangeLockerAuthorityParams";
+      name: "ChangePerformancePackageAuthorityParams";
       type: {
         kind: "struct";
         fields: [
           {
-            name: "newLockerAuthority";
+            name: "newPerformancePackageAuthority";
             type: "publicKey";
           },
         ];
       };
     },
     {
-      name: "InitializeLockerParams";
+      name: "InitializePerformancePackageParams";
       type: {
         kind: "struct";
         fields: [
           {
-            name: "priceThreshold";
-            type: "u128";
+            name: "tranches";
+            type: {
+              vec: {
+                defined: "Tranche";
+              };
+            };
           },
           {
-            name: "tokenAmount";
-            type: "u64";
-          },
-          {
-            name: "unlockTimestamp";
+            name: "minUnlockTimestamp";
             type: "i64";
           },
           {
@@ -466,11 +482,11 @@ export type PriceBasedUnlock = {
             type: "u64";
           },
           {
-            name: "beneficiary";
+            name: "grantee";
             type: "publicKey";
           },
           {
-            name: "lockerAuthority";
+            name: "performancePackageAuthority";
             type: "publicKey";
           },
         ];
@@ -528,7 +544,45 @@ export type PriceBasedUnlock = {
       };
     },
     {
-      name: "LockerState";
+      name: "Tranche";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "priceThreshold";
+            docs: ["The price at which this tranch unlocks"];
+            type: "u128";
+          },
+          {
+            name: "tokenAmount";
+            docs: ["The amount of tokens in this tranch"];
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "StoredTranche";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "priceThreshold";
+            type: "u128";
+          },
+          {
+            name: "tokenAmount";
+            type: "u64";
+          },
+          {
+            name: "isUnlocked";
+            type: "bool";
+          },
+        ];
+      };
+    },
+    {
+      name: "PerformancePackageState";
       type: {
         kind: "enum";
         variants: [
@@ -587,37 +641,17 @@ export type PriceBasedUnlock = {
   ];
   events: [
     {
-      name: "LockerInitialized";
+      name: "PerformancePackageInitialized";
       fields: [
         {
-          name: "locker";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "priceThreshold";
-          type: "u128";
-          index: false;
-        },
-        {
-          name: "tokenAmount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "unlockTimestamp";
-          type: "i64";
-          index: false;
-        },
-        {
-          name: "oracleConfig";
+          name: "common";
           type: {
-            defined: "OracleConfig";
+            defined: "CommonFields";
           };
           index: false;
         },
         {
-          name: "tokenRecipient";
+          name: "performancePackage";
           type: "publicKey";
           index: false;
         },
@@ -627,7 +661,14 @@ export type PriceBasedUnlock = {
       name: "UnlockStarted";
       fields: [
         {
-          name: "locker";
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
           type: "publicKey";
           index: false;
         },
@@ -647,7 +688,14 @@ export type PriceBasedUnlock = {
       name: "UnlockCompleted";
       fields: [
         {
-          name: "locker";
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
           type: "publicKey";
           index: false;
         },
@@ -663,51 +711,6 @@ export type PriceBasedUnlock = {
         },
         {
           name: "twapPrice";
-          type: "u128";
-          index: false;
-        },
-        {
-          name: "priceThreshold";
-          type: "u128";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "TokensClaimed";
-      fields: [
-        {
-          name: "locker";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "recipient";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "tokensClaimed";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "tokensAlreadyUnlocked";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "totalTokenAmount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "currentPrice";
-          type: "u128";
-          index: false;
-        },
-        {
-          name: "unlockPercentage";
           type: "u128";
           index: false;
         },
@@ -738,18 +741,20 @@ export type PriceBasedUnlock = {
           };
           index: false;
         },
-        {
-          name: "proposedAt";
-          type: "i64";
-          index: false;
-        },
       ];
     },
     {
       name: "ChangeExecuted";
       fields: [
         {
-          name: "locker";
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
           type: "publicKey";
           index: false;
         },
@@ -770,16 +775,18 @@ export type PriceBasedUnlock = {
           };
           index: false;
         },
-        {
-          name: "executedAt";
-          type: "i64";
-          index: false;
-        },
       ];
     },
     {
-      name: "LockerAuthorityChanged";
+      name: "PerformancePackageAuthorityChanged";
       fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
         {
           name: "locker";
           type: "publicKey";
@@ -793,11 +800,6 @@ export type PriceBasedUnlock = {
         {
           name: "newAuthority";
           type: "publicKey";
-          index: false;
-        },
-        {
-          name: "changedAt";
-          type: "i64";
           index: false;
         },
       ];
@@ -816,12 +818,12 @@ export type PriceBasedUnlock = {
     },
     {
       code: 6002;
-      name: "InvalidLockerState";
-      msg: "Locker is not in the expected state";
+      name: "InvalidPerformancePackageState";
+      msg: "Performance package is not in the expected state";
     },
     {
       code: 6003;
-      name: "TwapCalculationFailed";
+      name: "TwapPeriodNotElapsed";
       msg: "TWAP calculation failed";
     },
     {
@@ -854,12 +856,22 @@ export type PriceBasedUnlock = {
       name: "InvariantViolated";
       msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this";
     },
+    {
+      code: 6010;
+      name: "TranchePriceThresholdsNotMonotonic";
+      msg: "Tranche price thresholds must be monotonically increasing";
+    },
+    {
+      code: 6011;
+      name: "TrancheTokenAmountZero";
+      msg: "Tranche token amount must be greater than 0";
+    },
   ];
 };
 
-export const IDL: PriceBasedUnlock = {
+export const IDL: PriceBasedPerformancePackage = {
   version: "0.1.0",
-  name: "price_based_unlock",
+  name: "price_based_performance_package",
   constants: [
     {
       name: "SEED",
@@ -869,10 +881,10 @@ export const IDL: PriceBasedUnlock = {
   ],
   instructions: [
     {
-      name: "initializeLocker",
+      name: "initializePerformancePackage",
       accounts: [
         {
-          name: "locker",
+          name: "performancePackage",
           isMut: true,
           isSigner: false,
         },
@@ -889,19 +901,19 @@ export const IDL: PriceBasedUnlock = {
           docs: ["The mint of the tokens to be locked"],
         },
         {
-          name: "fromTokenAccount",
+          name: "grantorTokenAccount",
           isMut: true,
           isSigner: false,
           docs: ["The token account containing the tokens to be locked"],
         },
         {
-          name: "tokenAuthority",
+          name: "grantor",
           isMut: false,
           isSigner: true,
           docs: ["The authority of the token account"],
         },
         {
-          name: "lockerTokenAccount",
+          name: "performancePackageTokenVault",
           isMut: true,
           isSigner: false,
           docs: ["The locker's token account where tokens will be stored"],
@@ -941,7 +953,7 @@ export const IDL: PriceBasedUnlock = {
         {
           name: "params",
           type: {
-            defined: "InitializeLockerParams",
+            defined: "InitializePerformancePackageParams",
           },
         },
       ],
@@ -950,7 +962,7 @@ export const IDL: PriceBasedUnlock = {
       name: "startUnlock",
       accounts: [
         {
-          name: "locker",
+          name: "performancePackage",
           isMut: true,
           isSigner: false,
         },
@@ -982,7 +994,7 @@ export const IDL: PriceBasedUnlock = {
       name: "completeUnlock",
       accounts: [
         {
-          name: "locker",
+          name: "performancePackage",
           isMut: true,
           isSigner: false,
         },
@@ -992,7 +1004,7 @@ export const IDL: PriceBasedUnlock = {
           isSigner: false,
         },
         {
-          name: "lockerTokenAccount",
+          name: "performancePackageTokenVault",
           isMut: true,
           isSigner: false,
           docs: ["The token account where locked tokens are stored"],
@@ -1059,12 +1071,17 @@ export const IDL: PriceBasedUnlock = {
           isSigner: false,
         },
         {
-          name: "locker",
+          name: "performancePackage",
           isMut: true,
           isSigner: false,
         },
         {
           name: "proposer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "payer",
           isMut: true,
           isSigner: true,
         },
@@ -1102,7 +1119,7 @@ export const IDL: PriceBasedUnlock = {
           isSigner: false,
         },
         {
-          name: "locker",
+          name: "performancePackage",
           isMut: true,
           isSigner: false,
         },
@@ -1118,10 +1135,10 @@ export const IDL: PriceBasedUnlock = {
       args: [],
     },
     {
-      name: "changeLockerAuthority",
+      name: "changePerformancePackageAuthority",
       accounts: [
         {
-          name: "locker",
+          name: "performancePackage",
           isMut: true,
           isSigner: false,
         },
@@ -1135,7 +1152,7 @@ export const IDL: PriceBasedUnlock = {
         {
           name: "params",
           type: {
-            defined: "ChangeLockerAuthorityParams",
+            defined: "ChangePerformancePackageAuthorityParams",
           },
         },
       ],
@@ -1143,27 +1160,31 @@ export const IDL: PriceBasedUnlock = {
   ],
   accounts: [
     {
-      name: "locker",
+      name: "performancePackage",
       type: {
         kind: "struct",
         fields: [
           {
-            name: "priceThreshold",
-            docs: ["The price threshold for 100% unlocking (max price target)"],
-            type: "u128",
+            name: "tranches",
+            docs: ["The tranches that make up the performance package"],
+            type: {
+              vec: {
+                defined: "StoredTranche",
+              },
+            },
           },
           {
-            name: "tokenAmount",
-            docs: ["The amount of tokens locked"],
+            name: "totalTokenAmount",
+            docs: ["Total amount of tokens in the performance package"],
             type: "u64",
           },
           {
-            name: "tokensAlreadyUnlocked",
-            docs: ["The amount of tokens already unlocked"],
+            name: "alreadyUnlockedAmount",
+            docs: ["Amount of tokens already unlocked"],
             type: "u64",
           },
           {
-            name: "unlockTimestamp",
+            name: "minUnlockTimestamp",
             docs: ["The timestamp when unlocking can begin"],
             type: "i64",
           },
@@ -1180,7 +1201,7 @@ export const IDL: PriceBasedUnlock = {
             type: "u64",
           },
           {
-            name: "tokenRecipient",
+            name: "recipient",
             docs: ["The recipient of the tokens when unlocked"],
             type: "publicKey",
           },
@@ -1188,7 +1209,7 @@ export const IDL: PriceBasedUnlock = {
             name: "state",
             docs: ["The current state of the locker"],
             type: {
-              defined: "LockerState",
+              defined: "PerformancePackageState",
             },
           },
           {
@@ -1202,13 +1223,27 @@ export const IDL: PriceBasedUnlock = {
             type: "u8",
           },
           {
-            name: "lockerAuthority",
-            docs: ["The authorized locker authority that can execute changes"],
+            name: "performancePackageAuthority",
+            docs: [
+              "The authorized locker authority that can execute changes, usually the organization",
+            ],
             type: "publicKey",
           },
           {
             name: "tokenMint",
             docs: ["The mint of the locked tokens"],
+            type: "publicKey",
+          },
+          {
+            name: "seqNum",
+            docs: [
+              "The sequence number of the performance package, used for indexing events",
+            ],
+            type: "u64",
+          },
+          {
+            name: "performancePackageTokenVault",
+            docs: ["The vault that stores the tokens"],
             type: "publicKey",
           },
         ],
@@ -1220,8 +1255,8 @@ export const IDL: PriceBasedUnlock = {
         kind: "struct",
         fields: [
           {
-            name: "locker",
-            docs: ["The locker this change applies to"],
+            name: "performancePackage",
+            docs: ["The performance package this change applies to"],
             type: "publicKey",
           },
           {
@@ -1235,13 +1270,6 @@ export const IDL: PriceBasedUnlock = {
             name: "proposedAt",
             docs: ["When the change was proposed"],
             type: "i64",
-          },
-          {
-            name: "previousState",
-            docs: ["The locker state before the change was proposed"],
-            type: {
-              defined: "LockerState",
-            },
           },
           {
             name: "proposer",
@@ -1279,39 +1307,39 @@ export const IDL: PriceBasedUnlock = {
             type: "i64",
           },
           {
-            name: "lockerSeqNum",
+            name: "performancePackageSeqNum",
             type: "u64",
           },
         ],
       },
     },
     {
-      name: "ChangeLockerAuthorityParams",
+      name: "ChangePerformancePackageAuthorityParams",
       type: {
         kind: "struct",
         fields: [
           {
-            name: "newLockerAuthority",
+            name: "newPerformancePackageAuthority",
             type: "publicKey",
           },
         ],
       },
     },
     {
-      name: "InitializeLockerParams",
+      name: "InitializePerformancePackageParams",
       type: {
         kind: "struct",
         fields: [
           {
-            name: "priceThreshold",
-            type: "u128",
+            name: "tranches",
+            type: {
+              vec: {
+                defined: "Tranche",
+              },
+            },
           },
           {
-            name: "tokenAmount",
-            type: "u64",
-          },
-          {
-            name: "unlockTimestamp",
+            name: "minUnlockTimestamp",
             type: "i64",
           },
           {
@@ -1325,11 +1353,11 @@ export const IDL: PriceBasedUnlock = {
             type: "u64",
           },
           {
-            name: "beneficiary",
+            name: "grantee",
             type: "publicKey",
           },
           {
-            name: "lockerAuthority",
+            name: "performancePackageAuthority",
             type: "publicKey",
           },
         ],
@@ -1387,7 +1415,45 @@ export const IDL: PriceBasedUnlock = {
       },
     },
     {
-      name: "LockerState",
+      name: "Tranche",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "priceThreshold",
+            docs: ["The price at which this tranch unlocks"],
+            type: "u128",
+          },
+          {
+            name: "tokenAmount",
+            docs: ["The amount of tokens in this tranch"],
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "StoredTranche",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "priceThreshold",
+            type: "u128",
+          },
+          {
+            name: "tokenAmount",
+            type: "u64",
+          },
+          {
+            name: "isUnlocked",
+            type: "bool",
+          },
+        ],
+      },
+    },
+    {
+      name: "PerformancePackageState",
       type: {
         kind: "enum",
         variants: [
@@ -1446,37 +1512,17 @@ export const IDL: PriceBasedUnlock = {
   ],
   events: [
     {
-      name: "LockerInitialized",
+      name: "PerformancePackageInitialized",
       fields: [
         {
-          name: "locker",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "priceThreshold",
-          type: "u128",
-          index: false,
-        },
-        {
-          name: "tokenAmount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "unlockTimestamp",
-          type: "i64",
-          index: false,
-        },
-        {
-          name: "oracleConfig",
+          name: "common",
           type: {
-            defined: "OracleConfig",
+            defined: "CommonFields",
           },
           index: false,
         },
         {
-          name: "tokenRecipient",
+          name: "performancePackage",
           type: "publicKey",
           index: false,
         },
@@ -1486,7 +1532,14 @@ export const IDL: PriceBasedUnlock = {
       name: "UnlockStarted",
       fields: [
         {
-          name: "locker",
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
           type: "publicKey",
           index: false,
         },
@@ -1506,7 +1559,14 @@ export const IDL: PriceBasedUnlock = {
       name: "UnlockCompleted",
       fields: [
         {
-          name: "locker",
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
           type: "publicKey",
           index: false,
         },
@@ -1522,51 +1582,6 @@ export const IDL: PriceBasedUnlock = {
         },
         {
           name: "twapPrice",
-          type: "u128",
-          index: false,
-        },
-        {
-          name: "priceThreshold",
-          type: "u128",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "TokensClaimed",
-      fields: [
-        {
-          name: "locker",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "recipient",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "tokensClaimed",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "tokensAlreadyUnlocked",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "totalTokenAmount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "currentPrice",
-          type: "u128",
-          index: false,
-        },
-        {
-          name: "unlockPercentage",
           type: "u128",
           index: false,
         },
@@ -1597,18 +1612,20 @@ export const IDL: PriceBasedUnlock = {
           },
           index: false,
         },
-        {
-          name: "proposedAt",
-          type: "i64",
-          index: false,
-        },
       ],
     },
     {
       name: "ChangeExecuted",
       fields: [
         {
-          name: "locker",
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
           type: "publicKey",
           index: false,
         },
@@ -1629,16 +1646,18 @@ export const IDL: PriceBasedUnlock = {
           },
           index: false,
         },
-        {
-          name: "executedAt",
-          type: "i64",
-          index: false,
-        },
       ],
     },
     {
-      name: "LockerAuthorityChanged",
+      name: "PerformancePackageAuthorityChanged",
       fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
         {
           name: "locker",
           type: "publicKey",
@@ -1652,11 +1671,6 @@ export const IDL: PriceBasedUnlock = {
         {
           name: "newAuthority",
           type: "publicKey",
-          index: false,
-        },
-        {
-          name: "changedAt",
-          type: "i64",
           index: false,
         },
       ],
@@ -1675,12 +1689,12 @@ export const IDL: PriceBasedUnlock = {
     },
     {
       code: 6002,
-      name: "InvalidLockerState",
-      msg: "Locker is not in the expected state",
+      name: "InvalidPerformancePackageState",
+      msg: "Performance package is not in the expected state",
     },
     {
       code: 6003,
-      name: "TwapCalculationFailed",
+      name: "TwapPeriodNotElapsed",
       msg: "TWAP calculation failed",
     },
     {
@@ -1712,6 +1726,16 @@ export const IDL: PriceBasedUnlock = {
       code: 6009,
       name: "InvariantViolated",
       msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this",
+    },
+    {
+      code: 6010,
+      name: "TranchePriceThresholdsNotMonotonic",
+      msg: "Tranche price thresholds must be monotonically increasing",
+    },
+    {
+      code: 6011,
+      name: "TrancheTokenAmountZero",
+      msg: "Tranche token amount must be greater than 0",
     },
   ],
 };

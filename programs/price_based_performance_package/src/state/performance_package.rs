@@ -21,37 +21,67 @@ pub struct OracleConfig {
     pub byte_offset: u32,
 }
 
-#[account]
-#[derive(InitSpace)]
-pub struct Locker {
-    /// The price threshold for 100% unlocking (max price target)
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
+pub struct Tranche {
+    /// The price at which this tranch unlocks
     pub price_threshold: u128,
-    /// The amount of tokens locked
+    /// The amount of tokens in this tranch
     pub token_amount: u64,
-    /// The amount of tokens already unlocked
-    pub tokens_already_unlocked: u64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
+pub struct StoredTranche {
+    pub price_threshold: u128,
+    pub token_amount: u64,
+    pub is_unlocked: bool,
+}
+
+impl From<Tranche> for StoredTranche {
+    fn from(tranche: Tranche) -> Self {
+        Self {
+            price_threshold: tranche.price_threshold,
+            token_amount: tranche.token_amount,
+            is_unlocked: false,
+        }
+    }
+}
+
+#[account]
+#[derive(InitSpace, Debug)]
+pub struct PerformancePackage {
+    /// The tranches that make up the performance package
+    #[max_len(10)]
+    pub tranches: Vec<StoredTranche>,
+    /// Total amount of tokens in the performance package
+    pub total_token_amount: u64,
+    /// Amount of tokens already unlocked
+    pub already_unlocked_amount: u64,
     /// The timestamp when unlocking can begin
-    pub unlock_timestamp: i64,
+    pub min_unlock_timestamp: i64,
     /// Where to pull price data from
     pub oracle_config: OracleConfig,
     /// Length of time in seconds for TWAP calculation
     pub twap_length_seconds: u64,
     /// The recipient of the tokens when unlocked
-    pub token_recipient: Pubkey,
+    pub recipient: Pubkey,
     /// The current state of the locker
-    pub state: LockerState,
+    pub state: PerformancePackageState,
     /// Used to derive the PDA
     pub create_key: Pubkey,
     /// The PDA bump
     pub pda_bump: u8,
-    /// The authorized locker authority that can execute changes
-    pub locker_authority: Pubkey,
+    /// The authorized locker authority that can execute changes, usually the organization
+    pub performance_package_authority: Pubkey,
     /// The mint of the locked tokens
     pub token_mint: Pubkey,
+    /// The sequence number of the performance package, used for indexing events
+    pub seq_num: u64,
+    /// The vault that stores the tokens
+    pub performance_package_token_vault: Pubkey,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
-pub enum LockerState {
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub enum PerformancePackageState {
     /// Initial state - waiting for unlock timestamp
     Locked,
     /// Unlocking has started - tracking TWAP
@@ -65,6 +95,16 @@ pub enum LockerState {
     Unlocked,
 }
 
+impl ToString for PerformancePackageState {
+    fn to_string(&self) -> String {
+        match self {
+            PerformancePackageState::Locked => "Locked".to_string(),
+            PerformancePackageState::Unlocking { start_aggregator, start_timestamp } => format!("Unlocking (start_aggregator: {}, start_timestamp: {})", start_aggregator, start_timestamp),
+            PerformancePackageState::Unlocked => "Unlocked".to_string(),
+        }
+    }
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
 pub enum ChangeType {
     /// Change the oracle configuration
@@ -76,14 +116,12 @@ pub enum ChangeType {
 #[account]
 #[derive(InitSpace)]
 pub struct ChangeRequest {
-    /// The locker this change applies to
-    pub locker: Pubkey,
+    /// The performance package this change applies to
+    pub performance_package: Pubkey,
     /// What is being changed
     pub change_type: ChangeType,
     /// When the change was proposed
     pub proposed_at: i64,
-    /// The locker state before the change was proposed
-    pub previous_state: LockerState,
     /// Who proposed this change (either token_recipient or locker_authority)
     pub proposer: Pubkey,
     /// Used to derive the PDA along with the proposer
