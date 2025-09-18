@@ -40,4 +40,6 @@ pub enum LaunchpadError {
     TokensAlreadyClaimed,
     #[msg("Money already refunded")]
     MoneyAlreadyRefunded,
+    #[msg("An invariant was violated. You should get in contact with the MetaDAO team if you see this")]
+    InvariantViolated,
 }

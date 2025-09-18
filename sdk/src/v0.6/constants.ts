@@ -61,6 +61,10 @@ export const DEVNET_RAYDIUM_AUTHORITY = PublicKey.findProgramAddressSync(
   DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
 )[0];
 
+export const DAMM_V2_PROGRAM_ID = new PublicKey(
+  "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+);
+
 export const LOW_FEE_RAYDIUM_CONFIG = new PublicKey(
   "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2",
 );

@@ -24,14 +24,20 @@ security_txt! {
 
 declare_id!("mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA");
 
-/// 10M tokens with 6 decimals
-pub const TOKENS_TO_PARTICIPANTS: u64 = 10_000_000 * 1_000_000;
+pub const TOKEN_SCALE: u64 = 1_000_000;
 
+/// 10M tokens with 6 decimals
+pub const TOKENS_TO_PARTICIPANTS: u64 = 10_000_000 * TOKEN_SCALE;
 /// 20% to liquidity
-pub const TOKENS_TO_LIQUIDITY: u64 = TOKENS_TO_PARTICIPANTS / 5;
+pub const TOKENS_TO_FUTARCHY_LIQUIDITY: u64 = 2_000_000 * TOKEN_SCALE;
+/// 3M tokens to single-sided DammV2 liquidity
+pub const TOKENS_TO_DAMM_V2_LIQUIDITY: u64 = TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED * TOKEN_SCALE;
+/// we need this to prevent overflow
+pub const TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED: u64 = 3_000_000;
+
 
 /// Max 50% premine
-pub const MAX_PREMINE: u64 = TOKENS_TO_PARTICIPANTS + TOKENS_TO_LIQUIDITY;
+pub const MAX_PREMINE: u64 = 10_000_000 * TOKEN_SCALE;
 
 pub mod usdc_mint {
     use anchor_lang::prelude::declare_id;
