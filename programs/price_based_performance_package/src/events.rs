@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{ChangeType, OracleConfig, PerformancePackage, Tranche};
+use crate::ChangeType;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {

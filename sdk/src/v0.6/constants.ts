@@ -12,7 +12,7 @@ export const CONDITIONAL_VAULT_PROGRAM_ID = new PublicKey(
   "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg",
 );
 export const LAUNCHPAD_PROGRAM_ID = new PublicKey(
-  "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA",
+  "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV",
 );
 export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
   "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d",

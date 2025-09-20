@@ -227,6 +227,11 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "positionNftMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "treasuryQuoteAccount";
           isMut: true;
           isSigner: false;
@@ -238,7 +243,7 @@ export type Launchpad = {
         },
         {
           name: "quoteMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -320,11 +325,6 @@ export type Launchpad = {
               isSigner: false;
             },
             {
-              name: "rent";
-              isMut: false;
-              isSigner: false;
-            },
-            {
               name: "squadsProgram";
               isMut: false;
               isSigner: false;
@@ -370,11 +370,6 @@ export type Launchpad = {
               isSigner: false;
             },
             {
-              name: "positionNftMint";
-              isMut: true;
-              isSigner: false;
-            },
-            {
               name: "positionNftAccount";
               isMut: true;
               isSigner: false;
@@ -390,16 +385,6 @@ export type Launchpad = {
               isSigner: false;
             },
             {
-              name: "baseMint";
-              isMut: false;
-              isSigner: false;
-            },
-            {
-              name: "quoteMint";
-              isMut: false;
-              isSigner: false;
-            },
-            {
               name: "tokenAVault";
               isMut: true;
               isSigner: false;
@@ -412,7 +397,7 @@ export type Launchpad = {
             {
               name: "poolCreatorAuthority";
               isMut: false;
-              isSigner: true;
+              isSigner: false;
             },
             {
               name: "poolAuthority";
@@ -1509,6 +1494,11 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "positionNftMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "treasuryQuoteAccount",
           isMut: true,
           isSigner: false,
@@ -1520,7 +1510,7 @@ export const IDL: Launchpad = {
         },
         {
           name: "quoteMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1602,11 +1592,6 @@ export const IDL: Launchpad = {
               isSigner: false,
             },
             {
-              name: "rent",
-              isMut: false,
-              isSigner: false,
-            },
-            {
               name: "squadsProgram",
               isMut: false,
               isSigner: false,
@@ -1652,11 +1637,6 @@ export const IDL: Launchpad = {
               isSigner: false,
             },
             {
-              name: "positionNftMint",
-              isMut: true,
-              isSigner: false,
-            },
-            {
               name: "positionNftAccount",
               isMut: true,
               isSigner: false,
@@ -1672,16 +1652,6 @@ export const IDL: Launchpad = {
               isSigner: false,
             },
             {
-              name: "baseMint",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "quoteMint",
-              isMut: false,
-              isSigner: false,
-            },
-            {
               name: "tokenAVault",
               isMut: true,
               isSigner: false,
@@ -1694,7 +1664,7 @@ export const IDL: Launchpad = {
             {
               name: "poolCreatorAuthority",
               isMut: false,
-              isSigner: true,
+              isSigner: false,
             },
             {
               name: "poolAuthority",

@@ -336,7 +336,7 @@ export class LaunchpadClient {
     );
 
     const [positionNftMint] = PublicKey.findProgramAddressSync(
-      [Buffer.from("position_nft_mint")],
+      [Buffer.from("position_nft_mint"), baseMint.toBuffer()],
       LAUNCHPAD_PROGRAM_ID,
     );
 
@@ -394,6 +394,11 @@ export class LaunchpadClient {
       DAMM_V2_PROGRAM_ID,
     );
 
+    const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
+      [Buffer.from("damm_pool_creator_authority")],
+      LAUNCHPAD_PROGRAM_ID,
+    );
+
     const [dammV2EventAuthority] = getEventAuthorityAddr(DAMM_V2_PROGRAM_ID);
 
     return this.launchpad.methods
@@ -436,22 +441,23 @@ export class LaunchpadClient {
         spendingLimit,
         performancePackage,
         performancePackageTokenAccount,
+        positionNftMint,
         meteoraAccounts: {
           dammV2Program: DAMM_V2_PROGRAM_ID,
           config,
           token2022Program: TOKEN_2022_PROGRAM_ID,
-          positionNftMint,
           positionNftAccount,
           pool,
-          baseMint,
-          quoteMint,
+          // baseMint,
+          // quoteMint,
+          poolCreatorAuthority,
           position,
           tokenAVault,
           tokenBVault,
-          poolCreatorAuthority: this.provider.publicKey,
           poolAuthority,
           dammV2EventAuthority,
         },
+        // poolCreatorAuthority,
       })
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 800_000 }),

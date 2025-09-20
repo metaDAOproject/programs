@@ -29,6 +29,7 @@ import {
   InstructionUtils,
   getPerformancePackageAddr,
   DAMM_V2_PROGRAM_ID,
+  LAUNCHPAD_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.6";
 
 import {
@@ -214,7 +215,12 @@ before(async function () {
   // discriminator + vault config authority + pool creator authority + pool fees config + activation type + collect fee mode
   const configTypeOffset = 8 + 32 + 32 + 128 + 1 + 1;
 
-  dynamicConfig.data.set(this.payer.publicKey.toBuffer(), poolCreatorAuthorityOffset);
+  const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
+    [Buffer.from("damm_pool_creator_authority")],
+    LAUNCHPAD_PROGRAM_ID,
+  );
+
+  dynamicConfig.data.set(poolCreatorAuthority.toBuffer(), poolCreatorAuthorityOffset);
   dynamicConfig.data.set([1], configTypeOffset);
 
   this.context.setAccount(new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"), dynamicConfig);

@@ -3,19 +3,22 @@ use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::UpdateMetadataAccountsV2;
 use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, SetAuthority, Token, TokenAccount, Transfer};
-use anchor_spl::token_2022::{Token2022};
+use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_interface;
-use damm_v2_cpi::constants::seeds::{
-    POOL_AUTHORITY_PREFIX, POOL_PREFIX, POSITION_NFT_ACCOUNT_PREFIX, POSITION_PREFIX,
-    TOKEN_VAULT_PREFIX,
-};
+// use damm_v2_cpi::constants::seeds::{
+//     POOL_AUTHORITY_PREFIX, POOL_PREFIX, POSITION_NFT_ACCOUNT_PREFIX, POSITION_PREFIX,
+//     TOKEN_VAULT_PREFIX,
+// };
 use damm_v2_cpi::constants::MAX_SQRT_PRICE;
 use damm_v2_cpi::BaseFeeParameters;
 
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
-use crate::{TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_PARTICIPANTS, TOKEN_SCALE};
+use crate::{
+    TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
+    TOKEN_SCALE,
+};
 use anchor_spl::metadata::{
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
 };
@@ -43,7 +46,6 @@ pub struct StaticCompleteLaunchAccounts<'info> {
     pub token_metadata_program: Program<'info, Metadata>,
     /// CHECK: checked by autocrat program
     pub autocrat_event_authority: UncheckedAccount<'info>,
-    pub rent: Sysvar<'info, Rent>,
     pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
     /// CHECK: checked by squads multisig program
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_PROGRAM_CONFIG], bump, seeds::program = squads_program)]
@@ -56,13 +58,13 @@ pub struct StaticCompleteLaunchAccounts<'info> {
     pub price_based_performance_package_event_authority: UncheckedAccount<'info>,
 }
 
-pub fn max_key(left: &Pubkey, right: &Pubkey) -> [u8; 32] {
-    std::cmp::max(left, right).to_bytes()
-}
+// pub fn max_key(left: &Pubkey, right: &Pubkey) -> [u8; 32] {
+//     std::cmp::max(left, right).to_bytes()
+// }
 
-pub fn min_key(left: &Pubkey, right: &Pubkey) -> [u8; 32] {
-    std::cmp::min(left, right).to_bytes()
-}
+// pub fn min_key(left: &Pubkey, right: &Pubkey) -> [u8; 32] {
+//     std::cmp::min(left, right).to_bytes()
+// }
 
 #[derive(Accounts)]
 pub struct MeteoraAccounts<'info> {
@@ -73,53 +75,49 @@ pub struct MeteoraAccounts<'info> {
     pub token_2022_program: Program<'info, Token2022>,
 
     /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [b"position_nft_mint"], bump)]
-    pub position_nft_mint: UncheckedAccount<'info>,
-
-    /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [POSITION_NFT_ACCOUNT_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
+    // #[account(mut, seeds = [POSITION_NFT_ACCOUNT_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
+    #[account(mut)]
     pub position_nft_account: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [
-        POOL_PREFIX.as_ref(),
-        config.key().as_ref(),
-        &max_key(&base_mint.key(), &quote_mint.key()),
-        &min_key(&base_mint.key(), &quote_mint.key()),
-    ], bump, seeds::program = damm_v2_program)]
+    // #[account(mut, seeds = [
+    //     POOL_PREFIX.as_ref(),
+    //     config.key().as_ref(),
+    //     &max_key(&base_mint.key(), &quote_mint.key()),
+    //     &min_key(&base_mint.key(), &quote_mint.key()),
+    // ], bump, seeds::program = damm_v2_program)]
+    #[account(mut)]
     pub pool: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [POSITION_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
+    // #[account(mut, seeds = [POSITION_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
+    #[account(mut)]
     pub position: UncheckedAccount<'info>,
 
-    /// CHECK: checked by root account struct
-    pub base_mint: UncheckedAccount<'info>,
-
-    /// CHECK: checked by root account struct
-    pub quote_mint: UncheckedAccount<'info>,
-
     /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [
-        TOKEN_VAULT_PREFIX.as_ref(),
-        base_mint.key().as_ref(),
-        pool.key().as_ref(),
-    ], bump, seeds::program = damm_v2_program)]
+    // #[account(mut, seeds = [
+    //     TOKEN_VAULT_PREFIX.as_ref(),
+    //     base_mint.key().as_ref(),
+    //     pool.key().as_ref(),
+    // ], bump, seeds::program = damm_v2_program)]
+    #[account(mut)]
     pub token_a_vault: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [
-        TOKEN_VAULT_PREFIX.as_ref(),
-        quote_mint.key().as_ref(),
-        pool.key().as_ref(),
-    ], bump, seeds::program = damm_v2_program)]
+    // #[account(mut, seeds = [
+    //     TOKEN_VAULT_PREFIX.as_ref(),
+    //     quote_mint.key().as_ref(),
+    //     pool.key().as_ref(),
+    // ], bump, seeds::program = damm_v2_program)]
+    #[account(mut)]
     pub token_b_vault: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    pub pool_creator_authority: Signer<'info>,
+    #[account(seeds = [b"damm_pool_creator_authority"], bump)]
+    pub pool_creator_authority: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    #[account(seeds = [POOL_AUTHORITY_PREFIX.as_ref()], bump, seeds::program = damm_v2_program)]
+    // #[account(seeds = [POOL_AUTHORITY_PREFIX.as_ref()], bump, seeds::program = damm_v2_program)]
     pub pool_authority: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
@@ -179,6 +177,10 @@ pub struct CompleteLaunch<'info> {
     )]
     pub launch_base_vault: Box<Account<'info, TokenAccount>>,
 
+    /// CHECK: checked by damm v2 program
+    #[account(mut, seeds = [b"position_nft_mint", base_mint.key().as_ref()], bump)]
+    pub position_nft_mint: UncheckedAccount<'info>,
+
     #[account(
         init_if_needed,
         payer = payer,
@@ -187,10 +189,9 @@ pub struct CompleteLaunch<'info> {
     )]
     pub treasury_quote_account: Box<Account<'info, TokenAccount>>,
 
-    #[account(mut, address = meteora_accounts.base_mint.key())]
+    #[account(mut)]
     pub base_mint: Box<Account<'info, Mint>>,
 
-    #[account(mut, address = meteora_accounts.quote_mint.key())]
     pub quote_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: init by autocrat
@@ -220,7 +221,8 @@ pub struct CompleteLaunch<'info> {
     pub spending_limit: UncheckedAccount<'info>,
 
     /// CHECK: initialized by price based performance package program
-    #[account(mut, seeds = [b"performance_package", launch_signer.key().as_ref()], bump, seeds::program = static_accounts.price_based_performance_package_program)]
+    // #[account(mut, seeds = [b"performance_package", launch_signer.key().as_ref()], bump, seeds::program = static_accounts.price_based_performance_package_program)]
+    #[account(mut)]
     pub performance_package: UncheckedAccount<'info>,
 
     /// CHECK: initialized by price based performance package program
@@ -302,7 +304,6 @@ impl CompleteLaunch<'_> {
 
         let usdc_to_lp = final_raise_amount.saturating_div(5);
         let usdc_to_dao = final_raise_amount.saturating_sub(usdc_to_lp);
-        let token_to_lp = TOKENS_TO_PARTICIPANTS / 5;
 
         futarchy::cpi::initialize_dao(
             CpiContext::new_with_signer(
@@ -413,14 +414,14 @@ impl CompleteLaunch<'_> {
                 launch_signer,
             ),
             ProvideLiquidityParams {
-                max_base_amount: token_to_lp,
+                max_base_amount: TOKENS_TO_FUTARCHY_LIQUIDITY,
                 quote_amount: usdc_to_lp,
                 min_liquidity: 0,
                 position_authority: ctx.accounts.squads_multisig_vault.key(),
             },
         )?;
 
-        let clock = Clock::get()?;
+        let clock = Box::new(Clock::get()?);
 
         price_based_performance_package::cpi::initialize_performance_package(
             CpiContext::new_with_signer(
@@ -496,13 +497,22 @@ impl CompleteLaunch<'_> {
             },
         )?;
 
+        let base_mint_key = ctx.accounts.base_mint.key();
         let position_nft_mint_signer_seeds = &[
             b"position_nft_mint".as_ref(),
-            &[ctx.bumps.meteora_accounts.position_nft_mint],
+            base_mint_key.as_ref(),
+            &[ctx.bumps.position_nft_mint],
         ];
+
+        let pool_creator_authority_signer_seeds = &[
+            b"damm_pool_creator_authority".as_ref(),
+            &[ctx.bumps.meteora_accounts.pool_creator_authority],
+        ];
+
         let pool_init_signer = &[
             &launch_signer_seeds[..],
             &position_nft_mint_signer_seeds[..],
+            &pool_creator_authority_signer_seeds[..],
         ];
 
         system_program::transfer(
@@ -513,8 +523,6 @@ impl CompleteLaunch<'_> {
                     to: ctx.accounts.launch_signer.to_account_info(),
                 },
             ),
-            // pool fee + 0.1 SOL for rent, we only need 0.05 now but Raydium
-            // is upgradeable so I'd rather leave buffer
             50_000_000,
         )?;
 
@@ -550,7 +558,6 @@ impl CompleteLaunch<'_> {
                     creator: ctx.accounts.squads_multisig_vault.to_account_info(),
                     position_nft_mint: ctx
                         .accounts
-                        .meteora_accounts
                         .position_nft_mint
                         .to_account_info(),
                     position_nft_account: ctx
@@ -592,8 +599,8 @@ impl CompleteLaunch<'_> {
                     system_program: ctx.accounts.system_program.to_account_info(),
                     pool: ctx.accounts.meteora_accounts.pool.to_account_info(),
                     position: ctx.accounts.meteora_accounts.position.to_account_info(),
-                    token_a_mint: ctx.accounts.meteora_accounts.base_mint.to_account_info(),
-                    token_b_mint: ctx.accounts.meteora_accounts.quote_mint.to_account_info(),
+                    token_a_mint: ctx.accounts.base_mint.to_account_info(),
+                    token_b_mint: ctx.accounts.quote_mint.to_account_info(),
                     event_authority: ctx
                         .accounts
                         .meteora_accounts
@@ -629,27 +636,6 @@ impl CompleteLaunch<'_> {
                 sqrt_price,
             },
         )?;
-        
-        ctx.accounts.launch_base_vault.reload()?;
-        ctx.accounts.launch_quote_vault.reload()?;
-
-        require_gte!(
-            ctx.accounts.launch_base_vault.amount,
-            TOKENS_TO_PARTICIPANTS,
-            LaunchpadError::InvariantViolated
-        );
-        require_gte!(
-            ctx.accounts.launch_quote_vault.amount,
-            usdc_to_dao,
-            LaunchpadError::InvariantViolated
-        );
-
-        {
-            let position_nft_account = token_interface::TokenAccount::try_deserialize(&mut &ctx.accounts.meteora_accounts.position_nft_account.data.borrow()[..])?;
-
-            require_eq!(position_nft_account.amount, 1, LaunchpadError::InvariantViolated);
-            require_keys_eq!(position_nft_account.owner, ctx.accounts.squads_multisig_vault.key(), LaunchpadError::InvariantViolated);
-        }
 
         token::set_authority(
             CpiContext::new_with_signer(
@@ -699,7 +685,6 @@ impl CompleteLaunch<'_> {
         launch.final_raise_amount = Some(final_raise_amount);
         launch.seq_num += 1;
 
-        let clock = Clock::get()?;
         emit_cpi!(LaunchCompletedEvent {
             common: CommonFields::new(&clock, launch.seq_num),
             launch: launch.key(),
@@ -709,6 +694,45 @@ impl CompleteLaunch<'_> {
             dao_treasury: launch.dao_vault,
         });
 
+        ctx.accounts.verify_position_nft()?;
+        ctx.accounts.verify_vaults(usdc_to_dao)?;
+
+        Ok(())
+    }
+
+    fn verify_vaults(&mut self, usdc_to_dao: u64) -> Result<()> {
+        self.launch_base_vault.reload()?;
+        self.launch_quote_vault.reload()?;
+
+        require_gte!(
+            self.launch_base_vault.amount,
+            TOKENS_TO_PARTICIPANTS,
+            LaunchpadError::InvariantViolated
+        );
+        require_gte!(
+            self.launch_quote_vault.amount,
+            usdc_to_dao,
+            LaunchpadError::InvariantViolated
+        );
+        // require_eq!(false, true);
+
+        Ok(())
+    }
+
+    fn verify_position_nft(&self) -> Result<()> {
+        let position_nft_account = token_interface::TokenAccount::try_deserialize(
+            &mut &self.meteora_accounts.position_nft_account.data.borrow()[..],
+        )?;
+        require_eq!(
+            position_nft_account.amount,
+            1,
+            LaunchpadError::InvariantViolated
+        );
+        require_keys_eq!(
+            position_nft_account.owner,
+            self.squads_multisig_vault.key(),
+            LaunchpadError::InvariantViolated
+        );
         Ok(())
     }
 }

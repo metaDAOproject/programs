@@ -22,7 +22,7 @@ security_txt! {
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
 
-declare_id!("mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA");
+declare_id!("MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV");
 
 pub const TOKEN_SCALE: u64 = 1_000_000;
 
