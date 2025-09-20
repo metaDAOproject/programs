@@ -5,9 +5,9 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-futarchy = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
-launchpad = "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA"
+futarchy = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
+launchpad = "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
 price_based_performance_package = "GP3gUFqHgdz9tB5bosCqmnu7qnkFa1gjUMFs8uCkwWQr"
 
 [registry]
@@ -18,24 +18,24 @@ cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
+assign-permissionless-account = "yarn run tsx scripts/assignPermissionlessAccount.ts"
+claim-all-launch = "yarn run tsx scripts/v0.5/claimAllLaunch.ts"
+execute-proposal = "yarn run tsx scripts/v0.5/squads/executeProposal.ts"
+finalize-launch = "yarn run tsx scripts/v0.5/finalizeLaunch.ts"
+initialize-dao = "yarn run tsx scripts/v0.6/initializeDao.ts"
+initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
+initialize-proposal = "yarn run tsx scripts/v0.5/initializeProposal.ts"
+migrate-meta = "yarn run tsx scripts/v0.5/migrateMeta.ts"
+remove-spending-limit = "yarn run tsx scripts/v0.5/squads/removeSpendingLimit.ts"
+start-launch = "yarn run tsx scripts/v0.5/startLaunch.ts"
+test = "npx mocha --import=tsx --bail tests/main.test.ts"
+transfer = "yarn run tsx scripts/v0.5/squads/initializeTransferProposal.ts"
+update-spending-limit = "yarn run tsx scripts/v0.5/squads/updateSpendingLimit.ts"
+use-spending-limit = "yarn run tsx scripts/v0.5/squads/useSpendingLimit.ts"
 v03-add-metadata = "yarn run tsx scripts/v0.3/uploadMetadata.ts"
 v04-add-metadata = "yarn run tsx scripts/v0.4/uploadMetadata.ts"
 v04-initialize-dao = "yarn run tsx scripts/v0.4/initializeDao.ts"
 v04-initialize-proposal = "yarn run tsx scripts/v0.4/initializeProposal.ts"
-assign-permissionless-account = "yarn run tsx scripts/assignPermissionlessAccount.ts"
-initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
-initialize-proposal = "yarn run tsx scripts/v0.5/initializeProposal.ts"
-finalize-launch = "yarn run tsx scripts/v0.5/finalizeLaunch.ts"
-claim-all-launch = "yarn run tsx scripts/v0.5/claimAllLaunch.ts"
-start-launch = "yarn run tsx scripts/v0.5/startLaunch.ts"
-initialize-dao = "yarn run tsx scripts/v0.6/initializeDao.ts"
-migrate-meta = "yarn run tsx scripts/v0.5/migrateMeta.ts"
-execute-proposal = "yarn run tsx scripts/v0.5/squads/executeProposal.ts"
-use-spending-limit = "yarn run tsx scripts/v0.5/squads/useSpendingLimit.ts"
-transfer = "yarn run tsx scripts/v0.5/squads/initializeTransferProposal.ts"
-update-spending-limit = "yarn run tsx scripts/v0.5/squads/updateSpendingLimit.ts"
-remove-spending-limit = "yarn run tsx scripts/v0.5/squads/removeSpendingLimit.ts"
-test = "npx mocha --import=tsx --bail tests/main.test.ts"
 
 [test]
 startup_wait = 5000

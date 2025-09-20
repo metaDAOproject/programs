@@ -12,7 +12,7 @@ export const CONDITIONAL_VAULT_PROGRAM_ID = new PublicKey(
   "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg",
 );
 export const LAUNCHPAD_PROGRAM_ID = new PublicKey(
-  "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA",
+  "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV",
 );
 export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
   "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d",
@@ -60,6 +60,10 @@ export const DEVNET_RAYDIUM_AUTHORITY = PublicKey.findProgramAddressSync(
   [anchor.utils.bytes.utf8.encode("vault_and_lp_mint_auth_seed")],
   DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
 )[0];
+
+export const DAMM_V2_PROGRAM_ID = new PublicKey(
+  "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+);
 
 export const LOW_FEE_RAYDIUM_CONFIG = new PublicKey(
   "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2",

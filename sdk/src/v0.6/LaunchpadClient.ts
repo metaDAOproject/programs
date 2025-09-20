@@ -22,10 +22,12 @@ import {
   SQUADS_PROGRAM_ID,
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_CONFIG_TREASURY,
+  DAMM_V2_PROGRAM_ID,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
+  TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import BN from "bn.js";
 import { FundingRecord, Launch } from "./types/index.js";
@@ -328,6 +330,77 @@ export class LaunchpadClient {
       true,
     );
 
+    const [poolAuthority] = PublicKey.findProgramAddressSync(
+      [Buffer.from("pool_authority")],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [positionNftMint] = PublicKey.findProgramAddressSync(
+      [Buffer.from("position_nft_mint"), baseMint.toBuffer()],
+      LAUNCHPAD_PROGRAM_ID,
+    );
+
+    const [positionNftAccount] = PublicKey.findProgramAddressSync(
+      [Buffer.from("position_nft_account"), positionNftMint.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    function getFirstKey(key1: PublicKey, key2: PublicKey) {
+      const buf1 = key1.toBuffer();
+      const buf2 = key2.toBuffer();
+      // Buf1 > buf2
+      if (Buffer.compare(buf1, buf2) === 1) {
+        return buf1;
+      }
+      return buf2;
+    }
+
+    function getSecondKey(key1: PublicKey, key2: PublicKey) {
+      const buf1 = key1.toBuffer();
+      const buf2 = key2.toBuffer();
+      // Buf1 > buf2
+      if (Buffer.compare(buf1, buf2) === 1) {
+        return buf2;
+      }
+      return buf1;
+    }
+
+    const config = new PublicKey(
+      "4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod",
+    );
+
+    const [pool] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("pool"),
+        config.toBuffer(),
+        getFirstKey(baseMint, quoteMint),
+        getSecondKey(baseMint, quoteMint),
+      ],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [position] = PublicKey.findProgramAddressSync(
+      [Buffer.from("position"), positionNftMint.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [tokenAVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), baseMint.toBuffer(), pool.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [tokenBVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), quoteMint.toBuffer(), pool.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
+      [Buffer.from("damm_pool_creator_authority")],
+      LAUNCHPAD_PROGRAM_ID,
+    );
+
+    const [dammV2EventAuthority] = getEventAuthorityAddr(DAMM_V2_PROGRAM_ID);
+
     return this.launchpad.methods
       .completeLaunch({ finalRaiseAmount })
       .accounts({
@@ -368,9 +441,27 @@ export class LaunchpadClient {
         spendingLimit,
         performancePackage,
         performancePackageTokenAccount,
+        positionNftMint,
+        meteoraAccounts: {
+          dammV2Program: DAMM_V2_PROGRAM_ID,
+          config,
+          token2022Program: TOKEN_2022_PROGRAM_ID,
+          positionNftAccount,
+          pool,
+          // baseMint,
+          // quoteMint,
+          poolCreatorAuthority,
+          position,
+          tokenAVault,
+          tokenBVault,
+          poolAuthority,
+          dammV2EventAuthority,
+        },
+        // poolCreatorAuthority,
       })
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 560_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 800_000 }),
+        ComputeBudgetProgram.requestHeapFrame({ bytes: 255 * 1024 }),
       ]);
   }
 

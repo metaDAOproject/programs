@@ -28,6 +28,8 @@ import {
   getProposalAddrV2,
   InstructionUtils,
   getPerformancePackageAddr,
+  DAMM_V2_PROGRAM_ID,
+  LAUNCHPAD_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.6";
 
 import {
@@ -132,6 +134,10 @@ before(async function () {
         name: "squads_multisig",
         programId: SQUADS_PROGRAM_ID,
       },
+      {
+        name: "cp_amm",
+        programId: DAMM_V2_PROGRAM_ID,
+      }
     ],
     [
       {
@@ -172,6 +178,15 @@ before(async function () {
           lamports: 1_000_000_000,
         },
       },
+      {
+        address: new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"),
+        info: {
+          data: fs.readFileSync("./tests/fixtures/dynamic-config"),
+          executable: false,
+          owner: DAMM_V2_PROGRAM_ID,
+          lamports: 1_000_000_000,
+        }
+      }
     ]
   );
   this.banksClient = this.context.banksClient;
@@ -192,6 +207,28 @@ before(async function () {
   });
   this.provider = provider;
   this.payer = provider.wallet.payer;
+
+  const dynamicConfig = await this.banksClient.getAccount(new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"));
+
+  // discriminator + vault config authority
+  const poolCreatorAuthorityOffset = 8 + 32;
+  // discriminator + vault config authority + pool creator authority + pool fees config + activation type + collect fee mode
+  const configTypeOffset = 8 + 32 + 32 + 128 + 1 + 1;
+
+  const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
+    [Buffer.from("damm_pool_creator_authority")],
+    LAUNCHPAD_PROGRAM_ID,
+  );
+
+  dynamicConfig.data.set(poolCreatorAuthority.toBuffer(), poolCreatorAuthorityOffset);
+  dynamicConfig.data.set([1], configTypeOffset);
+
+  this.context.setAccount(new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"), dynamicConfig);
+  const creatorAuthority = new PublicKey(dynamicConfig.data.subarray(poolCreatorAuthorityOffset, poolCreatorAuthorityOffset + 32));
+  console.log(creatorAuthority);
+  console.log(this.payer.publicKey);
+  console.log(dynamicConfig.data.subarray(poolCreatorAuthorityOffset, poolCreatorAuthorityOffset + 32));
+  console.log(dynamicConfig.data.toString())
 
   this.squadsConnection = {
     getAccountInfo: async (address: PublicKey) => {

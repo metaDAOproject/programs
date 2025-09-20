@@ -1,12 +1,12 @@
 [package]
-name = "price_based_performance_package"
-version = "0.6.0"
+name = "damm_v2_cpi"
+version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "price_based_performance_package"
+name = "damm_v2_cpi"
 
 [features]
 no-entrypoint = []
@@ -16,5 +16,4 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = { version = "0.29.0", features = ["init-if-needed", "event-cpi"] }
-anchor-spl = "0.29.0"
+anchor-lang = { version = "0.29.0", features = ["event-cpi"] }

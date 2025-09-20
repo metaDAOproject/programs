@@ -776,6 +776,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "damm_v2_cpi"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+]
+
+[[package]]
 name = "darling"
 version = "0.20.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1140,6 +1147,7 @@ dependencies = [
  "ahash 0.8.6",
  "anchor-lang",
  "anchor-spl",
+ "damm_v2_cpi",
  "futarchy",
  "price_based_performance_package",
  "solana-program",
@@ -1466,7 +1474,7 @@ dependencies = [
 
 [[package]]
 name = "price_based_performance_package"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",

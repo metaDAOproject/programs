@@ -227,6 +227,11 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "positionNftMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "treasuryQuoteAccount";
           isMut: true;
           isSigner: false;
@@ -320,11 +325,6 @@ export type Launchpad = {
               isSigner: false;
             },
             {
-              name: "rent";
-              isMut: false;
-              isSigner: false;
-            },
-            {
               name: "squadsProgram";
               isMut: false;
               isSigner: false;
@@ -346,6 +346,66 @@ export type Launchpad = {
             },
             {
               name: "priceBasedPerformancePackageEventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "meteoraAccounts";
+          accounts: [
+            {
+              name: "dammV2Program";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "config";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "token2022Program";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "positionNftAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "pool";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "position";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenAVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenBVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "poolCreatorAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "poolAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "dammV2EventAuthority";
               isMut: false;
               isSigner: false;
             },
@@ -1197,6 +1257,11 @@ export type Launchpad = {
       name: "MoneyAlreadyRefunded";
       msg: "Money already refunded";
     },
+    {
+      code: 6019;
+      name: "InvariantViolated";
+      msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this";
+    },
   ];
 };
 
@@ -1429,6 +1494,11 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "positionNftMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "treasuryQuoteAccount",
           isMut: true,
           isSigner: false,
@@ -1522,11 +1592,6 @@ export const IDL: Launchpad = {
               isSigner: false,
             },
             {
-              name: "rent",
-              isMut: false,
-              isSigner: false,
-            },
-            {
               name: "squadsProgram",
               isMut: false,
               isSigner: false,
@@ -1548,6 +1613,66 @@ export const IDL: Launchpad = {
             },
             {
               name: "priceBasedPerformancePackageEventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "meteoraAccounts",
+          accounts: [
+            {
+              name: "dammV2Program",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "config",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "token2022Program",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "positionNftAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "pool",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "position",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenAVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenBVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "poolCreatorAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "poolAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "dammV2EventAuthority",
               isMut: false,
               isSigner: false,
             },
@@ -2398,6 +2523,11 @@ export const IDL: Launchpad = {
       code: 6018,
       name: "MoneyAlreadyRefunded",
       msg: "Money already refunded",
+    },
+    {
+      code: 6019,
+      name: "InvariantViolated",
+      msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this",
     },
   ],
 };

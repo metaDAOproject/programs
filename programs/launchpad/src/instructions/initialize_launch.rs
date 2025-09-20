@@ -5,8 +5,7 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchInitializedEvent};
 use crate::state::{Launch, LaunchState};
-use crate::usdc_mint;
-use crate::TOKENS_TO_PARTICIPANTS;
+use crate::{usdc_mint, TOKENS_TO_DAMM_V2_LIQUIDITY, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS, TOKEN_SCALE};
 use crate::MAX_PREMINE;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
@@ -121,7 +120,7 @@ impl InitializeLaunch<'_> {
         );
 
         require_gte!(
-            MAX_PREMINE,
+            MAX_PREMINE * TOKEN_SCALE,
             args.performance_package_token_amount,
             LaunchpadError::InvalidPriceBasedPremineAmount
         );
@@ -236,7 +235,7 @@ impl InitializeLaunch<'_> {
                 },
                 signer,
             ),
-            TOKENS_TO_PARTICIPANTS + args.performance_package_token_amount,
+            args.performance_package_token_amount + TOKENS_TO_PARTICIPANTS + TOKENS_TO_FUTARCHY_LIQUIDITY + TOKENS_TO_DAMM_V2_LIQUIDITY
         )?;
 
         Ok(())

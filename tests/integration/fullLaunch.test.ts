@@ -174,7 +174,7 @@ export default async function suite() {
     await this.launchpad.closeLaunchIx({ launch }).rpc();
 
     const completeLaunchTx = await this.launchpad
-      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META, finalRaiseAmount: new BN(500_000 * 1e6), launchAuthority: this.payer.publicKey })
+      .completeLaunchIx({ launch, baseMint: META, finalRaiseAmount: new BN(500_000 * 1e6), launchAuthority: this.payer.publicKey })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -207,6 +207,9 @@ export default async function suite() {
       multisigPda,
       index: 0,
     });
+
+    console.log(await this.getTokenBalance(META, launchSigner));
+    console.log(await this.getTokenBalance(MAINNET_USDC, launchSigner));
 
     // Claim tokens for all funders
     await this.launchpad.claimIx(launch, META, funder1.publicKey).rpc();
@@ -440,7 +443,7 @@ export default async function suite() {
 
     const storedMeta = await this.getMint(META);
 
-    assert.equal(storedMeta.supply, BigInt(23_000_000 * 10 ** 6)); // 10M ICO + 2M liquidity + 10M package + 1M proposal
+    assert.equal(storedMeta.supply, BigInt(26_000_000 * 10 ** 6)); // 10M ICO + 2M futarchy liquidity + 3M meteora liquidity + 10M package + 1M proposal
 
     const receiverBalance = await this.getTokenBalance(
       META,
