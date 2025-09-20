@@ -1474,7 +1474,7 @@ dependencies = [
 
 [[package]]
 name = "price_based_performance_package"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",

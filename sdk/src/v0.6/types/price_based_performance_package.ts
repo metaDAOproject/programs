@@ -1,5 +1,5 @@
 export type PriceBasedPerformancePackage = {
-  version: "0.1.0";
+  version: "0.6.0";
   name: "price_based_performance_package";
   constants: [
     {
@@ -870,7 +870,7 @@ export type PriceBasedPerformancePackage = {
 };
 
 export const IDL: PriceBasedPerformancePackage = {
-  version: "0.1.0",
+  version: "0.6.0",
   name: "price_based_performance_package",
   constants: [
     {
