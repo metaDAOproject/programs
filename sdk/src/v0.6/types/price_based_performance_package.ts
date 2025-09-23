@@ -326,8 +326,10 @@ export type PriceBasedPerformancePackage = {
           },
           {
             name: "twapLengthSeconds";
-            docs: ["Length of time in seconds for TWAP calculation"];
-            type: "u64";
+            docs: [
+              "Length of time in seconds for TWAP calculation, between 1 day and 1 year",
+            ];
+            type: "u32";
           },
           {
             name: "recipient";
@@ -481,7 +483,7 @@ export type PriceBasedPerformancePackage = {
           },
           {
             name: "twapLengthSeconds";
-            type: "u64";
+            type: "u32";
           },
           {
             name: "grantee";
@@ -1218,8 +1220,10 @@ export const IDL: PriceBasedPerformancePackage = {
           },
           {
             name: "twapLengthSeconds",
-            docs: ["Length of time in seconds for TWAP calculation"],
-            type: "u64",
+            docs: [
+              "Length of time in seconds for TWAP calculation, between 1 day and 1 year",
+            ],
+            type: "u32",
           },
           {
             name: "recipient",
@@ -1373,7 +1377,7 @@ export const IDL: PriceBasedPerformancePackage = {
           },
           {
             name: "twapLengthSeconds",
-            type: "u64",
+            type: "u32",
           },
           {
             name: "grantee",

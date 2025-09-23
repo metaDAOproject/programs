@@ -9,7 +9,7 @@ pub struct InitializePerformancePackageParams {
     pub tranches: Vec<Tranche>,
     pub min_unlock_timestamp: i64,
     pub oracle_config: OracleConfig,
-    pub twap_length_seconds: u64,
+    pub twap_length_seconds: u32,
     pub grantee: Pubkey,
     pub performance_package_authority: Pubkey,
 }

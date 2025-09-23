@@ -60,8 +60,8 @@ pub struct PerformancePackage {
     pub min_unlock_timestamp: i64,
     /// Where to pull price data from
     pub oracle_config: OracleConfig,
-    /// Length of time in seconds for TWAP calculation
-    pub twap_length_seconds: u64,
+    /// Length of time in seconds for TWAP calculation, between 1 day and 1 year
+    pub twap_length_seconds: u32,
     /// The recipient of the tokens when unlocked
     pub recipient: Pubkey,
     /// The current state of the locker
