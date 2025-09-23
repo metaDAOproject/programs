@@ -1,0 +1,8 @@
+#!/bin/sh
+
+echo "Running cargo fmt..."
+cargo fmt --all
+
+
+# Add any changes from formatting back to commit
+git add -u
