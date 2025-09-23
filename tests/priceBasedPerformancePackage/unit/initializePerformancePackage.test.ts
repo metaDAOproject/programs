@@ -84,7 +84,7 @@ export default function () {
       tranches,
       grantee: recipient.publicKey,
       performancePackageAuthority: this.payer.publicKey,
-      unlockTimestamp: new BN(
+      minUnlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600
       ), // 1 hour from now
       oracleConfig: {
@@ -118,8 +118,8 @@ export default function () {
     assert.equal(storedPerformancePackage.tranches[1].priceThreshold.toString(), "2000000");
     assert.equal(storedPerformancePackage.tranches[1].tokenAmount.toString(), "200000");
     assert.equal(
-      storedPerformancePackage.unlockTimestamp.toString(),
-      params.unlockTimestamp.toString()
+      storedPerformancePackage.minUnlockTimestamp.toString(),
+      params.minUnlockTimestamp.toString()
     );
     assert.equal(
       storedPerformancePackage.oracleConfig.oracleAccount.toString(),
@@ -178,7 +178,7 @@ export default function () {
       ],
       grantee: recipient.publicKey,
       performancePackageAuthority: this.payer.publicKey,
-      unlockTimestamp: new BN(
+      minUnlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) - 3600
       ), // 1 hour ago
       oracleConfig: {
@@ -236,7 +236,7 @@ export default function () {
       ],
       grantee: recipient.publicKey,
       performancePackageAuthority: this.payer.publicKey,
-      unlockTimestamp: new BN(
+      minUnlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600
       ),
       oracleConfig: {

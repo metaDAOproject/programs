@@ -104,7 +104,7 @@ export default function () {
       ],
       grantee: recipient.publicKey,
       performancePackageAuthority: lockerAuthority.publicKey,
-      unlockTimestamp: new BN(
+      minUnlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 1
       ), // 1 second from now
       oracleConfig: {
@@ -199,7 +199,7 @@ export default function () {
       ],
       grantee: recipient.publicKey,
       performancePackageAuthority: lockerAuthority.publicKey,
-      unlockTimestamp: new BN(
+      minUnlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600
       ), // 1 hour from now
       oracleConfig: {
@@ -281,7 +281,7 @@ export default function () {
       ],
       grantee: recipient.publicKey,
       performancePackageAuthority: lockerAuthority.publicKey,
-      unlockTimestamp: new BN(
+      minUnlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 1
       ),
       oracleConfig: {

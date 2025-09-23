@@ -509,7 +509,7 @@ before(async function () {
         ],
         grantee: recipient,
         performancePackageAuthority: this.payer.publicKey,
-        unlockTimestamp: new BN(
+        minUnlockTimestamp: new BN(
           Number((await this.context.banksClient.getClock()).unixTimestamp) + 1
         ),
         oracleConfig: {
@@ -537,10 +537,10 @@ before(async function () {
 });
 
 describe("launchpad", launchpad);
-describe("price_based_performance_package", priceBasedPerformancePackage);
+describe.only("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);
-describe.only("project-wide integration tests", function () {
+describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch", fullLaunch);
 });

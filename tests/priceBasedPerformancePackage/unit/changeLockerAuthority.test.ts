@@ -67,7 +67,7 @@ export default function () {
     const params = {
       priceThreshold: new BN(1000000),
       tokenAmount: new BN(100000),
-      unlockTimestamp: new BN(
+      minUnlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600
       ),
       oracleConfig: {
