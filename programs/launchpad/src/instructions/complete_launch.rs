@@ -556,10 +556,7 @@ impl CompleteLaunch<'_> {
                     .to_account_info(),
                 damm_v2_cpi::cpi::accounts::InitializePoolWithDynamicConfigCtx {
                     creator: ctx.accounts.squads_multisig_vault.to_account_info(),
-                    position_nft_mint: ctx
-                        .accounts
-                        .position_nft_mint
-                        .to_account_info(),
+                    position_nft_mint: ctx.accounts.position_nft_mint.to_account_info(),
                     position_nft_account: ctx
                         .accounts
                         .meteora_accounts

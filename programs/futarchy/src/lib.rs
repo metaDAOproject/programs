@@ -130,7 +130,9 @@ pub mod futarchy {
     }
 
     #[access_control(ctx.accounts.validate())]
-    pub fn execute_spending_limit_change<'c: 'info, 'info>(ctx: Context<'_, '_, 'c, 'info, ExecuteSpendingLimitChange<'info>>) -> Result<()> {
+    pub fn execute_spending_limit_change<'c: 'info, 'info>(
+        ctx: Context<'_, '_, 'c, 'info, ExecuteSpendingLimitChange<'info>>,
+    ) -> Result<()> {
         ExecuteSpendingLimitChange::handle(ctx)
     }
 }

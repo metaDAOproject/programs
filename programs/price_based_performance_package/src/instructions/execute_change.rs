@@ -1,5 +1,8 @@
+use crate::{
+    ChangeExecuted, ChangeRequest, ChangeType, CommonFields, PerformancePackage,
+    PriceBasedPerformancePackageError, ProposerType,
+};
 use anchor_lang::prelude::*;
-use crate::{ChangeExecuted, ChangeRequest, ChangeType, CommonFields, PerformancePackage, PriceBasedPerformancePackageError, ProposerType};
 
 #[derive(Accounts)]
 pub struct ExecuteChange<'info> {

@@ -1,5 +1,8 @@
+use crate::{
+    ChangeProposed, ChangeRequest, ChangeType, PerformancePackage,
+    PriceBasedPerformancePackageError, ProposerType,
+};
 use anchor_lang::prelude::*;
-use crate::{ChangeProposed, ChangeRequest, ChangeType, PerformancePackage, PriceBasedPerformancePackageError, ProposerType};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct ProposeChangeParams {
@@ -34,7 +37,9 @@ pub struct ProposeChange<'info> {
 
 impl<'info> ProposeChange<'info> {
     pub fn validate(&self) -> Result<()> {
-        if self.proposer.key() != self.performance_package.recipient && self.proposer.key() != self.performance_package.performance_package_authority {
+        if self.proposer.key() != self.performance_package.recipient
+            && self.proposer.key() != self.performance_package.performance_package_authority
+        {
             msg!("proposer ({}) is not the token recipient ({}) or performance package authority ({})", self.proposer.key(), self.performance_package.recipient, self.performance_package.performance_package_authority);
             return Err(PriceBasedPerformancePackageError::UnauthorizedChangeRequest.into());
         }
@@ -76,7 +81,7 @@ impl<'info> ProposeChange<'info> {
             pda_nonce: pda_nonce,
             pda_bump: ctx.bumps.change_request,
         });
-        
+
         // Emit event
         emit!(ChangeProposed {
             locker: performance_package.key(),

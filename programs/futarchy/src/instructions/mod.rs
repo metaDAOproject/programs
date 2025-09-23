@@ -2,6 +2,7 @@ use super::*;
 
 pub mod collect_fees;
 pub mod conditional_swap;
+pub mod execute_spending_limit_change;
 pub mod finalize_proposal;
 pub mod initialize_dao;
 pub mod initialize_proposal;
@@ -12,10 +13,10 @@ pub mod stake_to_proposal;
 pub mod unstake_from_proposal;
 pub mod update_dao;
 pub mod withdraw_liquidity;
-pub mod execute_spending_limit_change;
 
 pub use collect_fees::*;
 pub use conditional_swap::*;
+pub use execute_spending_limit_change::*;
 pub use finalize_proposal::*;
 pub use initialize_dao::*;
 pub use initialize_proposal::*;
@@ -26,4 +27,3 @@ pub use stake_to_proposal::*;
 pub use unstake_from_proposal::*;
 pub use update_dao::*;
 pub use withdraw_liquidity::*;
-pub use execute_spending_limit_change::*;

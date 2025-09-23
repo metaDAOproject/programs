@@ -42,8 +42,10 @@ pub struct Refund<'info> {
 impl Refund<'_> {
     pub fn validate(&self) -> Result<()> {
         require!(
-            self.launch.state == LaunchState::Refunding || 
-                (self.launch.state == LaunchState::Complete && self.launch.final_raise_amount.unwrap() < self.launch.total_committed_amount),
+            self.launch.state == LaunchState::Refunding
+                || (self.launch.state == LaunchState::Complete
+                    && self.launch.final_raise_amount.unwrap()
+                        < self.launch.total_committed_amount),
             LaunchpadError::LaunchNotRefunding
         );
 
@@ -62,7 +64,11 @@ impl Refund<'_> {
 
         let amount_to_refund = match launch.state {
             LaunchState::Refunding => funding_record.committed_amount,
-            LaunchState::Complete => ((launch.final_raise_amount.unwrap() as u128) * funding_record.committed_amount as u128 / launch.total_committed_amount as u128) as u64,
+            LaunchState::Complete => {
+                ((launch.final_raise_amount.unwrap() as u128)
+                    * funding_record.committed_amount as u128
+                    / launch.total_committed_amount as u128) as u64
+            }
             _ => unreachable!(),
         };
 

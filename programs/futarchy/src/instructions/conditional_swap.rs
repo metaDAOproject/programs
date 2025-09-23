@@ -80,7 +80,11 @@ impl ConditionalSwap<'_> {
             FutarchyError::InsufficientBalance
         );
 
-        require_eq!(self.proposal.state, ProposalState::Pending, FutarchyError::ProposalNotActive);
+        require_eq!(
+            self.proposal.state,
+            ProposalState::Pending,
+            FutarchyError::ProposalNotActive
+        );
 
         require_eq!(self.dao.proposal_count, self.proposal.number);
 
@@ -123,10 +127,7 @@ impl ConditionalSwap<'_> {
             min_output_amount,
         } = params;
 
-        let output_amount = dao
-            .amm
-            .state
-            .swap(input_amount, swap_type, market)?;
+        let output_amount = dao.amm.state.swap(input_amount, swap_type, market)?;
 
         require_gte!(
             output_amount,
@@ -178,7 +179,8 @@ impl ConditionalSwap<'_> {
             conditional_vault::cpi::accounts::InteractWithVault {
                 question: question.to_account_info(),
                 vault: quote_vault.to_account_info(),
-                vault_underlying_token_account: quote_vault_underlying_token_account.to_account_info(),
+                vault_underlying_token_account: quote_vault_underlying_token_account
+                    .to_account_info(),
                 authority: dao.to_account_info(),
                 user_underlying_token_account: amm_quote_vault.to_account_info(),
                 event_authority: vault_event_authority.to_account_info(),
@@ -206,10 +208,8 @@ impl ConditionalSwap<'_> {
         // If they're selling, we might need to split some quote
         match swap_type {
             SwapType::Buy => {
-                let quote_mergeable = std::cmp::min(
-                    amm_fail_quote_vault.amount,
-                    amm_pass_quote_vault.amount,
-                );
+                let quote_mergeable =
+                    std::cmp::min(amm_fail_quote_vault.amount, amm_pass_quote_vault.amount);
 
                 if quote_mergeable > 0 {
                     conditional_vault::cpi::merge_tokens(quote_cpi_context, quote_mergeable)?
@@ -229,7 +229,8 @@ impl ConditionalSwap<'_> {
             conditional_vault::cpi::accounts::InteractWithVault {
                 question: question.to_account_info(),
                 vault: base_vault.to_account_info(),
-                vault_underlying_token_account: base_vault_underlying_token_account.to_account_info(),
+                vault_underlying_token_account: base_vault_underlying_token_account
+                    .to_account_info(),
                 authority: dao.to_account_info(),
                 user_underlying_token_account: amm_base_vault.to_account_info(),
                 event_authority: vault_event_authority.to_account_info(),
@@ -254,10 +255,8 @@ impl ConditionalSwap<'_> {
                 }
             }
             SwapType::Sell => {
-                let base_mergeable = std::cmp::min(
-                    amm_fail_base_vault.amount,
-                    amm_pass_base_vault.amount,
-                );
+                let base_mergeable =
+                    std::cmp::min(amm_fail_base_vault.amount, amm_pass_base_vault.amount);
 
                 if base_mergeable > 0 {
                     conditional_vault::cpi::merge_tokens(base_cpi_context, base_mergeable)?

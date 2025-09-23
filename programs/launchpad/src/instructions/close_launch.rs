@@ -1,4 +1,3 @@
-
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCloseEvent};
 use crate::state::{Launch, LaunchState};

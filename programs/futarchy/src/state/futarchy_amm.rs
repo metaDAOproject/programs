@@ -48,7 +48,7 @@ impl PoolState {
                 let pre_spot = spot.clone();
                 let pre_pass = pass.clone();
                 let pre_fail = fail.clone();
-              
+
                 spot.update_twap(clock.unix_timestamp)?;
                 pass.update_twap(clock.unix_timestamp)?;
                 fail.update_twap(clock.unix_timestamp)?;
@@ -397,9 +397,12 @@ impl Pool {
         } else {
             // so that we don't act as if the first update ocurred over the whole
             // pre-start delay period
-            let effective_last_updated_timestamp = oracle.last_updated_timestamp.max(twap_start_timestamp);
+            let effective_last_updated_timestamp =
+                oracle.last_updated_timestamp.max(twap_start_timestamp);
 
-            let slot_difference: u128 = (current_timestamp - effective_last_updated_timestamp).try_into().unwrap();
+            let slot_difference: u128 = (current_timestamp - effective_last_updated_timestamp)
+                .try_into()
+                .unwrap();
 
             // if this saturates, the aggregator will wrap back to 0, so this value doesn't
             // really matter. we just can't panic.
@@ -420,7 +423,10 @@ impl Pool {
             start_delay_seconds: oracle.start_delay_seconds,
         };
 
-        require_gt!(new_oracle.last_updated_timestamp, oracle.last_updated_timestamp);
+        require_gt!(
+            new_oracle.last_updated_timestamp,
+            oracle.last_updated_timestamp
+        );
 
         // assert that the new observation is between price and last observation
         match price.cmp(&oracle.last_observation) {
@@ -444,7 +450,8 @@ impl Pool {
 
     /// Returns the time-weighted average price since market creation
     pub fn get_twap(&self) -> Result<u128> {
-        let start_timestamp = self.oracle.created_at_timestamp + self.oracle.start_delay_seconds as i64;
+        let start_timestamp =
+            self.oracle.created_at_timestamp + self.oracle.start_delay_seconds as i64;
 
         require_gt!(self.oracle.last_updated_timestamp, start_timestamp);
         let seconds_passed = (self.oracle.last_updated_timestamp - start_timestamp) as u128;

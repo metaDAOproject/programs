@@ -1,8 +1,8 @@
 //! Price-Based Performance Package
-//! 
+//!
 //! This program allows organizations to lock tokens that are unlocked to
 //! recipients when those prices hit certain price thresholds.
-//! 
+//!
 //! These tokens are split into up to 10 tranches, each of which is unlocked at a
 //! different price threshold.
 pub mod constants;
@@ -43,10 +43,7 @@ pub mod price_based_performance_package {
     }
 
     #[access_control(ctx.accounts.validate())]
-    pub fn propose_change(
-        ctx: Context<ProposeChange>,
-        params: ProposeChangeParams,
-    ) -> Result<()> {
+    pub fn propose_change(ctx: Context<ProposeChange>, params: ProposeChangeParams) -> Result<()> {
         ProposeChange::handle(ctx, params)
     }
 

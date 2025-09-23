@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{self, Mint, Token, TokenAccount}
+    token::{self, Mint, Token, TokenAccount},
 };
 
 use super::*;
@@ -11,18 +11,18 @@ use super::*;
 pub struct CompleteUnlock<'info> {
     #[account(mut, has_one = token_mint, has_one = performance_package_token_vault)]
     pub performance_package: Box<Account<'info, PerformancePackage>>,
-    
+
     /// CHECK: We will read the aggregator value from this account
     #[account(address = performance_package.oracle_config.oracle_account)]
     pub oracle_account: UncheckedAccount<'info>,
-    
+
     /// The token account where locked tokens are stored
     #[account(mut)]
     pub performance_package_token_vault: Box<Account<'info, TokenAccount>>,
-    
+
     /// The token mint - validated via has_one constraint on locker
     pub token_mint: Account<'info, Mint>,
-    
+
     /// The recipient's ATA where tokens will be sent - created if needed
     #[account(
         init_if_needed,
@@ -31,25 +31,31 @@ pub struct CompleteUnlock<'info> {
         associated_token::authority = token_recipient
     )]
     pub recipient_token_account: Box<Account<'info, TokenAccount>>,
-    
+
     /// CHECK: validated to match locker.token_recipient  
     #[account(address = performance_package.recipient @ PriceBasedPerformancePackageError::UnauthorizedChangeRequest)]
     pub token_recipient: UncheckedAccount<'info>,
-    
+
     /// Payer for creating the ATA if needed
     #[account(mut)]
     pub payer: Signer<'info>,
-    
+
     pub system_program: Program<'info, System>,
-    
+
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl CompleteUnlock<'_> {
     pub fn validate(&self) -> Result<()> {
-        if !matches!(self.performance_package.state, PerformancePackageState::Unlocking { .. }) {
-            msg!("package state: {}", self.performance_package.state.to_string());
+        if !matches!(
+            self.performance_package.state,
+            PerformancePackageState::Unlocking { .. }
+        ) {
+            msg!(
+                "package state: {}",
+                self.performance_package.state.to_string()
+            );
             return Err(PriceBasedPerformancePackageError::InvalidPerformancePackageState.into());
         }
 
@@ -76,16 +82,17 @@ impl CompleteUnlock<'_> {
 
         // Get the start values from the Unlocking state
         let (start_aggregator, start_timestamp) = match &performance_package.state {
-            PerformancePackageState::Unlocking { start_aggregator, start_timestamp } => {
-                (*start_aggregator, *start_timestamp)
-            },
+            PerformancePackageState::Unlocking {
+                start_aggregator,
+                start_timestamp,
+            } => (*start_aggregator, *start_timestamp),
             _ => unreachable!(),
         };
 
         // Read the current aggregator value from the oracle account
         let oracle_data = oracle_account.try_borrow_data()?;
         let offset = performance_package.oracle_config.byte_offset as usize;
-        
+
         // Ensure we have enough data to read 16 bytes (u128)
         require_gte!(
             oracle_data.len(),
@@ -94,12 +101,13 @@ impl CompleteUnlock<'_> {
         );
 
         // Read the current aggregator value
-        let current_aggregator = u128::from_le_bytes(
-            oracle_data[offset..offset + 16].try_into().unwrap()
-        );
+        let current_aggregator =
+            u128::from_le_bytes(oracle_data[offset..offset + 16].try_into().unwrap());
 
         let last_updated_timestamp = i64::from_le_bytes(
-            oracle_data[offset + 16..offset + 16 + 8].try_into().unwrap()
+            oracle_data[offset + 16..offset + 16 + 8]
+                .try_into()
+                .unwrap(),
         );
 
         require_gte!(
@@ -139,7 +147,11 @@ impl CompleteUnlock<'_> {
         // Only transfer if there are tokens to unlock
         if tokens_to_unlock > 0 {
             // Transfer tokens to recipient using PDA signature
-            let seeds = &[b"performance_package", performance_package.create_key.as_ref(), &[performance_package.pda_bump]];
+            let seeds = &[
+                b"performance_package",
+                performance_package.create_key.as_ref(),
+                &[performance_package.pda_bump],
+            ];
             let signer = &[&seeds[..]];
 
             let transfer_ctx = CpiContext::new_with_signer(
@@ -157,7 +169,11 @@ impl CompleteUnlock<'_> {
             performance_package.already_unlocked_amount += tokens_to_unlock;
         }
 
-        require_gte!(performance_package.total_token_amount, performance_package.already_unlocked_amount, PriceBasedPerformancePackageError::InvariantViolated);
+        require_gte!(
+            performance_package.total_token_amount,
+            performance_package.already_unlocked_amount,
+            PriceBasedPerformancePackageError::InvariantViolated
+        );
 
         // Reset locker state back to Locked for next unlock cycle
         performance_package.state = PerformancePackageState::Locked;

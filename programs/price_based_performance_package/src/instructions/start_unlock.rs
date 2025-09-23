@@ -7,18 +7,22 @@ use super::*;
 pub struct StartUnlock<'info> {
     #[account(mut, has_one = recipient)]
     pub performance_package: Account<'info, PerformancePackage>,
-    
+
     /// CHECK: We will read the aggregator value from this account
     #[account(address = performance_package.oracle_config.oracle_account)]
     pub oracle_account: UncheckedAccount<'info>,
-    
+
     /// Only the token recipient can start unlock
     pub recipient: Signer<'info>,
 }
 
 impl StartUnlock<'_> {
     pub fn validate(&self) -> Result<()> {
-        require_eq!(self.performance_package.state, PerformancePackageState::Locked, PriceBasedPerformancePackageError::InvalidPerformancePackageState);
+        require_eq!(
+            self.performance_package.state,
+            PerformancePackageState::Locked,
+            PriceBasedPerformancePackageError::InvalidPerformancePackageState
+        );
 
         Ok(())
     }
@@ -44,7 +48,7 @@ impl StartUnlock<'_> {
         // Read the current aggregator value from the oracle account
         let oracle_data = ctx.accounts.oracle_account.try_borrow_data()?;
         let offset = performance_package.oracle_config.byte_offset as usize;
-        
+
         // Ensure we have enough data to read 24 bytes (16 bytes for aggregator, 8 bytes for last updated slot)
         require_gte!(
             oracle_data.len(),
@@ -53,18 +57,27 @@ impl StartUnlock<'_> {
         );
 
         // Read the aggregator value (assuming it's stored as u128)
-        let start_aggregator = u128::from_le_bytes(
-            oracle_data[offset..offset + 16].try_into().unwrap()
-        );
+        let start_aggregator =
+            u128::from_le_bytes(oracle_data[offset..offset + 16].try_into().unwrap());
 
         let last_updated_timestamp = i64::from_le_bytes(
-            oracle_data[offset + 16..offset + 16 + 8].try_into().unwrap()
+            oracle_data[offset + 16..offset + 16 + 8]
+                .try_into()
+                .unwrap(),
         );
 
         // The last updated timestamp should be greater than or equal to the unlock timestamp
         // and less than or equal to the current time
-        require_gte!(last_updated_timestamp, performance_package.min_unlock_timestamp, PriceBasedPerformancePackageError::InvalidOracleData);
-        require_gte!(clock.unix_timestamp, last_updated_timestamp, PriceBasedPerformancePackageError::InvalidOracleData);
+        require_gte!(
+            last_updated_timestamp,
+            performance_package.min_unlock_timestamp,
+            PriceBasedPerformancePackageError::InvalidOracleData
+        );
+        require_gte!(
+            clock.unix_timestamp,
+            last_updated_timestamp,
+            PriceBasedPerformancePackageError::InvalidOracleData
+        );
 
         performance_package.state = PerformancePackageState::Unlocking {
             start_aggregator,

@@ -17,7 +17,8 @@ impl ToString for LaunchState {
             LaunchState::Closed => "Closed",
             LaunchState::Complete => "Complete",
             LaunchState::Refunding => "Refunding",
-        }.to_string()
+        }
+        .to_string()
     }
 }
 

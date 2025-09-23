@@ -24,7 +24,10 @@ declare_id!("cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG");
 pub mod damm_v2_cpi {
     use super::*;
 
-    pub fn initialize_pool_with_dynamic_config(_ctx: Context<InitializePoolWithDynamicConfigCtx>, _params: InitializeCustomizablePoolParameters) -> Result<()> {
+    pub fn initialize_pool_with_dynamic_config(
+        _ctx: Context<InitializePoolWithDynamicConfigCtx>,
+        _params: InitializeCustomizablePoolParameters,
+    ) -> Result<()> {
         Ok(())
     }
 }
@@ -39,7 +42,6 @@ pub struct PoolFeeParameters {
     /// dynamic fee
     pub dynamic_fee: Option<DynamicFeeParameters>,
 }
-
 
 #[derive(Copy, Clone, Debug, AnchorSerialize, AnchorDeserialize, InitSpace, Default)]
 pub struct BaseFeeParameters {
@@ -82,7 +84,6 @@ pub struct InitializeCustomizablePoolParameters {
     /// activation point
     pub activation_point: Option<u64>,
 }
-
 
 #[event_cpi]
 #[derive(Accounts)]

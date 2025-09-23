@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use crate::ChangeType;
+use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {

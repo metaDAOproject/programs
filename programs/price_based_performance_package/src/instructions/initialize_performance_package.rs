@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Mint};
 use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
 
 use super::*;
 
@@ -28,18 +28,17 @@ pub struct InitializePerformancePackage<'info> {
     pub performance_package: Account<'info, PerformancePackage>,
     /// Used to derive the PDA
     pub create_key: Signer<'info>,
-    
+
     /// The mint of the tokens to be locked
     pub token_mint: Account<'info, Mint>,
-    
+
     /// The token account containing the tokens to be locked
     #[account(mut, token::authority = grantor, token::mint = token_mint)]
     pub grantor_token_account: Box<Account<'info, TokenAccount>>,
-    
+
     /// The authority of the token account
     pub grantor: Signer<'info>,
-    
-    
+
     /// The locker's token account where tokens will be stored
     #[account(
         init_if_needed,
@@ -48,7 +47,7 @@ pub struct InitializePerformancePackage<'info> {
         associated_token::authority = performance_package,
     )]
     pub performance_package_token_vault: Box<Account<'info, TokenAccount>>,
-    
+
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -94,7 +93,11 @@ impl InitializePerformancePackage<'_> {
         }
 
         for tranche in tranches.iter() {
-            require_gt!(tranche.token_amount, 0, PriceBasedPerformancePackageError::TrancheTokenAmountZero);
+            require_gt!(
+                tranche.token_amount,
+                0,
+                PriceBasedPerformancePackageError::TrancheTokenAmountZero
+            );
         }
 
         let clock = Clock::get()?;
@@ -123,7 +126,7 @@ impl InitializePerformancePackage<'_> {
         );
 
         token::transfer(transfer_ctx, total_token_amount)?;
-        
+
         performance_package.set_inner(PerformancePackage {
             tranches: tranches.into_iter().map(|tranche| tranche.into()).collect(),
             min_unlock_timestamp,

@@ -5,8 +5,11 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchInitializedEvent};
 use crate::state::{Launch, LaunchState};
-use crate::{usdc_mint, TOKENS_TO_DAMM_V2_LIQUIDITY, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS, TOKEN_SCALE};
 use crate::MAX_PREMINE;
+use crate::{
+    usdc_mint, TOKENS_TO_DAMM_V2_LIQUIDITY, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
+    TOKEN_SCALE,
+};
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, CreateMetadataAccountsV3, Metadata,
@@ -235,7 +238,10 @@ impl InitializeLaunch<'_> {
                 },
                 signer,
             ),
-            args.performance_package_token_amount + TOKENS_TO_PARTICIPANTS + TOKENS_TO_FUTARCHY_LIQUIDITY + TOKENS_TO_DAMM_V2_LIQUIDITY
+            args.performance_package_token_amount
+                + TOKENS_TO_PARTICIPANTS
+                + TOKENS_TO_FUTARCHY_LIQUIDITY
+                + TOKENS_TO_DAMM_V2_LIQUIDITY,
         )?;
 
         Ok(())
