@@ -113,6 +113,12 @@ pub enum ChangeType {
     Recipient { new_recipient: Pubkey },
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
+pub enum ProposerType {
+    Recipient,
+    Authority,
+}
+
 #[account]
 #[derive(InitSpace)]
 pub struct ChangeRequest {
@@ -123,7 +129,7 @@ pub struct ChangeRequest {
     /// When the change was proposed
     pub proposed_at: i64,
     /// Who proposed this change (either token_recipient or locker_authority)
-    pub proposer: Pubkey,
+    pub proposer_type: ProposerType,
     /// Used to derive the PDA along with the proposer
     pub pda_nonce: u32,
     /// The PDA bump

@@ -18,6 +18,7 @@ import { PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID } from "./constants.js";
 import BN from "bn.js";
 // import { OracleConfig } from "./types/index.js";
 import {
+  getChangeRequestAddr,
   getEventAuthorityAddr,
   getPerformancePackageAddr,
 } from "./utils/pda.js";
@@ -198,15 +199,12 @@ export class PriceBasedPerformancePackageClient {
     proposer: PublicKey,
     pdaNonce: number,
   ): PublicKey {
-    const [changeRequestAddress] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("change_request"),
-        performancePackage.toBuffer(),
-        proposer.toBuffer(),
-        Buffer.from(new Uint8Array(new Uint32Array([pdaNonce]).buffer)),
-      ],
-      this.programId,
-    );
+    const [changeRequestAddress] = getChangeRequestAddr({
+      programId: this.programId,
+      performancePackage,
+      proposer,
+      pdaNonce,
+    });
     return changeRequestAddress;
   }
 

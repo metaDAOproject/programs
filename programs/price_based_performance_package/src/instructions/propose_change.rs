@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{ChangeProposed, ChangeRequest, ChangeType, PerformancePackage, PriceBasedPerformancePackageError};
+use crate::{ChangeProposed, ChangeRequest, ChangeType, PerformancePackage, PriceBasedPerformancePackageError, ProposerType};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct ProposeChangeParams {
@@ -58,13 +58,21 @@ impl<'info> ProposeChange<'info> {
             pda_nonce,
         } = params;
 
+        let proposer_type = if proposer.key() == performance_package.recipient {
+            ProposerType::Recipient
+        } else if proposer.key() == performance_package.performance_package_authority {
+            ProposerType::Authority
+        } else {
+            unreachable!()
+        };
+
         let clock = Clock::get()?;
 
         change_request.set_inner(ChangeRequest {
             performance_package: performance_package.key(),
             change_type: change_type.clone(),
             proposed_at: clock.unix_timestamp,
-            proposer: proposer.key(),
+            proposer_type,
             pda_nonce: pda_nonce,
             pda_bump: ctx.bumps.change_request,
         });

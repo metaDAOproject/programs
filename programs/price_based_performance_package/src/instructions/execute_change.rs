@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{ChangeExecuted, ChangeRequest, ChangeType, CommonFields, PerformancePackage, PriceBasedPerformancePackageError};
+use crate::{ChangeExecuted, ChangeRequest, ChangeType, CommonFields, PerformancePackage, PriceBasedPerformancePackageError, ProposerType};
 
 #[derive(Accounts)]
 pub struct ExecuteChange<'info> {
@@ -20,15 +20,15 @@ pub struct ExecuteChange<'info> {
 
 impl<'info> ExecuteChange<'info> {
     pub fn validate(&self) -> Result<()> {
-        if self.change_request.proposer == self.performance_package.recipient {
+        if self.change_request.proposer_type == ProposerType::Recipient {
             // If recipient proposed, locker authority must execute
             require_keys_eq!(
                 self.executor.key(),
                 self.performance_package.performance_package_authority,
                 PriceBasedPerformancePackageError::UnauthorizedLockerAuthority
             );
-        } else if self.change_request.proposer == self.performance_package.performance_package_authority {
-            // If locker authority proposed, recipient must execute
+        } else if self.change_request.proposer_type == ProposerType::Authority {
+            // If authority proposed, recipient must execute
             require_keys_eq!(
                 self.executor.key(),
                 self.performance_package.recipient,

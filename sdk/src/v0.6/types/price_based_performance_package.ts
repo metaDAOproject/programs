@@ -401,11 +401,13 @@ export type PriceBasedPerformancePackage = {
             type: "i64";
           },
           {
-            name: "proposer";
+            name: "proposerType";
             docs: [
               "Who proposed this change (either token_recipient or locker_authority)",
             ];
-            type: "publicKey";
+            type: {
+              defined: "ProposerType";
+            };
           },
           {
             name: "pdaNonce";
@@ -634,6 +636,20 @@ export type PriceBasedPerformancePackage = {
                 type: "publicKey";
               },
             ];
+          },
+        ];
+      };
+    },
+    {
+      name: "ProposerType";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Recipient";
+          },
+          {
+            name: "Authority";
           },
         ];
       };
@@ -1272,11 +1288,13 @@ export const IDL: PriceBasedPerformancePackage = {
             type: "i64",
           },
           {
-            name: "proposer",
+            name: "proposerType",
             docs: [
               "Who proposed this change (either token_recipient or locker_authority)",
             ],
-            type: "publicKey",
+            type: {
+              defined: "ProposerType",
+            },
           },
           {
             name: "pdaNonce",
@@ -1505,6 +1523,20 @@ export const IDL: PriceBasedPerformancePackage = {
                 type: "publicKey",
               },
             ],
+          },
+        ],
+      },
+    },
+    {
+      name: "ProposerType",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Recipient",
+          },
+          {
+            name: "Authority",
           },
         ],
       },

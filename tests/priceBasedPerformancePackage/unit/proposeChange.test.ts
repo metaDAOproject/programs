@@ -100,13 +100,7 @@ export default function () {
     );
     
     // Verify the change request was created correctly
-    assert.equal(changeRequest.proposer.toString(), recipient.publicKey.toString());
-    assert.equal(changeRequest.performancePackage.toString(), performancePackage.toString());
-
-    assert.equal(
-      changeRequest.proposer.toString(),
-      recipient.publicKey.toString()
-    );
+    assert.exists(changeRequest.proposerType.recipient);
     assert.equal(changeRequest.performancePackage.toString(), performancePackage.toString());
     assert.equal(
       changeRequest.changeType.recipient.newRecipient.toString(),
@@ -117,13 +111,15 @@ export default function () {
   it("should allow performancePackage authority to propose a change (performancePackage authority → recipient execution flow)", async function () {
     const pdaNonce = Math.floor(Math.random() * 1000000);
 
+    const newOracleAccount = Keypair.generate();
+
     await this.priceBasedPerformancePackage
       .proposeChangeIx({
         params: {
           changeType: {
             oracle: {
               newOracleConfig: {
-                oracleAccount: Keypair.generate().publicKey,
+                oracleAccount: newOracleAccount.publicKey,
                 byteOffset: 16,
               },
             },
@@ -151,15 +147,13 @@ export default function () {
       changeRequestAddr
     );
 
-    assert.equal(
-      changeRequest.proposer.toString(),
-      this.payer.publicKey.toString()
-    );
+    assert.exists(changeRequest.proposerType.authority);
     assert.equal(changeRequest.performancePackage.toString(), performancePackage.toString());
+    assert.equal(changeRequest.changeType.oracle.newOracleConfig.oracleAccount.toString(), newOracleAccount.publicKey.toString());
+    assert.equal(changeRequest.changeType.oracle.newOracleConfig.byteOffset, 16);
   });
 
   it("should fail if unauthorized party tries to propose change", async function () {
-    const changeKey = Keypair.generate();
     const unauthorizedWallet = Keypair.generate();
 
     // Fund the unauthorized wallet
