@@ -3,6 +3,8 @@
 echo "Running cargo fmt..."
 cargo fmt --all
 
+echo "Running prettier..."
+yarn lint:fix
+
 
 # Add any changes from formatting back to commit
-git add -u
