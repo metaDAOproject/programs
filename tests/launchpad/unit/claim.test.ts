@@ -44,7 +44,7 @@ export default function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
 
     META = result.tokenMint;
@@ -56,11 +56,11 @@ export default function suite() {
     quoteVault = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       launchSigner,
-      true
+      true,
     );
     funderUsdcAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     // Initialize launch
@@ -96,12 +96,17 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 24 * 7 + 100);
     await launchpadClient.closeLaunchIx({ launch }).rpc();
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META, finalRaiseAmount: minRaise })
+      .completeLaunchIx({
+        launch,
+        quoteMint: MAINNET_USDC,
+        baseMint: META,
+        finalRaiseAmount: minRaise,
+      })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
       completeLaunchTx,
-      this
+      this,
     );
 
     const completeLaunchMessage = new TransactionMessage({
@@ -120,18 +125,18 @@ export default function suite() {
     console.log("=== POST LAUNCH COMPLETION DEBUG ===");
     console.log(
       "Launch total committed amount:",
-      launchAccount.totalCommittedAmount.toString()
+      launchAccount.totalCommittedAmount.toString(),
     );
     console.log(
       "Launch minimum raise:",
-      launchAccount.minimumRaiseAmount.toString()
+      launchAccount.minimumRaiseAmount.toString(),
     );
 
     // Check launch base vault balance
     console.log("=== LAUNCH BASE VAULT BALANCE CHECK ===");
     try {
       const accountInfo = await this.context.banksClient.getAccount(
-        launchAccount.launchBaseVault
+        launchAccount.launchBaseVault,
       );
       if (accountInfo && accountInfo.data && accountInfo.data.length >= 72) {
         const balanceBuffer = accountInfo.data.slice(64, 72);
@@ -154,7 +159,7 @@ export default function suite() {
 
     const initialTokenBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
     console.log("Initial payer token balance:", initialTokenBalance.toString());
     assert.equal(initialTokenBalance.toString(), "0");
@@ -163,14 +168,13 @@ export default function suite() {
     const [fundingRecord] = getFundingRecordAddr(
       launchpadClient.getProgramId(),
       launch,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
-    const fundingRecordAccount = await launchpadClient.fetchFundingRecord(
-      fundingRecord
-    );
+    const fundingRecordAccount =
+      await launchpadClient.fetchFundingRecord(fundingRecord);
     console.log(
       "Payer committed amount:",
-      fundingRecordAccount.committedAmount.toString()
+      fundingRecordAccount.committedAmount.toString(),
     );
     console.log(
       "Expected claim percentage:",
@@ -178,7 +182,7 @@ export default function suite() {
         (fundingRecordAccount.committedAmount.toNumber() /
           launchAccount.totalCommittedAmount.toNumber()) *
         100
-      ).toFixed(2) + "%"
+      ).toFixed(2) + "%",
     );
 
     // Claim tokens
@@ -187,7 +191,7 @@ export default function suite() {
 
     const finalTokenBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
     const expectedTokens = new BN(10_000_000 * 1_000_000); // full supply
 

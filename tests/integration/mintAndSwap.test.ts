@@ -23,7 +23,7 @@ export default async function test() {
     USDC,
     this.payer.publicKey,
     this.payer,
-    100_000 * 1_000_000
+    100_000 * 1_000_000,
   );
 
   // Initialize DAO
@@ -55,7 +55,7 @@ export default async function test() {
       this.payer.publicKey.toBuffer(),
       nonce.toArrayLike(Buffer, "le", 8),
     ],
-    futarchyClient.getProgramId()
+    futarchyClient.getProgramId(),
   );
 
   // Provide liquidity to DAO AMM
@@ -75,11 +75,11 @@ export default async function test() {
   // Test spot swap functionality - buy META with USDC
   const initialUsdcBalance = await this.getTokenBalance(
     USDC,
-    this.payer.publicKey
+    this.payer.publicKey,
   );
   const initialMetaBalance = await this.getTokenBalance(
     META,
-    this.payer.publicKey
+    this.payer.publicKey,
   );
 
   const swapAmount = new BN(1_000 * 1_000_000); // 1,000 USDC
@@ -106,23 +106,23 @@ export default async function test() {
   // Assert balances changed
   const finalUsdcBalance = await this.getTokenBalance(
     USDC,
-    this.payer.publicKey
+    this.payer.publicKey,
   );
   const finalMetaBalance = await this.getTokenBalance(
     META,
-    this.payer.publicKey
+    this.payer.publicKey,
   );
 
   assert.isBelow(
     Number(finalUsdcBalance),
     Number(initialUsdcBalance),
-    "USDC balance should decrease after buying META"
+    "USDC balance should decrease after buying META",
   );
 
   assert.isAbove(
     Number(finalMetaBalance),
     Number(initialMetaBalance),
-    "META balance should increase after buying META"
+    "META balance should increase after buying META",
   );
 
   // Test sell swap as well
@@ -143,22 +143,22 @@ export default async function test() {
   // Check balances changed again
   const finalUsdcBalance2 = await this.getTokenBalance(
     USDC,
-    this.payer.publicKey
+    this.payer.publicKey,
   );
   const finalMetaBalance2 = await this.getTokenBalance(
     META,
-    this.payer.publicKey
+    this.payer.publicKey,
   );
 
   assert.isAbove(
     Number(finalUsdcBalance2),
     Number(finalUsdcBalance),
-    "USDC balance should increase after selling META"
+    "USDC balance should increase after selling META",
   );
 
   assert.isBelow(
     Number(finalMetaBalance2),
     Number(finalMetaBalance),
-    "META balance should decrease after selling META"
+    "META balance should decrease after selling META",
   );
 }

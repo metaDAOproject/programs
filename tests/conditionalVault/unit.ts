@@ -1,12 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN, Program, web3 } from "@coral-xyz/anchor";
-import {
-  MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
-} from "@metaplex-foundation/mpl-token-metadata";
-import {
-  Umi,
-  keypairIdentity,
-} from "@metaplex-foundation/umi";
+import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
+import { Umi, keypairIdentity } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
   fromWeb3JsKeypair,
@@ -48,7 +43,7 @@ export type Keypair = anchor.web3.Keypair;
 const METADATA_URI =
   "https://ftgnmxferax7tpgqyzdo76sisk5fhpsjv34omvgz33m7udvnsfba.arweave.net/LMzWXKSIL_m80MZG7_pIkrpTvkmu-OZU2d7Z-g6tkUI";
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
-  UMI_MPL_TOKEN_METADATA_PROGRAM_ID
+  UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
 );
 
 export enum VaultStatus {
@@ -92,7 +87,7 @@ describe("conditional_vault", async function () {
           programId: MPL_TOKEN_METADATA_PROGRAM_ID,
         },
       ],
-      []
+      [],
     );
     banksClient = context.banksClient;
     provider = new BankrunProvider(context);
@@ -103,7 +98,7 @@ describe("conditional_vault", async function () {
     vaultProgram = new Program<ConditionalVault>(
       ConditionalVaultIDL,
       CONDITIONAL_VAULT_PROGRAM_ID,
-      provider
+      provider,
     );
 
     vaultClient = ConditionalVaultClient.createClient({
@@ -121,7 +116,7 @@ describe("conditional_vault", async function () {
       payer as anchor.web3.Keypair,
       underlyingMintAuthority.publicKey,
       null,
-      8
+      8,
     );
 
     proposal = Keypair.generate().publicKey;
@@ -129,13 +124,13 @@ describe("conditional_vault", async function () {
     [vault] = getVaultAddr(
       vaultProgram.programId,
       settlementAuthority.publicKey,
-      underlyingTokenMint
+      underlyingTokenMint,
     );
 
     vaultUnderlyingTokenAccount = await token.getAssociatedTokenAddress(
       underlyingTokenMint,
       vault,
-      true
+      true,
     );
   });
 
@@ -151,7 +146,7 @@ describe("conditional_vault", async function () {
         vaultProgram.programId,
         questionId,
         settlementAuthority.publicKey,
-        2
+        2,
       );
 
       const storedQuestion = await vaultClient.fetchQuestion(question);
@@ -178,7 +173,7 @@ describe("conditional_vault", async function () {
           question = await vaultClient.initializeQuestion(
             questionId,
             settlementAuthority.publicKey,
-            outcomes
+            outcomes,
           );
         });
 
@@ -190,32 +185,32 @@ describe("conditional_vault", async function () {
           const [vault, pdaBump] = getVaultAddr(
             vaultProgram.programId,
             question,
-            underlyingTokenMint
+            underlyingTokenMint,
           );
 
           const storedVault = await vaultClient.fetchVault(vault);
           assert.ok(storedVault.question.equals(question));
           assert.ok(
-            storedVault.underlyingTokenMint.equals(underlyingTokenMint)
+            storedVault.underlyingTokenMint.equals(underlyingTokenMint),
           );
 
           const vaultUnderlyingTokenAccount =
             token.getAssociatedTokenAddressSync(
               underlyingTokenMint,
               vault,
-              true
+              true,
             );
           assert.ok(
             storedVault.underlyingTokenAccount.equals(
-              vaultUnderlyingTokenAccount
-            )
+              vaultUnderlyingTokenAccount,
+            ),
           );
           const storedConditionalTokenMints = storedVault.conditionalTokenMints;
           storedConditionalTokenMints.forEach((mint, i) => {
             const [expectedMint] = getConditionalTokenMintAddr(
               vaultProgram.programId,
               vault,
-              i
+              i,
             );
             assert.ok(mint.equals(expectedMint));
           });
@@ -243,7 +238,7 @@ describe("conditional_vault", async function () {
       question = await vaultClient.initializeQuestion(
         questionId,
         settlementAuthority.publicKey,
-        2
+        2,
       );
     });
 
@@ -274,19 +269,19 @@ describe("conditional_vault", async function () {
       question = await vaultClient.initializeQuestion(
         questionId,
         settlementAuthority.publicKey,
-        2
+        2,
       );
       vault = await vaultClient.initializeVault(
         question,
         underlyingTokenMint,
-        2
+        2,
       );
 
       const userUnderlyingTokenAccount = await createAssociatedTokenAccount(
         banksClient,
         payer,
         underlyingTokenMint,
-        payer.publicKey
+        payer.publicKey,
       );
 
       await mintTo(
@@ -295,7 +290,7 @@ describe("conditional_vault", async function () {
         underlyingTokenMint,
         userUnderlyingTokenAccount,
         underlyingMintAuthority,
-        10_000_000_000n
+        10_000_000_000n,
       );
     });
 
@@ -308,7 +303,7 @@ describe("conditional_vault", async function () {
 
       const storedVaultUnderlyingAcc = await getAccount(
         banksClient,
-        storedVault.underlyingTokenAccount
+        storedVault.underlyingTokenAccount,
       );
       assert.equal(storedVaultUnderlyingAcc.amount.toString(), "1000");
 
@@ -318,7 +313,7 @@ describe("conditional_vault", async function () {
         assert.equal(storedMint.supply.toString(), "1000");
         const storedTokenAcc = await getAccount(
           banksClient,
-          token.getAssociatedTokenAddressSync(mint, payer.publicKey)
+          token.getAssociatedTokenAddressSync(mint, payer.publicKey),
         );
         assert.equal(storedTokenAcc.amount.toString(), "1000");
       }
@@ -335,12 +330,12 @@ describe("conditional_vault", async function () {
       question = await vaultClient.initializeQuestion(
         questionId,
         settlementAuthority.publicKey,
-        2
+        2,
       );
       vault = await vaultClient.initializeVault(
         question,
         underlyingTokenMint,
-        2
+        2,
       );
 
       await vaultClient
@@ -353,8 +348,8 @@ describe("conditional_vault", async function () {
         banksClient,
         token.getAssociatedTokenAddressSync(
           underlyingTokenMint,
-          payer.publicKey
-        )
+          payer.publicKey,
+        ),
       ).then((acc) => acc.amount);
       await vaultClient
         .mergeTokensIx(question, vault, underlyingTokenMint, new BN(600), 2)
@@ -363,8 +358,8 @@ describe("conditional_vault", async function () {
         banksClient,
         token.getAssociatedTokenAddressSync(
           underlyingTokenMint,
-          payer.publicKey
-        )
+          payer.publicKey,
+        ),
       ).then((acc) => acc.amount);
 
       assert.isTrue(balanceAfter > balanceBefore);
@@ -382,12 +377,12 @@ describe("conditional_vault", async function () {
       question = await vaultClient.initializeQuestion(
         questionId,
         settlementAuthority.publicKey,
-        2
+        2,
       );
       vault = await vaultClient.initializeVault(
         question,
         underlyingTokenMint,
-        2
+        2,
       );
 
       await vaultClient
@@ -445,7 +440,7 @@ describe("conditional_vault", async function () {
         banksClient,
         payer,
         outcome0Tokens,
-        burne.publicKey
+        burne.publicKey,
       );
 
       await transfer(
@@ -454,17 +449,17 @@ describe("conditional_vault", async function () {
         token.getAssociatedTokenAddressSync(outcome0Tokens, payer.publicKey),
         token.getAssociatedTokenAddressSync(outcome0Tokens, burne.publicKey),
         payer,
-        1000n
+        1000n,
       );
 
       const underlyingTokenAccount = await token.getAssociatedTokenAddress(
         underlyingTokenMint,
-        payer.publicKey
+        payer.publicKey,
       );
 
       const balanceBefore = await getAccount(
         banksClient,
-        underlyingTokenAccount
+        underlyingTokenAccount,
       ).then((acc) => acc.amount);
 
       await vaultClient
@@ -473,7 +468,7 @@ describe("conditional_vault", async function () {
 
       const balanceAfter = await getAccount(
         banksClient,
-        underlyingTokenAccount
+        underlyingTokenAccount,
       ).then((acc) => acc.amount);
 
       assert.isTrue(balanceAfter == balanceBefore);

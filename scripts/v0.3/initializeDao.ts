@@ -20,14 +20,14 @@ async function main() {
     0.001,
     1_000_000,
     500,
-    DEVNET_MUSDC
+    DEVNET_MUSDC,
   );
   await autocratClient.initializeDao(
     DEVNET_DARK,
     0.2,
     10_000,
     2_500,
-    DEVNET_MUSDC
+    DEVNET_MUSDC,
   );
   await autocratClient.initializeDao(DEVNET_DRIFT, 1, 1000, 1000, DEVNET_MUSDC);
   await autocratClient.initializeDao(DEVNET_ORE, 500, 1, 100, DEVNET_MUSDC);

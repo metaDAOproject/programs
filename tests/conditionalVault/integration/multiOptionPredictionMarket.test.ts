@@ -1,11 +1,6 @@
 import { ConditionalVaultClient, sha256 } from "@metadaoproject/futarchy";
-import {
-  Keypair,
-  PublicKey,
-} from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-
-
 
 export default async function test() {
   // A 10-option prediction market test. Alice, Bob, and Charlie are betting on
@@ -24,11 +19,11 @@ export default async function test() {
   const question: PublicKey = await vaultClient.initializeQuestion(
     sha256(
       new TextEncoder().encode(
-        "Who's going to win the next election?/CAND1/CAND2/CAND3/CAND4/CAND5/CAND6/CAND7/CAND8/CAND9/CAND10"
-      )
+        "Who's going to win the next election?/CAND1/CAND2/CAND3/CAND4/CAND5/CAND6/CAND7/CAND8/CAND9/CAND10",
+      ),
     ),
     operator.publicKey,
-    numCandidates
+    numCandidates,
   );
 
   const USDC: PublicKey = await this.createMint(operator.publicKey, 6);
@@ -44,7 +39,7 @@ export default async function test() {
   const vault = await vaultClient.initializeVault(
     question,
     USDC,
-    numCandidates
+    numCandidates,
   );
   const storedVault = await vaultClient.fetchVault(vault);
 
@@ -102,7 +97,7 @@ export default async function test() {
         i,
         `Candidate ${i + 1}`,
         `CAND${i + 1}`,
-        `https://example.com/candidate${i + 1}.png`
+        `https://example.com/candidate${i + 1}.png`,
       )
       .rpc();
   }
@@ -115,7 +110,7 @@ export default async function test() {
       USDC,
       new BN(100),
       numCandidates,
-      alice.publicKey
+      alice.publicKey,
     )
     .signers([alice])
     .rpc();
@@ -127,7 +122,7 @@ export default async function test() {
       USDC,
       new BN(100),
       numCandidates,
-      bob.publicKey
+      bob.publicKey,
     )
     .signers([bob])
     .rpc();
@@ -139,7 +134,7 @@ export default async function test() {
       USDC,
       new BN(100),
       numCandidates,
-      charlie.publicKey
+      charlie.publicKey,
     )
     .signers([charlie])
     .rpc();

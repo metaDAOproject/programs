@@ -34,8 +34,8 @@ const rpcUrl =
   network === "custom"
     ? await input({ message: "Enter your custom RPC URL:" })
     : network === "devnet"
-    ? "https://api.devnet.solana.com"
-    : "https://api.mainnet-beta.solana.com";
+      ? "https://api.devnet.solana.com"
+      : "https://api.mainnet-beta.solana.com";
 
 // Add default oracle addresses
 const DEFAULT_ORACLE = "6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf";
@@ -94,8 +94,8 @@ async function sendAndConfirmTransaction(tx: Transaction, label: string) {
   if (txStatus?.meta?.err) {
     throw new Error(
       `Transaction failed: ${txHash}\nError: ${JSON.stringify(
-        txStatus?.meta?.err
-      )}`
+        txStatus?.meta?.err,
+      )}`,
     );
   }
   console.log(`${label} transaction confirmed`);
@@ -116,7 +116,7 @@ async function main() {
   let oracle = new PublicKey(oracleAddress);
 
   const outcomeQuestionId = sha256(
-    new TextEncoder().encode(outcomeQuestionText)
+    new TextEncoder().encode(outcomeQuestionText),
   );
 
   const metricQuestionId = sha256(new TextEncoder().encode(metricQuestionText));
@@ -125,35 +125,33 @@ async function main() {
     vaultProgram.vaultProgram.programId,
     outcomeQuestionId,
     oracle,
-    2
+    2,
   )[0];
   const metricQuestion = getQuestionAddr(
     vaultProgram.vaultProgram.programId,
     metricQuestionId,
     oracle,
-    2
+    2,
   )[0];
 
-  let storedOutcomeQuestion: Question | null = await vaultProgram.fetchQuestion(
-    outcomeQuestion
-  );
+  let storedOutcomeQuestion: Question | null =
+    await vaultProgram.fetchQuestion(outcomeQuestion);
   if (!storedOutcomeQuestion) {
     tx.add(
       await vaultProgram
         .initializeQuestionIx(outcomeQuestionId, oracle, 2)
-        .transaction()
+        .transaction(),
     );
     storedOutcomeQuestion = await vaultProgram.fetchQuestion(outcomeQuestion);
   }
 
-  let storedMetricQuestion: Question | null = await vaultProgram.fetchQuestion(
-    metricQuestion
-  );
+  let storedMetricQuestion: Question | null =
+    await vaultProgram.fetchQuestion(metricQuestion);
   if (!storedMetricQuestion) {
     tx.add(
       await vaultProgram
         .initializeQuestionIx(metricQuestionId, oracle, 2)
-        .transaction()
+        .transaction(),
     );
     storedMetricQuestion = await vaultProgram.fetchQuestion(metricQuestion);
   }
@@ -169,7 +167,7 @@ async function main() {
   const outcomeVault = getVaultAddr(
     vaultProgram.vaultProgram.programId,
     outcomeQuestion,
-    USDC
+    USDC,
   )[0];
   let storedOutcomeVault: ConditionalVault | null =
     await vaultProgram.fetchVault(outcomeVault);
@@ -178,19 +176,19 @@ async function main() {
     tx.add(
       await vaultProgram
         .initializeVaultIx(outcomeQuestion, USDC, 2)
-        .transaction()
+        .transaction(),
     );
   }
 
   const pUSDC = getFailAndPassMintAddrs(
     vaultProgram.vaultProgram.programId,
-    outcomeVault
+    outcomeVault,
   ).pass;
 
   const metricVault = getVaultAddr(
     vaultProgram.vaultProgram.programId,
     metricQuestion,
-    pUSDC
+    pUSDC,
   )[0];
   let storedMetricVault: ConditionalVault | null =
     await vaultProgram.fetchVault(metricVault);
@@ -199,7 +197,7 @@ async function main() {
     tx.add(
       await vaultProgram
         .initializeVaultIx(metricQuestion, pUSDC, 2)
-        .transaction()
+        .transaction(),
     );
     storedMetricVault = await vaultProgram.fetchVault(metricVault);
   }
@@ -213,7 +211,7 @@ async function main() {
 
   const { down: pDown, up: pUp } = getDownAndUpMintAddrs(
     vaultProgram.vaultProgram.programId,
-    metricVault
+    metricVault,
   );
 
   await sendAndConfirmTransaction(tx, "First");
@@ -228,9 +226,9 @@ async function main() {
         0,
         "Fail USDC",
         "fUSDC",
-        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/USDC/fUSDC.json"
+        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/USDC/fUSDC.json",
       )
-      .transaction()
+      .transaction(),
   );
 
   tx.add(
@@ -240,9 +238,9 @@ async function main() {
         1,
         "Pass USDC",
         "pUSDC",
-        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/USDC/pUSDC.json"
+        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/USDC/pUSDC.json",
       )
-      .transaction()
+      .transaction(),
   );
 
   tx.add(
@@ -252,9 +250,9 @@ async function main() {
         0,
         "NO",
         "pNO",
-        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/Binary/NO.json"
+        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/Binary/NO.json",
       )
-      .transaction()
+      .transaction(),
   );
 
   tx.add(
@@ -264,9 +262,9 @@ async function main() {
         1,
         "YES",
         "pYES",
-        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/Binary/YES.json"
+        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/Binary/YES.json",
       )
-      .transaction()
+      .transaction(),
   );
 
   await sendAndConfirmTransaction(tx, "Second");
@@ -288,9 +286,9 @@ async function main() {
           pDown,
           new BN(0),
           new BN(10 ** 12),
-          new BN(10 ** 10)
+          new BN(10 ** 10),
         )
-        .transaction()
+        .transaction(),
     );
     storedAmm = await ammProgram.fetchAmm(amm);
   }
@@ -303,9 +301,9 @@ async function main() {
         USDC,
         new BN(liquidityAmountNum * 10 ** 6),
         2,
-        payer.publicKey
+        payer.publicKey,
       )
-      .transaction()
+      .transaction(),
   );
   tx.add(
     await vaultProgram
@@ -315,9 +313,9 @@ async function main() {
         pUSDC,
         new BN(liquidityAmountNum * 10 ** 6),
         2,
-        payer.publicKey
+        payer.publicKey,
       )
-      .transaction()
+      .transaction(),
   );
 
   tx.add(
@@ -329,9 +327,9 @@ async function main() {
         new BN(liquidityAmountNum * 10 ** 6),
         new BN(liquidityAmountNum * 10 ** 6),
         new BN(0),
-        payer.publicKey
+        payer.publicKey,
       )
-      .transaction()
+      .transaction(),
   );
 
   await sendAndConfirmTransaction(tx, "Third");

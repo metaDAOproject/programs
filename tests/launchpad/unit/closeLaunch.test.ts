@@ -1,12 +1,6 @@
-import {
-  Keypair,
-  PublicKey,
-} from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import {
-  LaunchpadClient,
-  MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.6";
+import { LaunchpadClient, MAINNET_USDC } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
@@ -33,7 +27,7 @@ export default function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
 
     META = result.tokenMint;
@@ -43,11 +37,11 @@ export default function suite() {
     quoteVault = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       launchSigner,
-      true
+      true,
     );
     funderUsdcAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     // Initialize launch
@@ -145,8 +139,8 @@ export default function suite() {
       // The error message might be different depending on the state
       // Could be "LaunchNotInitialized" or transaction already processed
       assert.isTrue(
-        e.message.includes("LaunchNotInitialized") || 
-        e.message.includes("already been pro")
+        e.message.includes("LaunchNotInitialized") ||
+          e.message.includes("already been pro"),
       );
     }
   });
@@ -156,7 +150,7 @@ export default function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
     const newLaunch = result.launch;
     const newMETA = result.tokenMint;

@@ -23,7 +23,7 @@ const walletPath = await input({
   message: "Enter the path (relative to home directory) to your wallet file",
   default: join(
     homedir(),
-    process.env.WALLET_PATH || "/.config/solana/id.json"
+    process.env.WALLET_PATH || "/.config/solana/id.json",
   ),
 });
 process.env.ANCHOR_WALLET = walletPath;
@@ -36,7 +36,7 @@ const launchAddr = new PublicKey(
   await input({
     message: "Enter the launch address",
     default: process.env.LAUNCH_ADDRESS,
-  })
+  }),
 );
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
@@ -51,11 +51,11 @@ async function main() {
 
   // Filter funding records for this specific launch
   const launchFundingRecords = allFundingRecords.filter(
-    (record) => record.account.launch.toString() === launchAddr.toString()
+    (record) => record.account.launch.toString() === launchAddr.toString(),
   );
 
   console.log(
-    `Found ${launchFundingRecords.length} funding records for this launch`
+    `Found ${launchFundingRecords.length} funding records for this launch`,
   );
 
   if (launchFundingRecords.length === 0) {
@@ -71,7 +71,7 @@ async function main() {
     console.log(batch);
 
     console.log(
-      `Processing batch ${i / batchSize + 1} with ${batch.length} records`
+      `Processing batch ${i / batchSize + 1} with ${batch.length} records`,
     );
 
     const tx = new Transaction();
@@ -111,7 +111,7 @@ main().catch((error) => {
 async function sendAndConfirmTransaction(
   tx: Transaction,
   label: string,
-  signers: Keypair[] = []
+  signers: Keypair[] = [],
 ) {
   tx.feePayer = payer.publicKey;
   tx.recentBlockhash = (
@@ -129,8 +129,8 @@ async function sendAndConfirmTransaction(
   if (txStatus?.meta?.err) {
     throw new Error(
       `Transaction failed: ${txHash}\nError: ${JSON.stringify(
-        txStatus?.meta?.err
-      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`
+        txStatus?.meta?.err,
+      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`,
     );
   }
   console.log(`${label} transaction confirmed`);

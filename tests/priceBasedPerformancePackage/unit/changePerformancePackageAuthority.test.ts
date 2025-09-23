@@ -30,17 +30,29 @@ export default function () {
     tokenMint = await this.createMint(tokenAuthority, 6);
     tokenAccount = await this.createTokenAccount(tokenMint, tokenAuthority);
 
-    await this.mintTo(tokenMint, this.payer.publicKey, this.payer, 200 * 10 ** 6); // 1M tokens
+    await this.mintTo(
+      tokenMint,
+      this.payer.publicKey,
+      this.payer,
+      200 * 10 ** 6,
+    ); // 1M tokens
 
-    performancePackage = await this.setupBasicPerformancePackage({ tokenMint, oracleAccount: oracleAccount.publicKey, recipient: recipient.publicKey });
+    performancePackage = await this.setupBasicPerformancePackage({
+      tokenMint,
+      oracleAccount: oracleAccount.publicKey,
+      recipient: recipient.publicKey,
+    });
   });
 
   it("should change performance package authority successfully", async function () {
     // Verify initial authority
-    const initialPerformancePackage = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const initialPerformancePackage =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
     assert.equal(
       initialPerformancePackage.performancePackageAuthority.toString(),
-      this.payer.publicKey.toString()
+      this.payer.publicKey.toString(),
     );
 
     // Change the performancePackage authority
@@ -53,25 +65,29 @@ export default function () {
       .rpc();
 
     // Verify authority was changed
-    const updatedPerformancePackage = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const updatedPerformancePackage =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
     assert.equal(
       updatedPerformancePackage.performancePackageAuthority.toString(),
-      newAuthority.publicKey.toString()
+      newAuthority.publicKey.toString(),
     );
 
     // verify new authority can propose a change
-    await this.priceBasedPerformancePackage.proposeChangeIx({
-      performancePackage,
-      proposer: newAuthority.publicKey,
-      params: {
-        changeType: {
-          recipient: { newRecipient: recipient.publicKey },
+    await this.priceBasedPerformancePackage
+      .proposeChangeIx({
+        performancePackage,
+        proposer: newAuthority.publicKey,
+        params: {
+          changeType: {
+            recipient: { newRecipient: recipient.publicKey },
+          },
+          pdaNonce: Math.floor(Math.random() * 1000000),
         },
-        pdaNonce: Math.floor(Math.random() * 1000000),
-      },
-    })
-    .signers([newAuthority])
-    .rpc();
+      })
+      .signers([newAuthority])
+      .rpc();
   });
 
   it("should fail if unauthorized party tries to change authority", async function () {
@@ -83,7 +99,7 @@ export default function () {
         fromPubkey: this.payer.publicKey,
         toPubkey: unauthorizedWallet.publicKey,
         lamports: 1000000000, // 1 SOL
-      })
+      }),
     );
     fundTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
@@ -109,7 +125,7 @@ export default function () {
 
       assert.fail("Should have failed with unauthorized authority change");
     } catch (error) {
-      assert.include(error.message.toLowerCase(), "0x1778"); 
+      assert.include(error.message.toLowerCase(), "0x1778");
     }
   });
 }

@@ -1,11 +1,7 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import {
-  FutarchyClient,
-  LaunchpadClient,
-} from "@metadaoproject/futarchy/v0.6";
+import { FutarchyClient, LaunchpadClient } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
-
 
 import { initializeMintWithSeeds } from "../utils.js";
 import { MAINNET_USDC } from "@metadaoproject/futarchy/v0.6";
@@ -29,7 +25,7 @@ export default function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
 
     META = result.tokenMint;
@@ -78,7 +74,7 @@ export default function suite() {
     launchAccount = await launchpadClient.fetchLaunch(launch);
     assert.equal(
       launchAccount.unixTimestampStarted.toString(),
-      clock.unixTimestamp.toString()
+      clock.unixTimestamp.toString(),
     );
     assert.exists(launchAccount.state.live);
   });

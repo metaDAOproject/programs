@@ -12,7 +12,7 @@ const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const DAO_ADDRESS = new PublicKey(
-  "B3AufDZCDtQN8JxZgJ5bSDZaiKCF4vtw7ynN9tuR9pXN"
+  "B3AufDZCDtQN8JxZgJ5bSDZaiKCF4vtw7ynN9tuR9pXN",
 );
 const SPENDING_AMOUNT = 10_000; // in human readable TOKEN AMOUNT (eg 10,000)
 const MINT = USDC; // NOTE: This is the mint of the token you want to spend
@@ -23,14 +23,13 @@ const MINT = USDC; // NOTE: This is the mint of the token you want to spend
 // This checks for the token account and creates it if it doesn't exist.
 // This will spend the amount set above or the remaining amount of the spending limit, whichever is less.
 async function main() {
-  const { multisigPda, spendingLimitPda } = await getSquadsPdasFromDao(
-    DAO_ADDRESS
-  );
+  const { multisigPda, spendingLimitPda } =
+    await getSquadsPdasFromDao(DAO_ADDRESS);
 
   const spendingLimitAccount =
     await multisig.accounts.SpendingLimit.fromAccountAddress(
       provider.connection,
-      spendingLimitPda
+      spendingLimitPda,
     );
 
   if (spendingLimitAccount.mint.toBase58() !== MINT.toBase58()) {
@@ -39,7 +38,7 @@ async function main() {
 
   const spendingLimitAmount = Number(spendingLimitAccount.amount.toString());
   const spendingLimitRemaining = Number(
-    spendingLimitAccount.remainingAmount.toString()
+    spendingLimitAccount.remainingAmount.toString(),
   );
 
   console.log(`Spending limit: ${spendingLimitAmount / 10 ** 6}`);
@@ -47,7 +46,7 @@ async function main() {
 
   // Confirm the payer is a member of the spending limit
   const members = spendingLimitAccount.members.map((member) =>
-    member.toBase58()
+    member.toBase58(),
   );
   if (!members.includes(payer.publicKey.toBase58())) {
     throw new Error("Payer is not a member of the spending limit");
@@ -57,7 +56,7 @@ async function main() {
   const spendingTokenAccount = getAssociatedTokenAddressSync(
     MINT,
     payer.publicKey,
-    true
+    true,
   );
 
   // Get the decimals for the token for use when spending
@@ -81,7 +80,7 @@ async function main() {
     console.log(
       `Spending limit remaining is less than the amount to spend. Adjusting from ${SPENDING_AMOUNT} to ${
         spendingLimitRemaining / 10 ** 6
-      }`
+      }`,
     );
     amountConverted = spendingLimitRemaining;
   }
@@ -89,9 +88,8 @@ async function main() {
   const ixs = [];
   try {
     // See if there is a token account and if it has a balance, if not, create it
-    const tokenAccountInfo = await provider.connection.getAccountInfo(
-      spendingTokenAccount
-    );
+    const tokenAccountInfo =
+      await provider.connection.getAccountInfo(spendingTokenAccount);
     if (!tokenAccountInfo) {
       throw new Error("Token account not found");
     }
@@ -102,7 +100,7 @@ async function main() {
       payer.publicKey,
       spendingTokenAccount,
       payer.publicKey,
-      MINT
+      MINT,
     );
     ixs.push(createIx);
   }

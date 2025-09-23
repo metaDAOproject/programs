@@ -16,7 +16,7 @@ let autocratClient: AutocratClient = AutocratClient.createClient({
 const payer = provider.wallet["payer"];
 
 const PANTERA_PUBKEY = new PublicKey(
-  "BtNPTBX1XkFCwazDJ6ZkK3hcUsomm1RPcfmtUrP6wd2K"
+  "BtNPTBX1XkFCwazDJ6ZkK3hcUsomm1RPcfmtUrP6wd2K",
 );
 
 const COST_DEPLOY = 0.1 * LAMPORTS_PER_SOL;
@@ -26,7 +26,7 @@ const buildTreasuryTransferInstruction = async (
   daoTreasury: anchor.web3.PublicKey,
   destinationAccount: anchor.web3.PublicKey,
   tokenMint: anchor.web3.PublicKey,
-  amount: number
+  amount: number,
 ) => {
   console.log(`Transfer token ${tokenMint.toString()}`);
   // This gets the origin account with the token intended for transfer
@@ -35,7 +35,7 @@ const buildTreasuryTransferInstruction = async (
     payer,
     tokenMint,
     daoTreasury,
-    true
+    true,
   );
   console.log("Origin account");
   console.log(originAcc.address.toString());
@@ -49,14 +49,14 @@ const buildTreasuryTransferInstruction = async (
 
   if (transferAmount > Number(accountBalance.amount)) {
     console.error(
-      `Account does not have enough balance to transfer ${transferAmount}`
+      `Account does not have enough balance to transfer ${transferAmount}`,
     );
     console.error(`Account's balance is ${accountBalance.amount}`);
     return;
   }
 
   console.log(
-    `Transfer amount ${transferAmount / 10 ** accountBalance.decimals}`
+    `Transfer amount ${transferAmount / 10 ** accountBalance.decimals}`,
   );
 
   // Sets up the destination account with the token and address provided
@@ -65,7 +65,7 @@ const buildTreasuryTransferInstruction = async (
     payer,
     tokenMint,
     destinationAccount,
-    true
+    true,
   );
 
   console.log("Destination account");
@@ -75,7 +75,7 @@ const buildTreasuryTransferInstruction = async (
     originAcc.address,
     destinationAcc.address,
     daoTreasury,
-    transferAmount
+    transferAmount,
   );
 
   console.log("Transfer instructions");
@@ -113,7 +113,7 @@ const buildMemoInstruction = async (memoText: string) => {
 const buildTreasuryBurnInstruction = async (
   daoTreasury: anchor.web3.PublicKey,
   tokenMint: anchor.web3.PublicKey,
-  amount: number
+  amount: number,
 ) => {
   console.log(`Burn token ${tokenMint.toString()}`);
   // This gets the origin account with the token intended for burn
@@ -122,7 +122,7 @@ const buildTreasuryBurnInstruction = async (
     payer,
     tokenMint,
     daoTreasury,
-    true
+    true,
   );
   console.log("Origin account");
   console.log(originAcc.address.toString());
@@ -146,7 +146,7 @@ const buildTreasuryBurnInstruction = async (
     originAcc.address,
     tokenMint,
     daoTreasury,
-    burnAmount
+    burnAmount,
   );
 
   console.log("Burn instructions");
@@ -168,7 +168,7 @@ async function main() {
     console.error(
       `PublicKey doesn't have enough balance ${
         payerBalance / LAMPORTS_PER_SOL
-      } to initialize proposal ${COST_DEPLOY / LAMPORTS_PER_SOL}`
+      } to initialize proposal ${COST_DEPLOY / LAMPORTS_PER_SOL}`,
     );
     console.error(`Add ${diff / LAMPORTS_PER_SOL} more SOL`);
     return;
@@ -199,7 +199,7 @@ async function main() {
     "http://google.com",
     ix,
     storedDao.minBaseFutarchicLiquidity,
-    storedDao.minQuoteFutarchicLiquidity
+    storedDao.minQuoteFutarchicLiquidity,
   );
 
   console.log(proposal);

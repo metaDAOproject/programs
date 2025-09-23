@@ -10,6 +10,9 @@ export default function suite() {
   describe("#start_unlock", startUnlock);
   describe("#complete_unlock", completeUnlock);
   describe("#propose_change", proposeChange);
-  describe("#change_performance_package_authority", changePerformancePackageAuthority);
+  describe(
+    "#change_performance_package_authority",
+    changePerformancePackageAuthority,
+  );
   describe("#execute_change", executeChange);
 }

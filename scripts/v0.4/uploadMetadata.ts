@@ -24,7 +24,7 @@ async function main() {
       0,
       "Fail USDC",
       "fUSDC",
-      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/USDC/fUSDC.json"
+      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/USDC/fUSDC.json",
     )
     .transaction();
 
@@ -34,7 +34,7 @@ async function main() {
       1,
       "Pass USDC",
       "pUSDC",
-      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/USDC/pUSDC.json"
+      "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/USDC/pUSDC.json",
     )
     .transaction();
 
@@ -44,7 +44,7 @@ async function main() {
       0,
       `Fail ${baseSymbol}`,
       `f${baseSymbol}`,
-      `https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/${baseSymbol}/f${baseSymbol}.json`
+      `https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/${baseSymbol}/f${baseSymbol}.json`,
     )
     .transaction();
 
@@ -54,7 +54,7 @@ async function main() {
       1,
       `Pass ${baseSymbol}`,
       `p${baseSymbol}`,
-      `https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/${baseSymbol}/p${baseSymbol}.json`
+      `https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/${baseSymbol}/p${baseSymbol}.json`,
     )
     .transaction();
 
@@ -64,7 +64,7 @@ async function main() {
     quoteFail,
     quotePass,
     baseFail,
-    basePass
+    basePass,
   );
 
   const sig = await provider.sendAndConfirm(tx, undefined, {

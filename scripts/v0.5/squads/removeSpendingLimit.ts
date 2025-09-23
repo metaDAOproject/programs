@@ -8,7 +8,7 @@ const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const DAO_ADDRESS = new PublicKey(
-  "9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo"
+  "9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo",
 );
 
 async function main() {
@@ -19,7 +19,7 @@ async function main() {
   const multisigAccountInfo =
     await multisig.accounts.Multisig.fromAccountAddress(
       provider.connection,
-      multisigPda
+      multisigPda,
     );
 
   const currentTransactionIndex = Number(multisigAccountInfo.transactionIndex);
@@ -82,7 +82,7 @@ async function main() {
   console.log("Transaction hash:", txHash);
   console.log("Proposal index:", transactionIndex.toString());
   console.log(
-    `Proposed removal of spending limit: ${spendingLimitPda[0].toBase58()}`
+    `Proposed removal of spending limit: ${spendingLimitPda[0].toBase58()}`,
   );
 
   // Get the proposal PDA

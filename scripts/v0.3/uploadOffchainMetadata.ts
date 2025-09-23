@@ -89,7 +89,7 @@ const uploadImageData = async () => {
       .every((x) => x)
   ) {
     throw new Error(
-      `Found unexpected filename in assets directory. Only setup to handle "ConditionalToken"`
+      `Found unexpected filename in assets directory. Only setup to handle "ConditionalToken"`,
     );
   }
 
@@ -99,7 +99,7 @@ const uploadImageData = async () => {
     filesToUpload.push(
       createGenericFile(new Uint8Array(data), filename, {
         contentType: "image/png",
-      })
+      }),
     );
   }
 
@@ -116,7 +116,7 @@ const uploadImageData = async () => {
 export const uploadImageJson = async (
   proposal: anchor.BN,
   conditionalToken: ConditionalToken,
-  image: string
+  image: string,
 ) => {
   // use bundlr, targeting arweave
   umi.use(bundlrUploader());
@@ -134,17 +134,17 @@ export const uploadImageJson = async (
     {
       onProgress: (percent: number, ...args: any) => {
         console.log(
-          `percent metadata upload progress for ${conditionalToken} = ${percent}`
+          `percent metadata upload progress for ${conditionalToken} = ${percent}`,
         );
         console.log("progress args: ", args);
       },
-    }
+    },
   );
 };
 
 export const uploadOffchainMetadata = async (
   proposal: anchor.BN,
-  symbol: string
+  symbol: string,
 ):
   | Promise<{
       symbol: string;
@@ -157,12 +157,12 @@ export const uploadOffchainMetadata = async (
 
   const getValueOrUndefined = <T>(
     result: PromiseSettledResult<T>,
-    action?: string
+    action?: string,
   ): T | undefined => {
     if (result.status === "rejected") {
       console.error(
         `${action ? `[${action}] ` : "request failed: "}`,
-        result.reason
+        result.reason,
       );
       return undefined;
     }
@@ -175,7 +175,7 @@ export const uploadOffchainMetadata = async (
 
   if (!isAcceptedVaultToken(symbol)) {
     console.warn(
-      `unrecognized symbol provided. Skipping upload since we do not have conditional images for token: ${symbol}...`
+      `unrecognized symbol provided. Skipping upload since we do not have conditional images for token: ${symbol}...`,
     );
     return undefined;
   }
@@ -196,20 +196,20 @@ export const uploadOffchainMetadata = async (
       return uploadImageJson(
         proposal,
         o.symbol as ConditionalToken,
-        uploadedAssetMap[o.symbol]
+        uploadedAssetMap[o.symbol],
       );
-    })
+    }),
   );
 
   return {
     symbol,
     passTokenMetadataUri: getValueOrUndefined(
       passUploadResult,
-      "upload pass token metadata"
+      "upload pass token metadata",
     ),
     failTokenMetadataUri: getValueOrUndefined(
       failUploadResult,
-      "upload fail token metadata"
+      "upload fail token metadata",
     ),
   };
 };
@@ -219,7 +219,7 @@ export const uploadOffchainMetadata = async (
  * this method needs to check for those implementations
  */
 export const fetchOnchainMetadataForMint = async (
-  address: PublicKey
+  address: PublicKey,
 ): Promise<
   | {
       key: PublicKey;

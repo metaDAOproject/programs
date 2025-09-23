@@ -10,7 +10,7 @@ import {
 export async function initializeMintWithSeeds(
   banksClient: BanksClient,
   launchpadClient: LaunchpadClient,
-  payer: Signer
+  payer: Signer,
 ): Promise<{
   tokenMint: PublicKey;
   launch: PublicKey;
@@ -20,13 +20,13 @@ export async function initializeMintWithSeeds(
   const tokenMint = await PublicKey.createWithSeed(
     payer.publicKey,
     seed,
-    token.TOKEN_PROGRAM_ID
+    token.TOKEN_PROGRAM_ID,
   );
 
   const [launch] = getLaunchAddr(launchpadClient.getProgramId(), tokenMint);
   const [launchSigner] = getLaunchSignerAddr(
     launchpadClient.getProgramId(),
-    launch
+    launch,
   );
 
   const rent = await banksClient.getRent();
@@ -42,7 +42,7 @@ export async function initializeMintWithSeeds(
       space: token.MINT_SIZE,
       programId: token.TOKEN_PROGRAM_ID,
     }),
-    token.createInitializeMint2Instruction(tokenMint, 6, launchSigner, null)
+    token.createInitializeMint2Instruction(tokenMint, 6, launchSigner, null),
   );
   tx.recentBlockhash = (await banksClient.getLatestBlockhash())[0];
   tx.feePayer = payer.publicKey;

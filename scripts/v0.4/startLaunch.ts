@@ -35,7 +35,7 @@ const launchAddr = new PublicKey(
   await input({
     message: "Enter the launch address",
     default: process.env.LAUNCH_ADDRESS,
-  })
+  }),
 );
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
@@ -43,7 +43,7 @@ const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 async function main() {
   const launchAuthorityFile = fs.readFileSync(launchAuthorityKeypairPath);
   const launchAuthorityKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(launchAuthorityFile.toString()) as Uint8Array)
+    Buffer.from(JSON.parse(launchAuthorityFile.toString()) as Uint8Array),
   );
 
   if (!launchAuthorityKeypair) {
@@ -52,7 +52,7 @@ async function main() {
 
   console.log(
     "Launch authority public key:",
-    launchAuthorityKeypair.publicKey.toBase58()
+    launchAuthorityKeypair.publicKey.toBase58(),
   );
 
   console.log("Starting launch...");
@@ -76,7 +76,7 @@ main().catch((error) => {
 async function sendAndConfirmTransaction(
   tx: Transaction,
   label: string,
-  signers: Keypair[] = []
+  signers: Keypair[] = [],
 ) {
   tx.feePayer = payer.publicKey;
   tx.recentBlockhash = (
@@ -94,8 +94,8 @@ async function sendAndConfirmTransaction(
   if (txStatus?.meta?.err) {
     throw new Error(
       `Transaction failed: ${txHash}\nError: ${JSON.stringify(
-        txStatus?.meta?.err
-      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`
+        txStatus?.meta?.err,
+      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`,
     );
   }
   console.log(`${label} transaction confirmed`);

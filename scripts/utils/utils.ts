@@ -26,7 +26,7 @@ export async function createLookupTableForTransaction(
   transaction: Transaction,
   payer: Keypair,
   provider: any,
-  additionalAddresses: PublicKey[] = []
+  additionalAddresses: PublicKey[] = [],
 ): Promise<AddressLookupTableAccount> {
   // use a different authority for the lookup table to avoid conflicts
   const lookupAuthority = Keypair.generate();
@@ -42,7 +42,7 @@ export async function createLookupTableForTransaction(
 
   // Extract all unique accounts from the transaction
   const accountsToAdd = transaction.instructions.map((instruction) =>
-    instruction.keys.map((key) => key.pubkey)
+    instruction.keys.map((key) => key.pubkey),
   );
   const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
   console.log("uniqueAccounts", uniqueAccounts.length);
@@ -103,9 +103,8 @@ export async function createLookupTableForTransaction(
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   // Fetch and return the lookup table account
-  let lookupTableAccount = await provider.connection.getAddressLookupTable(
-    lookupTableAddress
-  );
+  let lookupTableAccount =
+    await provider.connection.getAddressLookupTable(lookupTableAddress);
   console.log("created lookupTableAccount", lookupTableAccount);
 
   return lookupTableAccount.value;

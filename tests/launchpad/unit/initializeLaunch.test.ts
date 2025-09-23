@@ -13,9 +13,7 @@ import {
   LaunchpadClient,
 } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
-import {
-  getAssociatedTokenAddressSync,
-} from "@solana/spl-token";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import * as token from "@solana/spl-token";
 import {
   MAINNET_USDC,
@@ -39,7 +37,7 @@ export default function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
 
     META = result.tokenMint;
@@ -57,7 +55,7 @@ export default function suite() {
     const [, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), META);
     const [, launchSignerPdaBump] = getLaunchSignerAddr(
       launchpadClient.getProgramId(),
-      launch
+      launch,
     );
 
     await launchpadClient
@@ -81,20 +79,20 @@ export default function suite() {
 
     assert.equal(
       storedLaunch.minimumRaiseAmount.toString(),
-      minRaise.toString()
+      minRaise.toString(),
     );
     assert.ok(storedLaunch.launchAuthority.equals(this.payer.publicKey));
     assert.ok(storedLaunch.launchSigner.equals(launchSigner));
     assert.equal(storedLaunch.launchSignerPdaBump, launchSignerPdaBump);
     assert.ok(
       storedLaunch.launchQuoteVault.equals(
-        token.getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true)
-      )
+        token.getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true),
+      ),
     );
     assert.ok(
       storedLaunch.launchBaseVault.equals(
-        token.getAssociatedTokenAddressSync(META, launchSigner, true)
-      )
+        token.getAssociatedTokenAddressSync(META, launchSigner, true),
+      ),
     );
     assert.ok(storedLaunch.baseMint.equals(META));
     assert.equal(storedLaunch.pdaBump, pdaBump);
@@ -110,7 +108,7 @@ export default function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
     const freshMeta = result.tokenMint;
 
@@ -174,7 +172,7 @@ export default function suite() {
     const storedLaunch = await launchpadClient.fetchLaunch(launch);
     assert.equal(
       storedLaunch.priceBasedUnlockThreshold.toString(),
-      exactMinThreshold.toString()
+      exactMinThreshold.toString(),
     );
   });
 
@@ -189,7 +187,7 @@ export default function suite() {
     META = await PublicKey.createWithSeed(
       this.payer.publicKey,
       "fake-launch-signer",
-      token.TOKEN_PROGRAM_ID
+      token.TOKEN_PROGRAM_ID,
     );
 
     const rent = await this.banksClient.getRent();
@@ -210,8 +208,8 @@ export default function suite() {
         META,
         6,
         fakeLaunchSigner.publicKey,
-        null
-      )
+        null,
+      ),
     );
     tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     tx.feePayer = this.payer.publicKey;
@@ -243,12 +241,12 @@ export default function suite() {
           quoteVault: token.getAssociatedTokenAddressSync(
             MAINNET_USDC,
             fakeLaunchSigner.publicKey,
-            true
+            true,
           ),
           baseVault: token.getAssociatedTokenAddressSync(
             META,
             fakeLaunchSigner.publicKey,
-            true
+            true,
           ),
           launchAuthority: this.payer.publicKey,
           quoteMint: MAINNET_USDC,
@@ -262,10 +260,10 @@ export default function suite() {
             getAssociatedTokenAddressSync(
               MAINNET_USDC,
               fakeLaunchSigner.publicKey,
-              true
+              true,
             ),
             fakeLaunchSigner.publicKey,
-            MAINNET_USDC
+            MAINNET_USDC,
           ),
         ])
         .remainingAccounts([

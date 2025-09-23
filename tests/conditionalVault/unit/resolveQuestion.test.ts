@@ -19,7 +19,7 @@ export default function suite() {
     question = await vaultClient.initializeQuestion(
       questionId,
       settlementAuthority.publicKey,
-      2
+      2,
     );
   });
 
@@ -42,7 +42,7 @@ export default function suite() {
   it("throws error when resolving a question with invalid number of payout numerators", async function () {
     const callbacks = expectError(
       "InvalidNumPayoutNumerators",
-      "question resolution succeeded despite invalid number of payout numerators"
+      "question resolution succeeded despite invalid number of payout numerators",
     );
 
     await vaultClient
@@ -54,7 +54,7 @@ export default function suite() {
   it("throws error when resolving a question with zero payout", async function () {
     const callbacks = expectError(
       "PayoutZero",
-      "question resolution succeeded despite zero payout"
+      "question resolution succeeded despite zero payout",
     );
 
     await vaultClient

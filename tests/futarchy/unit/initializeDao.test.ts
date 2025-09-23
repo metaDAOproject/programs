@@ -60,11 +60,11 @@ export default function suite() {
     assert.equal(storedDao.twapStartDelaySeconds, 60 * 60 * 24);
     assert.equal(
       storedDao.twapInitialObservation.toString(),
-      THOUSAND_BUCK_PRICE.toString()
+      THOUSAND_BUCK_PRICE.toString(),
     );
     assert.equal(
       storedDao.twapMaxObservationChangePerUpdate.toString(),
-      THOUSAND_BUCK_PRICE.divn(100).toString()
+      THOUSAND_BUCK_PRICE.divn(100).toString(),
     );
     assert.equal(storedDao.minQuoteFutarchicLiquidity.toString(), "1");
     assert.equal(storedDao.minBaseFutarchicLiquidity.toString(), "1000");
@@ -82,7 +82,7 @@ export default function suite() {
 
     const storedMultisig = await multisig.accounts.Multisig.fromAccountAddress(
       this.squadsConnection,
-      multisigPda
+      multisigPda,
     );
     assert.ok(storedMultisig.configAuthority.equals(dao));
     assert.equal(storedMultisig.threshold, 1);
@@ -90,22 +90,22 @@ export default function suite() {
     assert.equal(storedMultisig.transactionIndex.toString(), "0");
 
     const daoMember = storedMultisig.members.find((member) =>
-      member.key.equals(dao)
+      member.key.equals(dao),
     );
     assert.ok(daoMember);
     assert.equal(
       daoMember.permissions.mask,
-      Permissions.fromPermissions([Permission.Vote, Permission.Execute]).mask
+      Permissions.fromPermissions([Permission.Vote, Permission.Execute]).mask,
     );
 
     const permissionlessMember = storedMultisig.members.find((member) =>
-      member.key.equals(PERMISSIONLESS_ACCOUNT.publicKey)
+      member.key.equals(PERMISSIONLESS_ACCOUNT.publicKey),
     );
     assert.ok(permissionlessMember);
     assert.equal(
       permissionlessMember.permissions.mask,
       Permissions.fromPermissions([Permission.Initiate, Permission.Execute])
-        .mask
+        .mask,
     );
   });
 
@@ -145,11 +145,11 @@ export default function suite() {
     assert.exists(storedDao.initialSpendingLimit);
     assert.equal(
       storedDao.initialSpendingLimit.amountPerMonth.toString(),
-      "10000000000"
+      "10000000000",
     );
     assert.equal(storedDao.initialSpendingLimit.members.length, 1);
     assert.ok(
-      storedDao.initialSpendingLimit.members[0].equals(spender.publicKey)
+      storedDao.initialSpendingLimit.members[0].equals(spender.publicKey),
     );
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
@@ -162,7 +162,7 @@ export default function suite() {
     const storedSpendingLimit =
       await multisig.accounts.SpendingLimit.fromAccountAddress(
         this.squadsConnection,
-        spendingLimitPda
+        spendingLimitPda,
       );
 
     assert.ok(storedSpendingLimit.multisig.equals(multisigPda));
@@ -180,7 +180,7 @@ export default function suite() {
   it("doesn't allow DAOs with proposal duration less than TWAP start delay", async function () {
     const callbacks = expectError(
       "ProposalDurationTooShort",
-      "DAO initialized despite slots_per_proposal being less than twap_start_delay_slots"
+      "DAO initialized despite slots_per_proposal being less than twap_start_delay_slots",
     );
 
     await this.futarchy

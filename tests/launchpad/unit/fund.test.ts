@@ -8,9 +8,7 @@ import {
 } from "@metadaoproject/futarchy/v0.6";
 import { getAccount } from "spl-token-bankrun";
 import { BN } from "bn.js";
-import {
-  getAssociatedTokenAddressSync,
-} from "@solana/spl-token";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {
@@ -40,7 +38,7 @@ export default function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
 
     META = result.tokenMint;
@@ -51,15 +49,15 @@ export default function suite() {
     quoteVault = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       launchSigner,
-      true
+      true,
     );
     funderBaseAccount = getAssociatedTokenAddressSync(
       META,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
     funderQuoteAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     // Initialize launch
@@ -104,7 +102,7 @@ export default function suite() {
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     assert.equal(
       launchAccount.totalCommittedAmount.toString(),
-      fundAmount.toString()
+      fundAmount.toString(),
     );
 
     const usdcVaultAccount = await getAccount(this.banksClient, quoteVault);
@@ -113,15 +111,14 @@ export default function suite() {
     const [fundingRecord, pdaBump] = getFundingRecordAddr(
       launchpadClient.getProgramId(),
       launch,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
-    const fundingRecordAccount = await launchpadClient.fetchFundingRecord(
-      fundingRecord
-    );
+    const fundingRecordAccount =
+      await launchpadClient.fetchFundingRecord(fundingRecord);
     assert.equal(
       fundingRecordAccount.committedAmount.toString(),
-      fundAmount.toString()
+      fundAmount.toString(),
     );
     assert.equal(fundingRecordAccount.pdaBump, pdaBump);
     assert.ok(fundingRecordAccount.funder.equals(this.payer.publicKey));
@@ -145,7 +142,7 @@ export default function suite() {
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     assert.equal(
       launchAccount.totalCommittedAmount.toString(),
-      totalAmount.toString()
+      totalAmount.toString(),
     );
 
     const usdcVaultAccount = await getAccount(this.banksClient, quoteVault);
@@ -154,15 +151,14 @@ export default function suite() {
     const [fundingRecord] = getFundingRecordAddr(
       launchpadClient.getProgramId(),
       launch,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
-    const fundingRecordAccount = await launchpadClient.fetchFundingRecord(
-      fundingRecord
-    );
+    const fundingRecordAccount =
+      await launchpadClient.fetchFundingRecord(fundingRecord);
     assert.equal(
       fundingRecordAccount.committedAmount.toString(),
-      totalAmount.toString()
+      totalAmount.toString(),
     );
     assert.ok(fundingRecordAccount.seqNum.eqn(1));
   });

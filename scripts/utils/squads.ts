@@ -3,7 +3,7 @@ import * as multisig from "@sqds/multisig";
 
 // Returns the multisig, spending limit and 0th vault pda for a given dao address
 export const getSquadsPdasFromDao = async (
-  daoAddress: string | PublicKey
+  daoAddress: string | PublicKey,
 ): Promise<{
   multisigPda: PublicKey;
   spendingLimitPda: PublicKey;

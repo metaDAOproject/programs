@@ -22,6 +22,6 @@ export default function suite() {
   describe("#redeem_tokens", redeemTokens);
   describe(
     "#add_metadata_to_conditional_tokens",
-    addMetadataToConditionalTokens
+    addMetadataToConditionalTokens,
   );
 }

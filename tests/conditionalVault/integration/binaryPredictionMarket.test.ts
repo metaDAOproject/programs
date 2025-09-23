@@ -3,8 +3,6 @@ import { sha256 } from "@metadaoproject/futarchy";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
-
-
 export default function suite() {
   it("binary prediction market", async function () {
     // A binary prediction market test. Alice, Bob, and Charlie are betting on
@@ -36,11 +34,11 @@ export default function suite() {
     const question: PublicKey = await vaultClient.initializeQuestion(
       sha256(
         new TextEncoder().encode(
-          "Who's going to win the next election?/TRUMP/HARRIS"
-        )
+          "Who's going to win the next election?/TRUMP/HARRIS",
+        ),
       ),
       operator.publicKey,
-      2
+      2,
     );
 
     const USDC: PublicKey = await this.createMint(operator.publicKey, 6);
@@ -61,7 +59,7 @@ export default function suite() {
         0,
         "Trump Share",
         "TRUMP",
-        "https://example.com/trump.png"
+        "https://example.com/trump.png",
       )
       .rpc();
     await vaultClient
@@ -70,7 +68,7 @@ export default function suite() {
         1,
         "Harris Share",
         "HARRIS",
-        "https://example.com/harris.png"
+        "https://example.com/harris.png",
       )
       .rpc();
 

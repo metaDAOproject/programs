@@ -21,7 +21,7 @@ const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
 // Change these variables to match the launch details
 const START_LAUNCH_KEY = new PublicKey(
-  "CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf"
+  "CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf",
 );
 const MIN_RAISE_AMOUNT = 300_000;
 const FOUNDER_REQUESTED_SPENDING_LIMIT = 10_000;
@@ -35,7 +35,7 @@ const TOKEN_SEED = "Ck2w0N97Nkr886o8"; // Thanks Caveycool!
 const MAX_MONTHLY_SPENDING_LIMIT = MIN_RAISE_AMOUNT / 6;
 const SPENDING_LIMIT = Math.min(
   FOUNDER_REQUESTED_SPENDING_LIMIT,
-  MAX_MONTHLY_SPENDING_LIMIT
+  MAX_MONTHLY_SPENDING_LIMIT,
 );
 const ONE_MINUTE_IN_SECONDS = 60; // Devnet only
 const ONE_HOUR_IN_SECONDS = ONE_MINUTE_IN_SECONDS * 60;
@@ -52,7 +52,7 @@ async function main() {
   const TOKEN = await PublicKey.createWithSeed(
     payer.publicKey,
     seed,
-    token.TOKEN_PROGRAM_ID
+    token.TOKEN_PROGRAM_ID,
   );
 
   console.log("Token address:", TOKEN.toBase58());
@@ -63,7 +63,7 @@ async function main() {
   console.log("Launch address:", launch.toBase58());
 
   const lamports = await provider.connection.getMinimumBalanceForRentExemption(
-    token.MINT_SIZE
+    token.MINT_SIZE,
   );
 
   const convertedRaise = MIN_RAISE_AMOUNT * 10 ** 6;
@@ -79,7 +79,7 @@ async function main() {
       space: token.MINT_SIZE,
       programId: token.TOKEN_PROGRAM_ID,
     }),
-    token.createInitializeMint2Instruction(TOKEN, 6, launchSigner, null)
+    token.createInitializeMint2Instruction(TOKEN, 6, launchSigner, null),
   );
   tx.recentBlockhash = (
     await provider.connection.getLatestBlockhash()
@@ -103,7 +103,7 @@ async function main() {
       FOUNDER_KEYS,
       START_LAUNCH_KEY,
       false, // note: change for devnet
-      payer.publicKey
+      payer.publicKey,
     )
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),

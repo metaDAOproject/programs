@@ -48,7 +48,7 @@ export default function () {
         fromPubkey: this.payer.publicKey,
         toPubkey: newAuthority.publicKey,
         lamports: 1000000000, // 1 SOL
-      })
+      }),
     );
     fundingTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
@@ -68,7 +68,8 @@ export default function () {
       priceThreshold: new BN(1000000),
       tokenAmount: new BN(100000),
       minUnlockTimestamp: new BN(
-        Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600
+        Number((await this.context.banksClient.getClock()).unixTimestamp) +
+          3600,
       ),
       oracleConfig: {
         oracleAccount: oracleAccount.publicKey,
@@ -91,15 +92,21 @@ export default function () {
       .rpc();
 
     // Get performancePackage address
-    performancePackage = this.priceBasedPerformancePackage.getPerformancePackage(createKey.publicKey);
+    performancePackage =
+      this.priceBasedPerformancePackage.getPerformancePackage(
+        createKey.publicKey,
+      );
   });
 
   it("should change performancePackage authority successfully", async function () {
     // Verify initial authority
-    const initialPerformancePackage = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const initialPerformancePackage =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
     assert.equal(
       initialPerformancePackage.performancePackageAuthority.toString(),
-      currentAuthority.publicKey.toString()
+      currentAuthority.publicKey.toString(),
     );
 
     // Change the performancePackage authority
@@ -119,10 +126,13 @@ export default function () {
     await this.banksClient.processTransaction(tx);
 
     // Verify authority was changed
-    const updatedPerformancePackage = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const updatedPerformancePackage =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
     assert.equal(
       updatedPerformancePackage.performancePackageAuthority.toString(),
-      newAuthority.publicKey.toString()
+      newAuthority.publicKey.toString(),
     );
   });
 
@@ -135,7 +145,7 @@ export default function () {
         fromPubkey: this.payer.publicKey,
         toPubkey: unauthorizedWallet.publicKey,
         lamports: 1000000000, // 1 SOL
-      })
+      }),
     );
     fundTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
@@ -161,7 +171,7 @@ export default function () {
 
       assert.fail("Should have failed with unauthorized authority change");
     } catch (error) {
-      assert.include(error.message.toLowerCase(), "0x1778"); 
+      assert.include(error.message.toLowerCase(), "0x1778");
     }
   });
 
@@ -174,7 +184,7 @@ export default function () {
         fromPubkey: this.payer.publicKey,
         toPubkey: wrongAuthority.publicKey,
         lamports: 1000000000, // 1 SOL
-      })
+      }),
     );
     fundTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
@@ -200,7 +210,7 @@ export default function () {
 
       assert.fail("Should have failed with wrong current authority");
     } catch (error) {
-      assert.include(error.message.toLowerCase(), "0x1778"); 
+      assert.include(error.message.toLowerCase(), "0x1778");
     }
   });
 
@@ -250,17 +260,19 @@ export default function () {
     await this.banksClient.processTransaction(proposeTx);
 
     // Verify the change request was created successfully
-    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      newAuthority.publicKey,
-      pdaNonce
-    );
-    const changeRequest = await this.priceBasedPerformancePackage.getChangeRequest(
-      changeRequestAddr
-    );
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        newAuthority.publicKey,
+        pdaNonce,
+      );
+    const changeRequest =
+      await this.priceBasedPerformancePackage.getChangeRequest(
+        changeRequestAddr,
+      );
     assert.equal(
       changeRequest.proposer.toString(),
-      newAuthority.publicKey.toString()
+      newAuthority.publicKey.toString(),
     );
   });
 }

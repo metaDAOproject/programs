@@ -41,7 +41,7 @@ import {
   ComputeBudgetProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
-  
+
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -60,10 +60,10 @@ import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
 import { AccountInfo } from "@solana/web3.js";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
-  UMI_MPL_TOKEN_METADATA_PROGRAM_ID
+  UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
 );
 const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
-  "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+  "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C",
 );
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
@@ -86,38 +86,74 @@ export interface TestContext {
   createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
   createMint: (
     mintAuthority: PublicKey,
-    decimals: number
+    decimals: number,
   ) => Promise<PublicKey>;
   mintTo: (
     mint: PublicKey,
     to: PublicKey,
     mintAuthority: Keypair,
-    amount: number
+    amount: number,
   ) => Promise<any>;
   getTokenBalance: (mint: PublicKey, owner: PublicKey) => Promise<bigint>;
   getMint: (mint: PublicKey) => Promise<any>;
   assertBalance: (
     mint: PublicKey,
     owner: PublicKey,
-    amount: number
+    amount: number,
   ) => Promise<void>;
   transfer: (
     mint: PublicKey,
     from: Keypair,
     to: PublicKey,
-    amount: number
+    amount: number,
   ) => Promise<any>;
-  setupBasicDao: ({ baseMint, quoteMint }: { baseMint: PublicKey, quoteMint: PublicKey }) => Promise<PublicKey>;
-  setupBasicDaoWithLiquidity: ({ baseMint, quoteMint }: { baseMint: PublicKey, quoteMint: PublicKey }) => Promise<PublicKey>;
-  initializeProposal: ({ dao, instructions }: { dao: PublicKey, instructions: TransactionInstruction[] }) => Promise<{ proposal: PublicKey, question: PublicKey, baseVault: PublicKey, quoteVault: PublicKey, squadsProposal: PublicKey }>;
-  initializeAndLaunchProposal: ({ dao, instructions }: { dao: PublicKey, instructions: TransactionInstruction[] }) => Promise<{ proposal: PublicKey, question: PublicKey, baseVault: PublicKey, quoteVault: PublicKey, squadsProposal: PublicKey }>;
+  setupBasicDao: ({
+    baseMint,
+    quoteMint,
+  }: {
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+  }) => Promise<PublicKey>;
+  setupBasicDaoWithLiquidity: ({
+    baseMint,
+    quoteMint,
+  }: {
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+  }) => Promise<PublicKey>;
+  initializeProposal: ({
+    dao,
+    instructions,
+  }: {
+    dao: PublicKey;
+    instructions: TransactionInstruction[];
+  }) => Promise<{
+    proposal: PublicKey;
+    question: PublicKey;
+    baseVault: PublicKey;
+    quoteVault: PublicKey;
+    squadsProposal: PublicKey;
+  }>;
+  initializeAndLaunchProposal: ({
+    dao,
+    instructions,
+  }: {
+    dao: PublicKey;
+    instructions: TransactionInstruction[];
+  }) => Promise<{
+    proposal: PublicKey;
+    question: PublicKey;
+    baseVault: PublicKey;
+    quoteVault: PublicKey;
+    squadsProposal: PublicKey;
+  }>;
   advanceBySlots: (slots: bigint) => Promise<void>;
   advanceBySeconds: (seconds: number) => Promise<void>;
 }
 
 // Extend the Mocha context to include our test properties
 declare module "mocha" {
-  interface Context extends TestContext { }
+  interface Context extends TestContext {}
 }
 
 before(async function () {
@@ -137,7 +173,7 @@ before(async function () {
       {
         name: "cp_amm",
         programId: DAMM_V2_PROGRAM_ID,
-      }
+      },
     ],
     [
       {
@@ -153,7 +189,7 @@ before(async function () {
         address: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
         info: {
           data: fs.readFileSync(
-            "./tests/fixtures/raydium-create-pool-fee-receive"
+            "./tests/fixtures/raydium-create-pool-fee-receive",
           ),
           executable: false,
           owner: token.TOKEN_PROGRAM_ID,
@@ -185,9 +221,9 @@ before(async function () {
           executable: false,
           owner: DAMM_V2_PROGRAM_ID,
           lamports: 1_000_000_000,
-        }
-      }
-    ]
+        },
+      },
+    ],
   );
   this.banksClient = this.context.banksClient;
   const provider = new BankrunProvider(this.context);
@@ -202,13 +238,16 @@ before(async function () {
   this.launchpad = LaunchpadClient.createClient({
     provider: provider as any,
   });
-  this.priceBasedPerformancePackage = PriceBasedPerformancePackageClient.createClient({
-    provider: provider as any,
-  });
+  this.priceBasedPerformancePackage =
+    PriceBasedPerformancePackageClient.createClient({
+      provider: provider as any,
+    });
   this.provider = provider;
   this.payer = provider.wallet.payer;
 
-  const dynamicConfig = await this.banksClient.getAccount(new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"));
+  const dynamicConfig = await this.banksClient.getAccount(
+    new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"),
+  );
 
   // discriminator + vault config authority
   const poolCreatorAuthorityOffset = 8 + 32;
@@ -220,15 +259,31 @@ before(async function () {
     LAUNCHPAD_PROGRAM_ID,
   );
 
-  dynamicConfig.data.set(poolCreatorAuthority.toBuffer(), poolCreatorAuthorityOffset);
+  dynamicConfig.data.set(
+    poolCreatorAuthority.toBuffer(),
+    poolCreatorAuthorityOffset,
+  );
   dynamicConfig.data.set([1], configTypeOffset);
 
-  this.context.setAccount(new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"), dynamicConfig);
-  const creatorAuthority = new PublicKey(dynamicConfig.data.subarray(poolCreatorAuthorityOffset, poolCreatorAuthorityOffset + 32));
+  this.context.setAccount(
+    new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"),
+    dynamicConfig,
+  );
+  const creatorAuthority = new PublicKey(
+    dynamicConfig.data.subarray(
+      poolCreatorAuthorityOffset,
+      poolCreatorAuthorityOffset + 32,
+    ),
+  );
   console.log(creatorAuthority);
   console.log(this.payer.publicKey);
-  console.log(dynamicConfig.data.subarray(poolCreatorAuthorityOffset, poolCreatorAuthorityOffset + 32));
-  console.log(dynamicConfig.data.toString())
+  console.log(
+    dynamicConfig.data.subarray(
+      poolCreatorAuthorityOffset,
+      poolCreatorAuthorityOffset + 32,
+    ),
+  );
+  console.log(dynamicConfig.data.toString());
 
   this.squadsConnection = {
     getAccountInfo: async (address: PublicKey) => {
@@ -270,7 +325,7 @@ before(async function () {
       this.banksClient,
       this.payer,
       mint,
-      owner
+      owner,
     );
   };
 
@@ -280,7 +335,7 @@ before(async function () {
       this.payer,
       mintAuthority,
       null,
-      decimals
+      decimals,
     );
   };
 
@@ -288,14 +343,28 @@ before(async function () {
     mint: PublicKey,
     to: PublicKey,
     mintAuthority: Keypair,
-    amount: number
+    amount: number,
   ) => {
     const tokenAccount = token.getAssociatedTokenAddressSync(mint, to, true);
 
     const tx = new Transaction();
 
-    tx.add(token.createAssociatedTokenAccountIdempotentInstruction(this.payer.publicKey, tokenAccount, to, mint));
-    tx.add(token.createMintToInstruction(mint, tokenAccount, mintAuthority.publicKey, amount));
+    tx.add(
+      token.createAssociatedTokenAccountIdempotentInstruction(
+        this.payer.publicKey,
+        tokenAccount,
+        to,
+        mint,
+      ),
+    );
+    tx.add(
+      token.createMintToInstruction(
+        mint,
+        tokenAccount,
+        mintAuthority.publicKey,
+        amount,
+      ),
+    );
 
     tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     tx.feePayer = this.payer.publicKey;
@@ -306,7 +375,10 @@ before(async function () {
   this.getTokenBalance = async (mint: PublicKey, owner: PublicKey) => {
     const tokenAccount = token.getAssociatedTokenAddressSync(mint, owner, true);
     try {
-      const storedTokenAccount = await getAccount(this.banksClient, tokenAccount);
+      const storedTokenAccount = await getAccount(
+        this.banksClient,
+        tokenAccount,
+      );
       return storedTokenAccount.amount;
     } catch (error) {
       if (error.toString().includes("TokenAccountNotFoundError")) {
@@ -323,7 +395,7 @@ before(async function () {
   this.assertBalance = async (
     mint: PublicKey,
     owner: PublicKey,
-    amount: number
+    amount: number,
   ) => {
     const balance = await this.getTokenBalance(mint, owner);
     assert.equal(balance.toString(), amount.toString());
@@ -336,7 +408,7 @@ before(async function () {
     mint: PublicKey,
     from: Keypair,
     to: PublicKey,
-    amount: number
+    amount: number,
   ) => {
     return await transfer(
       this.banksClient,
@@ -344,7 +416,7 @@ before(async function () {
       token.getAssociatedTokenAddressSync(mint, from.publicKey, true),
       token.getAssociatedTokenAddressSync(mint, to, true),
       from,
-      amount
+      amount,
     );
   };
 
@@ -356,8 +428,8 @@ before(async function () {
         currentClock.epochStartTimestamp,
         currentClock.epoch,
         currentClock.leaderScheduleEpoch,
-        currentClock.unixTimestamp
-      )
+        currentClock.unixTimestamp,
+      ),
     );
   };
 
@@ -369,12 +441,18 @@ before(async function () {
         currentClock.epochStartTimestamp,
         currentClock.epoch,
         currentClock.leaderScheduleEpoch,
-        BigInt(currentClock.unixTimestamp + BigInt(seconds))
-      )
+        BigInt(currentClock.unixTimestamp + BigInt(seconds)),
+      ),
     );
   };
 
-  this.setupBasicDao = async ({ baseMint, quoteMint }: { baseMint: PublicKey, quoteMint: PublicKey }) => {
+  this.setupBasicDao = async ({
+    baseMint,
+    quoteMint,
+  }: {
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+  }) => {
     const nonce = new BN(Math.floor(Math.random() * 1000000));
 
     await this.futarchy
@@ -408,33 +486,66 @@ before(async function () {
     return dao;
   };
 
-  this.setupBasicDaoWithLiquidity = async ({ baseMint, quoteMint }: { baseMint: PublicKey, quoteMint: PublicKey }) => {
+  this.setupBasicDaoWithLiquidity = async ({
+    baseMint,
+    quoteMint,
+  }: {
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+  }) => {
     const dao = await this.setupBasicDao({ baseMint, quoteMint });
 
-    await this.mintTo(baseMint, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
-    await this.mintTo(quoteMint, this.payer.publicKey, this.payer, 100_000 * 10 ** 6);
-
-    await this.futarchy.provideLiquidityIx({
-      dao,
+    await this.mintTo(
       baseMint,
+      this.payer.publicKey,
+      this.payer,
+      100_000 * 10 ** 6,
+    );
+    await this.mintTo(
       quoteMint,
-      maxBaseAmount: new BN(100_000 * 10 ** 6),
-      quoteAmount: new BN(100_000 * 10 ** 6),
-    }).rpc();
+      this.payer.publicKey,
+      this.payer,
+      100_000 * 10 ** 6,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint,
+        quoteMint,
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        quoteAmount: new BN(100_000 * 10 ** 6),
+      })
+      .rpc();
 
     return dao;
   };
 
-  this.initializeProposal = async ({ dao, instructions }: { dao: PublicKey, instructions: TransactionInstruction[] }): Promise<{ proposal: PublicKey, question: PublicKey, baseVault: PublicKey, quoteVault: PublicKey, squadsProposal: PublicKey }> => {
+  this.initializeProposal = async ({
+    dao,
+    instructions,
+  }: {
+    dao: PublicKey;
+    instructions: TransactionInstruction[];
+  }): Promise<{
+    proposal: PublicKey;
+    question: PublicKey;
+    baseVault: PublicKey;
+    quoteVault: PublicKey;
+    squadsProposal: PublicKey;
+  }> => {
     const storedDao = await this.futarchy.getDao(dao);
 
-    const { tx: squadsProposalCreateTx, squadsProposal } = this.futarchy.squadsProposalCreateTx({
-      dao,
-      instructions,
-      transactionIndex: 1n,
-    });
+    const { tx: squadsProposalCreateTx, squadsProposal } =
+      this.futarchy.squadsProposalCreateTx({
+        dao,
+        instructions,
+        transactionIndex: 1n,
+      });
 
-    squadsProposalCreateTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    squadsProposalCreateTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
     squadsProposalCreateTx.feePayer = this.payer.publicKey;
     squadsProposalCreateTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
 
@@ -459,18 +570,23 @@ before(async function () {
       .initializeVaultIx(question, storedDao.baseMint, 2)
       .postInstructions(
         await InstructionUtils.getInstructions(
-          this.conditionalVault.initializeVaultIx(question, storedDao.quoteMint, 2),
+          this.conditionalVault.initializeVaultIx(
+            question,
+            storedDao.quoteMint,
+            2,
+          ),
         ),
       )
       .rpc();
 
-    await this.futarchy.initializeProposalIx(
-      squadsProposal,
-      dao,
-      storedDao.baseMint,
-      storedDao.quoteMint,
-      question,
-    )
+    await this.futarchy
+      .initializeProposalIx(
+        squadsProposal,
+        dao,
+        storedDao.baseMint,
+        storedDao.quoteMint,
+        question,
+      )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
@@ -479,49 +595,76 @@ before(async function () {
     return { proposal, question, baseVault, quoteVault, squadsProposal };
   };
 
-  this.initializeAndLaunchProposal = async ({ dao, instructions }: { dao: PublicKey, instructions: TransactionInstruction[] }): Promise<{ proposal: PublicKey, question: PublicKey, baseVault: PublicKey, quoteVault: PublicKey, squadsProposal: PublicKey }> => {
-    const { proposal, question, baseVault, quoteVault, squadsProposal } = await this.initializeProposal({ dao, instructions });
+  this.initializeAndLaunchProposal = async ({
+    dao,
+    instructions,
+  }: {
+    dao: PublicKey;
+    instructions: TransactionInstruction[];
+  }): Promise<{
+    proposal: PublicKey;
+    question: PublicKey;
+    baseVault: PublicKey;
+    quoteVault: PublicKey;
+    squadsProposal: PublicKey;
+  }> => {
+    const { proposal, question, baseVault, quoteVault, squadsProposal } =
+      await this.initializeProposal({ dao, instructions });
     const storedDao = await this.futarchy.getDao(dao);
-    await this.futarchy.launchProposalIx({
-      proposal,
-      dao,
-      baseMint: storedDao.baseMint,
-      quoteMint: storedDao.quoteMint,
-    }).rpc();
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: storedDao.baseMint,
+        quoteMint: storedDao.quoteMint,
+      })
+      .rpc();
 
     return { proposal, question, baseVault, quoteVault, squadsProposal };
   };
 
-  this.setupBasicPerformancePackage = async ({ tokenMint, oracleAccount, recipient }: { tokenMint: PublicKey, oracleAccount: PublicKey, recipient: PublicKey }): Promise<PublicKey> => {
+  this.setupBasicPerformancePackage = async ({
+    tokenMint,
+    oracleAccount,
+    recipient,
+  }: {
+    tokenMint: PublicKey;
+    oracleAccount: PublicKey;
+    recipient: PublicKey;
+  }): Promise<PublicKey> => {
     const createKey = Keypair.generate();
 
-    await this.priceBasedPerformancePackage.initializePerformancePackageIx({
-      params: {
-        tranches: [
-          {
-            priceThreshold: new BN(1e12),
-            tokenAmount: new BN(100 * 10 ** 6),
+    await this.priceBasedPerformancePackage
+      .initializePerformancePackageIx({
+        params: {
+          tranches: [
+            {
+              priceThreshold: new BN(1e12),
+              tokenAmount: new BN(100 * 10 ** 6),
+            },
+            {
+              priceThreshold: new BN(2e12),
+              tokenAmount: new BN(100 * 10 ** 6),
+            },
+          ],
+          grantee: recipient,
+          performancePackageAuthority: this.payer.publicKey,
+          minUnlockTimestamp: new BN(
+            Number((await this.context.banksClient.getClock()).unixTimestamp) +
+              1,
+          ),
+          oracleConfig: {
+            oracleAccount,
+            byteOffset: 0,
           },
-          {
-            priceThreshold: new BN(2e12),
-            tokenAmount: new BN(100 * 10 ** 6),
-          }
-        ],
-        grantee: recipient,
-        performancePackageAuthority: this.payer.publicKey,
-        minUnlockTimestamp: new BN(
-          Number((await this.context.banksClient.getClock()).unixTimestamp) + 1
-        ),
-        oracleConfig: {
-          oracleAccount,
-          byteOffset: 0,
+          twapLengthSeconds: new BN(5), // 5 seconds for faster testing
         },
-        twapLengthSeconds: new BN(5), // 5 seconds for faster testing
-      },
-      createKey: createKey.publicKey,
-      tokenMint,
-      grantor: this.payer.publicKey,
-    }).signers([createKey]).rpc();
+        createKey: createKey.publicKey,
+        tokenMint,
+        grantor: this.payer.publicKey,
+      })
+      .signers([createKey])
+      .rpc();
 
     return getPerformancePackageAddr({
       createKey: createKey.publicKey,
@@ -532,7 +675,7 @@ before(async function () {
   await mintToOverride(
     this.context,
     token.getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
-    10_000_000n * 10n ** 6n
+    10_000_000n * 10n ** 6n,
   );
 });
 

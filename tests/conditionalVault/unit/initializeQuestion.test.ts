@@ -28,7 +28,7 @@ export default function suite() {
       vaultClient.vaultProgram.programId,
       questionId,
       oracle.publicKey,
-      2
+      2,
     );
 
     const storedQuestion = await vaultClient.fetchQuestion(question);
@@ -41,14 +41,14 @@ export default function suite() {
   it("throws error when initializing a question with insufficient conditions", async function () {
     const callbacks = expectError(
       "InsufficientNumConditions",
-      "question initialization succeeded despite insufficient conditions"
+      "question initialization succeeded despite insufficient conditions",
     );
 
     await vaultClient
       .initializeQuestionIx(
         sha256(new Uint8Array([4, 5, 6])),
         Keypair.generate().publicKey,
-        1
+        1,
       )
       .rpc()
       .then(callbacks[0], callbacks[1]);

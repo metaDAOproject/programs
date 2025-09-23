@@ -75,20 +75,20 @@ const minimumRaiseAmount = new BN(
   await input({
     message: "Enter the minimum raise amount",
     default: process.env.MINIMUM_RAISE_AMOUNT,
-  })
+  }),
 );
 
 const secondsForLaunch = Number.parseInt(
   await input({
     message: "Enter the seconds for launch",
     default: process.env.SECONDS_FOR_LAUNCH,
-  })
+  }),
 );
 
 async function main() {
   const launchAuthorityFile = fs.readFileSync(launchAuthorityKeypairPath);
   const launchAuthorityKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(launchAuthorityFile.toString()) as Uint8Array)
+    Buffer.from(JSON.parse(launchAuthorityFile.toString()) as Uint8Array),
   );
 
   if (!launchAuthorityKeypair) {
@@ -109,18 +109,18 @@ async function main() {
 
   console.log(
     "Launch authority public key:",
-    launchAuthorityKeypair.publicKey.toBase58()
+    launchAuthorityKeypair.publicKey.toBase58(),
   );
 
   const mintKeypair = Keypair.generate();
 
   const [launchAddr] = getLaunchAddr(
     launchpad.getProgramId(),
-    mintKeypair.publicKey
+    mintKeypair.publicKey,
   );
   const [launchSigner] = getLaunchSignerAddr(
     launchpad.getProgramId(),
-    launchAddr
+    launchAddr,
   );
 
   console.log("Creating mint...");
@@ -135,7 +135,7 @@ async function main() {
     {
       // Let's be 100% sure the mint is created
       commitment: "finalized",
-    }
+    },
   );
 
   console.log("Mint created:", mint.toBase58());
@@ -152,7 +152,7 @@ async function main() {
       mint,
       launchAuthorityKeypair.publicKey,
       isDevnet,
-      payer.publicKey
+      payer.publicKey,
     )
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
@@ -174,7 +174,7 @@ main().catch((error) => {
 async function sendAndConfirmTransaction(
   tx: Transaction,
   label: string,
-  signers: Keypair[] = []
+  signers: Keypair[] = [],
 ) {
   tx.feePayer = payer.publicKey;
   tx.recentBlockhash = (
@@ -192,8 +192,8 @@ async function sendAndConfirmTransaction(
   if (txStatus?.meta?.err) {
     throw new Error(
       `Transaction failed: ${txHash}\nError: ${JSON.stringify(
-        txStatus?.meta?.err
-      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`
+        txStatus?.meta?.err,
+      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`,
     );
   }
   console.log(`${label} transaction confirmed`);

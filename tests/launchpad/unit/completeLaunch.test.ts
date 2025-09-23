@@ -16,9 +16,7 @@ import {
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
-import {
-  deserializeMetadata,
-} from "@metaplex-foundation/mpl-token-metadata";
+import { deserializeMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import {
   fromWeb3JsPublicKey,
   toWeb3JsPublicKey,
@@ -50,7 +48,7 @@ export default function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
 
     META = result.tokenMint;
@@ -101,7 +99,7 @@ export default function suite() {
         : undefined,
     });
     assert.ok(
-      toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(launchSigner)
+      toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(launchSigner),
     );
 
     // Advance clock past 7 days
@@ -115,7 +113,7 @@ export default function suite() {
 
     const completeLaunchLut = await createLookupTableForTransaction(
       completeLaunchTx,
-      this
+      this,
     );
 
     const completeLaunchMessage = new TransactionMessage({
@@ -132,13 +130,13 @@ export default function suite() {
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     const [poolState] = getLiquidityPoolAddr(
       launchpadClient.getProgramId(),
-      launchAccount.dao
+      launchAccount.dao,
     );
     const [lpMint] = getRaydiumCpmmLpMintAddr(poolState, false);
 
     const treasuryUSDCBalance = await this.getTokenBalance(
       MAINNET_USDC,
-      launchAccount.daoVault
+      launchAccount.daoVault,
     );
     // const treasuryLpBalance = await this.getTokenBalance(
     //   lpMint,
@@ -148,7 +146,7 @@ export default function suite() {
     assert.exists(launchAccount.state.complete);
     assert.equal(
       treasuryUSDCBalance.toString(),
-      minRaise.muln(8).divn(10).toString()
+      minRaise.muln(8).divn(10).toString(),
     );
     // assert.isAbove(Number(treasuryLpBalance.toString()), 1000);
     const mint = await this.getMint(META);
@@ -172,8 +170,8 @@ export default function suite() {
     });
     assert.ok(
       toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(
-        launchAccount.daoVault
-      )
+        launchAccount.daoVault,
+      ),
     );
   });
 
@@ -273,12 +271,17 @@ export default function suite() {
     await launchpadClient.closeLaunchIx({ launch }).rpc();
     // Try to complete again
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META, finalRaiseAmount: minRaise })
+      .completeLaunchIx({
+        launch,
+        quoteMint: MAINNET_USDC,
+        baseMint: META,
+        finalRaiseAmount: minRaise,
+      })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
       completeLaunchTx,
-      this
+      this,
     );
 
     const completeLaunchMessage2 = new TransactionMessage({
@@ -292,7 +295,7 @@ export default function suite() {
 
     const result = await this.banksClient.tryProcessTransaction(tx);
     assert.isTrue(
-      result.meta.logMessages.some((log) => log.includes("InvalidLaunchState"))
+      result.meta.logMessages.some((log) => log.includes("InvalidLaunchState")),
     );
   });
 }

@@ -18,7 +18,7 @@ let autocratClient: AutocratClient = AutocratClient.createClient({
 async function crankTwap() {
   await autocratClient.crankProposalMarkets(
     [proposal1, proposal2, proposal3],
-    1
+    1,
   );
 }
 

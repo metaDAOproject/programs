@@ -15,7 +15,7 @@ async function main() {
     payer,
     payer.publicKey, // mint authority
     payer.publicKey, // freeze authority
-    9 // 9 decimals like in tests
+    9, // 9 decimals like in tests
   );
   console.log("Created META mint:", metaMint.toString());
 
@@ -25,7 +25,7 @@ async function main() {
     payer,
     payer.publicKey,
     payer.publicKey,
-    6 // 6 decimals for USDC
+    6, // 6 decimals for USDC
   );
   console.log("Created USDC mint:", usdcMint.toString());
 
@@ -34,7 +34,7 @@ async function main() {
     provider.connection,
     payer,
     metaMint,
-    payer.publicKey
+    payer.publicKey,
   );
   console.log("Created META account:", metaAccount.toString());
 
@@ -42,7 +42,7 @@ async function main() {
     provider.connection,
     payer,
     usdcMint,
-    payer.publicKey
+    payer.publicKey,
   );
   console.log("Created USDC account:", usdcAccount.toString());
 
@@ -53,7 +53,7 @@ async function main() {
     metaMint,
     metaAccount,
     payer,
-    1000n * 1_000_000_000n // 1000 META with 9 decimals
+    1000n * 1_000_000_000n, // 1000 META with 9 decimals
   );
   console.log("Minted 1000 META to payer");
 
@@ -63,7 +63,7 @@ async function main() {
     usdcMint,
     usdcAccount,
     payer,
-    200_000n * 1_000_000n // 200,000 USDC with 6 decimals (like in tests)
+    200_000n * 1_000_000n, // 200,000 USDC with 6 decimals (like in tests)
   );
   console.log("Minted 200,000 USDC to payer");
 
@@ -80,7 +80,7 @@ async function main() {
     minQuoteFutarchicLiquidity,
     usdcMint,
     daoKeypair,
-    new BN(100000)
+    new BN(100000),
   );
 
   console.log("DAO created with address:", dao.toString());

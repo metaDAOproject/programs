@@ -47,12 +47,12 @@ const MINT_FROM_SEED: boolean = true;
 
 // TOKEN DETAILS
 let TOKEN_MINT: PublicKey | null = new PublicKey(
-  "METAwkXcqyXKy1AtsSgJ8JiUHwGCafnZL38n3vYmeta"
+  "METAwkXcqyXKy1AtsSgJ8JiUHwGCafnZL38n3vYmeta",
 );
 const TOKEN_SEED: string = "j0MH5YqwvFHs2h9T";
 const NEW_TOKEN_DECIMALS: number = 6;
 const CLASSIC_TOKEN_MINT: PublicKey = new PublicKey(
-  "METADDFL6wWMWEoKTFJwcThTbUmtarRJZjRpzUvkxhr"
+  "METADDFL6wWMWEoKTFJwcThTbUmtarRJZjRpzUvkxhr",
 );
 const CLASSIC_TOKEN_DECIMALS: number = 9;
 
@@ -79,20 +79,19 @@ const mintNewToken = async () => {
     console.log("Using devnet params");
   } else {
     console.log(
-      "Using mainnet params.. MAKE SURE YOU WANT TO DO THIS... Sleeping for 10 seconds"
+      "Using mainnet params.. MAKE SURE YOU WANT TO DO THIS... Sleeping for 10 seconds",
     );
     await new Promise((resolve) => setTimeout(resolve, 10000));
   }
 
   const tokenDecimalDiff = CLASSIC_TOKEN_DECIMALS - NEW_TOKEN_DECIMALS;
 
-  const classicTokenSupply = await provider.connection.getTokenSupply(
-    CLASSIC_TOKEN_MINT
-  );
+  const classicTokenSupply =
+    await provider.connection.getTokenSupply(CLASSIC_TOKEN_MINT);
   const classicTokenSupplyAmount = classicTokenSupply.value.amount;
 
   const classicTokenSupplyAmountBN = new BN(
-    classicTokenSupplyAmount.toString()
+    classicTokenSupplyAmount.toString(),
   );
 
   assert(classicTokenSupplyAmountBN.gt(new BN(0)), "Classic token supply is 0");
@@ -101,23 +100,22 @@ const mintNewToken = async () => {
   let TOKEN_KEYPAIR: Keypair | null = null;
   try {
     if (TOKEN_MINT) {
-      const newTokenSupply = await provider.connection.getTokenSupply(
-        TOKEN_MINT
-      );
+      const newTokenSupply =
+        await provider.connection.getTokenSupply(TOKEN_MINT);
       newTokenSupplyAmount = new BN(newTokenSupply.value.amount.toString());
       console.log(
-        "New token already exsits. You may need to mint more or change something."
+        "New token already exsits. You may need to mint more or change something.",
       );
       console.log(
         "New token supply (human readable):",
         newTokenSupplyAmount
           .div(new BN(10).pow(new BN(NEW_TOKEN_DECIMALS)))
-          .toString()
+          .toString(),
       );
 
       assert(
         newTokenSupplyAmount.eq(classicTokenSupplyAmountBN),
-        "New token supply is not equal to 1:1000 ratio of classic token supply"
+        "New token supply is not equal to 1:1000 ratio of classic token supply",
       );
       return TOKEN_MINT;
     }
@@ -139,12 +137,12 @@ const mintNewToken = async () => {
       TOKEN = await PublicKey.createWithSeed(
         payer.publicKey,
         seed,
-        TOKEN_PROGRAM_ID
+        TOKEN_PROGRAM_ID,
       );
 
       assert(
         TOKEN.toBase58() === TOKEN_MINT.toBase58(),
-        "Token mint address mismatch"
+        "Token mint address mismatch",
       );
 
       // Mint the new token
@@ -180,28 +178,28 @@ const mintNewToken = async () => {
       TOKEN,
       NEW_TOKEN_DECIMALS,
       payer.publicKey,
-      null
+      null,
     );
     const associatedTokenAccount = getAssociatedTokenAddressSync(
       TOKEN,
       payer.publicKey,
-      true
+      true,
     );
     const createAtaIx = createAssociatedTokenAccountInstruction(
       payer.publicKey,
       associatedTokenAccount,
       payer.publicKey,
-      TOKEN
+      TOKEN,
     );
 
     ixs.push(initializeMintIx);
     ixs.push(createAtaIx);
 
     const classicTokenSupplyHuman = classicTokenSupplyAmountBN.div(
-      new BN(10).pow(new BN(CLASSIC_TOKEN_DECIMALS))
+      new BN(10).pow(new BN(CLASSIC_TOKEN_DECIMALS)),
     );
     const newTokenSupplyHuman = classicTokenSupplyAmountBN.div(
-      new BN(10).pow(new BN(NEW_TOKEN_DECIMALS))
+      new BN(10).pow(new BN(NEW_TOKEN_DECIMALS)),
     );
 
     console.log("Old token supply:", classicTokenSupplyHuman.toString());
@@ -214,17 +212,17 @@ const mintNewToken = async () => {
         .mul(new BN(10).pow(new BN(tokenDecimalDiff)))
         .eq(
           classicTokenSupplyAmountBN.div(
-            new BN(10).pow(new BN(NEW_TOKEN_DECIMALS))
-          )
+            new BN(10).pow(new BN(NEW_TOKEN_DECIMALS)),
+          ),
         ),
-      "New token supply is not equal to 1:1000 ratio of classic token supply"
+      "New token supply is not equal to 1:1000 ratio of classic token supply",
     );
 
     const mintSupplyIx = createMintToInstruction(
       TOKEN,
       associatedTokenAccount,
       payer.publicKey,
-      BigInt(classicTokenSupplyAmountBN.toString())
+      BigInt(classicTokenSupplyAmountBN.toString()),
     );
 
     ixs.push(mintSupplyIx);
@@ -244,9 +242,8 @@ const mintNewToken = async () => {
       versionedTx.sign([payer]);
     }
 
-    const simulation = await provider.connection.simulateTransaction(
-      versionedTx
-    );
+    const simulation =
+      await provider.connection.simulateTransaction(versionedTx);
     console.log("Simulation complete");
     console.log(simulation);
 
@@ -254,7 +251,7 @@ const mintNewToken = async () => {
     await new Promise((resolve) => setTimeout(resolve, 10000));
 
     const txHash = await provider.connection.sendRawTransaction(
-      versionedTx.serialize()
+      versionedTx.serialize(),
     );
     await provider.connection.confirmTransaction(txHash, "confirmed");
 
@@ -264,7 +261,7 @@ const mintNewToken = async () => {
       "New token supply (human readable):",
       new BN(newTokenSupply.value.amount.toString())
         .div(new BN(10).pow(new BN(NEW_TOKEN_DECIMALS)))
-        .toString()
+        .toString(),
     );
   }
   return TOKEN;
@@ -279,7 +276,7 @@ const initializeNewDaoAndToken = async () => {
     console.log("Using devnet params");
     USDC = DEVNET_USDC;
     squadsProgramConfigTreasury = new PublicKey(
-      "HM5y4mz3Bt9JY9mr1hkyhnvqxSH4H2u2451j7Hc2dtvK"
+      "HM5y4mz3Bt9JY9mr1hkyhnvqxSH4H2u2451j7Hc2dtvK",
     ); // NOTE: THIS IS FOR DEVNET ONLY
   } else {
     console.log("Using mainnet params..");
@@ -287,7 +284,7 @@ const initializeNewDaoAndToken = async () => {
 
   // Calculate current price of the token
   const response = await fetch(
-    `https://lite-api.jup.ag/price/v3?ids=${CLASSIC_TOKEN_MINT.toBase58()}`
+    `https://lite-api.jup.ag/price/v3?ids=${CLASSIC_TOKEN_MINT.toBase58()}`,
   );
   const data = await response.json();
 
@@ -302,7 +299,7 @@ const initializeNewDaoAndToken = async () => {
   // Setup the DAO params
   const twapInitialObservation = newTokenConvertedPrice;
   const twapMaxObservationChangePerUpdate = twapInitialObservation.div(
-    new BN(20)
+    new BN(20),
   );
   const twapStartDelaySlots = ONE_DAY_IN_SLOTS;
 
@@ -337,16 +334,16 @@ const initializeNewDaoAndToken = async () => {
         twapMaxObservationChangePerUpdate: twapMaxObservationChangePerUpdate,
         twapStartDelaySlots: twapStartDelaySlots,
         minBaseFutarchicLiquidity: new BN(MIN_BASE_FUTARCHIC_LIQUIDITY).mul(
-          new BN(10).pow(new BN(NEW_TOKEN_DECIMALS))
+          new BN(10).pow(new BN(NEW_TOKEN_DECIMALS)),
         ),
         minQuoteFutarchicLiquidity: new BN(MIN_QUOTE_FUTARCHIC_LIQUIDITY).mul(
-          new BN(10).pow(new BN(USDC_DECIMALS))
+          new BN(10).pow(new BN(USDC_DECIMALS)),
         ),
         passThresholdBps: PASS_THRESHOLD_BPS,
         slotsPerProposal: THREE_DAYS_IN_SLOTS,
         initialSpendingLimit: {
           amountPerMonth: new BN(SPENDING_LIMIT).mul(
-            new BN(10).pow(new BN(USDC_DECIMALS))
+            new BN(10).pow(new BN(USDC_DECIMALS)),
           ),
           members: SPENDING_MEMBERS,
         },
@@ -393,10 +390,10 @@ const initializeNewDaoAndToken = async () => {
 
   // Convert Umi instructions to web3.js instructions
   const metadataInstructions = umiInstructions.map((umiInstruction) =>
-    toWeb3JsInstruction(umiInstruction)
+    toWeb3JsInstruction(umiInstruction),
   );
   const updateMetadataInstructions = umiUpdateInstructions.map(
-    (umiInstruction) => toWeb3JsInstruction(umiInstruction)
+    (umiInstruction) => toWeb3JsInstruction(umiInstruction),
   );
 
   ixs.push(...metadataInstructions);
@@ -408,7 +405,7 @@ const initializeNewDaoAndToken = async () => {
       TOKEN,
       payer.publicKey,
       AuthorityType.MintTokens,
-      squadsMultisigVault
+      squadsMultisigVault,
     );
     // const revokeFreezeAuthorityTx = token.createSetAuthorityInstruction(TOKEN, payer.publicKey, token.AuthorityType.FreezeAccount, null);
 
@@ -430,9 +427,8 @@ const initializeNewDaoAndToken = async () => {
     versionedTx.sign([payer]);
 
     // Try simulation with the versioned transaction
-    const simulation = await provider.connection.simulateTransaction(
-      versionedTx
-    );
+    const simulation =
+      await provider.connection.simulateTransaction(versionedTx);
     console.log("Simulation complete");
     console.log(simulation);
 
@@ -440,7 +436,7 @@ const initializeNewDaoAndToken = async () => {
     await new Promise((resolve) => setTimeout(resolve, 10000));
 
     const txHash = await provider.connection.sendRawTransaction(
-      versionedTx.serialize()
+      versionedTx.serialize(),
     );
     console.log("Transaction hash:", txHash);
     await provider.connection.confirmTransaction(txHash, "confirmed");

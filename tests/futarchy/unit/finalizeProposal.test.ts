@@ -9,10 +9,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import {
-  expectError,
-  setupBasicDao,
-} from "../../utils.js";
+import { expectError, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -34,7 +31,7 @@ export default function suite() {
       USDC,
       this.payer.publicKey,
       this.payer,
-      200_000 * 1_000_000
+      200_000 * 1_000_000,
     );
 
     // const nonce = new BN(Math.floor(Math.random() * 1000000));
@@ -130,7 +127,7 @@ export default function suite() {
   it("doesn't finalize proposals that are too young", async function () {
     const callbacks = expectError(
       "ProposalTooYoung",
-      "proposal is too young to finalize"
+      "proposal is too young to finalize",
     );
 
     await this.futarchy
@@ -144,7 +141,7 @@ export default function suite() {
       proposal,
       META,
       USDC,
-      dao
+      dao,
     );
 
     await this.conditionalVault
@@ -158,14 +155,14 @@ export default function suite() {
       proposal,
       META,
       USDC,
-      dao
+      dao,
     );
 
     const { failBaseMint, failQuoteMint } = this.futarchy.getProposalPdas(
       proposal,
       META,
       USDC,
-      dao
+      dao,
     );
 
     // await this.autocratClient.
@@ -240,7 +237,7 @@ export default function suite() {
       proposal,
       META,
       USDC,
-      dao
+      dao,
     );
 
     await this.conditionalVault

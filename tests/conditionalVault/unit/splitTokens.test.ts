@@ -2,9 +2,7 @@ import { sha256 } from "@metadaoproject/futarchy";
 import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.5";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import {
-  getMint,
-} from "spl-token-bankrun";
+import { getMint } from "spl-token-bankrun";
 import * as token from "@solana/spl-token";
 import { expectError } from "../../utils.js";
 import { BN } from "bn.js";
@@ -26,7 +24,7 @@ export default function suite() {
     question = await vaultClient.initializeQuestion(
       questionId,
       oracle.publicKey,
-      2
+      2,
     );
 
     underlyingTokenMint = await this.createMint(this.payer.publicKey, 8);
@@ -39,7 +37,7 @@ export default function suite() {
       underlyingTokenMint,
       this.payer.publicKey,
       this.payer,
-      10_000_000_000n
+      10_000_000_000n,
     );
   });
 
@@ -67,12 +65,12 @@ export default function suite() {
       vaultClient.getConditionalTokenAccountsAndInstructions(
         vault,
         2,
-        this.payer.publicKey
+        this.payer.publicKey,
       );
 
     const callbacks = expectError(
       "BadConditionalTokenAccount",
-      "split succeeded despite conditional token account not existing"
+      "split succeeded despite conditional token account not existing",
     );
 
     await vaultClient.vaultProgram.methods
@@ -84,12 +82,12 @@ export default function suite() {
         vaultUnderlyingTokenAccount: token.getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true
+          true,
         ),
         userUnderlyingTokenAccount: token.getAssociatedTokenAddressSync(
           underlyingTokenMint,
           this.payer.publicKey,
-          true
+          true,
         ),
       })
       .remainingAccounts(remainingAccounts)
@@ -100,7 +98,7 @@ export default function suite() {
   it("throws error if the conditional mints are wrong", async function () {
     const callbacks = expectError(
       "ConditionalMintMismatch",
-      "split succeeded despite conditional mint not being in vault"
+      "split succeeded despite conditional mint not being in vault",
     );
 
     const fakeConditionalMint1 = await this.createMint(vault, 8);
@@ -109,12 +107,12 @@ export default function suite() {
 
     const fakeConditionalTokenAccount1 = await this.createTokenAccount(
       fakeConditionalMint1,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     const fakeConditionalTokenAccount2 = await this.createTokenAccount(
       fakeConditionalMint2,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     // Attempt to split tokens using the original vault but with the malicious vault's conditional token accounts
@@ -127,19 +125,19 @@ export default function suite() {
         vaultUnderlyingTokenAccount: token.getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true
+          true,
         ),
         userUnderlyingTokenAccount: token.getAssociatedTokenAddressSync(
           underlyingTokenMint,
           this.payer.publicKey,
-          true
+          true,
         ),
       })
       .remainingAccounts(
         vaultClient.getRemainingAccounts(
           [fakeConditionalMint1, fakeConditionalMint2],
-          [fakeConditionalTokenAccount1, fakeConditionalTokenAccount2]
-        )
+          [fakeConditionalTokenAccount1, fakeConditionalTokenAccount2],
+        ),
       )
       .rpc()
       .then(callbacks[0], callbacks[1]);
@@ -149,12 +147,12 @@ export default function suite() {
     const fakeUnderlyingTokenMint = await this.createMint(vault, 8);
     const invalidVaultUnderlyingTokenAccount = await this.createTokenAccount(
       fakeUnderlyingTokenMint,
-      vault
+      vault,
     );
 
     const callbacks = expectError(
       "InvalidVaultUnderlyingTokenAccount",
-      "split succeeded despite invalid vault underlying token account"
+      "split succeeded despite invalid vault underlying token account",
     );
 
     await vaultClient
@@ -169,14 +167,14 @@ export default function suite() {
   it("throws error when providing invalid number of conditional accounts", async function () {
     const callbacks = expectError(
       "InvalidConditionals",
-      "split succeeded despite invalid number of conditional accounts"
+      "split succeeded despite invalid number of conditional accounts",
     );
 
     const { remainingAccounts } =
       vaultClient.getConditionalTokenAccountsAndInstructions(
         vault,
         1, // Incorrect number of outcomes
-        this.payer.publicKey
+        this.payer.publicKey,
       );
 
     await vaultClient.vaultProgram.methods
@@ -188,12 +186,12 @@ export default function suite() {
         vaultUnderlyingTokenAccount: token.getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true
+          true,
         ),
         userUnderlyingTokenAccount: token.getAssociatedTokenAddressSync(
           underlyingTokenMint,
           this.payer.publicKey,
-          true
+          true,
         ),
       })
       .remainingAccounts(remainingAccounts)

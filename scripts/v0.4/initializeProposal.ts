@@ -27,7 +27,7 @@ async function main() {
     provider.connection,
     payer,
     storedDao.tokenMint,
-    payer.publicKey
+    payer.publicKey,
   );
   console.log("META account:", metaAccount.address.toString());
 
@@ -35,7 +35,7 @@ async function main() {
     provider.connection,
     payer,
     storedDao.usdcMint,
-    payer.publicKey
+    payer.publicKey,
   );
   console.log("USDC account:", usdcAccount.address.toString());
 
@@ -62,7 +62,7 @@ async function main() {
   const autocrat = new anchor.Program(
     AutocratIDL,
     AUTOCRAT_PROGRAM_ID,
-    provider
+    provider,
   );
 
   const accounts = [
@@ -95,7 +95,7 @@ async function main() {
     "https://example.com/proposal", // proposal description URL
     ix,
     PriceMath.getChainAmount(10, 9), // 10 META for more liquidity
-    PriceMath.getChainAmount(10000, 6) // 10000 USDC for more liquidity
+    PriceMath.getChainAmount(10000, 6), // 10000 USDC for more liquidity
   );
 
   console.log("Proposal created with address:", proposal.toString());

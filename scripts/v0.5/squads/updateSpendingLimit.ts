@@ -10,7 +10,7 @@ const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const DAO_ADDRESS = new PublicKey(
-  "9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo"
+  "9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo",
 );
 const MINT = USDC;
 const MEMBERS_TO_ADD = [
@@ -30,13 +30,13 @@ async function main() {
   const multisigAccountInfo =
     await multisig.accounts.Multisig.fromAccountAddress(
       provider.connection,
-      multisigPda
+      multisigPda,
     );
 
   const destinations = await Promise.all(
     MEMBERS_TO_ADD.map((member) =>
-      getAssociatedTokenAddress(MINT, member, true)
-    )
+      getAssociatedTokenAddress(MINT, member, true),
+    ),
   );
 
   const currentTransactionIndex = Number(multisigAccountInfo.transactionIndex);

@@ -38,36 +38,36 @@ const OpenbookTwapIDL: OpenbookTwap = require("../tests/fixtures/openbook_twap.j
 const AutocratMigratorIDL: AutocratMigrator = require("../target/idl/autocrat_migrator.json");
 
 const AUTOCRAT_PROGRAM_ID = new PublicKey(
-  "metaRK9dUBnrAdZN6uUDKvxBVKW5pyCbPVmLtUZwtBp"
+  "metaRK9dUBnrAdZN6uUDKvxBVKW5pyCbPVmLtUZwtBp",
 );
 const CONDITIONAL_VAULT_PROGRAM_ID = new PublicKey(
-  "vAuLTQjV5AZx5f3UgE75wcnkxnQowWxThn1hGjfCVwP"
+  "vAuLTQjV5AZx5f3UgE75wcnkxnQowWxThn1hGjfCVwP",
 );
 const OPENBOOK_TWAP_PROGRAM_ID = new PublicKey(
-  "twAP5sArq2vDS1mZCT7f4qRLwzTfHvf5Ay5R5Q5df1m"
+  "twAP5sArq2vDS1mZCT7f4qRLwzTfHvf5Ay5R5Q5df1m",
 );
 export const OPENBOOK_PROGRAM_ID = new PublicKey(
-  "opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb"
+  "opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb",
 );
 
 export const META = new PublicKey(
-  "METADDFL6wWMWEoKTFJwcThTbUmtarRJZjRpzUvkxhr"
+  "METADDFL6wWMWEoKTFJwcThTbUmtarRJZjRpzUvkxhr",
 );
 export const DEVNET_USDC = new PublicKey(
-  "B9CZDrwg7d34MiPiWoUSmddriCtQB5eB2h9EUSDHt48b"
+  "B9CZDrwg7d34MiPiWoUSmddriCtQB5eB2h9EUSDHt48b",
 );
 export const USDC = new PublicKey(
-  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
 );
 export const PROPH3t_PUBKEY = new PublicKey(
-  "65U66fcYuNfqN12vzateJhZ4bgDuxFWN9gMwraeQKByg"
+  "65U66fcYuNfqN12vzateJhZ4bgDuxFWN9gMwraeQKByg",
 );
 const AUTOCRAT_MIGRATOR_PROGRAM_ID = new PublicKey(
-  "MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt"
+  "MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt",
 );
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
-  UMI_MPL_TOKEN_METADATA_PROGRAM_ID
+  UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
 );
 
 const findMetaplexMetadataPda = async (mint: PublicKey) => {
@@ -77,7 +77,7 @@ const findMetaplexMetadataPda = async (mint: PublicKey) => {
       MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    MPL_TOKEN_METADATA_PROGRAM_ID
+    MPL_TOKEN_METADATA_PROGRAM_ID,
   );
 
   return publicKey;
@@ -91,43 +91,43 @@ export const payer = provider.wallet["payer"];
 export const autocratProgram = new Program<AutocratV0>(
   AutocratIDL,
   AUTOCRAT_PROGRAM_ID,
-  provider
+  provider,
 );
 
 export const vaultProgram = new Program<ConditionalVault>(
   ConditionalVaultIDL,
   CONDITIONAL_VAULT_PROGRAM_ID,
-  provider
+  provider,
 );
 
 export const openbook = new OpenBookV2Client(provider);
 export const openbookTwap = new Program<OpenbookTwap>(
   OpenbookTwapIDL,
   OPENBOOK_TWAP_PROGRAM_ID,
-  provider
+  provider,
 );
 
 export const migrator = new anchor.Program<AutocratMigrator>(
   AutocratMigratorIDL,
   AUTOCRAT_MIGRATOR_PROGRAM_ID,
-  provider
+  provider,
 );
 
 export const [dao] = PublicKey.findProgramAddressSync(
   [anchor.utils.bytes.utf8.encode("WWCACOTMICMIBMHAFTTWYGHMB")],
-  autocratProgram.programId
+  autocratProgram.programId,
 );
 
 export const [daoTreasury] = PublicKey.findProgramAddressSync(
   [dao.toBuffer()],
-  autocratProgram.programId
+  autocratProgram.programId,
 );
 
 async function createMint(
   mintAuthority: any,
   freezeAuthority: any,
   decimals: number,
-  keypair = Keypair.generate()
+  keypair = Keypair.generate(),
 ): Promise<any> {
   return await token.createMint(
     provider.connection,
@@ -135,7 +135,7 @@ async function createMint(
     mintAuthority,
     freezeAuthority,
     decimals,
-    keypair
+    keypair,
   );
 }
 
@@ -151,23 +151,21 @@ async function generateAddMetadataToConditionalTokensIx(
   onFinalizeMint: PublicKey,
   onRevertMint: PublicKey,
   vault: PublicKey,
-  nonce: anchor.BN
+  nonce: anchor.BN,
 ): Promise<TransactionInstruction | undefined> {
   const tokenMetadata = await fetchOnchainMetadataForMint(mint);
   if (!tokenMetadata) {
     console.warn(
-      `no metadata found for token = ${mint.toBase58()}, conditional tokens will not have metadata`
+      `no metadata found for token = ${mint.toBase58()}, conditional tokens will not have metadata`,
     );
     return undefined;
   }
 
   const { metadata, key: metadataKey } = tokenMetadata;
-  const conditionalOnFinalizeTokenMetadataKey = await findMetaplexMetadataPda(
-    onFinalizeMint
-  );
-  const conditionalOnRevertTokenMetadataKey = await findMetaplexMetadataPda(
-    onRevertMint
-  );
+  const conditionalOnFinalizeTokenMetadataKey =
+    await findMetaplexMetadataPda(onFinalizeMint);
+  const conditionalOnRevertTokenMetadataKey =
+    await findMetaplexMetadataPda(onRevertMint);
 
   // pull off the least significant 32 bits representing the proposal count
   const proposalCount = nonce.and(new BN(1).shln(32).sub(new BN(1)));
@@ -175,7 +173,7 @@ async function generateAddMetadataToConditionalTokensIx(
   // create new json, take that and pipe into the instruction
   const uploadResult = await uploadOffchainMetadata(
     proposalCount,
-    metadata.symbol
+    metadata.symbol,
   );
 
   if (!uploadResult) return undefined;
@@ -183,19 +181,19 @@ async function generateAddMetadataToConditionalTokensIx(
   if (!passTokenMetadataUri || !failTokenMetadataUri) {
     // an error here is likely transient, so we want to fail the script so that the caller can try again. otherwise, we will end up with a token with no linkable off-chain metadata.
     throw new Error(
-      `required metadata is undefined, pass = ${passTokenMetadataUri}, fail = ${failTokenMetadataUri}. Please try again.`
+      `required metadata is undefined, pass = ${passTokenMetadataUri}, fail = ${failTokenMetadataUri}. Please try again.`,
     );
   }
 
   console.log(
-    `[proposal = ${proposalCount.toNumber()}] pass token metadata uri: ${passTokenMetadataUri}, fail token metadata uri: ${failTokenMetadataUri}`
+    `[proposal = ${proposalCount.toNumber()}] pass token metadata uri: ${passTokenMetadataUri}, fail token metadata uri: ${failTokenMetadataUri}`,
   );
 
   return vaultProgram.methods
     .addMetadataToConditionalTokens(
       proposalCount,
       passTokenMetadataUri,
-      failTokenMetadataUri
+      failTokenMetadataUri,
     )
     .accounts({
       payer: payer.publicKey,
@@ -216,7 +214,7 @@ async function generateAddMetadataToConditionalTokensIx(
 async function initializeVault(
   settlementAuthority: any,
   underlyingTokenMint: any,
-  nonce: anchor.BN
+  nonce: anchor.BN,
 ): Promise<any> {
   const [vault] = PublicKey.findProgramAddressSync(
     [
@@ -225,7 +223,7 @@ async function initializeVault(
       underlyingTokenMint.toBuffer(),
       nonce.toBuffer("le", 8),
     ],
-    vaultProgram.programId
+    vaultProgram.programId,
   );
 
   if (
@@ -237,7 +235,7 @@ async function initializeVault(
   const vaultUnderlyingTokenAccount = await token.getAssociatedTokenAddress(
     underlyingTokenMint,
     vault,
-    true
+    true,
   );
 
   let conditionalOnFinalizeKP = Keypair.generate();
@@ -249,7 +247,7 @@ async function initializeVault(
       conditionalOnFinalizeKP.publicKey,
       conditionalOnRevertKP.publicKey,
       vault,
-      nonce
+      nonce,
     );
 
   const initializeConditionalVaultBuilder = vaultProgram.methods
@@ -277,14 +275,14 @@ async function initializeVault(
 
   if (addMetadataToConditionalTokensIx) {
     console.log(
-      "appending add metadata instruction for initialize vault transaction..."
+      "appending add metadata instruction for initialize vault transaction...",
     );
     initializeConditionalVaultBuilder.postInstructions([
       addMetadataToConditionalTokensIx,
     ]);
   } else {
     console.log(
-      "skipping add metadata instruction for initialize vault transaction..."
+      "skipping add metadata instruction for initialize vault transaction...",
     );
   }
 
@@ -399,7 +397,7 @@ export async function fetchDao() {
 
 export async function initializeProposal(
   instruction: any,
-  proposalURL: string
+  proposalURL: string,
 ) {
   const proposalKeypair = Keypair.generate();
 
@@ -416,7 +414,7 @@ export async function initializeProposal(
   const quoteVault = await initializeVault(
     daoTreasury,
     USDC,
-    baseNonce.or(new BN(1).shln(63))
+    baseNonce.or(new BN(1).shln(63)),
   );
 
   const passBaseMint = (
@@ -441,7 +439,7 @@ export async function initializeProposal(
       anchor.utils.bytes.utf8.encode("twap_market"),
       openbookPassMarketKP.publicKey.toBuffer(),
     ],
-    openbookTwap.programId
+    openbookTwap.programId,
   );
 
   const currentTimeInSeconds = Math.floor(Date.now() / 1000);
@@ -469,7 +467,7 @@ export async function initializeProposal(
       openbookTwapPassMarket,
       { confFilter: 0.1, maxStalenessSlots: 100 },
       openbookPassMarketKP,
-      daoTreasury
+      daoTreasury,
     );
 
   const cuPriceIx = ComputeBudgetProgram.setComputeUnitPrice({
@@ -499,7 +497,7 @@ export async function initializeProposal(
       anchor.utils.bytes.utf8.encode("twap_market"),
       openbookFailMarketKP.publicKey.toBuffer(),
     ],
-    openbookTwap.programId
+    openbookTwap.programId,
   );
 
   let openbookFailMarketIx = await openbook.createMarketIx(
@@ -519,7 +517,7 @@ export async function initializeProposal(
     openbookTwapFailMarket,
     { confFilter: 0.1, maxStalenessSlots: 100 },
     openbookFailMarketKP,
-    daoTreasury
+    daoTreasury,
   );
 
   let tx = new Transaction();
@@ -538,7 +536,7 @@ export async function initializeProposal(
     .preInstructions([
       await autocratProgram.account.proposal.createInstruction(
         proposalKeypair,
-        1000
+        1000,
       ),
       await openbookTwap.methods
         .createTwapMarket(new BN(10_000), maxObservationChangePerUpdateLots)
@@ -602,7 +600,7 @@ async function placeOrdersOnBothSides(twapMarket: any) {
 
   const storedMarket = await openbook.deserializeMarketAccount(market);
   let openOrdersAccount = new PublicKey(
-    "CxDQ5RSYebF6mRLDrXYn1An7bawe6S3iyaU5rZBjz4Xs"
+    "CxDQ5RSYebF6mRLDrXYn1An7bawe6S3iyaU5rZBjz4Xs",
   );
   // let openOrdersAccount = await openbook.createOpenOrders(
   //   payer,
@@ -617,13 +615,13 @@ async function placeOrdersOnBothSides(twapMarket: any) {
     provider.connection,
     payer,
     storedMarket.baseMint,
-    payer.publicKey
+    payer.publicKey,
   );
   const userQuoteAccount = await token.getOrCreateAssociatedTokenAccount(
     provider.connection,
     payer,
     storedMarket.quoteMint,
-    payer.publicKey
+    payer.publicKey,
   );
 
   await openbookTwap.methods
@@ -665,13 +663,13 @@ async function placeTakeOrder(twapMarket: any) {
     provider.connection,
     payer,
     storedMarket.baseMint,
-    payer.publicKey
+    payer.publicKey,
   );
   const userQuoteAccount = await token.getOrCreateAssociatedTokenAccount(
     provider.connection,
     payer,
     storedMarket.quoteMint,
-    payer.publicKey
+    payer.publicKey,
   );
 
   let buyArgs: PlaceOrderArgs = {
@@ -689,12 +687,12 @@ async function placeTakeOrder(twapMarket: any) {
   console.log(
     "base balance before:",
     (await token.getAccount(provider.connection, userBaseAccount.address))
-      .amount
+      .amount,
   );
   console.log(
     "quote balance before",
     (await token.getAccount(provider.connection, userQuoteAccount.address))
-      .amount
+      .amount,
   );
 
   let tx = await openbookTwap.methods
@@ -729,13 +727,13 @@ async function placeTakeOrder(twapMarket: any) {
       data: Buffer.from(
         Buffer.from(
           sim.value.accounts[0].data[0],
-          sim.value.accounts[0].data[1] as BufferEncoding
-        )
+          sim.value.accounts[0].data[1] as BufferEncoding,
+        ),
       ),
       executable: false,
       lamports: 0,
       owner: token.TOKEN_PROGRAM_ID,
-    }).amount
+    }).amount,
   );
 
   console.log(
@@ -743,13 +741,13 @@ async function placeTakeOrder(twapMarket: any) {
       data: Buffer.from(
         Buffer.from(
           sim.value.accounts[1].data[0],
-          sim.value.accounts[1].data[1] as BufferEncoding
-        )
+          sim.value.accounts[1].data[1] as BufferEncoding,
+        ),
       ),
       executable: false,
       lamports: 0,
       owner: token.TOKEN_PROGRAM_ID,
-    }).amount
+    }).amount,
   );
 }
 
@@ -758,13 +756,13 @@ export async function mintConditionalTokens(amount: number, vault: PublicKey) {
 
   // Setting default values for optional parameters
   const userUnderlyingTokenAccount = await getOrCreateAccount(
-    storedVault.underlyingTokenMint
+    storedVault.underlyingTokenMint,
   );
   const userConditionalOnFinalizeTokenAccount = await getOrCreateAccount(
-    storedVault.conditionalOnFinalizeTokenMint
+    storedVault.conditionalOnFinalizeTokenMint,
   );
   const userConditionalOnRevertTokenAccount = await getOrCreateAccount(
-    storedVault.conditionalOnRevertTokenMint
+    storedVault.conditionalOnRevertTokenMint,
   );
   const vaultUnderlyingTokenAccount = storedVault.underlyingTokenAccount;
 
@@ -794,7 +792,7 @@ async function getOrCreateAccount(mint: PublicKey) {
       provider.connection,
       payer,
       mint,
-      payer.publicKey
+      payer.publicKey,
     )
   ).address;
 }

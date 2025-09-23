@@ -29,7 +29,7 @@ export default function suite() {
     question = await vaultClient.initializeQuestion(
       questionId,
       oracle.publicKey,
-      2
+      2,
     );
 
     underlyingTokenMint = await createMint(
@@ -37,7 +37,7 @@ export default function suite() {
       this.payer,
       this.payer.publicKey,
       null,
-      8
+      8,
     );
 
     vault = await vaultClient.initializeVault(question, underlyingTokenMint, 2);
@@ -46,7 +46,7 @@ export default function suite() {
       this.banksClient,
       this.payer,
       underlyingTokenMint,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     // Mint some underlying tokens to the user's account
@@ -56,7 +56,7 @@ export default function suite() {
       underlyingTokenMint,
       userUnderlyingTokenAccount,
       this.payer,
-      1000
+      1000,
     );
 
     await vaultClient
@@ -69,8 +69,8 @@ export default function suite() {
       this.banksClient,
       token.getAssociatedTokenAddressSync(
         underlyingTokenMint,
-        this.payer.publicKey
-      )
+        this.payer.publicKey,
+      ),
     ).then((acc) => acc.amount);
     await vaultClient
       .mergeTokensIx(question, vault, underlyingTokenMint, new BN(600), 2)
@@ -79,8 +79,8 @@ export default function suite() {
       this.banksClient,
       token.getAssociatedTokenAddressSync(
         underlyingTokenMint,
-        this.payer.publicKey
-      )
+        this.payer.publicKey,
+      ),
     ).then((acc) => acc.amount);
 
     assert.isTrue(balanceAfter > balanceBefore);
@@ -92,7 +92,7 @@ export default function suite() {
   it("throws error when trying to merge more tokens than available", async function () {
     const callbacks = expectError(
       "InsufficientConditionalTokens",
-      "merge succeeded despite insufficient conditional tokens"
+      "merge succeeded despite insufficient conditional tokens",
     );
 
     await vaultClient
@@ -106,8 +106,8 @@ export default function suite() {
       this.banksClient,
       token.getAssociatedTokenAddressSync(
         underlyingTokenMint,
-        this.payer.publicKey
-      )
+        this.payer.publicKey,
+      ),
     ).then((acc) => acc.amount);
     await vaultClient
       .mergeTokensIx(question, vault, underlyingTokenMint, new BN(500), 2)
@@ -116,8 +116,8 @@ export default function suite() {
       this.banksClient,
       token.getAssociatedTokenAddressSync(
         underlyingTokenMint,
-        this.payer.publicKey
-      )
+        this.payer.publicKey,
+      ),
     ).then((acc) => acc.amount);
 
     assert.isTrue(balanceAfter > balanceBefore);
@@ -129,8 +129,8 @@ export default function suite() {
       this.banksClient,
       token.getAssociatedTokenAddressSync(
         underlyingTokenMint,
-        this.payer.publicKey
-      )
+        this.payer.publicKey,
+      ),
     ).then((acc) => acc.amount);
     await vaultClient
       .mergeTokensIx(question, vault, underlyingTokenMint, new BN(500), 2)
@@ -142,8 +142,8 @@ export default function suite() {
       this.banksClient,
       token.getAssociatedTokenAddressSync(
         underlyingTokenMint,
-        this.payer.publicKey
-      )
+        this.payer.publicKey,
+      ),
     ).then((acc) => acc.amount);
 
     assert.isTrue(balanceAfter > balanceBefore);

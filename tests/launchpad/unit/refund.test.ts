@@ -11,9 +11,7 @@ import {
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
-import {
-  getAssociatedTokenAddressSync,
-} from "@solana/spl-token";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
 
@@ -38,7 +36,7 @@ export default function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
 
     META = result.tokenMint;
@@ -47,11 +45,11 @@ export default function suite() {
     quoteVault = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       launchSigner,
-      true
+      true,
     );
     funderQuoteAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     // Initialize launch
@@ -92,11 +90,11 @@ export default function suite() {
 
     const initialUsdcBalance = await this.getTokenBalance(
       MAINNET_USDC,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
     const initialMetaBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     // Get refund
@@ -104,21 +102,21 @@ export default function suite() {
 
     const finalUsdcBalance = await this.getTokenBalance(
       MAINNET_USDC,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
     const finalMetaBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     assert.equal(
       (finalUsdcBalance - initialUsdcBalance).toString(),
-      partialAmount.toString()
+      partialAmount.toString(),
     );
     assert.equal(
       finalMetaBalance,
       BigInt(0),
-      "META tokens should be burned during refund"
+      "META tokens should be burned during refund",
     );
   });
 

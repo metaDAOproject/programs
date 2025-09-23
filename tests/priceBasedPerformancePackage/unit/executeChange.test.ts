@@ -34,14 +34,22 @@ export default function () {
 
     tokenMint = await this.createMint(tokenAuthority, 6);
 
-    await this.mintTo(tokenMint, this.payer.publicKey, this.payer, 200 * 10 ** 6);
-    performancePackage = await this.setupBasicPerformancePackage({ tokenMint, oracleAccount: oracleAccount.publicKey, recipient: recipient.publicKey });
+    await this.mintTo(
+      tokenMint,
+      this.payer.publicKey,
+      this.payer,
+      200 * 10 ** 6,
+    );
+    performancePackage = await this.setupBasicPerformancePackage({
+      tokenMint,
+      oracleAccount: oracleAccount.publicKey,
+      recipient: recipient.publicKey,
+    });
   });
 
   it("should execute change when recipient proposed and authority executes", async function () {
     // Generate a fresh pdaNonce for this test
     const pdaNonce = Math.floor(Math.random() * 1000000);
-
 
     // First, recipient proposes the change
     await this.priceBasedPerformancePackage
@@ -59,11 +67,12 @@ export default function () {
       .rpc();
 
     // Now DAO executes the change after governance approval
-    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      recipient.publicKey,
-      pdaNonce
-    );
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        recipient.publicKey,
+        pdaNonce,
+      );
 
     await this.priceBasedPerformancePackage
       .executeChangeIx({
@@ -74,17 +83,22 @@ export default function () {
       .rpc();
 
     // Verify the change was applied
-    const performancePackageAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const performancePackageAccount =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
 
     assert.equal(
       performancePackageAccount.recipient.toString(),
-      newRecipient.publicKey.toString()
+      newRecipient.publicKey.toString(),
     );
     assert.equal(performancePackageAccount.state.locked !== undefined, true); // Should be back to Locked state
 
     // Verify change request account was closed
     try {
-      await this.priceBasedPerformancePackage.getChangeRequest(changeRequestAddr);
+      await this.priceBasedPerformancePackage.getChangeRequest(
+        changeRequestAddr,
+      );
       assert.fail("Change request should have been closed");
     } catch (error) {
       // console.log("Change request account properly closed");
@@ -116,11 +130,12 @@ export default function () {
       .rpc();
 
     // Now recipient executes the change
-    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      this.payer.publicKey,
-      pdaNonce2
-    );
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        this.payer.publicKey,
+        pdaNonce2,
+      );
 
     await this.priceBasedPerformancePackage
       .executeChangeIx({
@@ -132,14 +147,17 @@ export default function () {
       .rpc();
 
     // Verify the change was applied
-    const performancePackageAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const performancePackageAccount =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
     // console.log("Authority proposed -> Recipient executed");
     // console.log("Oracle change applied correctly:", performancePackageAccount.oracleConfig.oracleAccount.toString() === newOracleAccount.publicKey.toString());
     // console.log("Byte offset applied correctly:", performancePackageAccount.oracleConfig.byteOffset === 16);
 
     assert.equal(
       performancePackageAccount.oracleConfig.oracleAccount.toString(),
-      newOracleAccount.publicKey.toString()
+      newOracleAccount.publicKey.toString(),
     );
     assert.equal(performancePackageAccount.oracleConfig.byteOffset, 16);
     assert.equal(performancePackageAccount.state.locked !== undefined, true); // Should be back to Locked state
@@ -185,11 +203,12 @@ export default function () {
       .rpc();
 
     // Execute the recipient change first
-    const recipientChangeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      this.payer.publicKey,
-      recipientChangePdaNonce
-    );
+    const recipientChangeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        this.payer.publicKey,
+        recipientChangePdaNonce,
+      );
 
     await this.priceBasedPerformancePackage
       .executeChangeIx({
@@ -201,19 +220,23 @@ export default function () {
       .rpc();
 
     // Verify recipient was changed
-    let performancePackageAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    let performancePackageAccount =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
     assert.equal(
       performancePackageAccount.recipient.toString(),
-      newRecipient2.publicKey.toString()
+      newRecipient2.publicKey.toString(),
     );
 
     // Now the NEW recipient should be able to execute the original oracle change
     // even though they weren't the recipient when it was proposed
-    const originalChangeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      this.payer.publicKey, // Original authority (this.payer)
-      pdaNonce3
-    );
+    const originalChangeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        this.payer.publicKey, // Original authority (this.payer)
+        pdaNonce3,
+      );
 
     await this.priceBasedPerformancePackage
       .executeChangeIx({
@@ -225,10 +248,13 @@ export default function () {
       .rpc();
 
     // Verify the original oracle change was applied
-    performancePackageAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    performancePackageAccount =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
     assert.equal(
       performancePackageAccount.oracleConfig.oracleAccount.toString(),
-      newOracleAccount.publicKey.toString()
+      newOracleAccount.publicKey.toString(),
     );
     assert.equal(performancePackageAccount.oracleConfig.byteOffset, 24);
   });
@@ -256,15 +282,17 @@ export default function () {
     const [changeRequest] = getChangeRequestAddr({
       performancePackage,
       proposer: recipient.publicKey,
-      pdaNonce
+      pdaNonce,
     });
 
     // Now the current authority changes the authority to a new authority
-    await this.priceBasedPerformancePackage.changePerformancePackageAuthorityIx({
-      performancePackage,
-      currentAuthority: this.payer.publicKey,
-      newPerformancePackageAuthority: newAuthority.publicKey,
-    }).rpc();
+    await this.priceBasedPerformancePackage
+      .changePerformancePackageAuthorityIx({
+        performancePackage,
+        currentAuthority: this.payer.publicKey,
+        newPerformancePackageAuthority: newAuthority.publicKey,
+      })
+      .rpc();
 
     // Now the new authority should be able to execute the change
 
@@ -295,13 +323,17 @@ export default function () {
       .signers([recipient])
       .rpc();
 
-    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      recipient.publicKey,
-      pdaNonce
-    );
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        recipient.publicKey,
+        pdaNonce,
+      );
 
-    const callbacks = expectError("UnauthorizedLockerAuthority", "Unauthorized locker authority");
+    const callbacks = expectError(
+      "UnauthorizedLockerAuthority",
+      "Unauthorized locker authority",
+    );
 
     const wrongVault = Keypair.generate();
 
@@ -312,7 +344,8 @@ export default function () {
         executor: wrongVault.publicKey,
       })
       .signers([wrongVault])
-      .rpc().then(callbacks[0], callbacks[1]);
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("should fail if recipient tries to execute their own proposal", async function () {
@@ -340,13 +373,17 @@ export default function () {
     // console.log("Recipient proposal successful");
 
     // Now try to execute with same recipient (should fail)
-    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      recipient.publicKey,
-      pdaNonce7
-    );
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        recipient.publicKey,
+        pdaNonce7,
+      );
 
-    const callbacks = expectError("UnauthorizedLockerAuthority", "Unauthorized change request");
+    const callbacks = expectError(
+      "UnauthorizedLockerAuthority",
+      "Unauthorized change request",
+    );
 
     await this.priceBasedPerformancePackage
       .executeChangeIx({
@@ -355,7 +392,8 @@ export default function () {
         executor: recipient.publicKey, // Same as proposer - should fail
       })
       .signers([recipient])
-      .rpc().then(callbacks[0], callbacks[1]);
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("should fail if authority tries to execute their own proposal", async function () {
@@ -382,13 +420,17 @@ export default function () {
       })
       .rpc();
 
-    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      this.payer.publicKey,
-      pdaNonce8
-    );
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        this.payer.publicKey,
+        pdaNonce8,
+      );
 
-    const callbacks = expectError("UnauthorizedChangeRequest", "Unauthorized change request");
+    const callbacks = expectError(
+      "UnauthorizedChangeRequest",
+      "Unauthorized change request",
+    );
 
     await this.priceBasedPerformancePackage
       .executeChangeIx({
@@ -396,6 +438,7 @@ export default function () {
         changeRequest: changeRequestAddr,
         executor: this.payer.publicKey, // Same as proposer - should fail
       })
-      .rpc().then(callbacks[0], callbacks[1]);
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

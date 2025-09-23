@@ -19,7 +19,7 @@ const MINT = USDC; // Mainnet USDC
 
 // Configuration
 const DAO_ADDRESS = new PublicKey(
-  "7AivcS5Sm3uneG7EKtjAmmgWeQ653v6B1Uzc3JiYWihY"
+  "7AivcS5Sm3uneG7EKtjAmmgWeQ653v6B1Uzc3JiYWihY",
 );
 const RECIPIENT = new PublicKey("CRANkLNAUCPFapK5zpc1BvXA1WjfZpo6wEmssyECxuxf"); // change this to the recipient's address when testing
 const AMOUNT = 1_000_000; // 1 USDC (6 decimals)
@@ -30,7 +30,7 @@ async function main() {
   const multisigAccountInfo =
     await multisig.accounts.Multisig.fromAccountAddress(
       provider.connection,
-      multisigPda
+      multisigPda,
     );
 
   const currentTransactionIndex = Number(multisigAccountInfo.transactionIndex);
@@ -43,7 +43,7 @@ async function main() {
   const vaultUsdcAccount = getAssociatedTokenAddressSync(
     MINT,
     vaultPda,
-    true // Allow PDA owner
+    true, // Allow PDA owner
   );
 
   const recipientUsdcAccount = getAssociatedTokenAddressSync(MINT, RECIPIENT);
@@ -55,7 +55,7 @@ async function main() {
       payer.publicKey,
       recipientUsdcAccount,
       RECIPIENT,
-      MINT
+      MINT,
     );
 
   // Add the transfer instruction
@@ -63,7 +63,7 @@ async function main() {
     vaultUsdcAccount,
     recipientUsdcAccount,
     vaultPda,
-    AMOUNT
+    AMOUNT,
   );
 
   // Create the transaction message for the vault
@@ -97,7 +97,7 @@ async function main() {
   const tx = new Transaction().add(
     createRecipientAtaIx,
     vaultTxCreateIx,
-    proposalCreateIx
+    proposalCreateIx,
   );
   tx.recentBlockhash = (
     await provider.connection.getLatestBlockhash()
@@ -116,7 +116,7 @@ async function main() {
   console.log(
     `Proposed transfer: ${
       AMOUNT / 1_000_000
-    } USDC from vault to ${RECIPIENT.toBase58()}`
+    } USDC from vault to ${RECIPIENT.toBase58()}`,
   );
 
   // Get the proposal PDA

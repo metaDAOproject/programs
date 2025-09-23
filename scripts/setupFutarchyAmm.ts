@@ -24,7 +24,7 @@ async function main() {
     payer,
     payer.publicKey, // mint authority
     payer.publicKey, // freeze authority
-    9 // 9 decimals like in tests
+    9, // 9 decimals like in tests
   );
   console.log("Created META mint:", META.toString());
 
@@ -35,7 +35,7 @@ async function main() {
     payer,
     payer.publicKey,
     payer.publicKey,
-    6 // 6 decimals for USDC
+    6, // 6 decimals for USDC
   );
   console.log("Created USDC mint:", USDC.toString());
 
@@ -45,7 +45,7 @@ async function main() {
     provider.connection,
     payer,
     META,
-    payer.publicKey
+    payer.publicKey,
   );
   console.log("Created META account for payer");
 
@@ -53,7 +53,7 @@ async function main() {
     provider.connection,
     payer,
     USDC,
-    payer.publicKey
+    payer.publicKey,
   );
   console.log("Created USDC account for payer");
 
@@ -65,7 +65,7 @@ async function main() {
     META,
     token.getAssociatedTokenAddressSync(META, payer.publicKey),
     payer,
-    1000_00_00000n * 10n ** 9n // Same amount as in test
+    1000_00_00000n * 10n ** 9n, // Same amount as in test
   );
   console.log("Minted META tokens to payer");
 
@@ -75,7 +75,7 @@ async function main() {
     USDC,
     token.getAssociatedTokenAddressSync(USDC, payer.publicKey),
     payer,
-    1_000_000_000n * 1_000_000n // Same amount as in test
+    1_000_000_000n * 1_000_000n, // Same amount as in test
   );
   console.log("Minted USDC tokens to payer");
 
@@ -113,7 +113,7 @@ async function main() {
   console.log("\n6. Initializing Futarchy AMM...");
   const [futarchyAmm] = PublicKey.findProgramAddressSync(
     [Buffer.from("futarchy_amm")],
-    autocratClient.getProgramId()
+    autocratClient.getProgramId(),
   );
 
   await autocratClient.autocrat.methods
@@ -128,12 +128,12 @@ async function main() {
       ammBaseVault: token.getAssociatedTokenAddressSync(
         META,
         futarchyAmm,
-        true
+        true,
       ),
       ammQuoteVault: token.getAssociatedTokenAddressSync(
         USDC,
         futarchyAmm,
-        true
+        true,
       ),
     })
     .rpc();
@@ -148,7 +148,7 @@ async function main() {
       futarchyAmm.toBuffer(),
       payer.publicKey.toBuffer(),
     ],
-    autocratClient.getProgramId()
+    autocratClient.getProgramId(),
   );
 
   await autocratClient.autocrat.methods
@@ -163,21 +163,21 @@ async function main() {
       ammBaseVault: token.getAssociatedTokenAddressSync(
         META,
         futarchyAmm,
-        true
+        true,
       ),
       ammQuoteVault: token.getAssociatedTokenAddressSync(
         USDC,
         futarchyAmm,
-        true
+        true,
       ),
       liquidityProvider: payer.publicKey,
       liquidityProviderBaseAccount: token.getAssociatedTokenAddressSync(
         META,
-        payer.publicKey
+        payer.publicKey,
       ),
       liquidityProviderQuoteAccount: token.getAssociatedTokenAddressSync(
         USDC,
-        payer.publicKey
+        payer.publicKey,
       ),
       ammPosition,
     })
@@ -191,20 +191,20 @@ async function main() {
     await autocratClient.autocrat.account.ammPosition.fetch(ammPosition);
   console.log(
     "AMM Position liquidity:",
-    storedAmmPosition.liquidity.toString()
+    storedAmmPosition.liquidity.toString(),
   );
 
   const futarchyAmmData =
     await autocratClient.autocrat.account.futarchyAmm.fetch(futarchyAmm);
   console.log(
     "Total AMM liquidity:",
-    futarchyAmmData.totalLiquidity.toString()
+    futarchyAmmData.totalLiquidity.toString(),
   );
   console.log(
     "Spot reserves - Base:",
     futarchyAmmData.state.spot.spot.baseReserves.toString(),
     "Quote:",
-    futarchyAmmData.state.spot.spot.quoteReserves.toString()
+    futarchyAmmData.state.spot.spot.quoteReserves.toString(),
   );
 
   const storedDao = await autocratClient.getDao(dao);

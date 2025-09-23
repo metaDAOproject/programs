@@ -9,9 +9,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import {
-  setupBasicDao,
-} from "../../utils.js";
+import { setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -32,13 +30,13 @@ export default function suite() {
       META,
       this.payer.publicKey,
       this.payer,
-      1000_000_000 * 10 ** 9
+      1000_000_000 * 10 ** 9,
     );
     await this.mintTo(
       USDC,
       this.payer.publicKey,
       this.payer,
-      1_000_000_000 * 1_000_000
+      1_000_000_000 * 1_000_000,
     );
 
     dao = await setupBasicDao({
@@ -133,17 +131,16 @@ export default function suite() {
 
   it("futarchy amm", async function () {
     // Get initial state before spot swap (before launching proposal)
-    const daoBeforeSpotSwap = await this.futarchy.autocrat.account.dao.fetch(
-      dao
-    );
+    const daoBeforeSpotSwap =
+      await this.futarchy.autocrat.account.dao.fetch(dao);
 
     const initialUserBaseBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
     const initialUserQuoteBalance = await this.getTokenBalance(
       USDC,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     // Perform a spot swap before launching the proposal
@@ -160,17 +157,16 @@ export default function suite() {
       .rpc();
 
     // Get state after spot swap
-    const daoAfterSpotSwap = await this.futarchy.autocrat.account.dao.fetch(
-      dao
-    );
+    const daoAfterSpotSwap =
+      await this.futarchy.autocrat.account.dao.fetch(dao);
 
     const finalUserBaseBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
     const finalUserQuoteBalance = await this.getTokenBalance(
       USDC,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
     // // Assert that the spot swap worked correctly
     // assert(daoAfterSpotSwap.amm.state.spot.spot.baseReserves.gt(daoBeforeSpotSwap.amm.state.spot.spot.baseReserves),
@@ -183,7 +179,7 @@ export default function suite() {
       proposal,
       META,
       USDC,
-      dao
+      dao,
     );
 
     await this.conditionalVault
@@ -197,14 +193,14 @@ export default function suite() {
       proposal,
       META,
       USDC,
-      dao
+      dao,
     );
 
     const { failBaseMint, failQuoteMint } = this.futarchy.getProposalPdas(
       proposal,
       META,
       USDC,
-      dao
+      dao,
     );
 
     await this.futarchy

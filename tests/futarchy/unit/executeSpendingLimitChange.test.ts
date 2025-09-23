@@ -9,10 +9,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import {
-  expectError,
-  setupBasicDao,
-} from "../../utils.js";
+import { expectError, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
@@ -21,7 +18,12 @@ const { Permissions, Permission } = multisig.types;
 // TODO: abstract away these tests to make code cleaner
 
 export default function suite() {
-  let META: PublicKey, USDC: PublicKey, dao: PublicKey, proposal: PublicKey, multisigPda: PublicKey, squadsProposal: PublicKey;
+  let META: PublicKey,
+    USDC: PublicKey,
+    dao: PublicKey,
+    proposal: PublicKey,
+    multisigPda: PublicKey,
+    squadsProposal: PublicKey;
 
   beforeEach(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
@@ -35,7 +37,7 @@ export default function suite() {
       USDC,
       this.payer.publicKey,
       this.payer,
-      200_000 * 1_000_000
+      200_000 * 1_000_000,
     );
 
     dao = await this.setupBasicDaoWithLiquidity({
@@ -68,8 +70,8 @@ export default function suite() {
     });
 
     const proposalResult = await this.initializeAndLaunchProposal({
-        dao,
-        instructions: [addSpendingLimitIx]
+      dao,
+      instructions: [addSpendingLimitIx],
     });
 
     proposal = proposalResult.proposal;
@@ -81,7 +83,6 @@ export default function suite() {
       USDC,
       dao,
     );
-
 
     await this.conditionalVault
       .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
@@ -102,7 +103,7 @@ export default function suite() {
 
     // Crank TWAP to build up price history
     for (let i = 0; i < 100; i++) {
-        this.advanceBySeconds(10_000);
+      this.advanceBySeconds(10_000);
 
       await this.futarchy
         .conditionalSwapIx({
@@ -127,39 +128,49 @@ export default function suite() {
     assert.exists(storedProposal.state.passed);
 
     const [vaultTransactionPda] = multisig.getTransactionPda({
-        multisigPda: multisigPda,
-        index: 1n,
+      multisigPda: multisigPda,
+      index: 1n,
     });
 
-    const transactionAccount = await multisig.accounts.VaultTransaction.fromAccountAddress(
+    const transactionAccount =
+      await multisig.accounts.VaultTransaction.fromAccountAddress(
         this.squadsConnection,
-        vaultTransactionPda
-    );
+        vaultTransactionPda,
+      );
 
     const [vaultPda] = multisig.getVaultPda({
-        multisigPda,
-        index: transactionAccount.vaultIndex,
-        programId: multisig.PROGRAM_ID,
+      multisigPda,
+      index: transactionAccount.vaultIndex,
+      programId: multisig.PROGRAM_ID,
     });
 
-    const { accountMetas } =
-        await multisig.utils.accountsForTransactionExecute({
+    const { accountMetas } = await multisig.utils.accountsForTransactionExecute(
+      {
         connection: this.squadsConnection,
         message: transactionAccount.message,
         ephemeralSignerBumps: [...transactionAccount.ephemeralSignerBumps],
         vaultPda,
         transactionPda: vaultTransactionPda,
         programId: multisig.PROGRAM_ID,
-        });
+      },
+    );
 
-    await this.futarchy.autocrat.methods.executeSpendingLimitChange().accounts({
+    await this.futarchy.autocrat.methods
+      .executeSpendingLimitChange()
+      .accounts({
         squadsMultisig: multisigPda,
         proposal,
         dao,
         squadsProposal,
         squadsMultisigProgram: multisig.PROGRAM_ID,
         vaultTransaction: vaultTransactionPda,
-    }).remainingAccounts(accountMetas.map(meta => meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta)).rpc();
+      })
+      .remainingAccounts(
+        accountMetas.map((meta) =>
+          meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta,
+        ),
+      )
+      .rpc();
   });
 
   it("throws if the transaction is to remove the DAO as a member", async function () {
@@ -170,10 +181,9 @@ export default function suite() {
     });
 
     const proposalResult = await this.initializeAndLaunchProposal({
-        dao,
-        instructions: [removeMemberIx]
+      dao,
+      instructions: [removeMemberIx],
     });
-
 
     proposal = proposalResult.proposal;
     squadsProposal = proposalResult.squadsProposal;
@@ -184,7 +194,6 @@ export default function suite() {
       USDC,
       dao,
     );
-
 
     await this.conditionalVault
       .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
@@ -205,7 +214,7 @@ export default function suite() {
 
     // Crank TWAP to build up price history
     for (let i = 0; i < 100; i++) {
-        this.advanceBySeconds(10_000);
+      this.advanceBySeconds(10_000);
 
       await this.futarchy
         .conditionalSwapIx({
@@ -230,53 +239,68 @@ export default function suite() {
     assert.exists(storedProposal.state.passed);
 
     const [vaultTransactionPda] = multisig.getTransactionPda({
-        multisigPda: multisigPda,
-        index: 1n,
+      multisigPda: multisigPda,
+      index: 1n,
     });
 
-    const transactionAccount = await multisig.accounts.VaultTransaction.fromAccountAddress(
+    const transactionAccount =
+      await multisig.accounts.VaultTransaction.fromAccountAddress(
         this.squadsConnection,
-        vaultTransactionPda
-    );
+        vaultTransactionPda,
+      );
 
     const [vaultPda] = multisig.getVaultPda({
-        multisigPda,
-        index: transactionAccount.vaultIndex,
-        programId: multisig.PROGRAM_ID,
+      multisigPda,
+      index: transactionAccount.vaultIndex,
+      programId: multisig.PROGRAM_ID,
     });
 
-    const { accountMetas } =
-        await multisig.utils.accountsForTransactionExecute({
+    const { accountMetas } = await multisig.utils.accountsForTransactionExecute(
+      {
         connection: this.squadsConnection,
         message: transactionAccount.message,
         ephemeralSignerBumps: [...transactionAccount.ephemeralSignerBumps],
         vaultPda,
         transactionPda: vaultTransactionPda,
         programId: multisig.PROGRAM_ID,
-        });
+      },
+    );
 
-    const callbacks = expectError("InvalidTransaction", "The transaction should not be executed because it contains a call to remove the DAO as a member");
+    const callbacks = expectError(
+      "InvalidTransaction",
+      "The transaction should not be executed because it contains a call to remove the DAO as a member",
+    );
 
-    await this.futarchy.autocrat.methods.executeSpendingLimitChange().accounts({
+    await this.futarchy.autocrat.methods
+      .executeSpendingLimitChange()
+      .accounts({
         squadsMultisig: multisigPda,
         proposal,
         dao,
         squadsProposal,
         squadsMultisigProgram: multisig.PROGRAM_ID,
         vaultTransaction: vaultTransactionPda,
-    }).remainingAccounts(accountMetas.map(meta => meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta)).rpc().then(callbacks[0], callbacks[1]);
+      })
+      .remainingAccounts(
+        accountMetas.map((meta) =>
+          meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta,
+        ),
+      )
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("throws if the vault transaction is a memo instruction", async function () {
     const proposalResult = await this.initializeAndLaunchProposal({
-        dao,
-        instructions: [{
-            programId: MEMO_PROGRAM_ID,
-            keys: [],
-            data: Buffer.from("Hello, world!"),
-        }]
+      dao,
+      instructions: [
+        {
+          programId: MEMO_PROGRAM_ID,
+          keys: [],
+          data: Buffer.from("Hello, world!"),
+        },
+      ],
     });
-
 
     proposal = proposalResult.proposal;
     squadsProposal = proposalResult.squadsProposal;
@@ -287,7 +311,6 @@ export default function suite() {
       USDC,
       dao,
     );
-
 
     await this.conditionalVault
       .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
@@ -308,7 +331,7 @@ export default function suite() {
 
     // Crank TWAP to build up price history
     for (let i = 0; i < 100; i++) {
-        this.advanceBySeconds(10_000);
+      this.advanceBySeconds(10_000);
 
       await this.futarchy
         .conditionalSwapIx({
@@ -333,40 +356,54 @@ export default function suite() {
     assert.exists(storedProposal.state.passed);
 
     const [vaultTransactionPda] = multisig.getTransactionPda({
-        multisigPda: multisigPda,
-        index: 1n,
+      multisigPda: multisigPda,
+      index: 1n,
     });
 
-    const transactionAccount = await multisig.accounts.VaultTransaction.fromAccountAddress(
+    const transactionAccount =
+      await multisig.accounts.VaultTransaction.fromAccountAddress(
         this.squadsConnection,
-        vaultTransactionPda
-    );
+        vaultTransactionPda,
+      );
 
     const [vaultPda] = multisig.getVaultPda({
-        multisigPda,
-        index: transactionAccount.vaultIndex,
-        programId: multisig.PROGRAM_ID,
+      multisigPda,
+      index: transactionAccount.vaultIndex,
+      programId: multisig.PROGRAM_ID,
     });
 
-    const { accountMetas } =
-        await multisig.utils.accountsForTransactionExecute({
+    const { accountMetas } = await multisig.utils.accountsForTransactionExecute(
+      {
         connection: this.squadsConnection,
         message: transactionAccount.message,
         ephemeralSignerBumps: [...transactionAccount.ephemeralSignerBumps],
         vaultPda,
         transactionPda: vaultTransactionPda,
         programId: multisig.PROGRAM_ID,
-        });
+      },
+    );
 
-    const callbacks = expectError("InvalidTransaction", "The transaction should not be executed because it contains a call to remove the DAO as a member");
+    const callbacks = expectError(
+      "InvalidTransaction",
+      "The transaction should not be executed because it contains a call to remove the DAO as a member",
+    );
 
-    await this.futarchy.autocrat.methods.executeSpendingLimitChange().accounts({
+    await this.futarchy.autocrat.methods
+      .executeSpendingLimitChange()
+      .accounts({
         squadsMultisig: multisigPda,
         proposal,
         dao,
         squadsProposal,
         squadsMultisigProgram: multisig.PROGRAM_ID,
         vaultTransaction: vaultTransactionPda,
-    }).remainingAccounts(accountMetas.map(meta => meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta)).rpc().then(callbacks[0], callbacks[1]);
+      })
+      .remainingAccounts(
+        accountMetas.map((meta) =>
+          meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta,
+        ),
+      )
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

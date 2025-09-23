@@ -17,7 +17,7 @@ const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const LAUNCH_TO_FINALIZE = new PublicKey(
-  "EmAQS3qhcETCd9gXNavjwbMKgcybJajhHmcn7BoXiP8E"
+  "EmAQS3qhcETCd9gXNavjwbMKgcybJajhHmcn7BoXiP8E",
 );
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
@@ -30,7 +30,7 @@ async function main() {
       LAUNCH_TO_FINALIZE,
       launch.quoteMint,
       launch.baseMint,
-      true
+      true,
     )
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
@@ -53,7 +53,7 @@ async function sendAndConfirmTransaction(tx: Transaction, label: string) {
   const completeLaunchLut = await createLookupTableForTransaction(
     tx,
     payer,
-    provider
+    provider,
   );
 
   console.log("Complete launch lookup table:", completeLaunchLut);
@@ -69,7 +69,7 @@ async function sendAndConfirmTransaction(tx: Transaction, label: string) {
   const transactionV0 = new VersionedTransaction(messageV0);
   transactionV0.sign([payer]);
   const txHash = await provider.connection.sendRawTransaction(
-    transactionV0.serialize()
+    transactionV0.serialize(),
   );
   console.log(`${label} transaction sent:`, txHash);
 
@@ -81,8 +81,8 @@ async function sendAndConfirmTransaction(tx: Transaction, label: string) {
   if (txStatus?.meta?.err) {
     throw new Error(
       `Transaction failed: ${txHash}\nError: ${JSON.stringify(
-        txStatus?.meta?.err
-      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`
+        txStatus?.meta?.err,
+      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`,
     );
   }
   console.log(`${label} transaction confirmed`);

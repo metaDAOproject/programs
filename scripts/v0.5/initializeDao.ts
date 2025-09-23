@@ -19,7 +19,7 @@ import { DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY } from "../../sdk/src/v0.5/consta
 import * as token from "@solana/spl-token";
 
 const EXISTING_TOKEN = new PublicKey(
-  "METADDFL6wWMWEoKTFJwcThTbUmtarRJZjRpzUvkxhr"
+  "METADDFL6wWMWEoKTFJwcThTbUmtarRJZjRpzUvkxhr",
 );
 const ONE_DAY_IN_SLOTS = new BN(216_000);
 const THREE_DAYS_IN_SLOTS = ONE_DAY_IN_SLOTS.mul(new BN(3));
@@ -73,7 +73,7 @@ export const initializeToken = async () => {
     TOKEN,
     token.getAssociatedTokenAddressSync(TOKEN, payer.publicKey, true),
     payer,
-    19_999_980 * 10 ** 6 // 20M new tokens
+    19_999_980 * 10 ** 6, // 20M new tokens
   );
 
   console.log("Minted 20M new tokens to payer", mintToNewTokens.toString());
@@ -95,7 +95,7 @@ export const initializeDao = async () => {
   const txns = [];
   // Calculate current price of the token
   const response = await fetch(
-    `https://lite-api.jup.ag/price/v3?ids=${EXISTING_TOKEN.toBase58()}`
+    `https://lite-api.jup.ag/price/v3?ids=${EXISTING_TOKEN.toBase58()}`,
   );
   const data = await response.json();
 
@@ -110,7 +110,7 @@ export const initializeDao = async () => {
   // Setup the DAO params
   const twapInitialObservation = newTokenConvertedPrice; // TODO: Review me...
   const twapMaxObservationChangePerUpdate = twapInitialObservation.div(
-    new BN(20)
+    new BN(20),
   );
   const twapStartDelaySlots = ONE_DAY_IN_SLOTS;
 
@@ -185,7 +185,7 @@ export const initializeDao = async () => {
   console.log(simulation);
 
   const txHash = await provider.connection.sendRawTransaction(
-    versionedTx.serialize()
+    versionedTx.serialize(),
   );
   await provider.connection.confirmTransaction(txHash, "confirmed");
 };

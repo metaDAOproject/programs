@@ -11,7 +11,7 @@ import {
 } from "@metadaoproject/futarchy/v0.3";
 
 const CONDITIONAL_VAULT_PROGRAM_ID = new PublicKey(
-  "4nCk4qKJSJf8pzJadMnr9LubA6Y7Zw3EacsVqH1TwVXH"
+  "4nCk4qKJSJf8pzJadMnr9LubA6Y7Zw3EacsVqH1TwVXH",
 );
 
 console.log("hello, world");
@@ -32,7 +32,7 @@ async function main() {
     payer,
     settlementAuthority,
     settlementAuthority,
-    8
+    8,
   );
 
   const nonce = new BN(1337);
@@ -40,23 +40,23 @@ async function main() {
   const [vault] = getVaultAddr(
     vaultProgram.vaultProgram.programId,
     settlementAuthority,
-    underlyingTokenMint
+    underlyingTokenMint,
   );
 
   const vaultUnderlyingTokenAccount = await token.getAssociatedTokenAddress(
     underlyingTokenMint,
     vault,
-    true
+    true,
   );
 
   const [conditionalOnFinalizeTokenMint] = getVaultFinalizeMintAddr(
     vaultProgram.vaultProgram.programId,
-    vault
+    vault,
   );
 
   const [conditionalOnRevertTokenMint] = getVaultRevertMintAddr(
     vaultProgram.vaultProgram.programId,
-    vault
+    vault,
   );
 
   await vaultProgram.vaultProgram.methods

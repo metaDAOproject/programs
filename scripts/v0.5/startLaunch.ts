@@ -10,7 +10,7 @@ const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const LAUNCH_TO_START = new PublicKey(
-  "7DzBXBYSKhrXHPWT6mAKq394vKupaKaqLn9bK1wscpBz"
+  "7DzBXBYSKhrXHPWT6mAKq394vKupaKaqLn9bK1wscpBz",
 );
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
@@ -20,7 +20,7 @@ async function main() {
 
   console.log(
     "Launch authority public key:",
-    launchAuthorityKeypair.publicKey.toBase58()
+    launchAuthorityKeypair.publicKey.toBase58(),
   );
 
   console.log("Starting launch...");
@@ -44,7 +44,7 @@ main().catch((error) => {
 async function sendAndConfirmTransaction(
   tx: Transaction,
   label: string,
-  signers: Keypair[] = []
+  signers: Keypair[] = [],
 ) {
   tx.feePayer = payer.publicKey;
   tx.recentBlockhash = (
@@ -62,8 +62,8 @@ async function sendAndConfirmTransaction(
   if (txStatus?.meta?.err) {
     throw new Error(
       `Transaction failed: ${txHash}\nError: ${JSON.stringify(
-        txStatus?.meta?.err
-      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`
+        txStatus?.meta?.err,
+      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`,
     );
   }
   console.log(`${label} transaction confirmed`);

@@ -1,4 +1,12 @@
-import { PublicKey, Keypair, Transaction, SystemProgram, TransactionInstruction, ComputeBudgetInstruction, ComputeBudgetProgram } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  Transaction,
+  SystemProgram,
+  TransactionInstruction,
+  ComputeBudgetInstruction,
+  ComputeBudgetProgram,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import * as token from "@solana/spl-token";
 import BN from "bn.js";
@@ -31,12 +39,12 @@ export default function () {
     // Create token accounts
     tokenAccount = await this.createTokenAccount(
       tokenMint,
-      tokenAuthority.publicKey
+      tokenAuthority.publicKey,
     );
     recipientTokenAccount = token.getAssociatedTokenAddressSync(
       tokenMint,
       recipient.publicKey,
-      true
+      true,
     );
 
     // Create the recipient token account
@@ -47,7 +55,7 @@ export default function () {
       tokenMint,
       tokenAuthority.publicKey,
       tokenAuthority,
-      1000000
+      1000000,
     );
 
     // Fund accounts with SOL using SystemProgram
@@ -71,7 +79,7 @@ export default function () {
         fromPubkey: this.payer.publicKey,
         toPubkey: lockerAuthority.publicKey,
         lamports: 1000000000, // 1 SOL
-      })
+      }),
     );
     fundingTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
@@ -89,7 +97,7 @@ export default function () {
     lockerTokenAccount = token.getAssociatedTokenAddressSync(
       tokenMint,
       performancePackage,
-      true
+      true,
     );
   });
 
@@ -100,12 +108,12 @@ export default function () {
         {
           priceThreshold: new BN(1000000),
           tokenAmount: new BN(100000),
-        }
+        },
       ],
       grantee: recipient.publicKey,
       performancePackageAuthority: lockerAuthority.publicKey,
       minUnlockTimestamp: new BN(
-        Number((await this.context.banksClient.getClock()).unixTimestamp) + 1
+        Number((await this.context.banksClient.getClock()).unixTimestamp) + 1,
       ), // 1 second from now
       oracleConfig: {
         oracleAccount: oracleAccount.publicKey,
@@ -157,14 +165,16 @@ export default function () {
       .signers([recipient])
       .rpc();
 
-
     // Verify locker state changed to Unlocking
-    const lockerAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const lockerAccount =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
     assert(lockerAccount.state.unlocking !== undefined);
     if (lockerAccount.state.unlocking) {
       assert.equal(
         lockerAccount.state.unlocking.startAggregator.toString(),
-        "5000000"
+        "5000000",
       );
       assert(lockerAccount.state.unlocking.startTimestamp.toNumber() > 0);
     }
@@ -173,21 +183,21 @@ export default function () {
   it("should fail if unlock timestamp has not been reached", async function () {
     // Initialize locker with future timestamp
     const futureCreateKey = Keypair.generate();
-    
+
     // Fund the futureCreateKey with SOL
     const fundingTx = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: this.payer.publicKey,
         toPubkey: futureCreateKey.publicKey,
         lamports: 1000000000, // 1 SOL
-      })
+      }),
     );
     fundingTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
     )[0];
     fundingTx.sign(this.payer);
     await this.banksClient.processTransaction(fundingTx);
-    
+
     const params = {
       // priceThreshold: new BN(1000000),
       // tokenAmount: new BN(100000),
@@ -195,12 +205,13 @@ export default function () {
         {
           priceThreshold: new BN(1000000),
           tokenAmount: new BN(100000),
-        }
+        },
       ],
       grantee: recipient.publicKey,
       performancePackageAuthority: lockerAuthority.publicKey,
       minUnlockTimestamp: new BN(
-        Number((await this.context.banksClient.getClock()).unixTimestamp) + 3600
+        Number((await this.context.banksClient.getClock()).unixTimestamp) +
+          3600,
       ), // 1 hour from now
       oracleConfig: {
         oracleAccount: oracleAccount.publicKey,
@@ -228,10 +239,13 @@ export default function () {
     // await this.banksClient.processTransaction(initTx);
 
     const futureLocker = getPerformancePackageAddr({
-        createKey: futureCreateKey.publicKey
+      createKey: futureCreateKey.publicKey,
     })[0];
 
-    const callbacks = expectError("UnlockTimestampNotReached", "Unlock timestamp has not been reached yet");
+    const callbacks = expectError(
+      "UnlockTimestampNotReached",
+      "Unlock timestamp has not been reached yet",
+    );
     // Try to start unlock before timestamp
     await this.priceBasedPerformancePackage
       .startUnlockIx({
@@ -257,32 +271,32 @@ export default function () {
   it("should fail if locker is not in Locked state", async function () {
     // Initialize locker
     const doubleCreateKey = Keypair.generate();
-    
+
     // Fund the doubleCreateKey with SOL
     const fundingTx = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: this.payer.publicKey,
         toPubkey: doubleCreateKey.publicKey,
         lamports: 1000000000, // 1 SOL
-      })
+      }),
     );
     fundingTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
     )[0];
     fundingTx.sign(this.payer);
     await this.banksClient.processTransaction(fundingTx);
-    
+
     const params = {
       tranches: [
         {
           priceThreshold: new BN(1000000),
           tokenAmount: new BN(100000),
-        }
+        },
       ],
       grantee: recipient.publicKey,
       performancePackageAuthority: lockerAuthority.publicKey,
       minUnlockTimestamp: new BN(
-        Number((await this.context.banksClient.getClock()).unixTimestamp) + 1
+        Number((await this.context.banksClient.getClock()).unixTimestamp) + 1,
       ),
       oracleConfig: {
         oracleAccount: oracleAccount.publicKey,
@@ -304,7 +318,7 @@ export default function () {
       .rpc();
 
     const doubleLocker = getPerformancePackageAddr({
-      createKey: doubleCreateKey.publicKey
+      createKey: doubleCreateKey.publicKey,
     })[0];
 
     // Advance time and start unlock
@@ -334,11 +348,13 @@ export default function () {
       .signers([recipient])
       .rpc();
 
-
     // Advance time slightly to make the next transaction different
     await this.advanceBySeconds(1);
 
-    const callbacks = expectError("InvalidPerformancePackageState", "Performance package is not in the expected state");
+    const callbacks = expectError(
+      "InvalidPerformancePackageState",
+      "Performance package is not in the expected state",
+    );
 
     // Try to start unlock again (should fail)
     await this.priceBasedPerformancePackage
@@ -349,7 +365,7 @@ export default function () {
       })
       .signers([recipient])
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
       ])
       .rpc()
       .then(callbacks[0], callbacks[1]);

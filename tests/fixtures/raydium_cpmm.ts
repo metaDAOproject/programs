@@ -13,7 +13,7 @@ export type RaydiumCpmm = {
         "* `init_amount_0` - the initial amount_0 to deposit",
         "* `init_amount_1` - the initial amount_1 to deposit",
         "* `open_time` - the timestamp allowed for swap",
-        ""
+        "",
       ];
       accounts: [
         {
@@ -46,7 +46,7 @@ export type RaydiumCpmm = {
             "token_1_mint.key().as_ref(),",
             "],",
             "",
-            "Or random account: must be signed by cli"
+            "Or random account: must be signed by cli",
           ];
         },
         {
@@ -142,7 +142,7 @@ export type RaydiumCpmm = {
           isMut: false;
           isSigner: false;
           docs: ["Sysvar for program account"];
-        }
+        },
       ];
       args: [
         {
@@ -156,7 +156,7 @@ export type RaydiumCpmm = {
         {
           name: "openTime";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -170,7 +170,7 @@ export type RaydiumCpmm = {
         "* `lp_token_amount` - Pool token amount to transfer. token_a and token_b amount are set by the current exchange rate and size of the pool",
         "* `maximum_token_0_amount` -  Maximum token 0 amount to deposit, prevents excessive slippage",
         "* `maximum_token_1_amount` - Maximum token 1 amount to deposit, prevents excessive slippage",
-        ""
+        "",
       ];
       accounts: [
         {
@@ -248,7 +248,7 @@ export type RaydiumCpmm = {
           isMut: true;
           isSigner: false;
           docs: ["Lp token mint"];
-        }
+        },
       ];
       args: [
         {
@@ -262,7 +262,7 @@ export type RaydiumCpmm = {
         {
           name: "maximumToken1Amount";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -276,7 +276,7 @@ export type RaydiumCpmm = {
         "* `lp_token_amount` - Amount of pool tokens to burn. User receives an output of token a and b based on the percentage of the pool tokens that are returned.",
         "* `minimum_token_0_amount` -  Minimum amount of token 0 to receive, prevents excessive slippage",
         "* `minimum_token_1_amount` -  Minimum amount of token 1 to receive, prevents excessive slippage",
-        ""
+        "",
       ];
       accounts: [
         {
@@ -361,7 +361,7 @@ export type RaydiumCpmm = {
           isMut: false;
           isSigner: false;
           docs: ["memo program"];
-        }
+        },
       ];
       args: [
         {
@@ -375,7 +375,7 @@ export type RaydiumCpmm = {
         {
           name: "minimumToken1Amount";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -388,7 +388,7 @@ export type RaydiumCpmm = {
         "* `ctx`- The context of accounts",
         "* `amount_in` -  input amount to transfer, output to DESTINATION is based on the exchange rate",
         "* `minimum_amount_out` -  Minimum amount of output token, prevents excessive slippage",
-        ""
+        "",
       ];
       accounts: [
         {
@@ -413,7 +413,7 @@ export type RaydiumCpmm = {
           isMut: true;
           isSigner: false;
           docs: [
-            "The program account of the pool in which the swap will be performed"
+            "The program account of the pool in which the swap will be performed",
           ];
         },
         {
@@ -469,7 +469,7 @@ export type RaydiumCpmm = {
           isMut: true;
           isSigner: false;
           docs: ["The program account for the most recent oracle observation"];
-        }
+        },
       ];
       args: [
         {
@@ -479,7 +479,7 @@ export type RaydiumCpmm = {
         {
           name: "minimumAmountOut";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -492,7 +492,7 @@ export type RaydiumCpmm = {
         "* `ctx`- The context of accounts",
         "* `max_amount_in` -  input amount prevents excessive slippage",
         "* `amount_out` -  amount of output token",
-        ""
+        "",
       ];
       accounts: [
         {
@@ -517,7 +517,7 @@ export type RaydiumCpmm = {
           isMut: true;
           isSigner: false;
           docs: [
-            "The program account of the pool in which the swap will be performed"
+            "The program account of the pool in which the swap will be performed",
           ];
         },
         {
@@ -573,7 +573,7 @@ export type RaydiumCpmm = {
           isMut: true;
           isSigner: false;
           docs: ["The program account for the most recent oracle observation"];
-        }
+        },
       ];
       args: [
         {
@@ -583,9 +583,9 @@ export type RaydiumCpmm = {
         {
           name: "amountOut";
           type: "u64";
-        }
+        },
       ];
-    }
+    },
   ];
   accounts: [
     {
@@ -645,7 +645,7 @@ export type RaydiumCpmm = {
             type: {
               array: ["u64", 16];
             };
-          }
+          },
         ];
       };
     },
@@ -678,7 +678,7 @@ export type RaydiumCpmm = {
             name: "lpMint";
             docs: [
               "Pool tokens are issued when A or B tokens are deposited.",
-              "Pool tokens can be withdrawn back to the original A or B token."
+              "Pool tokens can be withdrawn back to the original A or B token.",
             ];
             type: "publicKey";
           },
@@ -717,7 +717,7 @@ export type RaydiumCpmm = {
               "Bitwise representation of the state of the pool",
               "bit0, 1: disable deposit(vaule is 1), 0: normal",
               "bit1, 1: disable withdraw(vaule is 2), 0: normal",
-              "bit2, 1: disable swap(vaule is 4), 0: normal"
+              "bit2, 1: disable swap(vaule is 4), 0: normal",
             ];
             type: "u8";
           },
@@ -742,7 +742,7 @@ export type RaydiumCpmm = {
           {
             name: "protocolFeesToken0";
             docs: [
-              "The amounts of token_0 and token_1 that are owed to the liquidity provider."
+              "The amounts of token_0 and token_1 that are owed to the liquidity provider.",
             ];
             type: "u64";
           },
@@ -769,7 +769,7 @@ export type RaydiumCpmm = {
             type: {
               array: ["u64", 32];
             };
-          }
+          },
         ];
       };
     },
@@ -800,7 +800,7 @@ export type RaydiumCpmm = {
                 {
                   defined: "Observation";
                 },
-                100
+                100,
               ];
             };
           },
@@ -810,10 +810,10 @@ export type RaydiumCpmm = {
             type: {
               array: ["u64", 4];
             };
-          }
+          },
         ];
       };
-    }
+    },
   ];
   types: [
     {
@@ -830,17 +830,17 @@ export type RaydiumCpmm = {
           {
             name: "cumulativeToken0PriceX32";
             docs: [
-              "the cumulative of token0 price during the duration time, Q32.32, the remaining 64 bit for overflow"
+              "the cumulative of token0 price during the duration time, Q32.32, the remaining 64 bit for overflow",
             ];
             type: "u128";
           },
           {
             name: "cumulativeToken1PriceX32";
             docs: [
-              "the cumulative of token1 price during the duration time, Q32.32, the remaining 64 bit for overflow"
+              "the cumulative of token1 price during the duration time, Q32.32, the remaining 64 bit for overflow",
             ];
             type: "u128";
-          }
+          },
         ];
       };
     },
@@ -857,7 +857,7 @@ export type RaydiumCpmm = {
           },
           {
             name: "Swap";
-          }
+          },
         ];
       };
     },
@@ -871,10 +871,10 @@ export type RaydiumCpmm = {
           },
           {
             name: "Disable";
-          }
+          },
         ];
       };
-    }
+    },
   ];
 };
 

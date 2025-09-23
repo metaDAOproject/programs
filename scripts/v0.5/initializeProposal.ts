@@ -39,7 +39,7 @@ const ammClient = AmmClient.createClient({ provider });
 
 const DAO_KEY = new PublicKey("9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo");
 const SQUADS_PROPOSAL_PDA = new PublicKey(
-  "HDyg2gbibGfDf672KN9MU38Z5dnNVaSiTsVQw33WnY5Q"
+  "HDyg2gbibGfDf672KN9MU38Z5dnNVaSiTsVQw33WnY5Q",
 ); // NOTE: This is NOT the transaction PDA (eg the URL in squads)
 
 async function main() {
@@ -57,7 +57,7 @@ async function main() {
   const multisigAccountInfo =
     await multisig.accounts.Multisig.fromAccountAddress(
       provider.connection,
-      multisigPda
+      multisigPda,
     );
 
   const currentTransactionIndex = Number(multisigAccountInfo.transactionIndex);
@@ -72,7 +72,7 @@ async function main() {
 
   assert(
     proposalKey.equals(SQUADS_PROPOSAL_PDA),
-    "Proposal PDA does not match"
+    "Proposal PDA does not match",
   );
 
   const minBaseLiquidity = dao.minBaseFutarchicLiquidity;
@@ -85,22 +85,22 @@ async function main() {
 
   const payerBaseTokenAccount = getAssociatedTokenAddressSync(
     dao.baseMint,
-    payer.publicKey
+    payer.publicKey,
   );
   const payerQuoteTokenAccount = getAssociatedTokenAddressSync(
     dao.quoteMint,
-    payer.publicKey
+    payer.publicKey,
   );
 
   try {
     const baseTokenAccount = await provider.connection.getTokenAccountBalance(
-      payerBaseTokenAccount
+      payerBaseTokenAccount,
     );
     console.log("baseTokenAccount", baseTokenAccount.value);
     assert(
       Number(baseTokenAccount.value.amount.toString()) >=
         Number(minBaseLiquidity.toString()),
-      "Base token account balance does not match minBaseLiquidity"
+      "Base token account balance does not match minBaseLiquidity",
     );
   } catch (error) {
     console.log(error);
@@ -109,17 +109,17 @@ async function main() {
 
   try {
     const quoteTokenAccount = await provider.connection.getTokenAccountBalance(
-      payerQuoteTokenAccount
+      payerQuoteTokenAccount,
     );
     console.log("quoteTokenAccount", quoteTokenAccount.value);
     assert(
       Number(quoteTokenAccount.value.amount.toString()) >=
         Number(minQuoteLiquidity.toString()),
-      "You don't have enough quote tokens to create a market"
+      "You don't have enough quote tokens to create a market",
     );
     assert(
       Number(quoteTokenAccount.value.amount.toString()) >= Number(100_000_001),
-      "Cannot create market with less than 100 USDC"
+      "Cannot create market with less than 100 USDC",
     );
   } catch (error) {
     console.log(error);
@@ -135,7 +135,7 @@ async function main() {
 
   const [metaDaoProposal] = getProposalAddr(
     AUTOCRAT_PROGRAM_ID,
-    SQUADS_PROPOSAL_PDA
+    SQUADS_PROPOSAL_PDA,
   );
 
   const {
@@ -154,7 +154,7 @@ async function main() {
     metaDaoProposal,
     dao.baseMint,
     dao.quoteMint,
-    DAO_KEY
+    DAO_KEY,
   );
 
   const txns = [];
@@ -164,7 +164,7 @@ async function main() {
     .initializeQuestionIx(
       sha256(`Will ${metaDaoProposal} pass?/FAIL/PASS`),
       metaDaoProposal,
-      2
+      2,
     )
     .transaction();
   txns.push(questionIx);
@@ -178,16 +178,16 @@ async function main() {
           passQuoteMint,
           dao.twapStartDelaySlots,
           dao.twapInitialObservation,
-          dao.twapMaxObservationChangePerUpdate
+          dao.twapMaxObservationChangePerUpdate,
         ),
         ammClient.initializeAmmIx(
           failBaseMint,
           failQuoteMint,
           dao.twapStartDelaySlots,
           dao.twapInitialObservation,
-          dao.twapMaxObservationChangePerUpdate
-        )
-      )
+          dao.twapMaxObservationChangePerUpdate,
+        ),
+      ),
     )
     .transaction();
   txns.push(vaultTx);
@@ -200,9 +200,9 @@ async function main() {
           quoteVault,
           dao.quoteMint,
           minQuoteLiquidity,
-          2
-        )
-      )
+          2,
+        ),
+      ),
     )
     .transaction();
   txns.push(splitTokensTx);
@@ -213,7 +213,7 @@ async function main() {
       passQuoteMint,
       minQuoteLiquidity,
       minBaseLiquidity,
-      new BN(0)
+      new BN(0),
     )
     .postInstructions(
       await InstructionUtils.getInstructions(
@@ -223,9 +223,9 @@ async function main() {
           failQuoteMint,
           minQuoteLiquidity,
           minBaseLiquidity,
-          new BN(0)
-        )
-      )
+          new BN(0),
+        ),
+      ),
     )
     .transaction();
   txns.push(addLiquidityTx);
@@ -240,7 +240,7 @@ async function main() {
       dao.quoteMint,
       lpTokens,
       lpTokens,
-      question
+      question,
     )
     .transaction();
   txns.push(proposalTx);
@@ -292,16 +292,16 @@ const prepareBundle = async (transactions: Transaction[]) => {
     msg.instructions.push(
       convertTransactionInstruction(
         transferInstruction,
-        msg.getAccountKeys().staticAccountKeys
-      )
+        msg.getAccountKeys().staticAccountKeys,
+      ),
     );
     const newMsg = new TransactionMessage({
       instructions: msg.instructions.map((instruction) =>
         convertCompiledInstruction(
           instruction,
           msg.programIds()[instruction.programIdIndex],
-          msg.accountKeys
-        )
+          msg.accountKeys,
+        ),
       ),
       payerKey: payer.publicKey,
       recentBlockhash: msg.recentBlockhash,

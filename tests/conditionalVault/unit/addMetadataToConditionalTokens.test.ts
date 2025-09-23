@@ -8,9 +8,7 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint } from "spl-token-bankrun";
 import { expectError } from "../../utils.js";
-import {
-  getMetadataAccountDataSerializer,
-} from "@metaplex-foundation/mpl-token-metadata";
+import { getMetadataAccountDataSerializer } from "@metaplex-foundation/mpl-token-metadata";
 
 export default function suite() {
   let vaultClient: ConditionalVaultClient;
@@ -31,7 +29,7 @@ export default function suite() {
     question = await vaultClient.initializeQuestion(
       questionId,
       oracle.publicKey,
-      outcomes
+      outcomes,
     );
 
     underlyingTokenMint = await createMint(
@@ -39,13 +37,13 @@ export default function suite() {
       this.payer,
       this.payer.publicKey,
       null,
-      8
+      8,
     );
 
     vault = await vaultClient.initializeVault(
       question,
       underlyingTokenMint,
-      outcomes
+      outcomes,
     );
   }
 
@@ -57,7 +55,7 @@ export default function suite() {
           i,
           `Outcome ${i}`,
           `OUT${i}`,
-          `https://example.com/uri${i}.png`
+          `https://example.com/uri${i}.png`,
         )
         .rpc();
     }
@@ -68,11 +66,11 @@ export default function suite() {
       const [conditionalTokenMint] = getConditionalTokenMintAddr(
         vaultClient.vaultProgram.programId,
         vault,
-        i
+        i,
       );
 
       const storedMetadata = await this.banksClient.getAccount(
-        getMetadataAddr(conditionalTokenMint)[0]
+        getMetadataAddr(conditionalTokenMint)[0],
       );
       assert.isNotNull(storedMetadata);
       const metadata = metadataSerializer.deserialize(storedMetadata.data)[0];
@@ -106,7 +104,7 @@ export default function suite() {
 
     const callbacks = expectError(
       "ConditionalTokenMetadataAlreadySet",
-      "added metadata to a conditional token that already had metadata"
+      "added metadata to a conditional token that already had metadata",
     );
 
     await vaultClient
@@ -115,7 +113,7 @@ export default function suite() {
         0,
         "New Outcome",
         "NEW",
-        "https://example.com/new.png"
+        "https://example.com/new.png",
       )
       .rpc()
       .then(callbacks[0], callbacks[1]);

@@ -35,7 +35,7 @@ type JitoBundleStatusResponse = {
 };
 
 export const getBundleStatuses = async (
-  bundleId: string
+  bundleId: string,
 ): Promise<JitoBundleStatusResponse> => {
   const response = await fetch(`${blockEngineAddress}/api/v1/bundles`, {
     method: "POST",
@@ -57,7 +57,7 @@ export const getBundleStatuses = async (
 
 export const sendBundle = async (transactions: Transaction[]) => {
   const serializedTransactions = transactions.map((tx) =>
-    bs58.encode(Uint8Array.from(tx.serialize()))
+    bs58.encode(Uint8Array.from(tx.serialize())),
   );
 
   const response = await fetch(`${blockEngineAddress}/api/v1/bundles`, {
@@ -85,11 +85,11 @@ export const getTipFloor = async () => {
         Accept: "application/json",
         "User-Agent": "MetaDAO",
       },
-    }
+    },
   );
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch Jito fees: ${response.status} ${response.statusText}`
+      `Failed to fetch Jito fees: ${response.status} ${response.statusText}`,
     );
   }
   // Convert the ReadableStream to text, then parse as JSON
@@ -133,10 +133,10 @@ export const getTipAccounts = async () => {
 
 export function convertTransactionInstruction(
   instruction: TransactionInstruction,
-  accountKeys: PublicKey[]
+  accountKeys: PublicKey[],
 ): CompiledInstruction {
   const accountIndices = instruction.keys.map((keyObj) =>
-    accountKeys.findIndex((pubkey) => pubkey.equals(keyObj.pubkey))
+    accountKeys.findIndex((pubkey) => pubkey.equals(keyObj.pubkey)),
   );
 
   if (accountIndices.includes(-1)) {
@@ -144,7 +144,7 @@ export function convertTransactionInstruction(
   }
 
   const programIdIndex = accountKeys.findIndex((pubkey) =>
-    pubkey.equals(instruction.programId)
+    pubkey.equals(instruction.programId),
   );
 
   if (programIdIndex === -1) {
@@ -162,7 +162,7 @@ export function convertTransactionInstruction(
 export function convertCompiledInstruction(
   compiledInstruction: CompiledInstruction,
   programId: PublicKey,
-  accountKeys: PublicKey[]
+  accountKeys: PublicKey[],
 ): TransactionInstruction {
   const keys = compiledInstruction.accounts.map((index) => ({
     pubkey: accountKeys[index],

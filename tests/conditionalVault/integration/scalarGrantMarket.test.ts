@@ -2,8 +2,6 @@ import { ConditionalVaultClient, sha256 } from "@metadaoproject/futarchy";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
-
-
 export default async function test() {
   // A scalar grant market test. Alice splits 100 USDC into E-UP and E-DOWN tokens.
   // She sends 30 E-UPs to Bob. The grant committee resolves the question with 60% effectiveness.
@@ -18,11 +16,11 @@ export default async function test() {
   const question: PublicKey = await vaultClient.initializeQuestion(
     sha256(
       new TextEncoder().encode(
-        "What is the effectiveness of the grant?/E-UP/E-DOWN"
-      )
+        "What is the effectiveness of the grant?/E-UP/E-DOWN",
+      ),
     ),
     grantCommittee.publicKey,
-    2
+    2,
   );
 
   const USDC: PublicKey = await this.createMint(this.payer.publicKey, 6);

@@ -6,7 +6,7 @@ export type OpenbookTwap = {
       name: "createTwapMarket";
       docs: [
         "`expected_value` will be the first observation of the TWAP, which is",
-        "necessary for anti-manipulation"
+        "necessary for anti-manipulation",
       ];
       accounts: [
         {
@@ -28,7 +28,7 @@ export type OpenbookTwap = {
           name: "payer";
           isMut: true;
           isSigner: true;
-        }
+        },
       ];
       args: [
         {
@@ -38,7 +38,7 @@ export type OpenbookTwap = {
         {
           name: "maxObservationChangePerUpdateLots";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -98,7 +98,7 @@ export type OpenbookTwap = {
           name: "openbookProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -106,7 +106,7 @@ export type OpenbookTwap = {
           type: {
             defined: "PlaceOrderArgs";
           };
-        }
+        },
       ];
       returns: {
         option: "u128";
@@ -169,7 +169,7 @@ export type OpenbookTwap = {
           name: "openbookProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -185,7 +185,7 @@ export type OpenbookTwap = {
           type: {
             defined: "PlaceOrderArgs";
           };
-        }
+        },
       ];
       returns: {
         option: "u128";
@@ -228,13 +228,13 @@ export type OpenbookTwap = {
           name: "openbookProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
           name: "clientOrderId";
           type: "u64";
-        }
+        },
       ];
       returns: "i64";
     },
@@ -275,7 +275,7 @@ export type OpenbookTwap = {
           name: "openbookProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -289,7 +289,7 @@ export type OpenbookTwap = {
         {
           name: "limit";
           type: "u8";
-        }
+        },
       ];
     },
     {
@@ -324,13 +324,13 @@ export type OpenbookTwap = {
           name: "openbookProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
           name: "limit";
           type: "u8";
-        }
+        },
       ];
     },
     {
@@ -390,7 +390,7 @@ export type OpenbookTwap = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -436,7 +436,7 @@ export type OpenbookTwap = {
           name: "openbookProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -512,7 +512,7 @@ export type OpenbookTwap = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -520,7 +520,7 @@ export type OpenbookTwap = {
           type: {
             defined: "PlaceTakeOrderArgs";
           };
-        }
+        },
       ];
     },
     {
@@ -590,7 +590,7 @@ export type OpenbookTwap = {
           name: "openbookProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -606,7 +606,7 @@ export type OpenbookTwap = {
               defined: "PlaceOrderArgs";
             };
           };
-        }
+        },
       ];
       returns: {
         vec: {
@@ -631,13 +631,13 @@ export type OpenbookTwap = {
           name: "asks";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
       returns: {
         vec: "u64";
       };
-    }
+    },
   ];
   accounts: [
     {
@@ -662,10 +662,10 @@ export type OpenbookTwap = {
           {
             name: "closeMarketRentReceiver";
             type: "publicKey";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   types: [
     {
@@ -700,7 +700,7 @@ export type OpenbookTwap = {
           {
             name: "maxObservationChangePerUpdateLots";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -750,7 +750,7 @@ export type OpenbookTwap = {
           {
             name: "limit";
             type: "u8";
-          }
+          },
         ];
       };
     },
@@ -786,7 +786,7 @@ export type OpenbookTwap = {
           {
             name: "limit";
             type: "u8";
-          }
+          },
         ];
       };
     },
@@ -803,7 +803,7 @@ export type OpenbookTwap = {
           },
           {
             name: "AbortTransaction";
-          }
+          },
         ];
       };
     },
@@ -826,7 +826,7 @@ export type OpenbookTwap = {
           },
           {
             name: "PostOnlySlide";
-          }
+          },
         ];
       };
     },
@@ -840,10 +840,10 @@ export type OpenbookTwap = {
           },
           {
             name: "Ask";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   errors: [
     {
@@ -880,7 +880,7 @@ export type OpenbookTwap = {
       code: 6006;
       name: "InvalidConsumeEventsAdmin";
       msg: "Consume events admin must be None";
-    }
+    },
   ];
 };
 

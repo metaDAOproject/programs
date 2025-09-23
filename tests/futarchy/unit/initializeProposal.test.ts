@@ -28,7 +28,7 @@ export default function suite() {
       USDC,
       this.payer.publicKey,
       this.payer,
-      100_000 * 1_000_000
+      100_000 * 1_000_000,
     );
 
     dao = await setupBasicDao({
@@ -94,7 +94,7 @@ export default function suite() {
     // Now initialize the autocrat proposal
     const proposal = await this.futarchy.initializeProposal(
       dao,
-      squadsProposalPda
+      squadsProposalPda,
     );
 
     // Split tokens into the vaults (as in the integration test)
@@ -102,7 +102,7 @@ export default function suite() {
       proposal,
       META,
       USDC,
-      dao
+      dao,
     );
 
     await this.conditionalVault

@@ -9,7 +9,7 @@ const payer = provider.wallet["payer"];
 
 const DAO_ADDRESS = new PublicKey("");
 const PROPOSAL_PDA = new PublicKey(
-  "HDyg2gbibGfDf672KN9MU38Z5dnNVaSiTsVQw33WnY5Q"
+  "HDyg2gbibGfDf672KN9MU38Z5dnNVaSiTsVQw33WnY5Q",
 );
 
 async function main() {
@@ -18,13 +18,13 @@ async function main() {
   const proposalAccountInfo =
     await multisig.accounts.Proposal.fromAccountAddress(
       provider.connection,
-      PROPOSAL_PDA
+      PROPOSAL_PDA,
     );
 
   const proposalTransactionIndex = Number(proposalAccountInfo.transactionIndex);
   console.log(
     "Proposal transaction index:",
-    proposalTransactionIndex.toString()
+    proposalTransactionIndex.toString(),
   );
 
   console.log("Vault address:", vaultPda.toBase58());
@@ -46,7 +46,7 @@ async function main() {
   const vaultTxExecuteIxResolved = await vaultTxExecuteIx;
   const tx = new Transaction().add(
     proposalApproveIx,
-    vaultTxExecuteIxResolved.instruction
+    vaultTxExecuteIxResolved.instruction,
   );
   tx.recentBlockhash = (
     await provider.connection.getLatestBlockhash()

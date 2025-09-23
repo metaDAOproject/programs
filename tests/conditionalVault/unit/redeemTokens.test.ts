@@ -30,7 +30,7 @@ export default function suite() {
     question = await vaultClient.initializeQuestion(
       questionId,
       settlementAuthority.publicKey,
-      2
+      2,
     );
 
     underlyingTokenMint = await createMint(
@@ -38,7 +38,7 @@ export default function suite() {
       this.payer,
       this.payer.publicKey,
       null,
-      8
+      8,
     );
 
     vault = await vaultClient.initializeVault(question, underlyingTokenMint, 2);
@@ -47,7 +47,7 @@ export default function suite() {
       this.banksClient,
       this.payer,
       underlyingTokenMint,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     // Mint some underlying tokens to the user's account
@@ -57,7 +57,7 @@ export default function suite() {
       underlyingTokenMint,
       userUnderlyingTokenAccount,
       this.payer,
-      1000
+      1000,
     );
 
     await vaultClient
@@ -83,12 +83,12 @@ export default function suite() {
 
     const underlyingTokenAccount = await token.getAssociatedTokenAddress(
       underlyingTokenMint,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     const balanceBefore = await getAccount(
       this.banksClient,
-      underlyingTokenAccount
+      underlyingTokenAccount,
     ).then((acc) => acc.amount);
 
     await vaultClient
@@ -97,7 +97,7 @@ export default function suite() {
 
     const balanceAfter = await getAccount(
       this.banksClient,
-      underlyingTokenAccount
+      underlyingTokenAccount,
     ).then((acc) => acc.amount);
 
     assert.isTrue(balanceAfter > balanceBefore);
@@ -114,12 +114,12 @@ export default function suite() {
 
     const underlyingTokenAccount = await token.getAssociatedTokenAddress(
       underlyingTokenMint,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     const balanceBefore = await getAccount(
       this.banksClient,
-      underlyingTokenAccount
+      underlyingTokenAccount,
     ).then((acc) => acc.amount);
 
     await vaultClient
@@ -132,7 +132,7 @@ export default function suite() {
 
     let balanceAfter = await getAccount(
       this.banksClient,
-      underlyingTokenAccount
+      underlyingTokenAccount,
     ).then((acc) => acc.amount);
 
     // console.log('balanceAfter', balanceAfter);
@@ -149,7 +149,7 @@ export default function suite() {
 
     balanceAfter = await getAccount(
       this.banksClient,
-      underlyingTokenAccount
+      underlyingTokenAccount,
     ).then((acc) => acc.amount);
 
     // console.log('balanceAfter', balanceAfter);
@@ -168,12 +168,12 @@ export default function suite() {
 
     const underlyingTokenAccount = await token.getAssociatedTokenAddress(
       underlyingTokenMint,
-      this.payer.publicKey
+      this.payer.publicKey,
     );
 
     const balanceBefore = await getAccount(
       this.banksClient,
-      underlyingTokenAccount
+      underlyingTokenAccount,
     ).then((acc) => acc.amount);
 
     await vaultClient
@@ -182,7 +182,7 @@ export default function suite() {
 
     const balanceAfter = await getAccount(
       this.banksClient,
-      underlyingTokenAccount
+      underlyingTokenAccount,
     ).then((acc) => acc.amount);
 
     assert.isTrue(balanceAfter > balanceBefore);

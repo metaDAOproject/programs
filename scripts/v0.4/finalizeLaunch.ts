@@ -33,7 +33,7 @@ const launchAddr = new PublicKey(
   await input({
     message: "Enter the launch address",
     default: process.env.LAUNCH_ADDRESS,
-  })
+  }),
 );
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
@@ -59,7 +59,7 @@ main().catch((error) => {
 async function sendAndConfirmTransaction(
   tx: Transaction,
   label: string,
-  signers: Keypair[] = []
+  signers: Keypair[] = [],
 ) {
   tx.feePayer = payer.publicKey;
   tx.recentBlockhash = (
@@ -77,8 +77,8 @@ async function sendAndConfirmTransaction(
   if (txStatus?.meta?.err) {
     throw new Error(
       `Transaction failed: ${txHash}\nError: ${JSON.stringify(
-        txStatus?.meta?.err
-      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`
+        txStatus?.meta?.err,
+      )}\n\n${txStatus?.meta?.logMessages?.join("\n")}`,
     );
   }
   console.log(`${label} transaction confirmed`);

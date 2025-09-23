@@ -21,7 +21,7 @@ export default function suite() {
       this.payer as Keypair,
       Keypair.generate().publicKey,
       null,
-      8
+      8,
     );
   });
 
@@ -39,7 +39,7 @@ export default function suite() {
         const question = await vaultClient.initializeQuestion(
           questionId,
           oracle.publicKey,
-          outcomes
+          outcomes,
         );
 
         await vaultClient
@@ -49,7 +49,7 @@ export default function suite() {
         const [vault, pdaBump] = getVaultAddr(
           vaultClient.vaultProgram.programId,
           question,
-          underlyingTokenMint
+          underlyingTokenMint,
         );
 
         const storedVault = await vaultClient.fetchVault(vault);
@@ -59,17 +59,19 @@ export default function suite() {
         const vaultUnderlyingTokenAccount = token.getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
-          true
+          true,
         );
         assert.ok(
-          storedVault.underlyingTokenAccount.equals(vaultUnderlyingTokenAccount)
+          storedVault.underlyingTokenAccount.equals(
+            vaultUnderlyingTokenAccount,
+          ),
         );
         const storedConditionalTokenMints = storedVault.conditionalTokenMints;
         storedConditionalTokenMints.forEach((mint, i) => {
           const [expectedMint] = getConditionalTokenMintAddr(
             vaultClient.vaultProgram.programId,
             vault,
-            i
+            i,
           );
           assert.ok(mint.equals(expectedMint));
         });
@@ -92,7 +94,7 @@ export default function suite() {
         const question = await vaultClient.initializeQuestion(
           questionId,
           oracle.publicKey,
-          outcomes
+          outcomes,
         );
 
         await vaultClient
@@ -104,12 +106,12 @@ export default function suite() {
         assert.notEqual(
           resolvedQuestion.payoutDenominator.toString(),
           "0",
-          "Question should be resolved"
+          "Question should be resolved",
         );
 
         const callbacks = expectError(
           "QuestionAlreadyResolved",
-          "Vault initialized despite question being resolved"
+          "Vault initialized despite question being resolved",
         );
 
         await vaultClient

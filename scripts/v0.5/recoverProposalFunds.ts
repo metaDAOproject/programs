@@ -19,7 +19,7 @@ const ammClient = AmmClient.createClient({ provider });
 
 const DAO_KEY = new PublicKey("9NCPLEFgiu4XZdp9wtWMc1mXyY26VGeWsoKHCAPP3bAo");
 const SQUADS_PROPOSAL_PDA = new PublicKey(
-  "CPXTJyYueptiLL5WAqXoC1SHnZvkq1hUAMw3qSv4bdxu"
+  "CPXTJyYueptiLL5WAqXoC1SHnZvkq1hUAMw3qSv4bdxu",
 );
 
 async function main() {
@@ -27,7 +27,7 @@ async function main() {
 
   const [metaDaoProposal] = getProposalAddr(
     AUTOCRAT_PROGRAM_ID,
-    SQUADS_PROPOSAL_PDA
+    SQUADS_PROPOSAL_PDA,
   );
 
   const {
@@ -46,15 +46,15 @@ async function main() {
     metaDaoProposal,
     dao.baseMint,
     dao.quoteMint,
-    DAO_KEY
+    DAO_KEY,
   );
 
   try {
     const passLpAmount = await provider.connection.getTokenAccountBalance(
-      getAssociatedTokenAddressSync(passLp, payer.publicKey, true)
+      getAssociatedTokenAddressSync(passLp, payer.publicKey, true),
     );
     const failLpAmount = await provider.connection.getTokenAccountBalance(
-      getAssociatedTokenAddressSync(failLp, payer.publicKey, true)
+      getAssociatedTokenAddressSync(failLp, payer.publicKey, true),
     );
 
     // TODO: Get balance of LP so we can withdraw it
@@ -65,7 +65,7 @@ async function main() {
         passQuoteMint,
         new BN(passLpAmount.value.amount.toString()),
         new BN(0),
-        new BN(0)
+        new BN(0),
       )
       .rpc();
     const withdrawLpQuote = await ammClient
@@ -75,7 +75,7 @@ async function main() {
         failQuoteMint,
         new BN(failLpAmount.value.amount.toString()),
         new BN(0),
-        new BN(0)
+        new BN(0),
       )
       .rpc();
 
@@ -87,25 +87,25 @@ async function main() {
 
   const baseVaultUserTokenAccount = getAssociatedTokenAddressSync(
     passBaseMint,
-    payer.publicKey
+    payer.publicKey,
   );
   const quoteVaultUserTokenAccount = getAssociatedTokenAddressSync(
     passQuoteMint,
-    payer.publicKey
+    payer.publicKey,
   );
 
   const baseTokensToMerge = await provider.connection.getTokenAccountBalance(
-    baseVaultUserTokenAccount
+    baseVaultUserTokenAccount,
   );
   const quoteTokensToMerge = await provider.connection.getTokenAccountBalance(
-    quoteVaultUserTokenAccount
+    quoteVaultUserTokenAccount,
   );
 
   const baseTokensToMergeAmount = new BN(
-    baseTokensToMerge.value.amount.toString()
+    baseTokensToMerge.value.amount.toString(),
   );
   const quoteTokensToMergeAmount = new BN(
-    Number(quoteTokensToMerge.value.amount.toString())
+    Number(quoteTokensToMerge.value.amount.toString()),
   );
 
   console.log("baseTokensToMerge", baseTokensToMerge.value.amount.toString());
@@ -118,7 +118,7 @@ async function main() {
       dao.baseMint,
       baseTokensToMergeAmount,
       2,
-      payer.publicKey
+      payer.publicKey,
     )
     .rpc();
   const mergeTokensQuote = await vaultClient
@@ -128,7 +128,7 @@ async function main() {
       dao.quoteMint,
       quoteTokensToMergeAmount,
       2,
-      payer.publicKey
+      payer.publicKey,
     )
     .rpc();
 

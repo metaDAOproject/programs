@@ -78,7 +78,7 @@ export async function createLookupTableForTransaction(
     payer: Keypair;
     advanceBySlots: (slots: bigint) => Promise<void>;
   },
-  additionalAddresses: PublicKey[] = []
+  additionalAddresses: PublicKey[] = [],
 ): Promise<AddressLookupTableAccount> {
   // use a different authority for the lookup table to avoid conflicts
   const lookupAuthority = Keypair.generate();
@@ -93,7 +93,7 @@ export async function createLookupTableForTransaction(
 
   // Extract all unique accounts from the transaction
   const accountsToAdd = transaction.instructions.map((instruction) =>
-    instruction.keys.map((key) => key.pubkey)
+    instruction.keys.map((key) => key.pubkey),
   );
   const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
   console.log("uniqueAccounts", uniqueAccounts.length);
@@ -157,9 +157,8 @@ export async function createLookupTableForTransaction(
   await context.advanceBySlots(1n);
 
   // Fetch and return the lookup table account
-  const rawStoredLookupTable = await context.banksClient.getAccount(
-    lookupTableAddress
-  );
+  const rawStoredLookupTable =
+    await context.banksClient.getAccount(lookupTableAddress);
 
   return new AddressLookupTableAccount({
     key: lookupTableAddress,
@@ -169,7 +168,7 @@ export async function createLookupTableForTransaction(
 
 export const expectError = (
   expectedError: string,
-  message: string
+  message: string,
 ): [() => void, (e: any) => void] => {
   return [
     () => assert.fail(message),
@@ -177,7 +176,7 @@ export const expectError = (
       assert(e.error != undefined, `problem retrieving program error: ${e}`);
       assert(
         e.error.errorCode != undefined,
-        "problem retrieving program error code"
+        "problem retrieving program error code",
       );
       //for (let idlError of program.idl.errors) {
       //  if (idlError.code == e.code) {
@@ -188,7 +187,7 @@ export const expectError = (
       assert.equal(
         e.error.errorCode.code,
         expectedError,
-        `the program threw for a reason that we didn't expect. error : ${e}`
+        `the program threw for a reason that we didn't expect. error : ${e}`,
       );
       /* assert.fail("error doesn't match idl"); */
       /* console.log(program.idl.errors); */
@@ -203,7 +202,7 @@ export const expectError = (
 
 export const advanceBySlots = async (
   context: ProgramTestContext,
-  slots: bigint
+  slots: bigint,
 ) => {
   const currentClock = await context.banksClient.getClock();
   context.setClock(
@@ -212,7 +211,7 @@ export const advanceBySlots = async (
       currentClock.epochStartTimestamp,
       currentClock.epoch,
       currentClock.leaderScheduleEpoch,
-      50n
-    )
+      50n,
+    ),
   );
 };

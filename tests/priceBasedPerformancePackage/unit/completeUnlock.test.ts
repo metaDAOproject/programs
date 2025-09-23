@@ -28,19 +28,22 @@ export default function () {
     oracleAccount = Keypair.generate();
 
     tokenMint = await this.createMint(this.payer.publicKey, 6);
-    
+
     await this.mintTo(
       tokenMint,
       this.payer.publicKey,
       this.payer,
-      200 * 10 ** 6
+      200 * 10 ** 6,
     );
 
-    performancePackage = await this.setupBasicPerformancePackage({ tokenMint, oracleAccount: oracleAccount.publicKey, recipient: recipient.publicKey });
+    performancePackage = await this.setupBasicPerformancePackage({
+      tokenMint,
+      oracleAccount: oracleAccount.publicKey,
+      recipient: recipient.publicKey,
+    });
   });
 
   it("should unlock 100% of tokens when price meets threshold", async function () {
-
     // Advance time and start unlock
     await this.advanceBySeconds(2);
 
@@ -69,7 +72,6 @@ export default function () {
       })
       .signers([recipient])
       .rpc();
-
 
     // Advance time past TWAP calculation period
     await this.advanceBySeconds(6);
@@ -102,21 +104,30 @@ export default function () {
       })
       .rpc();
 
-
-    const performancePackageAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const performancePackageAccount =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
 
     assert.equal(
       await this.getTokenBalance(tokenMint, recipient.publicKey),
       BigInt(200 * 10 ** 6),
-      "Recipient should have 100000 tokens"
+      "Recipient should have 100000 tokens",
     );
-    assert.equal(await this.getTokenBalance(tokenMint, performancePackage), 0n, "PerformancePackage token account should be empty");
+    assert.equal(
+      await this.getTokenBalance(tokenMint, performancePackage),
+      0n,
+      "PerformancePackage token account should be empty",
+    );
 
     for (const tranche of performancePackageAccount.tranches) {
       assert.equal(tranche.isUnlocked, true, "Tranche should be unlocked");
     }
 
-    assert.exists(performancePackageAccount.state.locked, "PerformancePackage should be in Locked state");
+    assert.exists(
+      performancePackageAccount.state.locked,
+      "PerformancePackage should be in Locked state",
+    );
   });
 
   it("should unlock the first tranche when the price meets that threshold", async function () {
@@ -149,7 +160,6 @@ export default function () {
       .signers([recipient])
       .rpc();
 
-
     // Advance time past TWAP calculation period
     await this.advanceBySeconds(6);
 
@@ -179,21 +189,37 @@ export default function () {
       })
       .rpc();
 
-
-    const performancePackageAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const performancePackageAccount =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
 
     assert.equal(
       await this.getTokenBalance(tokenMint, recipient.publicKey),
       BigInt(100 * 10 ** 6),
-      "Recipient should have 100 tokens"
+      "Recipient should have 100 tokens",
     );
-    assert.equal(await this.getTokenBalance(tokenMint, performancePackage), BigInt(100 * 10 ** 6), "PerformancePackage token account should be empty");
+    assert.equal(
+      await this.getTokenBalance(tokenMint, performancePackage),
+      BigInt(100 * 10 ** 6),
+      "PerformancePackage token account should be empty",
+    );
 
-    assert.equal(performancePackageAccount.tranches[0].isUnlocked, true, "First tranche should be unlocked");
-    assert.equal(performancePackageAccount.tranches[1].isUnlocked, false, "Second tranche should not be unlocked");
+    assert.equal(
+      performancePackageAccount.tranches[0].isUnlocked,
+      true,
+      "First tranche should be unlocked",
+    );
+    assert.equal(
+      performancePackageAccount.tranches[1].isUnlocked,
+      false,
+      "Second tranche should not be unlocked",
+    );
 
-    assert.exists(performancePackageAccount.state.locked, "PerformancePackage should be in Locked state");
-
+    assert.exists(
+      performancePackageAccount.state.locked,
+      "PerformancePackage should be in Locked state",
+    );
 
     // now try it again with a higher price
     await this.advanceBySeconds(1000);
@@ -220,7 +246,7 @@ export default function () {
       })
       .signers([recipient])
       .rpc();
-    
+
     await this.advanceBySeconds(6);
 
     finalOracleData.writeBigUInt64LE(BigInt(30e12), 0);
@@ -246,24 +272,44 @@ export default function () {
       })
       .rpc();
 
-    const performancePackageAccount2 = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const performancePackageAccount2 =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
 
-    assert.equal(performancePackageAccount2.tranches[0].isUnlocked, true, "First tranche should be unlocked");
-    assert.equal(performancePackageAccount2.tranches[1].isUnlocked, true, "Second tranche should be unlocked");
+    assert.equal(
+      performancePackageAccount2.tranches[0].isUnlocked,
+      true,
+      "First tranche should be unlocked",
+    );
+    assert.equal(
+      performancePackageAccount2.tranches[1].isUnlocked,
+      true,
+      "Second tranche should be unlocked",
+    );
 
     assert.equal(
       await this.getTokenBalance(tokenMint, recipient.publicKey),
       BigInt(200 * 10 ** 6),
-      "Recipient should have 200 tokens"
+      "Recipient should have 200 tokens",
     );
-    assert.equal(await this.getTokenBalance(tokenMint, performancePackage), 0n, "PerformancePackage token account should be empty");
+    assert.equal(
+      await this.getTokenBalance(tokenMint, performancePackage),
+      0n,
+      "PerformancePackage token account should be empty",
+    );
 
-
-    assert.exists(performancePackageAccount2.state.locked, "PerformancePackage should be in Locked state");
+    assert.exists(
+      performancePackageAccount2.state.locked,
+      "PerformancePackage should be in Locked state",
+    );
   });
 
   it("should fail if performancePackage is not in Unlocking state", async function () {
-    const callbacks = expectError("InvalidPerformancePackageState", "PerformancePackage is not in Unlocking state");
+    const callbacks = expectError(
+      "InvalidPerformancePackageState",
+      "PerformancePackage is not in Unlocking state",
+    );
 
     await this.priceBasedPerformancePackage
       .completeUnlockIx({
@@ -308,7 +354,10 @@ export default function () {
     // Try to complete unlock before TWAP period elapses
     await this.advanceBySeconds(5); // Only 5 seconds, need 10
 
-    const callbacks = expectError("TwapPeriodNotElapsed", "TWAP calculation period has not elapsed");
+    const callbacks = expectError(
+      "TwapPeriodNotElapsed",
+      "TWAP calculation period has not elapsed",
+    );
 
     await this.priceBasedPerformancePackage
       .completeUnlockIx({

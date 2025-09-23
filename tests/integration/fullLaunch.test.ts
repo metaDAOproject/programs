@@ -42,7 +42,7 @@ export default async function suite() {
     const result = await initializeMintWithSeeds(
       this.banksClient,
       this.launchpad,
-      this.payer
+      this.payer,
     );
 
     META = result.tokenMint;
@@ -65,7 +65,7 @@ export default async function suite() {
     const programConfig =
       await multisig.accounts.ProgramConfig.fromAccountAddress(
         this.squadsConnection,
-        programConfigPda
+        programConfigPda,
       );
 
     const cofounder0 = Keypair.generate();
@@ -87,7 +87,7 @@ export default async function suite() {
     });
 
     const insiderMultisigCreateTx = new Transaction().add(
-      insiderMultisigCreateIx
+      insiderMultisigCreateIx,
     );
     insiderMultisigCreateTx.recentBlockhash = (
       await this.banksClient.getLatestBlockhash()
@@ -106,13 +106,13 @@ export default async function suite() {
       MAINNET_USDC,
       this.payer,
       funder1.publicKey,
-      500_000_000000
+      500_000_000000,
     );
     await this.transfer(
       MAINNET_USDC,
       this.payer,
       funder3.publicKey,
-      400_000_000000
+      400_000_000000,
     );
 
     // Initialize launch
@@ -174,12 +174,17 @@ export default async function suite() {
     await this.launchpad.closeLaunchIx({ launch }).rpc();
 
     const completeLaunchTx = await this.launchpad
-      .completeLaunchIx({ launch, baseMint: META, finalRaiseAmount: new BN(500_000 * 1e6), launchAuthority: this.payer.publicKey })
+      .completeLaunchIx({
+        launch,
+        baseMint: META,
+        finalRaiseAmount: new BN(500_000 * 1e6),
+        launchAuthority: this.payer.publicKey,
+      })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
       completeLaunchTx,
-      this
+      this,
     );
 
     const completeLaunchMessage = new TransactionMessage({
@@ -192,9 +197,6 @@ export default async function suite() {
     tx.sign([this.payer]);
 
     await this.banksClient.processTransaction(tx);
-
-    
-
 
     // Verify launch completion and DAO creation
     const launchAccount = await this.launchpad.fetchLaunch(launch);
@@ -224,53 +226,112 @@ export default async function suite() {
     assert.equal(funder1Balance, 5_000_000_000000n); // 5M tokens
     assert.equal(payerBalance, 1_500_000_000000n); // 1.5M tokens
     assert.equal(funder3Balance, 3_500_000_000000n); // 3.5M tokens
-       
 
-    const preRefundFunder1QuoteBalance = await this.getTokenBalance(MAINNET_USDC, funder1.publicKey);
-    const preRefundPayerQuoteBalance = await this.getTokenBalance(MAINNET_USDC, this.payer.publicKey);
-    const preRefundFunder3QuoteBalance = await this.getTokenBalance(MAINNET_USDC, funder3.publicKey);
+    const preRefundFunder1QuoteBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      funder1.publicKey,
+    );
+    const preRefundPayerQuoteBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+    const preRefundFunder3QuoteBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      funder3.publicKey,
+    );
 
     // Claim partial refunds
     await this.launchpad.refundIx({ launch, funder: funder1.publicKey }).rpc();
-    await this.launchpad.refundIx({ launch, funder: this.payer.publicKey }).rpc();
+    await this.launchpad
+      .refundIx({ launch, funder: this.payer.publicKey })
+      .rpc();
     await this.launchpad.refundIx({ launch, funder: funder3.publicKey }).rpc();
 
-    const postRefundFunder1QuoteBalance = await this.getTokenBalance(MAINNET_USDC, funder1.publicKey);
-    const postRefundPayerQuoteBalance = await this.getTokenBalance(MAINNET_USDC, this.payer.publicKey);
-    const postRefundFunder3QuoteBalance = await this.getTokenBalance(MAINNET_USDC, funder3.publicKey);
+    const postRefundFunder1QuoteBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      funder1.publicKey,
+    );
+    const postRefundPayerQuoteBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+    const postRefundFunder3QuoteBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      funder3.publicKey,
+    );
 
-    assert.equal(postRefundFunder1QuoteBalance - preRefundFunder1QuoteBalance, 250_000_000000n);
-    assert.equal(postRefundPayerQuoteBalance - preRefundPayerQuoteBalance, 75_000_000000n);
-    assert.equal(postRefundFunder3QuoteBalance - preRefundFunder3QuoteBalance, 175_000_000000n);
+    assert.equal(
+      postRefundFunder1QuoteBalance - preRefundFunder1QuoteBalance,
+      250_000_000000n,
+    );
+    assert.equal(
+      postRefundPayerQuoteBalance - preRefundPayerQuoteBalance,
+      75_000_000000n,
+    );
+    assert.equal(
+      postRefundFunder3QuoteBalance - preRefundFunder3QuoteBalance,
+      175_000_000000n,
+    );
 
-    const performancePackage = getPerformancePackageAddr({ createKey: launchSigner })[0];
+    const performancePackage = getPerformancePackageAddr({
+      createKey: launchSigner,
+    })[0];
 
-    const storedPerformancePackage = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const storedPerformancePackage =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
 
     assert.equal(storedPerformancePackage.tranches.length, 5);
 
-    assert.equal(storedPerformancePackage.tranches[0].priceThreshold.toNumber() / 10 ** 12, 0.1);
-    assert.equal(storedPerformancePackage.tranches[1].priceThreshold.toNumber() / 10 ** 12, 0.2);
-    assert.equal(storedPerformancePackage.tranches[2].priceThreshold.toNumber() / 10 ** 12, 0.4);
-    assert.equal(storedPerformancePackage.tranches[3].priceThreshold.toNumber() / 10 ** 12, 0.8);
-    assert.equal(storedPerformancePackage.tranches[4].priceThreshold.toNumber() / 10 ** 12, 1.6);
+    assert.equal(
+      storedPerformancePackage.tranches[0].priceThreshold.toNumber() / 10 ** 12,
+      0.1,
+    );
+    assert.equal(
+      storedPerformancePackage.tranches[1].priceThreshold.toNumber() / 10 ** 12,
+      0.2,
+    );
+    assert.equal(
+      storedPerformancePackage.tranches[2].priceThreshold.toNumber() / 10 ** 12,
+      0.4,
+    );
+    assert.equal(
+      storedPerformancePackage.tranches[3].priceThreshold.toNumber() / 10 ** 12,
+      0.8,
+    );
+    assert.equal(
+      storedPerformancePackage.tranches[4].priceThreshold.toNumber() / 10 ** 12,
+      1.6,
+    );
 
     assert.ok(storedPerformancePackage.oracleConfig.oracleAccount.equals(dao));
     assert.equal(storedPerformancePackage.oracleConfig.byteOffset, 8 + 1);
-    assert.equal(storedPerformancePackage.totalTokenAmount.toNumber(), 10_000_000 * 10 ** 6);
-    assert.ok(storedPerformancePackage.performancePackageAuthority.equals(vaultPda));
+    assert.equal(
+      storedPerformancePackage.totalTokenAmount.toNumber(),
+      10_000_000 * 10 ** 6,
+    );
+    assert.ok(
+      storedPerformancePackage.performancePackageAuthority.equals(vaultPda),
+    );
     assert.ok(storedPerformancePackage.tokenMint.equals(META));
     assert.exists(storedPerformancePackage.state.locked);
-    assert.equal(storedPerformancePackage.minUnlockTimestamp.toNumber(), Number((await this.banksClient.getClock()).unixTimestamp) + 24 * 30 * 24 * 60 * 60);
-    assert.equal(storedPerformancePackage.twapLengthSeconds.toNumber(), 3 * 30 * 24 * 60 * 60);
-
+    assert.equal(
+      storedPerformancePackage.minUnlockTimestamp.toNumber(),
+      Number((await this.banksClient.getClock()).unixTimestamp) +
+        24 * 30 * 24 * 60 * 60,
+    );
+    assert.equal(
+      storedPerformancePackage.twapLengthSeconds.toNumber(),
+      3 * 30 * 24 * 60 * 60,
+    );
 
     // Create proposal to mint tokens
     const mintAmount = new BN(1_000_000_000000); // 1M tokens
     const receiver = Keypair.generate();
     const receiverAccount = await this.createTokenAccount(
       META,
-      receiver.publicKey
+      receiver.publicKey,
     );
 
     // Two parts of the proposal: update DAO threshold to 5% and mint tokens to receiver
@@ -294,7 +355,7 @@ export default async function suite() {
       META,
       receiverAccount,
       vaultPda,
-      mintAmount.toNumber()
+      mintAmount.toNumber(),
     );
 
     const mintToReceiverMessage = new TransactionMessage({
@@ -331,13 +392,12 @@ export default async function suite() {
     squadsTx.feePayer = this.payer.publicKey;
     squadsTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
 
-
     await this.banksClient.processTransaction(squadsTx);
 
     // Now initialize the autocrat proposal with the proper squads proposal
     const proposal = await this.futarchy.initializeProposal(
       dao,
-      squadsProposalPda
+      squadsProposalPda,
     );
 
     const {
@@ -380,7 +440,7 @@ export default async function suite() {
         quoteVault,
         MAINNET_USDC,
         new BN(100_000 * 1_000_000),
-        2
+        2,
       )
       .rpc();
 
@@ -447,7 +507,7 @@ export default async function suite() {
 
     const receiverBalance = await this.getTokenBalance(
       META,
-      receiver.publicKey
+      receiver.publicKey,
     );
 
     assert.equal(receiverBalance.toString(), "1000000000000");
@@ -481,7 +541,7 @@ export default async function suite() {
 
     const spendingLimitUse = await this.getTokenBalance(
       MAINNET_USDC,
-      spender.publicKey
+      spender.publicKey,
     );
 
     assert.equal(spendingLimitUse.toString(), (10_000 * 10 ** 6).toString());
@@ -489,42 +549,47 @@ export default async function suite() {
     const storedSpendingLimit =
       await multisig.accounts.SpendingLimit.fromAccountAddress(
         this.squadsConnection,
-        spendingLimit
+        spendingLimit,
       );
     assert.equal(
       storedSpendingLimit.amount.toString(),
-      (25_000 * 10 ** 6).toString()
+      (25_000 * 10 ** 6).toString(),
     );
     assert.equal(
       storedSpendingLimit.remainingAmount.toString(),
-      (15_000 * 10 ** 6).toString()
+      (15_000 * 10 ** 6).toString(),
     );
 
     this.advanceBySeconds(24 * 30 * 24 * 60 * 60);
 
-    await this.futarchy.spotSwapIx({
-      dao,
-      baseMint: META,
-      swapType: "buy",
-      inputAmount: new BN(100_000 * 10 ** 6),
-      minOutputAmount: new BN(0),
-    }).rpc();
+    await this.futarchy
+      .spotSwapIx({
+        dao,
+        baseMint: META,
+        swapType: "buy",
+        inputAmount: new BN(100_000 * 10 ** 6),
+        minOutputAmount: new BN(0),
+      })
+      .rpc();
 
     this.advanceBySeconds(24 * 30 * 24 * 60 * 60);
 
-    await this.futarchy.spotSwapIx({
-      dao,
-      baseMint: META,
-      swapType: "buy",
-      inputAmount: new BN(10_000 * 10 ** 6),
-      minOutputAmount: new BN(0),
-    }).rpc();
+    await this.futarchy
+      .spotSwapIx({
+        dao,
+        baseMint: META,
+        swapType: "buy",
+        inputAmount: new BN(10_000 * 10 ** 6),
+        minOutputAmount: new BN(0),
+      })
+      .rpc();
 
     // this is enough to move the price past $0.2
 
     let storedDao = await this.futarchy.getDao(dao);
     // should be around $0.22
-    const rawLastPrice = storedDao.amm.state.spot.spot.oracle.lastPrice.toBuffer('le', 16)
+    const rawLastPrice =
+      storedDao.amm.state.spot.spot.oracle.lastPrice.toBuffer("le", 16);
     // console.log(storedDao.amm.state.spot.spot.oracle.lastPrice.toNumber() / 10 ** 12);
 
     let daoAccount = await this.banksClient.getAccount(dao);
@@ -533,7 +598,13 @@ export default async function suite() {
     // we do this to speed up the test
     this.context.setAccount(dao, daoAccount);
 
-    const startUnlockTx = await this.priceBasedPerformancePackage.startUnlockIx({ performancePackage, oracleAccount: dao, recipient: insiderMultisigVaultPda }).transaction();
+    const startUnlockTx = await this.priceBasedPerformancePackage
+      .startUnlockIx({
+        performancePackage,
+        oracleAccount: dao,
+        recipient: insiderMultisigVaultPda,
+      })
+      .transaction();
 
     const squadsUnlockTx = new Transaction().add(
       multisig.instructions.vaultTransactionCreate({
@@ -563,7 +634,9 @@ export default async function suite() {
       }),
     );
 
-    squadsUnlockTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    squadsUnlockTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
     squadsUnlockTx.feePayer = this.payer.publicKey;
     squadsUnlockTx.sign(this.payer, cofounder0);
 
@@ -577,35 +650,56 @@ export default async function suite() {
     });
     // return;
     const txExecute2 = new Transaction().add(txExecuteIx2.instruction);
-    txExecute2.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    txExecute2.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
     txExecute2.feePayer = this.payer.publicKey;
     txExecute2.sign(this.payer, cofounder1);
     // txExecute2.sign(cofounder1);
-    console.log(txExecute2)
+    console.log(txExecute2);
     console.log(cofounder0.publicKey.toBase58());
-    console.log(txExecute2.instructions[0].keys)
+    console.log(txExecute2.instructions[0].keys);
     console.log(insiderMultisigPda.toBase58());
     await this.banksClient.processTransaction(txExecute2);
 
     this.advanceBySeconds(3 * 30 * 24 * 60 * 60);
 
-    await this.futarchy.spotSwapIx({
-      dao,
-      baseMint: META,
-      swapType: "buy",
-      inputAmount: new BN(100_000 * 10 ** 6),
-      minOutputAmount: new BN(0),
-    }).rpc();
+    await this.futarchy
+      .spotSwapIx({
+        dao,
+        baseMint: META,
+        swapType: "buy",
+        inputAmount: new BN(100_000 * 10 ** 6),
+        minOutputAmount: new BN(0),
+      })
+      .rpc();
 
     const daonow = await this.futarchy.getDao(dao);
-    console.log(daonow.amm.state.spot.spot.oracle.lastPrice.toNumber() / 10 ** 12);
-    console.log(daonow.amm.state.spot.spot.oracle.lastObservation.toNumber() / 10 ** 12);
+    console.log(
+      daonow.amm.state.spot.spot.oracle.lastPrice.toNumber() / 10 ** 12,
+    );
+    console.log(
+      daonow.amm.state.spot.spot.oracle.lastObservation.toNumber() / 10 ** 12,
+    );
 
-    const preUnlockBalance = await this.getTokenBalance(META, insiderMultisigVaultPda);
+    const preUnlockBalance = await this.getTokenBalance(
+      META,
+      insiderMultisigVaultPda,
+    );
 
-    await this.priceBasedPerformancePackage.completeUnlockIx({ performancePackage, oracleAccount: dao, tokenMint: META, tokenRecipient: insiderMultisigVaultPda }).rpc();
+    await this.priceBasedPerformancePackage
+      .completeUnlockIx({
+        performancePackage,
+        oracleAccount: dao,
+        tokenMint: META,
+        tokenRecipient: insiderMultisigVaultPda,
+      })
+      .rpc();
 
-    const postUnlockBalance = await this.getTokenBalance(META, insiderMultisigVaultPda);
+    const postUnlockBalance = await this.getTokenBalance(
+      META,
+      insiderMultisigVaultPda,
+    );
 
     // should go through 2 tranches, or 40% of 10M = 4M tokens
     assert.equal(postUnlockBalance - preUnlockBalance, 4_000_000_000000n);

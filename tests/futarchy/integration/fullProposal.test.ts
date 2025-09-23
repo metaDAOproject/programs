@@ -23,7 +23,7 @@ export default function suite() {
       USDC,
       this.payer.publicKey,
       this.payer,
-      100_000 * 1_000_000
+      100_000 * 1_000_000,
     );
 
     const nonce = new BN(Math.random() * 2 ** 50);
@@ -44,7 +44,7 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: new BN("1000000000000000000"),
           minQuoteFutarchicLiquidity: new BN(0),
           slotsPerProposal: new BN(
-            (ONE_MINUTE_IN_SLOTS * 60n * 24n).toString()
+            (ONE_MINUTE_IN_SLOTS * 60n * 24n).toString(),
           ),
           passThresholdBps: 300,
           minBaseFutarchicLiquidity: new BN(0),
@@ -67,7 +67,7 @@ export default function suite() {
         fromPubkey: this.payer.publicKey,
         toPubkey: vaultPda,
         lamports: 1_000_000_000,
-      })
+      }),
     );
     tx0.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     tx0.feePayer = this.payer.publicKey;
@@ -129,7 +129,7 @@ export default function suite() {
       "",
       squadsProposalPda,
       new BN(1_000_000_000),
-      new BN(1_000_000_000)
+      new BN(1_000_000_000),
     );
 
     const {
@@ -157,7 +157,7 @@ export default function suite() {
         passQuoteMint,
         { buy: {} },
         new BN(10000).muln(1_000_000),
-        new BN(0)
+        new BN(0),
       )
       .rpc();
 

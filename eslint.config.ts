@@ -12,7 +12,7 @@ export default defineConfig([
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
     rules: {
       "unused-imports/no-unused-imports": "warn",
-    }
+    },
   },
   tseslint.configs.recommended,
 ]);

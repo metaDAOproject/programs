@@ -30,7 +30,7 @@ async function main() {
 
     for (let dev of devs) {
       console.log(
-        `Airdroppping ${scaledAmount} ${mint.toString()} to ${dev.toString()}`
+        `Airdroppping ${scaledAmount} ${mint.toString()} to ${dev.toString()}`,
       );
 
       let destination = (
@@ -38,7 +38,7 @@ async function main() {
           provider.connection,
           payer,
           mint,
-          dev
+          dev,
         )
       ).address;
       await token.transfer(
@@ -47,7 +47,7 @@ async function main() {
         token.getAssociatedTokenAddressSync(mint, payer.publicKey),
         destination,
         payer,
-        scaledAmount
+        scaledAmount,
       );
     }
   }

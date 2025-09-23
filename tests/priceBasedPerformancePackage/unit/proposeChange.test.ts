@@ -54,7 +54,11 @@ export default function () {
 
     await this.mintTo(tokenMint, tokenAuthority, this.payer, 200 * 10 ** 6); // 1M tokens
 
-    performancePackage = await this.setupBasicPerformancePackage({ tokenMint, oracleAccount: oracleAccount.publicKey, recipient: recipient.publicKey });
+    performancePackage = await this.setupBasicPerformancePackage({
+      tokenMint,
+      oracleAccount: oracleAccount.publicKey,
+      recipient: recipient.publicKey,
+    });
   });
 
   it("should allow recipient to propose a change (recipient → performancePackage authority execution flow)", async function () {
@@ -64,7 +68,7 @@ export default function () {
         fromPubkey: this.payer.publicKey,
         toPubkey: newRecipient.publicKey,
         lamports: 1000000000, // 1 SOL
-      })
+      }),
     );
     fundingTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
@@ -88,23 +92,27 @@ export default function () {
       .signers([recipient])
       .rpc();
 
-
     // Verify change request was created with correct proposer
-    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      recipient.publicKey,
-      pdaNonce
-    );
-    const changeRequest = await this.priceBasedPerformancePackage.getChangeRequest(
-      changeRequestAddr
-    );
-    
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        recipient.publicKey,
+        pdaNonce,
+      );
+    const changeRequest =
+      await this.priceBasedPerformancePackage.getChangeRequest(
+        changeRequestAddr,
+      );
+
     // Verify the change request was created correctly
     assert.exists(changeRequest.proposerType.recipient);
-    assert.equal(changeRequest.performancePackage.toString(), performancePackage.toString());
+    assert.equal(
+      changeRequest.performancePackage.toString(),
+      performancePackage.toString(),
+    );
     assert.equal(
       changeRequest.changeType.recipient.newRecipient.toString(),
-      newRecipient.publicKey.toString()
+      newRecipient.publicKey.toString(),
     );
   });
 
@@ -132,25 +140,39 @@ export default function () {
       .rpc();
 
     // Verify performancePackage state remains Locked (no more PendingChange state)
-    const performancePackageAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const performancePackageAccount =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
     // console.log("Authority proposal test - proposer:", squadsMultisigVault.publicKey.toString().slice(0, 8));
     // console.log("State remains: Locked (no PendingChange state)");
     assert.equal(performancePackageAccount.state.locked !== undefined, true);
 
     // Verify change request was created with correct proposer
-    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      this.payer.publicKey,
-      pdaNonce
-    );
-    const changeRequest = await this.priceBasedPerformancePackage.getChangeRequest(
-      changeRequestAddr
-    );
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        this.payer.publicKey,
+        pdaNonce,
+      );
+    const changeRequest =
+      await this.priceBasedPerformancePackage.getChangeRequest(
+        changeRequestAddr,
+      );
 
     assert.exists(changeRequest.proposerType.authority);
-    assert.equal(changeRequest.performancePackage.toString(), performancePackage.toString());
-    assert.equal(changeRequest.changeType.oracle.newOracleConfig.oracleAccount.toString(), newOracleAccount.publicKey.toString());
-    assert.equal(changeRequest.changeType.oracle.newOracleConfig.byteOffset, 16);
+    assert.equal(
+      changeRequest.performancePackage.toString(),
+      performancePackage.toString(),
+    );
+    assert.equal(
+      changeRequest.changeType.oracle.newOracleConfig.oracleAccount.toString(),
+      newOracleAccount.publicKey.toString(),
+    );
+    assert.equal(
+      changeRequest.changeType.oracle.newOracleConfig.byteOffset,
+      16,
+    );
   });
 
   it("should fail if unauthorized party tries to propose change", async function () {
@@ -162,7 +184,7 @@ export default function () {
         fromPubkey: this.payer.publicKey,
         toPubkey: unauthorizedWallet.publicKey,
         lamports: 1000000000, // 1 SOL
-      })
+      }),
     );
     fundTx.recentBlockhash = (
       await this.context.banksClient.getLatestBlockhash()
@@ -170,8 +192,10 @@ export default function () {
     fundTx.sign(this.payer);
     await this.banksClient.processTransaction(fundTx);
 
-
-    const callbacks = expectError("UnauthorizedChangeRequest", "Unauthorized change request");
+    const callbacks = expectError(
+      "UnauthorizedChangeRequest",
+      "Unauthorized change request",
+    );
 
     await this.priceBasedPerformancePackage
       .proposeChangeIx({
@@ -185,7 +209,8 @@ export default function () {
         proposer: unauthorizedWallet.publicKey, // Neither recipient nor authority
       })
       .signers([unauthorizedWallet])
-      .rpc().then(callbacks[0], callbacks[1]);
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("should propose an oracle change successfully", async function () {
@@ -212,19 +237,24 @@ export default function () {
       .rpc();
 
     // Verify change request
-    const changeRequestAddr = this.priceBasedPerformancePackage.getChangeRequestAddress(
-      performancePackage,
-      recipient.publicKey,
-      pdaNonce
-    );
-    const changeRequest = await this.priceBasedPerformancePackage.getChangeRequest(
-      changeRequestAddr
-    );
-    const performancePackageAccount = await this.priceBasedPerformancePackage.getPerformancePackage(performancePackage);
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        recipient.publicKey,
+        pdaNonce,
+      );
+    const changeRequest =
+      await this.priceBasedPerformancePackage.getChangeRequest(
+        changeRequestAddr,
+      );
+    const performancePackageAccount =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
 
     assert.equal(
       changeRequest.changeType.oracle.newOracleConfig.oracleAccount.toString(),
-      newOracleAccount.publicKey.toString()
+      newOracleAccount.publicKey.toString(),
     );
     assert.equal(changeRequest.changeType.oracle.newOracleConfig.byteOffset, 8);
   });
