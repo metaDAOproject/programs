@@ -1,5 +1,8 @@
 name: Verify Build
 
+env:
+  HUSKY: 0
+
 on:
   workflow_dispatch:
     inputs:

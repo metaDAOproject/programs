@@ -6,6 +6,9 @@ on:
       - production
       - develop
 
+env:
+  HUSKY: 0
+
 jobs:
   generate-verifiable-futarchy:
     runs-on: ubuntu-22.04
