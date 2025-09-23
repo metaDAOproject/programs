@@ -51,6 +51,7 @@
     "eslint": "^9.35.0",
     "eslint-plugin-unused-imports": "^4.2.0",
     "globals": "^16.4.0",
+    "husky": "^9.1.7",
     "jiti": "^2.5.1",
     "mocha": "^9.0.3",
     "prettier": "^3.6.2",
