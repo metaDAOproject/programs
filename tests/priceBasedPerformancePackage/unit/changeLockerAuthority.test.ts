@@ -75,7 +75,7 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         byteOffset: 0,
       },
-      twapLengthSeconds: new BN(300),
+      twapLengthSeconds: new BN(3600),
       tokenRecipient: recipient.publicKey,
       performancePackageAuthority: currentAuthority.publicKey,
     };

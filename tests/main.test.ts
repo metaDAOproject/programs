@@ -657,7 +657,7 @@ before(async function () {
             oracleAccount,
             byteOffset: 0,
           },
-          twapLengthSeconds: new BN(5), // 5 seconds for faster testing
+          twapLengthSeconds: new BN(24 * 60 * 60), // 5 seconds for faster testing
         },
         createKey: createKey.publicKey,
         tokenMint,

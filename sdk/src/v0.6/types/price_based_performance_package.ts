@@ -882,6 +882,11 @@ export type PriceBasedPerformancePackage = {
       name: "TrancheTokenAmountZero";
       msg: "Tranche token amount must be greater than 0";
     },
+    {
+      code: 6012;
+      name: "InvalidTwapLength";
+      msg: "TWAP length must be greater than or equal to 1 day and less than 1 year";
+    },
   ];
 };
 
@@ -1768,6 +1773,11 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6011,
       name: "TrancheTokenAmountZero",
       msg: "Tranche token amount must be greater than 0",
+    },
+    {
+      code: 6012,
+      name: "InvalidTwapLength",
+      msg: "TWAP length must be greater than or equal to 1 day and less than 1 year",
     },
   ],
 };

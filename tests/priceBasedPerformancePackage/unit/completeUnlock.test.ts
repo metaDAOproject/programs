@@ -74,13 +74,11 @@ export default function () {
       .rpc();
 
     // Advance time past TWAP calculation period
-    await this.advanceBySeconds(6);
+    await this.advanceBySeconds(86_400);
 
     // Set final oracle data with higher price (meets threshold)
     const finalOracleData = Buffer.alloc(24);
-    // Write aggregator value (u128 little endian) - price of 7000000 to ensure TWAP >= threshold
-    // TWAP = (7000000 - 1000000) / 6 = 1000000 (exactly the threshold)
-    finalOracleData.writeBigUInt64LE(BigInt(14e12), 0);
+    finalOracleData.writeBigUInt64LE(BigInt((2 * 86_400 + 1) * 1e12), 0);
     finalOracleData.writeBigUInt64LE(BigInt(0), 8);
     // Write timestamp (i64 little endian) - current timestamp
     const finalTimestamp = await this.context.banksClient
@@ -161,11 +159,11 @@ export default function () {
       .rpc();
 
     // Advance time past TWAP calculation period
-    await this.advanceBySeconds(6);
+    await this.advanceBySeconds(86_400);
 
     // Set final oracle data with higher price (meets threshold)
     const finalOracleData = Buffer.alloc(24);
-    finalOracleData.writeBigUInt64LE(BigInt(7e12), 0);
+    finalOracleData.writeBigUInt64LE(BigInt((86_400 + 1) * 1e12), 0);
     finalOracleData.writeBigUInt64LE(BigInt(0), 8);
     // Write timestamp (i64 little endian) - current timestamp
     const finalTimestamp = await this.context.banksClient
@@ -247,9 +245,9 @@ export default function () {
       .signers([recipient])
       .rpc();
 
-    await this.advanceBySeconds(6);
+    await this.advanceBySeconds(86_400);
 
-    finalOracleData.writeBigUInt64LE(BigInt(30e12), 0);
+    finalOracleData.writeBigUInt64LE(BigInt((2 * 86_400 + 14) * 1e12), 0);
     finalOracleData.writeBigUInt64LE(BigInt(0), 8);
     // Write timestamp (i64 little endian) - current timestamp
     const finalTimestamp2 = await this.context.banksClient

@@ -100,6 +100,18 @@ impl InitializePerformancePackage<'_> {
             );
         }
 
+        require_gte!(
+            twap_length_seconds,
+            60 * 60 * 24,
+            PriceBasedPerformancePackageError::InvalidTwapLength
+        );
+
+        require_gte!(
+            60 * 60 * 24 * 365,
+            twap_length_seconds,
+            PriceBasedPerformancePackageError::InvalidTwapLength
+        );
+
         let clock = Clock::get()?;
 
         // Validate that unlock timestamp is in the future

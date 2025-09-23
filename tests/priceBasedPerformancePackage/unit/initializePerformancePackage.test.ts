@@ -100,7 +100,7 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         byteOffset: 0,
       },
-      twapLengthSeconds: new BN(300), // 5 minutes
+      twapLengthSeconds: new BN(86_400), // 1 day
       tokenRecipient: recipient.publicKey,
     };
 
@@ -150,7 +150,10 @@ export default function () {
       oracleAccount.publicKey.toString(),
     );
     assert.equal(storedPerformancePackage.oracleConfig.byteOffset, 0);
-    assert.equal(storedPerformancePackage.twapLengthSeconds.toString(), "300");
+    assert.equal(
+      storedPerformancePackage.twapLengthSeconds.toString(),
+      "86400",
+    );
     assert.equal(
       storedPerformancePackage.recipient.toString(),
       recipient.publicKey.toString(),
@@ -216,7 +219,7 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         byteOffset: 0,
       },
-      twapLengthSeconds: new BN(300),
+      twapLengthSeconds: new BN(24 * 60 * 60),
       tokenRecipient: recipient.publicKey,
     };
 
@@ -275,7 +278,7 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         byteOffset: 0,
       },
-      twapLengthSeconds: new BN(300),
+      twapLengthSeconds: new BN(3600),
       tokenRecipient: recipient.publicKey,
     };
 

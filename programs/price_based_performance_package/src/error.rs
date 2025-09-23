@@ -26,4 +26,6 @@ pub enum PriceBasedPerformancePackageError {
     TranchePriceThresholdsNotMonotonic,
     #[msg("Tranche token amount must be greater than 0")]
     TrancheTokenAmountZero,
+    #[msg("TWAP length must be greater than or equal to 1 day and less than 1 year")]
+    InvalidTwapLength,
 }
