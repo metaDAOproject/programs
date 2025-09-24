@@ -123,7 +123,6 @@ export default function suite() {
     );
     assert.equal(fundingRecordAccount.pdaBump, pdaBump);
     assert.ok(fundingRecordAccount.funder.equals(this.payer.publicKey));
-    assert.ok(fundingRecordAccount.seqNum.eqn(0));
   });
 
   it("successfully funds the launch multiple times", async function () {
@@ -161,7 +160,6 @@ export default function suite() {
       fundingRecordAccount.committedAmount.toString(),
       totalAmount.toString(),
     );
-    assert.ok(fundingRecordAccount.seqNum.eqn(1));
   });
 
   it("fails to fund the launch after time expires", async function () {

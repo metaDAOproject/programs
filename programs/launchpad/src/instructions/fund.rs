@@ -89,14 +89,12 @@ impl Fund<'_> {
 
         if funding_record.funder == ctx.accounts.funder.key() {
             funding_record.committed_amount += amount;
-            funding_record.seq_num += 1;
         } else {
             funding_record.set_inner(FundingRecord {
                 pda_bump: ctx.bumps.funding_record,
                 funder: ctx.accounts.funder.key(),
                 launch: ctx.accounts.launch.key(),
                 committed_amount: amount,
-                seq_num: 0,
                 is_tokens_claimed: false,
                 is_usdc_refunded: false,
             });
@@ -115,7 +113,6 @@ impl Fund<'_> {
             amount,
             total_committed: ctx.accounts.launch.total_committed_amount,
             funding_record: funding_record.key(),
-            funding_record_seq_num: funding_record.seq_num,
             total_committed_by_funder: funding_record.committed_amount,
         });
 

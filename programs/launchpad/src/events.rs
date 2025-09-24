@@ -51,7 +51,6 @@ pub struct LaunchFundedEvent {
     pub amount: u64,
     pub total_committed_by_funder: u64,
     pub total_committed: u64,
-    pub funding_record_seq_num: u64,
 }
 
 #[event]

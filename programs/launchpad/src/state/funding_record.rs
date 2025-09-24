@@ -11,8 +11,6 @@ pub struct FundingRecord {
     pub launch: Pubkey,
     /// The amount of USDC that has been committed by the funder.
     pub committed_amount: u64,
-    /// The sequence number of this funding record. Useful for sorting events.
-    pub seq_num: u64,
     /// Whether the tokens have been claimed.
     pub is_tokens_claimed: bool,
     /// Whether the USDC has been refunded.

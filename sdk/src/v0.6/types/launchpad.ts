@@ -597,13 +597,6 @@ export type Launchpad = {
             type: "u64";
           },
           {
-            name: "seqNum";
-            docs: [
-              "The sequence number of this funding record. Useful for sorting events.",
-            ];
-            type: "u64";
-          },
-          {
             name: "isTokensClaimed";
             docs: ["Whether the tokens have been claimed."];
             type: "bool";
@@ -1021,11 +1014,6 @@ export type Launchpad = {
         },
         {
           name: "totalCommitted";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "fundingRecordSeqNum";
           type: "u64";
           index: false;
         },
@@ -1866,13 +1854,6 @@ export const IDL: Launchpad = {
             type: "u64",
           },
           {
-            name: "seqNum",
-            docs: [
-              "The sequence number of this funding record. Useful for sorting events.",
-            ],
-            type: "u64",
-          },
-          {
             name: "isTokensClaimed",
             docs: ["Whether the tokens have been claimed."],
             type: "bool",
@@ -2290,11 +2271,6 @@ export const IDL: Launchpad = {
         },
         {
           name: "totalCommitted",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "fundingRecordSeqNum",
           type: "u64",
           index: false,
         },
