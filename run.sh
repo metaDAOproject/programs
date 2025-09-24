@@ -92,14 +92,14 @@ export_verifiable() {
     PROGRAM_NAME=$1
     PROGRAM_ID=$2
     FEATURES=$3
-    solana-verify export-pda-tx https://github.com/metaDAOproject/futarchy --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf -b ellipsislabs/solana:1.17.16 --library-name "$PROGRAM_NAME" -- --features $FEATURES
+    solana-verify export-pda-tx https://github.com/metaDAOproject/futarchy --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf -b ellipsislabs/solana:1.17.31 --library-name "$PROGRAM_NAME" -- --features $FEATURES
 }
 
 verify_local() {
     PROGRAM_NAME=$1
     PROGRAM_ID=$2
     FEATURES=$3
-    solana-verify verify-from-repo --remote -um --program-id $PROGRAM_ID https://github.com/metaDAOproject/futarchy --library-name $PROGRAM_NAME -b ellipsislabs/solana:1.17.16 -- --features $FEATURES
+    solana-verify verify-from-repo --remote -um --program-id $PROGRAM_ID https://github.com/metaDAOproject/futarchy --library-name $PROGRAM_NAME -b ellipsislabs/solana:1.17.31 -- --features $FEATURES
 }
 
 # verify() {
