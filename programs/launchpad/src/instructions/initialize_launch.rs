@@ -122,6 +122,12 @@ impl InitializeLaunch<'_> {
             LaunchpadError::InvalidMonthlySpendingLimit
         );
 
+        require_neq!(
+            args.monthly_spending_limit_amount,
+            0,
+            LaunchpadError::InvalidMonthlySpendingLimit
+        );
+
         require_gte!(
             MAX_PREMINE * TOKEN_SCALE,
             args.performance_package_token_amount,
