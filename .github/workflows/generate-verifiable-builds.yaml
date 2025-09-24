@@ -18,7 +18,7 @@ jobs:
         with:
           program: futarchy
           anchor-version: '0.29.0'
-          solana-cli-version: '1.17.34'
+          solana-cli-version: '1.17.31'
           features: 'production'
       - run: 'git pull --rebase'
       - run: cp target/deploy/futarchy.so ./verifiable-builds
@@ -35,7 +35,7 @@ jobs:
         with:
           program: conditional_vault
           anchor-version: '0.29.0'
-          solana-cli-version: '1.17.34'
+          solana-cli-version: '1.17.31'
           features: 'production'
       - run: 'git pull --rebase'
       - run: cp target/deploy/conditional_vault.so ./verifiable-builds
@@ -52,7 +52,7 @@ jobs:
         with:
           program: launchpad
           anchor-version: '0.29.0'
-          solana-cli-version: '1.17.34'
+          solana-cli-version: '1.17.31'
           features: 'production'
       - run: 'git pull --rebase'
       - run: cp target/deploy/launchpad.so ./verifiable-builds
@@ -69,7 +69,7 @@ jobs:
         with:
           program: price_based_unlock
           anchor-version: '0.29.0'
-          solana-cli-version: '1.17.34'
+          solana-cli-version: '1.17.31'
       - run: 'git pull --rebase'
       - run: cp target/deploy/price_based_unlock.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
