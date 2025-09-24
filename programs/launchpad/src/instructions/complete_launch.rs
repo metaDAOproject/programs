@@ -691,13 +691,15 @@ impl CompleteLaunch<'_> {
             dao_treasury: launch.dao_vault,
         });
 
+        let refundable_usdc = launch.total_committed_amount - final_raise_amount;
+
         ctx.accounts.verify_position_nft()?;
-        ctx.accounts.verify_vaults(usdc_to_dao)?;
+        ctx.accounts.verify_vaults(refundable_usdc)?;
 
         Ok(())
     }
 
-    fn verify_vaults(&mut self, usdc_to_dao: u64) -> Result<()> {
+    fn verify_vaults(&mut self, refundable_usdc: u64) -> Result<()> {
         self.launch_base_vault.reload()?;
         self.launch_quote_vault.reload()?;
 
@@ -708,10 +710,9 @@ impl CompleteLaunch<'_> {
         );
         require_gte!(
             self.launch_quote_vault.amount,
-            usdc_to_dao,
+            refundable_usdc,
             LaunchpadError::InvariantViolated
         );
-        // require_eq!(false, true);
 
         Ok(())
     }
