@@ -322,7 +322,7 @@ export default async function suite() {
         24 * 30 * 24 * 60 * 60,
     );
     assert.equal(
-      storedPerformancePackage.twapLengthSeconds.toNumber(),
+      storedPerformancePackage.twapLengthSeconds,
       3 * 30 * 24 * 60 * 60,
     );
 

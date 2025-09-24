@@ -14,7 +14,7 @@ while [ $# -gt 0 ]; do
             PROGRAM="$2"
             shift 2
             ;;
-        --no-build)
+        --skip-build)
             NO_BUILD=true
             shift
             ;;
@@ -35,7 +35,7 @@ while [ $# -gt 0 ]; do
             echo ""
             echo "Options:"
             echo "  -p, --program <name>     Build specific program (e.g., autocrat, amm, conditional_vault)"
-            echo "  --no-build               Skip program building"
+            echo "  --skip-build             Skip program building"
             echo "  --no-sdk-build           Skip SDK building"
             echo "  --no-logs                Suppress logs (add RUST_LOG=)"
             echo "  --no-watch               Run once instead of watching for changes"
@@ -44,7 +44,7 @@ while [ $# -gt 0 ]; do
             echo "Examples:"
             echo "  $0                                    # Build all programs, SDK, and test with logs"
             echo "  $0 -p autocrat                        # Build only autocrat program and test"
-            echo "  $0 --no-build                         # Skip building, just test"
+            echo "  $0 --skip-build                       # Skip building, just test"
             echo "  $0 --no-logs                          # Test without logs"
             echo "  $0 -p amm --no-sdk-build --no-logs    # Build amm, skip SDK, no logs"
             exit 0

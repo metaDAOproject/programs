@@ -704,7 +704,7 @@ before(async function () {
   );
 });
 
-describe.only("launchpad", launchpad);
+describe("launchpad", launchpad);
 describe("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);
