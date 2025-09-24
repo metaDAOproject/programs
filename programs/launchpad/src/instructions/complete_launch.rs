@@ -35,7 +35,7 @@ pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
 pub struct CompleteLaunchArgs {
-    pub final_raise_amount: u64,
+    pub final_raise_amount: Option<u64>,
 }
 
 /// Static accounts for completing a launch, used to reduce code duplication
@@ -124,14 +124,6 @@ pub struct MeteoraAccounts<'info> {
     pub damm_v2_event_authority: UncheckedAccount<'info>,
 }
 
-/// Completes a launch, which if the minimum raise is met:
-/// - Creates a DAO
-/// - Mints an additional 1M tokens
-/// - Pairs the 1M tokens against 10% of the USDC on Raydium
-/// - Transfers 90% of the USDC to the DAO treasury
-/// - Transfers mint authority to the DAO treasury
-/// - Transfers the LP position to the DAO treasury
-/// - Updates the token metadata to point to the DAO treasury as the update authority
 #[event_cpi]
 #[derive(Accounts)]
 pub struct CompleteLaunch<'info> {
@@ -254,7 +246,9 @@ impl CompleteLaunch<'_> {
                 msg!("Launch authority must complete launch until unix timestamp {}. Current time is {}.", two_days_after_close, clock.unix_timestamp);
                 return Err(LaunchpadError::LaunchAuthorityNotSet.into());
             }
+        }
 
+        if self.launch_authority.is_some() {
             require_keys_eq!(
                 self.launch_authority.as_ref().unwrap().key(),
                 self.launch.launch_authority,
@@ -266,14 +260,17 @@ impl CompleteLaunch<'_> {
     }
 
     pub fn handle(ctx: Context<Self>, args: CompleteLaunchArgs) -> Result<()> {
-        let CompleteLaunchArgs {
-            mut final_raise_amount,
-        } = args;
+        let CompleteLaunchArgs { final_raise_amount } = args;
 
-        // if the launch authority hasn't come back, ignore whatever the user put in
-        if ctx.accounts.launch_authority.is_none() {
-            final_raise_amount = ctx.accounts.launch.total_committed_amount;
-        }
+        // if the launch authority has provided a final raise amount, use it.
+        // else, if either they haven't provided a final raise amount or it was
+        // completed permissionlessly, use the total committed amount
+        let final_raise_amount =
+            if final_raise_amount.is_some() && ctx.accounts.launch_authority.is_some() {
+                final_raise_amount.unwrap()
+            } else {
+                ctx.accounts.launch.total_committed_amount
+            };
 
         require_gte!(
             final_raise_amount,

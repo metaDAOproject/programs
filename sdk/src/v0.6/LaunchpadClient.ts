@@ -271,7 +271,7 @@ export class LaunchpadClient {
     launch: PublicKey;
     quoteMint?: PublicKey;
     baseMint: PublicKey;
-    finalRaiseAmount: BN;
+    finalRaiseAmount: BN | null;
     launchAuthority: PublicKey | null;
   }) {
     const launchSigner = this.getLaunchSignerAddress({ launch });

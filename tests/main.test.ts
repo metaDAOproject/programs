@@ -671,6 +671,31 @@ before(async function () {
     })[0];
   };
 
+  this.setupBasicLaunch = async ({
+    baseMint,
+    founders,
+  }: {
+    baseMint: PublicKey;
+    founders: PublicKey[];
+  }) => {
+    await this.launchpad
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: new BN(100_000 * 10 ** 6), // 100k
+        secondsForLaunch: 60 * 60 * 24 * 4, // 4 days
+        baseMint,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: new BN(10_000 * 10 ** 6), // 15k burn
+        monthlySpendingLimitMembers: founders,
+        performancePackageGrantee: founders[0],
+        performancePackageTokenAmount: new BN(5_000_000 * 10 ** 6), // 5M
+        monthsUntilInsidersCanUnlock: 24, // 2 years
+      })
+      .rpc();
+  };
+
   await this.createTokenAccount(MAINNET_USDC, this.payer.publicKey);
   await mintToOverride(
     this.context,
@@ -679,8 +704,8 @@ before(async function () {
   );
 });
 
-describe("launchpad", launchpad);
-describe.only("price_based_performance_package", priceBasedPerformancePackage);
+describe.only("launchpad", launchpad);
+describe("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);
 describe("project-wide integration tests", function () {

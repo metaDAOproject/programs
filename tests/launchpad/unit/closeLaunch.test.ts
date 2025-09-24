@@ -1,4 +1,4 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { LaunchpadClient, MAINNET_USDC } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
@@ -44,23 +44,10 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    // Initialize launch
-    await launchpadClient
-      .initializeLaunchIx({
-        tokenName: "META",
-        tokenSymbol: "META",
-        tokenUri: "https://example.com",
-        minimumRaiseAmount: minRaise,
-        secondsForLaunch: secondsForLaunch,
-        baseMint: META,
-        quoteMint: MAINNET_USDC,
-        monthlySpendingLimitAmount: monthlySpend,
-        monthlySpendingLimitMembers: [this.payer.publicKey],
-        priceBasedUnlockAddress: recipientAddress,
-        priceBasedPremineAmount: premineAmount,
-        priceBasedUnlockThreshold: new BN("2000000000000"),
-      })
-      .rpc();
+    await this.setupBasicLaunch({
+      baseMint: META,
+      founders: [this.payer.publicKey],
+    });
 
     await launchpadClient.startLaunchIx({ launch }).rpc();
 
@@ -69,7 +56,7 @@ export default function suite() {
 
   it("successfully closes launch after sufficient time when minimum raise is met", async function () {
     // Fund the launch to meet minimum raise
-    const fundAmount = new BN(150_000_000); // 150 USDC (above minimum)
+    const fundAmount = new BN(150_000_000_000); // 150k USDC (above minimum)
     await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
 
     // Advance clock past the launch period
@@ -122,7 +109,7 @@ export default function suite() {
     assert.isNull(launchAccount.unixTimestampClosed);
   });
 
-  it("fails to close launch when launch is not in Live state", async function () {
+  it("fails to close launch when launchi s has already been closed", async function () {
     // Fund the launch
     const fundAmount = new BN(150_000_000);
     await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
@@ -133,15 +120,15 @@ export default function suite() {
 
     // Try to close again
     try {
-      await launchpadClient.closeLaunchIx({ launch }).rpc();
+      await launchpadClient
+        .closeLaunchIx({ launch })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+        ])
+        .rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
-      // The error message might be different depending on the state
-      // Could be "LaunchNotInitialized" or transaction already processed
-      assert.isTrue(
-        e.message.includes("LaunchNotInitialized") ||
-          e.message.includes("already been pro"),
-      );
+      assert.include(e.message, "LaunchNotLive");
     }
   });
 
@@ -166,9 +153,9 @@ export default function suite() {
         quoteMint: MAINNET_USDC,
         monthlySpendingLimitAmount: monthlySpend,
         monthlySpendingLimitMembers: [this.payer.publicKey],
-        priceBasedUnlockAddress: recipientAddress,
-        priceBasedPremineAmount: premineAmount,
-        priceBasedUnlockThreshold: new BN("2000000000000"),
+        performancePackageGrantee: recipientAddress,
+        performancePackageTokenAmount: premineAmount,
+        monthsUntilInsidersCanUnlock: 18,
       })
       .rpc();
 
@@ -177,7 +164,7 @@ export default function suite() {
       await launchpadClient.closeLaunchIx({ launch: newLaunch }).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
-      assert.include(e.message, "LaunchNotInitialized");
+      assert.include(e.message, "LaunchNotLive");
     }
 
     // Verify launch state is still Initialized

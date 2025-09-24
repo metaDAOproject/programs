@@ -29,12 +29,6 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
 
-  const minRaise = new BN(100_000_000); // 1000 USDCC
-  const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
-  const monthlySpend = new BN(10_000_000);
-  const recipientAddress = Keypair.generate().publicKey;
-  const premineAmount = new BN(600_000_000_000_0);
-
   before(async function () {
     futarchyClient = this.futarchy;
     launchpadClient = this.launchpad;
@@ -64,22 +58,10 @@ export default function suite() {
     );
 
     // Initialize launch
-    await launchpadClient
-      .initializeLaunchIx({
-        tokenName: "META",
-        tokenSymbol: "META",
-        tokenUri: "https://example.com",
-        minimumRaiseAmount: minRaise,
-        secondsForLaunch: secondsForLaunch,
-        baseMint: META,
-        quoteMint: MAINNET_USDC,
-        monthlySpendingLimitAmount: monthlySpend, // 100 USDC burn
-        monthlySpendingLimitMembers: [this.payer.publicKey],
-        priceBasedUnlockAddress: recipientAddress,
-        priceBasedPremineAmount: premineAmount,
-        priceBasedUnlockThreshold: new BN("2000000000000"), // 2e12 price threshold
-      })
-      .rpc();
+    await this.setupBasicLaunch({
+      baseMint: META,
+      founders: [this.payer.publicKey],
+    });
 
     await launchpadClient.startLaunchIx({ launch }).rpc();
 
@@ -100,7 +82,8 @@ export default function suite() {
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,
-        finalRaiseAmount: minRaise,
+        finalRaiseAmount: null,
+        launchAuthority: this.payer.publicKey,
       })
       .transaction();
 
@@ -170,7 +153,7 @@ export default function suite() {
       launch,
       this.payer.publicKey,
     );
-    const fundingRecordAccount =
+    let fundingRecordAccount =
       await launchpadClient.fetchFundingRecord(fundingRecord);
     console.log(
       "Payer committed amount:",
@@ -197,15 +180,18 @@ export default function suite() {
 
     assert.equal(finalTokenBalance.toString(), expectedTokens.toString());
 
-    // Verify funding record is closed
-    // fundingRecord already declared above
-
-    try {
+    fundingRecordAccount =
       await launchpadClient.fetchFundingRecord(fundingRecord);
-      assert.fail("Funding record should be closed");
-    } catch (e) {
-      assert.include(e.message, "Could not find");
-    }
+
+    assert.equal(fundingRecordAccount.isTokensClaimed, true);
+    assert.equal(fundingRecordAccount.isUsdcRefunded, false);
+    assert.equal(
+      fundingRecordAccount.committedAmount.toString(),
+      (100_000 * 10 ** 6).toString(),
+    );
+    assert.ok(fundingRecordAccount.funder.equals(this.payer.publicKey));
+    assert.ok(fundingRecordAccount.launch.equals(launch));
+    // assert.equal(fundingRecordAccount.seqNum.toString(), "2");
   });
 
   it("fails when launch is not complete", async function () {

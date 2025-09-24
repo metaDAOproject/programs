@@ -51,9 +51,9 @@ export default function suite() {
         quoteMint: MAINNET_USDC,
         monthlySpendingLimitAmount: monthlySpend, // 100 USDC burn
         monthlySpendingLimitMembers: [this.payer.publicKey],
-        priceBasedUnlockAddress: recipientAddress,
-        priceBasedPremineAmount: premineAmount,
-        priceBasedUnlockThreshold: unlockThreshold,
+        performancePackageGrantee: recipientAddress,
+        performancePackageTokenAmount: premineAmount,
+        monthsUntilInsidersCanUnlock: 18,
       })
       .rpc();
   });

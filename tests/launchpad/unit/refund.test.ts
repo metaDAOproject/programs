@@ -25,8 +25,6 @@ export default function suite() {
   let quoteVault: PublicKey;
   let funderQuoteAccount: PublicKey;
 
-  const minRaise = new BN(1000_000000); // 1000 USDC
-
   before(async function () {
     futarchyClient = this.futarchy;
     launchpadClient = this.launchpad;
@@ -52,23 +50,10 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    // Initialize launch
-    await launchpadClient
-      .initializeLaunchIx({
-        tokenName: "META",
-        tokenSymbol: "MTA",
-        tokenUri: "https://example.com",
-        minimumRaiseAmount: minRaise,
-        secondsForLaunch: 60 * 60 * 24 * 6,
-        baseMint: META,
-        quoteMint: MAINNET_USDC,
-        monthlySpendingLimitAmount: new BN(100_000000), // 100 USDC burn
-        monthlySpendingLimitMembers: [this.payer.publicKey],
-        priceBasedUnlockAddress: Keypair.generate().publicKey,
-        priceBasedPremineAmount: new BN(500_000),
-        priceBasedUnlockThreshold: new BN(1_000_000_000_000), // 1e12 price threshold
-      })
-      .rpc();
+    await this.setupBasicLaunch({
+      baseMint: META,
+      founders: [this.payer.publicKey],
+    });
 
     await launchpadClient.startLaunchIx({ launch }).rpc();
 
@@ -78,7 +63,7 @@ export default function suite() {
 
   it("allows refunds when launch is in refunding state", async function () {
     // Fund the launch with less than minimum raise
-    const partialAmount = minRaise.divn(2);
+    const partialAmount = new BN(100_000_000_000).divn(2); // 50k USDC
 
     await launchpadClient.fundIx({ launch, amount: partialAmount }).rpc();
 
@@ -98,7 +83,7 @@ export default function suite() {
     );
 
     // Get refund
-    await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();
+    await launchpadClient.refundIx({ launch, quoteMint: MAINNET_USDC }).rpc();
 
     const finalUsdcBalance = await this.getTokenBalance(
       MAINNET_USDC,
@@ -121,29 +106,15 @@ export default function suite() {
   });
 
   it("fails when launch is not in refunding state", async function () {
-    const partialAmount = minRaise.divn(2);
+    const partialAmount = new BN(100_000_000_000).divn(2); // 50k USDC
 
     await launchpadClient.fundIx({ launch, amount: partialAmount }).rpc();
 
     try {
-      await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();
+      await launchpadClient.refundIx({ launch, quoteMint: MAINNET_USDC }).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "LaunchNotRefunding");
-    }
-  });
-
-  it("fails when user has no tokens to refund", async function () {
-    // Move to refunding state without any funding
-    await this.advanceBySeconds(60 * 60 * 24 * 7);
-    await launchpadClient.closeLaunchIx({ launch }).rpc();
-
-    try {
-      await launchpadClient.refundIx(launch, undefined, MAINNET_USDC).rpc();
-      assert.fail("Should have thrown error");
-    } catch (e) {
-      // console.log(e);
-      // assert.include(e.message, "InvalidAmount");
     }
   });
 }

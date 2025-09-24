@@ -67,9 +67,9 @@ export default function suite() {
         quoteMint: MAINNET_USDC,
         monthlySpendingLimitAmount: monthlySpend, // 100 USDC burn
         monthlySpendingLimitMembers: [this.payer.publicKey],
-        priceBasedUnlockAddress: recipientAddress,
-        priceBasedPremineAmount: premineAmount,
-        priceBasedUnlockThreshold: unlockThreshold,
+        performancePackageGrantee: recipientAddress,
+        performancePackageTokenAmount: premineAmount,
+        monthsUntilInsidersCanUnlock: 18,
       })
       .rpc();
 
@@ -78,8 +78,6 @@ export default function suite() {
   });
 
   it("completes launch successfully when minimum raise is met and time has passed", async function () {
-    // Fund the launch with exactly minimum raise
-
     await launchpadClient.fundIx({ launch, amount: minRaise }).rpc();
 
     const [tokenMetadata] = getMetadataAddr(META);
@@ -108,7 +106,13 @@ export default function suite() {
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
+      .completeLaunchIx({
+        launch,
+        quoteMint: MAINNET_USDC,
+        baseMint: META,
+        finalRaiseAmount: null,
+        launchAuthority: this.payer.publicKey,
+      })
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -128,20 +132,10 @@ export default function suite() {
     await this.banksClient.processTransaction(tx);
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
-    const [poolState] = getLiquidityPoolAddr(
-      launchpadClient.getProgramId(),
-      launchAccount.dao,
-    );
-    const [lpMint] = getRaydiumCpmmLpMintAddr(poolState, false);
-
     const treasuryUSDCBalance = await this.getTokenBalance(
       MAINNET_USDC,
       launchAccount.daoVault,
     );
-    // const treasuryLpBalance = await this.getTokenBalance(
-    //   lpMint,
-    //   launchAccount.daoVault
-    // );
 
     assert.exists(launchAccount.state.complete);
     assert.equal(
@@ -152,7 +146,7 @@ export default function suite() {
     const mint = await this.getMint(META);
     assert.isTrue(mint.mintAuthority.equals(launchAccount.daoVault));
     assert.exists(launchAccount.dao);
-    assert.equal(mint.supply, 12_000_000 * 10 ** 6 + Number(premineAmount));
+    assert.equal(mint.supply, 15_000_000 * 10 ** 6 + Number(premineAmount));
 
     rawStoredMetadata = await this.banksClient.getAccount(tokenMetadata);
     storedMetadata = deserializeMetadata({

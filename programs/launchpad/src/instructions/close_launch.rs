@@ -12,9 +12,10 @@ pub struct CloseLaunch<'info> {
 
 impl CloseLaunch<'_> {
     pub fn validate(&self) -> Result<()> {
-        require!(
-            self.launch.state == LaunchState::Live,
-            LaunchpadError::LaunchNotInitialized
+        require_eq!(
+            self.launch.state,
+            LaunchState::Live,
+            LaunchpadError::LaunchNotLive
         );
 
         let clock = Clock::get()?;

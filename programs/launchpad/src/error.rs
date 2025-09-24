@@ -28,8 +28,6 @@ pub enum LaunchpadError {
     InvalidMonthlySpendingLimit,
     #[msg("Cannot do more than a 50% premine")]
     InvalidPriceBasedPremineAmount,
-    #[msg("Price-based unlock threshold must be at least 2x the minimum launch price")]
-    InvalidPriceBasedUnlockThreshold,
     #[msg("Insiders must be forced to wait at least 18 months before unlocking their tokens")]
     InvalidPerformancePackageMinUnlockTime,
     #[msg("Launch authority must be set to complete the launch until 2 days after closing")]
@@ -42,4 +40,6 @@ pub enum LaunchpadError {
     MoneyAlreadyRefunded,
     #[msg("An invariant was violated. You should get in contact with the MetaDAO team if you see this")]
     InvariantViolated,
+    #[msg("Launch must be live to be closed")]
+    LaunchNotLive,
 }
