@@ -17,8 +17,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: metadaoproject/anchor-test@v2.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.18.0'
+          cache: 'yarn'
+          cache-dependency-path: sdk/yarn.lock
+
+      - name: Install SDK dependencies
+        run: |
+          cd sdk
+          yarn install
+
+      - name: Build SDK
+        run: |
+          cd sdk
+          yarn build
+
+      - uses: metadaoproject/anchor-test@v2.3
         with:
           anchor-version: '0.29.0'
           solana-cli-version: '1.17.34'
           node-version: '20.18.0'
+
