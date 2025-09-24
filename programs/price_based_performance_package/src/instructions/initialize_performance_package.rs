@@ -83,6 +83,8 @@ impl InitializePerformancePackage<'_> {
 
         require_neq!(tranches.len(), 0);
 
+        require_gte!(MAX_TRANCHES, tranches.len());
+
         // validate that the tranches are sorted by price threshold
         for i in 1..tranches.len() {
             require_gt!(

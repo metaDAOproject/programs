@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::MAX_TRANCHES;
+
 /// Starting at `byte_offset` in `oracle_account`, this program expects to read:
 /// - 16 bytes for the aggregator, stored as a little endian u128
 /// - 8 bytes for the slot that the aggregator was last updated, stored as a
@@ -50,7 +52,7 @@ impl From<Tranche> for StoredTranche {
 #[derive(InitSpace, Debug)]
 pub struct PerformancePackage {
     /// The tranches that make up the performance package
-    #[max_len(10)]
+    #[max_len(MAX_TRANCHES)]
     pub tranches: Vec<StoredTranche>,
     /// Total amount of tokens in the performance package
     pub total_token_amount: u64,
