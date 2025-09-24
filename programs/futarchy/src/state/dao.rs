@@ -1,5 +1,7 @@
 pub use super::*;
 
+pub const MAX_SPENDING_LIMIT_MEMBERS: usize = 10;
+
 #[account]
 #[derive(InitSpace)]
 pub struct Dao {
@@ -53,7 +55,7 @@ pub struct Dao {
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
 pub struct InitialSpendingLimit {
     pub amount_per_month: u64,
-    #[max_len(10)]
+    #[max_len(MAX_SPENDING_LIMIT_MEMBERS)]
     pub members: Vec<Pubkey>,
 }
 
