@@ -710,5 +710,7 @@ describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);
 describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
+  // this test takes a while to run
+  this.timeout(15_000);
   describe("full launch", fullLaunch);
 });
