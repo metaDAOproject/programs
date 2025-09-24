@@ -19,7 +19,7 @@ pub use events::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("GP3gUFqHgdz9tB5bosCqmnu7qnkFa1gjUMFs8uCkwWQr");
+declare_id!("pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS");
 
 #[program]
 pub mod price_based_performance_package {

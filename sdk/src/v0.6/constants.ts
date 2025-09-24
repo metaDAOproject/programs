@@ -18,7 +18,7 @@ export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
   "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d",
 );
 export const PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID = new PublicKey(
-  "GP3gUFqHgdz9tB5bosCqmnu7qnkFa1gjUMFs8uCkwWQr",
+  "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS",
 );
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(

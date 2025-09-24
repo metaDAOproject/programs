@@ -8,7 +8,7 @@ skip-lint = false
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 futarchy = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
 launchpad = "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
-price_based_performance_package = "GP3gUFqHgdz9tB5bosCqmnu7qnkFa1gjUMFs8uCkwWQr"
+price_based_performance_package = "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
 
 [registry]
 url = "https://api.apr.dev"
