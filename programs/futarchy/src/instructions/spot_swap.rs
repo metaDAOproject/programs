@@ -14,14 +14,14 @@ pub struct SpotSwap<'info> {
     pub dao: Box<Account<'info, Dao>>,
     #[account(
         mut,
-        associated_token::mint = dao.base_mint,
-        associated_token::authority = user,
+        token::mint = dao.base_mint,
+        token::authority = user,
     )]
     pub user_base_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        associated_token::mint = dao.quote_mint,
-        associated_token::authority = user,
+        token::mint = dao.quote_mint,
+        token::authority = user,
     )]
     pub user_quote_account: Box<Account<'info, TokenAccount>>,
     #[account(
