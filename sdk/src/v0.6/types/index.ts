@@ -1,5 +1,3 @@
-import { Futarchy as FutarchyProgram } from "./futarchy.js";
-
 import { Amm as AmmProgram, IDL as AmmIDL } from "./amm.js";
 export { AmmProgram, AmmIDL };
 
@@ -15,17 +13,8 @@ import {
 } from "./conditional_vault.js";
 export { ConditionalVaultProgram, ConditionalVaultIDL };
 
-// import {
-//   SharedLiquidityManager as SharedLiquidityManagerProgram,
-//   IDL as SharedLiquidityManagerIDL,
-// } from "./shared_liquidity_manager.js";
-// export { SharedLiquidityManagerProgram, SharedLiquidityManagerIDL };
-
-// import {
-//   PriceBasedTokenLock as PriceBasedTokenLockProgram,
-//   IDL as PriceBasedTokenLockIDL,
-// } from "./price_based_token_lock.js";
-// export { PriceBasedTokenLockProgram, PriceBasedTokenLockIDL };
+import { Futarchy as FutarchyProgram, IDL as FutarchyIDL } from "./futarchy.js";
+export { FutarchyProgram, FutarchyIDL };
 
 import {
   PriceBasedPerformancePackage as PriceBasedPerformancePackageProgram,
@@ -112,23 +101,67 @@ export type LaunchRefundedEvent =
   IdlEvents<LaunchpadProgram>["LaunchRefundedEvent"];
 export type LaunchStartedEvent =
   IdlEvents<LaunchpadProgram>["LaunchStartedEvent"];
+export type LaunchCloseEvent = IdlEvents<LaunchpadProgram>["LaunchCloseEvent"];
 export type LaunchpadEvent =
   | LaunchClaimEvent
   | LaunchCompletedEvent
   | LaunchFundedEvent
   | LaunchInitializedEvent
   | LaunchRefundedEvent
-  | LaunchStartedEvent;
+  | LaunchStartedEvent
+  | LaunchCloseEvent;
 
+export type CollectFeesEvent = IdlEvents<FutarchyProgram>["CollectFeesEvent"];
 export type InitializeDaoEvent =
   IdlEvents<FutarchyProgram>["InitializeDaoEvent"];
 export type UpdateDaoEvent = IdlEvents<FutarchyProgram>["UpdateDaoEvent"];
 export type InitializeProposalEvent =
   IdlEvents<FutarchyProgram>["InitializeProposalEvent"];
+export type StakeToProposalEvent =
+  IdlEvents<FutarchyProgram>["StakeToProposalEvent"];
+export type UnstakeFromProposalEvent =
+  IdlEvents<FutarchyProgram>["UnstakeFromProposalEvent"];
+export type LaunchProposalEvent =
+  IdlEvents<FutarchyProgram>["LaunchProposalEvent"];
 export type FinalizeProposalEvent =
   IdlEvents<FutarchyProgram>["FinalizeProposalEvent"];
+export type SpotSwapEvent = IdlEvents<FutarchyProgram>["SpotSwapEvent"];
+export type ConditionalSwapEvent =
+  IdlEvents<FutarchyProgram>["ConditionalSwapEvent"];
+export type ProvideLiquidityEvent =
+  IdlEvents<FutarchyProgram>["ProvideLiquidityEvent"];
+export type WithdrawLiquidityEvent =
+  IdlEvents<FutarchyProgram>["WithdrawLiquidityEvent"];
 export type FutarchyEvent =
+  | CollectFeesEvent
   | InitializeDaoEvent
   | UpdateDaoEvent
   | InitializeProposalEvent
-  | FinalizeProposalEvent;
+  | StakeToProposalEvent
+  | UnstakeFromProposalEvent
+  | LaunchProposalEvent
+  | FinalizeProposalEvent
+  | SpotSwapEvent
+  | ConditionalSwapEvent
+  | ProvideLiquidityEvent
+  | WithdrawLiquidityEvent;
+
+export type PerformancePackageInitializedEvent =
+  IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageInitialized"];
+export type UnlockStartedEvent =
+  IdlEvents<PriceBasedPerformancePackageProgram>["UnlockStarted"];
+export type UnlockCompletedEvent =
+  IdlEvents<PriceBasedPerformancePackageProgram>["UnlockCompleted"];
+export type ChangeProposedEvent =
+  IdlEvents<PriceBasedPerformancePackageProgram>["ChangeProposed"];
+export type ChangeExecutedEvent =
+  IdlEvents<PriceBasedPerformancePackageProgram>["ChangeExecuted"];
+export type PerformancePackageAuthorityChangedEvent =
+  IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageAuthorityChanged"];
+export type PriceBasedPerformancePackageEvent =
+  | PerformancePackageInitializedEvent
+  | UnlockStartedEvent
+  | UnlockCompletedEvent
+  | ChangeProposedEvent
+  | ChangeExecutedEvent
+  | PerformancePackageAuthorityChangedEvent;
