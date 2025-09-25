@@ -2,12 +2,15 @@
 
 ![License BUSLv1.1](https://img.shields.io/badge/License-BUSLv1.1-lightgray.svg)
 
-Programs for unruggable ICOs and market-driven governance.
+Programs for unruggable capital formation and market-driven governance.
 
 ## Deployments
 
 | program           | tag  | program ID                                   |
 | ----------------- | ---- | -------------------------------------------- |
+| futarchy          | v0.6.0 | FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq |
+| launchpad         | v0.6.0 | MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV |
+| price_based_performance_package | v0.6.0 | pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS |
 | launchpad         | v0.5.0 | mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA |
 | autocrat          | v0.5.0 | auToUr3CQza3D4qreT6Std2MTomfzvrEeCC5qh7ivW5 |
 | amm               | v0.5.0 | AMMJdEiCCa8mdugg6JPF7gFirmmxisTfDJoSNSUi5zDJ |
