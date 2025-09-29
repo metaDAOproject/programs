@@ -65,9 +65,12 @@ impl Refund<'_> {
         let amount_to_refund = match launch.state {
             LaunchState::Refunding => funding_record.committed_amount,
             LaunchState::Complete => {
-                ((launch.final_raise_amount.unwrap() as u128)
+                let amount_used_to_buy = ((launch.final_raise_amount.unwrap() as u128)
                     * funding_record.committed_amount as u128
-                    / launch.total_committed_amount as u128) as u64
+                    / launch.total_committed_amount as u128)
+                    as u64;
+
+                funding_record.committed_amount - amount_used_to_buy
             }
             _ => unreachable!(),
         };

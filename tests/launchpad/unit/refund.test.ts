@@ -105,6 +105,58 @@ export default function suite() {
     );
   });
 
+  it("works for oversubscribed launches", async function () {
+    // fund the launch with more than the minimum raise
+
+    await launchpadClient
+      .fundIx({ launch, amount: new BN(211_000 * 1e6) })
+      .rpc();
+
+    await this.advanceBySeconds(60 * 60 * 24 * 4);
+
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    const completeLaunchTx = await launchpadClient
+      .completeLaunchIx({
+        launch,
+        baseMint: META,
+        finalRaiseAmount: new BN(150_000 * 1e6),
+        launchAuthority: this.payer.publicKey,
+      })
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this,
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer]);
+
+    await this.banksClient.processTransaction(tx);
+
+    const initialUsdcBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    await launchpadClient.refundIx({ launch }).rpc();
+
+    const finalUsdcBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    const refundAmount = finalUsdcBalance - initialUsdcBalance;
+    assert.equal(refundAmount, 61_000n * 1_000_000n);
+  });
+
   it("fails when launch is not in refunding state", async function () {
     const partialAmount = new BN(100_000_000_000).divn(2); // 50k USDC
 
