@@ -105,7 +105,7 @@ impl Refund<'_> {
             common: CommonFields::new(&clock, launch.seq_num),
             launch: ctx.accounts.launch.key(),
             funder: ctx.accounts.funder.key(),
-            usdc_refunded: funding_record.committed_amount,
+            usdc_refunded: amount_to_refund,
             funding_record: ctx.accounts.funding_record.key(),
         });
 
