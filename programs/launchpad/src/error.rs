@@ -26,6 +26,8 @@ pub enum LaunchpadError {
     FreezeAuthoritySet,
     #[msg("Monthly spending limit must be less than 1/6th of the minimum raise amount and cannot be 0")]
     InvalidMonthlySpendingLimit,
+    #[msg("There can only be at most 10 monthly spending limit members")]
+    InvalidMonthlySpendingLimitMembers,
     #[msg("Cannot do more than a 50% premine")]
     InvalidPriceBasedPremineAmount,
     #[msg("Insiders must be forced to wait at least 18 months before unlocking their tokens")]

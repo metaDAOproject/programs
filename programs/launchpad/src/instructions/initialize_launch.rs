@@ -129,6 +129,12 @@ impl InitializeLaunch<'_> {
         );
 
         require_gte!(
+            futarchy::MAX_SPENDING_LIMIT_MEMBERS,
+            args.monthly_spending_limit_members.len(),
+            LaunchpadError::InvalidMonthlySpendingLimitMembers
+        );
+
+        require_gte!(
             MAX_PREMINE * TOKEN_SCALE,
             args.performance_package_token_amount,
             LaunchpadError::InvalidPriceBasedPremineAmount

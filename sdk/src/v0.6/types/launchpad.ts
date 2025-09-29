@@ -1224,41 +1224,46 @@ export type Launchpad = {
     },
     {
       code: 6012;
+      name: "InvalidMonthlySpendingLimitMembers";
+      msg: "There can only be at most 10 monthly spending limit members";
+    },
+    {
+      code: 6013;
       name: "InvalidPriceBasedPremineAmount";
       msg: "Cannot do more than a 50% premine";
     },
     {
-      code: 6013;
+      code: 6014;
       name: "InvalidPerformancePackageMinUnlockTime";
       msg: "Insiders must be forced to wait at least 18 months before unlocking their tokens";
     },
     {
-      code: 6014;
+      code: 6015;
       name: "LaunchAuthorityNotSet";
       msg: "Launch authority must be set to complete the launch until 2 days after closing";
     },
     {
-      code: 6015;
+      code: 6016;
       name: "FinalRaiseAmountTooLow";
       msg: "The final amount raised must be greater than or equal to the minimum raise amount";
     },
     {
-      code: 6016;
+      code: 6017;
       name: "TokensAlreadyClaimed";
       msg: "Tokens already claimed";
     },
     {
-      code: 6017;
+      code: 6018;
       name: "MoneyAlreadyRefunded";
       msg: "Money already refunded";
     },
     {
-      code: 6018;
+      code: 6019;
       name: "InvariantViolated";
       msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this";
     },
     {
-      code: 6019;
+      code: 6020;
       name: "LaunchNotLive";
       msg: "Launch must be live to be closed";
     },
@@ -2491,41 +2496,46 @@ export const IDL: Launchpad = {
     },
     {
       code: 6012,
+      name: "InvalidMonthlySpendingLimitMembers",
+      msg: "There can only be at most 10 monthly spending limit members",
+    },
+    {
+      code: 6013,
       name: "InvalidPriceBasedPremineAmount",
       msg: "Cannot do more than a 50% premine",
     },
     {
-      code: 6013,
+      code: 6014,
       name: "InvalidPerformancePackageMinUnlockTime",
       msg: "Insiders must be forced to wait at least 18 months before unlocking their tokens",
     },
     {
-      code: 6014,
+      code: 6015,
       name: "LaunchAuthorityNotSet",
       msg: "Launch authority must be set to complete the launch until 2 days after closing",
     },
     {
-      code: 6015,
+      code: 6016,
       name: "FinalRaiseAmountTooLow",
       msg: "The final amount raised must be greater than or equal to the minimum raise amount",
     },
     {
-      code: 6016,
+      code: 6017,
       name: "TokensAlreadyClaimed",
       msg: "Tokens already claimed",
     },
     {
-      code: 6017,
+      code: 6018,
       name: "MoneyAlreadyRefunded",
       msg: "Money already refunded",
     },
     {
-      code: 6018,
+      code: 6019,
       name: "InvariantViolated",
       msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this",
     },
     {
-      code: 6019,
+      code: 6020,
       name: "LaunchNotLive",
       msg: "Launch must be live to be closed",
     },
