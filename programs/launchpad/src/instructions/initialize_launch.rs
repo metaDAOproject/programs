@@ -98,12 +98,12 @@ pub struct InitializeLaunch<'info> {
 
 impl InitializeLaunch<'_> {
     pub fn validate(&self, args: &InitializeLaunchArgs) -> Result<()> {
-        #[cfg(not(feature = "devnet"))]
-        require_gte!(
-            args.seconds_for_launch,
-            60 * 60,
-            LaunchpadError::InvalidSecondsForLaunch
-        );
+        // #[cfg(not(feature = "devnet"))]
+        // require_gte!(
+        //     args.seconds_for_launch,
+        //     60 * 60,
+        //     LaunchpadError::InvalidSecondsForLaunch
+        // );
 
         require_gte!(
             60 * 60 * 24 * 14,
@@ -148,12 +148,12 @@ impl InitializeLaunch<'_> {
 
         require!(self.base_mint.supply == 0, LaunchpadError::SupplyNonZero);
 
-        #[cfg(feature = "production")]
-        {
-            let base_token_key: String = self.base_mint.key().to_string();
-            let last_4_chars = &base_token_key[base_token_key.len() - 4..];
-            require_eq!("meta", last_4_chars, LaunchpadError::InvalidTokenKey);
-        }
+        // #[cfg(feature = "production")]
+        // {
+        //     let base_token_key: String = self.base_mint.key().to_string();
+        //     let last_4_chars = &base_token_key[base_token_key.len() - 4..];
+        //     require_eq!("meta", last_4_chars, LaunchpadError::InvalidTokenKey);
+        // }
 
         Ok(())
     }
