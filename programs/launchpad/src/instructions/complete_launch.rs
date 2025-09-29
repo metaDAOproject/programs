@@ -5,10 +5,10 @@ use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, SetAuthority, Token, TokenAccount, Transfer};
 use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_interface;
-// use damm_v2_cpi::constants::seeds::{
-//     POOL_AUTHORITY_PREFIX, POOL_PREFIX, POSITION_NFT_ACCOUNT_PREFIX, POSITION_PREFIX,
-//     TOKEN_VAULT_PREFIX,
-// };
+use damm_v2_cpi::constants::seeds::{
+    POOL_AUTHORITY_PREFIX, POOL_PREFIX, POSITION_NFT_ACCOUNT_PREFIX, POSITION_PREFIX,
+    TOKEN_VAULT_PREFIX,
+};
 use damm_v2_cpi::constants::MAX_SQRT_PRICE;
 use damm_v2_cpi::BaseFeeParameters;
 
@@ -58,58 +58,62 @@ pub struct StaticCompleteLaunchAccounts<'info> {
     pub price_based_performance_package_event_authority: UncheckedAccount<'info>,
 }
 
-// pub fn max_key(left: &Pubkey, right: &Pubkey) -> [u8; 32] {
-//     std::cmp::max(left, right).to_bytes()
-// }
+pub fn max_key(left: &Pubkey, right: &Pubkey) -> [u8; 32] {
+    std::cmp::max(left, right).to_bytes()
+}
 
-// pub fn min_key(left: &Pubkey, right: &Pubkey) -> [u8; 32] {
-//     std::cmp::min(left, right).to_bytes()
-// }
+pub fn min_key(left: &Pubkey, right: &Pubkey) -> [u8; 32] {
+    std::cmp::min(left, right).to_bytes()
+}
 
 #[derive(Accounts)]
 pub struct MeteoraAccounts<'info> {
     pub damm_v2_program: Program<'info, DammV2Cpi>,
-    /// CHECK: checked by damm v2 program
+    /// CHECK: checked by damm v2 program, there should only be one config that works for us
     pub config: UncheckedAccount<'info>,
 
     pub token_2022_program: Program<'info, Token2022>,
 
     /// CHECK: checked by damm v2 program
-    // #[account(mut, seeds = [POSITION_NFT_ACCOUNT_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
-    #[account(mut)]
+    #[account(mut, seeds = [POSITION_NFT_ACCOUNT_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
     pub position_nft_account: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    // #[account(mut, seeds = [
-    //     POOL_PREFIX.as_ref(),
-    //     config.key().as_ref(),
-    //     &max_key(&base_mint.key(), &quote_mint.key()),
-    //     &min_key(&base_mint.key(), &quote_mint.key()),
-    // ], bump, seeds::program = damm_v2_program)]
-    #[account(mut)]
+    #[account(mut, seeds = [
+        POOL_PREFIX.as_ref(),
+        config.key().as_ref(),
+        &max_key(&base_mint.key(), &quote_mint.key()),
+        &min_key(&base_mint.key(), &quote_mint.key()),
+    ], bump, seeds::program = damm_v2_program)]
     pub pool: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    // #[account(mut, seeds = [POSITION_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
-    #[account(mut)]
+    #[account(mut, seeds = [POSITION_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
     pub position: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    // #[account(mut, seeds = [
-    //     TOKEN_VAULT_PREFIX.as_ref(),
-    //     base_mint.key().as_ref(),
-    //     pool.key().as_ref(),
-    // ], bump, seeds::program = damm_v2_program)]
-    #[account(mut)]
+    #[account(mut, seeds = [b"position_nft_mint", base_mint.key().as_ref()], bump)]
+    pub position_nft_mint: UncheckedAccount<'info>,
+
+    /// CHECK: checked by root struct
+    pub base_mint: UncheckedAccount<'info>,
+    /// CHECK: checked by root struct
+    pub quote_mint: UncheckedAccount<'info>,
+
+    /// CHECK: checked by damm v2 program
+    #[account(mut, seeds = [
+        TOKEN_VAULT_PREFIX.as_ref(),
+        base_mint.key().as_ref(),
+        pool.key().as_ref(),
+    ], bump, seeds::program = damm_v2_program)]
     pub token_a_vault: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    // #[account(mut, seeds = [
-    //     TOKEN_VAULT_PREFIX.as_ref(),
-    //     quote_mint.key().as_ref(),
-    //     pool.key().as_ref(),
-    // ], bump, seeds::program = damm_v2_program)]
-    #[account(mut)]
+    #[account(mut, seeds = [
+        TOKEN_VAULT_PREFIX.as_ref(),
+        quote_mint.key().as_ref(),
+        pool.key().as_ref(),
+    ], bump, seeds::program = damm_v2_program)]
     pub token_b_vault: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
@@ -117,7 +121,7 @@ pub struct MeteoraAccounts<'info> {
     pub pool_creator_authority: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    // #[account(seeds = [POOL_AUTHORITY_PREFIX.as_ref()], bump, seeds::program = damm_v2_program)]
+    #[account(seeds = [POOL_AUTHORITY_PREFIX.as_ref()], bump, seeds::program = damm_v2_program)]
     pub pool_authority: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
@@ -169,10 +173,6 @@ pub struct CompleteLaunch<'info> {
     )]
     pub launch_base_vault: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [b"position_nft_mint", base_mint.key().as_ref()], bump)]
-    pub position_nft_mint: UncheckedAccount<'info>,
-
     #[account(
         init_if_needed,
         payer = payer,
@@ -181,9 +181,10 @@ pub struct CompleteLaunch<'info> {
     )]
     pub treasury_quote_account: Box<Account<'info, TokenAccount>>,
 
-    #[account(mut)]
+    #[account(mut, address = meteora_accounts.base_mint.key())]
     pub base_mint: Box<Account<'info, Mint>>,
 
+    #[account(address = meteora_accounts.quote_mint.key())]
     pub quote_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: init by autocrat
@@ -315,7 +316,7 @@ impl CompleteLaunch<'_> {
 
         ctx.accounts.provide_single_sided_meteora_liquidity(
             final_raise_amount,
-            ctx.bumps.position_nft_mint,
+            ctx.bumps.meteora_accounts.position_nft_mint,
             ctx.bumps.meteora_accounts.pool_creator_authority,
             launch_signer_seeds,
         )?;
@@ -594,7 +595,7 @@ impl CompleteLaunch<'_> {
                 self.meteora_accounts.damm_v2_program.to_account_info(),
                 damm_v2_cpi::cpi::accounts::InitializePoolWithDynamicConfigCtx {
                     creator: self.squads_multisig_vault.to_account_info(),
-                    position_nft_mint: self.position_nft_mint.to_account_info(),
+                    position_nft_mint: self.meteora_accounts.position_nft_mint.to_account_info(),
                     position_nft_account: self
                         .meteora_accounts
                         .position_nft_account

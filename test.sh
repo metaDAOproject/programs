@@ -72,7 +72,7 @@ fi
 
 # Add SDK build if not skipped
 if [ "$NO_SDK_BUILD" = false ]; then
-    SDK_CMD="(cd sdk && yarn build) &&"
+    SDK_CMD="(cd sdk && yarn build-local) &&"
 fi
 
 # Add log suppression if requested

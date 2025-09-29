@@ -446,9 +446,11 @@ export class LaunchpadClient {
         spendingLimit,
         performancePackage,
         performancePackageTokenAccount,
-        positionNftMint,
         meteoraAccounts: {
           dammV2Program: DAMM_V2_PROGRAM_ID,
+          positionNftMint,
+          baseMint,
+          quoteMint,
           config,
           token2022Program: TOKEN_2022_PROGRAM_ID,
           positionNftAccount,

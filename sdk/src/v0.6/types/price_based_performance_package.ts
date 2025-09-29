@@ -3,9 +3,11 @@ export type PriceBasedPerformancePackage = {
   name: "price_based_performance_package";
   constants: [
     {
-      name: "SEED";
-      type: "string";
-      value: '"anchor"';
+      name: "MAX_TRANCHES";
+      type: {
+        defined: "usize";
+      };
+      value: "10";
     },
   ];
   instructions: [
@@ -897,9 +899,11 @@ export const IDL: PriceBasedPerformancePackage = {
   name: "price_based_performance_package",
   constants: [
     {
-      name: "SEED",
-      type: "string",
-      value: '"anchor"',
+      name: "MAX_TRANCHES",
+      type: {
+        defined: "usize",
+      },
+      value: "10",
     },
   ],
   instructions: [

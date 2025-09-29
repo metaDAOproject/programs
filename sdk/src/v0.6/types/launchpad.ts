@@ -227,11 +227,6 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "positionNftMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "treasuryQuoteAccount";
           isMut: true;
           isSigner: false;
@@ -382,6 +377,21 @@ export type Launchpad = {
             {
               name: "position";
               isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "positionNftMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteMint";
+              isMut: false;
               isSigner: false;
             },
             {
@@ -1210,7 +1220,7 @@ export type Launchpad = {
     {
       code: 6011;
       name: "InvalidMonthlySpendingLimit";
-      msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount";
+      msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount and cannot be 0";
     },
     {
       code: 6012;
@@ -1484,11 +1494,6 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "positionNftMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "treasuryQuoteAccount",
           isMut: true,
           isSigner: false,
@@ -1639,6 +1644,21 @@ export const IDL: Launchpad = {
             {
               name: "position",
               isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "positionNftMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteMint",
+              isMut: false,
               isSigner: false,
             },
             {
@@ -2467,7 +2487,7 @@ export const IDL: Launchpad = {
     {
       code: 6011,
       name: "InvalidMonthlySpendingLimit",
-      msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount",
+      msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount and cannot be 0",
     },
     {
       code: 6012,
