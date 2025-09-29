@@ -278,16 +278,11 @@ impl CompleteLaunch<'_> {
             LaunchpadError::FinalRaiseAmountTooLow
         );
 
-        let launch = &mut ctx.accounts.launch;
-
-        launch.dao = Some(ctx.accounts.dao.key());
-        launch.dao_vault = Some(ctx.accounts.squads_multisig_vault.key());
-
-        let launch_key = launch.key();
+        let launch_key = ctx.accounts.launch.key();
         let launch_signer_seeds = &[
             b"launch_signer",
             launch_key.as_ref(),
-            &[launch.launch_signer_pda_bump],
+            &[ctx.accounts.launch.launch_signer_pda_bump],
         ];
         let launch_signer = &[&launch_signer_seeds[..]];
 
@@ -302,63 +297,100 @@ impl CompleteLaunch<'_> {
         let usdc_to_lp = final_raise_amount.saturating_div(5);
         let usdc_to_dao = final_raise_amount.saturating_sub(usdc_to_lp);
 
+        let clock = Clock::get()?;
+
+        ctx.accounts.initialize_dao(launch_signer, price_1e12)?;
+
+        ctx.accounts.initialize_performance_package(
+            price_1e12,
+            clock.unix_timestamp,
+            launch_signer,
+        )?;
+
+        ctx.accounts.provide_futarchy_amm_liquidity(
+            usdc_to_lp,
+            TOKENS_TO_FUTARCHY_LIQUIDITY,
+            launch_signer,
+        )?;
+
+        ctx.accounts.provide_single_sided_meteora_liquidity(
+            final_raise_amount,
+            ctx.bumps.position_nft_mint,
+            ctx.bumps.meteora_accounts.pool_creator_authority,
+            launch_signer_seeds,
+        )?;
+
+        ctx.accounts.send_usdc_to_dao(usdc_to_dao, launch_signer)?;
+
+        ctx.accounts.transfer_mint_authority_to_dao(launch_signer)?;
+
+        ctx.accounts
+            .transfer_metadata_authority_to_dao(launch_signer)?;
+
+        let launch = &mut ctx.accounts.launch;
+
+        launch.dao = Some(ctx.accounts.dao.key());
+        launch.dao_vault = Some(ctx.accounts.squads_multisig_vault.key());
+        launch.state = LaunchState::Complete;
+        launch.final_raise_amount = Some(final_raise_amount);
+        launch.seq_num += 1;
+
+        emit_cpi!(LaunchCompletedEvent {
+            common: CommonFields::new(&clock, launch.seq_num),
+            launch: launch.key(),
+            final_state: launch.state,
+            total_committed: launch.total_committed_amount,
+            dao: launch.dao,
+            dao_treasury: launch.dao_vault,
+        });
+
+        let refundable_usdc = launch.total_committed_amount - final_raise_amount;
+
+        ctx.accounts.verify_position_nft()?;
+        ctx.accounts.verify_vaults(refundable_usdc)?;
+
+        Ok(())
+    }
+
+    #[inline(never)]
+    fn initialize_dao(&self, launch_signer: &[&[&[u8]]], launch_price_1e12: u128) -> Result<()> {
         futarchy::cpi::initialize_dao(
             CpiContext::new_with_signer(
-                ctx.accounts
-                    .static_accounts
-                    .futarchy_program
-                    .to_account_info(),
+                self.static_accounts.futarchy_program.to_account_info(),
                 futarchy::cpi::accounts::InitializeDao {
-                    dao: ctx.accounts.dao.to_account_info(),
-                    dao_creator: ctx.accounts.launch_signer.to_account_info(),
-                    payer: ctx.accounts.payer.to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    base_mint: ctx.accounts.base_mint.to_account_info(),
-                    quote_mint: ctx.accounts.quote_mint.to_account_info(),
-                    event_authority: ctx
-                        .accounts
+                    dao: self.dao.to_account_info(),
+                    dao_creator: self.launch_signer.to_account_info(),
+                    payer: self.payer.to_account_info(),
+                    system_program: self.system_program.to_account_info(),
+                    base_mint: self.base_mint.to_account_info(),
+                    quote_mint: self.quote_mint.to_account_info(),
+                    event_authority: self
                         .static_accounts
                         .autocrat_event_authority
                         .to_account_info(),
-                    program: ctx
-                        .accounts
-                        .static_accounts
-                        .futarchy_program
-                        .to_account_info(),
-                    squads_multisig: ctx.accounts.squads_multisig.to_account_info(),
-                    squads_multisig_vault: ctx.accounts.squads_multisig_vault.to_account_info(),
-                    squads_program: ctx
-                        .accounts
-                        .static_accounts
-                        .squads_program
-                        .to_account_info(),
-                    squads_program_config: ctx
-                        .accounts
+                    program: self.static_accounts.futarchy_program.to_account_info(),
+                    squads_multisig: self.squads_multisig.to_account_info(),
+                    squads_multisig_vault: self.squads_multisig_vault.to_account_info(),
+                    squads_program: self.static_accounts.squads_program.to_account_info(),
+                    squads_program_config: self
                         .static_accounts
                         .squads_program_config
                         .to_account_info(),
-                    squads_program_config_treasury: ctx
-                        .accounts
+                    squads_program_config_treasury: self
                         .static_accounts
                         .squads_program_config_treasury
                         .to_account_info(),
-                    spending_limit: ctx.accounts.spending_limit.to_account_info(),
-                    futarchy_amm_base_vault: ctx.accounts.futarchy_amm_base_vault.to_account_info(),
-                    futarchy_amm_quote_vault: ctx
-                        .accounts
-                        .futarchy_amm_quote_vault
-                        .to_account_info(),
-                    associated_token_program: ctx
-                        .accounts
-                        .associated_token_program
-                        .to_account_info(),
-                    token_program: ctx.accounts.token_program.to_account_info(),
+                    spending_limit: self.spending_limit.to_account_info(),
+                    futarchy_amm_base_vault: self.futarchy_amm_base_vault.to_account_info(),
+                    futarchy_amm_quote_vault: self.futarchy_amm_quote_vault.to_account_info(),
+                    associated_token_program: self.associated_token_program.to_account_info(),
+                    token_program: self.token_program.to_account_info(),
                 },
                 launch_signer,
             ),
             InitializeDaoParams {
-                twap_initial_observation: price_1e12,
-                twap_max_observation_change_per_update: price_1e12 / 20,
+                twap_initial_observation: launch_price_1e12,
+                twap_max_observation_change_per_update: launch_price_1e12 / 20,
                 // We're providing liquidity, so that can be used for proposals
                 min_quote_futarchic_liquidity: 0,
                 min_base_futarchic_liquidity: 0,
@@ -368,89 +400,44 @@ impl CompleteLaunch<'_> {
                 twap_start_delay_seconds: 24 * 60 * 60,
                 nonce: 0,
                 initial_spending_limit: Some(InitialSpendingLimit {
-                    amount_per_month: launch.monthly_spending_limit_amount,
-                    members: launch.monthly_spending_limit_members.clone(),
+                    amount_per_month: self.launch.monthly_spending_limit_amount,
+                    members: self.launch.monthly_spending_limit_members.clone(),
                 }),
             },
-        )?;
+        )
+    }
 
-        futarchy::cpi::provide_liquidity(
-            CpiContext::new_with_signer(
-                ctx.accounts
-                    .static_accounts
-                    .futarchy_program
-                    .to_account_info(),
-                futarchy::cpi::accounts::ProvideLiquidity {
-                    dao: ctx.accounts.dao.to_account_info(),
-                    liquidity_provider: ctx.accounts.launch_signer.to_account_info(),
-                    liquidity_provider_base_account: ctx
-                        .accounts
-                        .launch_base_vault
-                        .to_account_info(),
-                    liquidity_provider_quote_account: ctx
-                        .accounts
-                        .launch_quote_vault
-                        .to_account_info(),
-                    payer: ctx.accounts.payer.to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    amm_base_vault: ctx.accounts.futarchy_amm_base_vault.to_account_info(),
-                    amm_quote_vault: ctx.accounts.futarchy_amm_quote_vault.to_account_info(),
-                    amm_position: ctx.accounts.dao_owned_lp_position.to_account_info(),
-                    token_program: ctx.accounts.token_program.to_account_info(),
-                    program: ctx
-                        .accounts
-                        .static_accounts
-                        .futarchy_program
-                        .to_account_info(),
-                    event_authority: ctx
-                        .accounts
-                        .static_accounts
-                        .autocrat_event_authority
-                        .to_account_info(),
-                },
-                launch_signer,
-            ),
-            ProvideLiquidityParams {
-                max_base_amount: TOKENS_TO_FUTARCHY_LIQUIDITY,
-                quote_amount: usdc_to_lp,
-                min_liquidity: 0,
-                position_authority: ctx.accounts.squads_multisig_vault.key(),
-            },
-        )?;
-
-        let clock = Box::new(Clock::get()?);
-
+    #[inline(never)]
+    fn initialize_performance_package(
+        &self,
+        launch_price_1e12: u128,
+        current_unix_timestamp: i64,
+        launch_signer: &[&[&[u8]]],
+    ) -> Result<()> {
         price_based_performance_package::cpi::initialize_performance_package(
             CpiContext::new_with_signer(
-                ctx.accounts
-                    .static_accounts
+                self.static_accounts
                     .price_based_performance_package_program
                     .to_account_info(),
                 price_based_performance_package::cpi::accounts::InitializePerformancePackage {
-                    performance_package: ctx.accounts.performance_package.to_account_info(),
-                    create_key: ctx.accounts.launch_signer.to_account_info(),
-                    token_mint: ctx.accounts.base_mint.to_account_info(),
-                    grantor_token_account: ctx.accounts.launch_base_vault.to_account_info(),
-                    grantor: ctx.accounts.launch_signer.to_account_info(),
-                    payer: ctx.accounts.payer.to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    token_program: ctx.accounts.token_program.to_account_info(),
-                    associated_token_program: ctx
-                        .accounts
-                        .associated_token_program
-                        .to_account_info(),
-                    event_authority: ctx
-                        .accounts
+                    performance_package: self.performance_package.to_account_info(),
+                    create_key: self.launch_signer.to_account_info(),
+                    token_mint: self.base_mint.to_account_info(),
+                    grantor_token_account: self.launch_base_vault.to_account_info(),
+                    grantor: self.launch_signer.to_account_info(),
+                    payer: self.payer.to_account_info(),
+                    system_program: self.system_program.to_account_info(),
+                    token_program: self.token_program.to_account_info(),
+                    associated_token_program: self.associated_token_program.to_account_info(),
+                    event_authority: self
                         .static_accounts
                         .price_based_performance_package_event_authority
                         .to_account_info(),
-                    program: ctx
-                        .accounts
+                    program: self
                         .static_accounts
                         .price_based_performance_package_program
                         .to_account_info(),
-                    performance_package_token_vault: ctx
-                        .accounts
+                    performance_package_token_vault: self
                         .performance_package_token_account
                         .to_account_info(),
                 },
@@ -459,51 +446,108 @@ impl CompleteLaunch<'_> {
             InitializePerformancePackageParams {
                 tranches: vec![
                     Tranche {
-                        price_threshold: price_1e12 * 2,
-                        token_amount: launch.performance_package_token_amount / 5,
+                        price_threshold: launch_price_1e12 * 2,
+                        token_amount: self.launch.performance_package_token_amount / 5,
                     },
                     Tranche {
-                        price_threshold: price_1e12 * 4,
-                        token_amount: launch.performance_package_token_amount / 5,
+                        price_threshold: launch_price_1e12 * 4,
+                        token_amount: self.launch.performance_package_token_amount / 5,
                     },
                     Tranche {
-                        price_threshold: price_1e12 * 8,
-                        token_amount: launch.performance_package_token_amount / 5,
+                        price_threshold: launch_price_1e12 * 8,
+                        token_amount: self.launch.performance_package_token_amount / 5,
                     },
                     Tranche {
-                        price_threshold: price_1e12 * 16,
-                        token_amount: launch.performance_package_token_amount / 5,
+                        price_threshold: launch_price_1e12 * 16,
+                        token_amount: self.launch.performance_package_token_amount / 5,
                     },
                     Tranche {
-                        price_threshold: price_1e12 * 32,
-                        token_amount: launch.performance_package_token_amount / 5,
+                        price_threshold: launch_price_1e12 * 32,
+                        token_amount: self.launch.performance_package_token_amount / 5,
                     },
                 ],
-                min_unlock_timestamp: clock.unix_timestamp
-                    + (launch.months_until_insiders_can_unlock as i64 * 30 * 24 * 60 * 60),
+                min_unlock_timestamp: current_unix_timestamp
+                    + (self.launch.months_until_insiders_can_unlock as i64 * 30 * 24 * 60 * 60),
                 oracle_config: OracleConfig {
-                    oracle_account: ctx.accounts.dao.key(),
+                    oracle_account: self.dao.key(),
                     // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
                     // spot `Pool` is always first and has the TWAP oracle
                     byte_offset: 8 + 1,
                 },
                 // 3 month TWAP
                 twap_length_seconds: 3 * 30 * 24 * 60 * 60,
-                grantee: launch.performance_package_grantee,
-                performance_package_authority: ctx.accounts.squads_multisig_vault.key(),
+                grantee: self.launch.performance_package_grantee,
+                performance_package_authority: self.squads_multisig_vault.key(),
             },
+        )
+    }
+
+    #[inline(never)]
+    fn provide_futarchy_amm_liquidity(
+        &self,
+        usdc_to_lp: u64,
+        tokens_to_lp: u64,
+        launch_signer: &[&[&[u8]]],
+    ) -> Result<()> {
+        futarchy::cpi::provide_liquidity(
+            CpiContext::new_with_signer(
+                self.static_accounts.futarchy_program.to_account_info(),
+                futarchy::cpi::accounts::ProvideLiquidity {
+                    dao: self.dao.to_account_info(),
+                    liquidity_provider: self.launch_signer.to_account_info(),
+                    liquidity_provider_base_account: self.launch_base_vault.to_account_info(),
+                    liquidity_provider_quote_account: self.launch_quote_vault.to_account_info(),
+                    payer: self.payer.to_account_info(),
+                    system_program: self.system_program.to_account_info(),
+                    amm_base_vault: self.futarchy_amm_base_vault.to_account_info(),
+                    amm_quote_vault: self.futarchy_amm_quote_vault.to_account_info(),
+                    amm_position: self.dao_owned_lp_position.to_account_info(),
+                    token_program: self.token_program.to_account_info(),
+                    program: self.static_accounts.futarchy_program.to_account_info(),
+                    event_authority: self
+                        .static_accounts
+                        .autocrat_event_authority
+                        .to_account_info(),
+                },
+                launch_signer,
+            ),
+            ProvideLiquidityParams {
+                max_base_amount: tokens_to_lp,
+                quote_amount: usdc_to_lp,
+                min_liquidity: 0,
+                position_authority: self.squads_multisig_vault.key(),
+            },
+        )
+    }
+
+    fn provide_single_sided_meteora_liquidity(
+        &self,
+        final_raise_amount: u64,
+        position_nft_mint_bump: u8,
+        pool_creator_authority_bump: u8,
+        launch_signer_seeds: &[&[u8]],
+    ) -> Result<()> {
+        system_program::transfer(
+            CpiContext::new(
+                self.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: self.payer.to_account_info(),
+                    to: self.launch_signer.to_account_info(),
+                },
+            ),
+            5e7 as u64,
         )?;
 
-        let base_mint_key = ctx.accounts.base_mint.key();
+        let base_mint_key = self.base_mint.key();
         let position_nft_mint_signer_seeds = &[
             b"position_nft_mint".as_ref(),
             base_mint_key.as_ref(),
-            &[ctx.bumps.position_nft_mint],
+            &[position_nft_mint_bump],
         ];
 
         let pool_creator_authority_signer_seeds = &[
             b"damm_pool_creator_authority".as_ref(),
-            &[ctx.bumps.meteora_accounts.pool_creator_authority],
+            &[pool_creator_authority_bump],
         ];
 
         let pool_init_signer = &[
@@ -512,24 +556,24 @@ impl CompleteLaunch<'_> {
             &pool_creator_authority_signer_seeds[..],
         ];
 
-        system_program::transfer(
-            CpiContext::new(
-                ctx.accounts.system_program.to_account_info(),
-                system_program::Transfer {
-                    from: ctx.accounts.payer.to_account_info(),
-                    to: ctx.accounts.launch_signer.to_account_info(),
-                },
-            ),
-            50_000_000,
-        )?;
+        // system_program::transfer(
+        //     CpiContext::new(
+        //         ctx.accounts.system_program.to_account_info(),
+        //         system_program::Transfer {
+        //             from: ctx.accounts.payer.to_account_info(),
+        //             to: ctx.accounts.launch_signer.to_account_info(),
+        //         },
+        //     ),
+        //     50_000_000,
+        // )?;
 
         require_eq!(
-            ctx.accounts.base_mint.decimals,
+            self.base_mint.decimals,
             6,
             LaunchpadError::InvariantViolated
         );
         require_eq!(
-            ctx.accounts.quote_mint.decimals,
+            self.quote_mint.decimals,
             6,
             LaunchpadError::InvariantViolated
         );
@@ -547,64 +591,38 @@ impl CompleteLaunch<'_> {
 
         damm_v2_cpi::cpi::initialize_pool_with_dynamic_config(
             CpiContext::new_with_signer(
-                ctx.accounts
-                    .meteora_accounts
-                    .damm_v2_program
-                    .to_account_info(),
+                self.meteora_accounts.damm_v2_program.to_account_info(),
                 damm_v2_cpi::cpi::accounts::InitializePoolWithDynamicConfigCtx {
-                    creator: ctx.accounts.squads_multisig_vault.to_account_info(),
-                    position_nft_mint: ctx.accounts.position_nft_mint.to_account_info(),
-                    position_nft_account: ctx
-                        .accounts
+                    creator: self.squads_multisig_vault.to_account_info(),
+                    position_nft_mint: self.position_nft_mint.to_account_info(),
+                    position_nft_account: self
                         .meteora_accounts
                         .position_nft_account
                         .to_account_info(),
-                    payer: ctx.accounts.launch_signer.to_account_info(),
-                    pool_creator_authority: ctx
-                        .accounts
+                    payer: self.launch_signer.to_account_info(),
+                    pool_creator_authority: self
                         .meteora_accounts
                         .pool_creator_authority
                         .to_account_info(),
-                    config: ctx.accounts.meteora_accounts.config.to_account_info(),
-                    pool_authority: ctx
-                        .accounts
-                        .meteora_accounts
-                        .pool_authority
-                        .to_account_info(),
-                    token_a_vault: ctx
-                        .accounts
-                        .meteora_accounts
-                        .token_a_vault
-                        .to_account_info(),
-                    token_b_vault: ctx
-                        .accounts
-                        .meteora_accounts
-                        .token_b_vault
-                        .to_account_info(),
-                    payer_token_a: ctx.accounts.launch_base_vault.to_account_info(),
-                    payer_token_b: ctx.accounts.launch_quote_vault.to_account_info(),
-                    token_a_program: ctx.accounts.token_program.to_account_info(),
-                    token_b_program: ctx.accounts.token_program.to_account_info(),
-                    token_2022_program: ctx
-                        .accounts
-                        .meteora_accounts
-                        .token_2022_program
-                        .to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    pool: ctx.accounts.meteora_accounts.pool.to_account_info(),
-                    position: ctx.accounts.meteora_accounts.position.to_account_info(),
-                    token_a_mint: ctx.accounts.base_mint.to_account_info(),
-                    token_b_mint: ctx.accounts.quote_mint.to_account_info(),
-                    event_authority: ctx
-                        .accounts
+                    config: self.meteora_accounts.config.to_account_info(),
+                    pool_authority: self.meteora_accounts.pool_authority.to_account_info(),
+                    token_a_vault: self.meteora_accounts.token_a_vault.to_account_info(),
+                    token_b_vault: self.meteora_accounts.token_b_vault.to_account_info(),
+                    payer_token_a: self.launch_base_vault.to_account_info(),
+                    payer_token_b: self.launch_quote_vault.to_account_info(),
+                    token_a_program: self.token_program.to_account_info(),
+                    token_b_program: self.token_program.to_account_info(),
+                    token_2022_program: self.meteora_accounts.token_2022_program.to_account_info(),
+                    system_program: self.system_program.to_account_info(),
+                    pool: self.meteora_accounts.pool.to_account_info(),
+                    position: self.meteora_accounts.position.to_account_info(),
+                    token_a_mint: self.base_mint.to_account_info(),
+                    token_b_mint: self.quote_mint.to_account_info(),
+                    event_authority: self
                         .meteora_accounts
                         .damm_v2_event_authority
                         .to_account_info(),
-                    program: ctx
-                        .accounts
-                        .meteora_accounts
-                        .damm_v2_program
-                        .to_account_info(),
+                    program: self.meteora_accounts.damm_v2_program.to_account_info(),
                 },
                 pool_init_signer,
             ),
@@ -629,73 +647,60 @@ impl CompleteLaunch<'_> {
                 liquidity,
                 sqrt_price,
             },
-        )?;
+        )
+    }
 
+    fn transfer_mint_authority_to_dao(&self, launch_signer: &[&[&[u8]]]) -> Result<()> {
         token::set_authority(
             CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
+                self.token_program.to_account_info(),
                 SetAuthority {
-                    account_or_mint: ctx.accounts.base_mint.to_account_info(),
-                    current_authority: ctx.accounts.launch_signer.to_account_info(),
+                    account_or_mint: self.base_mint.to_account_info(),
+                    current_authority: self.launch_signer.to_account_info(),
                 },
                 launch_signer,
             ),
             AuthorityType::MintTokens,
-            Some(ctx.accounts.squads_multisig_vault.key()),
-        )?;
+            Some(self.squads_multisig_vault.key()),
+        )
+    }
 
-        token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.launch_quote_vault.to_account_info(),
-                    to: ctx.accounts.treasury_quote_account.to_account_info(),
-                    authority: ctx.accounts.launch_signer.to_account_info(),
-                },
-                launch_signer,
-            ),
-            usdc_to_dao,
-        )?;
-
+    fn transfer_metadata_authority_to_dao(&self, launch_signer: &[&[&[u8]]]) -> Result<()> {
         update_metadata_accounts_v2(
             CpiContext::new_with_signer(
-                ctx.accounts
-                    .static_accounts
+                self.static_accounts
                     .token_metadata_program
                     .to_account_info(),
                 UpdateMetadataAccountsV2 {
-                    metadata: ctx.accounts.token_metadata.to_account_info(),
-                    update_authority: ctx.accounts.launch_signer.to_account_info(),
+                    metadata: self.token_metadata.to_account_info(),
+                    update_authority: self.launch_signer.to_account_info(),
                 },
                 launch_signer,
             ),
-            Some(ctx.accounts.squads_multisig_vault.key()),
+            Some(self.squads_multisig_vault.key()),
             None,
             None,
             None,
-        )?;
-
-        launch.state = LaunchState::Complete;
-        launch.final_raise_amount = Some(final_raise_amount);
-        launch.seq_num += 1;
-
-        emit_cpi!(LaunchCompletedEvent {
-            common: CommonFields::new(&clock, launch.seq_num),
-            launch: launch.key(),
-            final_state: launch.state,
-            total_committed: launch.total_committed_amount,
-            dao: launch.dao,
-            dao_treasury: launch.dao_vault,
-        });
-
-        let refundable_usdc = launch.total_committed_amount - final_raise_amount;
-
-        ctx.accounts.verify_position_nft()?;
-        ctx.accounts.verify_vaults(refundable_usdc)?;
-
-        Ok(())
+        )
     }
 
+    fn send_usdc_to_dao(&self, usdc_to_send: u64, launch_signer: &[&[&[u8]]]) -> Result<()> {
+        token::transfer(
+            CpiContext::new_with_signer(
+                self.token_program.to_account_info(),
+                Transfer {
+                    from: self.launch_quote_vault.to_account_info(),
+                    to: self.treasury_quote_account.to_account_info(),
+                    authority: self.launch_signer.to_account_info(),
+                },
+                launch_signer,
+            ),
+            usdc_to_send,
+        )
+    }
+
+    // otherwise we can run out of stack space
+    #[inline(never)]
     fn verify_vaults(&mut self, refundable_usdc: u64) -> Result<()> {
         self.launch_base_vault.reload()?;
         self.launch_quote_vault.reload()?;
@@ -714,6 +719,8 @@ impl CompleteLaunch<'_> {
         Ok(())
     }
 
+    // otherwise we can run out of stack space
+    #[inline(never)]
     fn verify_position_nft(&self) -> Result<()> {
         let position_nft_account = token_interface::TokenAccount::try_deserialize(
             &mut &self.meteora_accounts.position_nft_account.data.borrow()[..],

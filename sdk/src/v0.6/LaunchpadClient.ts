@@ -23,6 +23,7 @@ import {
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_CONFIG_TREASURY,
   DAMM_V2_PROGRAM_ID,
+  SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -267,12 +268,14 @@ export class LaunchpadClient {
     baseMint,
     finalRaiseAmount,
     launchAuthority,
+    isDevnet = false,
   }: {
     launch: PublicKey;
     quoteMint?: PublicKey;
     baseMint: PublicKey;
     finalRaiseAmount: BN | null;
     launchAuthority: PublicKey | null;
+    isDevnet?: boolean;
   }) {
     const launchSigner = this.getLaunchSignerAddress({ launch });
 
@@ -431,7 +434,9 @@ export class LaunchpadClient {
           autocratEventAuthority,
           squadsProgram: SQUADS_PROGRAM_ID,
           squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
-          squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
+          squadsProgramConfigTreasury: isDevnet
+            ? SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET
+            : SQUADS_PROGRAM_CONFIG_TREASURY,
           priceBasedPerformancePackageProgram: this.priceBasedUnlock.programId,
           priceBasedPerformancePackageEventAuthority:
             this.priceBasedUnlock.getEventAuthorityAddress(),

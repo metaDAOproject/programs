@@ -36,6 +36,7 @@ v03-add-metadata = "yarn run tsx scripts/v0.3/uploadMetadata.ts"
 v04-add-metadata = "yarn run tsx scripts/v0.4/uploadMetadata.ts"
 v04-initialize-dao = "yarn run tsx scripts/v0.4/initializeDao.ts"
 v04-initialize-proposal = "yarn run tsx scripts/v0.4/initializeProposal.ts"
+v06-launch = "yarn run tsx scripts/v0.6/launch.ts"
 
 [test]
 startup_wait = 5000
