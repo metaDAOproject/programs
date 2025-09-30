@@ -100,4 +100,11 @@ pub mod autocrat {
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {
         UpdateDao::handle(ctx, dao_params)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn execute_spending_limit_change<'c: 'info, 'info>(
+        ctx: Context<'_, '_, 'c, 'info, ExecuteSpendingLimitChange<'info>>,
+    ) -> Result<()> {
+        ExecuteSpendingLimitChange::handle(ctx)
+    }
 }

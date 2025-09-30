@@ -34,4 +34,6 @@ pub enum AutocratError {
     QuestionMustBeBinary,
     #[msg("Squads proposal must be in Draft status")]
     InvalidSquadsProposalStatus,
+    #[msg("This Squads transaction should only contain calls to update spending limits")]
+    InvalidTransaction,
 }
