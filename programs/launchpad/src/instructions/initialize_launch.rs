@@ -122,6 +122,12 @@ impl InitializeLaunch<'_> {
             LaunchpadError::InvalidMonthlySpendingLimit
         );
 
+        require_gte!(
+            args.minimum_raise_amount,
+            futarchy::MIN_QUOTE_LIQUIDITY * 5,
+            LaunchpadError::InvalidMinimumRaiseAmount
+        );
+
         require_neq!(
             args.monthly_spending_limit_amount,
             0,

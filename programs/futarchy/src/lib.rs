@@ -33,6 +33,8 @@ declare_id!("FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq");
 pub const SLOTS_PER_10_SECS: u64 = 25;
 pub const ONE_MINUTE_IN_SLOTS: u64 = 6 * SLOTS_PER_10_SECS;
 
+pub const MIN_QUOTE_LIQUIDITY: u64 = 100_000;
+
 pub const TEN_DAYS_IN_SECONDS: i64 = 10 * 24 * 60 * 60;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
