@@ -101,6 +101,10 @@ export const SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET = new PublicKey(
   "HM5y4mz3Bt9JY9mr1hkyhnvqxSH4H2u2451j7Hc2dtvK",
 );
 
+export const MAINNET_METEORA_CONFIG = new PublicKey(
+  "Asv1KQqeop9e4FFvTzEBZhwtTjuWHXPq5thUGtQrzzA3",
+);
+
 export const PERMISSIONLESS_ACCOUNT = Keypair.fromSecretKey(
   Uint8Array.from([
     249, 158, 188, 171, 243, 143, 1, 48, 87, 243, 209, 153, 144, 106, 23, 88,

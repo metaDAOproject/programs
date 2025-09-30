@@ -1267,6 +1267,11 @@ export type Launchpad = {
       name: "LaunchNotLive";
       msg: "Launch must be live to be closed";
     },
+    {
+      code: 6021;
+      name: "InvalidMinimumRaiseAmount";
+      msg: "Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch";
+    },
   ];
 };
 
@@ -2538,6 +2543,11 @@ export const IDL: Launchpad = {
       code: 6020,
       name: "LaunchNotLive",
       msg: "Launch must be live to be closed",
+    },
+    {
+      code: 6021,
+      name: "InvalidMinimumRaiseAmount",
+      msg: "Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch",
     },
   ],
 };

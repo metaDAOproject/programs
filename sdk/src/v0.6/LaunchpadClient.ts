@@ -24,6 +24,7 @@ import {
   SQUADS_PROGRAM_CONFIG_TREASURY,
   DAMM_V2_PROGRAM_ID,
   SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET,
+  MAINNET_METEORA_CONFIG,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -269,6 +270,7 @@ export class LaunchpadClient {
     finalRaiseAmount,
     launchAuthority,
     isDevnet = false,
+    meteoraConfig = MAINNET_METEORA_CONFIG,
   }: {
     launch: PublicKey;
     quoteMint?: PublicKey;
@@ -276,6 +278,7 @@ export class LaunchpadClient {
     finalRaiseAmount: BN | null;
     launchAuthority: PublicKey | null;
     isDevnet?: boolean;
+    meteoraConfig?: PublicKey;
   }) {
     const launchSigner = this.getLaunchSignerAddress({ launch });
 
@@ -368,14 +371,10 @@ export class LaunchpadClient {
       return buf1;
     }
 
-    const config = new PublicKey(
-      "4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod",
-    );
-
     const [pool] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("pool"),
-        config.toBuffer(),
+        meteoraConfig.toBuffer(),
         getFirstKey(baseMint, quoteMint),
         getSecondKey(baseMint, quoteMint),
       ],
@@ -451,7 +450,7 @@ export class LaunchpadClient {
           positionNftMint,
           baseMint,
           quoteMint,
-          config,
+          config: meteoraConfig,
           token2022Program: TOKEN_2022_PROGRAM_ID,
           positionNftAccount,
           pool,

@@ -2,6 +2,7 @@ import { BN } from "bn.js";
 import {
   AddressLookupTableAccount,
   AddressLookupTableProgram,
+  Connection,
   Keypair,
   PublicKey,
   Transaction,
@@ -25,13 +26,13 @@ export const toBN = (val: bigint): typeof BN.prototype =>
 export async function createLookupTableForTransaction(
   transaction: Transaction,
   payer: Keypair,
-  provider: any,
+  connection: Connection,
   additionalAddresses: PublicKey[] = [],
 ): Promise<AddressLookupTableAccount> {
   // use a different authority for the lookup table to avoid conflicts
   const lookupAuthority = Keypair.generate();
   // Should ^ be the payer so we can update it?
-  const slot = await provider.connection.getSlot();
+  const slot = await connection.getSlot();
 
   const [createTableIx, lookupTableAddress] =
     AddressLookupTableProgram.createLookupTable({
@@ -53,13 +54,15 @@ export async function createLookupTableForTransaction(
 
   // Create the lookup table
   let createLutTx = new Transaction().add(createTableIx);
-  let blockhash = await provider.connection.getLatestBlockhash();
+  let blockhash = await connection.getLatestBlockhash();
 
   createLutTx.recentBlockhash = blockhash.blockhash;
   createLutTx.feePayer = payer.publicKey;
   createLutTx.sign(payer, lookupAuthority);
 
-  await provider.connection.sendRawTransaction(createLutTx.serialize());
+  await connection.sendRawTransaction(createLutTx.serialize(), {
+    skipPreflight: true,
+  });
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   // Extend the lookup table with all unique accounts
@@ -75,12 +78,14 @@ export async function createLookupTableForTransaction(
     });
 
     let extendLutTx = new Transaction().add(extendTableIx);
-    blockhash = await provider.connection.getLatestBlockhash();
+    blockhash = await connection.getLatestBlockhash();
     extendLutTx.recentBlockhash = blockhash.blockhash;
     extendLutTx.feePayer = payer.publicKey;
     extendLutTx.sign(payer, lookupAuthority);
 
-    await provider.connection.sendRawTransaction(extendLutTx.serialize());
+    await connection.sendRawTransaction(extendLutTx.serialize(), {
+      skipPreflight: true,
+    });
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
@@ -94,17 +99,19 @@ export async function createLookupTableForTransaction(
   });
 
   let extendLutTx = new Transaction().add(extendTableIx);
-  blockhash = await provider.connection.getLatestBlockhash();
+  blockhash = await connection.getLatestBlockhash();
   extendLutTx.recentBlockhash = blockhash.blockhash;
   extendLutTx.feePayer = payer.publicKey;
   extendLutTx.sign(payer, lookupAuthority);
 
-  await provider.connection.sendRawTransaction(extendLutTx.serialize());
+  await connection.sendRawTransaction(extendLutTx.serialize(), {
+    skipPreflight: true,
+  });
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   // Fetch and return the lookup table account
   let lookupTableAccount =
-    await provider.connection.getAddressLookupTable(lookupTableAddress);
+    await connection.getAddressLookupTable(lookupTableAddress);
   console.log("created lookupTableAccount", lookupTableAccount);
 
   return lookupTableAccount.value;

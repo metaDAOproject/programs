@@ -30,6 +30,7 @@ import {
   getPerformancePackageAddr,
   DAMM_V2_PROGRAM_ID,
   LAUNCHPAD_PROGRAM_ID,
+  MAINNET_METEORA_CONFIG,
 } from "@metadaoproject/futarchy/v0.6";
 
 import {
@@ -265,25 +266,22 @@ before(async function () {
   );
   dynamicConfig.data.set([1], configTypeOffset);
 
-  this.context.setAccount(
-    new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"),
-    dynamicConfig,
-  );
+  this.context.setAccount(MAINNET_METEORA_CONFIG, dynamicConfig);
   const creatorAuthority = new PublicKey(
     dynamicConfig.data.subarray(
       poolCreatorAuthorityOffset,
       poolCreatorAuthorityOffset + 32,
     ),
   );
-  console.log(creatorAuthority);
-  console.log(this.payer.publicKey);
-  console.log(
-    dynamicConfig.data.subarray(
-      poolCreatorAuthorityOffset,
-      poolCreatorAuthorityOffset + 32,
-    ),
-  );
-  console.log(dynamicConfig.data.toString());
+  // console.log(creatorAuthority);
+  // console.log(this.payer.publicKey);
+  // console.log(
+  //   dynamicConfig.data.subarray(
+  //     poolCreatorAuthorityOffset,
+  //     poolCreatorAuthorityOffset + 32,
+  //   ),
+  // );
+  // console.log(dynamicConfig.data.toString());
 
   this.squadsConnection = {
     getAccountInfo: async (address: PublicKey) => {
