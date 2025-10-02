@@ -74,7 +74,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -82,7 +82,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeDaoParams";
           };
-        }
+        },
       ];
     },
     {
@@ -192,7 +192,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -200,7 +200,7 @@ export type Autocrat = {
           type: {
             defined: "InitializeProposalParams";
           };
-        }
+        },
       ];
     },
     {
@@ -290,7 +290,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -316,7 +316,7 @@ export type Autocrat = {
           name: "program";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -324,9 +324,55 @@ export type Autocrat = {
           type: {
             defined: "UpdateDaoParams";
           };
-        }
+        },
       ];
-    }
+    },
+    {
+      name: "executeSpendingLimitChange";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "vaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -391,7 +437,7 @@ export type Autocrat = {
               "observation of 400 (converted into the AMM prices) and a max observation change per",
               "update of 8 (also converted into the AMM prices). Observations can be updated once",
               "a minute, so 2% allows the proposal market to reach double the spot price or 0",
-              "in 50 minutes."
+              "in 50 minutes.",
             ];
             type: "u128";
           },
@@ -402,7 +448,7 @@ export type Autocrat = {
           {
             name: "twapStartDelaySlots";
             docs: [
-              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots"
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
             ];
             type: "u64";
           },
@@ -414,7 +460,7 @@ export type Autocrat = {
               "",
               "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
               "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
-              "10 * 1_000_000_000 (10 META)."
+              "10 * 1_000_000_000 (10 META).",
             ];
             type: "u64";
           },
@@ -433,7 +479,7 @@ export type Autocrat = {
                 defined: "InitialSpendingLimit";
               };
             };
-          }
+          },
         ];
       };
     },
@@ -507,10 +553,10 @@ export type Autocrat = {
           {
             name: "squadsProposal";
             type: "publicKey";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   types: [
     {
@@ -525,7 +571,7 @@ export type Autocrat = {
           {
             name: "unixTimestamp";
             type: "i64";
-          }
+          },
         ];
       };
     },
@@ -573,7 +619,7 @@ export type Autocrat = {
                 defined: "InitialSpendingLimit";
               };
             };
-          }
+          },
         ];
       };
     },
@@ -593,7 +639,7 @@ export type Autocrat = {
           {
             name: "failLpTokensToLock";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -637,7 +683,7 @@ export type Autocrat = {
             type: {
               option: "u64";
             };
-          }
+          },
         ];
       };
     },
@@ -655,7 +701,7 @@ export type Autocrat = {
             type: {
               vec: "publicKey";
             };
-          }
+          },
         ];
       };
     },
@@ -672,10 +718,10 @@ export type Autocrat = {
           },
           {
             name: "Failed";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   events: [
     {
@@ -751,7 +797,7 @@ export type Autocrat = {
           name: "squadsMultisigVault";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -798,7 +844,7 @@ export type Autocrat = {
           name: "minBaseFutarchicLiquidity";
           type: "u64";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -900,7 +946,7 @@ export type Autocrat = {
           name: "squadsMultisigVault";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -954,7 +1000,7 @@ export type Autocrat = {
           name: "squadsMultisig";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
     },
     {
@@ -976,9 +1022,9 @@ export type Autocrat = {
           name: "dao";
           type: "publicKey";
           index: false;
-        }
+        },
       ];
-    }
+    },
   ];
   errors: [
     {
@@ -1055,7 +1101,12 @@ export type Autocrat = {
       code: 6014;
       name: "InvalidSquadsProposalStatus";
       msg: "Squads proposal must be in Draft status";
-    }
+    },
+    {
+      code: 6015;
+      name: "InvalidTransaction";
+      msg: "This Squads transaction should only contain calls to update spending limits";
+    },
   ];
 };
 
@@ -1387,6 +1438,52 @@ export const IDL: Autocrat = {
           },
         },
       ],
+    },
+    {
+      name: "executeSpendingLimitChange",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "vaultTransaction",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [
@@ -2116,6 +2213,11 @@ export const IDL: Autocrat = {
       code: 6014,
       name: "InvalidSquadsProposalStatus",
       msg: "Squads proposal must be in Draft status",
+    },
+    {
+      code: 6015,
+      name: "InvalidTransaction",
+      msg: "This Squads transaction should only contain calls to update spending limits",
     },
   ],
 };
