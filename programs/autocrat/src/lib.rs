@@ -107,4 +107,9 @@ pub mod autocrat {
     ) -> Result<()> {
         ExecuteSpendingLimitChange::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn upgrade_multisig_dao(ctx: Context<UpgradeMultisigDao>) -> Result<()> {
+        UpgradeMultisigDao::handle(ctx)
+    }
 }
