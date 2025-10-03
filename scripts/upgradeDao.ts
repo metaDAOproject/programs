@@ -14,16 +14,16 @@ const keypair = Keypair.fromSecretKey(new Uint8Array(bytes));
 const proposer = keypair;
 
 const autocratClient = AutocratClient.createClient({ provider });
-const daoAddress = new PublicKey('7QbVKbEuqqrEANBaViB1XxoH34hqiroDqf2twkcusnWk')
+const daoAddress = new PublicKey('B3AufDZCDtQN8JxZgJ5bSDZaiKCF4vtw7ynN9tuR9pXN')
 const squadsPayer = new PublicKey("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf")
 
 const daoUpgrade = async () => {
   const dao =
     typeof daoAddress === "string" ? new PublicKey(daoAddress) : daoAddress;
-  const [multisigPda] = multisig.getMultisigPda({
+  
+    const [multisigPda] = multisig.getMultisigPda({
     createKey: dao,
   });
-
   
   const metaDaoUpgradeTxn = await autocratClient.autocrat.methods
     .upgradeMultisigDao()
@@ -31,11 +31,26 @@ const daoUpgrade = async () => {
       dao,
       squadsMultisig: multisigPda,
       squadsMultisigProgram: multisig.PROGRAM_ID,
-      rentPayer: squadsPayer,
-      metadaoMultisig: new PublicKey("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf")
+      rentPayer: payer.pubkey,
+      kollan: payer.pubkey
     }).transaction();
 
   return metaDaoUpgradeTxn;
+}
+
+const mainWoSquads = async () => {
+  const metaDaoUpgradeTxn = await daoUpgrade();
+
+  // const tx = new Transaction().add(metaDaoUpgradeTxn)
+  
+  metaDaoUpgradeTxn.feePayer = payer.publicKey;
+  metaDaoUpgradeTxn.recentBlockhash = (
+    await provider.connection.getLatestBlockhash()
+  ).blockhash;
+  metaDaoUpgradeTxn.partialSign(payer);
+  const txHash = await provider.connection.sendRawTransaction(metaDaoUpgradeTxn.serialize());
+  console.log(`upgradeDao transaction sent:`, txHash); 
+
 }
 
 const main = async () => {
@@ -88,4 +103,4 @@ const main = async () => {
   console.log(`upgradeDao transaction sent:`, txHash); 
 }
 
-main();
+mainWoSquads();
