@@ -2,9 +2,9 @@ use super::*;
 
 use squads_multisig_program::{program::SquadsMultisigProgram, Member, MultisigAddMemberArgs, MultisigRemoveMemberArgs, Permission, Permissions, Multisig};
 
-pub mod metadao_multisig {
+pub mod kollan_address {
     use anchor_lang::prelude::declare_id;
-    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+    declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
 }
 
 #[derive(Accounts)]
@@ -17,13 +17,13 @@ pub struct UpgradeMultisigDao<'info> {
     #[account(mut)]
     pub rent_payer: Signer<'info>,
     pub system_program: Program<'info, System>,
-    pub metadao_multisig: Signer<'info>,
+    pub kollan: Signer<'info>,
 }
 
 impl UpgradeMultisigDao<'_> {
     pub fn validate(&self) -> Result<()> {
         // #[cfg(feature = "production")]
-        require_eq!(self.metadao_multisig.key(), metadao_multisig::id());
+        require_eq!(self.kollan.key(), kollan_address::id());
 
         Ok(())
     }
@@ -35,7 +35,7 @@ impl UpgradeMultisigDao<'_> {
             squads_multisig_program,
             rent_payer,
             system_program,
-            metadao_multisig: _,
+            kollan: _,
         } = ctx.accounts;
 
         let dao_nonce = &dao.nonce.to_le_bytes();

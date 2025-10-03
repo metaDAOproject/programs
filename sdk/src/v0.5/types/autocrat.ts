@@ -402,7 +402,7 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "metadaoMultisig";
+          name: "kollan";
           isMut: false;
           isSigner: true;
         },
@@ -1550,7 +1550,7 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "metadaoMultisig",
+          name: "kollan",
           isMut: false,
           isSigner: true,
         },
