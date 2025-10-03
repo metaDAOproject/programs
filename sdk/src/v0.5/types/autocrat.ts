@@ -373,6 +373,42 @@ export type Autocrat = {
       ];
       args: [];
     },
+    {
+      name: "upgradeMultisigDao";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "rentPayer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "metadaoMultisig";
+          isMut: false;
+          isSigner: true;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -1481,6 +1517,42 @@ export const IDL: Autocrat = {
           name: "program",
           isMut: false,
           isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "upgradeMultisigDao",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "rentPayer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "metadaoMultisig",
+          isMut: false,
+          isSigner: true,
         },
       ],
       args: [],

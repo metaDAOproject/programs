@@ -30,6 +30,8 @@ create-v04-proposal = "yarn run tsx scripts/createV04Proposal.ts"
 initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
 test = "npx mocha --import=tsx --bail tests/main.test.ts"
 execute-spending-limit = "yarn run tsx scripts/executeSpendingLimit.ts"
+upgrade-dao = "yarn run tsx scripts/upgradeDao.ts"
+convert = "yarn run tsx scripts/convertpk.ts"
 
 [test]
 startup_wait = 5000
