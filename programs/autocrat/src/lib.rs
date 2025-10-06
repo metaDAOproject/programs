@@ -112,4 +112,9 @@ pub mod autocrat {
     pub fn upgrade_multisig_dao(ctx: Context<UpgradeMultisigDao>) -> Result<()> {
         UpgradeMultisigDao::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn fix_omnipair_spending_limit(ctx: Context<FixOmnipairSpendingLimit>) -> Result<()> {
+        FixOmnipairSpendingLimit::handle(ctx)
+    }
 }
