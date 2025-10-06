@@ -141,7 +141,7 @@ impl InitializeLaunch<'_> {
         );
 
         require_gte!(
-            MAX_PREMINE * TOKEN_SCALE,
+            MAX_PREMINE,
             args.performance_package_token_amount,
             LaunchpadError::InvalidPriceBasedPremineAmount
         );

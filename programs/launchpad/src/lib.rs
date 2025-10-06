@@ -37,7 +37,7 @@ pub const TOKENS_TO_DAMM_V2_LIQUIDITY: u64 = TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALE
 pub const TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED: u64 = 3_000_000;
 
 /// Max 50% premine
-pub const MAX_PREMINE: u64 = 10_000_000 * TOKEN_SCALE;
+pub const MAX_PREMINE: u64 = 15_000_000 * TOKEN_SCALE;
 
 pub mod usdc_mint {
     use anchor_lang::prelude::declare_id;
