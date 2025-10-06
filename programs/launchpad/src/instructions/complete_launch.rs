@@ -279,6 +279,11 @@ impl CompleteLaunch<'_> {
             LaunchpadError::FinalRaiseAmountTooLow
         );
 
+        require_gte!(
+            ctx.accounts.launch.total_committed_amount,
+            final_raise_amount,
+        );
+
         let launch_key = ctx.accounts.launch.key();
         let launch_signer_seeds = &[
             b"launch_signer",
