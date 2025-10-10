@@ -69,7 +69,11 @@ async function main() {
 
     for (const record of batch) {
       const refundIx = await launchpad
-        .refundIx(launchAddr, record.account.funder)
+        .refundIx({
+          launch: launchAddr,
+          funder: record.account.funder,
+          quoteMint: launch.baseMint,
+        })
         .transaction();
 
       tx.add(refundIx);
