@@ -411,7 +411,7 @@ export default async function suite() {
     } = this.futarchy.getProposalPdas(proposal, META, MAINNET_USDC, dao);
 
     // Stake tokens to meet the baseToStake requirement (100 billion = 100k META tokens)
-    const stakeAmount = new BN(100_000 * 10 ** 6); // 100k META tokens
+    const stakeAmount = new BN(500_000 * 10 ** 6); // 100k META tokens
     await this.futarchy
       .stakeToProposalIx({
         proposal,

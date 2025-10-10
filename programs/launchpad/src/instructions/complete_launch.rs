@@ -401,7 +401,7 @@ impl CompleteLaunch<'_> {
                 min_quote_futarchic_liquidity: 0,
                 min_base_futarchic_liquidity: 0,
                 pass_threshold_bps: 150,
-                base_to_stake: TOKENS_TO_PARTICIPANTS / 100,
+                base_to_stake: TOKENS_TO_PARTICIPANTS / 20,
                 seconds_per_proposal: 3 * 24 * 60 * 60,
                 twap_start_delay_seconds: 24 * 60 * 60,
                 nonce: 0,
