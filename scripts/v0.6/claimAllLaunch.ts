@@ -66,6 +66,16 @@ async function main() {
     }
 
     await sendAndConfirmTransaction(tx, `Claim batch ${i / batchSize + 1}`);
+
+    for (const record of batch) {
+      const refundIx = await launchpad
+        .refundIx(launchAddr, record.account.funder)
+        .transaction();
+
+      tx.add(refundIx);
+    }
+
+    await sendAndConfirmTransaction(tx, `Refund batch ${i / batchSize + 1}`);
   }
 
   console.log("All claims processed successfully!");
