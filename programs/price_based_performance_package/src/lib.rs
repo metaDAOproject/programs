@@ -19,6 +19,20 @@ pub use events::*;
 pub use instructions::*;
 pub use state::*;
 
+#[cfg(not(feature = "no-entrypoint"))]
+use solana_security_txt::security_txt;
+
+#[cfg(not(feature = "no-entrypoint"))]
+security_txt! {
+    name: "price_based_performance_package",
+    project_url: "https://metadao.fi",
+    contacts: "telegram:metaproph3t,telegram:kollan_house",
+    source_code: "https://github.com/metaDAOproject/programs",
+    source_release: "v0.6.0",
+    policy: "The market will decide whether we pay a bug bounty.",
+    acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
+}
+
 declare_id!("pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS");
 
 #[program]

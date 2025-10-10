@@ -1478,6 +1478,7 @@ version = "0.6.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "solana-security-txt",
 ]
 
 [[package]]
