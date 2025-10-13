@@ -34,7 +34,7 @@ pub const TOKENS_TO_FUTARCHY_LIQUIDITY: u64 = 2_000_000 * TOKEN_SCALE;
 /// 3M tokens to single-sided DammV2 liquidity
 pub const TOKENS_TO_DAMM_V2_LIQUIDITY: u64 = TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED * TOKEN_SCALE;
 /// we need this to prevent overflow
-pub const TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED: u64 = 3_000_000;
+pub const TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED: u64 = 900_000;
 
 /// Max 50% premine
 pub const MAX_PREMINE: u64 = 15_000_000 * TOKEN_SCALE;

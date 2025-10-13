@@ -146,7 +146,7 @@ export default function suite() {
     const mint = await this.getMint(META);
     assert.isTrue(mint.mintAuthority.equals(launchAccount.daoVault));
     assert.exists(launchAccount.dao);
-    assert.equal(mint.supply, 15_000_000 * 10 ** 6 + Number(premineAmount));
+    assert.equal(mint.supply, 12_900_000 * 10 ** 6 + Number(premineAmount));
 
     rawStoredMetadata = await this.banksClient.getAccount(tokenMetadata);
     storedMetadata = deserializeMetadata({

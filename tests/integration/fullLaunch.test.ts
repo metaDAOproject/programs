@@ -503,7 +503,7 @@ export default async function suite() {
 
     const storedMeta = await this.getMint(META);
 
-    assert.equal(storedMeta.supply, BigInt(26_000_000 * 10 ** 6)); // 10M ICO + 2M futarchy liquidity + 3M meteora liquidity + 10M package + 1M proposal
+    assert.equal(storedMeta.supply, BigInt(23_900_000 * 10 ** 6)); // 10M ICO + 2M futarchy liquidity + 3M meteora liquidity + 10M package + 1M proposal
 
     const receiverBalance = await this.getTokenBalance(
       META,
