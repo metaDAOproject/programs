@@ -21,6 +21,7 @@ custom-heap = []
 [dependencies]
 anchor-lang = "0.29.0"
 anchor-spl = "0.29.0"
+spl-associated-token-account = "2.3.0"
 futarchy = { path = "../futarchy", features = ["cpi"] }
 price_based_performance_package = { path = "../price_based_performance_package", features = ["cpi"] }
 spl-memo = "=4.0.0"

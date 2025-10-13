@@ -90,4 +90,8 @@ pub mod launchpad {
     pub fn close_launch(ctx: Context<CloseLaunch>) -> Result<()> {
         CloseLaunch::handle(ctx)
     }
+
+    pub fn recover_nested_tokens(ctx: Context<RecoverNestedTokens>) -> Result<()> {
+        RecoverNestedTokens::handle(ctx)
+    }
 }
