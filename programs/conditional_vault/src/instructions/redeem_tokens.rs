@@ -56,33 +56,37 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
             total_numerator += user_conditional_token_account.amount as u128
                 * question.payout_numerators[payout_index] as u128;
 
-            token::burn(
-                CpiContext::new(
-                    accs.token_program.to_account_info(),
-                    Burn {
-                        mint: conditional_mint.to_account_info(),
-                        from: user_conditional_token_account.to_account_info(),
-                        authority: accs.authority.to_account_info(),
-                    },
-                ),
-                user_conditional_token_account.amount,
-            )?;
+            if user_conditional_token_account.amount > 0 {
+                token::burn(
+                    CpiContext::new(
+                        accs.token_program.to_account_info(),
+                        Burn {
+                            mint: conditional_mint.to_account_info(),
+                            from: user_conditional_token_account.to_account_info(),
+                            authority: accs.authority.to_account_info(),
+                        },
+                    ),
+                    user_conditional_token_account.amount,
+                )?;
+            }
         }
 
         let total_redeemable = (total_numerator / question.payout_denominator as u128) as u64;
 
-        token::transfer(
-            CpiContext::new_with_signer(
-                accs.token_program.to_account_info(),
-                Transfer {
-                    from: accs.vault_underlying_token_account.to_account_info(),
-                    to: accs.user_underlying_token_account.to_account_info(),
-                    authority: accs.vault.to_account_info(),
-                },
-                signer,
-            ),
-            total_redeemable,
-        )?;
+        if total_redeemable > 0 {
+            token::transfer(
+                CpiContext::new_with_signer(
+                    accs.token_program.to_account_info(),
+                    Transfer {
+                        from: accs.vault_underlying_token_account.to_account_info(),
+                        to: accs.user_underlying_token_account.to_account_info(),
+                        authority: accs.vault.to_account_info(),
+                    },
+                    signer,
+                ),
+                total_redeemable,
+            )?;
+        }
 
         require_gte!(max_redeemable, total_redeemable, VaultError::AssertFailed);
 
