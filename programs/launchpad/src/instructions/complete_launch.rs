@@ -307,6 +307,7 @@ impl CompleteLaunch<'_> {
 
         ctx.accounts.initialize_dao(launch_signer, price_1e12)?;
 
+        // TODO: only do this is there exists a performance package config
         ctx.accounts.initialize_performance_package(
             price_1e12,
             clock.unix_timestamp,

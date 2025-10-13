@@ -8,12 +8,14 @@ use crate::state::{Launch, LaunchState};
 use crate::MAX_PREMINE;
 use crate::{
     usdc_mint, TOKENS_TO_DAMM_V2_LIQUIDITY, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
-    TOKEN_SCALE,
 };
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, CreateMetadataAccountsV3, Metadata,
 };
+
+// TODO: put spending limit stuff into `Option<SpendingLimitConfig>` and
+// performance package stuff into `Option<PerformancePackageConfig>`
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeLaunchArgs {
@@ -150,6 +152,12 @@ impl InitializeLaunch<'_> {
             args.months_until_insiders_can_unlock,
             18,
             LaunchpadError::InvalidPerformancePackageMinUnlockTime
+        );
+
+        require_gte!(
+            args.performance_package_token_amount,
+            10,
+            LaunchpadError::InvalidPriceBasedPremineAmount
         );
 
         require!(self.base_mint.supply == 0, LaunchpadError::SupplyNonZero);

@@ -169,6 +169,104 @@ export default function suite() {
     );
   });
 
+  it("works with a 0 token premine (today we do a 10 token premine)", async function () {
+    const result = await initializeMintWithSeeds(
+      this.banksClient,
+      this.launchpad,
+      this.payer,
+    );
+
+    META = result.tokenMint;
+    launch = result.launch;
+    launchSigner = result.launchSigner;
+
+    // Initialize launch
+    await launchpadClient
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: secondsForLaunch,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: monthlySpend, // 100 USDC burn
+        monthlySpendingLimitMembers: [this.payer.publicKey],
+        performancePackageGrantee: recipientAddress,
+        performancePackageTokenAmount: new BN(10),
+        monthsUntilInsidersCanUnlock: 18,
+      })
+      .rpc();
+
+    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await this.createTokenAccount(META, this.payer.publicKey);
+
+    await launchpadClient.fundIx({ launch, amount: minRaise }).rpc();
+
+    const [tokenMetadata] = getMetadataAddr(META);
+
+    let rawStoredMetadata = await this.banksClient.getAccount(tokenMetadata);
+    let storedMetadata = deserializeMetadata({
+      ...rawStoredMetadata,
+      publicKey: fromWeb3JsPublicKey(tokenMetadata),
+      owner: fromWeb3JsPublicKey(rawStoredMetadata.owner),
+      lamports: {
+        basisPoints: BigInt(rawStoredMetadata.lamports),
+        identifier: "SOL",
+        decimals: 9,
+      },
+      rentEpoch: rawStoredMetadata.rentEpoch
+        ? BigInt(rawStoredMetadata.rentEpoch)
+        : undefined,
+    });
+    assert.ok(
+      toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(launchSigner),
+    );
+
+    // Advance clock past 7 days
+    await this.advanceBySeconds(60 * 60 * 24 * 11);
+
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    const completeLaunchTx = await launchpadClient
+      .completeLaunchIx({
+        launch,
+        quoteMint: MAINNET_USDC,
+        baseMint: META,
+        finalRaiseAmount: null,
+        launchAuthority: this.payer.publicKey,
+      })
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this,
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer]);
+
+    await this.banksClient.processTransaction(tx);
+
+    const launchAccount = await launchpadClient.fetchLaunch(launch);
+    const treasuryUSDCBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      launchAccount.daoVault,
+    );
+
+    assert.exists(launchAccount.state.complete);
+    assert.equal(
+      treasuryUSDCBalance.toString(),
+      minRaise.muln(8).divn(10).toString(),
+    );
+  });
+
   // it("fails when launch period has not passed", async function () {
   //   // Fund the launch with exactly minimum raise
 

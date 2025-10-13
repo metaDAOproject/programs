@@ -28,7 +28,7 @@ pub enum LaunchpadError {
     InvalidMonthlySpendingLimit,
     #[msg("There can only be at most 10 monthly spending limit members")]
     InvalidMonthlySpendingLimitMembers,
-    #[msg("Cannot do more than a 50% premine")]
+    #[msg("Cannot do more than a 50% premine, minimum is 10 atoms of token")]
     InvalidPriceBasedPremineAmount,
     #[msg("Insiders must be forced to wait at least 18 months before unlocking their tokens")]
     InvalidPerformancePackageMinUnlockTime,
