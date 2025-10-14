@@ -1152,7 +1152,6 @@ dependencies = [
  "price_based_performance_package",
  "solana-program",
  "solana-security-txt",
- "spl-associated-token-account",
  "spl-memo",
  "spl-token",
  "squads-multisig-program",

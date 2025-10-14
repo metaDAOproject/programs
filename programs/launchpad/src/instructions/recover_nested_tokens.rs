@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount}};
 
-use crate::{state::{Launch, associated_token_program::associated_token_program::{RecoverNested, recover_nested}}};
+use crate::{state::{Launch, associated_token_program::{RecoverNested, recover_nested}}};
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -30,7 +30,7 @@ pub struct RecoverNestedTokens<'info> {
     pub launch_signer: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl RecoverNestedTokens<'_> {
@@ -49,12 +49,13 @@ impl RecoverNestedTokens<'_> {
             owner_associated_account_address: ctx.accounts.launch_quote_vault.to_account_info(),
             owner_token_mint_address: ctx.accounts.mint.to_account_info(),
             wallet_address: ctx.accounts.launch_signer.to_account_info(),
-            token_program_id: ctx.accounts.token_program.to_account_info(),
+            token_program: ctx.accounts.token_program.to_account_info(),
+            associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
         };
 
         recover_nested(
             CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(), 
+                ctx.accounts.associated_token_program.to_account_info(), 
                 accounts, 
                 signer
             )
