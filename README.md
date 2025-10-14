@@ -29,6 +29,172 @@ Programs for unruggable capital formation and market-driven governance.
 | autocrat_v0       | v0   | meta3cxKzFBmWYgCVozmvCQAS3y9b3fGxrG9HkHL7Wi  |
 | conditional_vault | v0   | vaU1tVLj8RFk7mNj1BxqgAsMKKaL8UvEUHvU3tdbZPe  |
 
+## Development Setup
+
+### Prerequisites
+
+Before you can build and test the programs, you'll need to install the following tools:
+
+- **Rust**: 1.78.0 or compatible
+- **Solana CLI**: 1.17.34 or compatible
+- **Anchor CLI**: 0.29.0
+- **Node.js**: 16.x or higher (tested with v23.x)
+- **Yarn**: 1.22.22 or compatible
+
+### MacOS Setup
+
+#### 1. Clone the Repository
+
+```bash
+git clone https://github.com/metaDAOproject/programs.git
+cd programs
+```
+
+#### 2. Install Rust
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup install 1.78.0
+rustup default 1.78.0
+```
+
+#### 3. Install Solana CLI
+
+```bash
+sh -c "$(curl -sSfL https://release.solana.com/v1.17.34/install)"
+```
+
+Add Solana to your PATH (add to `~/.zshrc` or `~/.bash_profile`):
+
+```bash
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+```
+
+Reload your shell configuration:
+
+```bash
+source ~/.zshrc  # or source ~/.bash_profile
+```
+
+#### 4. Install Anchor CLI
+
+```bash
+cargo install --git https://github.com/coral-xyz/anchor --tag v0.29.0 anchor-cli --locked
+```
+
+#### 5. Install Node.js and Yarn
+
+Install Node.js using [nvm](https://github.com/nvm-sh/nvm) (recommended):
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 18
+nvm use 18
+```
+
+Install Yarn:
+
+```bash
+npm install -g yarn
+```
+
+#### 6. Install GNU tar (Required for MacOS)
+
+MacOS ships with BSD tar, but Anchor requires GNU tar:
+
+```bash
+brew install gnu-tar
+```
+
+Add GNU tar to your PATH (add to `~/.zshrc` or `~/.bash_profile`):
+
+```bash
+export PATH="/opt/homebrew/opt/gnu-tar/libexec/gnubin:$PATH"
+```
+
+Reload your shell configuration:
+
+```bash
+source ~/.zshrc  # or source ~/.bash_profile
+```
+
+#### 7. Install Dependencies
+
+Install root project dependencies:
+
+```bash
+yarn install
+```
+
+Install SDK dependencies and build:
+
+```bash
+cd sdk
+yarn install
+yarn build-local
+cd ..
+```
+
+#### 8. Build Programs
+
+Build all Solana programs:
+
+```bash
+anchor build
+```
+
+Or build a specific program:
+
+```bash
+anchor build -p programs
+```
+
+#### 9. Run Tests
+
+Run all tests:
+
+```bash
+anchor test
+```
+
+Run tests without rebuilding (faster for iteration):
+
+```bash
+anchor test --skip-build
+```
+
+### Troubleshooting
+
+#### "blockstore error" when running tests
+
+If you encounter a "blockstore error", clean up corrupted ledger directories:
+
+```bash
+rm -rf .anchor/test-ledger test-ledger
+```
+
+Then run `anchor test` again.
+
+#### "Cannot find module" errors
+
+If you see module resolution errors, rebuild the SDK:
+
+```bash
+cd sdk
+yarn build-local
+cd ..
+yarn install --force
+```
+
+#### Tests timeout or validator doesn't start
+
+Increase the startup wait time in `Anchor.toml`:
+
+```toml
+[test]
+startup_wait = 10000  # Increase from 5000 if needed
+```
+
 ## Third-Party Licenses
 
 Approval Notice - Squads v4.0
