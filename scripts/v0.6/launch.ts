@@ -1,126 +1,88 @@
 import * as anchor from "@coral-xyz/anchor";
 import {
-  FutarchyClient,
   LaunchpadClient,
-  getDaoAddr,
-  DEVNET_USDC,
-  MAINNET_USDC,
-  SQUADS_PROGRAM_CONFIG_TREASURY,
   getLaunchAddr,
   getLaunchSignerAddr,
 } from "@metadaoproject/futarchy/v0.6";
-import {
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-  TransactionMessage,
-  VersionedTransaction,
-} from "@solana/web3.js";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
-import * as multisig from "@sqds/multisig";
-import { DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY } from "@metadaoproject/futarchy/v0.6";
 import * as token from "@solana/spl-token";
-import { createLookupTableForTransaction } from "../utils/utils.js";
 
 // DAO DETAILS
 const SPENDING_MEMBERS = [
-  new PublicKey("613BRiXuAEn7vibs2oAYzpGW9fXgjzDNuFMM4wPzLdY"), // Proph3t
+  new PublicKey("5XmgUdxfKBfyH8RjYdxYSegdQHLqWqU2NG1SZznv9D7g"), // Ram 1
+  new PublicKey("G7qs9MUFquwnSFtrDU6261KtovKRg8GS4s6bFbmLiBiQ"), // Ram 2
 ];
+const SPENDING_LIMIT = 100_000;
+const MIN_GOAL = 2_000_000;
+
+const TOKEN_SEED = "232mcvf09sq1C3w3";
+
+const secondsPerDay = 86_400;
+const fourDays = secondsPerDay * 4;
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const futarchy: FutarchyClient = FutarchyClient.createClient({ provider });
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
 export const launch = async () => {
-  const mintKp = Keypair.generate();
+  const seed = TOKEN_SEED;
+  const lamports = await provider.connection.getMinimumBalanceForRentExemption(
+    token.MINT_SIZE,
+  );
 
-  const [launch] = getLaunchAddr(undefined, mintKp.publicKey);
+  const TOKEN = await PublicKey.createWithSeed(
+    payer.publicKey,
+    seed,
+    token.TOKEN_PROGRAM_ID,
+  );
+
+  const [launch] = getLaunchAddr(undefined, TOKEN);
   const [launchSigner] = getLaunchSignerAddr(undefined, launch);
 
-  const EXMPL = await token.createMint(
-    provider.connection,
-    payer,
-    launchSigner,
-    null,
-    6,
-    mintKp,
+  const tx = new Transaction().add(
+    SystemProgram.createAccountWithSeed({
+      fromPubkey: payer.publicKey,
+      newAccountPubkey: TOKEN,
+      basePubkey: payer.publicKey,
+      seed,
+      lamports: lamports,
+      space: token.MINT_SIZE,
+      programId: token.TOKEN_PROGRAM_ID,
+    }),
+    token.createInitializeMint2Instruction(TOKEN, 6, launchSigner, null),
   );
+  tx.recentBlockhash = (
+    await provider.connection.getLatestBlockhash()
+  ).blockhash;
+  tx.feePayer = payer.publicKey;
+  tx.sign(payer);
+
+  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
+  await provider.connection.confirmTransaction(txHash, "confirmed");
 
   const launchIx = await launchpad
     .initializeLaunchIx({
-      tokenName: "Example",
-      tokenSymbol: "EXMPL",
-      tokenUri: "https://example.com",
-      minimumRaiseAmount: new BN(1 * 10 ** 5),
-      baseMint: EXMPL,
-      // quoteMint: DEVNET_USDC,
-      monthlySpendingLimitAmount: new BN(1 * 10 ** 4),
+      tokenName: "Avici",
+      tokenSymbol: "AVICI",
+      tokenUri:
+        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/AVICI/AVICI.json",
+      minimumRaiseAmount: new BN(MIN_GOAL * 10 ** 6),
+      baseMint: TOKEN,
+      monthlySpendingLimitAmount: new BN(SPENDING_LIMIT * 10 ** 6),
       monthlySpendingLimitMembers: SPENDING_MEMBERS,
       performancePackageGrantee: new PublicKey(
-        "613BRiXuAEn7vibs2oAYzpGW9fXgjzDNuFMM4wPzLdY",
+        "5XmgUdxfKBfyH8RjYdxYSegdQHLqWqU2NG1SZznv9D7g",
       ),
-      performancePackageTokenAmount: new BN(10 ** 5),
+      performancePackageTokenAmount: new BN(10),
       monthsUntilInsidersCanUnlock: 18,
-      secondsForLaunch: 10,
+      secondsForLaunch: fourDays,
     })
     .rpc();
 
-  await launchpad.startLaunchIx({ launch }).rpc();
-
-  await launchpad
-    .fundIx({
-      launch,
-      amount: new BN(5 * 10 ** 5),
-      funder: payer.publicKey,
-      // quoteMint: DEVNET_USDC,
-    })
-    .rpc({ skipPreflight: true });
-
-  await new Promise((resolve) => setTimeout(resolve, 10000));
-
-  await launchpad.closeLaunchIx({ launch }).rpc();
-
-  // const EXMPL = new PublicKey("6WE6hf9sf6irzMwcwp7zaVice7uvoQ8f7LRSrig9xa8q");
-  // const [launch] = getLaunchAddr(undefined, EXMPL);
-  // const [launchSigner] = getLaunchSignerAddr(undefined, launch);
-
-  // const launch = new PublicKey("9Gcu82fLbrNkdycqNrPUzZ9zKcx6ETyvoyMYV8gPAEQ6");
-  // const EXMPL = new PublicKey("")
-
-  const tx = await launchpad
-    .completeLaunchIx({
-      launch,
-      // quoteMint: DEVNET_USDC,
-      baseMint: EXMPL,
-      finalRaiseAmount: null,
-      launchAuthority: payer.publicKey,
-    })
-    .transaction();
-
-  const LUT = await createLookupTableForTransaction(
-    tx,
-    payer,
-    provider.connection,
-  );
-
-  const blockhash = (await provider.connection.getLatestBlockhash()).blockhash;
-
-  const message = new TransactionMessage({
-    payerKey: payer.publicKey,
-    recentBlockhash: blockhash,
-    instructions: tx.instructions,
-  }).compileToV0Message([LUT]);
-
-  const vtx = new VersionedTransaction(message);
-  vtx.sign([payer]);
-  await provider.connection.sendTransaction(vtx, { skipPreflight: true });
-  // const txHash = await provider.connection.sendRawTransaction(vtx.serialize());
-  // await provider.connection.confirmTransaction(txHash, "confirmed");
-
-  // console.log("Launch initialized", launchIx);
+  console.log("Launch initialized", launchIx);
+  // await launchpad.startLaunchIx({ launch }).rpc();
 };
 
 launch().catch(console.error);
