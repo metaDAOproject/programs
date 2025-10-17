@@ -16,6 +16,8 @@ pub struct InitializeDaoParams {
     pub seconds_per_proposal: u32,
     pub nonce: u64,
     pub initial_spending_limit: Option<InitialSpendingLimit>,
+    pub team_sponsored_pass_threshold_bps: i16,
+    pub team_address: Pubkey,
 }
 
 #[derive(Accounts)]
@@ -80,6 +82,8 @@ impl InitializeDao<'_> {
             seconds_per_proposal,
             nonce,
             initial_spending_limit,
+            team_sponsored_pass_threshold_bps,
+            team_address,
         } = params;
 
         let dao = &mut ctx.accounts.dao;
@@ -206,6 +210,8 @@ impl InitializeDao<'_> {
                 amm_base_vault: ctx.accounts.futarchy_amm_base_vault.key(),
                 amm_quote_vault: ctx.accounts.futarchy_amm_quote_vault.key(),
             },
+            team_sponsored_pass_threshold_bps,
+            team_address,
         });
 
         dao.invariant()?;

@@ -174,3 +174,11 @@ pub struct WithdrawLiquidityEvent {
     pub quote_amount: u64,
     pub post_amm_state: FutarchyAmm,
 }
+
+#[event]
+pub struct SponsorProposalEvent {
+    pub common: CommonFields,
+    pub proposal: Pubkey,
+    pub dao: Pubkey,
+    pub team_address: Pubkey,
+}

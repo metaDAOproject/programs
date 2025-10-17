@@ -139,11 +139,17 @@ impl FinalizeProposal<'_> {
         let pass_market_twap = calculate_twap(&pass)?;
         let fail_market_twap = calculate_twap(&fail)?;
 
+        let threshold_bps = if proposal.is_team_sponsored {
+            dao.team_sponsored_pass_threshold_bps
+        } else {
+            dao.pass_threshold_bps as i16
+        };
+
         // this can't overflow because each twap can only be MAX_PRICE (~1e31),
         // MAX_BPS + pass_threshold_bps is at most 1e5, and a u128 can hold
-        // 1e38. still, saturate
-        let threshold = fail_market_twap
-            .saturating_mul(MAX_BPS.saturating_add(dao.pass_threshold_bps).into())
+        // 1e38
+
+        let threshold = fail_market_twap * u128::try_from(MAX_BPS as i16 + threshold_bps).unwrap()
             / MAX_BPS as u128;
 
         let (new_proposal_state, payout_numerators) = if pass_market_twap > threshold {

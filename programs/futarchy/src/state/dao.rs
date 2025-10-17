@@ -50,6 +50,12 @@ pub struct Dao {
     pub base_to_stake: u64,
     pub seq_num: u64,
     pub initial_spending_limit: Option<InitialSpendingLimit>,
+    /// The percentage, in basis points, the pass price needs to be above the
+    /// fail price in order for the proposal to pass for team-sponsored proposals.
+    ///
+    /// Can be negative to allow for team-sponsored proposals to pass by default.
+    pub team_sponsored_pass_threshold_bps: i16,
+    pub team_address: Pubkey,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
@@ -77,6 +83,18 @@ impl Dao {
             1_000,
             self.pass_threshold_bps,
             FutarchyError::PassThresholdTooHigh
+        );
+
+        require_gte!(
+            self.team_sponsored_pass_threshold_bps,
+            -1_000,
+            FutarchyError::InvalidTeamSponsoredPassThreshold
+        );
+
+        require_gte!(
+            1_000,
+            self.team_sponsored_pass_threshold_bps,
+            FutarchyError::InvalidTeamSponsoredPassThreshold
         );
 
         Ok(())

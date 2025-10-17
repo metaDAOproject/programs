@@ -137,4 +137,9 @@ pub mod futarchy {
     ) -> Result<()> {
         ExecuteSpendingLimitChange::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn sponsor_proposal(ctx: Context<SponsorProposal>) -> Result<()> {
+        SponsorProposal::handle(ctx)
+    }
 }

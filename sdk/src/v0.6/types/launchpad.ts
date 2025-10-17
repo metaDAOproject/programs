@@ -779,6 +779,11 @@ export type Launchpad = {
             ];
             type: "u8";
           },
+          {
+            name: "teamAddress";
+            docs: ["The initial address used to sponsor team proposals."];
+            type: "publicKey";
+          },
         ];
       };
     },
@@ -864,6 +869,10 @@ export type Launchpad = {
           {
             name: "monthsUntilInsidersCanUnlock";
             type: "u8";
+          },
+          {
+            name: "teamAddress";
+            type: "publicKey";
           },
         ];
       };
@@ -1230,7 +1239,7 @@ export type Launchpad = {
     {
       code: 6013;
       name: "InvalidPriceBasedPremineAmount";
-      msg: "Cannot do more than a 50% premine";
+      msg: "Cannot do more than a 50% premine, minimum is 10 atoms of token";
     },
     {
       code: 6014;
@@ -2056,6 +2065,11 @@ export const IDL: Launchpad = {
             ],
             type: "u8",
           },
+          {
+            name: "teamAddress",
+            docs: ["The initial address used to sponsor team proposals."],
+            type: "publicKey",
+          },
         ],
       },
     },
@@ -2141,6 +2155,10 @@ export const IDL: Launchpad = {
           {
             name: "monthsUntilInsidersCanUnlock",
             type: "u8",
+          },
+          {
+            name: "teamAddress",
+            type: "publicKey",
           },
         ],
       },
@@ -2507,7 +2525,7 @@ export const IDL: Launchpad = {
     {
       code: 6013,
       name: "InvalidPriceBasedPremineAmount",
-      msg: "Cannot do more than a 50% premine",
+      msg: "Cannot do more than a 50% premine, minimum is 10 atoms of token",
     },
     {
       code: 6014,
