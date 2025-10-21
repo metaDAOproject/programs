@@ -176,7 +176,7 @@ impl InitializeLaunch<'_> {
         ctx.accounts.launch.set_inner(Launch {
             minimum_raise_amount: args.minimum_raise_amount,
             monthly_spending_limit_amount: args.monthly_spending_limit_amount,
-            monthly_spending_limit_members: args.monthly_spending_limit_members.clone(), // hmm ensure this is right
+            monthly_spending_limit_members: args.monthly_spending_limit_members.clone(),
             launch_authority: ctx.accounts.launch_authority.key(),
             launch_signer: ctx.accounts.launch_signer.key(),
             launch_signer_pda_bump: ctx.bumps.launch_signer,
