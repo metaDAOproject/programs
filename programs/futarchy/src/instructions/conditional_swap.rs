@@ -85,9 +85,6 @@ impl ConditionalSwap<'_> {
             ProposalState::Pending,
             FutarchyError::ProposalNotActive
         );
-
-        require_eq!(self.dao.proposal_count, self.proposal.number);
-
         Ok(())
     }
 

@@ -176,7 +176,7 @@ impl InitializeLaunch<'_> {
         ctx.accounts.launch.set_inner(Launch {
             minimum_raise_amount: args.minimum_raise_amount,
             monthly_spending_limit_amount: args.monthly_spending_limit_amount,
-            monthly_spending_limit_members: args.monthly_spending_limit_members,
+            monthly_spending_limit_members: args.monthly_spending_limit_members.clone(), // hmm ensure this is right
             launch_authority: ctx.accounts.launch_authority.key(),
             launch_signer: ctx.accounts.launch_signer.key(),
             launch_signer_pda_bump: ctx.bumps.launch_signer,
@@ -204,6 +204,11 @@ impl InitializeLaunch<'_> {
             common: CommonFields::new(&clock, 0),
             launch: ctx.accounts.launch.key(),
             minimum_raise_amount: args.minimum_raise_amount,
+            performance_package_grantee: args.performance_package_grantee,
+            performance_package_token_amount: args.performance_package_token_amount,
+            months_until_insiders_can_unlock: args.months_until_insiders_can_unlock,
+            monthly_spending_limit_amount: args.monthly_spending_limit_amount,
+            monthly_spending_limit_members: args.monthly_spending_limit_members,
             launch_authority: ctx.accounts.launch_authority.key(),
             launch_signer: ctx.accounts.launch_signer.key(),
             launch_signer_pda_bump: ctx.bumps.launch_signer,

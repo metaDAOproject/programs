@@ -913,6 +913,40 @@ export class FutarchyClient {
       ]);
   }
 
+  unstakeFromProposalIx({
+    proposal,
+    dao,
+    baseMint,
+    amount,
+    staker = this.provider.publicKey,
+  }: {
+    proposal: PublicKey;
+    dao: PublicKey;
+    baseMint: PublicKey;
+    amount: BN;
+    staker?: PublicKey;
+  }) {
+    const stakeAccount = PublicKey.findProgramAddressSync(
+      [Buffer.from("stake"), proposal.toBuffer(), staker.toBuffer()],
+      this.getProgramId(),
+    )[0];
+
+    return this.autocrat.methods.unstakeFromProposal({ amount }).accounts({
+      proposal,
+      dao,
+      stakerBaseAccount: getAssociatedTokenAddressSync(baseMint, staker, true),
+      proposalBaseAccount: getAssociatedTokenAddressSync(
+        baseMint,
+        proposal,
+        true,
+      ),
+      stakeAccount,
+      staker,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    });
+  }
+
   collectFeesIx({
     dao,
     baseMint,

@@ -347,6 +347,7 @@ impl CompleteLaunch<'_> {
             launch: launch.key(),
             final_state: launch.state,
             total_committed: launch.total_committed_amount,
+            final_raise_amount: launch.final_raise_amount,
             dao: launch.dao,
             dao_treasury: launch.dao_vault,
         });
