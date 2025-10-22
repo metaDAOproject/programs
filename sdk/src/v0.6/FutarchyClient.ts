@@ -58,7 +58,7 @@ import { Dao, Proposal } from "./types/index.js";
 
 import * as multisig from "@sqds/multisig";
 import { TransactionMessage } from "@solana/web3.js";
-import { getStakeRecordAddr } from "./utils/index.js";
+import { getStakeAddr } from "./utils/index.js";
 
 export type CreateClientParams = {
   provider: AnchorProvider;
@@ -872,11 +872,7 @@ export class FutarchyClient {
     staker?: PublicKey;
     payer?: PublicKey;
   }) {
-    const stakeAccount = getStakeRecordAddr(
-      SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
-      proposal,
-      staker,
-    )[0];
+    const stakeAccount = getStakeAddr(FUTARCHY_PROGRAM_ID, proposal, staker)[0];
 
     return this.autocrat.methods
       .stakeToProposal({ amount })
@@ -929,11 +925,7 @@ export class FutarchyClient {
     amount: BN;
     staker?: PublicKey;
   }) {
-    const stakeAccount = getStakeRecordAddr(
-      SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
-      proposal,
-      staker,
-    )[0];
+    const stakeAccount = getStakeAddr(FUTARCHY_PROGRAM_ID, proposal, staker)[0];
 
     return this.autocrat.methods.unstakeFromProposal({ amount }).accounts({
       proposal,

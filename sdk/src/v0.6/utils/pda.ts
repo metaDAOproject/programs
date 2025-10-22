@@ -191,6 +191,17 @@ export const getStakeRecordAddr = (
   );
 };
 
+export const getStakeAddr = (
+  programId: PublicKey = FUTARCHY_PROGRAM_ID,
+  draftProposal: PublicKey,
+  staker: PublicKey,
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("stake"), draftProposal.toBuffer(), staker.toBuffer()],
+    programId,
+  );
+};
+
 export const getPerformancePackageAddr = ({
   programId = PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
   createKey,
