@@ -105,7 +105,7 @@ pub struct LaunchProposalEvent {
     pub common: CommonFields,
     pub proposal: Pubkey,
     pub dao: Pubkey,
-    pub timestamp_launched: Option<i64>,
+    pub timestamp_enqueued: i64,
     pub total_staked: u64,
     pub post_amm_state: FutarchyAmm,
 }

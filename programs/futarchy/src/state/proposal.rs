@@ -32,5 +32,4 @@ pub struct Proposal {
     pub pass_quote_mint: Pubkey,
     pub fail_base_mint: Pubkey,
     pub fail_quote_mint: Pubkey,
-    pub timestamp_launched: Option<i64>,
 }

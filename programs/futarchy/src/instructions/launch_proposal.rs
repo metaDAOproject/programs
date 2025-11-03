@@ -135,9 +135,9 @@ impl LaunchProposal<'_> {
             },
         };
 
-        // Update proposal state to Pending and set launch timestamp
+        // Update proposal state to Pending and set timestamp enqueued
         proposal.state = ProposalState::Pending;
-        proposal.timestamp_launched = Some(clock.unix_timestamp);
+        proposal.timestamp_enqueued = clock.unix_timestamp;
 
         dao.seq_num += 1;
 
@@ -145,7 +145,7 @@ impl LaunchProposal<'_> {
             common: CommonFields::new(&clock, dao.seq_num),
             proposal: proposal.key(),
             dao: dao.key(),
-            timestamp_launched: proposal.timestamp_launched,
+            timestamp_enqueued: proposal.timestamp_enqueued,
             total_staked,
             post_amm_state: dao.amm.clone(),
         });
