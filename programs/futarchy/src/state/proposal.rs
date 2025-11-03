@@ -20,6 +20,7 @@ pub struct Proposal {
     pub number: u32,
     pub proposer: Pubkey,
     pub timestamp_enqueued: i64,
+    pub timestamp_launched: Option<i64>,
     pub state: ProposalState,
     pub base_vault: Pubkey,
     pub quote_vault: Pubkey,

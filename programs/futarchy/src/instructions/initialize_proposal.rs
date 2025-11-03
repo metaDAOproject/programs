@@ -82,6 +82,7 @@ impl InitializeProposal<'_> {
             squads_proposal: squads_proposal.key(),
             proposer: proposer.key(),
             timestamp_enqueued: clock.unix_timestamp,
+            timestamp_launched: None,
             state: ProposalState::Draft { amount_staked: 0 },
             base_vault: base_vault.key(),
             quote_vault: quote_vault.key(),

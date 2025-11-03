@@ -66,7 +66,7 @@ impl FinalizeProposal<'_> {
 
         require_gte!(
             clock.unix_timestamp,
-            self.proposal.timestamp_enqueued + self.proposal.duration_in_seconds as i64,
+            self.proposal.timestamp_launched.unwrap() + self.proposal.duration_in_seconds as i64,
             FutarchyError::ProposalTooYoung
         );
 
