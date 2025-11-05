@@ -228,12 +228,15 @@ impl InitializeDao<'_> {
             seconds_per_proposal: dao.seconds_per_proposal,
             twap_initial_observation: dao.twap_initial_observation,
             twap_max_observation_change_per_update: dao.twap_max_observation_change_per_update,
+            twap_start_delay_seconds: dao.twap_start_delay_seconds,
             min_quote_futarchic_liquidity: dao.min_quote_futarchic_liquidity,
             min_base_futarchic_liquidity: dao.min_base_futarchic_liquidity,
             base_to_stake: dao.base_to_stake,
             initial_spending_limit: dao.initial_spending_limit.clone(),
             squads_multisig: dao.squads_multisig,
             squads_multisig_vault: dao.squads_multisig_vault,
+            team_sponsored_pass_threshold_bps: dao.team_sponsored_pass_threshold_bps,
+            team_address: dao.team_address,
         });
 
         Ok(())

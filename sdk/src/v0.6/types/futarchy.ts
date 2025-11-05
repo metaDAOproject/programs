@@ -1495,6 +1495,12 @@ export type Futarchy = {
             };
           },
           {
+            name: "twapStartDelaySeconds";
+            type: {
+              option: "u32";
+            };
+          },
+          {
             name: "minQuoteFutarchicLiquidity";
             type: {
               option: "u64";
@@ -1510,6 +1516,18 @@ export type Futarchy = {
             name: "baseToStake";
             type: {
               option: "u64";
+            };
+          },
+          {
+            name: "teamSponsoredPassThresholdBps";
+            type: {
+              option: "i16";
+            };
+          },
+          {
+            name: "teamAddress";
+            type: {
+              option: "publicKey";
             };
           },
         ];
@@ -1917,6 +1935,11 @@ export type Futarchy = {
           index: false;
         },
         {
+          name: "twapStartDelaySeconds";
+          type: "u32";
+          index: false;
+        },
+        {
           name: "minQuoteFutarchicLiquidity";
           type: "u64";
           index: false;
@@ -1947,6 +1970,16 @@ export type Futarchy = {
         },
         {
           name: "squadsMultisigVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "teamSponsoredPassThresholdBps";
+          type: "i16";
+          index: false;
+        },
+        {
+          name: "teamAddress";
           type: "publicKey";
           index: false;
         },
@@ -1988,6 +2021,11 @@ export type Futarchy = {
           index: false;
         },
         {
+          name: "twapStartDelaySeconds";
+          type: "u32";
+          index: false;
+        },
+        {
           name: "minQuoteFutarchicLiquidity";
           type: "u64";
           index: false;
@@ -2000,6 +2038,16 @@ export type Futarchy = {
         {
           name: "baseToStake";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "teamSponsoredPassThresholdBps";
+          type: "i16";
+          index: false;
+        },
+        {
+          name: "teamAddress";
+          type: "publicKey";
           index: false;
         },
       ];
@@ -2231,6 +2279,11 @@ export type Futarchy = {
           type: {
             defined: "FutarchyAmm";
           };
+          index: false;
+        },
+        {
+          name: "isTeamSponsored";
+          type: "bool";
           index: false;
         },
       ];
@@ -4156,6 +4209,12 @@ export const IDL: Futarchy = {
             },
           },
           {
+            name: "twapStartDelaySeconds",
+            type: {
+              option: "u32",
+            },
+          },
+          {
             name: "minQuoteFutarchicLiquidity",
             type: {
               option: "u64",
@@ -4171,6 +4230,18 @@ export const IDL: Futarchy = {
             name: "baseToStake",
             type: {
               option: "u64",
+            },
+          },
+          {
+            name: "teamSponsoredPassThresholdBps",
+            type: {
+              option: "i16",
+            },
+          },
+          {
+            name: "teamAddress",
+            type: {
+              option: "publicKey",
             },
           },
         ],
@@ -4578,6 +4649,11 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
+          name: "twapStartDelaySeconds",
+          type: "u32",
+          index: false,
+        },
+        {
           name: "minQuoteFutarchicLiquidity",
           type: "u64",
           index: false,
@@ -4608,6 +4684,16 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisigVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "teamSponsoredPassThresholdBps",
+          type: "i16",
+          index: false,
+        },
+        {
+          name: "teamAddress",
           type: "publicKey",
           index: false,
         },
@@ -4649,6 +4735,11 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
+          name: "twapStartDelaySeconds",
+          type: "u32",
+          index: false,
+        },
+        {
           name: "minQuoteFutarchicLiquidity",
           type: "u64",
           index: false,
@@ -4661,6 +4752,16 @@ export const IDL: Futarchy = {
         {
           name: "baseToStake",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "teamSponsoredPassThresholdBps",
+          type: "i16",
+          index: false,
+        },
+        {
+          name: "teamAddress",
+          type: "publicKey",
           index: false,
         },
       ],
@@ -4892,6 +4993,11 @@ export const IDL: Futarchy = {
           type: {
             defined: "FutarchyAmm",
           },
+          index: false,
+        },
+        {
+          name: "isTeamSponsored",
+          type: "bool",
           index: false,
         },
       ],

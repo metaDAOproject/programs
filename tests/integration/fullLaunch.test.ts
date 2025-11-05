@@ -343,9 +343,12 @@ export default async function suite() {
           secondsPerProposal: null,
           baseToStake: new BN(0),
           twapInitialObservation: null,
+          twapStartDelaySeconds: null,
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
           minBaseFutarchicLiquidity: null,
+          teamSponsoredPassThresholdBps: null,
+          teamAddress: null,
         },
       })
       .instruction();

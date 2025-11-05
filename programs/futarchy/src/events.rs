@@ -44,12 +44,15 @@ pub struct InitializeDaoEvent {
     pub seconds_per_proposal: u32,
     pub twap_initial_observation: u128,
     pub twap_max_observation_change_per_update: u128,
+    pub twap_start_delay_seconds: u32,
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
     pub base_to_stake: u64,
     pub initial_spending_limit: Option<InitialSpendingLimit>,
     pub squads_multisig: Pubkey,
     pub squads_multisig_vault: Pubkey,
+    pub team_sponsored_pass_threshold_bps: i16,
+    pub team_address: Pubkey,
 }
 
 #[event]
@@ -124,6 +127,7 @@ pub struct FinalizeProposalEvent {
     pub squads_proposal: Pubkey,
     pub squads_multisig: Pubkey,
     pub post_amm_state: FutarchyAmm,
+    pub is_team_sponsored: bool,
 }
 
 #[event]

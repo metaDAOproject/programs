@@ -268,6 +268,7 @@ impl FinalizeProposal<'_> {
             squads_proposal: squads_proposal.key(),
             squads_multisig: dao.squads_multisig,
             post_amm_state: dao.amm.clone(),
+            is_team_sponsored: proposal.is_team_sponsored,
         });
 
         Ok(())
