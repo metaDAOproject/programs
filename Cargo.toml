@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "programs/*"
+    "v0.6-programs/*"
 ]
 exclude = [
     "jup-sdk"
