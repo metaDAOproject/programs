@@ -12,7 +12,8 @@ env:
 
 jobs:
   run-anchor-test:
-    runs-on: ubuntu-22.04
+    runs-on:
+      labels: speedy-anchor-test
 
     steps:
       - uses: actions/checkout@v4
