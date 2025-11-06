@@ -13,7 +13,7 @@ env:
 jobs:
   run-anchor-test:
     runs-on:
-      labels: speedy-anchor-test
+      group: speed
 
     steps:
       - uses: actions/checkout@v4
