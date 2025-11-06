@@ -86,8 +86,6 @@ impl ConditionalSwap<'_> {
             FutarchyError::ProposalNotActive
         );
 
-        require_eq!(self.dao.proposal_count, self.proposal.number);
-
         Ok(())
     }
 
