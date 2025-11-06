@@ -12,8 +12,7 @@ env:
 
 jobs:
   run-anchor-test:
-    runs-on:
-      group: speed
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
