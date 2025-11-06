@@ -46,5 +46,13 @@ shutdown_wait = 2000
 upgradeable = false
 
 [[test.genesis]]
+address = "opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb"
+program = "./tests/fixtures/openbook_v2.so"
+
+[[test.genesis]]
+address = "TWAP7frdvD3ia7TWc8e9SxZMmrpd2Yf3ifSPAHS8VG3"
+program = "./tests/fixtures/openbook_twap.so"
+
+[[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 program = "./tests/fixtures/mpl_token_metadata.so"
