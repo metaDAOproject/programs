@@ -137,6 +137,7 @@ impl LaunchProposal<'_> {
 
         // Update proposal state to Pending
         proposal.state = ProposalState::Pending;
+        proposal.timestamp_enqueued = clock.unix_timestamp;
 
         dao.seq_num += 1;
 
