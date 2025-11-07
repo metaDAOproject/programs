@@ -1,22 +1,16 @@
 import * as anchor from "@coral-xyz/anchor";
-import {
-  FutarchyClient,
-  PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.6";
+import { FutarchyClient } from "@metadaoproject/futarchy/v0.6";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
+const futarchy = FutarchyClient.createClient({ provider });
 
-const autocrat: FutarchyClient = FutarchyClient.createClient({ provider });
+const PROPOSAL = new PublicKey("FUTARCHY_PROPOSAL_HERE");
 
-const PROPOSAL = new PublicKey("GcdHiq8jzmYUHLg4inBagUTdjDmU8Z4zWeeX5ghTCAkd");
-
-const executeProposal = async () => {
-  const proposal = await autocrat.getProposal(PROPOSAL);
-  console.log(proposal);
-
+const executeSpendingLimit = async () => {
+  const proposal = await futarchy.getProposal(PROPOSAL);
   const squadsProposal = proposal.squadsProposal;
 
   const proposalAccount = await multisig.accounts.Proposal.fromAccountAddress(
@@ -24,31 +18,51 @@ const executeProposal = async () => {
     squadsProposal,
   );
 
-  const dao = await autocrat.getDao(proposal.dao);
+  const dao = await futarchy.getDao(proposal.dao);
   const multisigPda = dao.squadsMultisig;
 
-  const txExecuteIx = await multisig.instructions.vaultTransactionExecute({
-    connection: provider.connection,
+  const [vaultTransactionPda] = await multisig.getTransactionPda({
     multisigPda,
-    transactionIndex: BigInt(proposalAccount.transactionIndex.toString()),
-    member: PERMISSIONLESS_ACCOUNT.publicKey,
+    index: BigInt(proposalAccount.transactionIndex.toString()),
   });
 
-  const txExecute = new Transaction().add(txExecuteIx.instruction);
-  txExecute.recentBlockhash = (
+  const vaultTransaction =
+    await multisig.accounts.VaultTransaction.fromAccountAddress(
+      provider.connection,
+      vaultTransactionPda,
+    );
+
+  // Get remaining accounts from the vault transaction
+  const remainingAccounts = vaultTransaction.message.accountKeys.map((key) => ({
+    pubkey: key,
+    isWritable: true,
+    isSigner: false,
+  }));
+
+  const executeIx = await futarchy.autocrat.methods
+    .executeSpendingLimitChange()
+    .accounts({
+      proposal: PROPOSAL,
+      dao: proposal.dao,
+      squadsProposal: squadsProposal,
+      squadsMultisig: multisigPda,
+      squadsMultisigProgram: multisig.PROGRAM_ID,
+      vaultTransaction: vaultTransactionPda,
+    })
+    .remainingAccounts(remainingAccounts)
+    .instruction();
+
+  const tx = new Transaction().add(executeIx);
+  tx.recentBlockhash = (
     await provider.connection.getLatestBlockhash()
   ).blockhash;
-  txExecute.feePayer = payer.publicKey;
-  txExecute.sign(payer, PERMISSIONLESS_ACCOUNT);
+  tx.feePayer = payer.publicKey;
+  tx.sign(payer);
 
-  console.log(txExecute);
-
-  const txHash = await provider.connection.sendRawTransaction(
-    txExecute.serialize(),
-  );
+  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
   await provider.connection.confirmTransaction(txHash, "confirmed");
 
-  console.log(`Transaction sent: ${txHash}`);
+  console.log(`Transaction: ${txHash}`);
 };
 
-executeProposal().catch(console.error);
+executeSpendingLimit().catch(console.error);
