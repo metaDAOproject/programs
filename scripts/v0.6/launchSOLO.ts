@@ -74,7 +74,7 @@ export const launch = async () => {
       tokenName: "Solomon",
       tokenSymbol: "SOLO",
       tokenUri:
-        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/SOLO/SOLO.json",
+        "https://solomonlabs.org/assets/solo.json",
       minimumRaiseAmount: new BN(MIN_GOAL * 10 ** 6),
       baseMint: TOKEN,
       monthlySpendingLimitAmount: new BN(SPENDING_LIMIT * 10 ** 6),
