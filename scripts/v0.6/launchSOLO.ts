@@ -10,11 +10,12 @@ import * as token from "@solana/spl-token";
 
 // DAO DETAILS
 const SPENDING_MEMBERS = [
-  new PublicKey(""), // SOLO 1
-  new PublicKey(""), // SOLO 2
+  new PublicKey("5wXBWMea5KWQHUjtcK5Np5zubMqYuicCLnvFZYbYt2ik"), // SOLO 1
+  new PublicKey("BCNsaGbVu4KdwWu2uS59628Un8uFWv9KG15JFkqYQtLT"), // SOLO 2
+  new PublicKey("CNbdt6wVxpRdDJ5Tu179wVMEyoLeokdMchBgx5Lkat22"), // SOLO 3
 ];
 const PERFORMANCE_PACKAGE_GRANTEE = new PublicKey(
-  "",
+  "9LuV5LrXJjpzb7rxhYwBwnraq9XEYcxA1mkuWTqUy2or",
 );
 const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 12_900_000;
 const PERFORMANCE_PACKAGE_UNLOCK_TIME = 18;
@@ -88,7 +89,7 @@ export const launch = async () => {
     })
     .rpc();
 
-  console.log("Launch initialized", launchIx);
+  console.log("Launch initialized - YaaS Baby!", launchIx);
   // await launchpad.startLaunchIx({ launch }).rpc();
 };
 
