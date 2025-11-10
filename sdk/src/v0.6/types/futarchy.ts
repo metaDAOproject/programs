@@ -1,5 +1,5 @@
 export type Futarchy = {
-  version: "0.6.0";
+  version: "0.6.1";
   name: "futarchy";
   instructions: [
     {
@@ -2104,6 +2104,11 @@ export type Futarchy = {
           index: false;
         },
         {
+          name: "timestampEnqueued";
+          type: "i64";
+          index: false;
+        },
+        {
           name: "totalStaked";
           type: "u64";
           index: false;
@@ -2566,7 +2571,7 @@ export type Futarchy = {
 };
 
 export const IDL: Futarchy = {
-  version: "0.6.0",
+  version: "0.6.1",
   name: "futarchy",
   instructions: [
     {
@@ -4668,6 +4673,11 @@ export const IDL: Futarchy = {
         {
           name: "dao",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "timestampEnqueued",
+          type: "i64",
           index: false,
         },
         {
