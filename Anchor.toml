@@ -39,6 +39,8 @@ v04-initialize-proposal = "yarn run tsx scripts/v0.4/initializeProposal.ts"
 v05-execute-proposal = "yarn run tsx scripts/v0.5/executeProposal.ts"
 v06-launch = "yarn run tsx scripts/v0.6/launch.ts"
 claim-launch = "yarn run tsx scripts/v0.6/claimAllLaunch.ts"
+v06-execute-proposal = "yarn run tsx scripts/v0.6/executeProposal.ts"
+v06-execute-general-proposal = "yarn run tsx scripts/v0.6/executeGeneralProposal.ts"
 
 [test]
 startup_wait = 5000

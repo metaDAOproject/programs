@@ -31,6 +31,7 @@ import {
   SQUADS_PROGRAM_CONFIG_TREASURY,
   SQUADS_PROGRAM_ID,
   USDC_DECIMALS,
+  SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
 } from "./constants.js";
 import {
   DEFAULT_CU_PRICE,
@@ -57,6 +58,7 @@ import { Dao, Proposal } from "./types/index.js";
 
 import * as multisig from "@sqds/multisig";
 import { TransactionMessage } from "@solana/web3.js";
+import { getStakeAddr } from "./utils/index.js";
 
 export type CreateClientParams = {
   provider: AnchorProvider;
@@ -870,10 +872,7 @@ export class FutarchyClient {
     staker?: PublicKey;
     payer?: PublicKey;
   }) {
-    const stakeAccount = PublicKey.findProgramAddressSync(
-      [Buffer.from("stake"), proposal.toBuffer(), staker.toBuffer()],
-      this.getProgramId(),
-    )[0];
+    const stakeAccount = getStakeAddr(FUTARCHY_PROGRAM_ID, proposal, staker)[0];
 
     return this.autocrat.methods
       .stakeToProposal({ amount })
@@ -911,6 +910,37 @@ export class FutarchyClient {
           baseMint,
         ),
       ]);
+  }
+
+  unstakeFromProposalIx({
+    proposal,
+    dao,
+    baseMint,
+    amount,
+    staker = this.provider.publicKey,
+  }: {
+    proposal: PublicKey;
+    dao: PublicKey;
+    baseMint: PublicKey;
+    amount: BN;
+    staker?: PublicKey;
+  }) {
+    const stakeAccount = getStakeAddr(FUTARCHY_PROGRAM_ID, proposal, staker)[0];
+
+    return this.autocrat.methods.unstakeFromProposal({ amount }).accounts({
+      proposal,
+      dao,
+      stakerBaseAccount: getAssociatedTokenAddressSync(baseMint, staker, true),
+      proposalBaseAccount: getAssociatedTokenAddressSync(
+        baseMint,
+        proposal,
+        true,
+      ),
+      stakeAccount,
+      staker,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    });
   }
 
   collectFeesIx({
