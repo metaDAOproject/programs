@@ -29,20 +29,85 @@ const payer = provider.wallet["payer"];
 const futarchy: FutarchyClient = FutarchyClient.createClient({ provider });
 
 export const initializeDao = async () => {
-  const META = await token.createMint(
-    provider.connection,
-    payer,
-    payer.publicKey,
-    null,
-    6,
-  );
-  const USDC = await token.createMint(
-    provider.connection,
-    payer,
-    payer.publicKey,
-    null,
-    6,
-  );
+  const META = new PublicKey("89YxQWgrCG3vXF4aLxMb8mdr2Wc9FSjV4QQddZaWesX8");
+  const USDC = new PublicKey("HEscCfLSkCAwfZrgP6XkS2tjNUDNNzuNPEGFXdC7apq2");
+
+  // await futarchy.initializeDaoIx({
+  //   baseMint: META,
+  //   quoteMint: USDC,
+  //   params: {
+  //     twapInitialObservation: new BN(0),
+  //     twapMaxObservationChangePerUpdate: new BN(0),
+  //     twapStartDelaySeconds: 60 * 60 * 24,
+  //     minQuoteFutarchicLiquidity: new BN(0),
+  //     minBaseFutarchicLiquidity: new BN(0),
+  //     passThresholdBps: 0,
+  //     nonce: new BN(0),
+  //     initialSpendingLimit: null,
+  //     baseToStake: new BN(0),
+  //     secondsPerProposal: 60 * 60 * 24 * 3,
+  //     // teamSponsoredPassThresholdBps: 0,
+  //     // teamAddress: new PublicKey(""),
+  //   },
+  // }).rpc();
+
+  const [daoAddr] = getDaoAddr({
+    nonce: new BN(0),
+    daoCreator: payer.publicKey,
+  });
+
+  console.log(daoAddr.toString());
+
+  const daoData = await futarchy.getDao(daoAddr);
+  console.log(daoData);
+
+  // await token.createAssociatedTokenAccount(provider.connection, payer, USDC, payer.publicKey);
+  // await token.createAssociatedTokenAccount(provider.connection, payer, META, payer.publicKey);
+
+  // await token.mintTo(provider.connection, payer, USDC, token.getAssociatedTokenAddressSync(USDC, payer.publicKey), payer, 1_000_000 * 1_000_000);
+  // await token.mintTo(provider.connection, payer, META, token.getAssociatedTokenAddressSync(META, payer.publicKey), payer, 1_000_000 * 1_000_000);
+
+  // await futarchy
+  //   .provideLiquidityIx({
+  //     dao: daoAddr,
+  //     baseMint: META,
+  //     quoteMint: USDC,
+  //     quoteAmount: new BN(100 * 1_000_000),
+  //     maxBaseAmount: new BN(100 * 1_000_000),
+  //   })
+  //   .rpc();
+
+  //   return;
+
+  await futarchy
+    .spotSwapIx({
+      dao: daoAddr,
+      baseMint: META,
+      quoteMint: USDC,
+      swapType: "buy",
+      inputAmount: new BN(1 * 1_000_000),
+      minOutputAmount: new BN(900_000),
+      trader: payer.publicKey,
+    })
+    .rpc();
+
+  // console.log(daoAddr.toString());
+  return;
+
+  // const META = await token.createMint(
+  //   provider.connection,
+  //   payer,
+  //   payer.publicKey,
+  //   null,
+  //   6,
+  // );
+  // const USDC = await token.createMint(
+  //   provider.connection,
+  //   payer,
+  //   payer.publicKey,
+  //   null,
+  //   6,
+  // );
 
   await token.createAssociatedTokenAccount(
     provider.connection,
