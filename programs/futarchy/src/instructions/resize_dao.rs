@@ -48,7 +48,6 @@ impl ResizeDao<'_> {
             lamports_needed - dao.lamports(),
         )?;
 
-        // let question = Question::deserialize(&mut &question.try_into())?;
         let mut dao_data = Dao::deserialize(&mut &dao.try_borrow_mut_data().unwrap()[8..])?;
 
         // the `team_sponsored_pass_threshold_bps` doesn't matter because they don't have a team address
