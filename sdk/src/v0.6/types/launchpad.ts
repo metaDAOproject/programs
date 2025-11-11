@@ -948,6 +948,33 @@ export type Launchpad = {
           index: false;
         },
         {
+          name: "performancePackageGrantee";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "performancePackageTokenAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "monthsUntilInsidersCanUnlock";
+          type: "u8";
+          index: false;
+        },
+        {
+          name: "monthlySpendingLimitAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "monthlySpendingLimitMembers";
+          type: {
+            vec: "publicKey";
+          };
+          index: false;
+        },
+        {
           name: "baseMint";
           type: "publicKey";
           index: false;
@@ -1076,6 +1103,13 @@ export type Launchpad = {
           name: "daoTreasury";
           type: {
             option: "publicKey";
+          };
+          index: false;
+        },
+        {
+          name: "finalRaiseAmount";
+          type: {
+            option: "u64";
           };
           index: false;
         },
@@ -2234,6 +2268,33 @@ export const IDL: Launchpad = {
           index: false,
         },
         {
+          name: "performancePackageGrantee",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "performancePackageTokenAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "monthsUntilInsidersCanUnlock",
+          type: "u8",
+          index: false,
+        },
+        {
+          name: "monthlySpendingLimitAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "monthlySpendingLimitMembers",
+          type: {
+            vec: "publicKey",
+          },
+          index: false,
+        },
+        {
           name: "baseMint",
           type: "publicKey",
           index: false,
@@ -2362,6 +2423,13 @@ export const IDL: Launchpad = {
           name: "daoTreasury",
           type: {
             option: "publicKey",
+          },
+          index: false,
+        },
+        {
+          name: "finalRaiseAmount",
+          type: {
+            option: "u64",
           },
           index: false,
         },

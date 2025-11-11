@@ -28,6 +28,11 @@ pub struct LaunchInitializedEvent {
     pub launch_signer_pda_bump: u8,
     pub launch_usdc_vault: Pubkey,
     pub launch_token_vault: Pubkey,
+    pub performance_package_grantee: Pubkey,
+    pub performance_package_token_amount: u64,
+    pub months_until_insiders_can_unlock: u8,
+    pub monthly_spending_limit_amount: u64,
+    pub monthly_spending_limit_members: Vec<Pubkey>,
     pub base_mint: Pubkey,
     pub quote_mint: Pubkey,
     pub pda_bump: u8,
@@ -61,6 +66,7 @@ pub struct LaunchCompletedEvent {
     pub total_committed: u64,
     pub dao: Option<Pubkey>,
     pub dao_treasury: Option<Pubkey>,
+    pub final_raise_amount: Option<u64>,
 }
 
 #[event]
