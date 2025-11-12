@@ -971,4 +971,20 @@ export class FutarchyClient {
       quoteTokenAccount,
     });
   }
+
+  sponsorProposalIx({
+    proposal,
+    dao,
+    teamAddress = this.provider.publicKey,
+  }: {
+    proposal: PublicKey;
+    dao: PublicKey;
+    teamAddress?: PublicKey;
+  }) {
+    return this.autocrat.methods.sponsorProposal().accounts({
+      proposal,
+      dao,
+      teamAddress,
+    });
+  }
 }

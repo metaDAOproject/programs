@@ -111,9 +111,13 @@ export interface TestContext {
   setupBasicDao: ({
     baseMint,
     quoteMint,
+    teamSponsoredPassThresholdBps,
+    teamAddress,
   }: {
     baseMint: PublicKey;
     quoteMint: PublicKey;
+    teamSponsoredPassThresholdBps?: number;
+    teamAddress?: PublicKey;
   }) => Promise<PublicKey>;
   setupBasicDaoWithLiquidity: ({
     baseMint,
@@ -447,9 +451,13 @@ before(async function () {
   this.setupBasicDao = async ({
     baseMint,
     quoteMint,
+    teamSponsoredPassThresholdBps = 300,
+    teamAddress = this.payer.publicKey,
   }: {
     baseMint: PublicKey;
     quoteMint: PublicKey;
+    teamSponsoredPassThresholdBps?: number;
+    teamAddress?: PublicKey;
   }) => {
     const nonce = new BN(Math.floor(Math.random() * 1000000));
 
@@ -468,6 +476,8 @@ before(async function () {
           nonce,
           initialSpendingLimit: null,
           baseToStake: new BN(0),
+          teamSponsoredPassThresholdBps,
+          teamAddress,
         },
         provideLiquidity: true,
       })

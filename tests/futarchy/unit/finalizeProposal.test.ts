@@ -194,6 +194,7 @@ export default function suite() {
         market: "pass",
         swapType: "buy",
         inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
       })
       .rpc();
 
@@ -210,6 +211,7 @@ export default function suite() {
           market: "pass",
           swapType: "buy",
           inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
         })
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
@@ -254,6 +256,7 @@ export default function suite() {
           market: "pass",
           swapType: "buy",
           inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
         })
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
@@ -279,5 +282,177 @@ export default function suite() {
 
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.failed);
+  });
+
+  it("passes proposals when the team sponsors them and pass twap is slightly below fail twap", async function () {
+    // Create a new DAO with -5% team-sponsored threshold
+    const META = await this.createMint(this.payer.publicKey, 6);
+    const USDC = await this.createMint(this.payer.publicKey, 6);
+
+    await this.createTokenAccount(META, this.payer.publicKey);
+    await this.createTokenAccount(USDC, this.payer.publicKey);
+
+    await this.mintTo(
+      META,
+      this.payer.publicKey,
+      this.payer,
+      200_000 * 10 ** 6,
+    );
+    await this.mintTo(
+      USDC,
+      this.payer.publicKey,
+      this.payer,
+      200_000 * 1_000_000,
+    );
+
+    const daoWithTeamSponsorship = await setupBasicDao({
+      context: this,
+      baseMint: META,
+      quoteMint: USDC,
+      teamSponsoredPassThresholdBps: -500, // -5% threshold
+    });
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao: daoWithTeamSponsorship,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6), // 100,000 USDC
+        maxBaseAmount: new BN(100_000 * 10 ** 6), // 100,000 META
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    // Create a simple instruction for the proposal
+    const updateDaoIx = await this.futarchy
+      .updateDaoIx({
+        dao: daoWithTeamSponsorship,
+        params: {
+          passThresholdBps: 500,
+          secondsPerProposal: null,
+          baseToStake: null,
+          twapInitialObservation: null,
+          twapMaxObservationChangePerUpdate: null,
+          minQuoteFutarchicLiquidity: null,
+          minBaseFutarchicLiquidity: null,
+        },
+      })
+      .instruction();
+
+    const updateDaoMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [updateDaoIx],
+    });
+
+    const multisigPda = multisig.getMultisigPda({
+      createKey: daoWithTeamSponsorship,
+    })[0];
+    const vaultTxCreate = multisig.instructions.vaultTransactionCreate({
+      multisigPda,
+      transactionIndex: 1n,
+      creator: PERMISSIONLESS_ACCOUNT.publicKey,
+      rentPayer: this.payer.publicKey,
+      vaultIndex: 0,
+      ephemeralSigners: 0,
+      transactionMessage: updateDaoMessage,
+    });
+
+    const proposalCreateIx = multisig.instructions.proposalCreate({
+      multisigPda,
+      transactionIndex: 1n,
+      creator: PERMISSIONLESS_ACCOUNT.publicKey,
+      rentPayer: this.payer.publicKey,
+    });
+
+    const [squadsProposalPda] = multisig.getProposalPda({
+      multisigPda,
+      transactionIndex: 1n,
+    });
+
+    // Create the squads proposal first
+    const tx = new Transaction().add(vaultTxCreate, proposalCreateIx);
+    tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = this.payer.publicKey;
+    tx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+
+    await this.banksClient.processTransaction(tx);
+
+    // Now initialize the autocrat proposal
+    const teamSponsoredProposal = await this.futarchy.initializeProposal(
+      daoWithTeamSponsorship,
+      squadsProposalPda,
+    );
+
+    // Sponsor the proposal
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal: teamSponsoredProposal,
+        dao: daoWithTeamSponsorship,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: teamSponsoredProposal,
+        dao: daoWithTeamSponsorship,
+        baseMint: META,
+        quoteMint: USDC,
+      })
+      .rpc();
+
+    // Split tokens into the vaults
+    const { baseVault, quoteVault, question } = this.futarchy.getProposalPdas(
+      teamSponsoredProposal,
+      META,
+      USDC,
+      daoWithTeamSponsorship,
+    );
+
+    await this.conditionalVault
+      .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 6), 2)
+      .rpc();
+    await this.conditionalVault
+      .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
+      .rpc();
+
+    // Swap in fail market to make fail TWAP higher than pass TWAP, but within 5% threshold
+    for (let i = 0; i < 100; i++) {
+      await this.futarchy
+        .conditionalSwapIx({
+          dao: daoWithTeamSponsorship,
+          baseMint: META,
+          quoteMint: USDC,
+          proposal: teamSponsoredProposal,
+          market: "fail",
+          swapType: "buy",
+          inputAmount: new BN(10 * 1_000_000), // Buy in fail market
+          minOutputAmount: new BN(0),
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+        ])
+        .rpc();
+
+      await this.advanceBySeconds(20_000);
+    }
+
+    // Finalize the proposal - should pass because it's team-sponsored
+    // and the pass TWAP is within the -5% threshold
+    await this.futarchy.finalizeProposal(teamSponsoredProposal);
+
+    const storedProposal = await this.futarchy.getProposal(
+      teamSponsoredProposal,
+    );
+    assert.exists(
+      storedProposal.state.passed,
+      "Team-sponsored proposal should pass when within threshold",
+    );
   });
 }

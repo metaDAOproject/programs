@@ -779,6 +779,11 @@ export type Launchpad = {
             ];
             type: "u8";
           },
+          {
+            name: "teamAddress";
+            docs: ["The initial address used to sponsor team proposals."];
+            type: "publicKey";
+          },
         ];
       };
     },
@@ -864,6 +869,10 @@ export type Launchpad = {
           {
             name: "monthsUntilInsidersCanUnlock";
             type: "u8";
+          },
+          {
+            name: "teamAddress";
+            type: "publicKey";
           },
         ];
       };
@@ -2090,6 +2099,11 @@ export const IDL: Launchpad = {
             ],
             type: "u8",
           },
+          {
+            name: "teamAddress",
+            docs: ["The initial address used to sponsor team proposals."],
+            type: "publicKey",
+          },
         ],
       },
     },
@@ -2175,6 +2189,10 @@ export const IDL: Launchpad = {
           {
             name: "monthsUntilInsidersCanUnlock",
             type: "u8",
+          },
+          {
+            name: "teamAddress",
+            type: "publicKey",
           },
         ],
       },

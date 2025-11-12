@@ -74,4 +74,6 @@ pub struct Launch {
     pub performance_package_token_amount: u64,
     /// The number of months that insiders must wait before unlocking their tokens.
     pub months_until_insiders_can_unlock: u8,
+    /// The initial address used to sponsor team proposals.
+    pub team_address: Pubkey,
 }

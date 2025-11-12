@@ -29,6 +29,7 @@ pub struct InitializeLaunchArgs {
     pub performance_package_grantee: Pubkey,
     pub performance_package_token_amount: u64,
     pub months_until_insiders_can_unlock: u8,
+    pub team_address: Pubkey,
 }
 
 #[event_cpi]
@@ -197,6 +198,7 @@ impl InitializeLaunch<'_> {
             performance_package_grantee: args.performance_package_grantee,
             performance_package_token_amount: args.performance_package_token_amount,
             months_until_insiders_can_unlock: args.months_until_insiders_can_unlock,
+            team_address: args.team_address,
         });
 
         let clock = Clock::get()?;

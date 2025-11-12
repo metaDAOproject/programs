@@ -991,6 +991,37 @@ export type Futarchy = {
       ];
       args: [];
     },
+    {
+      name: "sponsorProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "teamAddress";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -1132,6 +1163,20 @@ export type Futarchy = {
               };
             };
           },
+          {
+            name: "teamSponsoredPassThresholdBps";
+            docs: [
+              "The percentage, in basis points, the pass price needs to be above the",
+              "fail price in order for the proposal to pass for team-sponsored proposals.",
+              "",
+              "Can be negative to allow for team-sponsored proposals to pass by default.",
+            ];
+            type: "i16";
+          },
+          {
+            name: "teamAddress";
+            type: "publicKey";
+          },
         ];
       };
     },
@@ -1201,6 +1246,10 @@ export type Futarchy = {
           {
             name: "failQuoteMint";
             type: "publicKey";
+          },
+          {
+            name: "isTeamSponsored";
+            type: "bool";
           },
         ];
       };
@@ -1328,6 +1377,14 @@ export type Futarchy = {
               };
             };
           },
+          {
+            name: "teamSponsoredPassThresholdBps";
+            type: "i16";
+          },
+          {
+            name: "teamAddress";
+            type: "publicKey";
+          },
         ];
       };
     },
@@ -1438,6 +1495,12 @@ export type Futarchy = {
             };
           },
           {
+            name: "twapStartDelaySeconds";
+            type: {
+              option: "u32";
+            };
+          },
+          {
             name: "minQuoteFutarchicLiquidity";
             type: {
               option: "u64";
@@ -1453,6 +1516,18 @@ export type Futarchy = {
             name: "baseToStake";
             type: {
               option: "u64";
+            };
+          },
+          {
+            name: "teamSponsoredPassThresholdBps";
+            type: {
+              option: "i16";
+            };
+          },
+          {
+            name: "teamAddress";
+            type: {
+              option: "publicKey";
             };
           },
         ];
@@ -1860,6 +1935,11 @@ export type Futarchy = {
           index: false;
         },
         {
+          name: "twapStartDelaySeconds";
+          type: "u32";
+          index: false;
+        },
+        {
           name: "minQuoteFutarchicLiquidity";
           type: "u64";
           index: false;
@@ -1890,6 +1970,16 @@ export type Futarchy = {
         },
         {
           name: "squadsMultisigVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "teamSponsoredPassThresholdBps";
+          type: "i16";
+          index: false;
+        },
+        {
+          name: "teamAddress";
           type: "publicKey";
           index: false;
         },
@@ -1931,6 +2021,11 @@ export type Futarchy = {
           index: false;
         },
         {
+          name: "twapStartDelaySeconds";
+          type: "u32";
+          index: false;
+        },
+        {
           name: "minQuoteFutarchicLiquidity";
           type: "u64";
           index: false;
@@ -1943,6 +2038,16 @@ export type Futarchy = {
         {
           name: "baseToStake";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "teamSponsoredPassThresholdBps";
+          type: "i16";
+          index: false;
+        },
+        {
+          name: "teamAddress";
+          type: "publicKey";
           index: false;
         },
       ];
@@ -2181,6 +2286,11 @@ export type Futarchy = {
           };
           index: false;
         },
+        {
+          name: "isTeamSponsored";
+          type: "bool";
+          index: false;
+        },
       ];
     },
     {
@@ -2405,6 +2515,33 @@ export type Futarchy = {
         },
       ];
     },
+    {
+      name: "SponsorProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "teamAddress";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -2566,6 +2703,16 @@ export type Futarchy = {
       code: 6031;
       name: "InvalidTransaction";
       msg: "This Squads transaction should only contain calls to update spending limits";
+    },
+    {
+      code: 6032;
+      name: "ProposalAlreadySponsored";
+      msg: "Proposal has already been sponsored";
+    },
+    {
+      code: 6033;
+      name: "InvalidTeamSponsoredPassThreshold";
+      msg: "Team sponsored pass threshold must be between -10% and 10%";
     },
   ];
 };
@@ -3563,6 +3710,37 @@ export const IDL: Futarchy = {
       ],
       args: [],
     },
+    {
+      name: "sponsorProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "teamAddress",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -3704,6 +3882,20 @@ export const IDL: Futarchy = {
               },
             },
           },
+          {
+            name: "teamSponsoredPassThresholdBps",
+            docs: [
+              "The percentage, in basis points, the pass price needs to be above the",
+              "fail price in order for the proposal to pass for team-sponsored proposals.",
+              "",
+              "Can be negative to allow for team-sponsored proposals to pass by default.",
+            ],
+            type: "i16",
+          },
+          {
+            name: "teamAddress",
+            type: "publicKey",
+          },
         ],
       },
     },
@@ -3773,6 +3965,10 @@ export const IDL: Futarchy = {
           {
             name: "failQuoteMint",
             type: "publicKey",
+          },
+          {
+            name: "isTeamSponsored",
+            type: "bool",
           },
         ],
       },
@@ -3900,6 +4096,14 @@ export const IDL: Futarchy = {
               },
             },
           },
+          {
+            name: "teamSponsoredPassThresholdBps",
+            type: "i16",
+          },
+          {
+            name: "teamAddress",
+            type: "publicKey",
+          },
         ],
       },
     },
@@ -4010,6 +4214,12 @@ export const IDL: Futarchy = {
             },
           },
           {
+            name: "twapStartDelaySeconds",
+            type: {
+              option: "u32",
+            },
+          },
+          {
             name: "minQuoteFutarchicLiquidity",
             type: {
               option: "u64",
@@ -4025,6 +4235,18 @@ export const IDL: Futarchy = {
             name: "baseToStake",
             type: {
               option: "u64",
+            },
+          },
+          {
+            name: "teamSponsoredPassThresholdBps",
+            type: {
+              option: "i16",
+            },
+          },
+          {
+            name: "teamAddress",
+            type: {
+              option: "publicKey",
             },
           },
         ],
@@ -4432,6 +4654,11 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
+          name: "twapStartDelaySeconds",
+          type: "u32",
+          index: false,
+        },
+        {
           name: "minQuoteFutarchicLiquidity",
           type: "u64",
           index: false,
@@ -4462,6 +4689,16 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisigVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "teamSponsoredPassThresholdBps",
+          type: "i16",
+          index: false,
+        },
+        {
+          name: "teamAddress",
           type: "publicKey",
           index: false,
         },
@@ -4503,6 +4740,11 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
+          name: "twapStartDelaySeconds",
+          type: "u32",
+          index: false,
+        },
+        {
           name: "minQuoteFutarchicLiquidity",
           type: "u64",
           index: false,
@@ -4515,6 +4757,16 @@ export const IDL: Futarchy = {
         {
           name: "baseToStake",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "teamSponsoredPassThresholdBps",
+          type: "i16",
+          index: false,
+        },
+        {
+          name: "teamAddress",
+          type: "publicKey",
           index: false,
         },
       ],
@@ -4753,6 +5005,11 @@ export const IDL: Futarchy = {
           },
           index: false,
         },
+        {
+          name: "isTeamSponsored",
+          type: "bool",
+          index: false,
+        },
       ],
     },
     {
@@ -4977,6 +5234,33 @@ export const IDL: Futarchy = {
         },
       ],
     },
+    {
+      name: "SponsorProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "teamAddress",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -5138,6 +5422,16 @@ export const IDL: Futarchy = {
       code: 6031,
       name: "InvalidTransaction",
       msg: "This Squads transaction should only contain calls to update spending limits",
+    },
+    {
+      code: 6032,
+      name: "ProposalAlreadySponsored",
+      msg: "Proposal has already been sponsored",
+    },
+    {
+      code: 6033,
+      name: "InvalidTeamSponsoredPassThreshold",
+      msg: "Team sponsored pass threshold must be between -10% and 10%",
     },
   ],
 };

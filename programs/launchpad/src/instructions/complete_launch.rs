@@ -411,6 +411,8 @@ impl CompleteLaunch<'_> {
                     amount_per_month: self.launch.monthly_spending_limit_amount,
                     members: self.launch.monthly_spending_limit_members.clone(),
                 }),
+                team_sponsored_pass_threshold_bps: -500,
+                team_address: self.launch.team_address,
             },
         )
     }

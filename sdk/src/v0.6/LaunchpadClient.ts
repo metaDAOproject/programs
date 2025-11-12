@@ -133,6 +133,7 @@ export class LaunchpadClient {
     performancePackageGrantee,
     performancePackageTokenAmount,
     monthsUntilInsidersCanUnlock,
+    teamAddress,
     launchAuthority = this.provider.publicKey,
     payer = this.provider.publicKey,
   }: {
@@ -148,6 +149,7 @@ export class LaunchpadClient {
     performancePackageGrantee: PublicKey;
     performancePackageTokenAmount: BN;
     monthsUntilInsidersCanUnlock: number;
+    teamAddress: PublicKey;
     launchAuthority?: PublicKey;
     payer?: PublicKey;
   }) {
@@ -181,6 +183,7 @@ export class LaunchpadClient {
         performancePackageGrantee,
         performancePackageTokenAmount,
         monthsUntilInsidersCanUnlock,
+        teamAddress,
       })
       .accounts({
         launch,
