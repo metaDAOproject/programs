@@ -25,6 +25,7 @@ import {
   DAMM_V2_PROGRAM_ID,
   SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET,
   MAINNET_METEORA_CONFIG,
+  FUNDING_FEE_WALLET,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -516,6 +517,7 @@ export class LaunchpadClient {
     launch: PublicKey,
     baseMint: PublicKey,
     funder: PublicKey = this.provider.publicKey,
+    quoteMint = MAINNET_USDC,
   ) {
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
@@ -540,9 +542,20 @@ export class LaunchpadClient {
           true,
         ),
         baseMint,
+        quoteMint,
         launchBaseVault: getAssociatedTokenAddressSync(
           baseMint,
           launchSigner,
+          true,
+        ),
+        launchQuoteVault: getAssociatedTokenAddressSync(
+          quoteMint,
+          launchSigner,
+          true,
+        ),
+        fundingFeeWallet: getAssociatedTokenAddressSync(
+          quoteMint,
+          FUNDING_FEE_WALLET,
           true,
         ),
       })
@@ -552,6 +565,12 @@ export class LaunchpadClient {
           getAssociatedTokenAddressSync(baseMint, funder, true),
           funder,
           baseMint,
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(quoteMint, FUNDING_FEE_WALLET, true),
+          FUNDING_FEE_WALLET,
+          quoteMint,
         ),
       ]);
   }

@@ -100,7 +100,7 @@ impl Fund<'_> {
             });
         }
 
-        // Update committed amount
+        // Update committed amount (including fees)
         ctx.accounts.launch.total_committed_amount += amount;
 
         ctx.accounts.launch.seq_num += 1;

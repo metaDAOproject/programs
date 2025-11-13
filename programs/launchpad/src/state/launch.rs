@@ -54,7 +54,7 @@ pub struct Launch {
     pub unix_timestamp_started: Option<i64>,
     /// The unix timestamp when the launch stopped taking new contributions.
     pub unix_timestamp_closed: Option<i64>,
-    /// The amount of USDC that has been committed by the users.
+    /// The amount of USDC (including fees) that has been committed by the users.
     pub total_committed_amount: u64,
     /// The final raise amount.
     pub final_raise_amount: Option<u64>,

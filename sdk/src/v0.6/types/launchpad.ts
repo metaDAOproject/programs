@@ -517,11 +517,21 @@ export type Launchpad = {
         },
         {
           name: "baseMint";
-          isMut: true;
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
           isSigner: false;
         },
         {
           name: "launchBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchQuoteVault";
           isMut: true;
           isSigner: false;
         },
@@ -536,7 +546,17 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "fundingFeeWallet";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -603,7 +623,9 @@ export type Launchpad = {
           },
           {
             name: "committedAmount";
-            docs: ["The amount of USDC that has been committed by the funder."];
+            docs: [
+              "The amount of USDC (including fees) that has been committed by the funder.",
+            ];
             type: "u64";
           },
           {
@@ -713,7 +735,9 @@ export type Launchpad = {
           },
           {
             name: "totalCommittedAmount";
-            docs: ["The amount of USDC that has been committed by the users."];
+            docs: [
+              "The amount of USDC (including fees) that has been committed by the users.",
+            ];
             type: "u64";
           },
           {
@@ -1828,11 +1852,21 @@ export const IDL: Launchpad = {
         },
         {
           name: "baseMint",
-          isMut: true,
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
           isSigner: false,
         },
         {
           name: "launchBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchQuoteVault",
           isMut: true,
           isSigner: false,
         },
@@ -1847,7 +1881,17 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "fundingFeeWallet",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1914,7 +1958,9 @@ export const IDL: Launchpad = {
           },
           {
             name: "committedAmount",
-            docs: ["The amount of USDC that has been committed by the funder."],
+            docs: [
+              "The amount of USDC (including fees) that has been committed by the funder.",
+            ],
             type: "u64",
           },
           {
@@ -2024,7 +2070,9 @@ export const IDL: Launchpad = {
           },
           {
             name: "totalCommittedAmount",
-            docs: ["The amount of USDC that has been committed by the users."],
+            docs: [
+              "The amount of USDC (including fees) that has been committed by the users.",
+            ],
             type: "u64",
           },
           {

@@ -78,7 +78,10 @@ export default function suite() {
   });
 
   it("completes launch successfully when minimum raise is met and time has passed", async function () {
-    await launchpadClient.fundIx({ launch, amount: minRaise }).rpc();
+    // Add exactly the amount of funding required to meet the minimum raise + fees
+    await launchpadClient
+      .fundIx({ launch, amount: minRaise.muln(10_000).divn(9_900).addn(1) })
+      .rpc();
 
     const [tokenMetadata] = getMetadataAddr(META);
 
@@ -201,7 +204,9 @@ export default function suite() {
     await launchpadClient.startLaunchIx({ launch }).rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
 
-    await launchpadClient.fundIx({ launch, amount: minRaise }).rpc();
+    await launchpadClient
+      .fundIx({ launch, amount: minRaise.muln(10_000).divn(9_900).addn(1) })
+      .rpc();
 
     const [tokenMetadata] = getMetadataAddr(META);
 

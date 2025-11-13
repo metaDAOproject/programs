@@ -63,12 +63,33 @@ impl Refund<'_> {
         let funding_record = &mut ctx.accounts.funding_record;
 
         let amount_to_refund = match launch.state {
+            // When the launch is refunding (unsuccessful launch), we refund the full committed amount (including fees)
             LaunchState::Refunding => funding_record.committed_amount,
             LaunchState::Complete => {
-                let amount_used_to_buy = ((launch.final_raise_amount.unwrap() as u128)
+                let final_raise_amount_before_fees = launch.final_raise_amount.unwrap();
+
+                let final_raise_amount_after_fees = (final_raise_amount_before_fees as u128)
+                    .checked_mul(10_000u128)
+                    .unwrap()
+                    .checked_div(9_900u128)
+                    .unwrap() as u64;
+
+                msg!(
+                    "final_raise_amount_after_fees: {}",
+                    final_raise_amount_after_fees
+                );
+
+                // When the launch is complete (successful launch), we refund the amount of USDC that is left after subtracting the amount used to buy tokens (including fees)
+                let amount_used_to_buy = ((final_raise_amount_after_fees as u128)
                     * funding_record.committed_amount as u128
                     / launch.total_committed_amount as u128)
                     as u64;
+
+                msg!("amount_used_to_buy: {}", amount_used_to_buy);
+                msg!(
+                    "funding_record.committed_amount: {}",
+                    funding_record.committed_amount
+                );
 
                 funding_record.committed_amount - amount_used_to_buy
             }
@@ -83,6 +104,12 @@ impl Refund<'_> {
         let signer = &[&seeds[..]];
 
         funding_record.is_usdc_refunded = true;
+
+        msg!("amount_to_refund: {}", amount_to_refund);
+        msg!(
+            "vault usdc amount: {}",
+            ctx.accounts.launch_quote_vault.amount
+        );
 
         // Transfer USDC back to the user
         token::transfer(
@@ -108,6 +135,13 @@ impl Refund<'_> {
             usdc_refunded: amount_to_refund,
             funding_record: ctx.accounts.funding_record.key(),
         });
+
+        ctx.accounts.launch_quote_vault.reload()?;
+
+        msg!(
+            "vault usdc amount: {}",
+            ctx.accounts.launch_quote_vault.amount
+        );
 
         Ok(())
     }

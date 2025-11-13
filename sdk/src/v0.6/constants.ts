@@ -40,6 +40,11 @@ export const MAINNET_USDC = new PublicKey(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
 );
 
+// TODO: Add actual wallet address
+export const FUNDING_FEE_WALLET = new PublicKey(
+  "VG9yJyrq984qXG45j8yB5K1VYhiTFxVoPFJqtoBdRFp",
+);
+
 export const DEVNET_USDC = new PublicKey(
   "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
 );

@@ -15,6 +15,7 @@ use damm_v2_cpi::BaseFeeParameters;
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
+use crate::utils::apply_funding_fee;
 use crate::{
     TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
     TOKEN_SCALE,
@@ -263,14 +264,17 @@ impl CompleteLaunch<'_> {
     pub fn handle(ctx: Context<Self>, args: CompleteLaunchArgs) -> Result<()> {
         let CompleteLaunchArgs { final_raise_amount } = args;
 
+        let (total_committed_amount_after_fees, _) =
+            apply_funding_fee(ctx.accounts.launch.total_committed_amount);
+
         // if the launch authority has provided a final raise amount, use it.
         // else, if either they haven't provided a final raise amount or it was
-        // completed permissionlessly, use the total committed amount
+        // completed permissionlessly, use the total committed amount (after fees)
         let final_raise_amount =
             if final_raise_amount.is_some() && ctx.accounts.launch_authority.is_some() {
                 final_raise_amount.unwrap()
             } else {
-                ctx.accounts.launch.total_committed_amount
+                total_committed_amount_after_fees
             };
 
         require_gte!(
@@ -279,10 +283,7 @@ impl CompleteLaunch<'_> {
             LaunchpadError::FinalRaiseAmountTooLow
         );
 
-        require_gte!(
-            ctx.accounts.launch.total_committed_amount,
-            final_raise_amount,
-        );
+        require_gte!(total_committed_amount_after_fees, final_raise_amount,);
 
         let launch_key = ctx.accounts.launch.key();
         let launch_signer_seeds = &[

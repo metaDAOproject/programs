@@ -108,9 +108,13 @@ export default function suite() {
   it("works for oversubscribed launches", async function () {
     // fund the launch with more than the minimum raise
 
-    await launchpadClient
-      .fundIx({ launch, amount: new BN(211_000 * 1e6) })
-      .rpc();
+    const fundAmount = new BN(211_000 * 1e6);
+
+    await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
+
+    const finalRaiseAmount = new BN(150_000 * 1e6);
+
+    const finalRaiseAmountAfterFees = finalRaiseAmount.muln(10_000).divn(9_900);
 
     await this.advanceBySeconds(60 * 60 * 24 * 4);
 
@@ -120,7 +124,7 @@ export default function suite() {
       .completeLaunchIx({
         launch,
         baseMint: META,
-        finalRaiseAmount: new BN(150_000 * 1e6),
+        finalRaiseAmount,
         launchAuthority: this.payer.publicKey,
       })
       .transaction();
@@ -153,8 +157,15 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    const refundAmount = finalUsdcBalance - initialUsdcBalance;
-    assert.equal(refundAmount, 61_000n * 1_000_000n);
+    // Since only one person funded the launch, the refund amount is the difference between the funded amount and the final raise amount after fees
+    const expectedRefundAmount = fundAmount.sub(finalRaiseAmountAfterFees);
+
+    const actualRefundAmount = finalUsdcBalance - initialUsdcBalance;
+
+    assert.equal(
+      actualRefundAmount.toString(),
+      expectedRefundAmount.toString(),
+    );
   });
 
   it("fails when launch is not in refunding state", async function () {

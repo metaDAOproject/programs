@@ -70,7 +70,9 @@ export default function suite() {
     const fundAmount = new BN(100_000_000_000); // 100K USDC
 
     // Fund the launch
-    await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
+    await launchpadClient
+      .fundIx({ launch, amount: fundAmount.muln(10_000).divn(9_900).addn(1) })
+      .rpc();
   });
 
   it("successfully claims tokens after launch completion", async function () {
@@ -187,7 +189,7 @@ export default function suite() {
     assert.equal(fundingRecordAccount.isUsdcRefunded, false);
     assert.equal(
       fundingRecordAccount.committedAmount.toString(),
-      (100_000 * 10 ** 6).toString(),
+      new BN(100_000 * 10 ** 6).muln(10_000).divn(9_900).addn(1).toString(),
     );
     assert.ok(fundingRecordAccount.funder.equals(this.payer.publicKey));
     assert.ok(fundingRecordAccount.launch.equals(launch));

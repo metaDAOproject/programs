@@ -6,9 +6,11 @@ pub mod error;
 pub mod events;
 pub mod instructions;
 pub mod state;
+pub mod utils;
 
 use instructions::*;
 
+use solana_program::pubkey;
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
 
@@ -38,6 +40,13 @@ pub const TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED: u64 = 900_000;
 
 /// Max 50% premine
 pub const MAX_PREMINE: u64 = 15_000_000 * TOKEN_SCALE;
+
+// 1% default funding fee for launches
+pub const DEFAULT_FUNDING_FEE_BPS: u16 = 100;
+
+// Funding fee wallet
+// TODO: Add actual wallet address
+pub const FUNDING_FEE_WALLET: Pubkey = pubkey!("VG9yJyrq984qXG45j8yB5K1VYhiTFxVoPFJqtoBdRFp");
 
 pub mod usdc_mint {
     use anchor_lang::prelude::declare_id;

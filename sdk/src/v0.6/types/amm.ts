@@ -1,5 +1,5 @@
 export type Amm = {
-  version: "0.5.0";
+  version: "0.4.0";
   name: "amm";
   instructions: [
     {
@@ -343,14 +343,6 @@ export type Amm = {
             name: "seqNum";
             type: "u64";
           },
-          {
-            name: "vaultAtaBase";
-            type: "publicKey";
-          },
-          {
-            name: "vaultAtaQuote";
-            type: "publicKey";
-          },
         ];
       };
     },
@@ -439,10 +431,6 @@ export type Amm = {
           {
             name: "twapMaxObservationChangePerUpdate";
             type: "u128";
-          },
-          {
-            name: "twapStartDelaySlots";
-            type: "u64";
           },
         ];
       };
@@ -546,13 +534,6 @@ export type Amm = {
             name: "initialObservation";
             docs: ["What the initial `latest_observation` is set to."];
             type: "u128";
-          },
-          {
-            name: "startDelaySlots";
-            docs: [
-              "Number of slots after amm.created_at_slot to start recording TWAP",
-            ];
-            type: "u64";
           },
         ];
       };
@@ -831,7 +812,7 @@ export type Amm = {
 };
 
 export const IDL: Amm = {
-  version: "0.5.0",
+  version: "0.4.0",
   name: "amm",
   instructions: [
     {
@@ -1175,14 +1156,6 @@ export const IDL: Amm = {
             name: "seqNum",
             type: "u64",
           },
-          {
-            name: "vaultAtaBase",
-            type: "publicKey",
-          },
-          {
-            name: "vaultAtaQuote",
-            type: "publicKey",
-          },
         ],
       },
     },
@@ -1271,10 +1244,6 @@ export const IDL: Amm = {
           {
             name: "twapMaxObservationChangePerUpdate",
             type: "u128",
-          },
-          {
-            name: "twapStartDelaySlots",
-            type: "u64",
           },
         ],
       },
@@ -1378,13 +1347,6 @@ export const IDL: Amm = {
             name: "initialObservation",
             docs: ["What the initial `latest_observation` is set to."],
             type: "u128",
-          },
-          {
-            name: "startDelaySlots",
-            docs: [
-              "Number of slots after amm.created_at_slot to start recording TWAP",
-            ],
-            type: "u64",
           },
         ],
       },
