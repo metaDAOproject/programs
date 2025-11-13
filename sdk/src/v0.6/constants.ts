@@ -45,6 +45,8 @@ export const FUNDING_FEE_WALLET = new PublicKey(
   "VG9yJyrq984qXG45j8yB5K1VYhiTFxVoPFJqtoBdRFp",
 );
 
+export const DEFAULT_FUNDING_FEE_BPS = new BN(100);
+
 export const DEVNET_USDC = new PublicKey(
   "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
 );

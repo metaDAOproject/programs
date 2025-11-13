@@ -88,14 +88,14 @@ impl Claim<'_> {
 
         let (amount_after_fees, fee_amount) = apply_funding_fee(funding_record.committed_amount);
 
-        // Calculate tokens to transfer to funder based on contribution percentage
+        // Calculate tokens to transfer to funder based on contribution proportion
         let token_amount = (TOKENS_TO_PARTICIPANTS as u128)
             .checked_mul(amount_after_fees as u128)
             .unwrap()
             .checked_div(launch_total_committed_amount_after_fees as u128)
             .unwrap() as u64;
 
-        // Calculate fee amount to transfer to fee wallet based on contribution percentage
+        // Calculate fee amount to transfer to fee wallet based on contribution proportion
         let fee_amount_adjusted = (fee_amount as u128)
             .checked_mul(amount_after_fees as u128)
             .unwrap()

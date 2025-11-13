@@ -11,13 +11,33 @@ import {
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
 } from "@metadaoproject/futarchy/v0.6";
-import { BN } from "bn.js";
+import BN from "bn.js";
 import { initializeMintWithSeeds } from "../launchpad/utils.js";
 import { createLookupTableForTransaction } from "../utils.js";
 import * as token from "@solana/spl-token";
 import * as multisig from "@sqds/multisig";
+import { applyFundingFeeInverse } from "../../sdk/src/v0.6/utils/launch.js";
 
 const { Permissions, Permission } = multisig.types;
+
+function mulDivCeil(
+  value: BN | number,
+  mul: BN | number,
+  div: BN | number,
+): BN {
+  const valueBN = new BN(value);
+  const mulBN = new BN(mul);
+  const divBN = new BN(div);
+
+  const numerator = valueBN.mul(mulBN);
+  const result = numerator.div(divBN);
+
+  if (numerator.mod(divBN).gt(new BN(0))) {
+    return result.add(new BN(1));
+  }
+
+  return result;
+}
 
 export default async function suite() {
   it("launch a DAO, have a multi-ix proposal pass, execute it, and have insiders vest their first 2 tranches", async function () {
@@ -178,7 +198,8 @@ export default async function suite() {
     await this.launchpad.closeLaunchIx({ launch }).rpc();
 
     const finalRaiseAmount = new BN(500_000 * 1e6);
-    const finalRaiseAmountAfterFees = finalRaiseAmount.muln(10_000).divn(9_900);
+    const { amountAfterFees: finalRaiseAmountAfterFees } =
+      applyFundingFeeInverse(finalRaiseAmount);
 
     const completeLaunchTx = await this.launchpad
       .completeLaunchIx({
@@ -236,15 +257,21 @@ export default async function suite() {
 
     const refundableAmount = totalFundAmount.sub(finalRaiseAmountAfterFees);
 
-    const refund1Amount = refundableAmount
-      .mul(fund1Amount)
-      .div(totalFundAmount);
-    const refund2Amount = refundableAmount
-      .mul(fund2Amount)
-      .div(totalFundAmount);
-    const refund3Amount = refundableAmount
-      .mul(fund3Amount)
-      .div(totalFundAmount);
+    let refund1Amount = mulDivCeil(
+      refundableAmount,
+      fund1Amount,
+      totalFundAmount,
+    );
+    let refund2Amount = mulDivCeil(
+      refundableAmount,
+      fund2Amount,
+      totalFundAmount,
+    );
+    let refund3Amount = mulDivCeil(
+      refundableAmount,
+      fund3Amount,
+      totalFundAmount,
+    );
 
     const preRefundFunder1QuoteBalance = await this.getTokenBalance(
       MAINNET_USDC,
@@ -285,11 +312,11 @@ export default async function suite() {
     );
     assert.equal(
       (postRefundPayerQuoteBalance - preRefundPayerQuoteBalance).toString(),
-      refund2Amount.addn(1).toString(), // TODO - This should not be in favor of the user
+      refund2Amount.toString(), // TODO - This should not be in favor of the user
     );
     assert.equal(
       (postRefundFunder3QuoteBalance - preRefundFunder3QuoteBalance).toString(),
-      refund3Amount.addn(1).toString(), // TODO - This should not be in favor of the user
+      refund3Amount.toString(), // TODO - This should not be in favor of the user
     );
 
     const performancePackage = getPerformancePackageAddr({

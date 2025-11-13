@@ -23,6 +23,7 @@ import {
 } from "@metaplex-foundation/umi-web3js-adapters";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
+import { applyFundingFeeInverse } from "../../../sdk/src/v0.6/utils/launch.js";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -80,7 +81,10 @@ export default function suite() {
   it("completes launch successfully when minimum raise is met and time has passed", async function () {
     // Add exactly the amount of funding required to meet the minimum raise + fees
     await launchpadClient
-      .fundIx({ launch, amount: minRaise.muln(10_000).divn(9_900).addn(1) })
+      .fundIx({
+        launch,
+        amount: applyFundingFeeInverse(minRaise).amountAfterFees,
+      })
       .rpc();
 
     const [tokenMetadata] = getMetadataAddr(META);
@@ -205,7 +209,10 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
 
     await launchpadClient
-      .fundIx({ launch, amount: minRaise.muln(10_000).divn(9_900).addn(1) })
+      .fundIx({
+        launch,
+        amount: applyFundingFeeInverse(minRaise).amountAfterFees,
+      })
       .rpc();
 
     const [tokenMetadata] = getMetadataAddr(META);

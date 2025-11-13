@@ -15,6 +15,7 @@ import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
+import { applyFundingFeeInverse } from "../../../sdk/src/v0.6/utils/launch.js";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -68,11 +69,11 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
 
     const fundAmount = new BN(100_000_000_000); // 100K USDC
+    const fundAmountWithFees =
+      applyFundingFeeInverse(fundAmount).amountAfterFees;
 
     // Fund the launch
-    await launchpadClient
-      .fundIx({ launch, amount: fundAmount.muln(10_000).divn(9_900).addn(1) })
-      .rpc();
+    await launchpadClient.fundIx({ launch, amount: fundAmountWithFees }).rpc();
   });
 
   it("successfully claims tokens after launch completion", async function () {
@@ -189,7 +190,9 @@ export default function suite() {
     assert.equal(fundingRecordAccount.isUsdcRefunded, false);
     assert.equal(
       fundingRecordAccount.committedAmount.toString(),
-      new BN(100_000 * 10 ** 6).muln(10_000).divn(9_900).addn(1).toString(),
+      applyFundingFeeInverse(
+        new BN(100_000 * 10 ** 6),
+      ).amountAfterFees.toString(),
     );
     assert.ok(fundingRecordAccount.funder.equals(this.payer.publicKey));
     assert.ok(fundingRecordAccount.launch.equals(launch));

@@ -14,6 +14,7 @@ import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
+import { applyFundingFeeInverse } from "../../../sdk/src/v0.6/utils/launch.js";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -114,7 +115,8 @@ export default function suite() {
 
     const finalRaiseAmount = new BN(150_000 * 1e6);
 
-    const finalRaiseAmountAfterFees = finalRaiseAmount.muln(10_000).divn(9_900);
+    const { amountAfterFees: finalRaiseAmountAfterFees } =
+      applyFundingFeeInverse(finalRaiseAmount);
 
     await this.advanceBySeconds(60 * 60 * 24 * 4);
 

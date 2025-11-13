@@ -4,6 +4,7 @@ use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchRefundedEvent};
 use crate::state::{FundingRecord, Launch, LaunchState};
+use crate::utils::apply_funding_fee_inverse;
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -68,28 +69,24 @@ impl Refund<'_> {
             LaunchState::Complete => {
                 let final_raise_amount_before_fees = launch.final_raise_amount.unwrap();
 
-                let final_raise_amount_after_fees = (final_raise_amount_before_fees as u128)
-                    .checked_mul(10_000u128)
-                    .unwrap()
-                    .checked_div(9_900u128)
-                    .unwrap() as u64;
+                // let final_raise_amount_after_fees = (final_raise_amount_before_fees as u128)
+                //     .checked_mul(10_000u128)
+                //     .unwrap()
+                //     .checked_div(
+                //         10_000_u128
+                //             .checked_sub(DEFAULT_FUNDING_FEE_BPS as u128)
+                //             .unwrap(),
+                //     )
+                //     .unwrap() as u64;
 
-                msg!(
-                    "final_raise_amount_after_fees: {}",
-                    final_raise_amount_after_fees
-                );
+                let (final_raise_amount_after_fees, _) =
+                    apply_funding_fee_inverse(final_raise_amount_before_fees);
 
                 // When the launch is complete (successful launch), we refund the amount of USDC that is left after subtracting the amount used to buy tokens (including fees)
                 let amount_used_to_buy = ((final_raise_amount_after_fees as u128)
                     * funding_record.committed_amount as u128
                     / launch.total_committed_amount as u128)
                     as u64;
-
-                msg!("amount_used_to_buy: {}", amount_used_to_buy);
-                msg!(
-                    "funding_record.committed_amount: {}",
-                    funding_record.committed_amount
-                );
 
                 funding_record.committed_amount - amount_used_to_buy
             }
@@ -104,12 +101,6 @@ impl Refund<'_> {
         let signer = &[&seeds[..]];
 
         funding_record.is_usdc_refunded = true;
-
-        msg!("amount_to_refund: {}", amount_to_refund);
-        msg!(
-            "vault usdc amount: {}",
-            ctx.accounts.launch_quote_vault.amount
-        );
 
         // Transfer USDC back to the user
         token::transfer(

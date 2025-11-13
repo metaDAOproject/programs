@@ -22,3 +22,23 @@ pub fn apply_funding_fee(amount: u64) -> (u64, u64) {
 
     (amount_after_fees, total_fees)
 }
+
+pub fn apply_funding_fee_inverse(amount: u64) -> (u64, u64) {
+    let numerator = (amount as u128).checked_mul(10_000_u128).unwrap();
+
+    let divisor = 10_000_u128
+        .checked_sub(DEFAULT_FUNDING_FEE_BPS as u128)
+        .unwrap();
+
+    let amount_after_fees = numerator.checked_div(divisor).unwrap() as u64;
+
+    let amount_after_fees = if numerator.checked_rem(divisor).unwrap() != 0 {
+        amount_after_fees + 1
+    } else {
+        amount_after_fees
+    };
+
+    let total_fees = amount_after_fees.checked_sub(amount).unwrap();
+
+    (amount_after_fees, total_fees)
+}
