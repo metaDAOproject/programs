@@ -36,17 +36,18 @@ impl ResizeDao<'_> {
 
         let lamports_needed = Rent::get()?.minimum_balance(AFTER_REALLOC_SIZE);
 
-        // TODO: do this optionally?
-        system_program::transfer(
-            CpiContext::new(
-                ctx.accounts.system_program.to_account_info(),
-                system_program::Transfer {
-                    from: ctx.accounts.payer.to_account_info(),
-                    to: dao.to_account_info(),
-                },
-            ),
-            lamports_needed - dao.lamports(),
-        )?;
+        if lamports_needed > dao.lamports() {
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.payer.to_account_info(),
+                        to: dao.to_account_info(),
+                    },
+                ),
+                lamports_needed - dao.lamports(),
+            )?;
+        }
 
         // let question = Question::deserialize(&mut &question.try_into())?;
         let mut dao_data = Dao::deserialize(&mut &dao.try_borrow_mut_data().unwrap()[8..])?;

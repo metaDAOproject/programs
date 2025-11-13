@@ -35,17 +35,18 @@ impl ResizeProposal<'_> {
 
         let lamports_needed = Rent::get()?.minimum_balance(AFTER_REALLOC_SIZE);
 
-        // TODO: do this optionally?
-        system_program::transfer(
-            CpiContext::new(
-                ctx.accounts.system_program.to_account_info(),
-                system_program::Transfer {
-                    from: ctx.accounts.payer.to_account_info(),
-                    to: proposal.to_account_info(),
-                },
-            ),
-            lamports_needed - proposal.lamports(),
-        )?;
+        if lamports_needed > proposal.lamports() {
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.payer.to_account_info(),
+                        to: proposal.to_account_info(),
+                    },
+                ),
+                lamports_needed - proposal.lamports(),
+            )?;
+        }
 
         let mut proposal_data =
             Proposal::deserialize(&mut &proposal.try_borrow_mut_data().unwrap()[8..])?;
