@@ -1,5 +1,5 @@
 export type Autocrat = {
-  version: "0.4.0";
+  version: "0.5.0";
   name: "autocrat";
   instructions: [
     {
@@ -8,6 +8,11 @@ export type Autocrat = {
         {
           name: "dao";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "daoCreator";
+          isMut: false;
           isSigner: true;
         },
         {
@@ -21,13 +26,43 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "tokenMint";
+          name: "baseMint";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "usdcMint";
+          name: "quoteMint";
           isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgramConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgramConfigTreasury";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "spendingLimit";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -56,6 +91,11 @@ export type Autocrat = {
         {
           name: "proposal";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -120,6 +160,11 @@ export type Autocrat = {
         },
         {
           name: "proposer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "payer";
           isMut: true;
           isSigner: true;
         },
@@ -130,6 +175,11 @@ export type Autocrat = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -162,6 +212,21 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "passAmm";
           isMut: false;
           isSigner: false;
@@ -173,17 +238,12 @@ export type Autocrat = {
         },
         {
           name: "dao";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
           name: "question";
           isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "treasury";
-          isMut: false;
           isSigner: false;
         },
         {
@@ -235,32 +295,6 @@ export type Autocrat = {
       args: [];
     },
     {
-      name: "executeProposal";
-      accounts: [
-        {
-          name: "proposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
       name: "updateDao";
       accounts: [
         {
@@ -269,7 +303,7 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "treasury";
+          name: "squadsMultisigVault";
           isMut: false;
           isSigner: true;
         },
@@ -293,6 +327,129 @@ export type Autocrat = {
         },
       ];
     },
+    {
+      name: "executeSpendingLimitChange";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "vaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "upgradeMultisigDao";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "rentPayer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "kollan";
+          isMut: false;
+          isSigner: true;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "fixOmnipairSpendingLimit";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "rentPayer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "kollan";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "omnipairSpendingLimit";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -301,19 +458,32 @@ export type Autocrat = {
         kind: "struct";
         fields: [
           {
-            name: "treasuryPdaBump";
+            name: "nonce";
+            docs: ["`nonce` + `dao_creator` are PDA seeds"];
+            type: "u64";
+          },
+          {
+            name: "daoCreator";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
             type: "u8";
           },
           {
-            name: "treasury";
+            name: "squadsMultisig";
             type: "publicKey";
           },
           {
-            name: "tokenMint";
+            name: "squadsMultisigVault";
             type: "publicKey";
           },
           {
-            name: "usdcMint";
+            name: "baseMint";
+            type: "publicKey";
+          },
+          {
+            name: "quoteMint";
             type: "publicKey";
           },
           {
@@ -353,6 +523,13 @@ export type Autocrat = {
             type: "u128";
           },
           {
+            name: "twapStartDelaySlots";
+            docs: [
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
+            ];
+            type: "u64";
+          },
+          {
             name: "minQuoteFutarchicLiquidity";
             docs: [
               "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
@@ -371,6 +548,14 @@ export type Autocrat = {
           {
             name: "seqNum";
             type: "u64";
+          },
+          {
+            name: "initialSpendingLimit";
+            type: {
+              option: {
+                defined: "InitialSpendingLimit";
+              };
+            };
           },
         ];
       };
@@ -403,12 +588,6 @@ export type Autocrat = {
             };
           },
           {
-            name: "instruction";
-            type: {
-              defined: "ProposalInstruction";
-            };
-          },
-          {
             name: "passAmm";
             type: "publicKey";
           },
@@ -437,21 +616,19 @@ export type Autocrat = {
             type: "u64";
           },
           {
-            name: "nonce";
-            docs: [
-              "We need to include a per-proposer nonce to prevent some weird proposal",
-              "front-running edge cases. Using a `u64` means that proposers are unlikely",
-              "to run into collisions, even if they generate nonces randomly - I've run",
-              "the math :D",
-            ];
-            type: "u64";
-          },
-          {
             name: "pdaBump";
             type: "u8";
           },
           {
             name: "question";
+            type: "publicKey";
+          },
+          {
+            name: "durationInSlots";
+            type: "u64";
+          },
+          {
+            name: "squadsProposal";
             type: "publicKey";
           },
         ];
@@ -489,6 +666,10 @@ export type Autocrat = {
             type: "u128";
           },
           {
+            name: "twapStartDelaySlots";
+            type: "u64";
+          },
+          {
             name: "minQuoteFutarchicLiquidity";
             type: "u64";
           },
@@ -498,14 +679,22 @@ export type Autocrat = {
           },
           {
             name: "passThresholdBps";
-            type: {
-              option: "u16";
-            };
+            type: "u16";
           },
           {
             name: "slotsPerProposal";
+            type: "u64";
+          },
+          {
+            name: "nonce";
+            type: "u64";
+          },
+          {
+            name: "initialSpendingLimit";
             type: {
-              option: "u64";
+              option: {
+                defined: "InitialSpendingLimit";
+              };
             };
           },
         ];
@@ -521,21 +710,11 @@ export type Autocrat = {
             type: "string";
           },
           {
-            name: "instruction";
-            type: {
-              defined: "ProposalInstruction";
-            };
-          },
-          {
             name: "passLpTokensToLock";
             type: "u64";
           },
           {
             name: "failLpTokensToLock";
-            type: "u64";
-          },
-          {
-            name: "nonce";
             type: "u64";
           },
         ];
@@ -586,45 +765,19 @@ export type Autocrat = {
       };
     },
     {
-      name: "ProposalAccount";
+      name: "InitialSpendingLimit";
       type: {
         kind: "struct";
         fields: [
           {
-            name: "pubkey";
-            type: "publicKey";
+            name: "amountPerMonth";
+            type: "u64";
           },
           {
-            name: "isSigner";
-            type: "bool";
-          },
-          {
-            name: "isWritable";
-            type: "bool";
-          },
-        ];
-      };
-    },
-    {
-      name: "ProposalInstruction";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "programId";
-            type: "publicKey";
-          },
-          {
-            name: "accounts";
+            name: "members";
             type: {
-              vec: {
-                defined: "ProposalAccount";
-              };
+              vec: "publicKey";
             };
-          },
-          {
-            name: "data";
-            type: "bytes";
           },
         ];
       };
@@ -642,9 +795,6 @@ export type Autocrat = {
           },
           {
             name: "Failed";
-          },
-          {
-            name: "Executed";
           },
         ];
       };
@@ -667,17 +817,12 @@ export type Autocrat = {
           index: false;
         },
         {
-          name: "tokenMint";
+          name: "baseMint";
           type: "publicKey";
           index: false;
         },
         {
-          name: "usdcMint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "treasury";
+          name: "quoteMint";
           type: "publicKey";
           index: false;
         },
@@ -709,6 +854,25 @@ export type Autocrat = {
         {
           name: "minBaseFutarchicLiquidity";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "initialSpendingLimit";
+          type: {
+            option: {
+              defined: "InitialSpendingLimit";
+            };
+          };
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          type: "publicKey";
           index: false;
         },
       ];
@@ -821,11 +985,6 @@ export type Autocrat = {
           index: false;
         },
         {
-          name: "nonce";
-          type: "u64";
-          index: false;
-        },
-        {
           name: "number";
           type: "u32";
           index: false;
@@ -846,10 +1005,23 @@ export type Autocrat = {
           index: false;
         },
         {
-          name: "instruction";
-          type: {
-            defined: "ProposalInstruction";
-          };
+          name: "durationInSlots";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "squadsProposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          type: "publicKey";
           index: false;
         },
       ];
@@ -896,6 +1068,16 @@ export type Autocrat = {
           };
           index: false;
         },
+        {
+          name: "squadsProposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
+          index: false;
+        },
       ];
     },
     {
@@ -939,49 +1121,74 @@ export type Autocrat = {
     },
     {
       code: 6003;
+      name: "InvalidStartDelaySlots";
+      msg: "An amm has a `start_delay_slots` that doesn't match the `dao`'s config";
+    },
+    {
+      code: 6004;
       name: "InvalidSettlementAuthority";
       msg: "One of the vaults has an invalid `settlement_authority`";
     },
     {
-      code: 6004;
+      code: 6005;
       name: "ProposalTooYoung";
       msg: "Proposal is too young to be executed or rejected";
     },
     {
-      code: 6005;
+      code: 6006;
       name: "MarketsTooYoung";
       msg: "Markets too young for proposal to be finalized. TWAP might need to be cranked";
     },
     {
-      code: 6006;
+      code: 6007;
       name: "ProposalAlreadyFinalized";
       msg: "This proposal has already been finalized";
     },
     {
-      code: 6007;
+      code: 6008;
       name: "InvalidVaultNonce";
       msg: "A conditional vault has an invalid nonce. A nonce should encode the proposal number";
     },
     {
-      code: 6008;
+      code: 6009;
       name: "ProposalNotPassed";
       msg: "This proposal can't be executed because it isn't in the passed state";
     },
     {
-      code: 6009;
+      code: 6010;
       name: "InsufficientLpTokenBalance";
       msg: "The proposer has fewer pass or fail LP tokens than they requested to lock";
     },
     {
-      code: 6010;
+      code: 6011;
       name: "InsufficientLpTokenLock";
       msg: "The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`";
+    },
+    {
+      code: 6012;
+      name: "ProposalDurationTooShort";
+      msg: "Proposal duration must be longer than TWAP start delay";
+    },
+    {
+      code: 6013;
+      name: "QuestionMustBeBinary";
+      msg: "Question must have exactly 2 outcomes for binary futarchy";
+    },
+    {
+      code: 6014;
+      name: "InvalidSquadsProposalStatus";
+      msg: "Squads proposal must be in Draft status";
+    },
+    {
+      code: 6015;
+      name: "InvalidTransaction";
+      msg: "This Squads transaction should only contain calls to update spending limits";
     },
   ];
 };
 
 export const IDL: Autocrat = {
-  version: "0.4.0",
+  version: "0.5.0",
   name: "autocrat",
   instructions: [
     {
@@ -990,6 +1197,11 @@ export const IDL: Autocrat = {
         {
           name: "dao",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "daoCreator",
+          isMut: false,
           isSigner: true,
         },
         {
@@ -1003,13 +1215,43 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "tokenMint",
+          name: "baseMint",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "usdcMint",
+          name: "quoteMint",
           isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgramConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgramConfigTreasury",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "spendingLimit",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1038,6 +1280,11 @@ export const IDL: Autocrat = {
         {
           name: "proposal",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1102,6 +1349,11 @@ export const IDL: Autocrat = {
         },
         {
           name: "proposer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "payer",
           isMut: true,
           isSigner: true,
         },
@@ -1112,6 +1364,11 @@ export const IDL: Autocrat = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1144,6 +1401,21 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "passAmm",
           isMut: false,
           isSigner: false,
@@ -1155,17 +1427,12 @@ export const IDL: Autocrat = {
         },
         {
           name: "dao",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
           name: "question",
           isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "treasury",
-          isMut: false,
           isSigner: false,
         },
         {
@@ -1217,32 +1484,6 @@ export const IDL: Autocrat = {
       args: [],
     },
     {
-      name: "executeProposal",
-      accounts: [
-        {
-          name: "proposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "updateDao",
       accounts: [
         {
@@ -1251,7 +1492,7 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "treasury",
+          name: "squadsMultisigVault",
           isMut: false,
           isSigner: true,
         },
@@ -1275,6 +1516,129 @@ export const IDL: Autocrat = {
         },
       ],
     },
+    {
+      name: "executeSpendingLimitChange",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "vaultTransaction",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "upgradeMultisigDao",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "rentPayer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "kollan",
+          isMut: false,
+          isSigner: true,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "fixOmnipairSpendingLimit",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "rentPayer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "kollan",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "omnipairSpendingLimit",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -1283,19 +1647,32 @@ export const IDL: Autocrat = {
         kind: "struct",
         fields: [
           {
-            name: "treasuryPdaBump",
+            name: "nonce",
+            docs: ["`nonce` + `dao_creator` are PDA seeds"],
+            type: "u64",
+          },
+          {
+            name: "daoCreator",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
             type: "u8",
           },
           {
-            name: "treasury",
+            name: "squadsMultisig",
             type: "publicKey",
           },
           {
-            name: "tokenMint",
+            name: "squadsMultisigVault",
             type: "publicKey",
           },
           {
-            name: "usdcMint",
+            name: "baseMint",
+            type: "publicKey",
+          },
+          {
+            name: "quoteMint",
             type: "publicKey",
           },
           {
@@ -1335,6 +1712,13 @@ export const IDL: Autocrat = {
             type: "u128",
           },
           {
+            name: "twapStartDelaySlots",
+            docs: [
+              "Forces TWAP calculation to start after amm.created_at_slot + twap_start_delay_slots",
+            ],
+            type: "u64",
+          },
+          {
             name: "minQuoteFutarchicLiquidity",
             docs: [
               "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
@@ -1353,6 +1737,14 @@ export const IDL: Autocrat = {
           {
             name: "seqNum",
             type: "u64",
+          },
+          {
+            name: "initialSpendingLimit",
+            type: {
+              option: {
+                defined: "InitialSpendingLimit",
+              },
+            },
           },
         ],
       },
@@ -1385,12 +1777,6 @@ export const IDL: Autocrat = {
             },
           },
           {
-            name: "instruction",
-            type: {
-              defined: "ProposalInstruction",
-            },
-          },
-          {
             name: "passAmm",
             type: "publicKey",
           },
@@ -1419,21 +1805,19 @@ export const IDL: Autocrat = {
             type: "u64",
           },
           {
-            name: "nonce",
-            docs: [
-              "We need to include a per-proposer nonce to prevent some weird proposal",
-              "front-running edge cases. Using a `u64` means that proposers are unlikely",
-              "to run into collisions, even if they generate nonces randomly - I've run",
-              "the math :D",
-            ],
-            type: "u64",
-          },
-          {
             name: "pdaBump",
             type: "u8",
           },
           {
             name: "question",
+            type: "publicKey",
+          },
+          {
+            name: "durationInSlots",
+            type: "u64",
+          },
+          {
+            name: "squadsProposal",
             type: "publicKey",
           },
         ],
@@ -1471,6 +1855,10 @@ export const IDL: Autocrat = {
             type: "u128",
           },
           {
+            name: "twapStartDelaySlots",
+            type: "u64",
+          },
+          {
             name: "minQuoteFutarchicLiquidity",
             type: "u64",
           },
@@ -1480,14 +1868,22 @@ export const IDL: Autocrat = {
           },
           {
             name: "passThresholdBps",
-            type: {
-              option: "u16",
-            },
+            type: "u16",
           },
           {
             name: "slotsPerProposal",
+            type: "u64",
+          },
+          {
+            name: "nonce",
+            type: "u64",
+          },
+          {
+            name: "initialSpendingLimit",
             type: {
-              option: "u64",
+              option: {
+                defined: "InitialSpendingLimit",
+              },
             },
           },
         ],
@@ -1503,21 +1899,11 @@ export const IDL: Autocrat = {
             type: "string",
           },
           {
-            name: "instruction",
-            type: {
-              defined: "ProposalInstruction",
-            },
-          },
-          {
             name: "passLpTokensToLock",
             type: "u64",
           },
           {
             name: "failLpTokensToLock",
-            type: "u64",
-          },
-          {
-            name: "nonce",
             type: "u64",
           },
         ],
@@ -1568,45 +1954,19 @@ export const IDL: Autocrat = {
       },
     },
     {
-      name: "ProposalAccount",
+      name: "InitialSpendingLimit",
       type: {
         kind: "struct",
         fields: [
           {
-            name: "pubkey",
-            type: "publicKey",
+            name: "amountPerMonth",
+            type: "u64",
           },
           {
-            name: "isSigner",
-            type: "bool",
-          },
-          {
-            name: "isWritable",
-            type: "bool",
-          },
-        ],
-      },
-    },
-    {
-      name: "ProposalInstruction",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "programId",
-            type: "publicKey",
-          },
-          {
-            name: "accounts",
+            name: "members",
             type: {
-              vec: {
-                defined: "ProposalAccount",
-              },
+              vec: "publicKey",
             },
-          },
-          {
-            name: "data",
-            type: "bytes",
           },
         ],
       },
@@ -1624,9 +1984,6 @@ export const IDL: Autocrat = {
           },
           {
             name: "Failed",
-          },
-          {
-            name: "Executed",
           },
         ],
       },
@@ -1649,17 +2006,12 @@ export const IDL: Autocrat = {
           index: false,
         },
         {
-          name: "tokenMint",
+          name: "baseMint",
           type: "publicKey",
           index: false,
         },
         {
-          name: "usdcMint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "treasury",
+          name: "quoteMint",
           type: "publicKey",
           index: false,
         },
@@ -1691,6 +2043,25 @@ export const IDL: Autocrat = {
         {
           name: "minBaseFutarchicLiquidity",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "initialSpendingLimit",
+          type: {
+            option: {
+              defined: "InitialSpendingLimit",
+            },
+          },
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          type: "publicKey",
           index: false,
         },
       ],
@@ -1803,11 +2174,6 @@ export const IDL: Autocrat = {
           index: false,
         },
         {
-          name: "nonce",
-          type: "u64",
-          index: false,
-        },
-        {
           name: "number",
           type: "u32",
           index: false,
@@ -1828,10 +2194,23 @@ export const IDL: Autocrat = {
           index: false,
         },
         {
-          name: "instruction",
-          type: {
-            defined: "ProposalInstruction",
-          },
+          name: "durationInSlots",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "squadsProposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          type: "publicKey",
           index: false,
         },
       ],
@@ -1878,6 +2257,16 @@ export const IDL: Autocrat = {
           },
           index: false,
         },
+        {
+          name: "squadsProposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
+          index: false,
+        },
       ],
     },
     {
@@ -1921,43 +2310,68 @@ export const IDL: Autocrat = {
     },
     {
       code: 6003,
+      name: "InvalidStartDelaySlots",
+      msg: "An amm has a `start_delay_slots` that doesn't match the `dao`'s config",
+    },
+    {
+      code: 6004,
       name: "InvalidSettlementAuthority",
       msg: "One of the vaults has an invalid `settlement_authority`",
     },
     {
-      code: 6004,
+      code: 6005,
       name: "ProposalTooYoung",
       msg: "Proposal is too young to be executed or rejected",
     },
     {
-      code: 6005,
+      code: 6006,
       name: "MarketsTooYoung",
       msg: "Markets too young for proposal to be finalized. TWAP might need to be cranked",
     },
     {
-      code: 6006,
+      code: 6007,
       name: "ProposalAlreadyFinalized",
       msg: "This proposal has already been finalized",
     },
     {
-      code: 6007,
+      code: 6008,
       name: "InvalidVaultNonce",
       msg: "A conditional vault has an invalid nonce. A nonce should encode the proposal number",
     },
     {
-      code: 6008,
+      code: 6009,
       name: "ProposalNotPassed",
       msg: "This proposal can't be executed because it isn't in the passed state",
     },
     {
-      code: 6009,
+      code: 6010,
       name: "InsufficientLpTokenBalance",
       msg: "The proposer has fewer pass or fail LP tokens than they requested to lock",
     },
     {
-      code: 6010,
+      code: 6011,
       name: "InsufficientLpTokenLock",
       msg: "The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`",
+    },
+    {
+      code: 6012,
+      name: "ProposalDurationTooShort",
+      msg: "Proposal duration must be longer than TWAP start delay",
+    },
+    {
+      code: 6013,
+      name: "QuestionMustBeBinary",
+      msg: "Question must have exactly 2 outcomes for binary futarchy",
+    },
+    {
+      code: 6014,
+      name: "InvalidSquadsProposalStatus",
+      msg: "Squads proposal must be in Draft status",
+    },
+    {
+      code: 6015,
+      name: "InvalidTransaction",
+      msg: "This Squads transaction should only contain calls to update spending limits",
     },
   ],
 };
