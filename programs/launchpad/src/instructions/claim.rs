@@ -111,13 +111,6 @@ impl Claim<'_> {
 
         funding_record.is_tokens_claimed = true;
 
-        msg!("token_amount: {}", token_amount);
-        msg!("fee_amount: {}", fee_amount_adjusted);
-        msg!(
-            "vault usdc amount: {}",
-            ctx.accounts.launch_quote_vault.amount
-        );
-
         // Transfer tokens from vault to funder
         token::transfer(
             CpiContext::new_with_signer(

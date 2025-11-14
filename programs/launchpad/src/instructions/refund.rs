@@ -129,11 +129,6 @@ impl Refund<'_> {
 
         ctx.accounts.launch_quote_vault.reload()?;
 
-        msg!(
-            "vault usdc amount: {}",
-            ctx.accounts.launch_quote_vault.amount
-        );
-
         Ok(())
     }
 }
