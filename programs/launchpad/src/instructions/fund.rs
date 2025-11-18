@@ -97,6 +97,7 @@ impl Fund<'_> {
                 committed_amount: amount,
                 is_tokens_claimed: false,
                 is_usdc_refunded: false,
+                approved_amount: 0,
             });
         }
 

@@ -59,6 +59,16 @@ pub struct LaunchFundedEvent {
 }
 
 #[event]
+pub struct FundingRecordApprovalSetEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub funding_record: Pubkey,
+    pub funder: Pubkey,
+    pub approved_amount: u64,
+    pub total_approved: u64,
+}
+
+#[event]
 pub struct LaunchCompletedEvent {
     pub common: CommonFields,
     pub launch: Pubkey,

@@ -199,6 +199,7 @@ impl InitializeLaunch<'_> {
             performance_package_token_amount: args.performance_package_token_amount,
             months_until_insiders_can_unlock: args.months_until_insiders_can_unlock,
             team_address: args.team_address,
+            total_approved_amount: 0,
         });
 
         let clock = Clock::get()?;

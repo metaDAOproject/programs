@@ -15,4 +15,7 @@ pub struct FundingRecord {
     pub is_tokens_claimed: bool,
     /// Whether the USDC has been refunded.
     pub is_usdc_refunded: bool,
+    /// The amount of USDC that the launch authority has approved for the funder.
+    /// If zero, the funder has not been approved for any amount.
+    pub approved_amount: u64,
 }

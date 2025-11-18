@@ -71,6 +71,14 @@ pub mod launchpad {
         Fund::handle(ctx, amount)
     }
 
+    #[access_control(ctx.accounts.validate(approved_amount))]
+    pub fn set_funding_record_approval(
+        ctx: Context<SetFundingRecordApproval>,
+        approved_amount: u64,
+    ) -> Result<()> {
+        SetFundingRecordApproval::handle(ctx, approved_amount)
+    }
+
     #[access_control(ctx.accounts.validate())]
     pub fn complete_launch(ctx: Context<CompleteLaunch>, args: CompleteLaunchArgs) -> Result<()> {
         CompleteLaunch::handle(ctx, args)

@@ -76,4 +76,7 @@ pub struct Launch {
     pub months_until_insiders_can_unlock: u8,
     /// The initial address used to sponsor team proposals.
     pub team_address: Pubkey,
+    /// The amount of USDC that the launch authority has approved across all funders.
+    /// If zero, no approval has been given, thus this can be ignored.
+    pub total_approved_amount: u64,
 }

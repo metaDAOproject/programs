@@ -72,6 +72,7 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
       })
       .rpc();
 
@@ -161,6 +162,7 @@ export default function suite() {
           performancePackageGrantee: recipientAddress,
           performancePackageTokenAmount: premineAmount,
           monthsUntilInsidersCanUnlock: 18,
+          teamAddress: PublicKey.default,
         })
         .accounts({
           launch,

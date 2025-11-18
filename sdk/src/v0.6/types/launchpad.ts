@@ -188,6 +188,42 @@ export type Launchpad = {
       ];
     },
     {
+      name: "setFundingRecordApproval";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "fundingRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchAuthority";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "approvedAmount";
+          type: "u64";
+        },
+      ];
+    },
+    {
       name: "completeLaunch";
       accounts: [
         {
@@ -616,6 +652,14 @@ export type Launchpad = {
             docs: ["Whether the USDC has been refunded."];
             type: "bool";
           },
+          {
+            name: "approvedAmount";
+            docs: [
+              "The amount of USDC that the launch authority has approved for the funder.",
+              "If zero, the funder has not been approved for any amount.",
+            ];
+            type: "u64";
+          },
         ];
       };
     },
@@ -783,6 +827,14 @@ export type Launchpad = {
             name: "teamAddress";
             docs: ["The initial address used to sponsor team proposals."];
             type: "publicKey";
+          },
+          {
+            name: "totalApprovedAmount";
+            docs: [
+              "The amount of USDC that the launch authority has approved across all funders.",
+              "If zero, no approval has been given, thus this can be ignored.",
+            ];
+            type: "u64";
           },
         ];
       };
@@ -1060,6 +1112,43 @@ export type Launchpad = {
         },
         {
           name: "totalCommitted";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "FundingRecordApprovalSetEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "fundingRecord";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "funder";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "approvedAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "totalApproved";
           type: "u64";
           index: false;
         },
@@ -1508,6 +1597,42 @@ export const IDL: Launchpad = {
       ],
     },
     {
+      name: "setFundingRecordApproval",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "fundingRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchAuthority",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "approvedAmount",
+          type: "u64",
+        },
+      ],
+    },
+    {
       name: "completeLaunch",
       accounts: [
         {
@@ -1936,6 +2061,14 @@ export const IDL: Launchpad = {
             docs: ["Whether the USDC has been refunded."],
             type: "bool",
           },
+          {
+            name: "approvedAmount",
+            docs: [
+              "The amount of USDC that the launch authority has approved for the funder.",
+              "If zero, the funder has not been approved for any amount.",
+            ],
+            type: "u64",
+          },
         ],
       },
     },
@@ -2103,6 +2236,14 @@ export const IDL: Launchpad = {
             name: "teamAddress",
             docs: ["The initial address used to sponsor team proposals."],
             type: "publicKey",
+          },
+          {
+            name: "totalApprovedAmount",
+            docs: [
+              "The amount of USDC that the launch authority has approved across all funders.",
+              "If zero, no approval has been given, thus this can be ignored.",
+            ],
+            type: "u64",
           },
         ],
       },
@@ -2380,6 +2521,43 @@ export const IDL: Launchpad = {
         },
         {
           name: "totalCommitted",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "FundingRecordApprovalSetEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "fundingRecord",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "funder",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "approvedAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "totalApproved",
           type: "u64",
           index: false,
         },
