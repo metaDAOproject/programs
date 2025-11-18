@@ -559,6 +559,32 @@ export class LaunchpadClient {
       ]);
   }
 
+  setFundingRecordApprovalIx({
+    launch,
+    funder,
+    launchAuthority,
+    approvedAmount,
+  }: {
+    launch: PublicKey;
+    funder: PublicKey;
+    launchAuthority: PublicKey;
+    approvedAmount: BN;
+  }) {
+    let fundingRecord = getFundingRecordAddr(
+      this.launchpad.programId,
+      launch,
+      funder,
+    )[0];
+
+    return this.launchpad.methods
+      .setFundingRecordApproval(approvedAmount)
+      .accounts({
+        launch,
+        fundingRecord,
+        launchAuthority,
+      });
+  }
+
   getLaunchAddress({ baseMint }: { baseMint: PublicKey }): PublicKey {
     return getLaunchAddr(this.launchpad.programId, baseMint)[0];
   }

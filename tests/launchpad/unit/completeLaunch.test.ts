@@ -70,6 +70,7 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
       })
       .rpc();
 
@@ -195,6 +196,7 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: new BN(10),
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
       })
       .rpc();
 
@@ -368,6 +370,7 @@ export default function suite() {
         quoteMint: MAINNET_USDC,
         baseMint: META,
         finalRaiseAmount: minRaise,
+        launchAuthority: null,
       })
       .transaction();
 
