@@ -1404,6 +1404,11 @@ export type Launchpad = {
       name: "InvalidMinimumRaiseAmount";
       msg: "Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch";
     },
+    {
+      code: 6022;
+      name: "FinalRaiseAmountAlreadySet";
+      msg: "The final raise amount has already been set";
+    },
   ];
 };
 
@@ -2812,6 +2817,11 @@ export const IDL: Launchpad = {
       code: 6021,
       name: "InvalidMinimumRaiseAmount",
       msg: "Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch",
+    },
+    {
+      code: 6022,
+      name: "FinalRaiseAmountAlreadySet",
+      msg: "The final raise amount has already been set",
     },
   ],
 };

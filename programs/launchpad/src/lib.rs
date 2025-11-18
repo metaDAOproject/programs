@@ -79,7 +79,7 @@ pub mod launchpad {
         SetFundingRecordApproval::handle(ctx, approved_amount)
     }
 
-    #[access_control(ctx.accounts.validate())]
+    #[access_control(ctx.accounts.validate(args))]
     pub fn complete_launch(ctx: Context<CompleteLaunch>, args: CompleteLaunchArgs) -> Result<()> {
         CompleteLaunch::handle(ctx, args)
     }

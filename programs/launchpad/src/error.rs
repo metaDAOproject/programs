@@ -46,4 +46,6 @@ pub enum LaunchpadError {
     LaunchNotLive,
     #[msg("Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch")]
     InvalidMinimumRaiseAmount,
+    #[msg("The final raise amount has already been set")]
+    FinalRaiseAmountAlreadySet,
 }

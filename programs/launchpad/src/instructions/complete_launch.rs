@@ -230,7 +230,8 @@ pub struct CompleteLaunch<'info> {
 }
 
 impl CompleteLaunch<'_> {
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self, args: CompleteLaunchArgs) -> Result<()> {
+        let CompleteLaunchArgs { final_raise_amount } = args;
         let clock = Clock::get()?;
 
         require_eq!(
@@ -257,21 +258,30 @@ impl CompleteLaunch<'_> {
             );
         }
 
+        // A total_approved_amount > 0 means that the launch authority was approving funding records
+        // In this case, the final raise amount must be set to the total approved amount and cannot be provided by the launch authority
+        if self.launch.total_approved_amount > 0 && final_raise_amount.is_some() {
+            return Err(LaunchpadError::FinalRaiseAmountAlreadySet.into());
+        }
+
         Ok(())
     }
 
     pub fn handle(ctx: Context<Self>, args: CompleteLaunchArgs) -> Result<()> {
         let CompleteLaunchArgs { final_raise_amount } = args;
 
+        let launch_total_approved_amount = ctx.accounts.launch.total_approved_amount;
+
         // if the launch authority has provided a final raise amount, use it.
         // else, if either they haven't provided a final raise amount or it was
         // completed permissionlessly, use the total committed amount
-        let final_raise_amount =
-            if final_raise_amount.is_some() && ctx.accounts.launch_authority.is_some() {
-                final_raise_amount.unwrap()
-            } else {
-                ctx.accounts.launch.total_committed_amount
-            };
+        let final_raise_amount = if launch_total_approved_amount > 0 {
+            launch_total_approved_amount
+        } else if final_raise_amount.is_some() && ctx.accounts.launch_authority.is_some() {
+            final_raise_amount.unwrap()
+        } else {
+            ctx.accounts.launch.total_committed_amount
+        };
 
         require_gte!(
             final_raise_amount,
