@@ -1158,6 +1158,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "launchpad_v7"
+version = "0.7.0"
+dependencies = [
+ "ahash 0.8.6",
+ "anchor-lang",
+ "anchor-spl",
+ "damm_v2_cpi",
+ "futarchy",
+ "price_based_performance_package",
+ "solana-program",
+ "solana-security-txt",
+ "spl-memo",
+ "spl-token",
+ "squads-multisig-program",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

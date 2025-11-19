@@ -50,7 +50,7 @@ pub mod usdc_mint {
 }
 
 #[program]
-pub mod launchpad {
+pub mod launchpad_v7 {
     use super::*;
 
     #[access_control(ctx.accounts.validate(&args))]

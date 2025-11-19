@@ -14,7 +14,7 @@ import {
   getMetadataAddr,
   LaunchpadClient,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/futarchy/v0.7";
 import { BN } from "bn.js";
 import { deserializeMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import {

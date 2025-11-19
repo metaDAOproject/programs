@@ -1,6 +1,7 @@
 import conditionalVault from "./conditionalVault/main.test.js";
 import futarchy from "./futarchy/main.test.js";
 import launchpad from "./launchpad/main.test.js";
+import launchpad_v7 from "./launchpad_v7/main.test.js";
 import priceBasedPerformancePackage from "./priceBasedPerformancePackage/main.test.js";
 
 import {
@@ -31,7 +32,7 @@ import {
   DAMM_V2_PROGRAM_ID,
   LAUNCHPAD_PROGRAM_ID,
   MAINNET_METEORA_CONFIG,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/futarchy/v0.7";
 
 import {
   PublicKey,
@@ -700,6 +701,7 @@ before(async function () {
         performancePackageGrantee: founders[0],
         performancePackageTokenAmount: new BN(5_000_000 * 10 ** 6), // 5M
         monthsUntilInsidersCanUnlock: 24, // 2 years
+        teamAddress: PublicKey.default,
       })
       .rpc();
   };
@@ -713,6 +715,7 @@ before(async function () {
 });
 
 describe("launchpad", launchpad);
+describe("launchpad_v7", launchpad_v7);
 describe("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);

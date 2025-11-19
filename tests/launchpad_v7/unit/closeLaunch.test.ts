@@ -1,6 +1,6 @@
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { LaunchpadClient, MAINNET_USDC } from "@metadaoproject/futarchy/v0.6";
+import { LaunchpadClient, MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
