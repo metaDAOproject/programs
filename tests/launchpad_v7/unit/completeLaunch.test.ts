@@ -7,10 +7,6 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  getLiquidityPoolAddr,
-  getRaydiumCpmmLpMintAddr,
-} from "@metadaoproject/futarchy/v0.5";
-import {
   FutarchyClient,
   getMetadataAddr,
   LaunchpadClient,
@@ -28,7 +24,6 @@ import { createLookupTableForTransaction } from "../../utils.js";
 export default function suite() {
   let futarchyClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
-  let METAKP: Keypair;
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
@@ -299,95 +294,6 @@ export default function suite() {
       minRaise.muln(8).divn(10).toString(),
     );
   });
-
-  // it("fails when launch period has not passed", async function () {
-  //   // Fund the launch with exactly minimum raise
-
-  //   await launchpadClient.fundIx({ launch, amount: minRaise }).rpc();
-
-  //   const completeLaunchTx = await launchpadClient
-  //     .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
-  //     .transaction();
-
-  //   const completeLaunchLut = await createLookupTableForTransaction(
-  //     completeLaunchTx,
-  //     this
-  //   );
-
-  //   const completeLaunchMessage = new TransactionMessage({
-  //     payerKey: this.payer.publicKey,
-  //     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-  //     instructions: completeLaunchTx.instructions,
-  //   }).compileToV0Message([completeLaunchLut]);
-
-  //   const tx = new VersionedTransaction(completeLaunchMessage);
-  //   tx.sign([this.payer]);
-
-  //   try {
-  //     await this.banksClient.processTransaction(tx);
-  //     assert.fail("Should have thrown error");
-  //   } catch (error) {
-  //     // LaunchPeriodNotOver error code is 6006, which is 0x1776 in hex
-  //     assert.isTrue(
-  //       error.message.includes("0x1776"),
-  //       `Expected error message to contain 0x1776, got: ${error.message}`
-  //     );
-  //   }
-
-  //   // Advance by 9 days (still not enough)
-  //   await this.advanceBySeconds(60 * 60 * 24 * 9);
-
-  //   const completeLaunchMessage2 = new TransactionMessage({
-  //     payerKey: this.payer.publicKey,
-  //     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-  //     instructions: completeLaunchTx.instructions,
-  //   }).compileToV0Message([completeLaunchLut]);
-
-  //   const tx2 = new VersionedTransaction(completeLaunchMessage2);
-
-  //   tx2.sign([this.payer]);
-
-  //   try {
-  //     await this.banksClient.processTransaction(tx2);
-  //     assert.fail("Should have thrown error");
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // });
-
-  // it("moves to refunding state when minimum raise is not met after period", async function () {
-  //   // Fund the launch with less than minimum raise
-  //   const partialAmount = minRaise.divn(2);
-
-  //   await launchpadClient.fundIx({ launch, amount: partialAmount }).rpc();
-
-  //   await this.advanceBySeconds(60 * 60 * 24 * 11);
-
-  //   // Complete the launch
-  //   const completeLaunchTx = await launchpadClient
-  //     .completeLaunchIx({ launch, quoteMint: MAINNET_USDC, baseMint: META })
-  //     .transaction();
-
-  //   const completeLaunchLut = await createLookupTableForTransaction(
-  //     completeLaunchTx,
-  //     this
-  //   );
-
-  //   const completeLaunchMessage = new TransactionMessage({
-  //     payerKey: this.payer.publicKey,
-  //     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-  //     instructions: completeLaunchTx.instructions,
-  //   }).compileToV0Message([completeLaunchLut]);
-
-  //   const tx = new VersionedTransaction(completeLaunchMessage);
-  //   tx.sign([this.payer]);
-
-  //   await this.banksClient.processTransaction(tx);
-
-  //   const launchAccount = await launchpadClient.fetchLaunch(launch);
-
-  //   assert.exists(launchAccount.state.refunding);
-  // });
 
   it("fails when launch is in refunding state", async function () {
     // Advance clock past 7 days

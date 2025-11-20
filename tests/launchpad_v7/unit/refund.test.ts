@@ -19,7 +19,6 @@ import { createLookupTableForTransaction } from "../../utils.js";
 export default function suite() {
   let futarchyClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
-  let METAKP: Keypair;
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;

@@ -9,8 +9,6 @@ import { MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
 export default function suite() {
   let futarchyClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
-  let dao: PublicKey;
-  let METAKP: Keypair;
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;

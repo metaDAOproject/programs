@@ -6,28 +6,17 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  getLiquidityPoolAddr,
-  getRaydiumCpmmLpMintAddr,
-} from "@metadaoproject/futarchy/v0.5";
-import {
   FutarchyClient,
-  getMetadataAddr,
   LaunchpadClient,
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.7";
 import { BN } from "bn.js";
-import { deserializeMetadata } from "@metaplex-foundation/mpl-token-metadata";
-import {
-  fromWeb3JsPublicKey,
-  toWeb3JsPublicKey,
-} from "@metaplex-foundation/umi-web3js-adapters";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction, expectError } from "../../utils.js";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
-  let METAKP: Keypair;
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
@@ -37,7 +26,6 @@ export default function suite() {
   const monthlySpend = new BN(100_000000);
   const recipientAddress = Keypair.generate().publicKey;
   const premineAmount = new BN(500_000_000);
-  const unlockThreshold = new BN(2000_000000);
 
   const launchAuthority = Keypair.generate();
 
