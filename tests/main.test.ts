@@ -256,33 +256,34 @@ before(async function () {
   this.provider = provider;
   this.payer = provider.wallet.payer;
 
-  const dynamicConfig = await this.banksClient.getAccount(
-    new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"),
-  );
+  // Moved these into individual v6/v7 launchpad test suites
+  // const dynamicConfig = await this.banksClient.getAccount(
+  //   new PublicKey("4mPQ4VuvvtYL3CeMPt14Uj1CLpBWcVdJoLoTH9ea4Kod"),
+  // );
 
-  // discriminator + vault config authority
-  const poolCreatorAuthorityOffset = 8 + 32;
-  // discriminator + vault config authority + pool creator authority + pool fees config + activation type + collect fee mode
-  const configTypeOffset = 8 + 32 + 32 + 128 + 1 + 1;
+  // // discriminator + vault config authority
+  // const poolCreatorAuthorityOffset = 8 + 32;
+  // // discriminator + vault config authority + pool creator authority + pool fees config + activation type + collect fee mode
+  // const configTypeOffset = 8 + 32 + 32 + 128 + 1 + 1;
 
-  const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
-    [Buffer.from("damm_pool_creator_authority")],
-    LAUNCHPAD_PROGRAM_ID,
-  );
+  // const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
+  //   [Buffer.from("damm_pool_creator_authority")],
+  //   LAUNCHPAD_PROGRAM_ID,
+  // );
 
-  dynamicConfig.data.set(
-    poolCreatorAuthority.toBuffer(),
-    poolCreatorAuthorityOffset,
-  );
-  dynamicConfig.data.set([1], configTypeOffset);
+  // dynamicConfig.data.set(
+  //   poolCreatorAuthority.toBuffer(),
+  //   poolCreatorAuthorityOffset,
+  // );
+  // dynamicConfig.data.set([1], configTypeOffset);
 
-  this.context.setAccount(MAINNET_METEORA_CONFIG, dynamicConfig);
-  const creatorAuthority = new PublicKey(
-    dynamicConfig.data.subarray(
-      poolCreatorAuthorityOffset,
-      poolCreatorAuthorityOffset + 32,
-    ),
-  );
+  // this.context.setAccount(MAINNET_METEORA_CONFIG, dynamicConfig);
+  // const creatorAuthority = new PublicKey(
+  //   dynamicConfig.data.subarray(
+  //     poolCreatorAuthorityOffset,
+  //     poolCreatorAuthorityOffset + 32,
+  //   ),
+  // );
   // console.log(creatorAuthority);
   // console.log(this.payer.publicKey);
   // console.log(
@@ -685,34 +686,34 @@ before(async function () {
     })[0];
   };
 
-  this.setupBasicLaunch = async ({
-    baseMint,
-    founders,
-    launchAuthority,
-  }: {
-    baseMint: PublicKey;
-    founders: PublicKey[];
-    launchAuthority: PublicKey;
-  }) => {
-    await this.launchpad
-      .initializeLaunchIx({
-        tokenName: "META",
-        tokenSymbol: "META",
-        tokenUri: "https://example.com",
-        minimumRaiseAmount: new BN(100_000 * 10 ** 6), // 100k
-        secondsForLaunch: 60 * 60 * 24 * 4, // 4 days
-        baseMint,
-        quoteMint: MAINNET_USDC,
-        monthlySpendingLimitAmount: new BN(10_000 * 10 ** 6), // 15k burn
-        monthlySpendingLimitMembers: founders,
-        performancePackageGrantee: founders[0],
-        performancePackageTokenAmount: new BN(5_000_000 * 10 ** 6), // 5M
-        monthsUntilInsidersCanUnlock: 24, // 2 years
-        teamAddress: PublicKey.default,
-        launchAuthority: launchAuthority,
-      })
-      .rpc();
-  };
+  // this.setupBasicLaunch = async ({
+  //   baseMint,
+  //   founders,
+  //   launchAuthority,
+  // }: {
+  //   baseMint: PublicKey;
+  //   founders: PublicKey[];
+  //   launchAuthority: PublicKey;
+  // }) => {
+  //   await this.launchpad
+  //     .initializeLaunchIx({
+  //       tokenName: "META",
+  //       tokenSymbol: "META",
+  //       tokenUri: "https://example.com",
+  //       minimumRaiseAmount: new BN(100_000 * 10 ** 6), // 100k
+  //       secondsForLaunch: 60 * 60 * 24 * 4, // 4 days
+  //       baseMint,
+  //       quoteMint: MAINNET_USDC,
+  //       monthlySpendingLimitAmount: new BN(10_000 * 10 ** 6), // 15k burn
+  //       monthlySpendingLimitMembers: founders,
+  //       performancePackageGrantee: founders[0],
+  //       performancePackageTokenAmount: new BN(5_000_000 * 10 ** 6), // 5M
+  //       monthsUntilInsidersCanUnlock: 24, // 2 years
+  //       teamAddress: PublicKey.default,
+  //       launchAuthority: launchAuthority,
+  //     })
+  //     .rpc();
+  // };
 
   await this.createTokenAccount(MAINNET_USDC, this.payer.publicKey);
   await mintToOverride(
@@ -729,5 +730,5 @@ describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);
 describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
-  // describe("full launch", fullLaunch);
+  describe("full launch v6", fullLaunch);
 });
