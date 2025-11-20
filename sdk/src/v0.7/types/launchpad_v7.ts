@@ -468,14 +468,7 @@ export type LaunchpadV7 = {
           isSigner: false;
         },
       ];
-      args: [
-        {
-          name: "args";
-          type: {
-            defined: "CompleteLaunchArgs";
-          };
-        },
-      ];
+      args: [];
     },
     {
       name: "refund";
@@ -761,13 +754,6 @@ export type LaunchpadV7 = {
             type: "u64";
           },
           {
-            name: "finalRaiseAmount";
-            docs: ["The final raise amount."];
-            type: {
-              option: "u64";
-            };
-          },
-          {
             name: "state";
             docs: ["The state of the launch."];
             type: {
@@ -857,20 +843,6 @@ export type LaunchpadV7 = {
           {
             name: "launchSeqNum";
             type: "u64";
-          },
-        ];
-      };
-    },
-    {
-      name: "CompleteLaunchArgs";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "finalRaiseAmount";
-            type: {
-              option: "u64";
-            };
           },
         ];
       };
@@ -1196,10 +1168,8 @@ export type LaunchpadV7 = {
           index: false;
         },
         {
-          name: "finalRaiseAmount";
-          type: {
-            option: "u64";
-          };
+          name: "totalApprovedAmount";
+          type: "u64";
           index: false;
         },
       ];
@@ -1408,6 +1378,11 @@ export type LaunchpadV7 = {
       code: 6022;
       name: "FinalRaiseAmountAlreadySet";
       msg: "The final raise amount has already been set";
+    },
+    {
+      code: 6023;
+      name: "TotalApprovedAmountTooLow";
+      msg: "Total approved amount must be greater than or equal to the minimum raise amount";
     },
   ];
 };
@@ -1882,14 +1857,7 @@ export const IDL: LaunchpadV7 = {
           isSigner: false,
         },
       ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "CompleteLaunchArgs",
-          },
-        },
-      ],
+      args: [],
     },
     {
       name: "refund",
@@ -2175,13 +2143,6 @@ export const IDL: LaunchpadV7 = {
             type: "u64",
           },
           {
-            name: "finalRaiseAmount",
-            docs: ["The final raise amount."],
-            type: {
-              option: "u64",
-            },
-          },
-          {
             name: "state",
             docs: ["The state of the launch."],
             type: {
@@ -2271,20 +2232,6 @@ export const IDL: LaunchpadV7 = {
           {
             name: "launchSeqNum",
             type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "CompleteLaunchArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "finalRaiseAmount",
-            type: {
-              option: "u64",
-            },
           },
         ],
       },
@@ -2610,10 +2557,8 @@ export const IDL: LaunchpadV7 = {
           index: false,
         },
         {
-          name: "finalRaiseAmount",
-          type: {
-            option: "u64",
-          },
+          name: "totalApprovedAmount",
+          type: "u64",
           index: false,
         },
       ],
@@ -2822,6 +2767,11 @@ export const IDL: LaunchpadV7 = {
       code: 6022,
       name: "FinalRaiseAmountAlreadySet",
       msg: "The final raise amount has already been set",
+    },
+    {
+      code: 6023,
+      name: "TotalApprovedAmountTooLow",
+      msg: "Total approved amount must be greater than or equal to the minimum raise amount",
     },
   ],
 };

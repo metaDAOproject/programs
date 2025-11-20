@@ -137,7 +137,7 @@ export class LaunchpadClient {
     performancePackageTokenAmount,
     monthsUntilInsidersCanUnlock,
     teamAddress,
-    launchAuthority = this.provider.publicKey,
+    launchAuthority,
     payer = this.provider.publicKey,
   }: {
     tokenName: string;
@@ -153,7 +153,7 @@ export class LaunchpadClient {
     performancePackageTokenAmount: BN;
     monthsUntilInsidersCanUnlock: number;
     teamAddress: PublicKey;
-    launchAuthority?: PublicKey;
+    launchAuthority: PublicKey;
     payer?: PublicKey;
   }) {
     const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
@@ -216,7 +216,7 @@ export class LaunchpadClient {
     launchAuthority = this.provider.publicKey,
   }: {
     launch: PublicKey;
-    launchAuthority?: PublicKey;
+    launchAuthority: PublicKey;
   }) {
     return this.launchpad.methods.startLaunch().accounts({
       launch,
@@ -273,7 +273,6 @@ export class LaunchpadClient {
     launch,
     quoteMint = MAINNET_USDC,
     baseMint,
-    finalRaiseAmount,
     launchAuthority,
     isDevnet = false,
     meteoraConfig = MAINNET_METEORA_CONFIG,
@@ -281,7 +280,6 @@ export class LaunchpadClient {
     launch: PublicKey;
     quoteMint?: PublicKey;
     baseMint: PublicKey;
-    finalRaiseAmount: BN | null;
     launchAuthority: PublicKey | null;
     isDevnet?: boolean;
     meteoraConfig?: PublicKey;
@@ -410,7 +408,7 @@ export class LaunchpadClient {
     const [dammV2EventAuthority] = getEventAuthorityAddr(DAMM_V2_PROGRAM_ID);
 
     return this.launchpad.methods
-      .completeLaunch({ finalRaiseAmount })
+      .completeLaunch()
       .accounts({
         launch,
         launchSigner,

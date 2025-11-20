@@ -85,6 +85,7 @@ pub struct InitializeLaunch<'info> {
 
     #[account(mut)]
     pub payer: Signer<'info>,
+
     /// CHECK: account not used, just for constraints
     pub launch_authority: UncheckedAccount<'info>,
 
@@ -191,7 +192,6 @@ impl InitializeLaunch<'_> {
             state: LaunchState::Initialized,
             unix_timestamp_started: None,
             unix_timestamp_closed: None,
-            final_raise_amount: None,
             seconds_for_launch: args.seconds_for_launch,
             dao: None,
             dao_vault: None,

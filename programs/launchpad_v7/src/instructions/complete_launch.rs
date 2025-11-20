@@ -13,7 +13,7 @@ use damm_v2_cpi::constants::MAX_SQRT_PRICE;
 use damm_v2_cpi::BaseFeeParameters;
 
 use crate::error::LaunchpadError;
-use crate::events::{CommonFields, LaunchCompletedEvent};
+use crate::events::{CommonFields, LaunchCloseEvent, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::{
     TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
@@ -32,11 +32,6 @@ use price_based_performance_package::{InitializePerformancePackageParams, Oracle
 use damm_v2_cpi::program::DammV2Cpi;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
-pub struct CompleteLaunchArgs {
-    pub final_raise_amount: Option<u64>,
-}
 
 /// Static accounts for completing a launch, used to reduce code duplication
 /// and conserve stack space.
@@ -230,8 +225,7 @@ pub struct CompleteLaunch<'info> {
 }
 
 impl CompleteLaunch<'_> {
-    pub fn validate(&self, args: CompleteLaunchArgs) -> Result<()> {
-        let CompleteLaunchArgs { final_raise_amount } = args;
+    pub fn validate(&self) -> Result<()> {
         let clock = Clock::get()?;
 
         require_eq!(
@@ -251,48 +245,55 @@ impl CompleteLaunch<'_> {
         }
 
         if self.launch_authority.is_some() {
+            require!(
+                self.launch_authority.as_ref().unwrap().is_signer,
+                LaunchpadError::LaunchAuthorityNotSet
+            );
+
+            msg!(
+                "Launch authority is a signer: {}",
+                self.launch_authority.as_ref().unwrap().is_signer
+            );
+
             require_keys_eq!(
                 self.launch_authority.as_ref().unwrap().key(),
                 self.launch.launch_authority,
                 LaunchpadError::LaunchAuthorityNotSet
             );
-        }
 
-        // A total_approved_amount > 0 means that the launch authority was approving funding records
-        // In this case, the final raise amount must be set to the total approved amount and cannot be provided by the launch authority
-        if self.launch.total_approved_amount > 0 && final_raise_amount.is_some() {
-            return Err(LaunchpadError::FinalRaiseAmountAlreadySet.into());
+            // If the launch authority is completing the launch, the total approved amount must be greater than or equal to the minimum raise amount
+            // Otherwise, the launch authority could send the launch into a refunding state by not approving enough funding and erroneously completing the launch
+            require_gte!(
+                self.launch.total_approved_amount,
+                self.launch.minimum_raise_amount,
+                LaunchpadError::TotalApprovedAmountTooLow
+            );
         }
 
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>, args: CompleteLaunchArgs) -> Result<()> {
-        let CompleteLaunchArgs { final_raise_amount } = args;
-
+    pub fn handle(ctx: Context<Self>) -> Result<()> {
         let launch_total_approved_amount = ctx.accounts.launch.total_approved_amount;
 
-        // if the launch authority has provided a final raise amount, use it.
-        // else, if either they haven't provided a final raise amount or it was
-        // completed permissionlessly, use the total committed amount
-        let final_raise_amount = if launch_total_approved_amount > 0 {
-            launch_total_approved_amount
-        } else if final_raise_amount.is_some() && ctx.accounts.launch_authority.is_some() {
-            final_raise_amount.unwrap()
-        } else {
-            ctx.accounts.launch.total_committed_amount
+        // If the launch authority doesn't approve enough funding, the launch will go into refunding state
+        if launch_total_approved_amount < ctx.accounts.launch.minimum_raise_amount {
+            let launch = &mut ctx.accounts.launch;
+
+            // refund the launch, end it
+            launch.state = LaunchState::Refunding;
+            launch.seq_num += 1;
+
+            let clock = Clock::get()?;
+
+            emit_cpi!(LaunchCloseEvent {
+                common: CommonFields::new(&clock, launch.seq_num),
+                launch: launch.key(),
+                new_state: launch.state,
+            });
+
+            return Ok(());
         };
-
-        require_gte!(
-            final_raise_amount,
-            ctx.accounts.launch.minimum_raise_amount,
-            LaunchpadError::FinalRaiseAmountTooLow
-        );
-
-        require_gte!(
-            ctx.accounts.launch.total_committed_amount,
-            final_raise_amount,
-        );
 
         let launch_key = ctx.accounts.launch.key();
         let launch_signer_seeds = &[
@@ -307,11 +308,11 @@ impl CompleteLaunch<'_> {
         // per update (300% per hour), and for proposers to need to lock up 1%
         // of the supply and an equivalent value of USDC.
 
-        let price_1e12 =
-            ((final_raise_amount as u128) * PRICE_SCALE) / (TOKENS_TO_PARTICIPANTS as u128);
+        let price_1e12 = ((launch_total_approved_amount as u128) * PRICE_SCALE)
+            / (TOKENS_TO_PARTICIPANTS as u128);
 
-        let usdc_to_lp = final_raise_amount.saturating_div(5);
-        let usdc_to_dao = final_raise_amount.saturating_sub(usdc_to_lp);
+        let usdc_to_lp = launch_total_approved_amount.saturating_div(5);
+        let usdc_to_dao = launch_total_approved_amount.saturating_sub(usdc_to_lp);
 
         let clock = Clock::get()?;
 
@@ -331,7 +332,7 @@ impl CompleteLaunch<'_> {
         )?;
 
         ctx.accounts.provide_single_sided_meteora_liquidity(
-            final_raise_amount,
+            launch_total_approved_amount,
             ctx.bumps.meteora_accounts.position_nft_mint,
             ctx.bumps.meteora_accounts.pool_creator_authority,
             launch_signer_seeds,
@@ -349,7 +350,6 @@ impl CompleteLaunch<'_> {
         launch.dao = Some(ctx.accounts.dao.key());
         launch.dao_vault = Some(ctx.accounts.squads_multisig_vault.key());
         launch.state = LaunchState::Complete;
-        launch.final_raise_amount = Some(final_raise_amount);
         launch.seq_num += 1;
 
         emit_cpi!(LaunchCompletedEvent {
@@ -357,12 +357,12 @@ impl CompleteLaunch<'_> {
             launch: launch.key(),
             final_state: launch.state,
             total_committed: launch.total_committed_amount,
-            final_raise_amount: launch.final_raise_amount,
+            total_approved_amount: launch.total_approved_amount,
             dao: launch.dao,
             dao_treasury: launch.dao_vault,
         });
 
-        let refundable_usdc = launch.total_committed_amount - final_raise_amount;
+        let refundable_usdc = launch.total_committed_amount - launch_total_approved_amount;
 
         ctx.accounts.verify_position_nft()?;
         ctx.accounts.verify_vaults(refundable_usdc)?;

@@ -76,7 +76,7 @@ pub struct LaunchCompletedEvent {
     pub total_committed: u64,
     pub dao: Option<Pubkey>,
     pub dao_treasury: Option<Pubkey>,
-    pub final_raise_amount: Option<u64>,
+    pub total_approved_amount: u64,
 }
 
 #[event]

@@ -1,6 +1,7 @@
 import {
   Keypair,
   PublicKey,
+  Signer,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -24,6 +25,7 @@ export default function suite() {
   let launchSigner: PublicKey;
   let quoteVault: PublicKey;
   let funderQuoteAccount: PublicKey;
+  let launchAuthority: Signer;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -40,6 +42,7 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
+    launchAuthority = new Keypair();
     quoteVault = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       launchSigner,
@@ -53,9 +56,13 @@ export default function suite() {
     await this.setupBasicLaunch({
       baseMint: META,
       founders: [this.payer.publicKey],
+      launchAuthority: launchAuthority.publicKey,
     });
 
-    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
 
     // Setup funder accounts
     await this.createTokenAccount(META, this.payer.publicKey);
@@ -106,8 +113,9 @@ export default function suite() {
   });
 
   it("works for oversubscribed launches", async function () {
-    // fund the launch with more than the minimum raise
+    const minRaise = new BN(100_000 * 10 ** 6);
 
+    // fund the launch with more than the minimum raise
     await launchpadClient
       .fundIx({ launch, amount: new BN(211_000 * 1e6) })
       .rpc();
@@ -116,13 +124,23 @@ export default function suite() {
 
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        approvedAmount: minRaise,
+        launch,
+        funder: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx({
         launch,
         baseMint: META,
-        finalRaiseAmount: new BN(150_000 * 1e6),
-        launchAuthority: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
       })
+      .signers([launchAuthority])
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -137,7 +155,7 @@ export default function suite() {
     }).compileToV0Message([completeLaunchLut]);
 
     const tx = new VersionedTransaction(completeLaunchMessage);
-    tx.sign([this.payer]);
+    tx.sign([this.payer, launchAuthority]);
 
     await this.banksClient.processTransaction(tx);
 
@@ -153,8 +171,9 @@ export default function suite() {
       this.payer.publicKey,
     );
 
+    // User deposited 211k USDC, but only 100k was used to buy tokens. So 111k is refunded.
     const refundAmount = finalUsdcBalance - initialUsdcBalance;
-    assert.equal(refundAmount, 61_000n * 1_000_000n);
+    assert.equal(refundAmount, 111_000n * 1_000_000n);
   });
 
   it("fails when launch is not in refunding state", async function () {

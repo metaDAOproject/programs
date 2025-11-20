@@ -1,4 +1,4 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey, Signer } from "@solana/web3.js";
 import { assert } from "chai";
 import { FutarchyClient, LaunchpadClient } from "@metadaoproject/futarchy/v0.7";
 import { BN } from "bn.js";
@@ -14,6 +14,7 @@ export default function suite() {
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
+  let launchAuthority: Signer;
   const minRaise = new BN(1000_000000); // 1000 USDC
 
   before(async function () {
@@ -31,6 +32,8 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
+
+    launchAuthority = new Keypair();
 
     const minRaise = new BN(1000_000000); // 1000 USDC
     const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
@@ -54,6 +57,8 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
+        launchAuthority: launchAuthority.publicKey,
       })
       .rpc();
   });
@@ -68,7 +73,10 @@ export default function suite() {
     const clock = await this.banksClient.getClock();
 
     // Start the launch
-    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
 
     // Check final state
     launchAccount = await launchpadClient.fetchLaunch(launch);

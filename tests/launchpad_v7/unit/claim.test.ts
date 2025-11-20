@@ -1,6 +1,7 @@
 import {
   Keypair,
   PublicKey,
+  Signer,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -11,7 +12,7 @@ import {
   LaunchpadClient,
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.7";
-import { BN } from "bn.js";
+import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
@@ -28,6 +29,8 @@ export default function suite() {
   let quoteVault: PublicKey;
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
+  let launchAuthority: Signer;
+  let fundAmount: BN;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -44,6 +47,7 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
+    launchAuthority = new Keypair();
 
     // Create second funder
     secondFunder = Keypair.generate();
@@ -61,13 +65,17 @@ export default function suite() {
     await this.setupBasicLaunch({
       baseMint: META,
       founders: [this.payer.publicKey],
+      launchAuthority: launchAuthority.publicKey,
     });
 
-    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
 
     await this.createTokenAccount(META, this.payer.publicKey);
 
-    const fundAmount = new BN(100_000_000_000); // 100K USDC
+    fundAmount = new BN(100_000_000_000); // 100K USDC
 
     // Fund the launch
     await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
@@ -77,14 +85,25 @@ export default function suite() {
     // // Advance clock and complete launch
     await this.advanceBySeconds(60 * 60 * 24 * 7 + 100);
     await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        approvedAmount: fundAmount,
+        launch,
+        funder: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,
-        finalRaiseAmount: null,
-        launchAuthority: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
       })
+      .signers([launchAuthority])
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -99,7 +118,7 @@ export default function suite() {
     }).compileToV0Message([completeLaunchLut]);
 
     const tx = new VersionedTransaction(completeLaunchMessage);
-    tx.sign([this.payer]);
+    tx.sign([this.payer, launchAuthority]);
 
     await this.banksClient.processTransaction(tx);
 

@@ -56,8 +56,6 @@ pub struct Launch {
     pub unix_timestamp_closed: Option<i64>,
     /// The amount of USDC that has been committed by the users.
     pub total_committed_amount: u64,
-    /// The final raise amount.
-    pub final_raise_amount: Option<u64>,
     /// The state of the launch.
     pub state: LaunchState,
     /// The sequence number of this launch. Useful for sorting events.

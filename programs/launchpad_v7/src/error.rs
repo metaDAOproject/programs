@@ -48,4 +48,6 @@ pub enum LaunchpadError {
     InvalidMinimumRaiseAmount,
     #[msg("The final raise amount has already been set")]
     FinalRaiseAmountAlreadySet,
+    #[msg("Total approved amount must be greater than or equal to the minimum raise amount")]
+    TotalApprovedAmountTooLow,
 }

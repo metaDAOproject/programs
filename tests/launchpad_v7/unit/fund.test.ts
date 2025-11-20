@@ -1,4 +1,4 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey, Signer } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   FutarchyClient,
@@ -21,6 +21,7 @@ export default function suite() {
   let quoteVault: PublicKey;
   let funderBaseAccount: PublicKey;
   let funderQuoteAccount: PublicKey;
+  let launchAuthority: Signer;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
   const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
@@ -44,6 +45,7 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
+    launchAuthority = new Keypair();
 
     baseVault = getAssociatedTokenAddressSync(META, launchSigner, true);
     quoteVault = getAssociatedTokenAddressSync(
@@ -76,6 +78,8 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
+        launchAuthority: launchAuthority.publicKey,
       })
       .rpc();
   });
@@ -93,7 +97,10 @@ export default function suite() {
   });
 
   it("successfully funds the launch", async function () {
-    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
 
     const fundAmount = new BN(100_000000); // 100 USDC
@@ -126,7 +133,10 @@ export default function suite() {
   });
 
   it("successfully funds the launch multiple times", async function () {
-    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
 
     const fundAmount1 = new BN(100_000000); // 100 USDC
@@ -163,7 +173,10 @@ export default function suite() {
   });
 
   it("fails to fund the launch after time expires", async function () {
-    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
 
     const fundAmount = new BN(100_000000); // 100 USDC

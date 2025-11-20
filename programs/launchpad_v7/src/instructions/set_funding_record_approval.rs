@@ -24,13 +24,6 @@ pub struct SetFundingRecordApproval<'info> {
 
 impl SetFundingRecordApproval<'_> {
     pub fn validate(&self, approved_amount: u64) -> Result<()> {
-        // We can only set approval amounts for a launch that is live, but not accepting new contributions
-
-        require!(
-            self.launch.state == LaunchState::Live,
-            LaunchpadError::LaunchNotLive
-        );
-
         let clock = Clock::get()?;
 
         // Check that the launch funding period is over (not accepting new contributions)
@@ -41,6 +34,12 @@ impl SetFundingRecordApproval<'_> {
                 .unwrap()
                 .saturating_add(self.launch.seconds_for_launch.try_into().unwrap()),
             LaunchpadError::LaunchPeriodNotOver
+        );
+
+        // We can only set approval amounts for a launch that is closed
+        require!(
+            self.launch.state == LaunchState::Closed,
+            LaunchpadError::InvalidLaunchState
         );
 
         // Can't approve more than the committed amount

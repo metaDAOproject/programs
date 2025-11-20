@@ -1,6 +1,7 @@
 import {
   Keypair,
   PublicKey,
+  Signer,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -31,6 +32,7 @@ export default function suite() {
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
+  let launchAuthority: Signer;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
   const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
@@ -54,6 +56,7 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
+    launchAuthority = new Keypair();
 
     // Initialize launch
     await launchpadClient
@@ -71,10 +74,14 @@ export default function suite() {
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
+        launchAuthority: launchAuthority.publicKey,
       })
       .rpc();
 
-    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
   });
 
@@ -106,14 +113,24 @@ export default function suite() {
 
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        approvedAmount: minRaise,
+        launch,
+        funder: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,
-        finalRaiseAmount: null,
-        launchAuthority: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
       })
+      .signers([launchAuthority])
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -128,7 +145,7 @@ export default function suite() {
     }).compileToV0Message([completeLaunchLut]);
 
     const tx = new VersionedTransaction(completeLaunchMessage);
-    tx.sign([this.payer]);
+    tx.sign([this.payer, launchAuthority]);
 
     await this.banksClient.processTransaction(tx);
 
@@ -197,10 +214,14 @@ export default function suite() {
         performancePackageTokenAmount: new BN(10),
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
+        launchAuthority: launchAuthority.publicKey,
       })
       .rpc();
 
-    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
 
     await launchpadClient.fundIx({ launch, amount: minRaise }).rpc();
@@ -230,14 +251,24 @@ export default function suite() {
 
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        approvedAmount: minRaise,
+        launch,
+        funder: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,
-        finalRaiseAmount: null,
-        launchAuthority: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
       })
+      .signers([launchAuthority])
       .transaction();
 
     const completeLaunchLut = await createLookupTableForTransaction(
@@ -252,7 +283,7 @@ export default function suite() {
     }).compileToV0Message([completeLaunchLut]);
 
     const tx = new VersionedTransaction(completeLaunchMessage);
-    tx.sign([this.payer]);
+    tx.sign([this.payer, launchAuthority]);
 
     await this.banksClient.processTransaction(tx);
 
@@ -369,7 +400,6 @@ export default function suite() {
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,
-        finalRaiseAmount: minRaise,
         launchAuthority: null,
       })
       .transaction();

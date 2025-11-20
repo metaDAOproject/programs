@@ -1,4 +1,9 @@
-import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  Signer,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import { LaunchpadClient, MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
 import { BN } from "bn.js";
@@ -12,7 +17,7 @@ export default function suite() {
   let launchSigner: PublicKey;
   let quoteVault: PublicKey;
   let funderUsdcAccount: PublicKey;
-
+  let launchAuthority: Signer;
   const minRaise = new BN(100_000_000); // 100 USDC
   const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
   const monthlySpend = new BN(10_000_000);
@@ -33,7 +38,7 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
-
+    launchAuthority = new Keypair();
     quoteVault = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       launchSigner,
@@ -47,9 +52,13 @@ export default function suite() {
     await this.setupBasicLaunch({
       baseMint: META,
       founders: [this.payer.publicKey],
+      launchAuthority: launchAuthority.publicKey,
     });
 
-    await launchpadClient.startLaunchIx({ launch }).rpc();
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
 
     await this.createTokenAccount(META, this.payer.publicKey);
   });
@@ -156,6 +165,8 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
+        launchAuthority: launchAuthority.publicKey,
       })
       .rpc();
 

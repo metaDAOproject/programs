@@ -68,20 +68,11 @@ impl Claim<'_> {
         let funding_record = &mut ctx.accounts.funding_record;
         let launch_key = launch.key();
 
-        let (funding_record_amount, launch_total_amount) = if launch.total_approved_amount > 0 {
-            (funding_record.approved_amount, launch.total_approved_amount)
-        } else {
-            (
-                funding_record.committed_amount,
-                launch.total_committed_amount,
-            )
-        };
-
-        // Calculate tokens to transfer based on contribution percentage
-        let token_amount = (funding_record_amount as u128)
+        // Calculate tokens to transfer based on approved contribution percentage
+        let token_amount = (funding_record.approved_amount as u128)
             .checked_mul(TOKENS_TO_PARTICIPANTS as u128)
             .unwrap()
-            .checked_div(launch_total_amount as u128)
+            .checked_div(launch.total_approved_amount as u128)
             .unwrap() as u64;
 
         let seeds = &[

@@ -3,6 +3,7 @@ import {
   Keypair,
   SystemProgram,
   Transaction,
+  Signer,
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
@@ -27,6 +28,7 @@ export default function suite() {
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
+  let launchAuthority: Signer;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -43,6 +45,7 @@ export default function suite() {
     META = result.tokenMint;
     launch = result.launch;
     launchSigner = result.launchSigner;
+    launchAuthority = new Keypair();
   });
 
   it("initializes a launch with valid parameters", async function () {
@@ -73,6 +76,7 @@ export default function suite() {
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
+        launchAuthority: launchAuthority.publicKey,
       })
       .rpc();
 
@@ -82,7 +86,7 @@ export default function suite() {
       storedLaunch.minimumRaiseAmount.toString(),
       minRaise.toString(),
     );
-    assert.ok(storedLaunch.launchAuthority.equals(this.payer.publicKey));
+    assert.ok(storedLaunch.launchAuthority.equals(launchAuthority.publicKey));
     assert.ok(storedLaunch.launchSigner.equals(launchSigner));
     assert.equal(storedLaunch.launchSignerPdaBump, launchSignerPdaBump);
     assert.ok(
@@ -163,6 +167,7 @@ export default function suite() {
           performancePackageTokenAmount: premineAmount,
           monthsUntilInsidersCanUnlock: 18,
           teamAddress: PublicKey.default,
+          launchAuthority: launchAuthority.publicKey,
         })
         .accounts({
           launch,
@@ -177,7 +182,7 @@ export default function suite() {
             fakeLaunchSigner.publicKey,
             true,
           ),
-          launchAuthority: this.payer.publicKey,
+          launchAuthority: launchAuthority.publicKey,
           quoteMint: MAINNET_USDC,
           baseMint: META,
           tokenMetadata,
