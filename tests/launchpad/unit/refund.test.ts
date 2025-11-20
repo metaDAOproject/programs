@@ -164,6 +164,9 @@ export default function suite() {
     const funder1 = new Keypair();
     const funder2 = new Keypair();
 
+    await this.createTokenAccount(MAINNET_USDC, funder1.publicKey);
+    await this.createTokenAccount(MAINNET_USDC, funder2.publicKey);
+
     // Mint USDC to funders
     await this.transfer(
       MAINNET_USDC,
