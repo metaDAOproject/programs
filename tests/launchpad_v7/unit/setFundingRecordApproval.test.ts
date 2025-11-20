@@ -72,7 +72,7 @@ export default function suite() {
 
   before(async function () {
     futarchyClient = this.futarchy;
-    launchpadClient = this.launchpad;
+    launchpadClient = this.launchpad_v7;
 
     // Setup token accounts for funders
     await this.createTokenAccount(MAINNET_USDC, funder1.publicKey);
@@ -84,7 +84,7 @@ export default function suite() {
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v7,
       this.payer,
     );
 

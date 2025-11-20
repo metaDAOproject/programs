@@ -43,13 +43,13 @@ export default function suite() {
 
   before(async function () {
     futarchyClient = this.futarchy;
-    launchpadClient = this.launchpad;
+    launchpadClient = this.launchpad_v7;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v7,
       this.payer,
     );
 
@@ -190,7 +190,7 @@ export default function suite() {
   it("works with a 0 token premine (today we do a 10 token premine)", async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v7,
       this.payer,
     );
 

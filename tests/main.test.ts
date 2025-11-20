@@ -15,7 +15,7 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   FutarchyClient,
   ConditionalVaultClient,
-  LaunchpadClient,
+  LaunchpadClient as LaunchpadClientV7,
   PriceBasedPerformancePackageClient,
   MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
@@ -33,6 +33,7 @@ import {
   LAUNCHPAD_PROGRAM_ID,
   MAINNET_METEORA_CONFIG,
 } from "@metadaoproject/futarchy/v0.7";
+import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/futarchy/v0.6";
 
 import {
   PublicKey,
@@ -81,7 +82,8 @@ export interface TestContext {
   banksClient: BanksClient;
   conditionalVault: ConditionalVaultClient;
   futarchy: FutarchyClient;
-  launchpad: LaunchpadClient;
+  launchpad_v7: LaunchpadClientV7;
+  launchpad_v6: LaunchpadClientV6;
   priceBasedPerformancePackage: PriceBasedPerformancePackageClient;
   payer: Keypair;
   squadsConnection: Connection;
@@ -241,7 +243,10 @@ before(async function () {
   this.futarchy = FutarchyClient.createClient({
     provider: provider as any,
   });
-  this.launchpad = LaunchpadClient.createClient({
+  this.launchpad_v7 = LaunchpadClientV7.createClient({
+    provider: provider as any,
+  });
+  this.launchpad_v6 = LaunchpadClientV6.createClient({
     provider: provider as any,
   });
   this.priceBasedPerformancePackage =
@@ -717,7 +722,7 @@ before(async function () {
   );
 });
 
-// describe("launchpad", launchpad);
+describe("launchpad", launchpad);
 describe("launchpad_v7", launchpad_v7);
 describe("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);

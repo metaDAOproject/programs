@@ -32,13 +32,13 @@ export default function suite() {
 
   before(async function () {
     futarchyClient = this.futarchy;
-    launchpadClient = this.launchpad;
+    launchpadClient = this.launchpad_v7;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v7,
       this.payer,
     );
 
@@ -116,8 +116,11 @@ export default function suite() {
     const recipientAddress = Keypair.generate().publicKey;
     const premineAmount = new BN(500_000_000);
 
+    const fakeSignerFrom = Keypair.generate();
+    const fakeSignerFromPubkey = fakeSignerFrom.publicKey;
+
     META = await PublicKey.createWithSeed(
-      this.payer.publicKey,
+      fakeSignerFrom.publicKey,
       "fake-launch-signer",
       token.TOKEN_PROGRAM_ID,
     );
@@ -130,7 +133,7 @@ export default function suite() {
       SystemProgram.createAccountWithSeed({
         fromPubkey: this.payer.publicKey,
         newAccountPubkey: META,
-        basePubkey: this.payer.publicKey,
+        basePubkey: fakeSignerFromPubkey,
         seed: "fake-launch-signer",
         lamports: lamports,
         space: token.MINT_SIZE,
@@ -145,7 +148,7 @@ export default function suite() {
     );
     tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
     tx.feePayer = this.payer.publicKey;
-    tx.sign(this.payer);
+    tx.sign(this.payer, fakeSignerFrom);
 
     await this.banksClient.processTransaction(tx);
 
