@@ -71,6 +71,7 @@ const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
+import fullLaunch_v7 from "./integration/fullLaunch_v7.test.js";
 import { BN } from "bn.js";
 import { sha256 } from "@metadaoproject/futarchy";
 
@@ -731,4 +732,5 @@ describe("futarchy", futarchy);
 describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);
+  describe("full launch v7", fullLaunch_v7);
 });

@@ -321,31 +321,94 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  // it("can't set funding record approval after the launch is closed", async function () {
-  //   // Fully fund the launch and wait for the launch period to end
-  //   await fundLaunch();
-  //   this.advanceBySeconds(secondsForLaunch + 1);
+  it("can't set funding record approval after the launch is completed", async function () {
+    // Fully fund the launch and wait for the launch period to end
+    await fundLaunch();
+    this.advanceBySeconds(secondsForLaunch + 1);
 
-  //   // Close the launch
-  //   await launchpadClient.closeLaunchIx({ launch }).rpc();
+    // Close the launch
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
 
-  //   const callbacks = expectError(
-  //     "LaunchNotLive",
-  //     "Launch must be live to be closed"
-  //   );
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder1Amount,
+        funder: funder1.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
 
-  //   // Set funder1's funding record approval to the full amount - should fail
-  //   await launchpadClient
-  //     .setFundingRecordApprovalIx({
-  //       launch,
-  //       approvedAmount: funder1Amount,
-  //       funder: funder1.publicKey,
-  //       launchAuthority: launchAuthority.publicKey,
-  //     })
-  //     .signers([launchAuthority])
-  //     .rpc()
-  //     .then(callbacks[0], callbacks[1]);
-  // });
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder2Amount,
+        funder: funder2.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder3Amount,
+        funder: funder3.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder4Amount,
+        funder: funder4.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    // Complete the launch
+    const completeLaunchTx = await this.launchpad_v7
+      .completeLaunchIx({
+        launch,
+        baseMint: META,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this,
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer, launchAuthority]);
+
+    await this.banksClient.processTransaction(tx);
+
+    const callbacks = expectError("InvalidLaunchState", "Invalid launch state");
+
+    // Set funder1's funding record approval after the launch is completed - should fail
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder1Amount,
+        funder: funder1.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
 
   it("can't set funding record approval to an amount greater than the committed amount", async function () {
     // Fully fund the launch and wait for the launch period to end
@@ -371,178 +434,4 @@ export default function suite() {
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
-
-  // it("completes a launch with the correct total approved amount, including claims and refunds", async function () {
-  //   // Fully fund the launch twice (oversubscribe 3x)
-  //   // The plan is to oversubscribe 3x, but approve only 1x, so that we refund the extra 2x
-  //   await fundLaunch();
-  //   await fundLaunch();
-  //   await fundLaunch();
-
-  //   // Wait for the launch period to end
-  //   this.advanceBySeconds(secondsForLaunch + 1);
-
-  //   // Set funders' funding record approvals to the 1x amount
-  //   await launchpadClient
-  //     .setFundingRecordApprovalIx({
-  //       launch,
-  //       approvedAmount: funder1Amount,
-  //       funder: funder1.publicKey,
-  //       launchAuthority: launchAuthority.publicKey,
-  //     })
-  //     .signers([launchAuthority])
-  //     .rpc();
-
-  //   await launchpadClient
-  //     .setFundingRecordApprovalIx({
-  //       launch,
-  //       approvedAmount: funder2Amount,
-  //       funder: funder2.publicKey,
-  //       launchAuthority: launchAuthority.publicKey,
-  //     })
-  //     .signers([launchAuthority])
-  //     .rpc();
-
-  //   await launchpadClient
-  //     .setFundingRecordApprovalIx({
-  //       launch,
-  //       approvedAmount: funder3Amount,
-  //       funder: funder3.publicKey,
-  //       launchAuthority: launchAuthority.publicKey,
-  //     })
-  //     .signers([launchAuthority])
-  //     .rpc();
-
-  //   await launchpadClient
-  //     .setFundingRecordApprovalIx({
-  //       launch,
-  //       approvedAmount: funder4Amount,
-  //       funder: funder4.publicKey,
-  //       launchAuthority: launchAuthority.publicKey,
-  //     })
-  //     .signers([launchAuthority])
-  //     .rpc();
-
-  //   // Close the launch
-  //   await launchpadClient.closeLaunchIx({ launch }).rpc();
-
-  //   // Complete the launch
-  //   const completeLaunchTx = await launchpadClient
-  //     .completeLaunchIx({
-  //       launch,
-  //       quoteMint: MAINNET_USDC,
-  //       baseMint: META,
-  //       launchAuthority: launchAuthority.publicKey,
-  //     })
-  //     .transaction();
-
-  //   const completeLaunchLut = await createLookupTableForTransaction(
-  //     completeLaunchTx,
-  //     this,
-  //   );
-
-  //   const completeLaunchMessage = new TransactionMessage({
-  //     payerKey: this.payer.publicKey,
-  //     recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-  //     instructions: completeLaunchTx.instructions,
-  //   }).compileToV0Message([completeLaunchLut]);
-
-  //   const tx = new VersionedTransaction(completeLaunchMessage);
-  //   tx.sign([this.payer, launchAuthority]);
-
-  //   await this.banksClient.processTransaction(tx);
-
-  //   // Claim tokens for all funders
-  //   await launchpadClient.claimIx(launch, META, funder1.publicKey).rpc();
-  //   await launchpadClient.claimIx(launch, META, funder2.publicKey).rpc();
-  //   await launchpadClient.claimIx(launch, META, funder3.publicKey).rpc();
-  //   await launchpadClient.claimIx(launch, META, funder4.publicKey).rpc();
-
-  //   // Verify token distributions
-  //   const funder1Balance = await this.getTokenBalance(META, funder1.publicKey);
-  //   const funder2Balance = await this.getTokenBalance(META, funder2.publicKey);
-  //   const funder3Balance = await this.getTokenBalance(META, funder3.publicKey);
-  //   const funder4Balance = await this.getTokenBalance(META, funder4.publicKey);
-
-  //   const totalApprovedAmount = funder1Amount
-  //     .add(funder2Amount)
-  //     .add(funder3Amount)
-  //     .add(funder4Amount);
-
-  //   const totalTokens = new BN(10_000_000_000000); // 10M tokens
-
-  //   assert.equal(
-  //     funder1Balance.toString(),
-  //     totalTokens.mul(funder1Amount).div(totalApprovedAmount).toString(),
-  //   );
-  //   assert.equal(
-  //     funder2Balance.toString(),
-  //     totalTokens.mul(funder2Amount).div(totalApprovedAmount).toString(),
-  //   );
-  //   assert.equal(
-  //     funder3Balance.toString(),
-  //     totalTokens.mul(funder3Amount).div(totalApprovedAmount).toString(),
-  //   );
-  //   assert.equal(
-  //     funder4Balance.toString(),
-  //     totalTokens.mul(funder4Amount).div(totalApprovedAmount).toString(),
-  //   );
-
-  //   // Verify refunds
-  //   const funder1BalanceBeforeRefund = await this.getTokenBalance(
-  //     MAINNET_USDC,
-  //     funder1.publicKey,
-  //   );
-  //   const funder2BalanceBeforeRefund = await this.getTokenBalance(
-  //     MAINNET_USDC,
-  //     funder2.publicKey,
-  //   );
-  //   const funder3BalanceBeforeRefund = await this.getTokenBalance(
-  //     MAINNET_USDC,
-  //     funder3.publicKey,
-  //   );
-  //   const funder4BalanceBeforeRefund = await this.getTokenBalance(
-  //     MAINNET_USDC,
-  //     funder4.publicKey,
-  //   );
-
-  //   await launchpadClient.refundIx({ launch, funder: funder1.publicKey }).rpc();
-  //   await launchpadClient.refundIx({ launch, funder: funder2.publicKey }).rpc();
-  //   await launchpadClient.refundIx({ launch, funder: funder3.publicKey }).rpc();
-  //   await launchpadClient.refundIx({ launch, funder: funder4.publicKey }).rpc();
-
-  //   const funder1BalanceAfterRefund = await this.getTokenBalance(
-  //     MAINNET_USDC,
-  //     funder1.publicKey,
-  //   );
-  //   const funder2BalanceAfterRefund = await this.getTokenBalance(
-  //     MAINNET_USDC,
-  //     funder2.publicKey,
-  //   );
-  //   const funder3BalanceAfterRefund = await this.getTokenBalance(
-  //     MAINNET_USDC,
-  //     funder3.publicKey,
-  //   );
-  //   const funder4BalanceAfterRefund = await this.getTokenBalance(
-  //     MAINNET_USDC,
-  //     funder4.publicKey,
-  //   );
-
-  //   assert.equal(
-  //     (funder1BalanceAfterRefund - funder1BalanceBeforeRefund).toString(),
-  //     funder1Amount.muln(2).toString(),
-  //   );
-  //   assert.equal(
-  //     (funder2BalanceAfterRefund - funder2BalanceBeforeRefund).toString(),
-  //     funder2Amount.muln(2).toString(),
-  //   );
-  //   assert.equal(
-  //     (funder3BalanceAfterRefund - funder3BalanceBeforeRefund).toString(),
-  //     funder3Amount.muln(2).toString(),
-  //   );
-  //   assert.equal(
-  //     (funder4BalanceAfterRefund - funder4BalanceBeforeRefund).toString(),
-  //     funder4Amount.muln(2).toString(),
-  //   );
-  // });
 }
