@@ -4,6 +4,7 @@ use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchRefundedEvent};
 use crate::state::{FundingRecord, Launch, LaunchState};
+use crate::utils::mul_div_ceil;
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -65,10 +66,11 @@ impl Refund<'_> {
         let amount_to_refund = match launch.state {
             LaunchState::Refunding => funding_record.committed_amount,
             LaunchState::Complete => {
-                let amount_used_to_buy = ((launch.final_raise_amount.unwrap() as u128)
-                    * funding_record.committed_amount as u128
-                    / launch.total_committed_amount as u128)
-                    as u64;
+                let amount_used_to_buy = mul_div_ceil(
+                    launch.final_raise_amount.unwrap(),
+                    funding_record.committed_amount,
+                    launch.total_committed_amount,
+                );
 
                 funding_record.committed_amount - amount_used_to_buy
             }
