@@ -1022,6 +1022,48 @@ export type Futarchy = {
       ];
       args: [];
     },
+    {
+      name: "resizeDao";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "resizeProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -1575,6 +1617,96 @@ export type Futarchy = {
       };
     },
     {
+      name: "OldDao";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amm";
+            type: {
+              defined: "FutarchyAmm";
+            };
+          },
+          {
+            name: "nonce";
+            type: "u64";
+          },
+          {
+            name: "daoCreator";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "squadsMultisig";
+            type: "publicKey";
+          },
+          {
+            name: "squadsMultisigVault";
+            type: "publicKey";
+          },
+          {
+            name: "baseMint";
+            type: "publicKey";
+          },
+          {
+            name: "quoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "proposalCount";
+            type: "u32";
+          },
+          {
+            name: "passThresholdBps";
+            type: "u16";
+          },
+          {
+            name: "secondsPerProposal";
+            type: "u32";
+          },
+          {
+            name: "twapInitialObservation";
+            type: "u128";
+          },
+          {
+            name: "twapMaxObservationChangePerUpdate";
+            type: "u128";
+          },
+          {
+            name: "twapStartDelaySeconds";
+            type: "u32";
+          },
+          {
+            name: "minQuoteFutarchicLiquidity";
+            type: "u64";
+          },
+          {
+            name: "minBaseFutarchicLiquidity";
+            type: "u64";
+          },
+          {
+            name: "baseToStake";
+            type: "u64";
+          },
+          {
+            name: "seqNum";
+            type: "u64";
+          },
+          {
+            name: "initialSpendingLimit";
+            type: {
+              option: {
+                defined: "InitialSpendingLimit";
+              };
+            };
+          },
+        ];
+      };
+    },
+    {
       name: "FutarchyAmm";
       type: {
         kind: "struct";
@@ -1706,6 +1838,76 @@ export type Futarchy = {
           {
             name: "baseProtocolFeeBalance";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "OldProposal";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "number";
+            type: "u32";
+          },
+          {
+            name: "proposer";
+            type: "publicKey";
+          },
+          {
+            name: "timestampEnqueued";
+            type: "i64";
+          },
+          {
+            name: "state";
+            type: {
+              defined: "ProposalState";
+            };
+          },
+          {
+            name: "baseVault";
+            type: "publicKey";
+          },
+          {
+            name: "quoteVault";
+            type: "publicKey";
+          },
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "question";
+            type: "publicKey";
+          },
+          {
+            name: "durationInSeconds";
+            type: "u32";
+          },
+          {
+            name: "squadsProposal";
+            type: "publicKey";
+          },
+          {
+            name: "passBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "passQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "failBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "failQuoteMint";
+            type: "publicKey";
           },
         ];
       };
@@ -3741,6 +3943,48 @@ export const IDL: Futarchy = {
       ],
       args: [],
     },
+    {
+      name: "resizeDao",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "resizeProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -4294,6 +4538,96 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "OldDao",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amm",
+            type: {
+              defined: "FutarchyAmm",
+            },
+          },
+          {
+            name: "nonce",
+            type: "u64",
+          },
+          {
+            name: "daoCreator",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "squadsMultisig",
+            type: "publicKey",
+          },
+          {
+            name: "squadsMultisigVault",
+            type: "publicKey",
+          },
+          {
+            name: "baseMint",
+            type: "publicKey",
+          },
+          {
+            name: "quoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "proposalCount",
+            type: "u32",
+          },
+          {
+            name: "passThresholdBps",
+            type: "u16",
+          },
+          {
+            name: "secondsPerProposal",
+            type: "u32",
+          },
+          {
+            name: "twapInitialObservation",
+            type: "u128",
+          },
+          {
+            name: "twapMaxObservationChangePerUpdate",
+            type: "u128",
+          },
+          {
+            name: "twapStartDelaySeconds",
+            type: "u32",
+          },
+          {
+            name: "minQuoteFutarchicLiquidity",
+            type: "u64",
+          },
+          {
+            name: "minBaseFutarchicLiquidity",
+            type: "u64",
+          },
+          {
+            name: "baseToStake",
+            type: "u64",
+          },
+          {
+            name: "seqNum",
+            type: "u64",
+          },
+          {
+            name: "initialSpendingLimit",
+            type: {
+              option: {
+                defined: "InitialSpendingLimit",
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
       name: "FutarchyAmm",
       type: {
         kind: "struct",
@@ -4425,6 +4759,76 @@ export const IDL: Futarchy = {
           {
             name: "baseProtocolFeeBalance",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "OldProposal",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "number",
+            type: "u32",
+          },
+          {
+            name: "proposer",
+            type: "publicKey",
+          },
+          {
+            name: "timestampEnqueued",
+            type: "i64",
+          },
+          {
+            name: "state",
+            type: {
+              defined: "ProposalState",
+            },
+          },
+          {
+            name: "baseVault",
+            type: "publicKey",
+          },
+          {
+            name: "quoteVault",
+            type: "publicKey",
+          },
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "question",
+            type: "publicKey",
+          },
+          {
+            name: "durationInSeconds",
+            type: "u32",
+          },
+          {
+            name: "squadsProposal",
+            type: "publicKey",
+          },
+          {
+            name: "passBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "passQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "failBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "failQuoteMint",
+            type: "publicKey",
           },
         ],
       },
