@@ -22,7 +22,7 @@ security_txt! {
 
 declare_id!("WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx");
 
-pub const TOKEN_SCALE: u64 = 1_000_000;
+pub const FEE_BPS: u16 = 100;
 
 pub mod usdc_mint {
     use anchor_lang::prelude::declare_id;
@@ -32,6 +32,13 @@ pub mod usdc_mint {
 
     #[cfg(not(feature = "devnet"))]
     declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+}
+
+// TODO: Change to a real fee wallet address
+pub mod fee_wallet {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("11111111111111111111111111111111");
 }
 
 #[program]
