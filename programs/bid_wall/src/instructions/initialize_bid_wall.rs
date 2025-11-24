@@ -77,7 +77,7 @@ impl InitializeBidWall<'_> {
             authority: ctx.accounts.authority.key(),
             base_mint: ctx.accounts.base_mint.key(),
             created_timestamp: Clock::get()?.unix_timestamp,
-            duration: args.duration,
+            min_duration: args.duration,
             dao: ctx.accounts.dao.key(),
             // TODO: See how to handle Meteora DAMMv2 position liquidity.
             meteora_cpmm_base_token_vault: Pubkey::default(),

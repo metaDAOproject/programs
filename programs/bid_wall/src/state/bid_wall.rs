@@ -16,6 +16,6 @@ pub struct BidWall {
     pub meteora_cpmm_base_token_vault: Pubkey,
     /// When the bid wall was created.
     pub created_timestamp: i64,
-    /// The duration of the bid wall in seconds.
-    pub duration: u32,
+    /// The minimum duration in seconds before the bid wall can be closed.
+    pub min_duration: u32,
 }

@@ -4,10 +4,7 @@ use anchor_spl::{
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
 
-use crate::{state::BidWall, usdc_mint};
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct CloseBidWallArgs {}
+use crate::{error::BidWallError, state::BidWall, usdc_mint};
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -16,7 +13,8 @@ pub struct CloseBidWall<'info> {
         mut,
         close=payer,
         seeds = [b"bid_wall", base_mint.key().as_ref(), authority.key().as_ref()],
-        bump
+        bump,
+        has_one = authority
     )]
     pub bid_wall: Account<'info, BidWall>,
 
@@ -43,11 +41,23 @@ pub struct CloseBidWall<'info> {
 }
 
 impl CloseBidWall<'_> {
-    pub fn validate(&self, _args: &CloseBidWallArgs) -> Result<()> {
+    pub fn validate(&self) -> Result<()> {
+        let clock = Clock::get()?;
+
+        // Only allow closing the bid wall if it has been open for at least the minimum duration.
+        require_gt!(
+            self.bid_wall
+                .created_timestamp
+                .checked_add(self.bid_wall.min_duration as i64)
+                .unwrap(),
+            clock.unix_timestamp,
+            BidWallError::BidWallNotExpired
+        );
+
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>, _args: CloseBidWallArgs) -> Result<()> {
+    pub fn handle(ctx: Context<Self>) -> Result<()> {
         // transfer USDC back to authority
         token::transfer(
             CpiContext::new_with_signer(
@@ -67,8 +77,8 @@ impl CloseBidWall<'_> {
             ctx.accounts.bid_wall_usdc_token_account.amount,
         )?;
 
-        // Bid wall account has been closed using close constraint
-        // Bid wall USDC ATA has been closed using close constraint
+        // Bid wall account gets closed using close constraint
+        // Bid wall USDC ATA gets closed using close constraint
 
         Ok(())
     }

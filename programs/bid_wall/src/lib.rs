@@ -1,6 +1,7 @@
 //! A big wall of cash sitting at NAV, ready to take tokens from weak hands and burn them.
 use anchor_lang::prelude::*;
 
+pub mod error;
 pub mod instructions;
 pub mod state;
 
@@ -53,9 +54,9 @@ pub mod bid_wall {
         InitializeBidWall::handle(ctx, args)
     }
 
-    #[access_control(ctx.accounts.validate(&args))]
-    pub fn close_bid_wall(ctx: Context<CloseBidWall>, args: CloseBidWallArgs) -> Result<()> {
-        CloseBidWall::handle(ctx, args)
+    #[access_control(ctx.accounts.validate())]
+    pub fn close_bid_wall(ctx: Context<CloseBidWall>) -> Result<()> {
+        CloseBidWall::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate(&args))]
