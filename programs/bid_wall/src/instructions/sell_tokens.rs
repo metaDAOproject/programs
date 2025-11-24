@@ -1,5 +1,5 @@
+use crate::math::u128x128_math::Rounding;
 use crate::meteora_state::{Pool, Position};
-use crate::u128x128_math::Rounding;
 use crate::{fee_wallet, state::BidWall, usdc_mint, FEE_BPS};
 
 use anchor_lang::prelude::*;
@@ -48,7 +48,7 @@ pub struct SellTokens<'info> {
 
     pub pool: AccountLoader<'info, Pool>,
 
-    #[account(mut, has_one = pool)]
+    #[account(has_one = pool)]
     pub position: AccountLoader<'info, Position>,
 
     pub token_program: Program<'info, Token>,

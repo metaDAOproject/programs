@@ -4,10 +4,9 @@ use anchor_lang::prelude::*;
 pub mod curve;
 pub mod error;
 pub mod instructions;
+pub mod math;
 pub mod meteora_state;
-pub mod safe_math;
 pub mod state;
-pub mod u128x128_math;
 
 use instructions::*;
 

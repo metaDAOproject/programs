@@ -4,7 +4,7 @@ use static_assertions::const_assert_eq;
 
 use super::NUM_REWARDS;
 use crate::curve::{get_delta_amount_a_unsigned, get_delta_amount_b_unsigned};
-use crate::u128x128_math::Rounding;
+use crate::math::u128x128_math::Rounding;
 
 #[account(zero_copy)]
 #[derive(InitSpace, Debug, Default)]

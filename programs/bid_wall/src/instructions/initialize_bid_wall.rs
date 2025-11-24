@@ -5,7 +5,11 @@ use anchor_spl::{
 };
 use futarchy::Dao;
 
-use crate::{state::BidWall, usdc_mint};
+use crate::{
+    meteora_state::{Pool, Position},
+    state::BidWall,
+    usdc_mint,
+};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeBidWallArgs {
@@ -44,6 +48,11 @@ pub struct InitializeBidWall<'info> {
     #[account(has_one = base_mint)]
     pub dao: Account<'info, Dao>,
 
+    pub pool: AccountLoader<'info, Pool>,
+
+    #[account(has_one = pool)]
+    pub position: AccountLoader<'info, Position>,
+
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -51,6 +60,7 @@ pub struct InitializeBidWall<'info> {
 
 impl InitializeBidWall<'_> {
     pub fn validate(&self, _args: &InitializeBidWallArgs) -> Result<()> {
+        // TODO: Validate that the pool and position are the correct ones for the DAO.
         Ok(())
     }
 
@@ -80,7 +90,8 @@ impl InitializeBidWall<'_> {
             min_duration: args.duration,
             dao: ctx.accounts.dao.key(),
             // TODO: See how to handle Meteora DAMMv2 position liquidity.
-            meteora_cpmm_base_token_vault: Pubkey::default(),
+            pool: ctx.accounts.pool.key(),
+            position: ctx.accounts.position.key(),
         });
 
         Ok(())

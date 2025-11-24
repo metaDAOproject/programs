@@ -3,8 +3,10 @@ use ruint::aliases::U256;
 
 use crate::{
     error::BidWallError,
-    safe_math::SafeMath,
-    u128x128_math::{mul_div_u256, Rounding},
+    math::{
+        safe_math::SafeMath,
+        u128x128_math::{mul_div_u256, Rounding},
+    },
 };
 
 pub const RESOLUTION: u8 = 64;

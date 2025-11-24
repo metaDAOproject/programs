@@ -11,9 +11,10 @@ pub struct BidWall {
     pub base_mint: Pubkey,
     /// The related DAO.
     pub dao: Pubkey,
-    /// The related Meteora CPMM base token vault.
-    /// This is the vault into which single-sided liquidity is deposited upon creation.
-    pub meteora_cpmm_base_token_vault: Pubkey,
+    /// The DAO's Meteora CPMM pool
+    pub pool: Pubkey,
+    /// The DAO's Meteora CPMM position
+    pub position: Pubkey,
     /// When the bid wall was created.
     pub created_timestamp: i64,
     /// The minimum duration in seconds before the bid wall can be closed.
