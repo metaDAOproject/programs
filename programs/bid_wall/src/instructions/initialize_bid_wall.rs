@@ -68,7 +68,7 @@ impl InitializeBidWall<'_> {
         // Bid wall account has been created using init constraint
         // Bid wall USDC ATA has been created using init_if_needed constraint
 
-        // transfer USDC to bid wall
+        // Transfer USDC to bid wall
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -81,7 +81,7 @@ impl InitializeBidWall<'_> {
             args.amount,
         )?;
 
-        // initialize bid wall account
+        // Initialize bid wall account
         ctx.accounts.bid_wall.set_inner(BidWall {
             pda_bump: ctx.bumps.bid_wall,
             authority: ctx.accounts.authority.key(),
@@ -89,7 +89,6 @@ impl InitializeBidWall<'_> {
             created_timestamp: Clock::get()?.unix_timestamp,
             min_duration: args.duration,
             dao: ctx.accounts.dao.key(),
-            // TODO: See how to handle Meteora DAMMv2 position liquidity.
             pool: ctx.accounts.pool.key(),
             position: ctx.accounts.position.key(),
         });

@@ -18,7 +18,7 @@ pub struct SellTokensArgs {
 #[event_cpi]
 #[derive(Accounts)]
 pub struct SellTokens<'info> {
-    #[account(has_one = dao, has_one = base_mint)]
+    #[account(has_one = dao, has_one = base_mint, has_one = pool, has_one = position)]
     pub bid_wall: Account<'info, BidWall>,
 
     #[account(mut)]
@@ -101,7 +101,7 @@ impl SellTokens<'_> {
             .unwrap();
 
         let modify_liquidity_result =
-            pool.get_amounts_for_modify_liquidity(position_liquidity, Rounding::Down)?;
+            pool.get_amounts_for_modify_liquidity(position_liquidity, Rounding::Up)?;
 
         let (dao_damm_tokens, dao_damm_usdc) = if pool_token_a_mint == ctx.accounts.base_mint.key()
         {

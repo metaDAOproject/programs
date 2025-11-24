@@ -1,5 +1,5 @@
 use anchor_lang::solana_program::msg;
-use ruint::aliases::{U256, U512};
+use ruint::aliases::U256;
 use std::panic::Location;
 
 use crate::error::BidWallError;
@@ -104,13 +104,5 @@ macro_rules! checked_impl {
     };
 }
 
-checked_impl!(u16, u32);
-checked_impl!(i32, u32);
-checked_impl!(u32, u32);
-checked_impl!(u64, u32);
-checked_impl!(i64, u32);
 checked_impl!(u128, u32);
-checked_impl!(i128, u32);
-checked_impl!(usize, u32);
 checked_impl!(U256, usize);
-checked_impl!(U512, usize);
