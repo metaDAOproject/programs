@@ -1,11 +1,14 @@
+use crate::meteora_state::{Pool, Position};
+use crate::u128x128_math::Rounding;
+use crate::{fee_wallet, state::BidWall, usdc_mint, FEE_BPS};
+
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Burn, Mint, Token, TokenAccount, Transfer},
 };
-use futarchy::{Dao, PoolState};
 
-use crate::{fee_wallet, state::BidWall, usdc_mint, FEE_BPS};
+use futarchy::{Dao, PoolState};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct SellTokensArgs {
@@ -43,6 +46,11 @@ pub struct SellTokens<'info> {
     #[account(associated_token::mint = quote_mint, associated_token::authority = dao.squads_multisig_vault)]
     pub dao_treasury_usdc_token_account: Account<'info, TokenAccount>,
 
+    pub pool: AccountLoader<'info, Pool>,
+
+    #[account(mut, has_one = pool)]
+    pub position: AccountLoader<'info, Position>,
+
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -58,7 +66,8 @@ impl SellTokens<'_> {
 
         let token_total_supply = ctx.accounts.base_mint.supply;
 
-        let (dao_lp_tokens, dao_lp_usdc) = match &ctx.accounts.dao.amm.state {
+        // Futarchy AMM Pool
+        let (dao_futarchy_amm_tokens, dao_futarchy_amm_usdc) = match &ctx.accounts.dao.amm.state {
             PoolState::Spot { spot } => (spot.base_reserves, spot.quote_reserves),
             PoolState::Futarchy { spot, pass, fail } => (
                 spot.base_reserves
@@ -78,33 +87,60 @@ impl SellTokens<'_> {
             ),
         };
 
-        // TODO: Implement DAMM token and USDC calculations.
-        let (dao_damm_tokens, dao_damm_usdc) = (0, 0);
+        // Meteora DAMM Pool
+        let pool = ctx.accounts.pool.load()?;
+        let position = ctx.accounts.position.load()?;
 
+        let pool_token_a_mint = pool.token_a_mint;
+
+        let position_liquidity = position
+            .vested_liquidity
+            .checked_add(position.unlocked_liquidity)
+            .unwrap()
+            .checked_add(position.permanent_locked_liquidity)
+            .unwrap();
+
+        let modify_liquidity_result =
+            pool.get_amounts_for_modify_liquidity(position_liquidity, Rounding::Down)?;
+
+        let (dao_damm_tokens, dao_damm_usdc) = if pool_token_a_mint == ctx.accounts.base_mint.key()
+        {
+            (
+                modify_liquidity_result.token_a_amount,
+                modify_liquidity_result.token_b_amount,
+            )
+        } else {
+            (
+                modify_liquidity_result.token_b_amount,
+                modify_liquidity_result.token_a_amount,
+            )
+        };
+
+        // DAO Treasury
         let dao_treasury_usdc = ctx.accounts.dao_treasury_usdc_token_account.amount;
 
         let dao_nav = dao_treasury_usdc
-            .checked_add(dao_lp_usdc)
+            .checked_add(dao_futarchy_amm_usdc)
             .unwrap()
             .checked_add(dao_damm_usdc)
             .unwrap();
 
-        // Supply within the hands of users.
+        // Supply within the hands of users
         let token_active_supply = token_total_supply
-            .checked_sub(dao_lp_tokens)
+            .checked_sub(dao_futarchy_amm_tokens)
             .unwrap()
             .checked_sub(dao_damm_tokens)
             .unwrap();
 
         // Token price = DAO NAV / active supply
-        // amount_out is always rounded down.
+        // amount_out is always rounded down
         let amount_out_before_fee = (amount_in as u128)
             .checked_mul(dao_nav as u128)
             .unwrap()
             .checked_div(token_active_supply as u128)
             .unwrap() as u64;
 
-        // fee is always rounded up, so we need to add 1 if the remainder is not 0.
+        // fee is always rounded up, so we need to add 1 if the remainder is not 0
         let fee_numerator = (amount_out_before_fee as u128)
             .checked_mul(FEE_BPS as u128)
             .unwrap();
@@ -120,7 +156,7 @@ impl SellTokens<'_> {
 
         let amount_out_after_fee = amount_out_before_fee - fee;
 
-        // Burn tokens
+        // Burn base tokens
         token::burn(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -133,7 +169,7 @@ impl SellTokens<'_> {
             amount_in,
         )?;
 
-        // transfer USDC to user
+        // Transfer USDC to user
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -152,7 +188,7 @@ impl SellTokens<'_> {
             amount_out_after_fee,
         )?;
 
-        // transfer fee to protocol fee wallet
+        // Transfer fee to protocol fee wallet
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -170,6 +206,7 @@ impl SellTokens<'_> {
             ),
             fee,
         )?;
+
         Ok(())
     }
 }
