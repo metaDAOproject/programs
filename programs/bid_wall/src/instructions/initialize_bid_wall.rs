@@ -3,6 +3,7 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
+use futarchy::Dao;
 
 use crate::{state::BidWall, usdc_mint};
 
@@ -19,7 +20,7 @@ pub struct InitializeBidWall<'info> {
         init,
         payer = payer,
         space = 8 + BidWall::INIT_SPACE,
-        seeds = [b"bid_wall", token_mint.key().as_ref(), authority.key().as_ref()],
+        seeds = [b"bid_wall", base_mint.key().as_ref(), authority.key().as_ref()],
         bump
     )]
     pub bid_wall: Account<'info, BidWall>,
@@ -38,7 +39,10 @@ pub struct InitializeBidWall<'info> {
 
     #[account(address = usdc_mint::id())]
     pub usdc_mint: Account<'info, Mint>,
-    pub token_mint: Account<'info, Mint>,
+    pub base_mint: Account<'info, Mint>,
+
+    #[account(has_one = base_mint)]
+    pub dao: Account<'info, Dao>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -71,9 +75,12 @@ impl InitializeBidWall<'_> {
         ctx.accounts.bid_wall.set_inner(BidWall {
             pda_bump: ctx.bumps.bid_wall,
             authority: ctx.accounts.authority.key(),
-            mint: ctx.accounts.token_mint.key(),
+            base_mint: ctx.accounts.base_mint.key(),
             created_timestamp: Clock::get()?.unix_timestamp,
             duration: args.duration,
+            dao: ctx.accounts.dao.key(),
+            // TODO: See how to handle Meteora DAMMv2 position liquidity.
+            meteora_cpmm_base_token_vault: Pubkey::default(),
         });
 
         Ok(())

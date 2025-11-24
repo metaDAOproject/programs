@@ -15,7 +15,7 @@ pub struct CloseBidWall<'info> {
     #[account(
         mut,
         close=payer,
-        seeds = [b"bid_wall", token_mint.key().as_ref(), authority.key().as_ref()],
+        seeds = [b"bid_wall", base_mint.key().as_ref(), authority.key().as_ref()],
         bump
     )]
     pub bid_wall: Account<'info, BidWall>,
@@ -34,8 +34,8 @@ pub struct CloseBidWall<'info> {
     #[account(address = usdc_mint::id())]
     pub usdc_mint: Account<'info, Mint>,
 
-    #[account(address = bid_wall.mint)]
-    pub token_mint: Account<'info, Mint>,
+    #[account(address = bid_wall.base_mint)]
+    pub base_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -59,7 +59,7 @@ impl CloseBidWall<'_> {
                 },
                 &[&[
                     b"bid_wall",
-                    ctx.accounts.token_mint.key().as_ref(),
+                    ctx.accounts.base_mint.key().as_ref(),
                     ctx.accounts.authority.key().as_ref(),
                     &[ctx.accounts.bid_wall.pda_bump],
                 ]],
