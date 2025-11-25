@@ -36,7 +36,7 @@ pub struct InitializeBidWall<'info> {
     pub authority: Signer<'info>,
 
     #[account(has_one = base_mint)]
-    pub dao: Account<'info, Dao>,
+    pub dao: Box<Account<'info, Dao>>,
 
     #[account(init_if_needed, payer = payer, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
     pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
@@ -49,10 +49,13 @@ pub struct InitializeBidWall<'info> {
     #[account(address = usdc_mint::id())]
     pub quote_mint: Account<'info, Mint>,
 
-    pub pool: AccountLoader<'info, Pool>,
+    /// CHECK: Discriminator checked inside validate
+    #[account(owner = damm_v2_cpi::id())]
+    pub pool: UncheckedAccount<'info>,
 
-    #[account(has_one = pool)]
-    pub position: AccountLoader<'info, Position>,
+    /// CHECK: Discriminator and pool checked inside validate
+    #[account(owner = damm_v2_cpi::id())]
+    pub position: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -62,6 +65,14 @@ pub struct InitializeBidWall<'info> {
 impl InitializeBidWall<'_> {
     pub fn validate(&self, _args: &InitializeBidWallArgs) -> Result<()> {
         // TODO: Validate that the pool and position are the correct ones for the DAO.
+        let pool_data = self.pool.try_borrow_data()?;
+        let pool_discriminator = &pool_data[..8];
+        Pool::validate_discriminator(pool_discriminator)?;
+
+        let position_data = self.position.try_borrow_data()?;
+        let position_discriminator = &position_data[..8];
+        Position::validate_discriminator(position_discriminator)?;
+
         Ok(())
     }
 

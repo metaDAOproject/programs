@@ -416,6 +416,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "bytemuck",
+ "damm_v2_cpi",
  "futarchy",
  "ruint",
  "solana-security-txt",

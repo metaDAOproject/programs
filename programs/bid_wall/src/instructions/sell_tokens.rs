@@ -41,15 +41,18 @@ pub struct SellTokens<'info> {
     pub base_mint: Account<'info, Mint>,
 
     #[account(has_one = base_mint, has_one = quote_mint)]
-    pub dao: Account<'info, Dao>,
+    pub dao: Box<Account<'info, Dao>>,
 
     #[account(associated_token::mint = quote_mint, associated_token::authority = dao.squads_multisig_vault)]
     pub dao_treasury_usdc_token_account: Account<'info, TokenAccount>,
 
-    pub pool: AccountLoader<'info, Pool>,
+    /// CHECK: Discriminator checked inside validate
+    #[account(owner = damm_v2_cpi::id())]
+    pub pool: UncheckedAccount<'info>,
 
-    #[account(has_one = pool)]
-    pub position: AccountLoader<'info, Position>,
+    /// CHECK: Discriminator and pool checked inside validate
+    #[account(owner = damm_v2_cpi::id())]
+    pub position: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -58,6 +61,14 @@ pub struct SellTokens<'info> {
 
 impl SellTokens<'_> {
     pub fn validate(&self, _args: &SellTokensArgs) -> Result<()> {
+        let pool_data = self.pool.try_borrow_data()?;
+        let pool_discriminator = &pool_data[..8];
+        Pool::validate_discriminator(pool_discriminator)?;
+
+        let position_data = self.position.try_borrow_data()?;
+        let position_discriminator = &position_data[..8];
+        Position::validate_discriminator(position_discriminator)?;
+
         Ok(())
     }
 
@@ -88,8 +99,11 @@ impl SellTokens<'_> {
         };
 
         // Meteora DAMM Pool
-        let pool = ctx.accounts.pool.load()?;
-        let position = ctx.accounts.position.load()?;
+        let pool_data = ctx.accounts.pool.try_borrow_data()?;
+        let pool: &Pool = bytemuck::from_bytes(&pool_data[8..]);
+
+        let position_data = ctx.accounts.position.try_borrow_data()?;
+        let position: &Position = bytemuck::from_bytes(&position_data[8..]);
 
         let pool_token_a_mint = pool.token_a_mint;
 

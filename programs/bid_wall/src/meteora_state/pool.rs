@@ -4,9 +4,10 @@ use static_assertions::const_assert_eq;
 
 use super::NUM_REWARDS;
 use crate::curve::{get_delta_amount_a_unsigned, get_delta_amount_b_unsigned};
+use crate::error::BidWallError;
 use crate::math::u128x128_math::Rounding;
 
-#[account(zero_copy)]
+#[zero_copy]
 #[derive(InitSpace, Debug, Default)]
 pub struct Pool {
     /// Pool fee
@@ -223,5 +224,16 @@ impl Pool {
             token_a_amount,
             token_b_amount,
         })
+    }
+
+    pub const fn discriminator() -> [u8; 8] {
+        [241, 154, 109, 4, 17, 177, 109, 188]
+    }
+
+    pub fn validate_discriminator(discriminator: &[u8]) -> Result<()> {
+        if discriminator != &Self::discriminator() {
+            return Err(BidWallError::MeteoraDammPoolDiscriminatorMismatch.into());
+        }
+        Ok(())
     }
 }

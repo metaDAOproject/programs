@@ -1,9 +1,11 @@
 use anchor_lang::prelude::*;
 use static_assertions::const_assert_eq;
 
+use crate::error::BidWallError;
+
 use super::NUM_REWARDS;
 
-#[account(zero_copy)]
+#[zero_copy]
 #[derive(InitSpace, Debug, Default)]
 pub struct Position {
     pub pool: Pubkey,
@@ -54,3 +56,16 @@ pub struct UserRewardInfo {
 }
 
 const_assert_eq!(UserRewardInfo::INIT_SPACE, 48);
+
+impl Position {
+    pub const fn discriminator() -> [u8; 8] {
+        [170, 188, 143, 228, 122, 64, 247, 208]
+    }
+
+    pub fn validate_discriminator(discriminator: &[u8]) -> Result<()> {
+        if discriminator != &Self::discriminator() {
+            return Err(BidWallError::MeteoraDammPositionDiscriminatorMismatch.into());
+        }
+        Ok(())
+    }
+}
