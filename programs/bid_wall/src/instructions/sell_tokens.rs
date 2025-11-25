@@ -1,3 +1,4 @@
+use crate::error::BidWallError;
 use crate::math::u128x128_math::Rounding;
 use crate::meteora_state::{Pool, Position};
 use crate::{fee_wallet, state::BidWall, usdc_mint, FEE_BPS};
@@ -68,6 +69,11 @@ impl SellTokens<'_> {
         let position_data = self.position.try_borrow_data()?;
         let position_discriminator = &position_data[..8];
         Position::validate_discriminator(position_discriminator)?;
+
+        let position: &Position = bytemuck::from_bytes(&position_data[8..]);
+        if position.pool != self.pool.key() {
+            return Err(BidWallError::MeteoraDammPositionPoolMismatch.into());
+        }
 
         Ok(())
     }

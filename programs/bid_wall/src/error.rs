@@ -16,4 +16,6 @@ pub enum BidWallError {
     MathOverflow,
     #[msg("Type cast failed")]
     TypeCastFailed,
+    #[msg("Meteora DAMM position pool mismatch")]
+    MeteoraDammPositionPoolMismatch,
 }

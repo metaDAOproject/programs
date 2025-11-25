@@ -14,7 +14,7 @@ use crate::{
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeBidWallArgs {
     pub amount: u64,
-    pub duration: u32,
+    pub min_duration: u32,
 }
 
 #[event_cpi]
@@ -99,7 +99,7 @@ impl InitializeBidWall<'_> {
             authority: ctx.accounts.authority.key(),
             base_mint: ctx.accounts.base_mint.key(),
             created_timestamp: Clock::get()?.unix_timestamp,
-            min_duration: args.duration,
+            min_duration: args.min_duration,
             dao: ctx.accounts.dao.key(),
             pool: ctx.accounts.pool.key(),
             position: ctx.accounts.position.key(),

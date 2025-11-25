@@ -318,7 +318,7 @@ export type BidWall = {
             type: "u64";
           },
           {
-            name: "duration";
+            name: "minDuration";
             type: "u32";
           },
         ];
@@ -988,6 +988,11 @@ export type BidWall = {
       name: "TypeCastFailed";
       msg: "Type cast failed";
     },
+    {
+      code: 6007;
+      name: "MeteoraDammPositionPoolMismatch";
+      msg: "Meteora DAMM position pool mismatch";
+    },
   ];
 };
 
@@ -1311,7 +1316,7 @@ export const IDL: BidWall = {
             type: "u64",
           },
           {
-            name: "duration",
+            name: "minDuration",
             type: "u32",
           },
         ],
@@ -1980,6 +1985,11 @@ export const IDL: BidWall = {
       code: 6006,
       name: "TypeCastFailed",
       msg: "Type cast failed",
+    },
+    {
+      code: 6007,
+      name: "MeteoraDammPositionPoolMismatch",
+      msg: "Meteora DAMM position pool mismatch",
     },
   ],
 };

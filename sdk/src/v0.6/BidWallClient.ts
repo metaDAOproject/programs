@@ -59,7 +59,7 @@ export class BidWallClient {
 
   initializeBidWallIx({
     amount,
-    duration,
+    minDuration,
     dao,
     authority,
     baseMint,
@@ -68,7 +68,7 @@ export class BidWallClient {
     meteoraConfig = MAINNET_METEORA_CONFIG,
   }: {
     amount: number;
-    duration: number;
+    minDuration: number;
     dao: PublicKey;
     authority: PublicKey;
     baseMint: PublicKey;
@@ -95,7 +95,7 @@ export class BidWallClient {
     );
 
     return this.bidWallProgram.methods
-      .initializeBidWall({ amount: new BN(amount), duration })
+      .initializeBidWall({ amount: new BN(amount), minDuration })
       .accounts({
         bidWall,
         payer,

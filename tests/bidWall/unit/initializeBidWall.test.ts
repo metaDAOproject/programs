@@ -12,6 +12,8 @@ import {
   MAINNET_USDC,
   MAINNET_METEORA_CONFIG,
   getBidWallAddr,
+  getMeteoraPoolAddr,
+  getLaunchpadMeteoraPoolPositionAddr,
 } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
@@ -113,10 +115,12 @@ export default function suite() {
   });
 
   it.only("successfully initializes a bid wall", async function () {
+    let minDuration = 100;
+
     await bidWallClient
       .initializeBidWallIx({
         amount: 100_000_000000,
-        duration: 100,
+        minDuration,
         dao: dao,
         authority: this.payer.publicKey,
         baseMint: META,
@@ -133,9 +137,25 @@ export default function suite() {
 
     const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
 
-    console.log(bidWallAccount);
+    const [pool] = getMeteoraPoolAddr({
+      baseMint: META,
+      quoteMint: MAINNET_USDC,
+      meteoraConfig: MAINNET_METEORA_CONFIG,
+    });
+
+    const [position] = getLaunchpadMeteoraPoolPositionAddr({ baseMint: META });
 
     assert.isNotNull(bidWallAccount);
+
+    assert.equal(
+      bidWallAccount.authority.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
+    assert.equal(bidWallAccount.baseMint.toBase58(), META.toBase58());
+    assert.equal(bidWallAccount.dao.toBase58(), dao.toBase58());
+    assert.equal(bidWallAccount.pool.toBase58(), pool.toString());
+    assert.equal(bidWallAccount.position.toBase58(), position.toString());
+    assert.equal(bidWallAccount.minDuration, minDuration);
   });
 
   it.skip("fails when launch is not complete", async function () {
