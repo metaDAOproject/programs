@@ -6,6 +6,7 @@ use anchor_spl::{
 use futarchy::Dao;
 
 use crate::{
+    error::BidWallError,
     meteora_state::{Pool, Position},
     state::BidWall,
     usdc_mint,
@@ -64,7 +65,6 @@ pub struct InitializeBidWall<'info> {
 
 impl InitializeBidWall<'_> {
     pub fn validate(&self, _args: &InitializeBidWallArgs) -> Result<()> {
-        // TODO: Validate that the pool and position are the correct ones for the DAO.
         let pool_data = self.pool.try_borrow_data()?;
         let pool_discriminator = &pool_data[..8];
         Pool::validate_discriminator(pool_discriminator)?;
@@ -72,6 +72,11 @@ impl InitializeBidWall<'_> {
         let position_data = self.position.try_borrow_data()?;
         let position_discriminator = &position_data[..8];
         Position::validate_discriminator(position_discriminator)?;
+
+        let position: &Position = bytemuck::from_bytes(&position_data[8..]);
+        if position.pool != self.pool.key() {
+            return Err(BidWallError::MeteoraDammPositionPoolMismatch.into());
+        }
 
         Ok(())
     }
