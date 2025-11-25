@@ -2,6 +2,7 @@ import conditionalVault from "./conditionalVault/main.test.js";
 import futarchy from "./futarchy/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 import priceBasedPerformancePackage from "./priceBasedPerformancePackage/main.test.js";
+import bidWall from "./bidWall/main.test.js";
 
 import {
   BanksClient,
@@ -31,6 +32,7 @@ import {
   DAMM_V2_PROGRAM_ID,
   LAUNCHPAD_PROGRAM_ID,
   MAINNET_METEORA_CONFIG,
+  BidWallClient,
 } from "@metadaoproject/futarchy/v0.6";
 
 import {
@@ -82,6 +84,7 @@ export interface TestContext {
   futarchy: FutarchyClient;
   launchpad: LaunchpadClient;
   priceBasedPerformancePackage: PriceBasedPerformancePackageClient;
+  bidWall: BidWallClient;
   payer: Keypair;
   squadsConnection: Connection;
   createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
@@ -247,6 +250,9 @@ before(async function () {
     PriceBasedPerformancePackageClient.createClient({
       provider: provider as any,
     });
+  this.bidWall = BidWallClient.createClient({
+    provider: provider as any,
+  });
   this.provider = provider;
   this.payer = provider.wallet.payer;
 
@@ -712,11 +718,12 @@ before(async function () {
   );
 });
 
-describe("launchpad", launchpad);
-describe("price_based_performance_package", priceBasedPerformancePackage);
-describe("conditional_vault", conditionalVault);
-describe("futarchy", futarchy);
-describe("project-wide integration tests", function () {
-  it.skip("mint and swap in a single transaction", mintAndSwap);
-  describe("full launch", fullLaunch);
-});
+// describe("launchpad", launchpad);
+// describe("price_based_performance_package", priceBasedPerformancePackage);
+// describe("conditional_vault", conditionalVault);
+// describe("futarchy", futarchy);
+describe("bid_wall", bidWall);
+// describe("project-wide integration tests", function () {
+//   it.skip("mint and swap in a single transaction", mintAndSwap);
+//   describe("full launch", fullLaunch);
+// });

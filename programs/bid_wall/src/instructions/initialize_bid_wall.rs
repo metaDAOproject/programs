@@ -35,18 +35,19 @@ pub struct InitializeBidWall<'info> {
     // Authority must sign to prevent unauthorized bid wall initialization on their behalf
     pub authority: Signer<'info>,
 
-    #[account(init_if_needed, payer = payer, associated_token::mint = usdc_mint, associated_token::authority = bid_wall)]
-    pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
-
-    #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = authority)]
-    pub authority_usdc_token_account: Account<'info, TokenAccount>,
-
-    #[account(address = usdc_mint::id())]
-    pub usdc_mint: Account<'info, Mint>,
-    pub base_mint: Account<'info, Mint>,
-
     #[account(has_one = base_mint)]
     pub dao: Account<'info, Dao>,
+
+    #[account(init_if_needed, payer = payer, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
+    pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut, associated_token::mint = quote_mint, associated_token::authority = authority)]
+    pub authority_usdc_token_account: Account<'info, TokenAccount>,
+
+    pub base_mint: Account<'info, Mint>,
+
+    #[account(address = usdc_mint::id())]
+    pub quote_mint: Account<'info, Mint>,
 
     pub pool: AccountLoader<'info, Pool>,
 

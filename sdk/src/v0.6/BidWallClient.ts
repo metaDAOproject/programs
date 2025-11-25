@@ -1,0 +1,115 @@
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+  BID_WALL_PROGRAM_ID,
+  DAMM_V2_PROGRAM_ID,
+  LAUNCHPAD_PROGRAM_ID,
+  MAINNET_METEORA_CONFIG,
+  MAINNET_USDC,
+} from "./constants.js";
+import { BidWallProgram, BidWallIDL, BidWall } from "./types/index.js";
+import { BN } from "bn.js";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import {
+  getBidWallAddr,
+  getLaunchpadMeteoraPoolPositionAddr,
+  getMeteoraPoolAddr,
+} from "./utils/pda.js";
+
+export type CreateBidWallClientParams = {
+  provider: AnchorProvider;
+  bidWallProgramId?: PublicKey;
+};
+
+export class BidWallClient {
+  public readonly provider: AnchorProvider;
+  public readonly bidWallProgram: Program<BidWallProgram>;
+
+  constructor(provider: AnchorProvider, bidWallProgramId: PublicKey) {
+    this.provider = provider;
+    this.bidWallProgram = new Program<BidWallProgram>(
+      BidWallIDL,
+      bidWallProgramId,
+      provider,
+    );
+  }
+
+  public static createClient(
+    createBidWallClientParams: CreateBidWallClientParams,
+  ): BidWallClient {
+    let { provider, bidWallProgramId } = createBidWallClientParams;
+
+    return new BidWallClient(provider, bidWallProgramId || BID_WALL_PROGRAM_ID);
+  }
+
+  async fetchBidWall(bidWall: PublicKey): Promise<BidWall | null> {
+    return this.bidWallProgram.account.bidWall.fetchNullable(bidWall);
+  }
+
+  async deserializeBidWall(accountInfo: AccountInfo<Buffer>): Promise<BidWall> {
+    return this.bidWallProgram.coder.accounts.decode(
+      "bidWall",
+      accountInfo.data,
+    );
+  }
+
+  initializeBidWallIx({
+    amount,
+    duration,
+    dao,
+    authority,
+    baseMint,
+    quoteMint = MAINNET_USDC,
+    payer = this.provider.publicKey,
+    meteoraConfig = MAINNET_METEORA_CONFIG,
+  }: {
+    amount: number;
+    duration: number;
+    dao: PublicKey;
+    authority: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    payer: PublicKey;
+    meteoraConfig: PublicKey;
+  }) {
+    const [bidWall] = getBidWallAddr({ authority, baseMint });
+
+    const [pool] = getMeteoraPoolAddr({ baseMint, quoteMint, meteoraConfig });
+
+    const [position] = getLaunchpadMeteoraPoolPositionAddr({ baseMint });
+
+    const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      bidWall,
+      true,
+    );
+
+    const authorityUsdcTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      authority,
+      true,
+    );
+
+    return this.bidWallProgram.methods
+      .initializeBidWall({ amount: new BN(amount), duration })
+      .accounts({
+        bidWall,
+        payer,
+        authority: authority,
+        dao: dao,
+        bidWallUsdcTokenAccount,
+        authorityUsdcTokenAccount,
+        baseMint,
+        quoteMint,
+        pool,
+        position,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      });
+  }
+}
