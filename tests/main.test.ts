@@ -718,12 +718,12 @@ before(async function () {
   );
 });
 
-// describe("launchpad", launchpad);
-// describe("price_based_performance_package", priceBasedPerformancePackage);
-// describe("conditional_vault", conditionalVault);
-// describe("futarchy", futarchy);
+describe("launchpad", launchpad);
+describe("price_based_performance_package", priceBasedPerformancePackage);
+describe("conditional_vault", conditionalVault);
+describe("futarchy", futarchy);
 describe("bid_wall", bidWall);
-// describe("project-wide integration tests", function () {
-//   it.skip("mint and swap in a single transaction", mintAndSwap);
-//   describe("full launch", fullLaunch);
-// });
+describe("project-wide integration tests", function () {
+  it.skip("mint and swap in a single transaction", mintAndSwap);
+  describe("full launch", fullLaunch);
+});

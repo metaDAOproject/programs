@@ -34,8 +34,7 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
   let bidWall: PublicKey;
-  let pool: PublicKey;
-  let position: PublicKey;
+  let minDuration: number;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -131,7 +130,7 @@ export default function suite() {
     // Claim tokens for the payer
     await launchpadClient.claimIx(launch, META).rpc();
 
-    let minDuration = 100;
+    minDuration = 100;
 
     await bidWallClient
       .initializeBidWallIx({
@@ -152,26 +151,6 @@ export default function suite() {
     });
 
     bidWall = bidWallAddr;
-  });
-
-  it("successfully sells tokens into a bid wall", async function () {
-    const [bidWall] = getBidWallAddr({
-      authority: this.payer.publicKey,
-      baseMint: META,
-    });
-
-    const usdcBalanceBefore = await this.getTokenBalance(
-      MAINNET_USDC,
-      this.payer.publicKey,
-    );
-
-    const metaBalanceBefore = await this.getTokenBalance(
-      META,
-      this.payer.publicKey,
-    );
-
-    // User should have gotten 10M META from the launch
-    assert.equal(metaBalanceBefore, 10_000_000_000000n);
 
     const daoTreasuryUsdcTokenAccount = getAssociatedTokenAddressSync(
       MAINNET_USDC,
@@ -179,13 +158,7 @@ export default function suite() {
       true,
     );
 
-    // As it stands:
-    // DAO NAV = 100_000_000000 USDC (100K)
-    // Active supply = 10_000_000_000010 META (10M + 10)
-    // Price = 100_000_000000 / 10_000_000_000010 = ~0.01 USDC per META
-    // Assume user sells 5M META
-    // User will receive ~50_000 USDC (5M * 0.01) minus 1% fee, rounded down.
-
+    // Sell tokens into bid wall
     await bidWallClient
       .sellTokensIx({
         amount: 5_000_000_000000,
@@ -198,26 +171,82 @@ export default function suite() {
         meteoraConfig: MAINNET_METEORA_CONFIG,
       })
       .rpc();
+  });
 
-    const usdcBalanceAfter = await this.getTokenBalance(
+  it("successfully closes a bid wall and receives fees", async function () {
+    // Advance clock to past minimum duration plus 1 second
+    await this.advanceBySeconds(minDuration + 1);
+
+    const authorityUsdcBalanceBefore = await this.getTokenBalance(
       MAINNET_USDC,
       this.payer.publicKey,
     );
 
-    const metaBalanceAfter = await this.getTokenBalance(
-      META,
+    const feeWallet = Keypair.generate().publicKey;
+
+    await this.createTokenAccount(MAINNET_USDC, feeWallet);
+
+    const feeWalletUsdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      feeWallet,
+    );
+
+    await bidWallClient
+      .closeBidWallIx({
+        bidWall,
+        authority: this.payer.publicKey,
+        baseMint: META,
+        feeRecipient: feeWallet,
+        quoteMint: MAINNET_USDC,
+        payer: this.payer.publicKey,
+      })
+      .rpc();
+
+    const bidWallUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      bidWall,
+    );
+
+    const authorityUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
       this.payer.publicKey,
     );
 
-    // Seller received 49_499_999999 USDC (49.5K), which is 50_000_000000 - 500_000001 (fee)
-    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 49_499_999999n);
-    assert.equal(metaBalanceAfter, 5_000_000_000000n);
-
-    // Bid wall collected 500_000000 USDC (0.5K) in fees
-    const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
-    assert.equal(
-      bidWallAccount.feesCollected.toString(),
-      new BN(500_000000).toString(),
+    const feeWalletUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      feeWallet,
     );
+
+    assert.equal(bidWallUsdcBalanceAfter, 0n);
+    assert.equal(
+      authorityUsdcBalanceAfter,
+      authorityUsdcBalanceBefore + 50_000_000001n,
+    );
+    assert.equal(
+      feeWalletUsdcBalanceAfter,
+      feeWalletUsdcBalanceBefore + 500_000000n,
+    );
+  });
+
+  it("fails to close bid wallwhen bid wall is not expired", async function () {
+    try {
+      const feeWallet = Keypair.generate().publicKey;
+
+      await this.createTokenAccount(MAINNET_USDC, feeWallet);
+
+      await bidWallClient
+        .closeBidWallIx({
+          bidWall,
+          authority: this.payer.publicKey,
+          baseMint: META,
+          feeRecipient: feeWallet,
+          quoteMint: MAINNET_USDC,
+          payer: this.payer.publicKey,
+        })
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "BidWallNotExpired");
+    }
   });
 }

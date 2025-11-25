@@ -26,7 +26,7 @@ pub struct CloseBidWall<'info> {
     /// CHECK: used for constraints
     pub fee_recipient: AccountInfo<'info>,
 
-    #[account(mut, close=payer, associated_token::mint = usdc_mint, associated_token::authority = bid_wall)]
+    #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = bid_wall)]
     pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = authority)]
@@ -35,11 +35,11 @@ pub struct CloseBidWall<'info> {
     #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = fee_recipient)]
     pub fee_wallet_usdc_token_account: Account<'info, TokenAccount>,
 
-    #[account(address = usdc_mint::id())]
-    pub usdc_mint: Account<'info, Mint>,
-
     #[account(address = bid_wall.base_mint)]
     pub base_mint: Account<'info, Mint>,
+
+    #[account(address = usdc_mint::id())]
+    pub usdc_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -52,11 +52,11 @@ impl CloseBidWall<'_> {
 
         // Only allow closing the bid wall if it has been open for at least the minimum duration.
         require_gt!(
+            clock.unix_timestamp,
             self.bid_wall
                 .created_timestamp
                 .checked_add(self.bid_wall.min_duration as i64)
                 .unwrap(),
-            clock.unix_timestamp,
             BidWallError::BidWallNotExpired
         );
 
@@ -64,7 +64,7 @@ impl CloseBidWall<'_> {
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        // transfer fee to fee recipient
+        // transfer fees collected to fee recipient
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -92,7 +92,7 @@ impl CloseBidWall<'_> {
                 Transfer {
                     from: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
                     to: ctx.accounts.authority_usdc_token_account.to_account_info(),
-                    authority: ctx.accounts.authority.to_account_info(),
+                    authority: ctx.accounts.bid_wall.to_account_info(),
                 },
                 &[&[
                     b"bid_wall",
@@ -104,8 +104,23 @@ impl CloseBidWall<'_> {
             ctx.accounts.bid_wall_usdc_token_account.amount,
         )?;
 
+        // Close the bid wall USDC ATA
+        token::close_account(CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            token::CloseAccount {
+                account: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
+                destination: ctx.accounts.payer.to_account_info(),
+                authority: ctx.accounts.bid_wall.to_account_info(),
+            },
+            &[&[
+                b"bid_wall",
+                ctx.accounts.base_mint.key().as_ref(),
+                ctx.accounts.authority.key().as_ref(),
+                &[ctx.accounts.bid_wall.pda_bump],
+            ]],
+        ))?;
+
         // Bid wall account gets closed using close constraint
-        // Bid wall USDC ATA gets closed using close constraint
 
         Ok(())
     }

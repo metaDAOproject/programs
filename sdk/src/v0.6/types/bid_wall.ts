@@ -129,12 +129,12 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "usdcMint";
+          name: "baseMint";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "baseMint";
+          name: "usdcMint";
           isMut: false;
           isSigner: false;
         },
@@ -1137,12 +1137,12 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "usdcMint",
+          name: "baseMint",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "baseMint",
+          name: "usdcMint",
           isMut: false,
           isSigner: false,
         },

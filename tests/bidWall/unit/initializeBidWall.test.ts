@@ -127,7 +127,7 @@ export default function suite() {
     dao = launchAccount.dao;
   });
 
-  it.only("successfully initializes a bid wall", async function () {
+  it("successfully initializes a bid wall", async function () {
     let minDuration = 100;
 
     await bidWallClient
