@@ -1,0 +1,44 @@
+name: program-upgrade
+on:
+  workflow_dispatch:
+    inputs:
+      program:
+        description: 'Select program to upgrade'
+        required: true
+        type: choice
+        options:
+          - futarchy
+          - conditional_vault
+          - launchpad
+          - price_based_performance_package
+      priority_fee:
+        description: 'Priority fee in microlamports'
+        required: false
+        type: string
+        default: "300000"
+  
+env:
+  HUSKY: 0
+
+jobs:
+  upgrade-program:
+    uses: solana-developers/github-workflows/.github/workflows/reusable-build.yaml@v0.2.9
+    with:
+      program: ${{ inputs.program }}
+      program-id: |
+        ${{
+          inputs.program == 'futarchy' && 'FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq' ||
+          inputs.program == 'conditional_vault' && 'VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg' ||
+          inputs.program == 'launchpad' && 'MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV' ||
+          inputs.program == 'price_based_performance_package' && 'pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS'
+        }}
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: ${{ inputs.program == 'price_based_performance_package' && '' || 'production' }}
+      priority-fee: ${{ inputs.priority_fee }}
+      override-solana-version: "1.17.31"
+      override-anchor-version: "0.29.0"
+    secrets: inherit

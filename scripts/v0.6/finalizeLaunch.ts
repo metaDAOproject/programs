@@ -13,14 +13,13 @@ const payer = provider.wallet["payer"];
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
-const FINAL_RAISE_AMOUNT = null;
+const FINAL_RAISE_AMOUNT = 15;
+// const LAUNCH_ADDRESS = new PublicKey("48UeghTJDcUugF4hsSECLrotWY2pxSTuA9b87R8zybQn");
 
 export const launch = async () => {
-  const mintKp = new PublicKey("PRVT6TB7uss3FrUd2D9xs2zqDBsa3GbMJMwCQsgmeta");
+  const mintKp = new PublicKey("4ZYGY49yFDjJVgmSxRypXHvPhPi5vNfxbBCTDapyNdAR");
 
   const [launch] = getLaunchAddr(undefined, mintKp);
-
-  await launchpad.closeLaunchIx({ launch }).rpc();
 
   const tx = await launchpad
     .completeLaunchIx({

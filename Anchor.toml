@@ -38,9 +38,18 @@ v04-initialize-dao = "yarn run tsx scripts/v0.4/initializeDao.ts"
 v04-initialize-proposal = "yarn run tsx scripts/v0.4/initializeProposal.ts"
 v05-execute-proposal = "yarn run tsx scripts/v0.5/executeProposal.ts"
 v06-launch = "yarn run tsx scripts/v0.6/launch.ts"
+v06-initialize-launch = "yarn run tsx scripts/v0.6/initializeLaunch.ts"
+v06-start-launch = "yarn run tsx scripts/v0.6/startLaunch.ts"
+v06-close-launch = "yarn run tsx scripts/v0.6/closeLaunch.ts"
+v06-finalize-launch = "yarn run tsx scripts/v0.6/finalizeLaunch.ts"
+v06-refund = "yarn run tsx scripts/v0.6/refund.ts"
 claim-launch = "yarn run tsx scripts/v0.6/claimAllLaunch.ts"
 v06-execute-proposal = "yarn run tsx scripts/v0.6/executeProposal.ts"
 v06-execute-general-proposal = "yarn run tsx scripts/v0.6/executeGeneralProposal.ts"
+v06-create-buyback-squads = "yarn run tsx scripts/v0.6/createBuybackSquadsProposal.ts"
+v06-initialize-buyback = "yarn run tsx scripts/v0.6/initializeBuybackProposal.ts"
+v06-execute-jupiter-order = "yarn run tsx scripts/v0.6/executeJupiterRecurringOrder.ts"
+v06-cancel-jupiter-order = "yarn run tsx scripts/v0.6/cancelJupiterRecurringOrder.ts"
 
 [test]
 startup_wait = 5000

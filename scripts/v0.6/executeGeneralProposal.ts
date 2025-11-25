@@ -10,7 +10,7 @@ const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 const futarchy = FutarchyClient.createClient({ provider });
 
-const PROPOSAL = new PublicKey("FUTARCHY_PROPOSAL_HERE");
+const PROPOSAL = new PublicKey("DAxuUHwkLm5rQyFjx8Cnm28bBuApUL9pBrxAMnr8i3VU");
 
 async function main() {
   const proposal = await futarchy.getProposal(PROPOSAL);
