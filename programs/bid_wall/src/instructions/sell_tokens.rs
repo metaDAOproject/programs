@@ -4,10 +4,7 @@ use crate::meteora_state::{Pool, Position};
 use crate::{state::BidWall, usdc_mint, FEE_BPS};
 
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{self, Burn, Mint, Token, TokenAccount, Transfer},
-};
+use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 
 use futarchy::{Dao, PoolState};
 
@@ -55,7 +52,6 @@ pub struct SellTokens<'info> {
     pub position: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 

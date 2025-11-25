@@ -171,7 +171,6 @@ export class BidWallClient {
         pool,
         position,
         tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       });
   }
@@ -218,7 +217,6 @@ export class BidWallClient {
       baseMint,
       usdcMint: MAINNET_USDC,
       tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     });
   }

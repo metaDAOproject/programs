@@ -1,8 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{self, Mint, Token, TokenAccount, Transfer},
-};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::{error::BidWallError, state::BidWall, usdc_mint};
 
@@ -42,7 +39,6 @@ pub struct CloseBidWall<'info> {
     pub usdc_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 
