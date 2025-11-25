@@ -1,5 +1,5 @@
 export type BidWall = {
-  version: "0.1.0";
+  version: "0.6.0";
   name: "bid_wall";
   instructions: [
     {
@@ -980,26 +980,16 @@ export type BidWall = {
     },
     {
       code: 6003;
-      name: "MeteoraDammPoolOwnerMismatch";
-      msg: "Meteora DAMM pool owner mismatch";
-    },
-    {
-      code: 6004;
-      name: "MeteoraDammPositionOwnerMismatch";
-      msg: "Meteora DAMM position owner mismatch";
-    },
-    {
-      code: 6005;
       name: "MathOverflow";
       msg: "Math overflow";
     },
     {
-      code: 6006;
+      code: 6004;
       name: "TypeCastFailed";
       msg: "Type cast failed";
     },
     {
-      code: 6007;
+      code: 6005;
       name: "MeteoraDammPositionPoolMismatch";
       msg: "Meteora DAMM position pool mismatch";
     },
@@ -1007,7 +997,7 @@ export type BidWall = {
 };
 
 export const IDL: BidWall = {
-  version: "0.1.0",
+  version: "0.6.0",
   name: "bid_wall",
   instructions: [
     {
@@ -1988,26 +1978,16 @@ export const IDL: BidWall = {
     },
     {
       code: 6003,
-      name: "MeteoraDammPoolOwnerMismatch",
-      msg: "Meteora DAMM pool owner mismatch",
-    },
-    {
-      code: 6004,
-      name: "MeteoraDammPositionOwnerMismatch",
-      msg: "Meteora DAMM position owner mismatch",
-    },
-    {
-      code: 6005,
       name: "MathOverflow",
       msg: "Math overflow",
     },
     {
-      code: 6006,
+      code: 6004,
       name: "TypeCastFailed",
       msg: "Type cast failed",
     },
     {
-      code: 6007,
+      code: 6005,
       name: "MeteoraDammPositionPoolMismatch",
       msg: "Meteora DAMM position pool mismatch",
     },
