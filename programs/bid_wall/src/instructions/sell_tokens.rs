@@ -1,7 +1,7 @@
 use crate::error::BidWallError;
 use crate::math::u128x128_math::Rounding;
 use crate::meteora_state::{Pool, Position};
-use crate::{fee_wallet, state::BidWall, usdc_mint, FEE_BPS};
+use crate::{state::BidWall, usdc_mint, FEE_BPS};
 
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -19,7 +19,7 @@ pub struct SellTokensArgs {
 #[event_cpi]
 #[derive(Accounts)]
 pub struct SellTokens<'info> {
-    #[account(has_one = dao, has_one = base_mint, has_one = pool, has_one = position)]
+    #[account(mut, has_one = dao, has_one = base_mint, has_one = pool, has_one = position)]
     pub bid_wall: Account<'info, BidWall>,
 
     #[account(mut)]
@@ -34,12 +34,11 @@ pub struct SellTokens<'info> {
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
     pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut, associated_token::mint = quote_mint, associated_token::authority = fee_wallet::id())]
-    pub fee_wallet_usdc_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub base_mint: Account<'info, Mint>,
 
     #[account(address = usdc_mint::id())]
     pub quote_mint: Account<'info, Mint>,
-    pub base_mint: Account<'info, Mint>,
 
     #[account(has_one = base_mint, has_one = quote_mint)]
     pub dao: Box<Account<'info, Dao>>,
@@ -174,7 +173,7 @@ impl SellTokens<'_> {
             fee
         };
 
-        let amount_out_after_fee = amount_out_before_fee - fee;
+        let amount_out_after_fee = amount_out_before_fee.checked_sub(fee).unwrap();
 
         // Burn base tokens
         token::burn(
@@ -208,24 +207,13 @@ impl SellTokens<'_> {
             amount_out_after_fee,
         )?;
 
-        // Transfer fee to protocol fee wallet
-        token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
-                    to: ctx.accounts.fee_wallet_usdc_token_account.to_account_info(),
-                    authority: ctx.accounts.bid_wall.to_account_info(),
-                },
-                &[&[
-                    b"bid_wall",
-                    ctx.accounts.base_mint.key().as_ref(),
-                    ctx.accounts.bid_wall.authority.as_ref(),
-                    &[ctx.accounts.bid_wall.pda_bump],
-                ]],
-            ),
-            fee,
-        )?;
+        // Update fees collected by bid wall
+        ctx.accounts.bid_wall.fees_collected = ctx
+            .accounts
+            .bid_wall
+            .fees_collected
+            .checked_add(fee)
+            .unwrap();
 
         Ok(())
     }

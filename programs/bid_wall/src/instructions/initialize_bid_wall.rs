@@ -103,6 +103,7 @@ impl InitializeBidWall<'_> {
             dao: ctx.accounts.dao.key(),
             pool: ctx.accounts.pool.key(),
             position: ctx.accounts.position.key(),
+            fees_collected: 0,
         });
 
         Ok(())

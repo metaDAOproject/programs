@@ -23,11 +23,17 @@ pub struct CloseBidWall<'info> {
 
     pub authority: Signer<'info>,
 
+    /// CHECK: used for constraints
+    pub fee_recipient: AccountInfo<'info>,
+
     #[account(mut, close=payer, associated_token::mint = usdc_mint, associated_token::authority = bid_wall)]
     pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = authority)]
     pub authority_usdc_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = fee_recipient)]
+    pub fee_wallet_usdc_token_account: Account<'info, TokenAccount>,
 
     #[account(address = usdc_mint::id())]
     pub usdc_mint: Account<'info, Mint>,
@@ -58,7 +64,28 @@ impl CloseBidWall<'_> {
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        // transfer USDC back to authority
+        // transfer fee to fee recipient
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
+                    to: ctx.accounts.fee_wallet_usdc_token_account.to_account_info(),
+                    authority: ctx.accounts.bid_wall.to_account_info(),
+                },
+                &[&[
+                    b"bid_wall",
+                    ctx.accounts.base_mint.key().as_ref(),
+                    ctx.accounts.authority.key().as_ref(),
+                    &[ctx.accounts.bid_wall.pda_bump],
+                ]],
+            ),
+            ctx.accounts.bid_wall.fees_collected,
+        )?;
+
+        ctx.accounts.bid_wall_usdc_token_account.reload()?;
+
+        // transfer all remaining USDC in bid wall USDC ATA back to authority
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),

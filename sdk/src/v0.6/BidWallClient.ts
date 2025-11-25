@@ -112,4 +112,67 @@ export class BidWallClient {
         systemProgram: SystemProgram.programId,
       });
   }
+
+  sellTokensIx({
+    amount,
+    bidWall,
+    dao,
+    daoTreasuryUsdcTokenAccount,
+    baseMint,
+    quoteMint = MAINNET_USDC,
+    user = this.provider.publicKey,
+    meteoraConfig = MAINNET_METEORA_CONFIG,
+  }: {
+    amount: number;
+    bidWall: PublicKey;
+    dao: PublicKey;
+    daoTreasuryUsdcTokenAccount: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    user: PublicKey;
+    meteoraConfig: PublicKey;
+  }) {
+    const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      bidWall,
+      true,
+    );
+    const userTokenAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      user,
+      true,
+    );
+    const userUsdcTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      user,
+      true,
+    );
+    const feeWalletUsdcTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      PublicKey.default,
+      true,
+    );
+
+    const [pool] = getMeteoraPoolAddr({ baseMint, quoteMint, meteoraConfig });
+    const [position] = getLaunchpadMeteoraPoolPositionAddr({ baseMint });
+
+    return this.bidWallProgram.methods
+      .sellTokens({ amountIn: new BN(amount) })
+      .accounts({
+        bidWall,
+        user,
+        userTokenAccount,
+        userUsdcTokenAccount,
+        bidWallUsdcTokenAccount,
+        baseMint,
+        quoteMint,
+        dao,
+        daoTreasuryUsdcTokenAccount,
+        pool,
+        position,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      });
+  }
 }

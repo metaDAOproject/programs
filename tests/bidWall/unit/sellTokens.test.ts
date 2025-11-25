@@ -33,6 +33,9 @@ export default function suite() {
   let quoteVault: PublicKey;
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
+  let bidWall: PublicKey;
+  let pool: PublicKey;
+  let position: PublicKey;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -86,7 +89,7 @@ export default function suite() {
 
     await this.createTokenAccount(META, this.payer.publicKey);
 
-    const fundAmount = new BN(100_000_000_000); // 100K USDC
+    const fundAmount = new BN(100_000_000000); // 100K USDC
 
     // Fund the launch
     await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
@@ -120,14 +123,14 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx);
 
-    // Verify launch completion and DAO creation
     const launchAccount = await this.launchpad.fetchLaunch(launch);
-    assert.exists(launchAccount.state.complete);
-    assert.exists(launchAccount.dao);
-    dao = launchAccount.dao;
-  });
 
-  it.only("successfully initializes a bid wall", async function () {
+    dao = launchAccount.dao;
+    daoTreasury = launchAccount.daoVault;
+
+    // Claim tokens for the payer
+    await launchpadClient.claimIx(launch, META).rpc();
+
     let minDuration = 100;
 
     await bidWallClient
@@ -143,32 +146,88 @@ export default function suite() {
       })
       .rpc();
 
+    const [bidWallAddr] = getBidWallAddr({
+      authority: this.payer.publicKey,
+      baseMint: META,
+    });
+
+    bidWall = bidWallAddr;
+  });
+
+  it.only("successfully sells tokens into a bid wall", async function () {
     const [bidWall] = getBidWallAddr({
       authority: this.payer.publicKey,
       baseMint: META,
     });
 
-    const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
-
-    const [pool] = getMeteoraPoolAddr({
-      baseMint: META,
-      quoteMint: MAINNET_USDC,
-      meteoraConfig: MAINNET_METEORA_CONFIG,
-    });
-
-    const [position] = getLaunchpadMeteoraPoolPositionAddr({ baseMint: META });
-
-    assert.isNotNull(bidWallAccount);
-
-    assert.equal(
-      bidWallAccount.authority.toBase58(),
-      this.payer.publicKey.toBase58(),
+    const usdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
     );
-    assert.equal(bidWallAccount.baseMint.toBase58(), META.toBase58());
-    assert.equal(bidWallAccount.dao.toBase58(), dao.toBase58());
-    assert.equal(bidWallAccount.pool.toBase58(), pool.toString());
-    assert.equal(bidWallAccount.position.toBase58(), position.toString());
-    assert.equal(bidWallAccount.minDuration, minDuration);
-    assert.equal(bidWallAccount.feesCollected.toString(), "0");
+
+    const metaBalanceBefore = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+
+    // Sanity check to confirm user has 9.6M USDC after launch
+    assert.equal(usdcBalanceBefore, 9_600_000_000000n);
+    // User should have gotten 10M META from the launch
+    assert.equal(metaBalanceBefore, 10_000_000_000000n);
+
+    const daoTreasuryUsdcTokenAccount = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      daoTreasury,
+      true,
+    );
+
+    // As it stands:
+    // DAO NAV = 100_000_000000 USDC (100K)
+    // Active supply = 10_000_000_000010 META (10M + 10)
+    // Price = 100_000_000000 / 10_000_000_000010 = ~0.01 USDC per META
+    // Assume user sells 5M META
+    // User will receive ~50_000 USDC (5M * 0.01) minus 1% fee, rounded down.
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 5_000_000_000000,
+        bidWall,
+        dao,
+        daoTreasuryUsdcTokenAccount,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+        meteoraConfig: MAINNET_METEORA_CONFIG,
+      })
+      .rpc();
+
+    const usdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    const metaBalanceAfter = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+
+    // Seller received 49_499_999999 USDC (49.5K), which is 50_000_000000 - 500_000001 (fee)
+    assert.equal(usdcBalanceAfter, 9_649_499_999999n);
+    assert.equal(metaBalanceAfter, 5_000_000_000000n);
+
+    // Bid wall collected 500_000000 USDC (0.5K) in fees
+    const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
+    assert.equal(
+      bidWallAccount.feesCollected.toString(),
+      new BN(500_000000).toString(),
+    );
+  });
+
+  it.skip("fails when launch is not complete", async function () {
+    try {
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "InvalidLaunchState");
+    }
   });
 }

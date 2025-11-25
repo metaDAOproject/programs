@@ -109,12 +109,22 @@ export type BidWall = {
           isSigner: true;
         },
         {
+          name: "feeRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "bidWallUsdcTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
           name: "authorityUsdcTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "feeWalletUsdcTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -161,7 +171,7 @@ export type BidWall = {
       accounts: [
         {
           name: "bidWall";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -185,17 +195,12 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "feeWalletUsdcTokenAccount";
+          name: "baseMint";
           isMut: true;
           isSigner: false;
         },
         {
           name: "quoteMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "baseMint";
           isMut: false;
           isSigner: false;
         },
@@ -295,6 +300,11 @@ export type BidWall = {
             name: "createdTimestamp";
             docs: ["When the bid wall was created."];
             type: "i64";
+          },
+          {
+            name: "feesCollected";
+            docs: ["The fees collected by the bid wall."];
+            type: "u64";
           },
           {
             name: "minDuration";
@@ -1107,12 +1117,22 @@ export const IDL: BidWall = {
           isSigner: true,
         },
         {
+          name: "feeRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "bidWallUsdcTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
           name: "authorityUsdcTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "feeWalletUsdcTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1159,7 +1179,7 @@ export const IDL: BidWall = {
       accounts: [
         {
           name: "bidWall",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1183,17 +1203,12 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "feeWalletUsdcTokenAccount",
+          name: "baseMint",
           isMut: true,
           isSigner: false,
         },
         {
           name: "quoteMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "baseMint",
           isMut: false,
           isSigner: false,
         },
@@ -1293,6 +1308,11 @@ export const IDL: BidWall = {
             name: "createdTimestamp",
             docs: ["When the bid wall was created."],
             type: "i64",
+          },
+          {
+            name: "feesCollected",
+            docs: ["The fees collected by the bid wall."],
+            type: "u64",
           },
           {
             name: "minDuration",
