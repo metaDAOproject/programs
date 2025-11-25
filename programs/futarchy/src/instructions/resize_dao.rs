@@ -32,6 +32,32 @@ impl ResizeDao<'_> {
             return Ok(());
         }
 
+        let old_dao_data = OldDao::deserialize(&mut &dao.try_borrow_data().unwrap()[8..])?;
+
+        let new_dao_data = Dao {
+            amm: old_dao_data.amm,
+            nonce: old_dao_data.nonce,
+            dao_creator: old_dao_data.dao_creator,
+            pda_bump: old_dao_data.pda_bump,
+            squads_multisig: old_dao_data.squads_multisig,
+            squads_multisig_vault: old_dao_data.squads_multisig_vault,
+            base_mint: old_dao_data.base_mint,
+            quote_mint: old_dao_data.quote_mint,
+            proposal_count: old_dao_data.proposal_count,
+            pass_threshold_bps: old_dao_data.pass_threshold_bps,
+            seconds_per_proposal: old_dao_data.seconds_per_proposal,
+            twap_initial_observation: old_dao_data.twap_initial_observation,
+            twap_max_observation_change_per_update: old_dao_data
+                .twap_max_observation_change_per_update,
+            twap_start_delay_seconds: old_dao_data.twap_start_delay_seconds,
+            min_quote_futarchic_liquidity: old_dao_data.min_quote_futarchic_liquidity,
+            min_base_futarchic_liquidity: old_dao_data.min_base_futarchic_liquidity,
+            base_to_stake: old_dao_data.base_to_stake,
+            seq_num: old_dao_data.seq_num,
+            initial_spending_limit: old_dao_data.initial_spending_limit,
+            team_sponsored_pass_threshold_bps: 0,
+            team_address: Pubkey::default(),
+        };
         dao.realloc(AFTER_REALLOC_SIZE, true)?;
 
         let lamports_needed = Rent::get()?.minimum_balance(AFTER_REALLOC_SIZE);
@@ -49,14 +75,7 @@ impl ResizeDao<'_> {
             )?;
         }
 
-        // let question = Question::deserialize(&mut &question.try_into())?;
-        let mut dao_data = Dao::deserialize(&mut &dao.try_borrow_mut_data().unwrap()[8..])?;
-
-        // the `team_sponsored_pass_threshold_bps` doesn't matter because they don't have a team address
-        dao_data.team_sponsored_pass_threshold_bps = 0;
-        dao_data.team_address = Pubkey::default();
-
-        dao_data.serialize(&mut &mut dao.try_borrow_mut_data().unwrap()[8..])?;
+        new_dao_data.serialize(&mut &mut dao.try_borrow_mut_data().unwrap()[8..])?;
 
         Ok(())
     }

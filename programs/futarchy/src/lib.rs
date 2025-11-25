@@ -142,4 +142,12 @@ pub mod futarchy {
     pub fn sponsor_proposal(ctx: Context<SponsorProposal>) -> Result<()> {
         SponsorProposal::handle(ctx)
     }
+
+    pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
+        ResizeDao::handle(ctx)
+    }
+
+    pub fn resize_proposal(ctx: Context<ResizeProposal>) -> Result<()> {
+        ResizeProposal::handle(ctx)
+    }
 }
