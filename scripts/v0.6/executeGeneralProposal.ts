@@ -9,8 +9,8 @@ import {
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 const futarchy = FutarchyClient.createClient({ provider });
-
-const PROPOSAL = new PublicKey("DAxuUHwkLm5rQyFjx8Cnm28bBuApUL9pBrxAMnr8i3VU");
+// dao proposal not squads proposa;
+const PROPOSAL = new PublicKey("PROPOSAL_ADDRESS_HERE");
 
 async function main() {
   const proposal = await futarchy.getProposal(PROPOSAL);

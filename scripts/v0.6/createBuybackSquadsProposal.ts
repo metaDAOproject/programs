@@ -24,9 +24,11 @@ const OUTPUT_MINT = new PublicKey(
 // Jupiter recurring order parameters
 const IN_AMOUNT = 1_000_000_000; // Raw amount before decimals, (1_000_000 is $1)
 const NUMBER_OF_ORDERS = 10;
-const INTERVAL = 300; // Time between orders in seconds (86400 = 1 day)
+const INTERVAL = 300;
 const MIN_PRICE = null;
-const MAX_PRICE = 300; // set this to the ACTAUL price you want to target, it's that easy so 0.25 for loyal
+const MAX_PRICE = 300; // set this to the ACTAUL price you want to target, it's that easy. so MAX_PRICE = 300 = $300
+// i.e. 0.25 for lower prices tokens still corresponds to 0.25. I didn't test if price is different for 9 decimals though but
+// the above comments are tested for 6 decimal tokens
 const START_AT = null; // null = start immediately
 
 const provider = anchor.AnchorProvider.env();
@@ -204,16 +206,13 @@ const createBuybackSquadsProposal = async () => {
     `\n  Extracted ${vaultInstructions.length} instruction(s) for vault execution\n`,
   );
 
-  // Step 6: Create Squads proposal transaction
-  // NOTE: The SDK's squadsProposalCreateTx has a bug - it uses the payer as the payerKey
-  // in the TransactionMessage, but it should use the vault PDA. So we do it manually.
   console.log("Step 6: Creating Squads proposal transaction...");
 
   // Create vault transaction message with vault as payer (not user payer!)
   const { blockhash: vaultBlockhash } =
     await provider.connection.getLatestBlockhash();
   const transactionMessage = new TransactionMessage({
-    payerKey: vaultPda, // This MUST be the vault, not the user payer
+    payerKey: vaultPda,
     recentBlockhash: vaultBlockhash,
     instructions: vaultInstructions, // Include all Jupiter instructions (ATA + recurring order)
   });
