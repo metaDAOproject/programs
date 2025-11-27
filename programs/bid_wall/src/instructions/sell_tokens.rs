@@ -76,8 +76,6 @@ impl SellTokens<'_> {
     pub fn handle(ctx: Context<Self>, args: SellTokensArgs) -> Result<()> {
         let SellTokensArgs { amount_in } = args;
 
-        let token_total_supply = ctx.accounts.base_mint.supply;
-
         // Futarchy AMM Pool
         let (dao_futarchy_amm_tokens, dao_futarchy_amm_usdc) = match &ctx.accounts.dao.amm.state {
             PoolState::Spot { spot } => (spot.base_reserves, spot.quote_reserves),
@@ -134,7 +132,8 @@ impl SellTokens<'_> {
         let dao_nav = dao_treasury_usdc + dao_futarchy_amm_usdc + dao_damm_usdc;
 
         // Supply within the hands of users
-        let token_active_supply = token_total_supply - dao_futarchy_amm_tokens - dao_damm_tokens;
+        let token_active_supply =
+            ctx.accounts.base_mint.supply - dao_futarchy_amm_tokens - dao_damm_tokens;
 
         // Token price = DAO NAV / active supply
         // amount_out is always rounded down
