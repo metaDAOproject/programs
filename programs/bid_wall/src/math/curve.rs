@@ -1,3 +1,4 @@
+// Code lifted from https://github.com/MeteoraAg/damm-v2/blob/main/programs/cp-amm/src/curve.rs, with some modifications
 use anchor_lang::prelude::*;
 use ruint::aliases::U256;
 

@@ -1,7 +1,6 @@
 //! A big wall of cash sitting at NAV, ready to take tokens from weak hands and burn them.
 use anchor_lang::prelude::*;
 
-pub mod curve;
 pub mod error;
 pub mod instructions;
 pub mod math;

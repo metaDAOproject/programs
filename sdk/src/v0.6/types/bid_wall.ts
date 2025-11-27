@@ -938,7 +938,6 @@ export type BidWall = {
     },
     {
       name: "Rounding";
-      docs: ["Round up, down"];
       type: {
         kind: "enum";
         variants: [
@@ -1931,7 +1930,6 @@ export const IDL: BidWall = {
     },
     {
       name: "Rounding",
-      docs: ["Round up, down"],
       type: {
         kind: "enum",
         variants: [

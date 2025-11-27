@@ -1,11 +1,14 @@
+// Code lifted from https://github.com/MeteoraAg/damm-v2/blob/main/programs/cp-amm/src/state/pool.rs, with some modifications
 use anchor_lang::prelude::*;
 
 use static_assertions::const_assert_eq;
 
 use super::NUM_REWARDS;
-use crate::curve::{get_delta_amount_a_unsigned, get_delta_amount_b_unsigned};
 use crate::error::BidWallError;
-use crate::math::u128x128_math::Rounding;
+use crate::math::{
+    curve::{get_delta_amount_a_unsigned, get_delta_amount_b_unsigned},
+    Rounding,
+};
 
 #[zero_copy]
 #[derive(InitSpace, Debug, Default)]

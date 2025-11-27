@@ -1,11 +1,9 @@
+// Code lifted from https://github.com/MeteoraAg/damm-v2/blob/main/programs/cp-amm/src/math/u128x128_math.rs, with some modifications
 use ruint::aliases::{U256, U512};
 
-/// Round up, down
 #[derive(PartialEq, Clone, Copy)]
 pub enum Rounding {
-    /// Rounding up
     Up,
-    /// Rounding down
     Down,
 }
 
