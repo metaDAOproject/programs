@@ -140,19 +140,10 @@ impl SellTokens<'_> {
         let amount_out_before_fee =
             (amount_in as u128 * dao_nav as u128 / token_active_supply as u128) as u64;
 
-        // fee is always rounded up, so we need to add 1 if the remainder is not 0
-        let fee_numerator = amount_out_before_fee as u128 * FEE_BPS as u128;
-        let fee_denominator = 10_000_u128;
+        let amount_out_after_fee =
+            ((10_000_u128 - FEE_BPS as u128) * amount_out_before_fee as u128 / 10_000_u128) as u64;
 
-        let fee = (fee_numerator / fee_denominator) as u64;
-
-        let fee = if fee_numerator % fee_denominator != 0 {
-            fee + 1
-        } else {
-            fee
-        };
-
-        let amount_out_after_fee = amount_out_before_fee - fee;
+        let fee = amount_out_before_fee - amount_out_after_fee;
 
         // Burn base tokens
         token::burn(

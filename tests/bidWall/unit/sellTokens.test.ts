@@ -209,7 +209,7 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    // Seller received 49_499_999999 USDC (49.5K), which is 50_000_000000 - 500_000001 (fee)
+    // Seller received 49_499_999999 USDC (49.5K), which is 49_999_999999 - 500_000000 (fee)
     assert.equal(usdcBalanceAfter, usdcBalanceBefore + 49_499_999999n);
     assert.equal(metaBalanceAfter, 5_000_000_000000n);
 
