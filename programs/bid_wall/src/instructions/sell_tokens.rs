@@ -44,11 +44,11 @@ pub struct SellTokens<'info> {
     pub dao_treasury_usdc_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: Discriminator checked inside validate
-    #[account(owner = damm_v2_cpi::id())]
+    #[account(owner = damm_v2_cpi::id(), address = bid_wall.pool)]
     pub pool: UncheckedAccount<'info>,
 
     /// CHECK: Discriminator and pool checked inside validate
-    #[account(owner = damm_v2_cpi::id())]
+    #[account(owner = damm_v2_cpi::id(), address = bid_wall.position)]
     pub position: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -108,12 +108,9 @@ impl SellTokens<'_> {
 
         let pool_token_a_mint = pool.token_a_mint;
 
-        let position_liquidity = position
-            .vested_liquidity
-            .checked_add(position.unlocked_liquidity)
-            .unwrap()
-            .checked_add(position.permanent_locked_liquidity)
-            .unwrap();
+        let position_liquidity = position.vested_liquidity
+            + position.unlocked_liquidity
+            + position.permanent_locked_liquidity;
 
         let modify_liquidity_result =
             pool.get_amounts_for_modify_liquidity(position_liquidity, Rounding::Up)?;
@@ -134,42 +131,29 @@ impl SellTokens<'_> {
         // DAO Treasury
         let dao_treasury_usdc = ctx.accounts.dao_treasury_usdc_token_account.amount;
 
-        let dao_nav = dao_treasury_usdc
-            .checked_add(dao_futarchy_amm_usdc)
-            .unwrap()
-            .checked_add(dao_damm_usdc)
-            .unwrap();
+        let dao_nav = dao_treasury_usdc + dao_futarchy_amm_usdc + dao_damm_usdc;
 
         // Supply within the hands of users
-        let token_active_supply = token_total_supply
-            .checked_sub(dao_futarchy_amm_tokens)
-            .unwrap()
-            .checked_sub(dao_damm_tokens)
-            .unwrap();
+        let token_active_supply = token_total_supply - dao_futarchy_amm_tokens - dao_damm_tokens;
 
         // Token price = DAO NAV / active supply
         // amount_out is always rounded down
-        let amount_out_before_fee = (amount_in as u128)
-            .checked_mul(dao_nav as u128)
-            .unwrap()
-            .checked_div(token_active_supply as u128)
-            .unwrap() as u64;
+        let amount_out_before_fee =
+            (amount_in as u128 * dao_nav as u128 / token_active_supply as u128) as u64;
 
         // fee is always rounded up, so we need to add 1 if the remainder is not 0
-        let fee_numerator = (amount_out_before_fee as u128)
-            .checked_mul(FEE_BPS as u128)
-            .unwrap();
-        let fee_denominator = 10_000;
+        let fee_numerator = amount_out_before_fee as u128 * FEE_BPS as u128;
+        let fee_denominator = 10_000_u128;
 
-        let fee = fee_numerator.checked_div(fee_denominator).unwrap() as u64;
+        let fee = (fee_numerator / fee_denominator) as u64;
 
-        let fee = if fee_numerator.checked_rem(fee_denominator).unwrap() != 0 {
-            fee.checked_add(1).unwrap()
+        let fee = if fee_numerator % fee_denominator != 0 {
+            fee + 1
         } else {
             fee
         };
 
-        let amount_out_after_fee = amount_out_before_fee.checked_sub(fee).unwrap();
+        let amount_out_after_fee = amount_out_before_fee - fee;
 
         // Burn base tokens
         token::burn(
@@ -204,12 +188,7 @@ impl SellTokens<'_> {
         )?;
 
         // Update fees collected by bid wall
-        ctx.accounts.bid_wall.fees_collected = ctx
-            .accounts
-            .bid_wall
-            .fees_collected
-            .checked_add(fee)
-            .unwrap();
+        ctx.accounts.bid_wall.fees_collected += fee;
 
         Ok(())
     }

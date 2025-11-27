@@ -14,4 +14,6 @@ pub enum BidWallError {
     TypeCastFailed,
     #[msg("Meteora DAMM position pool mismatch")]
     MeteoraDammPositionPoolMismatch,
+    #[msg("Meteora DAMM pool mints do not match the bid wall mints")]
+    MeteoraDammPoolMintsMismatch,
 }

@@ -257,9 +257,14 @@ export type BidWall = {
         kind: "struct";
         fields: [
           {
-            name: "pdaBump";
-            docs: ["The PDA bump."];
-            type: "u8";
+            name: "createdTimestamp";
+            docs: ["When the bid wall was created."];
+            type: "i64";
+          },
+          {
+            name: "feesCollected";
+            docs: ["The fees collected by the bid wall."];
+            type: "u64";
           },
           {
             name: "authority";
@@ -278,23 +283,13 @@ export type BidWall = {
           },
           {
             name: "pool";
-            docs: ["The DAO's Meteora CPMM pool"];
+            docs: ["The DAO's Meteora DAMMv2 pool"];
             type: "publicKey";
           },
           {
             name: "position";
-            docs: ["The DAO's Meteora CPMM position"];
+            docs: ["The DAO's Meteora DAMMv2 position"];
             type: "publicKey";
-          },
-          {
-            name: "createdTimestamp";
-            docs: ["When the bid wall was created."];
-            type: "i64";
-          },
-          {
-            name: "feesCollected";
-            docs: ["The fees collected by the bid wall."];
-            type: "u64";
           },
           {
             name: "minDuration";
@@ -302,6 +297,11 @@ export type BidWall = {
               "The minimum duration in seconds before the bid wall can be closed.",
             ];
             type: "u32";
+          },
+          {
+            name: "pdaBump";
+            docs: ["The PDA bump."];
+            type: "u8";
           },
         ];
       };
@@ -983,6 +983,11 @@ export type BidWall = {
       name: "MeteoraDammPositionPoolMismatch";
       msg: "Meteora DAMM position pool mismatch";
     },
+    {
+      code: 6006;
+      name: "MeteoraDammPoolMintsMismatch";
+      msg: "Meteora DAMM pool mints do not match the bid wall mints";
+    },
   ];
 };
 
@@ -1245,9 +1250,14 @@ export const IDL: BidWall = {
         kind: "struct",
         fields: [
           {
-            name: "pdaBump",
-            docs: ["The PDA bump."],
-            type: "u8",
+            name: "createdTimestamp",
+            docs: ["When the bid wall was created."],
+            type: "i64",
+          },
+          {
+            name: "feesCollected",
+            docs: ["The fees collected by the bid wall."],
+            type: "u64",
           },
           {
             name: "authority",
@@ -1266,23 +1276,13 @@ export const IDL: BidWall = {
           },
           {
             name: "pool",
-            docs: ["The DAO's Meteora CPMM pool"],
+            docs: ["The DAO's Meteora DAMMv2 pool"],
             type: "publicKey",
           },
           {
             name: "position",
-            docs: ["The DAO's Meteora CPMM position"],
+            docs: ["The DAO's Meteora DAMMv2 position"],
             type: "publicKey",
-          },
-          {
-            name: "createdTimestamp",
-            docs: ["When the bid wall was created."],
-            type: "i64",
-          },
-          {
-            name: "feesCollected",
-            docs: ["The fees collected by the bid wall."],
-            type: "u64",
           },
           {
             name: "minDuration",
@@ -1290,6 +1290,11 @@ export const IDL: BidWall = {
               "The minimum duration in seconds before the bid wall can be closed.",
             ],
             type: "u32",
+          },
+          {
+            name: "pdaBump",
+            docs: ["The PDA bump."],
+            type: "u8",
           },
         ],
       },
@@ -1970,6 +1975,11 @@ export const IDL: BidWall = {
       code: 6005,
       name: "MeteoraDammPositionPoolMismatch",
       msg: "Meteora DAMM position pool mismatch",
+    },
+    {
+      code: 6006,
+      name: "MeteoraDammPoolMintsMismatch",
+      msg: "Meteora DAMM pool mints do not match the bid wall mints",
     },
   ],
 };

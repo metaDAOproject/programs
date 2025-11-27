@@ -78,6 +78,17 @@ impl InitializeBidWall<'_> {
             return Err(BidWallError::MeteoraDammPositionPoolMismatch.into());
         }
 
+        let pool: &Pool = bytemuck::from_bytes(&pool_data[8..]);
+        let (pool_base_mint, pool_quote_mint) = if pool.token_a_mint == self.base_mint.key() {
+            (pool.token_a_mint, pool.token_b_mint)
+        } else {
+            (pool.token_b_mint, pool.token_a_mint)
+        };
+
+        if pool_base_mint != self.base_mint.key() || pool_quote_mint != self.quote_mint.key() {
+            return Err(BidWallError::MeteoraDammPoolMintsMismatch.into());
+        }
+
         Ok(())
     }
 
