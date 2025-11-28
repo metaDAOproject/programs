@@ -163,7 +163,7 @@ export default function suite() {
     bidWall = bidWallAddr;
   });
 
-  it.only("successfully sells tokens into a bid wall", async function () {
+  it("successfully sells tokens into a bid wall", async function () {
     const [bidWall] = getBidWallAddr({
       authority: this.payer.publicKey,
       baseMint: META,
@@ -221,7 +221,7 @@ export default function suite() {
     );
   });
 
-  it.only("fails to sell tokens into a bid wall when bid wall is expired", async function () {
+  it("fails to sell tokens into a bid wall when bid wall is expired", async function () {
     await this.advanceBySeconds(durationSeconds + 1);
 
     try {

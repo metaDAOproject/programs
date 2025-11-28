@@ -124,7 +124,7 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "usdcMint";
+          name: "quoteMint";
           isMut: false;
           isSigner: false;
         },
@@ -218,6 +218,57 @@ export type BidWall = {
           };
         },
       ];
+    },
+    {
+      name: "collectFees";
+      accounts: [
+        {
+          name: "bidWall";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "bidWallUsdcTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "feeRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "feeRecipientUsdcTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
     },
   ];
   accounts: [
@@ -460,7 +511,7 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "usdcMint",
+          name: "quoteMint",
           isMut: false,
           isSigner: false,
         },
@@ -554,6 +605,57 @@ export const IDL: BidWall = {
           },
         },
       ],
+    },
+    {
+      name: "collectFees",
+      accounts: [
+        {
+          name: "bidWall",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "bidWallUsdcTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "feeRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "feeRecipientUsdcTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [

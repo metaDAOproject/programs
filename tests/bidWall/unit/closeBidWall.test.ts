@@ -174,7 +174,7 @@ export default function suite() {
       .rpc();
   });
 
-  it.only("successfully closes a bid wall and receives fees", async function () {
+  it("successfully closes a bid wall and receives fees", async function () {
     // Advance clock to past minimum duration plus 1 second
     await this.advanceBySeconds(durationSeconds + 1);
 
@@ -225,7 +225,7 @@ export default function suite() {
     );
   });
 
-  it.only("fails to close bid wallwhen bid wall is not expired", async function () {
+  it("fails to close bid wallwhen bid wall is not expired", async function () {
     try {
       await bidWallClient
         .closeBidWallIx({
@@ -243,7 +243,7 @@ export default function suite() {
     }
   });
 
-  it.only("fails to close bid wallwhen wrong fee recipient is provided", async function () {
+  it("fails to close bid wallwhen wrong fee recipient is provided", async function () {
     try {
       await this.advanceBySeconds(durationSeconds + 1);
 

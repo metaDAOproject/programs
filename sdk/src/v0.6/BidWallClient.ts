@@ -158,6 +158,38 @@ export class BidWallClient {
       });
   }
 
+  collectFeesIx({
+    bidWall,
+    feeRecipient,
+    quoteMint = MAINNET_USDC,
+  }: {
+    bidWall: PublicKey;
+    feeRecipient: PublicKey;
+    quoteMint: PublicKey;
+  }) {
+    const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      bidWall,
+      true,
+    );
+
+    const feeRecipientUsdcTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      feeRecipient,
+      true,
+    );
+
+    return this.bidWallProgram.methods.collectFees().accounts({
+      bidWall,
+      bidWallUsdcTokenAccount,
+      feeRecipient,
+      feeRecipientUsdcTokenAccount,
+      quoteMint,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    });
+  }
+
   closeBidWallIx({
     bidWall,
     authority,
@@ -198,7 +230,7 @@ export class BidWallClient {
       authorityUsdcTokenAccount,
       feeRecipientUsdcTokenAccount,
       baseMint,
-      usdcMint: MAINNET_USDC,
+      quoteMint,
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     });

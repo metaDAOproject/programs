@@ -24,20 +24,20 @@ pub struct CloseBidWall<'info> {
     /// CHECK: used for constraints
     pub fee_recipient: UncheckedAccount<'info>,
 
-    #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = bid_wall)]
+    #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
     pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = authority)]
+    #[account(mut, associated_token::mint = quote_mint, associated_token::authority = authority)]
     pub authority_usdc_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = fee_recipient)]
+    #[account(mut, associated_token::mint = quote_mint, associated_token::authority = fee_recipient)]
     pub fee_recipient_usdc_token_account: Account<'info, TokenAccount>,
 
     #[account(address = bid_wall.base_mint)]
     pub base_mint: Account<'info, Mint>,
 
     #[account(address = usdc_mint::id())]
-    pub usdc_mint: Account<'info, Mint>,
+    pub quote_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,

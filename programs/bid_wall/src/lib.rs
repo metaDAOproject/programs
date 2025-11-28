@@ -63,4 +63,9 @@ pub mod bid_wall {
     pub fn sell_tokens(ctx: Context<SellTokens>, args: SellTokensArgs) -> Result<()> {
         SellTokens::handle(ctx, args)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn collect_fees(ctx: Context<CollectFees>) -> Result<()> {
+        CollectFees::handle(ctx)
+    }
 }

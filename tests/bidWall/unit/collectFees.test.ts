@@ -15,7 +15,7 @@ import {
   getMeteoraPoolAddr,
   getLaunchpadMeteoraPoolPositionAddr,
 } from "@metadaoproject/futarchy/v0.6";
-import BN from "bn.js";
+import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
@@ -33,8 +33,9 @@ export default function suite() {
   let quoteVault: PublicKey;
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
-  let ammBaseVaultReserves: BN;
-  let ammQuoteVaultReserves: BN;
+  let bidWall: PublicKey;
+  let durationSeconds: number;
+  let feeRecipient: PublicKey;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -88,7 +89,7 @@ export default function suite() {
 
     await this.createTokenAccount(META, this.payer.publicKey);
 
-    const fundAmount = new BN(100_000_000_000); // 100K USDC
+    const fundAmount = new BN(100_000_000000); // 100K USDC
 
     // Fund the launch
     await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
@@ -122,23 +123,23 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx);
 
-    // Verify launch completion and DAO creation
     const launchAccount = await this.launchpad.fetchLaunch(launch);
-    assert.exists(launchAccount.state.complete);
-    assert.exists(launchAccount.dao);
-    dao = launchAccount.dao;
 
-    ammBaseVaultReserves = new BN(await this.getTokenBalance(META, dao));
-    ammQuoteVaultReserves = new BN(
+    dao = launchAccount.dao;
+    daoTreasury = launchAccount.daoVault;
+
+    let ammBaseVaultReserves = new BN(await this.getTokenBalance(META, dao));
+    let ammQuoteVaultReserves = new BN(
       await this.getTokenBalance(MAINNET_USDC, dao),
     );
-  });
 
-  it("successfully initializes a bid wall", async function () {
-    let durationSeconds = 100;
-
-    const feeRecipient = Keypair.generate().publicKey;
+    feeRecipient = Keypair.generate().publicKey;
     await this.createTokenAccount(MAINNET_USDC, feeRecipient);
+
+    // Claim tokens for the payer
+    await launchpadClient.claimIx(launch, META).rpc();
+
+    durationSeconds = 100;
 
     await bidWallClient
       .initializeBidWallIx({
@@ -154,29 +155,66 @@ export default function suite() {
       })
       .rpc();
 
-    const [bidWall] = getBidWallAddr({
+    const [bidWallAddr] = getBidWallAddr({
       authority: this.payer.publicKey,
       baseMint: META,
     });
 
+    bidWall = bidWallAddr;
+
+    // Sell tokens into bid wall
+    await bidWallClient
+      .sellTokensIx({
+        amount: 5_000_000_000000,
+        bidWall,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .rpc();
+  });
+
+  it("successfully collects fees", async function () {
+    const feeRecipientUsdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      feeRecipient,
+    );
+
+    const bidWallUsdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      bidWall,
+    );
+
+    await bidWallClient
+      .collectFeesIx({
+        bidWall,
+        feeRecipient: feeRecipient,
+        quoteMint: MAINNET_USDC,
+      })
+      .rpc();
+
+    const bidWallUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      bidWall,
+    );
+
+    const feeRecipientUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      feeRecipient,
+    );
+
+    const expectedFeesCollected = 500_000000n;
+
+    assert.equal(
+      bidWallUsdcBalanceAfter,
+      bidWallUsdcBalanceBefore - expectedFeesCollected,
+    );
+    assert.equal(
+      feeRecipientUsdcBalanceAfter,
+      feeRecipientUsdcBalanceBefore + expectedFeesCollected,
+    );
+
     const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
-
-    assert.isNotNull(bidWallAccount);
-
-    assert.equal(
-      bidWallAccount.authority.toBase58(),
-      this.payer.publicKey.toBase58(),
-    );
-    assert.equal(bidWallAccount.baseMint.toBase58(), META.toBase58());
-    assert.equal(bidWallAccount.durationSeconds, durationSeconds);
-    assert.equal(bidWallAccount.feesCollected.toString(), "0");
-    assert.equal(
-      bidWallAccount.initialAmmBaseReserves.toString(),
-      ammBaseVaultReserves.toString(),
-    );
-    assert.equal(
-      bidWallAccount.initialAmmQuoteReserves.toString(),
-      ammQuoteVaultReserves.toString(),
-    );
+    assert.equal(bidWallAccount.feesCollected.toString(), new BN(0).toString());
   });
 }
