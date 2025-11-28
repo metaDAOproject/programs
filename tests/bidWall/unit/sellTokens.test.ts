@@ -35,6 +35,7 @@ export default function suite() {
   let secondFunder: Keypair;
   let bidWall: PublicKey;
   let feeRecipient: PublicKey;
+  let durationSeconds: number;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -138,7 +139,7 @@ export default function suite() {
     // Claim tokens for the payer
     await launchpadClient.claimIx(launch, META).rpc();
 
-    let durationSeconds = 100;
+    durationSeconds = 100;
 
     await bidWallClient
       .initializeBidWallIx({
@@ -218,5 +219,24 @@ export default function suite() {
       bidWallAccount.feesCollected.toString(),
       new BN(500_000000).toString(),
     );
+  });
+
+  it.only("fails to sell tokens into a bid wall when bid wall is expired", async function () {
+    await this.advanceBySeconds(durationSeconds + 1);
+
+    try {
+      await bidWallClient
+        .sellTokensIx({
+          amount: 5_000_000_000000,
+          bidWall,
+          baseMint: META,
+          quoteMint: MAINNET_USDC,
+          user: this.payer.publicKey,
+        })
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "BidWallExpired");
+    }
   });
 }
