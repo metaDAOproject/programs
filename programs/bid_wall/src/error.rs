@@ -4,4 +4,6 @@ use super::*;
 pub enum BidWallError {
     #[msg("Bid wall not expired")]
     BidWallNotExpired,
+    #[msg("Fee recipient mismatch")]
+    FeeRecipientMismatch,
 }

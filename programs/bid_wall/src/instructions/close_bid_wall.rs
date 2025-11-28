@@ -56,6 +56,12 @@ impl CloseBidWall<'_> {
             BidWallError::BidWallNotExpired
         );
 
+        require_keys_eq!(
+            self.bid_wall.fee_recipient,
+            self.fee_recipient.key(),
+            BidWallError::FeeRecipientMismatch
+        );
+
         Ok(())
     }
 

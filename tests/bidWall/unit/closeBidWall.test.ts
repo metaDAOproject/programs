@@ -162,12 +162,6 @@ export default function suite() {
 
     bidWall = bidWallAddr;
 
-    const daoTreasuryUsdcTokenAccount = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
-      daoTreasury,
-      true,
-    );
-
     // Sell tokens into bid wall
     await bidWallClient
       .sellTokensIx({
@@ -189,13 +183,9 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    const feeWallet = Keypair.generate().publicKey;
-
-    await this.createTokenAccount(MAINNET_USDC, feeWallet);
-
-    const feeWalletUsdcBalanceBefore = await this.getTokenBalance(
+    const feeRecipientUsdcBalanceBefore = await this.getTokenBalance(
       MAINNET_USDC,
-      feeWallet,
+      feeRecipient,
     );
 
     await bidWallClient
@@ -203,7 +193,7 @@ export default function suite() {
         bidWall,
         authority: this.payer.publicKey,
         baseMint: META,
-        feeRecipient: feeWallet,
+        feeRecipient: feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
       })
@@ -219,9 +209,9 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    const feeWalletUsdcBalanceAfter = await this.getTokenBalance(
+    const feeRecipientUsdcBalanceAfter = await this.getTokenBalance(
       MAINNET_USDC,
-      feeWallet,
+      feeRecipient,
     );
 
     assert.equal(bidWallUsdcBalanceAfter, 0n);
@@ -230,23 +220,19 @@ export default function suite() {
       authorityUsdcBalanceBefore + 50_000_000000n,
     );
     assert.equal(
-      feeWalletUsdcBalanceAfter,
-      feeWalletUsdcBalanceBefore + 500_000000n,
+      feeRecipientUsdcBalanceAfter,
+      feeRecipientUsdcBalanceBefore + 500_000000n,
     );
   });
 
   it.only("fails to close bid wallwhen bid wall is not expired", async function () {
     try {
-      const feeWallet = Keypair.generate().publicKey;
-
-      await this.createTokenAccount(MAINNET_USDC, feeWallet);
-
       await bidWallClient
         .closeBidWallIx({
           bidWall,
           authority: this.payer.publicKey,
           baseMint: META,
-          feeRecipient: feeWallet,
+          feeRecipient: feeRecipient,
           quoteMint: MAINNET_USDC,
           payer: this.payer.publicKey,
         })
@@ -254,6 +240,30 @@ export default function suite() {
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "BidWallNotExpired");
+    }
+  });
+
+  it.only("fails to close bid wallwhen wrong fee recipient is provided", async function () {
+    try {
+      await this.advanceBySeconds(minDuration + 1);
+
+      const wrongFeeRecipient = Keypair.generate().publicKey;
+
+      await this.createTokenAccount(MAINNET_USDC, wrongFeeRecipient);
+
+      await bidWallClient
+        .closeBidWallIx({
+          bidWall,
+          authority: this.payer.publicKey,
+          baseMint: META,
+          feeRecipient: wrongFeeRecipient,
+          quoteMint: MAINNET_USDC,
+          payer: this.payer.publicKey,
+        })
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "FeeRecipientMismatch");
     }
   });
 }

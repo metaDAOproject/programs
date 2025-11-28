@@ -321,6 +321,11 @@ export type BidWall = {
       name: "BidWallNotExpired";
       msg: "Bid wall not expired";
     },
+    {
+      code: 6001;
+      name: "FeeRecipientMismatch";
+      msg: "Fee recipient mismatch";
+    },
   ];
 };
 
@@ -646,6 +651,11 @@ export const IDL: BidWall = {
       code: 6000,
       name: "BidWallNotExpired",
       msg: "Bid wall not expired",
+    },
+    {
+      code: 6001,
+      name: "FeeRecipientMismatch",
+      msg: "Fee recipient mismatch",
     },
   ],
 };
