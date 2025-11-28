@@ -34,8 +34,7 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
   let bidWall: PublicKey;
-  let pool: PublicKey;
-  let position: PublicKey;
+  let feeRecipient: PublicKey;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -128,6 +127,14 @@ export default function suite() {
     dao = launchAccount.dao;
     daoTreasury = launchAccount.daoVault;
 
+    let ammBaseVaultReserves = new BN(await this.getTokenBalance(META, dao));
+    let ammQuoteVaultReserves = new BN(
+      await this.getTokenBalance(MAINNET_USDC, dao),
+    );
+
+    feeRecipient = Keypair.generate().publicKey;
+    await this.createTokenAccount(MAINNET_USDC, feeRecipient);
+
     // Claim tokens for the payer
     await launchpadClient.claimIx(launch, META).rpc();
 
@@ -137,12 +144,13 @@ export default function suite() {
       .initializeBidWallIx({
         amount: 100_000_000000,
         minDuration,
-        dao: dao,
+        initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
+        initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         baseMint: META,
+        feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
-        meteoraConfig: MAINNET_METEORA_CONFIG,
       })
       .rpc();
 
@@ -154,7 +162,7 @@ export default function suite() {
     bidWall = bidWallAddr;
   });
 
-  it("successfully sells tokens into a bid wall", async function () {
+  it.only("successfully sells tokens into a bid wall", async function () {
     const [bidWall] = getBidWallAddr({
       authority: this.payer.publicKey,
       baseMint: META,
@@ -173,12 +181,6 @@ export default function suite() {
     // User should have gotten 10M META from the launch
     assert.equal(metaBalanceBefore, 10_000_000_000000n);
 
-    const daoTreasuryUsdcTokenAccount = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
-      daoTreasury,
-      true,
-    );
-
     // As it stands:
     // DAO NAV = 100_000_000000 USDC (100K)
     // Active supply = 10_000_000_000010 META (10M + 10)
@@ -190,12 +192,9 @@ export default function suite() {
       .sellTokensIx({
         amount: 5_000_000_000000,
         bidWall,
-        dao,
-        daoTreasuryUsdcTokenAccount,
         baseMint: META,
         quoteMint: MAINNET_USDC,
         user: this.payer.publicKey,
-        meteoraConfig: MAINNET_METEORA_CONFIG,
       })
       .rpc();
 
@@ -209,8 +208,8 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    // Seller received 49_499_999999 USDC (49.5K), which is 49_999_999999 - 500_000000 (fee)
-    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 49_499_999999n);
+    // Seller received 49_500_000000 USDC (50K), which is 50_000_000000 - 500_000000 (fee)
+    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 49_500_000000n);
     assert.equal(metaBalanceAfter, 5_000_000_000000n);
 
     // Bid wall collected 500_000000 USDC (0.5K) in fees

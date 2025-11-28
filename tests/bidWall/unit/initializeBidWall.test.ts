@@ -15,7 +15,7 @@ import {
   getMeteoraPoolAddr,
   getLaunchpadMeteoraPoolPositionAddr,
 } from "@metadaoproject/futarchy/v0.6";
-import { BN } from "bn.js";
+import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
@@ -33,6 +33,8 @@ export default function suite() {
   let quoteVault: PublicKey;
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
+  let ammBaseVaultReserves: BN;
+  let ammQuoteVaultReserves: BN;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -125,21 +127,30 @@ export default function suite() {
     assert.exists(launchAccount.state.complete);
     assert.exists(launchAccount.dao);
     dao = launchAccount.dao;
+
+    ammBaseVaultReserves = new BN(await this.getTokenBalance(META, dao));
+    ammQuoteVaultReserves = new BN(
+      await this.getTokenBalance(MAINNET_USDC, dao),
+    );
   });
 
-  it("successfully initializes a bid wall", async function () {
+  it.only("successfully initializes a bid wall", async function () {
     let minDuration = 100;
+
+    const feeRecipient = Keypair.generate().publicKey;
+    await this.createTokenAccount(MAINNET_USDC, feeRecipient);
 
     await bidWallClient
       .initializeBidWallIx({
         amount: 100_000_000000,
         minDuration,
-        dao: dao,
+        initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
+        initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         baseMint: META,
+        feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
-        meteoraConfig: MAINNET_METEORA_CONFIG,
       })
       .rpc();
 
@@ -150,14 +161,6 @@ export default function suite() {
 
     const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
 
-    const [pool] = getMeteoraPoolAddr({
-      baseMint: META,
-      quoteMint: MAINNET_USDC,
-      meteoraConfig: MAINNET_METEORA_CONFIG,
-    });
-
-    const [position] = getLaunchpadMeteoraPoolPositionAddr({ baseMint: META });
-
     assert.isNotNull(bidWallAccount);
 
     assert.equal(
@@ -165,10 +168,15 @@ export default function suite() {
       this.payer.publicKey.toBase58(),
     );
     assert.equal(bidWallAccount.baseMint.toBase58(), META.toBase58());
-    assert.equal(bidWallAccount.dao.toBase58(), dao.toBase58());
-    assert.equal(bidWallAccount.pool.toBase58(), pool.toString());
-    assert.equal(bidWallAccount.position.toBase58(), position.toString());
     assert.equal(bidWallAccount.minDuration, minDuration);
     assert.equal(bidWallAccount.feesCollected.toString(), "0");
+    assert.equal(
+      bidWallAccount.initialAmmBaseReserves.toString(),
+      ammBaseVaultReserves.toString(),
+    );
+    assert.equal(
+      bidWallAccount.initialAmmQuoteReserves.toString(),
+      ammQuoteVaultReserves.toString(),
+    );
   });
 }

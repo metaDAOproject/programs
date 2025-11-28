@@ -3,8 +3,6 @@ use anchor_lang::prelude::*;
 
 pub mod error;
 pub mod instructions;
-pub mod math;
-pub mod meteora_state;
 pub mod state;
 
 use instructions::*;

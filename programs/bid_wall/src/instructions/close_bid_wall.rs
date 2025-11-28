@@ -30,7 +30,7 @@ pub struct CloseBidWall<'info> {
     pub authority_usdc_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, associated_token::mint = usdc_mint, associated_token::authority = fee_recipient)]
-    pub fee_wallet_usdc_token_account: Account<'info, TokenAccount>,
+    pub fee_recipient_usdc_token_account: Account<'info, TokenAccount>,
 
     #[account(address = bid_wall.base_mint)]
     pub base_mint: Account<'info, Mint>,
@@ -66,7 +66,10 @@ impl CloseBidWall<'_> {
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
                     from: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
-                    to: ctx.accounts.fee_wallet_usdc_token_account.to_account_info(),
+                    to: ctx
+                        .accounts
+                        .fee_recipient_usdc_token_account
+                        .to_account_info(),
                     authority: ctx.accounts.bid_wall.to_account_info(),
                 },
                 &[&[

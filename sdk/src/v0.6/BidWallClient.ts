@@ -60,27 +60,25 @@ export class BidWallClient {
   initializeBidWallIx({
     amount,
     minDuration,
-    dao,
+    initialAmmBaseReserves,
+    initialAmmQuoteReserves,
     authority,
     baseMint,
+    feeRecipient,
     quoteMint = MAINNET_USDC,
     payer = this.provider.publicKey,
-    meteoraConfig = MAINNET_METEORA_CONFIG,
   }: {
     amount: number;
     minDuration: number;
-    dao: PublicKey;
+    initialAmmBaseReserves: number;
+    initialAmmQuoteReserves: number;
     authority: PublicKey;
     baseMint: PublicKey;
+    feeRecipient: PublicKey;
     quoteMint: PublicKey;
     payer: PublicKey;
-    meteoraConfig: PublicKey;
   }) {
     const [bidWall] = getBidWallAddr({ authority, baseMint });
-
-    const [pool] = getMeteoraPoolAddr({ baseMint, quoteMint, meteoraConfig });
-
-    const [position] = getLaunchpadMeteoraPoolPositionAddr({ baseMint });
 
     const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
@@ -95,18 +93,21 @@ export class BidWallClient {
     );
 
     return this.bidWallProgram.methods
-      .initializeBidWall({ amount: new BN(amount), minDuration })
+      .initializeBidWall({
+        amount: new BN(amount),
+        minDuration,
+        initialAmmBaseReserves: new BN(initialAmmBaseReserves),
+        initialAmmQuoteReserves: new BN(initialAmmQuoteReserves),
+      })
       .accounts({
         bidWall,
         payer,
         authority: authority,
-        dao: dao,
         bidWallUsdcTokenAccount,
         authorityUsdcTokenAccount,
         baseMint,
         quoteMint,
-        pool,
-        position,
+        feeRecipient,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
@@ -116,21 +117,15 @@ export class BidWallClient {
   sellTokensIx({
     amount,
     bidWall,
-    dao,
-    daoTreasuryUsdcTokenAccount,
     baseMint,
     quoteMint = MAINNET_USDC,
     user = this.provider.publicKey,
-    meteoraConfig = MAINNET_METEORA_CONFIG,
   }: {
     amount: number;
     bidWall: PublicKey;
-    dao: PublicKey;
-    daoTreasuryUsdcTokenAccount: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
     user: PublicKey;
-    meteoraConfig: PublicKey;
   }) {
     const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
@@ -147,14 +142,6 @@ export class BidWallClient {
       user,
       true,
     );
-    const feeWalletUsdcTokenAccount = getAssociatedTokenAddressSync(
-      quoteMint,
-      PublicKey.default,
-      true,
-    );
-
-    const [pool] = getMeteoraPoolAddr({ baseMint, quoteMint, meteoraConfig });
-    const [position] = getLaunchpadMeteoraPoolPositionAddr({ baseMint });
 
     return this.bidWallProgram.methods
       .sellTokens({ amountIn: new BN(amount) })
@@ -166,10 +153,6 @@ export class BidWallClient {
         bidWallUsdcTokenAccount,
         baseMint,
         quoteMint,
-        dao,
-        daoTreasuryUsdcTokenAccount,
-        pool,
-        position,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       });
@@ -200,7 +183,7 @@ export class BidWallClient {
       authority,
       true,
     );
-    const feeWalletUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const feeRecipientUsdcTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       feeRecipient,
       true,
@@ -213,7 +196,7 @@ export class BidWallClient {
       feeRecipient,
       bidWallUsdcTokenAccount,
       authorityUsdcTokenAccount,
-      feeWalletUsdcTokenAccount,
+      feeRecipientUsdcTokenAccount,
       baseMint,
       usdcMint: MAINNET_USDC,
       tokenProgram: TOKEN_PROGRAM_ID,

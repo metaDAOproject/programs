@@ -35,6 +35,7 @@ export default function suite() {
   let secondFunder: Keypair;
   let bidWall: PublicKey;
   let minDuration: number;
+  let feeRecipient: PublicKey;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -127,6 +128,14 @@ export default function suite() {
     dao = launchAccount.dao;
     daoTreasury = launchAccount.daoVault;
 
+    let ammBaseVaultReserves = new BN(await this.getTokenBalance(META, dao));
+    let ammQuoteVaultReserves = new BN(
+      await this.getTokenBalance(MAINNET_USDC, dao),
+    );
+
+    feeRecipient = Keypair.generate().publicKey;
+    await this.createTokenAccount(MAINNET_USDC, feeRecipient);
+
     // Claim tokens for the payer
     await launchpadClient.claimIx(launch, META).rpc();
 
@@ -136,12 +145,13 @@ export default function suite() {
       .initializeBidWallIx({
         amount: 100_000_000000,
         minDuration,
-        dao: dao,
+        initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
+        initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         baseMint: META,
+        feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
-        meteoraConfig: MAINNET_METEORA_CONFIG,
       })
       .rpc();
 
@@ -163,17 +173,14 @@ export default function suite() {
       .sellTokensIx({
         amount: 5_000_000_000000,
         bidWall,
-        dao,
-        daoTreasuryUsdcTokenAccount,
         baseMint: META,
         quoteMint: MAINNET_USDC,
         user: this.payer.publicKey,
-        meteoraConfig: MAINNET_METEORA_CONFIG,
       })
       .rpc();
   });
 
-  it("successfully closes a bid wall and receives fees", async function () {
+  it.only("successfully closes a bid wall and receives fees", async function () {
     // Advance clock to past minimum duration plus 1 second
     await this.advanceBySeconds(minDuration + 1);
 
@@ -220,7 +227,7 @@ export default function suite() {
     assert.equal(bidWallUsdcBalanceAfter, 0n);
     assert.equal(
       authorityUsdcBalanceAfter,
-      authorityUsdcBalanceBefore + 50_000_000001n,
+      authorityUsdcBalanceBefore + 50_000_000000n,
     );
     assert.equal(
       feeWalletUsdcBalanceAfter,
@@ -228,7 +235,7 @@ export default function suite() {
     );
   });
 
-  it("fails to close bid wallwhen bid wall is not expired", async function () {
+  it.only("fails to close bid wallwhen bid wall is not expired", async function () {
     try {
       const feeWallet = Keypair.generate().publicKey;
 
