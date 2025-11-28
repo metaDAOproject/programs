@@ -10,10 +10,7 @@ import {
   LaunchpadClient,
   BidWallClient,
   MAINNET_USDC,
-  MAINNET_METEORA_CONFIG,
   getBidWallAddr,
-  getMeteoraPoolAddr,
-  getLaunchpadMeteoraPoolPositionAddr,
 } from "@metadaoproject/futarchy/v0.6";
 import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
@@ -25,8 +22,6 @@ export default function suite() {
   let launchpadClient: LaunchpadClient;
   let bidWallClient: BidWallClient;
   let dao: PublicKey;
-  let daoTreasury: PublicKey;
-  let METAKP: Keypair;
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
@@ -93,7 +88,7 @@ export default function suite() {
     // Fund the launch
     await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
 
-    // // Advance clock and complete launch
+    // Advance clock and complete launch
     await this.advanceBySeconds(60 * 60 * 24 * 7 + 100);
     await launchpadClient.closeLaunchIx({ launch }).rpc();
     const completeLaunchTx = await launchpadClient

@@ -17,5 +17,5 @@ default = []
 
 [dependencies]
 anchor-lang = { version = "0.29.0", features = ["event-cpi", "init-if-needed"] }
-anchor-spl = { version = "0.29.0", features = ["metadata"] }
+anchor-spl = "0.29.0"
 solana-security-txt = "1.1.1"
