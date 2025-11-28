@@ -4,6 +4,7 @@ import {
   Keypair,
   AccountInfo,
   ComputeBudgetProgram,
+  SystemProgram,
 } from "@solana/web3.js";
 import {
   LaunchpadV7 as Launchpad,
@@ -30,9 +31,11 @@ import {
   MAINNET_METEORA_CONFIG,
 } from "./constants.js";
 import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
   TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import BN from "bn.js";
 import { FundingRecord, Launch } from "./types/index.js";
@@ -139,6 +142,8 @@ export class LaunchpadClient {
     teamAddress,
     launchAuthority,
     payer = this.provider.publicKey,
+    additionalTokensRecipient,
+    additionalTokensAmount,
   }: {
     tokenName: string;
     tokenSymbol: string;
@@ -155,6 +160,8 @@ export class LaunchpadClient {
     teamAddress: PublicKey;
     launchAuthority: PublicKey;
     payer?: PublicKey;
+    additionalTokensRecipient?: PublicKey;
+    additionalTokensAmount?: BN;
   }) {
     const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
     const [launchSigner] = getLaunchSignerAddr(
@@ -187,6 +194,7 @@ export class LaunchpadClient {
         performancePackageTokenAmount,
         monthsUntilInsidersCanUnlock,
         teamAddress,
+        additionalTokensAmount: additionalTokensAmount ?? new BN(0),
       })
       .accounts({
         launch,
@@ -199,6 +207,7 @@ export class LaunchpadClient {
         tokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         payer,
+        additionalTokensRecipient: additionalTokensRecipient ?? null,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
@@ -584,6 +593,41 @@ export class LaunchpadClient {
         fundingRecord,
         launchAuthority,
       });
+  }
+
+  claimAdditionalTokenAllocationIx({
+    launch,
+    baseMint,
+    additionalTokensRecipient,
+    payer = this.provider.publicKey,
+  }: {
+    launch: PublicKey;
+    baseMint: PublicKey;
+    additionalTokensRecipient: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    return this.launchpad.methods.claimAdditionalTokenAllocation().accounts({
+      launch,
+      payer,
+      launchSigner,
+      launchBaseVault: getAssociatedTokenAddressSync(
+        baseMint,
+        launchSigner,
+        true,
+      ),
+      baseMint,
+      additionalTokensRecipient,
+      additionalTokensRecipientTokenAccount: getAssociatedTokenAddressSync(
+        baseMint,
+        additionalTokensRecipient,
+        true,
+      ),
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    });
   }
 
   getLaunchAddress({ baseMint }: { baseMint: PublicKey }): PublicKey {

@@ -1,4 +1,5 @@
 pub mod claim;
+pub mod claim_additional_token_allocation;
 pub mod close_launch;
 pub mod complete_launch;
 pub mod fund;
@@ -8,6 +9,7 @@ pub mod set_funding_record_approval;
 pub mod start_launch;
 
 pub use claim::*;
+pub use claim_additional_token_allocation::*;
 pub use close_launch::*;
 pub use complete_launch::*;
 pub use fund::*;

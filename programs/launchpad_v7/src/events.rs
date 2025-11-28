@@ -103,3 +103,11 @@ pub struct LaunchCloseEvent {
     pub launch: Pubkey,
     pub new_state: LaunchState,
 }
+
+#[event]
+pub struct LaunchClaimAdditionalTokenAllocationEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub additional_tokens_amount: u64,
+    pub additional_tokens_recipient: Pubkey,
+}

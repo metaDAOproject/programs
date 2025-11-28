@@ -51,6 +51,12 @@ export type LaunchpadV7 = {
           isSigner: false;
         },
         {
+          name: "additionalTokensRecipient";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
+        },
+        {
           name: "rent";
           isMut: false;
           isSigner: false;
@@ -608,6 +614,72 @@ export type LaunchpadV7 = {
       ];
       args: [];
     },
+    {
+      name: "claimAdditionalTokenAllocation";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "launchSigner";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "additionalTokensRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "additionalTokensRecipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -818,9 +890,29 @@ export type LaunchpadV7 = {
             name: "totalApprovedAmount";
             docs: [
               "The amount of USDC that the launch authority has approved across all funders.",
-              "If zero, no approval has been given, thus this can be ignored.",
             ];
             type: "u64";
+          },
+          {
+            name: "additionalTokensAmount";
+            docs: [
+              "The amount of additional tokens to be minted on a successful launch.",
+            ];
+            type: "u64";
+          },
+          {
+            name: "additionalTokensRecipient";
+            docs: [
+              "The token account that will receive the additional tokens.",
+            ];
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "additionalTokensClaimed";
+            docs: ["Are the additional tokens claimed"];
+            type: "bool";
           },
         ];
       };
@@ -897,6 +989,10 @@ export type LaunchpadV7 = {
           {
             name: "teamAddress";
             type: "publicKey";
+          },
+          {
+            name: "additionalTokensAmount";
+            type: "u64";
           },
         ];
       };
@@ -1262,6 +1358,33 @@ export type LaunchpadV7 = {
         },
       ];
     },
+    {
+      name: "LaunchClaimAdditionalTokenAllocationEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "additionalTokensAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "additionalTokensRecipient";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -1384,6 +1507,21 @@ export type LaunchpadV7 = {
       name: "TotalApprovedAmountTooLow";
       msg: "Total approved amount must be greater than or equal to the minimum raise amount";
     },
+    {
+      code: 6024;
+      name: "InvalidAdditionalTokensRecipient";
+      msg: "Invalid additional tokens recipient - should be set if additional tokens amount is greater than 0";
+    },
+    {
+      code: 6025;
+      name: "NoAdditionalTokensRecipientSet";
+      msg: "No additional tokens recipient set";
+    },
+    {
+      code: 6026;
+      name: "AdditionalTokensAlreadyClaimed";
+      msg: "Additional tokens already claimed";
+    },
   ];
 };
 
@@ -1438,6 +1576,12 @@ export const IDL: LaunchpadV7 = {
           name: "quoteMint",
           isMut: false,
           isSigner: false,
+        },
+        {
+          name: "additionalTokensRecipient",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
         },
         {
           name: "rent",
@@ -1997,6 +2141,72 @@ export const IDL: LaunchpadV7 = {
       ],
       args: [],
     },
+    {
+      name: "claimAdditionalTokenAllocation",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "launchSigner",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "additionalTokensRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "additionalTokensRecipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -2207,9 +2417,29 @@ export const IDL: LaunchpadV7 = {
             name: "totalApprovedAmount",
             docs: [
               "The amount of USDC that the launch authority has approved across all funders.",
-              "If zero, no approval has been given, thus this can be ignored.",
             ],
             type: "u64",
+          },
+          {
+            name: "additionalTokensAmount",
+            docs: [
+              "The amount of additional tokens to be minted on a successful launch.",
+            ],
+            type: "u64",
+          },
+          {
+            name: "additionalTokensRecipient",
+            docs: [
+              "The token account that will receive the additional tokens.",
+            ],
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "additionalTokensClaimed",
+            docs: ["Are the additional tokens claimed"],
+            type: "bool",
           },
         ],
       },
@@ -2286,6 +2516,10 @@ export const IDL: LaunchpadV7 = {
           {
             name: "teamAddress",
             type: "publicKey",
+          },
+          {
+            name: "additionalTokensAmount",
+            type: "u64",
           },
         ],
       },
@@ -2651,6 +2885,33 @@ export const IDL: LaunchpadV7 = {
         },
       ],
     },
+    {
+      name: "LaunchClaimAdditionalTokenAllocationEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "additionalTokensAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "additionalTokensRecipient",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -2772,6 +3033,21 @@ export const IDL: LaunchpadV7 = {
       code: 6023,
       name: "TotalApprovedAmountTooLow",
       msg: "Total approved amount must be greater than or equal to the minimum raise amount",
+    },
+    {
+      code: 6024,
+      name: "InvalidAdditionalTokensRecipient",
+      msg: "Invalid additional tokens recipient - should be set if additional tokens amount is greater than 0",
+    },
+    {
+      code: 6025,
+      name: "NoAdditionalTokensRecipientSet",
+      msg: "No additional tokens recipient set",
+    },
+    {
+      code: 6026,
+      name: "AdditionalTokensAlreadyClaimed",
+      msg: "Additional tokens already claimed",
     },
   ],
 };

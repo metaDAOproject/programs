@@ -30,6 +30,7 @@ pub struct InitializeLaunchArgs {
     pub performance_package_token_amount: u64,
     pub months_until_insiders_can_unlock: u8,
     pub team_address: Pubkey,
+    pub additional_tokens_amount: u64,
 }
 
 #[event_cpi]
@@ -91,6 +92,9 @@ pub struct InitializeLaunch<'info> {
 
     #[account(mint::decimals = 6, address = usdc_mint::id())]
     pub quote_mint: Account<'info, Mint>,
+
+    /// CHECK: Just the recipient of the additional tokens
+    pub additional_tokens_recipient: Option<UncheckedAccount<'info>>,
 
     pub rent: Sysvar<'info, Rent>,
 
@@ -164,6 +168,19 @@ impl InitializeLaunch<'_> {
 
         require!(self.base_mint.supply == 0, LaunchpadError::SupplyNonZero);
 
+        // If we set an additional tokens amount, we must also set an additional tokens recipient
+        if args.additional_tokens_amount > 0 {
+            require!(
+                self.additional_tokens_recipient.is_some(),
+                LaunchpadError::InvalidAdditionalTokensRecipient
+            );
+        } else {
+            require!(
+                self.additional_tokens_recipient.is_none(),
+                LaunchpadError::InvalidAdditionalTokensRecipient
+            );
+        }
+
         // #[cfg(feature = "production")]
         // {
         //     let base_token_key: String = self.base_mint.key().to_string();
@@ -200,6 +217,13 @@ impl InitializeLaunch<'_> {
             months_until_insiders_can_unlock: args.months_until_insiders_can_unlock,
             team_address: args.team_address,
             total_approved_amount: 0,
+            additional_tokens_amount: args.additional_tokens_amount,
+            additional_tokens_recipient: ctx
+                .accounts
+                .additional_tokens_recipient
+                .as_ref()
+                .map(|a| a.key()),
+            additional_tokens_claimed: false,
         });
 
         let clock = Clock::get()?;
@@ -262,6 +286,7 @@ impl InitializeLaunch<'_> {
 
         // Mint total tokens to launch token vault
         // Include premine amount since complete_launch will transfer it to price-based unlock
+        // Include additional tokens amount since complete_launch will transfer it to the recipient
         token::mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -273,6 +298,7 @@ impl InitializeLaunch<'_> {
                 signer,
             ),
             args.performance_package_token_amount
+                + args.additional_tokens_amount
                 + TOKENS_TO_PARTICIPANTS
                 + TOKENS_TO_FUTARCHY_LIQUIDITY
                 + TOKENS_TO_DAMM_V2_LIQUIDITY,
