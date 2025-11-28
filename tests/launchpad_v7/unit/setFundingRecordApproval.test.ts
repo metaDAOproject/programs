@@ -137,7 +137,7 @@ export default function suite() {
   it("can set funding record approval for full, partial, and zero amounts", async function () {
     // Fully fund the launch and wait for the launch period to end
     await fundLaunch();
-    this.advanceBySeconds(secondsForLaunch + 1);
+    await this.advanceBySeconds(secondsForLaunch + 1);
 
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
@@ -218,7 +218,7 @@ export default function suite() {
   it("correctly updates the launch account total approved amount", async function () {
     // Fully fund the launch and wait for the launch period to end
     await fundLaunch();
-    this.advanceBySeconds(secondsForLaunch + 1);
+    await this.advanceBySeconds(secondsForLaunch + 1);
 
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
@@ -312,7 +312,7 @@ export default function suite() {
   it("can't set funding record approval after the launch is completed", async function () {
     // Fully fund the launch and wait for the launch period to end
     await fundLaunch();
-    this.advanceBySeconds(secondsForLaunch + 1);
+    await this.advanceBySeconds(secondsForLaunch + 1);
 
     // Close the launch
     await launchpadClient.closeLaunchIx({ launch }).rpc();
@@ -401,7 +401,7 @@ export default function suite() {
   it("can't set funding record approval to an amount greater than the committed amount", async function () {
     // Fully fund the launch and wait for the launch period to end
     await fundLaunch();
-    this.advanceBySeconds(secondsForLaunch + 1);
+    await this.advanceBySeconds(secondsForLaunch + 1);
 
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
