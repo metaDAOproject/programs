@@ -59,7 +59,7 @@ export class BidWallClient {
 
   initializeBidWallIx({
     amount,
-    minDuration,
+    durationSeconds,
     initialAmmBaseReserves,
     initialAmmQuoteReserves,
     authority,
@@ -69,7 +69,7 @@ export class BidWallClient {
     payer = this.provider.publicKey,
   }: {
     amount: number;
-    minDuration: number;
+    durationSeconds: number;
     initialAmmBaseReserves: number;
     initialAmmQuoteReserves: number;
     authority: PublicKey;
@@ -95,7 +95,7 @@ export class BidWallClient {
     return this.bidWallProgram.methods
       .initializeBidWall({
         amount: new BN(amount),
-        minDuration,
+        durationSeconds,
         initialAmmBaseReserves: new BN(initialAmmBaseReserves),
         initialAmmQuoteReserves: new BN(initialAmmQuoteReserves),
       })

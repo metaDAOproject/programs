@@ -34,7 +34,7 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
   let bidWall: PublicKey;
-  let minDuration: number;
+  let durationSeconds: number;
   let feeRecipient: PublicKey;
 
   before(async function () {
@@ -139,12 +139,12 @@ export default function suite() {
     // Claim tokens for the payer
     await launchpadClient.claimIx(launch, META).rpc();
 
-    minDuration = 100;
+    durationSeconds = 100;
 
     await bidWallClient
       .initializeBidWallIx({
         amount: 100_000_000000,
-        minDuration,
+        durationSeconds,
         initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
@@ -176,7 +176,7 @@ export default function suite() {
 
   it.only("successfully closes a bid wall and receives fees", async function () {
     // Advance clock to past minimum duration plus 1 second
-    await this.advanceBySeconds(minDuration + 1);
+    await this.advanceBySeconds(durationSeconds + 1);
 
     const authorityUsdcBalanceBefore = await this.getTokenBalance(
       MAINNET_USDC,
@@ -245,7 +245,7 @@ export default function suite() {
 
   it.only("fails to close bid wallwhen wrong fee recipient is provided", async function () {
     try {
-      await this.advanceBySeconds(minDuration + 1);
+      await this.advanceBySeconds(durationSeconds + 1);
 
       const wrongFeeRecipient = Keypair.generate().publicKey;
 

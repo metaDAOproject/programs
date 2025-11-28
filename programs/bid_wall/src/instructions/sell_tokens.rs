@@ -1,4 +1,4 @@
-use crate::{state::BidWall, usdc_mint, FEE_BPS};
+use crate::{error::BidWallError, state::BidWall, usdc_mint, FEE_BPS};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
@@ -38,6 +38,18 @@ pub struct SellTokens<'info> {
 
 impl SellTokens<'_> {
     pub fn validate(&self, _args: &SellTokensArgs) -> Result<()> {
+        let clock = Clock::get()?;
+
+        // Only allow selling tokens if the bid wall has not yet expired.
+        require_gte!(
+            self.bid_wall
+                .created_timestamp
+                .checked_add(self.bid_wall.duration_seconds as i64)
+                .unwrap(),
+            clock.unix_timestamp,
+            BidWallError::BidWallExpired
+        );
+
         Ok(())
     }
 
@@ -48,14 +60,11 @@ impl SellTokens<'_> {
             (amount_in as u128 * ctx.accounts.bid_wall.initial_amm_quote_reserves as u128
                 / ctx.accounts.bid_wall.initial_amm_base_reserves as u128) as u64;
 
-        msg!("amount_out_before_fee: {}", amount_out_before_fee);
         let amount_out_after_fee =
             ((10_000_u128 - FEE_BPS as u128) * amount_out_before_fee as u128 / 10_000_u128) as u64;
 
-        msg!("amount_out_after_fee: {}", amount_out_after_fee);
         let fee = amount_out_before_fee - amount_out_after_fee;
 
-        msg!("fee: {}", fee);
         // Burn base tokens
         token::burn(
             CpiContext::new(

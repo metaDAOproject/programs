@@ -11,7 +11,7 @@ pub struct InitializeBidWallArgs {
     pub amount: u64,
     pub initial_amm_base_reserves: u64,
     pub initial_amm_quote_reserves: u64,
-    pub min_duration: u32,
+    pub duration_seconds: u32,
 }
 
 #[event_cpi]
@@ -82,7 +82,7 @@ impl InitializeBidWall<'_> {
             authority: ctx.accounts.authority.key(),
             base_mint: ctx.accounts.base_mint.key(),
             fee_recipient: ctx.accounts.fee_recipient.key(),
-            min_duration: args.min_duration,
+            duration_seconds: args.duration_seconds,
             pda_bump: ctx.bumps.bid_wall,
         });
 

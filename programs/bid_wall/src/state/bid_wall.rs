@@ -18,7 +18,7 @@ pub struct BidWall {
     /// The recipient of the fees collected by the bid wall.
     pub fee_recipient: Pubkey,
     /// The minimum duration in seconds before the bid wall can be closed.
-    pub min_duration: u32,
+    pub duration_seconds: u32,
     /// The PDA bump.
     pub pda_bump: u8,
 }

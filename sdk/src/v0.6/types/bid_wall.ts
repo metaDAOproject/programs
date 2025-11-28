@@ -96,7 +96,7 @@ export type BidWall = {
         {
           name: "authority";
           isMut: false;
-          isSigner: true;
+          isSigner: false;
         },
         {
           name: "feeRecipient";
@@ -262,7 +262,7 @@ export type BidWall = {
             type: "publicKey";
           },
           {
-            name: "minDuration";
+            name: "durationSeconds";
             docs: [
               "The minimum duration in seconds before the bid wall can be closed.",
             ];
@@ -296,7 +296,7 @@ export type BidWall = {
             type: "u64";
           },
           {
-            name: "minDuration";
+            name: "durationSeconds";
             type: "u32";
           },
         ];
@@ -318,11 +318,16 @@ export type BidWall = {
   errors: [
     {
       code: 6000;
+      name: "BidWallExpired";
+      msg: "Bid wall expired";
+    },
+    {
+      code: 6001;
       name: "BidWallNotExpired";
       msg: "Bid wall not expired";
     },
     {
-      code: 6001;
+      code: 6002;
       name: "FeeRecipientMismatch";
       msg: "Fee recipient mismatch";
     },
@@ -427,7 +432,7 @@ export const IDL: BidWall = {
         {
           name: "authority",
           isMut: false,
-          isSigner: true,
+          isSigner: false,
         },
         {
           name: "feeRecipient",
@@ -593,7 +598,7 @@ export const IDL: BidWall = {
             type: "publicKey",
           },
           {
-            name: "minDuration",
+            name: "durationSeconds",
             docs: [
               "The minimum duration in seconds before the bid wall can be closed.",
             ],
@@ -627,7 +632,7 @@ export const IDL: BidWall = {
             type: "u64",
           },
           {
-            name: "minDuration",
+            name: "durationSeconds",
             type: "u32",
           },
         ],
@@ -649,11 +654,16 @@ export const IDL: BidWall = {
   errors: [
     {
       code: 6000,
+      name: "BidWallExpired",
+      msg: "Bid wall expired",
+    },
+    {
+      code: 6001,
       name: "BidWallNotExpired",
       msg: "Bid wall not expired",
     },
     {
-      code: 6001,
+      code: 6002,
       name: "FeeRecipientMismatch",
       msg: "Fee recipient mismatch",
     },

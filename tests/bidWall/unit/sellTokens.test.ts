@@ -138,12 +138,12 @@ export default function suite() {
     // Claim tokens for the payer
     await launchpadClient.claimIx(launch, META).rpc();
 
-    let minDuration = 100;
+    let durationSeconds = 100;
 
     await bidWallClient
       .initializeBidWallIx({
         amount: 100_000_000000,
-        minDuration,
+        durationSeconds,
         initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,

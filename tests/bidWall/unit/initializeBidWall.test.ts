@@ -135,7 +135,7 @@ export default function suite() {
   });
 
   it.only("successfully initializes a bid wall", async function () {
-    let minDuration = 100;
+    let durationSeconds = 100;
 
     const feeRecipient = Keypair.generate().publicKey;
     await this.createTokenAccount(MAINNET_USDC, feeRecipient);
@@ -143,7 +143,7 @@ export default function suite() {
     await bidWallClient
       .initializeBidWallIx({
         amount: 100_000_000000,
-        minDuration,
+        durationSeconds,
         initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
@@ -168,7 +168,7 @@ export default function suite() {
       this.payer.publicKey.toBase58(),
     );
     assert.equal(bidWallAccount.baseMint.toBase58(), META.toBase58());
-    assert.equal(bidWallAccount.minDuration, minDuration);
+    assert.equal(bidWallAccount.durationSeconds, durationSeconds);
     assert.equal(bidWallAccount.feesCollected.toString(), "0");
     assert.equal(
       bidWallAccount.initialAmmBaseReserves.toString(),
