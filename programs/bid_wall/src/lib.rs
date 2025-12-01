@@ -35,13 +35,6 @@ pub mod usdc_mint {
     declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 }
 
-// TODO: Change to a real fee wallet address
-pub mod fee_wallet {
-    use anchor_lang::prelude::declare_id;
-
-    declare_id!("11111111111111111111111111111111");
-}
-
 #[program]
 pub mod bid_wall {
     use super::*;
