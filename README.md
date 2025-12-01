@@ -9,6 +9,7 @@ Programs for unruggable capital formation and market-driven governance.
 | program           | tag  | program ID                                   |
 | ----------------- | ---- | -------------------------------------------- |
 | futarchy          | v0.6.0 | FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq |
+| launchpad_v7      | v0.7.0 | moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM |
 | launchpad         | v0.6.0 | MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV |
 | price_based_performance_package | v0.6.0 | pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS |
 | launchpad         | v0.5.0 | mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA |
