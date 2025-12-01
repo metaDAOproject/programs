@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::{error::BidWallError, state::BidWall, usdc_mint};
+use crate::{state::BidWall, usdc_mint};
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -13,6 +13,7 @@ pub struct CollectFees<'info> {
     pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: used for constraints
+    #[account(address = bid_wall.fee_recipient)]
     pub fee_recipient: UncheckedAccount<'info>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = fee_recipient)]
@@ -27,12 +28,6 @@ pub struct CollectFees<'info> {
 
 impl CollectFees<'_> {
     pub fn validate(&self) -> Result<()> {
-        require_keys_eq!(
-            self.bid_wall.fee_recipient,
-            self.fee_recipient.key(),
-            BidWallError::FeeRecipientMismatch
-        );
-
         Ok(())
     }
 

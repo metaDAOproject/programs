@@ -36,6 +36,16 @@ export type BidWall = {
           isSigner: false;
         },
         {
+          name: "daoTreasury";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "daoTreasuryUsdcTokenAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "baseMint";
           isMut: false;
           isSigner: false;
@@ -180,6 +190,16 @@ export type BidWall = {
           isSigner: false;
         },
         {
+          name: "daoTreasury";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "daoTreasuryUsdcTokenAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "baseMint";
           isMut: true;
           isSigner: false;
@@ -295,6 +315,16 @@ export type BidWall = {
           {
             name: "initialAmmQuoteReserves";
             docs: ["The initial quote (USDC) reserves of the Futarchy AMM."];
+            type: "u64";
+          },
+          {
+            name: "daoTreasury";
+            docs: ["The DAO treasury address."];
+            type: "publicKey";
+          },
+          {
+            name: "initialDaoTreasuryQuoteAmount";
+            docs: ["The initial amount of quote token in the DAO treasury."];
             type: "u64";
           },
           {
@@ -420,6 +450,16 @@ export const IDL: BidWall = {
         {
           name: "authorityUsdcTokenAccount",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "daoTreasury",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "daoTreasuryUsdcTokenAccount",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -567,6 +607,16 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
+          name: "daoTreasury",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "daoTreasuryUsdcTokenAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "baseMint",
           isMut: true,
           isSigner: false,
@@ -682,6 +732,16 @@ export const IDL: BidWall = {
           {
             name: "initialAmmQuoteReserves",
             docs: ["The initial quote (USDC) reserves of the Futarchy AMM."],
+            type: "u64",
+          },
+          {
+            name: "daoTreasury",
+            docs: ["The DAO treasury address."],
+            type: "publicKey",
+          },
+          {
+            name: "initialDaoTreasuryQuoteAmount",
+            docs: ["The initial amount of quote token in the DAO treasury."],
             type: "u64",
           },
           {

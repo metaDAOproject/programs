@@ -26,6 +26,13 @@ pub struct SellTokens<'info> {
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
     pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
 
+    /// CHECK: used for constraints
+    #[account(address = bid_wall.dao_treasury)]
+    pub dao_treasury: AccountInfo<'info>,
+
+    #[account(associated_token::mint = quote_mint, associated_token::authority = dao_treasury)]
+    pub dao_treasury_usdc_token_account: Account<'info, TokenAccount>,
+
     #[account(mut)]
     pub base_mint: Account<'info, Mint>,
 
@@ -56,9 +63,14 @@ impl SellTokens<'_> {
     pub fn handle(ctx: Context<Self>, args: SellTokensArgs) -> Result<()> {
         let SellTokensArgs { amount_in } = args;
 
-        let amount_out_before_fee =
-            (amount_in as u128 * ctx.accounts.bid_wall.initial_amm_quote_reserves as u128
-                / ctx.accounts.bid_wall.initial_amm_base_reserves as u128) as u64;
+        let amount_out_before_vault_adjustment: u128 = amount_in as u128
+            * ctx.accounts.bid_wall.initial_amm_quote_reserves as u128
+            / ctx.accounts.bid_wall.initial_amm_base_reserves as u128;
+
+        let amount_out_before_fee = (amount_out_before_vault_adjustment
+            * ctx.accounts.dao_treasury_usdc_token_account.amount as u128
+            / ctx.accounts.bid_wall.initial_dao_treasury_quote_amount as u128)
+            as u64;
 
         let amount_out_after_fee =
             ((10_000_u128 - FEE_BPS as u128) * amount_out_before_fee as u128 / 10_000_u128) as u64;

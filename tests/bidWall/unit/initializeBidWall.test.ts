@@ -135,6 +135,8 @@ export default function suite() {
     const feeRecipient = Keypair.generate().publicKey;
     await this.createTokenAccount(MAINNET_USDC, feeRecipient);
 
+    let launchAccount = await this.launchpad.fetchLaunch(launch);
+
     await bidWallClient
       .initializeBidWallIx({
         amount: 100_000_000000,
@@ -142,6 +144,7 @@ export default function suite() {
         initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
+        daoTreasury: launchAccount.daoVault,
         baseMint: META,
         feeRecipient,
         quoteMint: MAINNET_USDC,

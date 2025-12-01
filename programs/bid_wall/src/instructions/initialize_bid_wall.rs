@@ -41,6 +41,12 @@ pub struct InitializeBidWall<'info> {
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = authority)]
     pub authority_usdc_token_account: Account<'info, TokenAccount>,
 
+    /// CHECK: Used for constraints
+    pub dao_treasury: AccountInfo<'info>,
+
+    #[account(associated_token::mint = quote_mint, associated_token::authority = dao_treasury)]
+    pub dao_treasury_usdc_token_account: Account<'info, TokenAccount>,
+
     pub base_mint: Account<'info, Mint>,
 
     #[account(address = usdc_mint::id())]
@@ -79,6 +85,8 @@ impl InitializeBidWall<'_> {
             fees_collected: 0,
             initial_amm_base_reserves: args.initial_amm_base_reserves,
             initial_amm_quote_reserves: args.initial_amm_quote_reserves,
+            dao_treasury: ctx.accounts.dao_treasury.key(),
+            initial_dao_treasury_quote_amount: ctx.accounts.dao_treasury_usdc_token_account.amount,
             authority: ctx.accounts.authority.key(),
             base_mint: ctx.accounts.base_mint.key(),
             fee_recipient: ctx.accounts.fee_recipient.key(),

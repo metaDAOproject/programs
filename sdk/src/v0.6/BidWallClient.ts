@@ -52,6 +52,7 @@ export class BidWallClient {
     durationSeconds,
     initialAmmBaseReserves,
     initialAmmQuoteReserves,
+    daoTreasury,
     authority,
     baseMint,
     feeRecipient,
@@ -63,6 +64,7 @@ export class BidWallClient {
     initialAmmBaseReserves: number;
     initialAmmQuoteReserves: number;
     authority: PublicKey;
+    daoTreasury: PublicKey;
     baseMint: PublicKey;
     feeRecipient: PublicKey;
     quoteMint: PublicKey;
@@ -82,6 +84,12 @@ export class BidWallClient {
       true,
     );
 
+    const daoTreasuryUsdcTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      daoTreasury,
+      true,
+    );
+
     return this.bidWallProgram.methods
       .initializeBidWall({
         amount: new BN(amount),
@@ -98,6 +106,8 @@ export class BidWallClient {
         baseMint,
         quoteMint,
         feeRecipient,
+        daoTreasury,
+        daoTreasuryUsdcTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
@@ -108,12 +118,14 @@ export class BidWallClient {
     amount,
     bidWall,
     baseMint,
+    daoTreasury,
     quoteMint = MAINNET_USDC,
     user = this.provider.publicKey,
   }: {
     amount: number;
     bidWall: PublicKey;
     baseMint: PublicKey;
+    daoTreasury: PublicKey;
     quoteMint: PublicKey;
     user: PublicKey;
   }) {
@@ -122,14 +134,22 @@ export class BidWallClient {
       bidWall,
       true,
     );
+
     const userTokenAccount = getAssociatedTokenAddressSync(
       baseMint,
       user,
       true,
     );
+
     const userUsdcTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       user,
+      true,
+    );
+
+    const daoTreasuryUsdcTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      daoTreasury,
       true,
     );
 
@@ -143,6 +163,8 @@ export class BidWallClient {
         bidWallUsdcTokenAccount,
         baseMint,
         quoteMint,
+        daoTreasury,
+        daoTreasuryUsdcTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       });

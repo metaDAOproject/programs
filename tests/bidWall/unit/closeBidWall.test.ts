@@ -144,6 +144,7 @@ export default function suite() {
         initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
+        daoTreasury: daoTreasury,
         baseMint: META,
         feeRecipient,
         quoteMint: MAINNET_USDC,
@@ -164,6 +165,7 @@ export default function suite() {
         amount: 5_000_000_000000,
         bidWall,
         baseMint: META,
+        daoTreasury: daoTreasury,
         quoteMint: MAINNET_USDC,
         user: this.payer.publicKey,
       })
@@ -259,7 +261,7 @@ export default function suite() {
         .rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
-      assert.include(e.message, "FeeRecipientMismatch");
+      assert.include(e.message, "ConstraintAddress");
     }
   });
 }

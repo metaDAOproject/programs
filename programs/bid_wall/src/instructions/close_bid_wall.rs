@@ -18,10 +18,12 @@ pub struct CloseBidWall<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// CHECK: used for constraints, anyone can close the bid wall once it expires
+    /// CHECK: used for constraints
+    #[account(address = bid_wall.authority)]
     pub authority: UncheckedAccount<'info>,
 
     /// CHECK: used for constraints
+    #[account(address = bid_wall.fee_recipient)]
     pub fee_recipient: UncheckedAccount<'info>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
@@ -55,12 +57,6 @@ impl CloseBidWall<'_> {
                 .checked_add(self.bid_wall.duration_seconds as i64)
                 .unwrap(),
             BidWallError::BidWallNotExpired
-        );
-
-        require_keys_eq!(
-            self.bid_wall.fee_recipient,
-            self.fee_recipient.key(),
-            BidWallError::FeeRecipientMismatch
         );
 
         Ok(())
