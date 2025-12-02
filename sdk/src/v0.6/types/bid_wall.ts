@@ -290,6 +290,77 @@ export type BidWall = {
       ];
       args: [];
     },
+    {
+      name: "cancelBidWall";
+      accounts: [
+        {
+          name: "bidWall";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "authority";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "feeRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "bidWallUsdcTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "authorityUsdcTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "feeRecipientUsdcTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -677,6 +748,77 @@ export const IDL: BidWall = {
         {
           name: "feeRecipientUsdcTokenAccount",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "cancelBidWall",
+      accounts: [
+        {
+          name: "bidWall",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "authority",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "feeRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "bidWallUsdcTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "authorityUsdcTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "feeRecipientUsdcTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
           isSigner: false,
         },
         {

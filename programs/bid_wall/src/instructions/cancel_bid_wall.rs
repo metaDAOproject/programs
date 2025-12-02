@@ -1,11 +1,11 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::{error::BidWallError, state::BidWall, usdc_mint};
+use crate::{state::BidWall, usdc_mint};
 
 #[event_cpi]
 #[derive(Accounts)]
-pub struct CloseBidWall<'info> {
+pub struct CancelBidWall<'info> {
     #[account(
         mut,
         close=payer,
@@ -18,9 +18,9 @@ pub struct CloseBidWall<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// CHECK: used for constraints
+    // Authority must sign to prevent unauthorized bid wall cancellation on their behalf
     #[account(address = bid_wall.authority)]
-    pub authority: UncheckedAccount<'info>,
+    pub authority: Signer<'info>,
 
     /// CHECK: used for constraints
     #[account(address = bid_wall.fee_recipient)]
@@ -45,21 +45,9 @@ pub struct CloseBidWall<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// TODO: Theoretically, we could merge the logic of this instruction with the cancel bid wall instruction.
-impl CloseBidWall<'_> {
+// TODO: Theoretically, we could merge the logic of this instruction with the close bid wall instruction.
+impl CancelBidWall<'_> {
     pub fn validate(&self) -> Result<()> {
-        let clock = Clock::get()?;
-
-        // Only allow closing the bid wall if it has been open for at least the minimum duration.
-        require_gt!(
-            clock.unix_timestamp,
-            self.bid_wall
-                .created_timestamp
-                .checked_add(self.bid_wall.duration_seconds as i64)
-                .unwrap(),
-            BidWallError::BidWallNotExpired
-        );
-
         Ok(())
     }
 

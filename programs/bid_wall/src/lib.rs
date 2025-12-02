@@ -61,4 +61,9 @@ pub mod bid_wall {
     pub fn collect_fees(ctx: Context<CollectFees>) -> Result<()> {
         CollectFees::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn cancel_bid_wall(ctx: Context<CancelBidWall>) -> Result<()> {
+        CancelBidWall::handle(ctx)
+    }
 }
