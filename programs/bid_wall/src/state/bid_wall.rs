@@ -13,7 +13,7 @@ pub struct BidWall {
     pub initial_amm_quote_reserves: u64,
     /// The DAO treasury address.
     pub dao_treasury: Pubkey,
-    /// The initial amount of quote token in the DAO treasury.
+    /// The initial amount of quote tokens in the DAO treasury.
     pub initial_dao_treasury_quote_amount: u64,
     /// The authority of the bid wall.
     pub authority: Pubkey,

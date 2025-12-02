@@ -324,7 +324,7 @@ export type BidWall = {
           },
           {
             name: "initialDaoTreasuryQuoteAmount";
-            docs: ["The initial amount of quote token in the DAO treasury."];
+            docs: ["The initial amount of quote tokens in the DAO treasury."];
             type: "u64";
           },
           {
@@ -741,7 +741,7 @@ export const IDL: BidWall = {
           },
           {
             name: "initialDaoTreasuryQuoteAmount",
-            docs: ["The initial amount of quote token in the DAO treasury."],
+            docs: ["The initial amount of quote tokens in the DAO treasury."],
             type: "u64",
           },
           {

@@ -176,5 +176,14 @@ export default function suite() {
       bidWallAccount.initialAmmQuoteReserves.toString(),
       ammQuoteVaultReserves.toString(),
     );
+    assert.equal(
+      bidWallAccount.daoTreasury.toBase58(),
+      launchAccount.daoVault.toBase58(),
+    );
+    // 20_000_000000 quote tokens (20% of 100_000_000000 raise) were supplied to Futarchy AMM liquidity
+    assert.equal(
+      bidWallAccount.initialDaoTreasuryQuoteAmount.toString(),
+      new BN(80_000_000000).toString(),
+    );
   });
 }

@@ -79,6 +79,11 @@ impl InitializeBidWall<'_> {
             args.amount,
         )?;
 
+        // Reload DAO treasury USDC token account to ensure latest balance is present
+        // This is necessary because the authority quote token account could be the same as the DAO treasury USDC token account,
+        // and transfer CPIs don't update the balance in the deserialized ATA struct of the caller in Anchor.
+        ctx.accounts.dao_treasury_usdc_token_account.reload()?;
+
         // Initialize bid wall account
         ctx.accounts.bid_wall.set_inner(BidWall {
             created_timestamp: Clock::get()?.unix_timestamp,
