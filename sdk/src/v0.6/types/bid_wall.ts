@@ -389,14 +389,14 @@ export type BidWall = {
             type: "u64";
           },
           {
-            name: "daoTreasury";
-            docs: ["The DAO treasury address."];
-            type: "publicKey";
-          },
-          {
             name: "initialDaoTreasuryQuoteAmount";
             docs: ["The initial amount of quote tokens in the DAO treasury."];
             type: "u64";
+          },
+          {
+            name: "daoTreasury";
+            docs: ["The DAO treasury address."];
+            type: "publicKey";
           },
           {
             name: "authority";
@@ -877,14 +877,14 @@ export const IDL: BidWall = {
             type: "u64",
           },
           {
-            name: "daoTreasury",
-            docs: ["The DAO treasury address."],
-            type: "publicKey",
-          },
-          {
             name: "initialDaoTreasuryQuoteAmount",
             docs: ["The initial amount of quote tokens in the DAO treasury."],
             type: "u64",
+          },
+          {
+            name: "daoTreasury",
+            docs: ["The DAO treasury address."],
+            type: "publicKey",
           },
           {
             name: "authority",
