@@ -1522,6 +1522,11 @@ export type LaunchpadV7 = {
       name: "AdditionalTokensAlreadyClaimed";
       msg: "Additional tokens already claimed";
     },
+    {
+      code: 6027;
+      name: "FundingRecordApprovalPeriodOver";
+      msg: "Funding record approval period is over";
+    },
   ];
 };
 
@@ -3048,6 +3053,11 @@ export const IDL: LaunchpadV7 = {
       code: 6026,
       name: "AdditionalTokensAlreadyClaimed",
       msg: "Additional tokens already claimed",
+    },
+    {
+      code: 6027,
+      name: "FundingRecordApprovalPeriodOver",
+      msg: "Funding record approval period is over",
     },
   ],
 };

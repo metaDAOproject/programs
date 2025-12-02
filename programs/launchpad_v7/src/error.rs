@@ -56,4 +56,6 @@ pub enum LaunchpadError {
     NoAdditionalTokensRecipientSet,
     #[msg("Additional tokens already claimed")]
     AdditionalTokensAlreadyClaimed,
+    #[msg("Funding record approval period is over")]
+    FundingRecordApprovalPeriodOver,
 }
