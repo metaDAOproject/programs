@@ -102,6 +102,10 @@ export type LaunchRefundedEvent =
 export type LaunchStartedEvent =
   IdlEvents<LaunchpadProgram>["LaunchStartedEvent"];
 export type LaunchCloseEvent = IdlEvents<LaunchpadProgram>["LaunchCloseEvent"];
+export type FundingRecordApprovalSetEvent =
+  IdlEvents<LaunchpadProgram>["FundingRecordApprovalSetEvent"];
+export type LaunchClaimAdditionalTokenAllocationEvent =
+  IdlEvents<LaunchpadProgram>["LaunchClaimAdditionalTokenAllocationEvent"];
 export type LaunchpadEvent =
   | LaunchClaimEvent
   | LaunchCompletedEvent
@@ -109,7 +113,9 @@ export type LaunchpadEvent =
   | LaunchInitializedEvent
   | LaunchRefundedEvent
   | LaunchStartedEvent
-  | LaunchCloseEvent;
+  | LaunchCloseEvent
+  | FundingRecordApprovalSetEvent
+  | LaunchClaimAdditionalTokenAllocationEvent;
 
 export type CollectFeesEvent = IdlEvents<FutarchyProgram>["CollectFeesEvent"];
 export type InitializeDaoEvent =
