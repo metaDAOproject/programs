@@ -10,7 +10,11 @@ import {
   toWeb3JsPublicKey,
 } from "@metaplex-foundation/umi-web3js-adapters";
 import {
+  BID_WALL_PROGRAM_ID,
+  DAMM_V2_PROGRAM_ID,
   DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
+  MAINNET_METEORA_CONFIG,
+  MAINNET_USDC,
   MPL_TOKEN_METADATA_PROGRAM_ID,
   PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
@@ -236,3 +240,84 @@ export const getChangeRequestAddr = ({
     programId,
   );
 };
+
+export const getBidWallAddr = ({
+  programId = BID_WALL_PROGRAM_ID,
+  baseMint,
+  creator,
+  nonce,
+}: {
+  programId?: PublicKey;
+  baseMint: PublicKey;
+  creator: PublicKey;
+  nonce: BN;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("bid_wall"),
+      baseMint.toBuffer(),
+      creator.toBuffer(),
+      nonce.toArrayLike(Buffer, "le", 8),
+    ],
+    programId,
+  );
+};
+
+export const getMeteoraPoolAddr = ({
+  baseMint,
+  quoteMint = MAINNET_USDC,
+  meteoraConfig = MAINNET_METEORA_CONFIG,
+}: {
+  baseMint: PublicKey;
+  quoteMint: PublicKey;
+  meteoraConfig: PublicKey;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("pool"),
+      meteoraConfig.toBuffer(),
+      getFirstKey(baseMint, quoteMint),
+      getSecondKey(baseMint, quoteMint),
+    ],
+    DAMM_V2_PROGRAM_ID,
+  );
+};
+
+export const getLaunchpadMeteoraPoolPositionAddr = ({
+  baseMint,
+}: {
+  baseMint: PublicKey;
+}) => {
+  // TODO - refactor together with LaunchpadClient
+  const [positionNftMint] = PublicKey.findProgramAddressSync(
+    [Buffer.from("position_nft_mint"), baseMint.toBuffer()],
+    LAUNCHPAD_PROGRAM_ID,
+  );
+
+  // TODO - refactor together with LaunchpadClient
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("position"), positionNftMint.toBuffer()],
+    DAMM_V2_PROGRAM_ID,
+  );
+};
+
+function getFirstKey(key1: PublicKey, key2: PublicKey) {
+  const buf1 = key1.toBuffer();
+  const buf2 = key2.toBuffer();
+  // Buf1 > buf2
+  if (Buffer.compare(buf1, buf2) === 1) {
+    return buf1;
+  }
+  return buf2;
+}
+
+// TODO - refactor together with LaunchpadClient
+function getSecondKey(key1: PublicKey, key2: PublicKey) {
+  const buf1 = key1.toBuffer();
+  const buf2 = key2.toBuffer();
+  // Buf1 > buf2
+  if (Buffer.compare(buf1, buf2) === 1) {
+    return buf2;
+  }
+  return buf1;
+}

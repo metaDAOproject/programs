@@ -6,6 +6,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
+bid_wall = "WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx"
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 futarchy = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
 launchpad = "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
