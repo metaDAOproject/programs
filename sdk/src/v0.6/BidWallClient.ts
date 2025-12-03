@@ -52,6 +52,8 @@ export class BidWallClient {
     durationSeconds,
     initialAmmBaseReserves,
     initialAmmQuoteReserves,
+    initialNav,
+    initialDaoTreasuryQuoteAmount,
     daoTreasury,
     authority,
     baseMint,
@@ -63,6 +65,8 @@ export class BidWallClient {
     durationSeconds: number;
     initialAmmBaseReserves: number;
     initialAmmQuoteReserves: number;
+    initialNav: number;
+    initialDaoTreasuryQuoteAmount: number;
     authority: PublicKey;
     daoTreasury: PublicKey;
     baseMint: PublicKey;
@@ -96,6 +100,8 @@ export class BidWallClient {
         durationSeconds,
         initialAmmBaseReserves: new BN(initialAmmBaseReserves),
         initialAmmQuoteReserves: new BN(initialAmmQuoteReserves),
+        initialNav: new BN(initialNav),
+        initialDaoTreasuryQuoteAmount: new BN(initialDaoTreasuryQuoteAmount),
       })
       .accounts({
         bidWall,
@@ -107,7 +113,6 @@ export class BidWallClient {
         quoteMint,
         feeRecipient,
         daoTreasury,
-        daoTreasuryUsdcTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,

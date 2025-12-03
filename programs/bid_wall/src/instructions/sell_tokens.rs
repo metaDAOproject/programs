@@ -67,10 +67,12 @@ impl SellTokens<'_> {
             * ctx.accounts.bid_wall.initial_amm_quote_reserves as u128
             / ctx.accounts.bid_wall.initial_amm_base_reserves as u128;
 
-        let amount_out_before_fee = (amount_out_before_vault_adjustment
-            * ctx.accounts.dao_treasury_usdc_token_account.amount as u128
-            / ctx.accounts.bid_wall.initial_dao_treasury_quote_amount as u128)
-            as u64;
+        let current_nav = ctx.accounts.bid_wall.initial_nav
+            + ctx.accounts.dao_treasury_usdc_token_account.amount
+            - ctx.accounts.bid_wall.initial_dao_treasury_quote_amount;
+
+        let amount_out_before_fee = (amount_out_before_vault_adjustment * current_nav as u128
+            / ctx.accounts.bid_wall.initial_nav as u128) as u64;
 
         let amount_out_after_fee =
             ((10_000_u128 - FEE_BPS as u128) * amount_out_before_fee as u128 / 10_000_u128) as u64;

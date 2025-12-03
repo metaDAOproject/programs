@@ -9,8 +9,6 @@ pub struct CancelBidWall<'info> {
     #[account(
         mut,
         close=payer,
-        seeds = [b"bid_wall", base_mint.key().as_ref(), authority.key().as_ref()],
-        bump,
         has_one = authority
     )]
     pub bid_wall: Account<'info, BidWall>,

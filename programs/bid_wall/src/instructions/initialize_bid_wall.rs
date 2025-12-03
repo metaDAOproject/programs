@@ -11,6 +11,8 @@ pub struct InitializeBidWallArgs {
     pub amount: u64,
     pub initial_amm_base_reserves: u64,
     pub initial_amm_quote_reserves: u64,
+    pub initial_nav: u64,
+    pub initial_dao_treasury_quote_amount: u64,
     pub duration_seconds: u32,
 }
 
@@ -44,9 +46,6 @@ pub struct InitializeBidWall<'info> {
     /// CHECK: Used for constraints
     pub dao_treasury: AccountInfo<'info>,
 
-    #[account(associated_token::mint = quote_mint, associated_token::authority = dao_treasury)]
-    pub dao_treasury_usdc_token_account: Account<'info, TokenAccount>,
-
     pub base_mint: Account<'info, Mint>,
 
     #[account(address = usdc_mint::id())]
@@ -79,18 +78,14 @@ impl InitializeBidWall<'_> {
             args.amount,
         )?;
 
-        // Reload DAO treasury USDC token account to ensure latest balance is present
-        // This is necessary because the authority quote token account could be the same as the DAO treasury USDC token account,
-        // and transfer CPIs don't update the balance in the deserialized ATA struct of the caller in Anchor.
-        ctx.accounts.dao_treasury_usdc_token_account.reload()?;
-
         // Initialize bid wall account
         ctx.accounts.bid_wall.set_inner(BidWall {
             created_timestamp: Clock::get()?.unix_timestamp,
             fees_collected: 0,
             initial_amm_base_reserves: args.initial_amm_base_reserves,
             initial_amm_quote_reserves: args.initial_amm_quote_reserves,
-            initial_dao_treasury_quote_amount: ctx.accounts.dao_treasury_usdc_token_account.amount,
+            initial_dao_treasury_quote_amount: args.initial_dao_treasury_quote_amount,
+            initial_nav: args.initial_nav,
             dao_treasury: ctx.accounts.dao_treasury.key(),
             authority: ctx.accounts.authority.key(),
             base_mint: ctx.accounts.base_mint.key(),

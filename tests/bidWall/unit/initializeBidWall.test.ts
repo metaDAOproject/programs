@@ -149,6 +149,8 @@ export default function suite() {
         feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
+        initialNav: 100_000_000000, // Final raise amount
+        initialDaoTreasuryQuoteAmount: 80_000_000000, // 20% of final raise amount goes to Futarchy AMM
       })
       .rpc();
 

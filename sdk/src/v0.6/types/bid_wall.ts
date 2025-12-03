@@ -41,11 +41,6 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "daoTreasuryUsdcTokenAccount";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "baseMint";
           isMut: false;
           isSigner: false;
@@ -394,6 +389,13 @@ export type BidWall = {
             type: "u64";
           },
           {
+            name: "initialNav";
+            docs: [
+              "The total raise amount of the launch this bid wall is associated with.",
+            ];
+            type: "u64";
+          },
+          {
             name: "daoTreasury";
             docs: ["The DAO treasury address."];
             type: "publicKey";
@@ -445,6 +447,14 @@ export type BidWall = {
           },
           {
             name: "initialAmmQuoteReserves";
+            type: "u64";
+          },
+          {
+            name: "initialNav";
+            type: "u64";
+          },
+          {
+            name: "initialDaoTreasuryQuoteAmount";
             type: "u64";
           },
           {
@@ -525,11 +535,6 @@ export const IDL: BidWall = {
         },
         {
           name: "daoTreasury",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "daoTreasuryUsdcTokenAccount",
           isMut: false,
           isSigner: false,
         },
@@ -882,6 +887,13 @@ export const IDL: BidWall = {
             type: "u64",
           },
           {
+            name: "initialNav",
+            docs: [
+              "The total raise amount of the launch this bid wall is associated with.",
+            ],
+            type: "u64",
+          },
+          {
             name: "daoTreasury",
             docs: ["The DAO treasury address."],
             type: "publicKey",
@@ -933,6 +945,14 @@ export const IDL: BidWall = {
           },
           {
             name: "initialAmmQuoteReserves",
+            type: "u64",
+          },
+          {
+            name: "initialNav",
+            type: "u64",
+          },
+          {
+            name: "initialDaoTreasuryQuoteAmount",
             type: "u64",
           },
           {

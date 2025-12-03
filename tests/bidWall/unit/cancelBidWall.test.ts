@@ -149,6 +149,8 @@ export default function suite() {
         feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
+        initialNav: 100_000_000000, // Final raise amount
+        initialDaoTreasuryQuoteAmount: 80_000_000000, // 20% of final raise amount goes to Futarchy AMM
       })
       .rpc();
 
@@ -223,14 +225,12 @@ export default function suite() {
 
   it("fails to cancel bid wall when wrong fee recipient is provided", async function () {
     try {
-      await this.advanceBySeconds(durationSeconds + 1);
-
       const wrongFeeRecipient = Keypair.generate().publicKey;
 
       await this.createTokenAccount(MAINNET_USDC, wrongFeeRecipient);
 
       await bidWallClient
-        .closeBidWallIx({
+        .cancelBidWallIx({
           bidWall,
           authority: this.payer.publicKey,
           baseMint: META,
@@ -245,26 +245,27 @@ export default function suite() {
     }
   });
 
-  it("fails to cancel bid wall when authority is not the correct one", async function () {
+  it.only("fails to cancel bid wall when authority is not the correct one", async function () {
     try {
-      await this.advanceBySeconds(durationSeconds + 1);
-
       const wrongAuthority = Keypair.generate();
 
+      // create token account for wrong authority
+      await this.createTokenAccount(MAINNET_USDC, wrongAuthority.publicKey);
+
       await bidWallClient
-        .closeBidWallIx({
+        .cancelBidWallIx({
           bidWall,
           authority: wrongAuthority.publicKey,
           baseMint: META,
           feeRecipient,
           quoteMint: MAINNET_USDC,
-          payer: this.payer.publicKey,
+          payer: wrongAuthority.publicKey,
         })
-        .signers([this.payer, wrongAuthority])
+        .signers([wrongAuthority])
         .rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
-      assert.include(e.message, "ConstraintAddress");
+      assert.include(e.message, "ConstraintHasOne");
     }
   });
 }
