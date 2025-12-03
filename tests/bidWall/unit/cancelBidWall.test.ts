@@ -144,6 +144,8 @@ export default function suite() {
         initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
+        creator: this.payer.publicKey,
+        nonce: new BN(0),
         daoTreasury: daoTreasury,
         baseMint: META,
         feeRecipient,
@@ -155,8 +157,9 @@ export default function suite() {
       .rpc();
 
     const [bidWallAddr] = getBidWallAddr({
-      authority: this.payer.publicKey,
+      creator: this.payer.publicKey,
       baseMint: META,
+      nonce: new BN(0),
     });
 
     bidWall = bidWallAddr;

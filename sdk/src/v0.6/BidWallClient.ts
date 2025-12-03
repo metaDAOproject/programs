@@ -2,7 +2,7 @@ import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
 import { BID_WALL_PROGRAM_ID, MAINNET_USDC } from "./constants.js";
 import { BidWallProgram, BidWallIDL, BidWall } from "./types/index.js";
-import { BN } from "bn.js";
+import BN from "bn.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
@@ -57,6 +57,8 @@ export class BidWallClient {
     daoTreasury,
     authority,
     baseMint,
+    creator = this.provider.publicKey,
+    nonce = new BN(0),
     feeRecipient,
     quoteMint = MAINNET_USDC,
     payer = this.provider.publicKey,
@@ -67,14 +69,16 @@ export class BidWallClient {
     initialAmmQuoteReserves: number;
     initialNav: number;
     initialDaoTreasuryQuoteAmount: number;
-    authority: PublicKey;
     daoTreasury: PublicKey;
+    creator?: PublicKey;
+    nonce?: BN;
+    authority?: PublicKey;
     baseMint: PublicKey;
     feeRecipient: PublicKey;
-    quoteMint: PublicKey;
-    payer: PublicKey;
+    quoteMint?: PublicKey;
+    payer?: PublicKey;
   }) {
-    const [bidWall] = getBidWallAddr({ authority, baseMint });
+    const [bidWall] = getBidWallAddr({ creator, baseMint, nonce });
 
     const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
@@ -82,15 +86,16 @@ export class BidWallClient {
       true,
     );
 
-    const authorityQuoteTokenAccount = getAssociatedTokenAddressSync(
+    const creatorQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
-      authority,
+      creator,
       true,
     );
 
     return this.bidWallProgram.methods
       .initializeBidWall({
         amount: new BN(amount),
+        nonce,
         durationSeconds,
         initialAmmBaseReserves: new BN(initialAmmBaseReserves),
         initialAmmQuoteReserves: new BN(initialAmmQuoteReserves),
@@ -100,9 +105,10 @@ export class BidWallClient {
       .accounts({
         bidWall,
         payer,
-        authority: authority,
         bidWallQuoteTokenAccount,
-        authorityQuoteTokenAccount,
+        creator,
+        creatorQuoteTokenAccount,
+        authority: authority ?? creator,
         baseMint,
         quoteMint,
         feeRecipient,

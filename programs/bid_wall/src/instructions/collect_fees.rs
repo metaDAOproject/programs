@@ -47,7 +47,8 @@ impl CollectFees<'_> {
                 &[&[
                     b"bid_wall",
                     ctx.accounts.bid_wall.base_mint.as_ref(),
-                    ctx.accounts.bid_wall.authority.as_ref(),
+                    ctx.accounts.bid_wall.creator.as_ref(),
+                    ctx.accounts.bid_wall.nonce.to_le_bytes().as_ref(),
                     &[ctx.accounts.bid_wall.pda_bump],
                 ]],
             ),

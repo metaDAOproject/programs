@@ -144,6 +144,8 @@ export default function suite() {
         initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
+        creator: this.payer.publicKey,
+        nonce: new BN(0),
         daoTreasury: daoTreasury,
         baseMint: META,
         feeRecipient,
@@ -155,7 +157,8 @@ export default function suite() {
       .rpc();
 
     const [bidWallAddr] = getBidWallAddr({
-      authority: this.payer.publicKey,
+      creator: this.payer.publicKey,
+      nonce: new BN(0),
       baseMint: META,
     });
 
@@ -163,11 +166,6 @@ export default function suite() {
   });
 
   it("successfully sells tokens into a bid wall", async function () {
-    const [bidWall] = getBidWallAddr({
-      authority: this.payer.publicKey,
-      baseMint: META,
-    });
-
     const usdcBalanceBefore = await this.getTokenBalance(
       MAINNET_USDC,
       this.payer.publicKey,

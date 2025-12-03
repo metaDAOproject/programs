@@ -21,9 +21,14 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "authority";
+          name: "creator";
           isMut: false;
           isSigner: true;
+        },
+        {
+          name: "authority";
+          isMut: false;
+          isSigner: false;
         },
         {
           name: "bidWallQuoteTokenAccount";
@@ -31,7 +36,7 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "authorityQuoteTokenAccount";
+          name: "creatorQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -364,6 +369,11 @@ export type BidWall = {
         kind: "struct";
         fields: [
           {
+            name: "nonce";
+            docs: ["The nonce of the bid wall."];
+            type: "u64";
+          },
+          {
             name: "createdTimestamp";
             docs: ["When the bid wall was created."];
             type: "i64";
@@ -396,13 +406,18 @@ export type BidWall = {
             type: "u64";
           },
           {
-            name: "daoTreasury";
-            docs: ["The DAO treasury address."];
+            name: "creator";
+            docs: ["The authority of the bid wall."];
             type: "publicKey";
           },
           {
             name: "authority";
             docs: ["The authority of the bid wall."];
+            type: "publicKey";
+          },
+          {
+            name: "daoTreasury";
+            docs: ["The DAO treasury address."];
             type: "publicKey";
           },
           {
@@ -439,6 +454,10 @@ export type BidWall = {
         fields: [
           {
             name: "amount";
+            type: "u64";
+          },
+          {
+            name: "nonce";
             type: "u64";
           },
           {
@@ -519,9 +538,14 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "authority",
+          name: "creator",
           isMut: false,
           isSigner: true,
+        },
+        {
+          name: "authority",
+          isMut: false,
+          isSigner: false,
         },
         {
           name: "bidWallQuoteTokenAccount",
@@ -529,7 +553,7 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "authorityQuoteTokenAccount",
+          name: "creatorQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -862,6 +886,11 @@ export const IDL: BidWall = {
         kind: "struct",
         fields: [
           {
+            name: "nonce",
+            docs: ["The nonce of the bid wall."],
+            type: "u64",
+          },
+          {
             name: "createdTimestamp",
             docs: ["When the bid wall was created."],
             type: "i64",
@@ -894,13 +923,18 @@ export const IDL: BidWall = {
             type: "u64",
           },
           {
-            name: "daoTreasury",
-            docs: ["The DAO treasury address."],
+            name: "creator",
+            docs: ["The authority of the bid wall."],
             type: "publicKey",
           },
           {
             name: "authority",
             docs: ["The authority of the bid wall."],
+            type: "publicKey",
+          },
+          {
+            name: "daoTreasury",
+            docs: ["The DAO treasury address."],
             type: "publicKey",
           },
           {
@@ -937,6 +971,10 @@ export const IDL: BidWall = {
         fields: [
           {
             name: "amount",
+            type: "u64",
+          },
+          {
+            name: "nonce",
             type: "u64",
           },
           {

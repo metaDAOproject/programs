@@ -9,8 +9,6 @@ pub struct CloseBidWall<'info> {
     #[account(
         mut,
         close=payer,
-        seeds = [b"bid_wall", base_mint.key().as_ref(), authority.key().as_ref()],
-        bump,
         has_one = authority
     )]
     pub bid_wall: Account<'info, BidWall>,
@@ -79,7 +77,8 @@ impl CloseBidWall<'_> {
                 &[&[
                     b"bid_wall",
                     ctx.accounts.base_mint.key().as_ref(),
-                    ctx.accounts.authority.key().as_ref(),
+                    ctx.accounts.bid_wall.creator.as_ref(),
+                    ctx.accounts.bid_wall.nonce.to_le_bytes().as_ref(),
                     &[ctx.accounts.bid_wall.pda_bump],
                 ]],
             ),
@@ -100,7 +99,8 @@ impl CloseBidWall<'_> {
                 &[&[
                     b"bid_wall",
                     ctx.accounts.base_mint.key().as_ref(),
-                    ctx.accounts.authority.key().as_ref(),
+                    ctx.accounts.bid_wall.creator.as_ref(),
+                    ctx.accounts.bid_wall.nonce.to_le_bytes().as_ref(),
                     &[ctx.accounts.bid_wall.pda_bump],
                 ]],
             ),
@@ -118,7 +118,8 @@ impl CloseBidWall<'_> {
             &[&[
                 b"bid_wall",
                 ctx.accounts.base_mint.key().as_ref(),
-                ctx.accounts.authority.key().as_ref(),
+                ctx.accounts.bid_wall.creator.as_ref(),
+                ctx.accounts.bid_wall.nonce.to_le_bytes().as_ref(),
                 &[ctx.accounts.bid_wall.pda_bump],
             ]],
         ))?;

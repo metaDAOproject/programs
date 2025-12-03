@@ -65,7 +65,8 @@ impl CancelBidWall<'_> {
                 &[&[
                     b"bid_wall",
                     ctx.accounts.base_mint.key().as_ref(),
-                    ctx.accounts.authority.key().as_ref(),
+                    ctx.accounts.bid_wall.creator.as_ref(),
+                    ctx.accounts.bid_wall.nonce.to_le_bytes().as_ref(),
                     &[ctx.accounts.bid_wall.pda_bump],
                 ]],
             ),
@@ -86,7 +87,8 @@ impl CancelBidWall<'_> {
                 &[&[
                     b"bid_wall",
                     ctx.accounts.base_mint.key().as_ref(),
-                    ctx.accounts.authority.key().as_ref(),
+                    ctx.accounts.bid_wall.creator.as_ref(),
+                    ctx.accounts.bid_wall.nonce.to_le_bytes().as_ref(),
                     &[ctx.accounts.bid_wall.pda_bump],
                 ]],
             ),
@@ -104,7 +106,8 @@ impl CancelBidWall<'_> {
             &[&[
                 b"bid_wall",
                 ctx.accounts.base_mint.key().as_ref(),
-                ctx.accounts.authority.key().as_ref(),
+                ctx.accounts.bid_wall.creator.as_ref(),
+                ctx.accounts.bid_wall.nonce.to_le_bytes().as_ref(),
                 &[ctx.accounts.bid_wall.pda_bump],
             ]],
         ))?;

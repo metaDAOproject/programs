@@ -3,6 +3,8 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct BidWall {
+    /// The nonce of the bid wall.
+    pub nonce: u64,
     /// When the bid wall was created.
     pub created_timestamp: i64,
     /// The fees collected by the bid wall.
@@ -15,10 +17,12 @@ pub struct BidWall {
     pub initial_dao_treasury_quote_amount: u64,
     /// The total raise amount of the launch this bid wall is associated with.
     pub initial_nav: u64,
-    /// The DAO treasury address.
-    pub dao_treasury: Pubkey,
+    /// The authority of the bid wall.
+    pub creator: Pubkey,
     /// The authority of the bid wall.
     pub authority: Pubkey,
+    /// The DAO treasury address.
+    pub dao_treasury: Pubkey,
     /// The mint of the token being sold into the bid wall.
     pub base_mint: Pubkey,
     /// The recipient of the fees collected by the bid wall.

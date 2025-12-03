@@ -244,14 +244,21 @@ export const getChangeRequestAddr = ({
 export const getBidWallAddr = ({
   programId = BID_WALL_PROGRAM_ID,
   baseMint,
-  authority,
+  creator,
+  nonce,
 }: {
   programId?: PublicKey;
   baseMint: PublicKey;
-  authority: PublicKey;
+  creator: PublicKey;
+  nonce: BN;
 }) => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("bid_wall"), baseMint.toBuffer(), authority.toBuffer()],
+    [
+      Buffer.from("bid_wall"),
+      baseMint.toBuffer(),
+      creator.toBuffer(),
+      nonce.toArrayLike(Buffer, "le", 8),
+    ],
     programId,
   );
 };

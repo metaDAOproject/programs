@@ -144,6 +144,8 @@ export default function suite() {
         initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
+        creator: this.payer.publicKey,
+        nonce: new BN(0),
         daoTreasury: launchAccount.daoVault,
         baseMint: META,
         feeRecipient,
@@ -155,13 +157,16 @@ export default function suite() {
       .rpc();
 
     const [bidWall] = getBidWallAddr({
-      authority: this.payer.publicKey,
+      creator: this.payer.publicKey,
       baseMint: META,
+      nonce: new BN(0),
     });
 
     const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
 
     assert.isNotNull(bidWallAccount);
+
+    console.log(bidWallAccount);
 
     assert.equal(
       bidWallAccount.authority.toBase58(),
@@ -187,5 +192,10 @@ export default function suite() {
       bidWallAccount.initialDaoTreasuryQuoteAmount.toString(),
       new BN(80_000_000000).toString(),
     );
+    assert.equal(
+      bidWallAccount.creator.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
+    assert.equal(bidWallAccount.nonce.toString(), new BN(0).toString());
   });
 }

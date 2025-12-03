@@ -9,6 +9,7 @@ use crate::{state::BidWall, usdc_mint};
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeBidWallArgs {
     pub amount: u64,
+    pub nonce: u64,
     pub initial_amm_base_reserves: u64,
     pub initial_amm_quote_reserves: u64,
     pub initial_nav: u64,
@@ -18,12 +19,13 @@ pub struct InitializeBidWallArgs {
 
 #[event_cpi]
 #[derive(Accounts)]
+#[instruction(args: InitializeBidWallArgs)]
 pub struct InitializeBidWall<'info> {
     #[account(
         init,
         payer = payer,
         space = 8 + BidWall::INIT_SPACE,
-        seeds = [b"bid_wall", base_mint.key().as_ref(), authority.key().as_ref()],
+        seeds = [b"bid_wall", base_mint.key().as_ref(), creator.key().as_ref(), args.nonce.to_le_bytes().as_ref()],
         bump
     )]
     pub bid_wall: Account<'info, BidWall>,
@@ -34,14 +36,17 @@ pub struct InitializeBidWall<'info> {
     /// CHECK: This is the recipient of the fees collected by the bid wall, no need to validate
     pub fee_recipient: AccountInfo<'info>,
 
-    // Authority must sign to prevent unauthorized bid wall initialization on their behalf
-    pub authority: Signer<'info>,
+    // Creator must sign to prevent unauthorized bid wall initialization on their behalf
+    pub creator: Signer<'info>,
+
+    /// CHECK: The authority with the rights of cancelling the bid wall and retrieving the remaining quote tokens on close
+    pub authority: AccountInfo<'info>,
 
     #[account(init_if_needed, payer = payer, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
     pub bid_wall_quote_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut, associated_token::mint = quote_mint, associated_token::authority = authority)]
-    pub authority_quote_token_account: Account<'info, TokenAccount>,
+    #[account(mut, associated_token::mint = quote_mint, associated_token::authority = creator)]
+    pub creator_quote_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: Used for constraints
     pub dao_treasury: AccountInfo<'info>,
@@ -70,9 +75,9 @@ impl InitializeBidWall<'_> {
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.authority_quote_token_account.to_account_info(),
+                    from: ctx.accounts.creator_quote_token_account.to_account_info(),
                     to: ctx.accounts.bid_wall_quote_token_account.to_account_info(),
-                    authority: ctx.accounts.authority.to_account_info(),
+                    authority: ctx.accounts.creator.to_account_info(),
                 },
             ),
             args.amount,
@@ -80,14 +85,16 @@ impl InitializeBidWall<'_> {
 
         // Initialize bid wall account
         ctx.accounts.bid_wall.set_inner(BidWall {
+            nonce: args.nonce,
             created_timestamp: Clock::get()?.unix_timestamp,
             fees_collected: 0,
             initial_amm_base_reserves: args.initial_amm_base_reserves,
             initial_amm_quote_reserves: args.initial_amm_quote_reserves,
             initial_dao_treasury_quote_amount: args.initial_dao_treasury_quote_amount,
             initial_nav: args.initial_nav,
-            dao_treasury: ctx.accounts.dao_treasury.key(),
+            creator: ctx.accounts.creator.key(),
             authority: ctx.accounts.authority.key(),
+            dao_treasury: ctx.accounts.dao_treasury.key(),
             base_mint: ctx.accounts.base_mint.key(),
             fee_recipient: ctx.accounts.fee_recipient.key(),
             duration_seconds: args.duration_seconds,
