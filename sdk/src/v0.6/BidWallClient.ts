@@ -76,21 +76,15 @@ export class BidWallClient {
   }) {
     const [bidWall] = getBidWallAddr({ authority, baseMint });
 
-    const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       bidWall,
       true,
     );
 
-    const authorityUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const authorityQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       authority,
-      true,
-    );
-
-    const daoTreasuryUsdcTokenAccount = getAssociatedTokenAddressSync(
-      quoteMint,
-      daoTreasury,
       true,
     );
 
@@ -107,8 +101,8 @@ export class BidWallClient {
         bidWall,
         payer,
         authority: authority,
-        bidWallUsdcTokenAccount,
-        authorityUsdcTokenAccount,
+        bidWallQuoteTokenAccount,
+        authorityQuoteTokenAccount,
         baseMint,
         quoteMint,
         feeRecipient,
@@ -134,7 +128,7 @@ export class BidWallClient {
     quoteMint: PublicKey;
     user: PublicKey;
   }) {
-    const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       bidWall,
       true,
@@ -146,13 +140,13 @@ export class BidWallClient {
       true,
     );
 
-    const userUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const userQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       user,
       true,
     );
 
-    const daoTreasuryUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const daoTreasuryQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       daoTreasury,
       true,
@@ -164,12 +158,12 @@ export class BidWallClient {
         bidWall,
         user,
         userTokenAccount,
-        userUsdcTokenAccount,
-        bidWallUsdcTokenAccount,
+        userQuoteTokenAccount,
+        bidWallQuoteTokenAccount,
         baseMint,
         quoteMint,
         daoTreasury,
-        daoTreasuryUsdcTokenAccount,
+        daoTreasuryQuoteTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       });
@@ -184,13 +178,13 @@ export class BidWallClient {
     feeRecipient: PublicKey;
     quoteMint: PublicKey;
   }) {
-    const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       bidWall,
       true,
     );
 
-    const feeRecipientUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const feeRecipientQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       feeRecipient,
       true,
@@ -198,9 +192,9 @@ export class BidWallClient {
 
     return this.bidWallProgram.methods.collectFees().accounts({
       bidWall,
-      bidWallUsdcTokenAccount,
+      bidWallQuoteTokenAccount,
       feeRecipient,
-      feeRecipientUsdcTokenAccount,
+      feeRecipientQuoteTokenAccount,
       quoteMint,
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
@@ -222,17 +216,17 @@ export class BidWallClient {
     quoteMint: PublicKey;
     payer: PublicKey;
   }) {
-    const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       bidWall,
       true,
     );
-    const authorityUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const authorityQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       authority,
       true,
     );
-    const feeRecipientUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const feeRecipientQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       feeRecipient,
       true,
@@ -243,9 +237,9 @@ export class BidWallClient {
       payer,
       authority,
       feeRecipient,
-      bidWallUsdcTokenAccount,
-      authorityUsdcTokenAccount,
-      feeRecipientUsdcTokenAccount,
+      bidWallQuoteTokenAccount,
+      authorityQuoteTokenAccount,
+      feeRecipientQuoteTokenAccount,
       baseMint,
       quoteMint,
       tokenProgram: TOKEN_PROGRAM_ID,
@@ -268,17 +262,17 @@ export class BidWallClient {
     quoteMint: PublicKey;
     payer: PublicKey;
   }) {
-    const bidWallUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       bidWall,
       true,
     );
-    const authorityUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const authorityQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       authority,
       true,
     );
-    const feeRecipientUsdcTokenAccount = getAssociatedTokenAddressSync(
+    const feeRecipientQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
       feeRecipient,
       true,
@@ -289,9 +283,9 @@ export class BidWallClient {
       payer,
       authority,
       feeRecipient,
-      bidWallUsdcTokenAccount,
-      authorityUsdcTokenAccount,
-      feeRecipientUsdcTokenAccount,
+      bidWallQuoteTokenAccount,
+      authorityQuoteTokenAccount,
+      feeRecipientQuoteTokenAccount,
       baseMint,
       quoteMint,
       tokenProgram: TOKEN_PROGRAM_ID,

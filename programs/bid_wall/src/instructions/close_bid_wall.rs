@@ -27,13 +27,13 @@ pub struct CloseBidWall<'info> {
     pub fee_recipient: UncheckedAccount<'info>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
-    pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
+    pub bid_wall_quote_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = authority)]
-    pub authority_usdc_token_account: Account<'info, TokenAccount>,
+    pub authority_quote_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = fee_recipient)]
-    pub fee_recipient_usdc_token_account: Account<'info, TokenAccount>,
+    pub fee_recipient_quote_token_account: Account<'info, TokenAccount>,
 
     #[account(address = bid_wall.base_mint)]
     pub base_mint: Account<'info, Mint>,
@@ -69,10 +69,10 @@ impl CloseBidWall<'_> {
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
+                    from: ctx.accounts.bid_wall_quote_token_account.to_account_info(),
                     to: ctx
                         .accounts
-                        .fee_recipient_usdc_token_account
+                        .fee_recipient_quote_token_account
                         .to_account_info(),
                     authority: ctx.accounts.bid_wall.to_account_info(),
                 },
@@ -86,15 +86,15 @@ impl CloseBidWall<'_> {
             ctx.accounts.bid_wall.fees_collected,
         )?;
 
-        ctx.accounts.bid_wall_usdc_token_account.reload()?;
+        ctx.accounts.bid_wall_quote_token_account.reload()?;
 
-        // transfer all remaining USDC in bid wall USDC ATA back to authority
+        // transfer all remaining quote tokens in bid wall quote ATA back to authority
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
-                    to: ctx.accounts.authority_usdc_token_account.to_account_info(),
+                    from: ctx.accounts.bid_wall_quote_token_account.to_account_info(),
+                    to: ctx.accounts.authority_quote_token_account.to_account_info(),
                     authority: ctx.accounts.bid_wall.to_account_info(),
                 },
                 &[&[
@@ -104,14 +104,14 @@ impl CloseBidWall<'_> {
                     &[ctx.accounts.bid_wall.pda_bump],
                 ]],
             ),
-            ctx.accounts.bid_wall_usdc_token_account.amount,
+            ctx.accounts.bid_wall_quote_token_account.amount,
         )?;
 
-        // Close the bid wall USDC ATA
+        // Close the bid wall quote ATA
         token::close_account(CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             token::CloseAccount {
-                account: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
+                account: ctx.accounts.bid_wall_quote_token_account.to_account_info(),
                 destination: ctx.accounts.payer.to_account_info(),
                 authority: ctx.accounts.bid_wall.to_account_info(),
             },

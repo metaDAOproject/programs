@@ -10,14 +10,14 @@ pub struct CollectFees<'info> {
     pub bid_wall: Account<'info, BidWall>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
-    pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
+    pub bid_wall_quote_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: used for constraints
     #[account(address = bid_wall.fee_recipient)]
     pub fee_recipient: UncheckedAccount<'info>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = fee_recipient)]
-    pub fee_recipient_usdc_token_account: Account<'info, TokenAccount>,
+    pub fee_recipient_quote_token_account: Account<'info, TokenAccount>,
 
     #[account(address = usdc_mint::id())]
     pub quote_mint: Account<'info, Mint>,
@@ -37,10 +37,10 @@ impl CollectFees<'_> {
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
+                    from: ctx.accounts.bid_wall_quote_token_account.to_account_info(),
                     to: ctx
                         .accounts
-                        .fee_recipient_usdc_token_account
+                        .fee_recipient_quote_token_account
                         .to_account_info(),
                     authority: ctx.accounts.bid_wall.to_account_info(),
                 },

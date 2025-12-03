@@ -245,7 +245,7 @@ export default function suite() {
     }
   });
 
-  it.only("fails to cancel bid wall when authority is not the correct one", async function () {
+  it("fails to cancel bid wall when authority is not the correct one", async function () {
     try {
       const wrongAuthority = Keypair.generate();
 

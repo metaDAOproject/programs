@@ -38,10 +38,10 @@ pub struct InitializeBidWall<'info> {
     pub authority: Signer<'info>,
 
     #[account(init_if_needed, payer = payer, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
-    pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
+    pub bid_wall_quote_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = authority)]
-    pub authority_usdc_token_account: Account<'info, TokenAccount>,
+    pub authority_quote_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: Used for constraints
     pub dao_treasury: AccountInfo<'info>,
@@ -63,15 +63,15 @@ impl InitializeBidWall<'_> {
 
     pub fn handle(ctx: Context<Self>, args: InitializeBidWallArgs) -> Result<()> {
         // Bid wall account has been created using init constraint
-        // Bid wall USDC ATA has been created using init_if_needed constraint
+        // Bid wall quote ATA has been created using init_if_needed constraint
 
-        // Transfer USDC to bid wall
+        // Transfer quote tokens to bid wall
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.authority_usdc_token_account.to_account_info(),
-                    to: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
+                    from: ctx.accounts.authority_quote_token_account.to_account_info(),
+                    to: ctx.accounts.bid_wall_quote_token_account.to_account_info(),
                     authority: ctx.accounts.authority.to_account_info(),
                 },
             ),

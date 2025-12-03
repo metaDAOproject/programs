@@ -26,12 +26,12 @@ export type BidWall = {
           isSigner: true;
         },
         {
-          name: "bidWallUsdcTokenAccount";
+          name: "bidWallQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "authorityUsdcTokenAccount";
+          name: "authorityQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -109,17 +109,17 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "bidWallUsdcTokenAccount";
+          name: "bidWallQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "authorityUsdcTokenAccount";
+          name: "authorityQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "feeRecipientUsdcTokenAccount";
+          name: "feeRecipientQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -175,12 +175,12 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "userUsdcTokenAccount";
+          name: "userQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "bidWallUsdcTokenAccount";
+          name: "bidWallQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -190,7 +190,7 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "daoTreasuryUsdcTokenAccount";
+          name: "daoTreasuryQuoteTokenAccount";
           isMut: false;
           isSigner: false;
         },
@@ -243,7 +243,7 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "bidWallUsdcTokenAccount";
+          name: "bidWallQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -253,7 +253,7 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "feeRecipientUsdcTokenAccount";
+          name: "feeRecipientQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -309,17 +309,17 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "bidWallUsdcTokenAccount";
+          name: "bidWallQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "authorityUsdcTokenAccount";
+          name: "authorityQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "feeRecipientUsdcTokenAccount";
+          name: "feeRecipientQuoteTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -524,12 +524,12 @@ export const IDL: BidWall = {
           isSigner: true,
         },
         {
-          name: "bidWallUsdcTokenAccount",
+          name: "bidWallQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "authorityUsdcTokenAccount",
+          name: "authorityQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -607,17 +607,17 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "bidWallUsdcTokenAccount",
+          name: "bidWallQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "authorityUsdcTokenAccount",
+          name: "authorityQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "feeRecipientUsdcTokenAccount",
+          name: "feeRecipientQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -673,12 +673,12 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "userUsdcTokenAccount",
+          name: "userQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "bidWallUsdcTokenAccount",
+          name: "bidWallQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -688,7 +688,7 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "daoTreasuryUsdcTokenAccount",
+          name: "daoTreasuryQuoteTokenAccount",
           isMut: false,
           isSigner: false,
         },
@@ -741,7 +741,7 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "bidWallUsdcTokenAccount",
+          name: "bidWallQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -751,7 +751,7 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "feeRecipientUsdcTokenAccount",
+          name: "feeRecipientQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -807,17 +807,17 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "bidWallUsdcTokenAccount",
+          name: "bidWallQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "authorityUsdcTokenAccount",
+          name: "authorityQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "feeRecipientUsdcTokenAccount",
+          name: "feeRecipientQuoteTokenAccount",
           isMut: true,
           isSigner: false,
         },

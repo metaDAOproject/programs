@@ -21,17 +21,17 @@ pub struct SellTokens<'info> {
     pub user_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = user)]
-    pub user_usdc_token_account: Account<'info, TokenAccount>,
+    pub user_quote_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
-    pub bid_wall_usdc_token_account: Account<'info, TokenAccount>,
+    pub bid_wall_quote_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: used for constraints
     #[account(address = bid_wall.dao_treasury)]
     pub dao_treasury: AccountInfo<'info>,
 
     #[account(associated_token::mint = quote_mint, associated_token::authority = dao_treasury)]
-    pub dao_treasury_usdc_token_account: Account<'info, TokenAccount>,
+    pub dao_treasury_quote_token_account: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub base_mint: Account<'info, Mint>,
@@ -68,7 +68,7 @@ impl SellTokens<'_> {
             / ctx.accounts.bid_wall.initial_amm_base_reserves as u128;
 
         let current_nav = ctx.accounts.bid_wall.initial_nav
-            + ctx.accounts.dao_treasury_usdc_token_account.amount
+            + ctx.accounts.dao_treasury_quote_token_account.amount
             - ctx.accounts.bid_wall.initial_dao_treasury_quote_amount;
 
         let amount_out_before_fee = (amount_out_before_vault_adjustment * current_nav as u128
@@ -92,13 +92,13 @@ impl SellTokens<'_> {
             amount_in,
         )?;
 
-        // Transfer USDC to user
+        // Transfer quote tokens to user
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.bid_wall_usdc_token_account.to_account_info(),
-                    to: ctx.accounts.user_usdc_token_account.to_account_info(),
+                    from: ctx.accounts.bid_wall_quote_token_account.to_account_info(),
+                    to: ctx.accounts.user_quote_token_account.to_account_info(),
                     authority: ctx.accounts.bid_wall.to_account_info(),
                 },
                 &[&[
