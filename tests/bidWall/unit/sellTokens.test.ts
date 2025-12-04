@@ -227,7 +227,7 @@ export default function suite() {
     );
   });
 
-  it("successfully sells tokens at the DAO's current NAV after treasury balance changes", async function () {
+  it("successfully sells tokens at the DAO's updated NAV after treasury balance changes", async function () {
     const usdcBalanceBefore = await this.getTokenBalance(
       MAINNET_USDC,
       this.payer.publicKey,
