@@ -35,7 +35,11 @@ jobs:
       override-solana-version: "1.17.31"
       override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
-    secrets: inherit
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   futarchy-v6:
     if: inputs.program == 'futarchy_v6' || inputs.program == 'all'
@@ -52,7 +56,11 @@ jobs:
       override-solana-version: "1.17.31"
       override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
-    secrets: inherit
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   launchpad-v6:
     if: inputs.program == 'launchpad_v6' || inputs.program == 'all'
@@ -69,7 +77,11 @@ jobs:
       override-solana-version: "1.17.31"
       override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
-    secrets: inherit
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   price-based-performance-package-v6:
     if: inputs.program == 'price_based_performance_package_v6' || inputs.program == 'all'
@@ -85,4 +97,8 @@ jobs:
       override-solana-version: "1.17.31"
       override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
-    secrets: inherit
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
