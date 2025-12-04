@@ -7,7 +7,7 @@ import { PublicKey } from "@solana/web3.js";
 import {
   LAUNCHPAD_PROGRAM_ID,
   MAINNET_METEORA_CONFIG,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/futarchy/v0.7";
 
 export default function suite() {
   before(async function () {

@@ -22,9 +22,6 @@ import {
 } from "./price_based_performance_package.js";
 export { PriceBasedPerformancePackageProgram, PriceBasedPerformancePackageIDL };
 
-import { BidWall as BidWallProgram, IDL as BidWallIDL } from "./bid_wall.js";
-export { BidWallProgram, BidWallIDL };
-
 export { LowercaseKeys } from "./utils.js";
 
 import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
@@ -56,8 +53,6 @@ export type Tranche = IdlTypes<PriceBasedPerformancePackageProgram>["Tranche"];
 //   IdlAccounts<SharedLiquidityManagerProgram>["sharedLiquidityPool"];
 // export type SharedLiquidityPoolPosition =
 //   IdlAccounts<SharedLiquidityManagerProgram>["liquidityPosition"];
-
-export type BidWall = IdlAccounts<BidWallProgram>["bidWall"];
 
 export type SwapEvent = IdlEvents<AmmProgram>["SwapEvent"];
 export type AddLiquidityEvent = IdlEvents<AmmProgram>["AddLiquidityEvent"];

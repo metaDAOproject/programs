@@ -10,7 +10,6 @@ import {
   toWeb3JsPublicKey,
 } from "@metaplex-foundation/umi-web3js-adapters";
 import {
-  BID_WALL_PROGRAM_ID,
   DAMM_V2_PROGRAM_ID,
   DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
   MAINNET_METEORA_CONFIG,
@@ -236,28 +235,6 @@ export const getChangeRequestAddr = ({
       performancePackage.toBuffer(),
       proposer.toBuffer(),
       Buffer.from(new Uint8Array(new Uint32Array([pdaNonce]).buffer)),
-    ],
-    programId,
-  );
-};
-
-export const getBidWallAddr = ({
-  programId = BID_WALL_PROGRAM_ID,
-  baseMint,
-  creator,
-  nonce,
-}: {
-  programId?: PublicKey;
-  baseMint: PublicKey;
-  creator: PublicKey;
-  nonce: BN;
-}) => {
-  return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("bid_wall"),
-      baseMint.toBuffer(),
-      creator.toBuffer(),
-      nonce.toArrayLike(Buffer, "le", 8),
     ],
     programId,
   );

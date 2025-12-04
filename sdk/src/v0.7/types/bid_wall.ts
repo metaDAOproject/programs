@@ -1,5 +1,5 @@
 export type BidWall = {
-  version: "0.6.0";
+  version: "0.7.0";
   name: "bid_wall";
   instructions: [
     {
@@ -516,7 +516,7 @@ export type BidWall = {
 };
 
 export const IDL: BidWall = {
-  version: "0.6.0",
+  version: "0.7.0",
   name: "bid_wall",
   instructions: [
     {

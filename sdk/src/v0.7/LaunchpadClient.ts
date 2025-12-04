@@ -140,7 +140,7 @@ export class LaunchpadClient {
     performancePackageTokenAmount,
     monthsUntilInsidersCanUnlock,
     teamAddress,
-    launchAuthority,
+    launchAuthority = this.provider.publicKey,
     payer = this.provider.publicKey,
     additionalTokensRecipient,
     additionalTokensAmount,
@@ -158,7 +158,7 @@ export class LaunchpadClient {
     performancePackageTokenAmount: BN;
     monthsUntilInsidersCanUnlock: number;
     teamAddress: PublicKey;
-    launchAuthority: PublicKey;
+    launchAuthority?: PublicKey;
     payer?: PublicKey;
     additionalTokensRecipient?: PublicKey;
     additionalTokensAmount?: BN;
@@ -225,7 +225,7 @@ export class LaunchpadClient {
     launchAuthority = this.provider.publicKey,
   }: {
     launch: PublicKey;
-    launchAuthority: PublicKey;
+    launchAuthority?: PublicKey;
   }) {
     return this.launchpad.methods.startLaunch().accounts({
       launch,
@@ -572,12 +572,12 @@ export class LaunchpadClient {
   setFundingRecordApprovalIx({
     launch,
     funder,
-    launchAuthority,
+    launchAuthority = this.provider.publicKey,
     approvedAmount,
   }: {
     launch: PublicKey;
     funder: PublicKey;
-    launchAuthority: PublicKey;
+    launchAuthority?: PublicKey;
     approvedAmount: BN;
   }) {
     let fundingRecord = getFundingRecordAddr(

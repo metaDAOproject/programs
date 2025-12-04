@@ -1,14 +1,14 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
-import { BID_WALL_PROGRAM_ID, MAINNET_USDC } from "../v0.6/constants.js";
-import { BidWallProgram, BidWallIDL, BidWall } from "../v0.6/types/index.js";
+import { MAINNET_USDC, BID_WALL_PROGRAM_ID } from "../v0.7/constants.js";
+import { BidWallProgram, BidWallIDL, BidWall } from "../v0.7/types/index.js";
 import BN from "bn.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { getBidWallAddr } from "../v0.6/utils/pda.js";
+import { getBidWallAddr } from "../v0.7/utils/pda.js";
 
 export type CreateBidWallClientParams = {
   provider: AnchorProvider;

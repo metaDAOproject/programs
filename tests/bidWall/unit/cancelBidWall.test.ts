@@ -11,7 +11,7 @@ import {
   BidWallClient,
   MAINNET_USDC,
   getBidWallAddr,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/futarchy/v0.7";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
@@ -35,14 +35,14 @@ export default function suite() {
 
   before(async function () {
     futarchyClient = this.futarchy;
-    launchpadClient = this.launchpad_v6;
+    launchpadClient = this.launchpad_v7;
     bidWallClient = this.bidWall;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad_v6,
+      this.launchpad_v7,
       this.payer,
     );
 
@@ -63,7 +63,7 @@ export default function suite() {
     );
 
     // Initialize launch
-    await this.launchpad_v6
+    await this.launchpad_v7
       .initializeLaunchIx({
         tokenName: "META",
         tokenSymbol: "META",
@@ -93,12 +93,20 @@ export default function suite() {
     // Advance clock and complete launch
     await this.advanceBySeconds(60 * 60 * 24 * 7 + 100);
     await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        funder: this.payer.publicKey,
+        approvedAmount: fundAmount,
+      })
+      .rpc();
+
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,
-        finalRaiseAmount: null,
         launchAuthority: this.payer.publicKey,
       })
       .transaction();
@@ -119,7 +127,7 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx);
 
-    const launchAccount = await this.launchpad_v6.fetchLaunch(launch);
+    const launchAccount = await this.launchpad_v7.fetchLaunch(launch);
 
     dao = launchAccount.dao;
     daoTreasury = launchAccount.daoVault;
