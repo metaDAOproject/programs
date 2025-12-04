@@ -1,0 +1,88 @@
+name: Deploy Programs to Mainnet with IDL and Verified builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      program:
+        description: "Program to deploy"
+        required: true
+        type: choice
+        options:
+          - all
+          - conditional_vault
+          - futarchy
+          - launchpad
+          - price_based_performance_package
+      priority-fee:
+        description: "Priority fee in microlamports"
+        required: true
+        default: "300000"
+        type: string
+
+jobs:
+  conditional-vault:
+    if: inputs.program == 'conditional_vault' || inputs.program == 'all'
+    uses: solana-developers/github-workflows/.github/workflows/reusable-build.yaml@v0.2.9
+    with:
+      program: "conditional_vault"
+      program-id: "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGeHV"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      override-solana-version: "1.17.31"
+      override-anchor-version: "0.29.0"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets: inherit
+
+  futarchy:
+    if: inputs.program == 'futarchy' || inputs.program == 'all'
+    uses: solana-developers/github-workflows/.github/workflows/reusable-build.yaml@v0.2.9
+    with:
+      program: "futarchy"
+      program-id: "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      override-solana-version: "1.17.31"
+      override-anchor-version: "0.29.0"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets: inherit
+
+  launchpad:
+    if: inputs.program == 'launchpad' || inputs.program == 'all'
+    uses: solana-developers/github-workflows/.github/workflows/reusable-build.yaml@v0.2.9
+    with:
+      program: "launchpad"
+      program-id: "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      override-solana-version: "1.17.31"
+      override-anchor-version: "0.29.0"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets: inherit
+
+  price-based-performance-package:
+    if: inputs.program == 'price_based_performance_package' || inputs.program == 'all'
+    uses: solana-developers/github-workflows/.github/workflows/reusable-build.yaml@v0.2.9
+    with:
+      program: "price_based_performance_package"
+      program-id: "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      override-solana-version: "1.17.31"
+      override-anchor-version: "0.29.0"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets: inherit
