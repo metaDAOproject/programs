@@ -82,4 +82,8 @@ pub struct Launch {
     pub additional_tokens_recipient: Option<Pubkey>,
     /// Are the additional tokens claimed
     pub additional_tokens_claimed: bool,
+    /// The unix timestamp when the launch was completed.
+    pub unix_timestamp_completed: Option<i64>,
+    /// Whether the performance package has been initialized.
+    pub is_performance_package_initialized: bool,
 }

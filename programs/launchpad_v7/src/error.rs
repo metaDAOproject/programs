@@ -58,4 +58,8 @@ pub enum LaunchpadError {
     AdditionalTokensAlreadyClaimed,
     #[msg("Funding record approval period is over")]
     FundingRecordApprovalPeriodOver,
+    #[msg("Performance package already initialized")]
+    PerformancePackageAlreadyInitialized,
+    #[msg("Invalid DAO")]
+    InvalidDao,
 }

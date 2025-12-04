@@ -27,6 +27,8 @@ declare_id!("moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM");
 
 pub const TOKEN_SCALE: u64 = 1_000_000;
 
+pub const PRICE_SCALE: u128 = 1_000_000_000_000;
+
 /// 10M tokens with 6 decimals
 pub const TOKENS_TO_PARTICIPANTS: u64 = 10_000_000 * TOKEN_SCALE;
 /// 20% to liquidity

@@ -914,6 +914,18 @@ export type LaunchpadV7 = {
             docs: ["Are the additional tokens claimed"];
             type: "bool";
           },
+          {
+            name: "unixTimestampCompleted";
+            docs: ["The unix timestamp when the launch was completed."];
+            type: {
+              option: "i64";
+            };
+          },
+          {
+            name: "isPerformancePackageInitialized";
+            docs: ["Whether the performance package has been initialized."];
+            type: "bool";
+          },
         ];
       };
     },
@@ -1112,6 +1124,18 @@ export type LaunchpadV7 = {
         {
           name: "secondsForLaunch";
           type: "u32";
+          index: false;
+        },
+        {
+          name: "additionalTokensAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "additionalTokensRecipient";
+          type: {
+            option: "publicKey";
+          };
           index: false;
         },
       ];
@@ -1526,6 +1550,11 @@ export type LaunchpadV7 = {
       code: 6027;
       name: "FundingRecordApprovalPeriodOver";
       msg: "Funding record approval period is over";
+    },
+    {
+      code: 6028;
+      name: "PerformancePackageAlreadyInitialized";
+      msg: "Performance package already initialized";
     },
   ];
 };
@@ -2446,6 +2475,18 @@ export const IDL: LaunchpadV7 = {
             docs: ["Are the additional tokens claimed"],
             type: "bool",
           },
+          {
+            name: "unixTimestampCompleted",
+            docs: ["The unix timestamp when the launch was completed."],
+            type: {
+              option: "i64",
+            },
+          },
+          {
+            name: "isPerformancePackageInitialized",
+            docs: ["Whether the performance package has been initialized."],
+            type: "bool",
+          },
         ],
       },
     },
@@ -2644,6 +2685,18 @@ export const IDL: LaunchpadV7 = {
         {
           name: "secondsForLaunch",
           type: "u32",
+          index: false,
+        },
+        {
+          name: "additionalTokensAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "additionalTokensRecipient",
+          type: {
+            option: "publicKey",
+          },
           index: false,
         },
       ],
@@ -3058,6 +3111,11 @@ export const IDL: LaunchpadV7 = {
       code: 6027,
       name: "FundingRecordApprovalPeriodOver",
       msg: "Funding record approval period is over",
+    },
+    {
+      code: 6028,
+      name: "PerformancePackageAlreadyInitialized",
+      msg: "Performance package already initialized",
     },
   ],
 };

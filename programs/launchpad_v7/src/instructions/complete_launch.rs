@@ -16,8 +16,8 @@ use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCloseEvent, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::{
-    TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
-    TOKEN_SCALE,
+    PRICE_SCALE, TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY,
+    TOKENS_TO_PARTICIPANTS, TOKEN_SCALE,
 };
 use anchor_spl::metadata::{
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
@@ -27,11 +27,9 @@ use futarchy::program::Futarchy;
 use futarchy::{InitialSpendingLimit, InitializeDaoParams, ProvideLiquidityParams};
 
 use price_based_performance_package::program::PriceBasedPerformancePackage;
-use price_based_performance_package::{InitializePerformancePackageParams, OracleConfig, Tranche};
+// use price_based_performance_package::{InitializePerformancePackageParams, OracleConfig, Tranche};
 
 use damm_v2_cpi::program::DammV2Cpi;
-
-pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
 /// Static accounts for completing a launch, used to reduce code duplication
 /// and conserve stack space.
@@ -276,6 +274,8 @@ impl CompleteLaunch<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let launch_total_approved_amount = ctx.accounts.launch.total_approved_amount;
 
+        let clock = Clock::get()?;
+
         // If the launch authority doesn't approve enough funding, the launch will go into refunding state
         if launch_total_approved_amount < ctx.accounts.launch.minimum_raise_amount {
             let launch = &mut ctx.accounts.launch;
@@ -283,8 +283,6 @@ impl CompleteLaunch<'_> {
             // refund the launch, end it
             launch.state = LaunchState::Refunding;
             launch.seq_num += 1;
-
-            let clock = Clock::get()?;
 
             emit_cpi!(LaunchCloseEvent {
                 common: CommonFields::new(&clock, launch.seq_num),
@@ -314,16 +312,14 @@ impl CompleteLaunch<'_> {
         let usdc_to_lp = launch_total_approved_amount.saturating_div(5);
         let usdc_to_dao = launch_total_approved_amount.saturating_sub(usdc_to_lp);
 
-        let clock = Clock::get()?;
-
         ctx.accounts.initialize_dao(launch_signer, price_1e12)?;
 
-        // TODO: only do this is there exists a performance package config
-        ctx.accounts.initialize_performance_package(
-            price_1e12,
-            clock.unix_timestamp,
-            launch_signer,
-        )?;
+        // // TODO: only do this is there exists a performance package config
+        // ctx.accounts.initialize_performance_package(
+        //     price_1e12,
+        //     clock.unix_timestamp,
+        //     launch_signer,
+        // )?;
 
         ctx.accounts.provide_futarchy_amm_liquidity(
             usdc_to_lp,
@@ -350,6 +346,7 @@ impl CompleteLaunch<'_> {
         launch.dao = Some(ctx.accounts.dao.key());
         launch.dao_vault = Some(ctx.accounts.squads_multisig_vault.key());
         launch.state = LaunchState::Complete;
+        launch.unix_timestamp_completed = Some(clock.unix_timestamp);
         launch.seq_num += 1;
 
         emit_cpi!(LaunchCompletedEvent {
@@ -427,80 +424,80 @@ impl CompleteLaunch<'_> {
         )
     }
 
-    #[inline(never)]
-    fn initialize_performance_package(
-        &self,
-        launch_price_1e12: u128,
-        current_unix_timestamp: i64,
-        launch_signer: &[&[&[u8]]],
-    ) -> Result<()> {
-        price_based_performance_package::cpi::initialize_performance_package(
-            CpiContext::new_with_signer(
-                self.static_accounts
-                    .price_based_performance_package_program
-                    .to_account_info(),
-                price_based_performance_package::cpi::accounts::InitializePerformancePackage {
-                    performance_package: self.performance_package.to_account_info(),
-                    create_key: self.launch_signer.to_account_info(),
-                    token_mint: self.base_mint.to_account_info(),
-                    grantor_token_account: self.launch_base_vault.to_account_info(),
-                    grantor: self.launch_signer.to_account_info(),
-                    payer: self.payer.to_account_info(),
-                    system_program: self.system_program.to_account_info(),
-                    token_program: self.token_program.to_account_info(),
-                    associated_token_program: self.associated_token_program.to_account_info(),
-                    event_authority: self
-                        .static_accounts
-                        .price_based_performance_package_event_authority
-                        .to_account_info(),
-                    program: self
-                        .static_accounts
-                        .price_based_performance_package_program
-                        .to_account_info(),
-                    performance_package_token_vault: self
-                        .performance_package_token_account
-                        .to_account_info(),
-                },
-                launch_signer,
-            ),
-            InitializePerformancePackageParams {
-                tranches: vec![
-                    Tranche {
-                        price_threshold: launch_price_1e12 * 2,
-                        token_amount: self.launch.performance_package_token_amount / 5,
-                    },
-                    Tranche {
-                        price_threshold: launch_price_1e12 * 4,
-                        token_amount: self.launch.performance_package_token_amount / 5,
-                    },
-                    Tranche {
-                        price_threshold: launch_price_1e12 * 8,
-                        token_amount: self.launch.performance_package_token_amount / 5,
-                    },
-                    Tranche {
-                        price_threshold: launch_price_1e12 * 16,
-                        token_amount: self.launch.performance_package_token_amount / 5,
-                    },
-                    Tranche {
-                        price_threshold: launch_price_1e12 * 32,
-                        token_amount: self.launch.performance_package_token_amount / 5,
-                    },
-                ],
-                min_unlock_timestamp: current_unix_timestamp
-                    + (self.launch.months_until_insiders_can_unlock as i64 * 30 * 24 * 60 * 60),
-                oracle_config: OracleConfig {
-                    oracle_account: self.dao.key(),
-                    // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
-                    // spot `Pool` is always first and has the TWAP oracle
-                    byte_offset: 8 + 1,
-                },
-                // 3 month TWAP
-                twap_length_seconds: 3 * 30 * 24 * 60 * 60,
-                grantee: self.launch.performance_package_grantee,
-                performance_package_authority: self.squads_multisig_vault.key(),
-            },
-        )
-    }
+    // #[inline(never)]
+    // fn initialize_performance_package(
+    //     &self,
+    //     launch_price_1e12: u128,
+    //     current_unix_timestamp: i64,
+    //     launch_signer: &[&[&[u8]]],
+    // ) -> Result<()> {
+    //     price_based_performance_package::cpi::initialize_performance_package(
+    //         CpiContext::new_with_signer(
+    //             self.static_accounts
+    //                 .price_based_performance_package_program
+    //                 .to_account_info(),
+    //             price_based_performance_package::cpi::accounts::InitializePerformancePackage {
+    //                 performance_package: self.performance_package.to_account_info(),
+    //                 create_key: self.launch_signer.to_account_info(),
+    //                 token_mint: self.base_mint.to_account_info(),
+    //                 grantor_token_account: self.launch_base_vault.to_account_info(),
+    //                 grantor: self.launch_signer.to_account_info(),
+    //                 payer: self.payer.to_account_info(),
+    //                 system_program: self.system_program.to_account_info(),
+    //                 token_program: self.token_program.to_account_info(),
+    //                 associated_token_program: self.associated_token_program.to_account_info(),
+    //                 event_authority: self
+    //                     .static_accounts
+    //                     .price_based_performance_package_event_authority
+    //                     .to_account_info(),
+    //                 program: self
+    //                     .static_accounts
+    //                     .price_based_performance_package_program
+    //                     .to_account_info(),
+    //                 performance_package_token_vault: self
+    //                     .performance_package_token_account
+    //                     .to_account_info(),
+    //             },
+    //             launch_signer,
+    //         ),
+    //         InitializePerformancePackageParams {
+    //             tranches: vec![
+    //                 Tranche {
+    //                     price_threshold: launch_price_1e12 * 2,
+    //                     token_amount: self.launch.performance_package_token_amount / 5,
+    //                 },
+    //                 Tranche {
+    //                     price_threshold: launch_price_1e12 * 4,
+    //                     token_amount: self.launch.performance_package_token_amount / 5,
+    //                 },
+    //                 Tranche {
+    //                     price_threshold: launch_price_1e12 * 8,
+    //                     token_amount: self.launch.performance_package_token_amount / 5,
+    //                 },
+    //                 Tranche {
+    //                     price_threshold: launch_price_1e12 * 16,
+    //                     token_amount: self.launch.performance_package_token_amount / 5,
+    //                 },
+    //                 Tranche {
+    //                     price_threshold: launch_price_1e12 * 32,
+    //                     token_amount: self.launch.performance_package_token_amount / 5,
+    //                 },
+    //             ],
+    //             min_unlock_timestamp: current_unix_timestamp
+    //                 + (self.launch.months_until_insiders_can_unlock as i64 * 30 * 24 * 60 * 60),
+    //             oracle_config: OracleConfig {
+    //                 oracle_account: self.dao.key(),
+    //                 // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
+    //                 // spot `Pool` is always first and has the TWAP oracle
+    //                 byte_offset: 8 + 1,
+    //             },
+    //             // 3 month TWAP
+    //             twap_length_seconds: 3 * 30 * 24 * 60 * 60,
+    //             grantee: self.launch.performance_package_grantee,
+    //             performance_package_authority: self.squads_multisig_vault.key(),
+    //         },
+    //     )
+    // }
 
     #[inline(never)]
     fn provide_futarchy_amm_liquidity(

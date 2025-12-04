@@ -37,6 +37,8 @@ pub struct LaunchInitializedEvent {
     pub quote_mint: Pubkey,
     pub pda_bump: u8,
     pub seconds_for_launch: u32,
+    pub additional_tokens_amount: u64,
+    pub additional_tokens_recipient: Option<Pubkey>,
 }
 
 #[event]

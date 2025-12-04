@@ -224,6 +224,8 @@ impl InitializeLaunch<'_> {
                 .as_ref()
                 .map(|a| a.key()),
             additional_tokens_claimed: false,
+            unix_timestamp_completed: None,
+            is_performance_package_initialized: false,
         });
 
         let clock = Clock::get()?;
@@ -245,6 +247,12 @@ impl InitializeLaunch<'_> {
             quote_mint: ctx.accounts.quote_mint.key(),
             pda_bump: ctx.bumps.launch,
             seconds_for_launch: args.seconds_for_launch,
+            additional_tokens_amount: args.additional_tokens_amount,
+            additional_tokens_recipient: ctx
+                .accounts
+                .additional_tokens_recipient
+                .as_ref()
+                .map(|a| a.key()),
         });
 
         let launch_key = ctx.accounts.launch.key();
