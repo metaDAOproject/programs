@@ -79,11 +79,12 @@ impl SellTokens<'_> {
         // We calculate the total NAV as as sum of:
         // - The initial quote reserves of the Futarchy AMM
         // - The quote tokens in the DAO treasury (which can be spent by the DAO)
-        // - The quote tokens in the bid wall (which are spent by selling into the bid wall)
+        // - The quote tokens in the bid wall minus the fees collected by the bid wall
+        // We must subtract the fees collected by the bid wall because the fees are not part of the NAV
         let total_nav: u128 = (ctx.accounts.bid_wall.initial_amm_quote_reserves
             + ctx.accounts.dao_treasury_quote_token_account.amount
-            + ctx.accounts.bid_wall_quote_token_account.amount)
-            as u128;
+            + ctx.accounts.bid_wall_quote_token_account.amount
+            - ctx.accounts.bid_wall.fees_collected) as u128;
 
         // We work under the assumption that the total supply is 10M tokens
         // We then assume that base tokens are only burned by the bid wall.
@@ -130,8 +131,6 @@ impl SellTokens<'_> {
             ),
             amount_out_after_fee,
         )?;
-
-        msg!("fees collected: {}", fee);
 
         // Track fees collected and base tokens bought up by the bid wall
         ctx.accounts.bid_wall.fees_collected += fee;
