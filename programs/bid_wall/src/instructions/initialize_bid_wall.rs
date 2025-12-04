@@ -10,10 +10,7 @@ use crate::{state::BidWall, usdc_mint};
 pub struct InitializeBidWallArgs {
     pub amount: u64,
     pub nonce: u64,
-    pub initial_amm_base_reserves: u64,
     pub initial_amm_quote_reserves: u64,
-    pub initial_nav: u64,
-    pub initial_dao_treasury_quote_amount: u64,
     pub duration_seconds: u32,
 }
 
@@ -87,11 +84,9 @@ impl InitializeBidWall<'_> {
         ctx.accounts.bid_wall.set_inner(BidWall {
             nonce: args.nonce,
             created_timestamp: Clock::get()?.unix_timestamp,
-            fees_collected: 0,
-            initial_amm_base_reserves: args.initial_amm_base_reserves,
             initial_amm_quote_reserves: args.initial_amm_quote_reserves,
-            initial_dao_treasury_quote_amount: args.initial_dao_treasury_quote_amount,
-            initial_nav: args.initial_nav,
+            fees_collected: 0,
+            base_bought_amount: 0,
             creator: ctx.accounts.creator.key(),
             authority: ctx.accounts.authority.key(),
             dao_treasury: ctx.accounts.dao_treasury.key(),

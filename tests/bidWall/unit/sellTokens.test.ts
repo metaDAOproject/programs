@@ -12,7 +12,7 @@ import {
   MAINNET_USDC,
   getBidWallAddr,
 } from "@metadaoproject/futarchy/v0.7";
-import { BN } from "bn.js";
+import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
@@ -149,7 +149,6 @@ export default function suite() {
       .initializeBidWallIx({
         amount: 100_000_000000,
         durationSeconds,
-        initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         creator: this.payer.publicKey,
@@ -159,8 +158,6 @@ export default function suite() {
         feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
-        initialNav: 100_000_000000, // Final raise amount
-        initialDaoTreasuryQuoteAmount: 80_000_000000, // 20% of final raise amount goes to Futarchy AMM
       })
       .rpc();
 
@@ -188,11 +185,14 @@ export default function suite() {
     assert.equal(metaBalanceBefore, 10_000_000_000000n);
 
     // As it stands:
-    // DAO NAV = 100_000_000000 USDC (100K)
-    // Active supply = 10_000_000_000010 META (10M + 10)
-    // Price = 100_000_000000 / 10_000_000_000010 = ~0.01 USDC per META
+    // DAO treasury = 80_000_000000 USDC (100K)
+    // Futarchy AMM = 20_000_000000 USDC (20K)
+    // Bid wall = 100_000_000000 USDC (100K)
+    // Total assumed NAV = 200_000_000000 USDC (200K)
+    // Active supply = 10_000_000_000000 META (10M)
+    // Price = 200_000_000000 / 10_000_000_000000 = ~0.02 USDC per META
     // Assume user sells 5M META
-    // User will receive ~50_000 USDC (5M * 0.01) minus 1% fee, rounded down.
+    // User will receive ~100_000 USDC (5M * 0.02) minus 1% fee, rounded down.
 
     await bidWallClient
       .sellTokensIx({
@@ -215,15 +215,15 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    // Seller received 49_500_000000 USDC (50K), which is 50_000_000000 - 500_000000 (fee)
-    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 49_500_000000n);
+    // Seller received 99_000_000000 USDC (99K), which is 100_000_000000 - 1_000_000000 (fee)
+    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 99_000_000000n);
     assert.equal(metaBalanceAfter, 5_000_000_000000n);
 
-    // Bid wall collected 500_000000 USDC (0.5K) in fees
+    // Bid wall collected 1_000_000000 USDC (1K) in fees
     const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
     assert.equal(
       bidWallAccount.feesCollected.toString(),
-      new BN(500_000000).toString(),
+      new BN(1_000_000000).toString(),
     );
   });
 

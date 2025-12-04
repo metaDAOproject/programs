@@ -149,7 +149,6 @@ export default function suite() {
       .initializeBidWallIx({
         amount: 100_000_000000,
         durationSeconds,
-        initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         creator: this.payer.publicKey,
@@ -159,8 +158,6 @@ export default function suite() {
         feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
-        initialNav: 100_000_000000, // Final raise amount
-        initialDaoTreasuryQuoteAmount: 80_000_000000, // 20% of final raise amount goes to Futarchy AMM
       })
       .rpc();
 
@@ -173,9 +170,11 @@ export default function suite() {
     bidWall = bidWallAddr;
 
     // Sell tokens into bid wall
+    // We're selling a quarter of the total floating supply at 0.2 USDC per token
+    // Bid wall should thus remain with 50k USDC after the sale
     await bidWallClient
       .sellTokensIx({
-        amount: 5_000_000_000000,
+        amount: 2_500_000_000000,
         bidWall,
         baseMint: META,
         daoTreasury: daoTreasury,
@@ -225,18 +224,21 @@ export default function suite() {
       feeRecipient,
     );
 
+    // Bid wall is now closed and has no remaining USDC
     assert.equal(bidWallUsdcBalanceAfter, 0n);
+    // Authority received 50k USDC left over from the bid wall
     assert.equal(
       authorityUsdcBalanceAfter,
       authorityUsdcBalanceBefore + 50_000_000000n,
     );
+    // Fee recipient received 500 USDC in fees
     assert.equal(
       feeRecipientUsdcBalanceAfter,
       feeRecipientUsdcBalanceBefore + 500_000000n,
     );
   });
 
-  it("fails to close bid wallwhen bid wall is not expired", async function () {
+  it("fails to close bid wall when bid wall is not expired", async function () {
     try {
       await bidWallClient
         .closeBidWallIx({

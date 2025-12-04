@@ -50,10 +50,7 @@ export class BidWallClient {
   initializeBidWallIx({
     amount,
     durationSeconds,
-    initialAmmBaseReserves,
     initialAmmQuoteReserves,
-    initialNav,
-    initialDaoTreasuryQuoteAmount,
     daoTreasury,
     authority,
     baseMint,
@@ -65,10 +62,7 @@ export class BidWallClient {
   }: {
     amount: number;
     durationSeconds: number;
-    initialAmmBaseReserves: number;
     initialAmmQuoteReserves: number;
-    initialNav: number;
-    initialDaoTreasuryQuoteAmount: number;
     daoTreasury: PublicKey;
     creator?: PublicKey;
     nonce?: BN;
@@ -97,10 +91,7 @@ export class BidWallClient {
         amount: new BN(amount),
         nonce,
         durationSeconds,
-        initialAmmBaseReserves: new BN(initialAmmBaseReserves),
         initialAmmQuoteReserves: new BN(initialAmmQuoteReserves),
-        initialNav: new BN(initialNav),
-        initialDaoTreasuryQuoteAmount: new BN(initialDaoTreasuryQuoteAmount),
       })
       .accounts({
         bidWall,

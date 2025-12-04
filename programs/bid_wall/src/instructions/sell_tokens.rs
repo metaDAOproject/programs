@@ -1,4 +1,4 @@
-use crate::{error::BidWallError, state::BidWall, usdc_mint, FEE_BPS};
+use crate::{error::BidWallError, state::BidWall, usdc_mint, FEE_BPS, TOKENS_TO_PARTICIPANTS};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
@@ -43,6 +43,19 @@ pub struct SellTokens<'info> {
     pub system_program: Program<'info, System>,
 }
 
+// User sells tokens into the bid wall at the initial NAV per token, adjusted for treasury balance changes.
+//
+// NAV per token formula:
+//
+// dao.treasury_balance + initial_lp_quote + bid_wall_quote
+// --------------------------------------------------------
+//         base_at_launch - base_bought_by_bid_wall
+//
+// This formula works because we are only concerned with buying at the initial NAV per token,
+// adjusted for treasury balance changes.
+// Thus, if someone were to burn their tokens outside of the bid wall, they would be increasing
+// the NAV per token, meaning that selling into bid wall would be LESS profitable, not more.
+
 impl SellTokens<'_> {
     pub fn validate(&self, _args: &SellTokensArgs) -> Result<()> {
         let clock = Clock::get()?;
@@ -63,16 +76,22 @@ impl SellTokens<'_> {
     pub fn handle(ctx: Context<Self>, args: SellTokensArgs) -> Result<()> {
         let SellTokensArgs { amount_in } = args;
 
-        let amount_out_before_vault_adjustment: u128 = amount_in as u128
-            * ctx.accounts.bid_wall.initial_amm_quote_reserves as u128
-            / ctx.accounts.bid_wall.initial_amm_base_reserves as u128;
-
-        let current_nav = ctx.accounts.bid_wall.initial_nav
+        // We calculate the total NAV as as sum of:
+        // - The initial quote reserves of the Futarchy AMM
+        // - The quote tokens in the DAO treasury (which can be spent by the DAO)
+        // - The quote tokens in the bid wall (which are spent by selling into the bid wall)
+        let total_nav: u128 = (ctx.accounts.bid_wall.initial_amm_quote_reserves
             + ctx.accounts.dao_treasury_quote_token_account.amount
-            - ctx.accounts.bid_wall.initial_dao_treasury_quote_amount;
+            + ctx.accounts.bid_wall_quote_token_account.amount)
+            as u128;
 
-        let amount_out_before_fee = (amount_out_before_vault_adjustment * current_nav as u128
-            / ctx.accounts.bid_wall.initial_nav as u128) as u64;
+        // We work under the assumption that the total supply is 10M tokens
+        // We then assume that base tokens are only burned by the bid wall.
+        let remaining_base =
+            (TOKENS_TO_PARTICIPANTS - ctx.accounts.bid_wall.base_bought_amount) as u128;
+
+        let amount_out_before_fee =
+            (amount_in as u128 * total_nav as u128 / remaining_base as u128) as u64;
 
         let amount_out_after_fee =
             ((10_000_u128 - FEE_BPS as u128) * amount_out_before_fee as u128 / 10_000_u128) as u64;
@@ -112,8 +131,11 @@ impl SellTokens<'_> {
             amount_out_after_fee,
         )?;
 
-        // Update fees collected by bid wall
+        msg!("fees collected: {}", fee);
+
+        // Track fees collected and base tokens bought up by the bid wall
         ctx.accounts.bid_wall.fees_collected += fee;
+        ctx.accounts.bid_wall.base_bought_amount += amount_in;
 
         Ok(())
     }

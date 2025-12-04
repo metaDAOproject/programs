@@ -30,6 +30,8 @@ export default function suite() {
   let secondFunder: Keypair;
   let ammBaseVaultReserves: BN;
   let ammQuoteVaultReserves: BN;
+  let minRaiseAmount: BN;
+  let fundAmount: BN;
 
   before(async function () {
     futarchyClient = this.futarchy;
@@ -60,13 +62,15 @@ export default function suite() {
       this.payer.publicKey,
     );
 
+    minRaiseAmount = new BN(100_000 * 10 ** 6); // 100k
+
     // Initialize launch
     await this.launchpad_v7
       .initializeLaunchIx({
         tokenName: "META",
         tokenSymbol: "META",
         tokenUri: "https://example.com",
-        minimumRaiseAmount: new BN(100_000 * 10 ** 6), // 100k
+        minimumRaiseAmount: minRaiseAmount, // 100k
         secondsForLaunch: 60 * 60 * 24 * 4, // 4 days
         baseMint: META,
         quoteMint: MAINNET_USDC,
@@ -83,7 +87,7 @@ export default function suite() {
 
     await this.createTokenAccount(META, this.payer.publicKey);
 
-    const fundAmount = new BN(100_000_000_000); // 100K USDC
+    fundAmount = new BN(200_000_000_000); // 200K USDC - double the initial raise amount
 
     // Fund the launch
     await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
@@ -147,9 +151,8 @@ export default function suite() {
 
     await bidWallClient
       .initializeBidWallIx({
-        amount: 100_000_000000,
+        amount: fundAmount.sub(minRaiseAmount).toNumber(),
         durationSeconds,
-        initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         creator: this.payer.publicKey,
@@ -159,12 +162,10 @@ export default function suite() {
         feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
-        initialNav: 100_000_000000, // Final raise amount
-        initialDaoTreasuryQuoteAmount: 80_000_000000, // 20% of final raise amount goes to Futarchy AMM
       })
       .rpc();
 
-    const [bidWall] = getBidWallAddr({
+    const [bidWall, bump] = getBidWallAddr({
       creator: this.payer.publicKey,
       baseMint: META,
       nonce: new BN(0),
@@ -174,34 +175,27 @@ export default function suite() {
 
     assert.isNotNull(bidWallAccount);
 
-    assert.equal(
-      bidWallAccount.authority.toBase58(),
-      this.payer.publicKey.toBase58(),
-    );
-    assert.equal(bidWallAccount.baseMint.toBase58(), META.toBase58());
-    assert.equal(bidWallAccount.durationSeconds, durationSeconds);
-    assert.equal(bidWallAccount.feesCollected.toString(), "0");
-    assert.equal(
-      bidWallAccount.initialAmmBaseReserves.toString(),
-      ammBaseVaultReserves.toString(),
-    );
+    assert.equal(bidWallAccount.nonce.toString(), new BN(0).toString());
     assert.equal(
       bidWallAccount.initialAmmQuoteReserves.toString(),
       ammQuoteVaultReserves.toString(),
+    );
+    assert.equal(bidWallAccount.feesCollected.toString(), "0");
+    assert.equal(bidWallAccount.baseBoughtAmount.toString(), "0");
+    assert.equal(
+      bidWallAccount.creator.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
+    assert.equal(
+      bidWallAccount.authority.toBase58(),
+      this.payer.publicKey.toBase58(),
     );
     assert.equal(
       bidWallAccount.daoTreasury.toBase58(),
       launchAccount.daoVault.toBase58(),
     );
-    // 20_000_000000 quote tokens (20% of 100_000_000000 raise) were supplied to Futarchy AMM liquidity
-    assert.equal(
-      bidWallAccount.initialDaoTreasuryQuoteAmount.toString(),
-      new BN(80_000_000000).toString(),
-    );
-    assert.equal(
-      bidWallAccount.creator.toBase58(),
-      this.payer.publicKey.toBase58(),
-    );
-    assert.equal(bidWallAccount.nonce.toString(), new BN(0).toString());
+    assert.equal(bidWallAccount.baseMint.toBase58(), META.toBase58());
+    assert.equal(bidWallAccount.durationSeconds, durationSeconds);
+    assert.equal(bidWallAccount.pdaBump, bump);
   });
 }

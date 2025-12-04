@@ -1556,6 +1556,11 @@ export type LaunchpadV7 = {
       name: "PerformancePackageAlreadyInitialized";
       msg: "Performance package already initialized";
     },
+    {
+      code: 6029;
+      name: "InvalidDao";
+      msg: "Invalid DAO";
+    },
   ];
 };
 
@@ -3116,6 +3121,11 @@ export const IDL: LaunchpadV7 = {
       code: 6028,
       name: "PerformancePackageAlreadyInitialized",
       msg: "Performance package already initialized",
+    },
+    {
+      code: 6029,
+      name: "InvalidDao",
+      msg: "Invalid DAO",
     },
   ],
 };

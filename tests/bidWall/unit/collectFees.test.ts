@@ -149,7 +149,6 @@ export default function suite() {
       .initializeBidWallIx({
         amount: 100_000_000000,
         durationSeconds,
-        initialAmmBaseReserves: ammBaseVaultReserves.toNumber(),
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         creator: this.payer.publicKey,
@@ -159,8 +158,6 @@ export default function suite() {
         feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
-        initialNav: 100_000_000000, // Final raise amount
-        initialDaoTreasuryQuoteAmount: 80_000_000000, // 20% of final raise amount goes to Futarchy AMM
       })
       .rpc();
 
@@ -214,7 +211,7 @@ export default function suite() {
       feeRecipient,
     );
 
-    const expectedFeesCollected = 500_000000n;
+    const expectedFeesCollected = 1_000_000000n;
 
     assert.equal(
       bidWallUsdcBalanceAfter,

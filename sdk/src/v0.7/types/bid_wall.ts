@@ -379,30 +379,18 @@ export type BidWall = {
             type: "i64";
           },
           {
-            name: "feesCollected";
-            docs: ["The fees collected by the bid wall."];
-            type: "u64";
-          },
-          {
-            name: "initialAmmBaseReserves";
-            docs: ["The initial base reserves of the Futarchy AMM."];
-            type: "u64";
-          },
-          {
             name: "initialAmmQuoteReserves";
             docs: ["The initial quote (USDC) reserves of the Futarchy AMM."];
             type: "u64";
           },
           {
-            name: "initialDaoTreasuryQuoteAmount";
-            docs: ["The initial amount of quote tokens in the DAO treasury."];
+            name: "feesCollected";
+            docs: ["The fees collected by the bid wall."];
             type: "u64";
           },
           {
-            name: "initialNav";
-            docs: [
-              "The total raise amount of the launch this bid wall is associated with.",
-            ];
+            name: "baseBoughtAmount";
+            docs: ["The amount of base tokens bought up by the bid wall."];
             type: "u64";
           },
           {
@@ -461,19 +449,7 @@ export type BidWall = {
             type: "u64";
           },
           {
-            name: "initialAmmBaseReserves";
-            type: "u64";
-          },
-          {
             name: "initialAmmQuoteReserves";
-            type: "u64";
-          },
-          {
-            name: "initialNav";
-            type: "u64";
-          },
-          {
-            name: "initialDaoTreasuryQuoteAmount";
             type: "u64";
           },
           {
@@ -896,30 +872,18 @@ export const IDL: BidWall = {
             type: "i64",
           },
           {
-            name: "feesCollected",
-            docs: ["The fees collected by the bid wall."],
-            type: "u64",
-          },
-          {
-            name: "initialAmmBaseReserves",
-            docs: ["The initial base reserves of the Futarchy AMM."],
-            type: "u64",
-          },
-          {
             name: "initialAmmQuoteReserves",
             docs: ["The initial quote (USDC) reserves of the Futarchy AMM."],
             type: "u64",
           },
           {
-            name: "initialDaoTreasuryQuoteAmount",
-            docs: ["The initial amount of quote tokens in the DAO treasury."],
+            name: "feesCollected",
+            docs: ["The fees collected by the bid wall."],
             type: "u64",
           },
           {
-            name: "initialNav",
-            docs: [
-              "The total raise amount of the launch this bid wall is associated with.",
-            ],
+            name: "baseBoughtAmount",
+            docs: ["The amount of base tokens bought up by the bid wall."],
             type: "u64",
           },
           {
@@ -978,19 +942,7 @@ export const IDL: BidWall = {
             type: "u64",
           },
           {
-            name: "initialAmmBaseReserves",
-            type: "u64",
-          },
-          {
             name: "initialAmmQuoteReserves",
-            type: "u64",
-          },
-          {
-            name: "initialNav",
-            type: "u64",
-          },
-          {
-            name: "initialDaoTreasuryQuoteAmount",
             type: "u64",
           },
           {

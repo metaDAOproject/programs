@@ -7,16 +7,12 @@ pub struct BidWall {
     pub nonce: u64,
     /// When the bid wall was created.
     pub created_timestamp: i64,
-    /// The fees collected by the bid wall.
-    pub fees_collected: u64,
-    /// The initial base reserves of the Futarchy AMM.
-    pub initial_amm_base_reserves: u64,
     /// The initial quote (USDC) reserves of the Futarchy AMM.
     pub initial_amm_quote_reserves: u64,
-    /// The initial amount of quote tokens in the DAO treasury.
-    pub initial_dao_treasury_quote_amount: u64,
-    /// The total raise amount of the launch this bid wall is associated with.
-    pub initial_nav: u64,
+    /// The fees collected by the bid wall.
+    pub fees_collected: u64,
+    /// The amount of base tokens bought up by the bid wall.
+    pub base_bought_amount: u64,
     /// The authority of the bid wall.
     pub creator: Pubkey,
     /// The authority of the bid wall.

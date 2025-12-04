@@ -23,8 +23,6 @@ security_txt! {
 
 declare_id!("WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx");
 
-pub const FEE_BPS: u16 = 100;
-
 pub mod usdc_mint {
     use anchor_lang::prelude::declare_id;
 
@@ -34,6 +32,12 @@ pub mod usdc_mint {
     #[cfg(not(feature = "devnet"))]
     declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 }
+
+pub const FEE_BPS: u16 = 100;
+
+pub const TOKEN_SCALE: u64 = 1_000_000;
+/// 10M tokens with 6 decimals - the exact amount of tokens that end up in floating supply at launch
+pub const TOKENS_TO_PARTICIPANTS: u64 = 10_000_000 * TOKEN_SCALE;
 
 #[program]
 pub mod bid_wall {
