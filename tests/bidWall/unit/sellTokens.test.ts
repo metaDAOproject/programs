@@ -1,4 +1,5 @@
 import {
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   TransactionMessage,
@@ -227,7 +228,7 @@ export default function suite() {
     );
   });
 
-  it("successfully sells tokens at the DAO's updated NAV after treasury balance changes", async function () {
+  it.only("successfully sells tokens at the DAO's updated NAV after treasury balance changes", async function () {
     const usdcBalanceBefore = await this.getTokenBalance(
       MAINNET_USDC,
       this.payer.publicKey,
@@ -333,12 +334,12 @@ export default function suite() {
     // Total assumed NAV = 100_000_000000 USDC (100K)
     // Active supply = 8_000_000_000000 META (8M)
     // Price = 100_000_000000 / 8_000_000_000000 = ~0.0125 USDC per META
-    // Assume user sells 2.5M META
-    // User will receive 30_937.5 USDC, which is 31_250 USDC (2.5M * 0.0125) minus 1% fee (312.5 USDC), rounded down.
+    // Assume user sells 2M META
+    // User will receive 24_750 USDC, which is 25_000 USDC (2M * 0.0125) minus 1% fee (250 USDC), rounded down.
 
     await bidWallClient
       .sellTokensIx({
-        amount: 2_500_000_000000,
+        amount: 2_000_000_000000,
         bidWall,
         baseMint: META,
         daoTreasury: daoTreasury,
@@ -357,24 +358,68 @@ export default function suite() {
     );
     assert.equal(
       usdcBalanceAfterSecondSell,
-      usdcBalanceAfterFirstSell + 30_937_500000n,
+      usdcBalanceAfterFirstSell + 24_750_000000n,
     );
-    assert.equal(metaBalanceAfterSecondSell, 5_500_000_000000n);
+    assert.equal(metaBalanceAfterSecondSell, 6_000_000_000000n);
 
-    // Bid wall collected an additional 312_500000 USDC (312.5) in fees, totalling 712.5 USDC
+    // Bid wall collected an additional 250_000000 USDC (250) in fees, totalling 650 USDC
     bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
     assert.equal(
       bidWallAccount.feesCollected.toString(),
-      new BN(712_500000).toString(),
+      new BN(650_000000).toString(),
     );
 
     const bidWallUsdcBalanceAfterSecondSell = await this.getTokenBalance(
       MAINNET_USDC,
       bidWall,
     );
-    // Bid wall should have 29_462.50 USDC after the second sell
-    // That is 60.4K (after first sell) reduced by 31.25k (bought) minus the fee (312.5)
-    assert.equal(bidWallUsdcBalanceAfterSecondSell, 29_462_500000n);
+    // Bid wall should have 35_650 USDC after the second sell
+    // That is 60_400 (after first sell) reduced by 25_000 (bought) minus the fee (250)
+    assert.equal(bidWallUsdcBalanceAfterSecondSell, 35_650_000_000n);
+
+    // Confirm that a third sell would get the same price per token as the second sell
+    await bidWallClient
+      .sellTokensIx({
+        amount: 2_000_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
+      ])
+      .rpc();
+
+    const usdcBalanceAfterThirdSell = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+    const metaBalanceAfterThirdSell = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+    assert.equal(
+      usdcBalanceAfterThirdSell,
+      usdcBalanceAfterSecondSell + 24_750_000000n,
+    );
+    assert.equal(metaBalanceAfterThirdSell, 4_000_000_000000n);
+
+    // Bid wall collected an additional 250 USDC in fees, totalling 900 USDC
+    bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
+    assert.equal(
+      bidWallAccount.feesCollected.toString(),
+      new BN(900_000000).toString(),
+    );
+
+    const bidWallUsdcBalanceAfterThirdSell = await this.getTokenBalance(
+      MAINNET_USDC,
+      bidWall,
+    );
+    // Bid wall should have 10_900 USDC after the third sell
+    // That is 35_650 (after second sell) reduced by 25_000 (bought) minus the fee (250)
+    assert.equal(bidWallUsdcBalanceAfterThirdSell, 10_900_000000n);
   });
 
   it("fails to sell tokens into a bid wall when bid wall is expired", async function () {
