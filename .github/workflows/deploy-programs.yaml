@@ -32,8 +32,6 @@ jobs:
       verify: true
       use-squads: true
       features: "production"
-      override-solana-version: "1.17.31"
-      override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
     secrets:
       MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
@@ -53,8 +51,6 @@ jobs:
       verify: true
       use-squads: true
       features: "production"
-      override-solana-version: "1.17.31"
-      override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
     secrets:
       MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
@@ -74,8 +70,6 @@ jobs:
       verify: true
       use-squads: true
       features: "production"
-      override-solana-version: "1.17.31"
-      override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
     secrets:
       MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
@@ -94,8 +88,6 @@ jobs:
       upload_idl: true
       verify: true
       use-squads: true
-      override-solana-version: "1.17.31"
-      override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
     secrets:
       MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
