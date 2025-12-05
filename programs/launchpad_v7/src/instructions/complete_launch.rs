@@ -367,6 +367,12 @@ impl CompleteLaunch<'_> {
             total_approved_amount: launch.total_approved_amount,
             dao: launch.dao,
             dao_treasury: launch.dao_vault,
+            bid_wall: if usdc_to_bid_wall > 0 {
+                Some(ctx.accounts.bid_wall.key())
+            } else {
+                None
+            },
+            bid_wall_amount: usdc_to_bid_wall,
         });
 
         let refundable_usdc = launch.total_committed_amount - launch_total_approved_amount;

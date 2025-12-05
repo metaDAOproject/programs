@@ -79,6 +79,8 @@ pub struct LaunchCompletedEvent {
     pub dao: Option<Pubkey>,
     pub dao_treasury: Option<Pubkey>,
     pub total_approved_amount: u64,
+    pub bid_wall: Option<Pubkey>,
+    pub bid_wall_amount: u64,
 }
 
 #[event]
@@ -112,4 +114,11 @@ pub struct LaunchClaimAdditionalTokenAllocationEvent {
     pub launch: Pubkey,
     pub additional_tokens_amount: u64,
     pub additional_tokens_recipient: Pubkey,
+}
+
+#[event]
+pub struct LaunchPerformancePackageInitializedEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub performance_package: Pubkey,
 }

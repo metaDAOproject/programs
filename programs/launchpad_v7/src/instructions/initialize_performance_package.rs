@@ -3,6 +3,7 @@ use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::error::LaunchpadError;
+use crate::events::{CommonFields, LaunchPerformancePackageInitializedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::{PRICE_SCALE, TOKENS_TO_PARTICIPANTS};
 
@@ -103,17 +104,14 @@ impl InitializePerformancePackage<'_> {
         )?;
 
         ctx.accounts.launch.is_performance_package_initialized = true;
+        ctx.accounts.launch.seq_num += 1;
 
-        // TODO - Pileks: add a new event for performance package initialization
-        // emit_cpi!(LaunchCompletedEvent {
-        //     common: CommonFields::new(&clock, launch.seq_num),
-        //     launch: launch.key(),
-        //     final_state: launch.state,
-        //     total_committed: launch.total_committed_amount,
-        //     total_approved_amount: launch.total_approved_amount,
-        //     dao: launch.dao,
-        //     dao_treasury: launch.dao_vault,
-        // });
+        let clock = Clock::get()?;
+        emit_cpi!(LaunchPerformancePackageInitializedEvent {
+            common: CommonFields::new(&clock, ctx.accounts.launch.seq_num),
+            launch: ctx.accounts.launch.key(),
+            performance_package: ctx.accounts.performance_package.key(),
+        });
 
         Ok(())
     }

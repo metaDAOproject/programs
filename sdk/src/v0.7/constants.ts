@@ -105,7 +105,7 @@ export const SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET = new PublicKey(
 );
 
 export const MAINNET_METEORA_CONFIG = new PublicKey(
-  "Asv1KQqeop9e4FFvTzEBZhwtTjuWHXPq5thUGtQrzzA3",
+  "FaA6RM9enPh1tU9Y8LiGCq715JubLc49WGcYTdNvDfsc",
 );
 
 // TODO - Pileks: change to the actual fee recipient

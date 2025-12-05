@@ -1297,6 +1297,18 @@ export type LaunchpadV7 = {
           type: "u64";
           index: false;
         },
+        {
+          name: "bidWall";
+          type: {
+            option: "publicKey";
+          };
+          index: false;
+        },
+        {
+          name: "bidWallAmount";
+          type: "u64";
+          index: false;
+        },
       ];
     },
     {
@@ -1409,6 +1421,28 @@ export type LaunchpadV7 = {
         },
         {
           name: "additionalTokensRecipient";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "LaunchPerformancePackageInitializedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "performancePackage";
           type: "publicKey";
           index: false;
         },
@@ -2868,6 +2902,18 @@ export const IDL: LaunchpadV7 = {
           type: "u64",
           index: false,
         },
+        {
+          name: "bidWall",
+          type: {
+            option: "publicKey",
+          },
+          index: false,
+        },
+        {
+          name: "bidWallAmount",
+          type: "u64",
+          index: false,
+        },
       ],
     },
     {
@@ -2980,6 +3026,28 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "additionalTokensRecipient",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "LaunchPerformancePackageInitializedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "performancePackage",
           type: "publicKey",
           index: false,
         },
