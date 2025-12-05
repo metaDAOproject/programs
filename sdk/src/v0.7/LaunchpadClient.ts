@@ -651,12 +651,87 @@ export class LaunchpadClient {
     });
   }
 
+  initializePerformancePackageIx({
+    launch,
+    baseMint,
+    payer = this.provider.publicKey,
+  }: {
+    launch: PublicKey;
+    baseMint: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    const [dao] = getDaoAddr({
+      nonce: new BN(0),
+      daoCreator: launchSigner,
+    });
+
+    const [multisigPda] = multisig.getMultisigPda({ createKey: dao });
+    const [multisigVault] = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    });
+
+    const launchBaseVault = getAssociatedTokenAddressSync(
+      baseMint,
+      launchSigner,
+      true,
+    );
+
+    const performancePackage = this.getLaunchPerformancePackageAddress({
+      launch,
+    });
+
+    const performancePackageTokenAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      performancePackage,
+      true,
+    );
+
+    return this.launchpad.methods.initializePerformancePackage().accounts({
+      launch,
+      performancePackage,
+      performancePackageTokenAccount,
+      dao,
+      squadsMultisig: multisigPda,
+      squadsMultisigVault: multisigVault,
+      launchBaseVault,
+      baseMint,
+      payer,
+      launchSigner,
+      squadsProgram: SQUADS_PROGRAM_ID,
+      priceBasedPerformancePackageEventAuthority:
+        this.priceBasedUnlock.getEventAuthorityAddress(),
+      priceBasedPerformancePackageProgram: this.priceBasedUnlock.programId,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    });
+  }
+
   getLaunchAddress({ baseMint }: { baseMint: PublicKey }): PublicKey {
     return getLaunchAddr(this.launchpad.programId, baseMint)[0];
   }
 
   getLaunchSignerAddress({ launch }: { launch: PublicKey }): PublicKey {
     return getLaunchSignerAddr(this.launchpad.programId, launch)[0];
+  }
+
+  getLaunchPerformancePackageAddress({
+    launch,
+  }: {
+    launch: PublicKey;
+  }): PublicKey {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    return getPerformancePackageAddr({ createKey: launchSigner })[0];
+  }
+
+  getLaunchDaoAddress({ launch }: { launch: PublicKey }): PublicKey {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    return getDaoAddr({ nonce: new BN(0), daoCreator: launchSigner })[0];
   }
 
   getFundingRecordAddress({

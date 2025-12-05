@@ -685,6 +685,102 @@ export type LaunchpadV7 = {
       ];
       args: [];
     },
+    {
+      name: "initializePerformancePackage";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "launchSigner";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "performancePackageTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "priceBasedPerformancePackageProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "priceBasedPerformancePackageEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -2274,6 +2370,102 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "initializePerformancePackage",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "launchSigner",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "performancePackageTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "priceBasedPerformancePackageProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "priceBasedPerformancePackageEventAuthority",
           isMut: false,
           isSigner: false,
         },

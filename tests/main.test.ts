@@ -739,5 +739,5 @@ describe("bid_wall", bidWall);
 describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);
-  describe.skip("full launch v7", fullLaunch_v7);
+  describe("full launch v7", fullLaunch_v7);
 });

@@ -114,4 +114,11 @@ pub mod launchpad_v7 {
     ) -> Result<()> {
         ClaimAdditionalTokenAllocation::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn initialize_performance_package(
+        ctx: Context<InitializePerformancePackage>,
+    ) -> Result<()> {
+        InitializePerformancePackage::handle(ctx)
+    }
 }
