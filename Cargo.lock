@@ -1173,6 +1173,7 @@ dependencies = [
  "ahash 0.8.6",
  "anchor-lang",
  "anchor-spl",
+ "bid_wall",
  "damm_v2_cpi",
  "futarchy",
  "price_based_performance_package",

@@ -108,6 +108,9 @@ export const MAINNET_METEORA_CONFIG = new PublicKey(
   "Asv1KQqeop9e4FFvTzEBZhwtTjuWHXPq5thUGtQrzzA3",
 );
 
+// TODO - Pileks: change to the actual fee recipient
+export const FEE_RECIPIENT = new PublicKey("11111111111111111111111111111111");
+
 export const PERMISSIONLESS_ACCOUNT = Keypair.fromSecretKey(
   Uint8Array.from([
     249, 158, 188, 171, 243, 143, 1, 48, 87, 243, 209, 153, 144, 106, 23, 88,

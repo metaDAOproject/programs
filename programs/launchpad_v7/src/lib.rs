@@ -51,6 +51,13 @@ pub mod usdc_mint {
     declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 }
 
+// TODO - Pileks: Set this to the correct fee recipient address
+pub mod fee_recipient {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("11111111111111111111111111111111");
+}
+
 #[program]
 pub mod launchpad_v7 {
     use super::*;

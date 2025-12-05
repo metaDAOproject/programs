@@ -5,6 +5,7 @@ use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, SetAuthority, Token, TokenAccount, Transfer};
 use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_interface;
+use bid_wall::program::BidWall;
 use damm_v2_cpi::constants::seeds::{
     POOL_AUTHORITY_PREFIX, POOL_PREFIX, POSITION_NFT_ACCOUNT_PREFIX, POSITION_PREFIX,
     TOKEN_VAULT_PREFIX,
@@ -16,7 +17,7 @@ use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCloseEvent, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::{
-    PRICE_SCALE, TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY,
+    fee_recipient, PRICE_SCALE, TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY,
     TOKENS_TO_PARTICIPANTS, TOKEN_SCALE,
 };
 use anchor_spl::metadata::{
@@ -25,9 +26,6 @@ use anchor_spl::metadata::{
 
 use futarchy::program::Futarchy;
 use futarchy::{InitialSpendingLimit, InitializeDaoParams, ProvideLiquidityParams};
-
-use price_based_performance_package::program::PriceBasedPerformancePackage;
-// use price_based_performance_package::{InitializePerformancePackageParams, OracleConfig, Tranche};
 
 use damm_v2_cpi::program::DammV2Cpi;
 
@@ -46,9 +44,9 @@ pub struct StaticCompleteLaunchAccounts<'info> {
     /// CHECK: checked by squads multisig program
     #[account(mut)]
     pub squads_program_config_treasury: UncheckedAccount<'info>,
-    pub price_based_performance_package_program: Program<'info, PriceBasedPerformancePackage>,
-    /// CHECK: checked by price based performance package program
-    pub price_based_performance_package_event_authority: UncheckedAccount<'info>,
+    pub bid_wall_program: Program<'info, BidWall>,
+    /// CHECK: checked by bid wall program
+    pub bid_wall_event_authority: UncheckedAccount<'info>,
 }
 
 pub fn max_key(left: &Pubkey, right: &Pubkey) -> [u8; 32] {
@@ -206,14 +204,17 @@ pub struct CompleteLaunch<'info> {
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
     pub spending_limit: UncheckedAccount<'info>,
 
-    /// CHECK: initialized by price based performance package program
-    // #[account(mut, seeds = [b"performance_package", launch_signer.key().as_ref()], bump, seeds::program = static_accounts.price_based_performance_package_program)]
+    /// CHECK: checked by bid wall program
+    // #[account(mut, seeds = [b"bid_wall", base_mint.key().as_ref(), launch_signer.key().as_ref(), 0_u64.to_le_bytes().as_ref()], bump, seeds::program = static_accounts.bid_wall_program)]
     #[account(mut)]
-    pub performance_package: UncheckedAccount<'info>,
+    pub bid_wall: UncheckedAccount<'info>,
+    /// CHECK: checked by bid wall program
+    #[account(mut)]
+    pub bid_wall_quote_token_account: UncheckedAccount<'info>,
 
-    /// CHECK: initialized by price based performance package program
-    #[account(mut)]
-    pub performance_package_token_account: UncheckedAccount<'info>,
+    /// CHECK: The fee recipient of bid wall fees, a fixed address
+    #[account(address = fee_recipient::id())]
+    pub fee_recipient: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -309,17 +310,25 @@ impl CompleteLaunch<'_> {
         let price_1e12 = ((launch_total_approved_amount as u128) * PRICE_SCALE)
             / (TOKENS_TO_PARTICIPANTS as u128);
 
+        // We first determine how much USDC to allocate to the LP pool, with the rest going to the DAO
         let usdc_to_lp = launch_total_approved_amount.saturating_div(5);
         let usdc_to_dao = launch_total_approved_amount.saturating_sub(usdc_to_lp);
 
+        // We then determine how much USDC to allocate to the DAO treasury, and how much to the DAO's bid wall
+        // In scenarios where the total approved amount is less than 1.25x the minimum raise amount:
+        // - we allocate the entire amount after LP allocation to the DAO treasury
+        // - we don't initialize the bid wall
+        // In all other scenarios, a bid wall is initialized with the remaining USDC after LP and DAO treasury allocation
+        // This is emergent behavior from the design of the launch, as 20% of the total approved amount is allocated to Futarchy AMM liquidity
+        let usdc_to_dao_treasury = usdc_to_dao.min(ctx.accounts.launch.minimum_raise_amount);
+        let usdc_to_bid_wall = usdc_to_dao.saturating_sub(usdc_to_dao_treasury);
+
         ctx.accounts.initialize_dao(launch_signer, price_1e12)?;
 
-        // // TODO: only do this is there exists a performance package config
-        // ctx.accounts.initialize_performance_package(
-        //     price_1e12,
-        //     clock.unix_timestamp,
-        //     launch_signer,
-        // )?;
+        if usdc_to_bid_wall > 0 {
+            ctx.accounts
+                .initialize_bid_wall(usdc_to_bid_wall, usdc_to_lp, launch_signer)?;
+        }
 
         ctx.accounts.provide_futarchy_amm_liquidity(
             usdc_to_lp,
@@ -334,7 +343,8 @@ impl CompleteLaunch<'_> {
             launch_signer_seeds,
         )?;
 
-        ctx.accounts.send_usdc_to_dao(usdc_to_dao, launch_signer)?;
+        ctx.accounts
+            .send_usdc_to_dao(usdc_to_dao_treasury, launch_signer)?;
 
         ctx.accounts.transfer_mint_authority_to_dao(launch_signer)?;
 
@@ -424,80 +434,47 @@ impl CompleteLaunch<'_> {
         )
     }
 
-    // #[inline(never)]
-    // fn initialize_performance_package(
-    //     &self,
-    //     launch_price_1e12: u128,
-    //     current_unix_timestamp: i64,
-    //     launch_signer: &[&[&[u8]]],
-    // ) -> Result<()> {
-    //     price_based_performance_package::cpi::initialize_performance_package(
-    //         CpiContext::new_with_signer(
-    //             self.static_accounts
-    //                 .price_based_performance_package_program
-    //                 .to_account_info(),
-    //             price_based_performance_package::cpi::accounts::InitializePerformancePackage {
-    //                 performance_package: self.performance_package.to_account_info(),
-    //                 create_key: self.launch_signer.to_account_info(),
-    //                 token_mint: self.base_mint.to_account_info(),
-    //                 grantor_token_account: self.launch_base_vault.to_account_info(),
-    //                 grantor: self.launch_signer.to_account_info(),
-    //                 payer: self.payer.to_account_info(),
-    //                 system_program: self.system_program.to_account_info(),
-    //                 token_program: self.token_program.to_account_info(),
-    //                 associated_token_program: self.associated_token_program.to_account_info(),
-    //                 event_authority: self
-    //                     .static_accounts
-    //                     .price_based_performance_package_event_authority
-    //                     .to_account_info(),
-    //                 program: self
-    //                     .static_accounts
-    //                     .price_based_performance_package_program
-    //                     .to_account_info(),
-    //                 performance_package_token_vault: self
-    //                     .performance_package_token_account
-    //                     .to_account_info(),
-    //             },
-    //             launch_signer,
-    //         ),
-    //         InitializePerformancePackageParams {
-    //             tranches: vec![
-    //                 Tranche {
-    //                     price_threshold: launch_price_1e12 * 2,
-    //                     token_amount: self.launch.performance_package_token_amount / 5,
-    //                 },
-    //                 Tranche {
-    //                     price_threshold: launch_price_1e12 * 4,
-    //                     token_amount: self.launch.performance_package_token_amount / 5,
-    //                 },
-    //                 Tranche {
-    //                     price_threshold: launch_price_1e12 * 8,
-    //                     token_amount: self.launch.performance_package_token_amount / 5,
-    //                 },
-    //                 Tranche {
-    //                     price_threshold: launch_price_1e12 * 16,
-    //                     token_amount: self.launch.performance_package_token_amount / 5,
-    //                 },
-    //                 Tranche {
-    //                     price_threshold: launch_price_1e12 * 32,
-    //                     token_amount: self.launch.performance_package_token_amount / 5,
-    //                 },
-    //             ],
-    //             min_unlock_timestamp: current_unix_timestamp
-    //                 + (self.launch.months_until_insiders_can_unlock as i64 * 30 * 24 * 60 * 60),
-    //             oracle_config: OracleConfig {
-    //                 oracle_account: self.dao.key(),
-    //                 // 8 bytes for `Dao` discriminator, 1 byte for `PoolState` enum discriminator
-    //                 // spot `Pool` is always first and has the TWAP oracle
-    //                 byte_offset: 8 + 1,
-    //             },
-    //             // 3 month TWAP
-    //             twap_length_seconds: 3 * 30 * 24 * 60 * 60,
-    //             grantee: self.launch.performance_package_grantee,
-    //             performance_package_authority: self.squads_multisig_vault.key(),
-    //         },
-    //     )
-    // }
+    fn initialize_bid_wall(
+        &self,
+        usdc_to_bid_wall: u64,
+        usdc_to_lp: u64,
+        launch_signer: &[&[&[u8]]],
+    ) -> Result<()> {
+        bid_wall::cpi::initialize_bid_wall(
+            CpiContext::new_with_signer(
+                self.static_accounts.bid_wall_program.to_account_info(),
+                bid_wall::cpi::accounts::InitializeBidWall {
+                    bid_wall: self.bid_wall.to_account_info(),
+                    payer: self.payer.to_account_info(),
+                    fee_recipient: self.fee_recipient.to_account_info(),
+                    creator: self.launch_signer.to_account_info(),
+                    authority: self.squads_multisig_vault.to_account_info(),
+                    bid_wall_quote_token_account: self
+                        .bid_wall_quote_token_account
+                        .to_account_info(),
+                    creator_quote_token_account: self.launch_quote_vault.to_account_info(),
+                    dao_treasury: self.squads_multisig_vault.to_account_info(),
+                    base_mint: self.base_mint.to_account_info(),
+                    quote_mint: self.quote_mint.to_account_info(),
+                    token_program: self.token_program.to_account_info(),
+                    associated_token_program: self.associated_token_program.to_account_info(),
+                    system_program: self.system_program.to_account_info(),
+                    event_authority: self
+                        .static_accounts
+                        .bid_wall_event_authority
+                        .to_account_info(),
+                    program: self.static_accounts.bid_wall_program.to_account_info(),
+                },
+                launch_signer,
+            ),
+            bid_wall::instructions::InitializeBidWallArgs {
+                amount: usdc_to_bid_wall,
+                nonce: 0,
+                initial_amm_quote_reserves: usdc_to_lp,
+                duration_seconds: 3 * 30 * 24 * 60 * 60, // 3 months
+            },
+        )
+    }
 
     #[inline(never)]
     fn provide_futarchy_amm_liquidity(

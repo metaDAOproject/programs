@@ -8,7 +8,7 @@ import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { getBidWallAddr } from "../v0.7/utils/pda.js";
+import { getBidWallAddr, getEventAuthorityAddr } from "../v0.7/utils/pda.js";
 
 export type CreateBidWallClientParams = {
   provider: AnchorProvider;
@@ -18,9 +18,11 @@ export type CreateBidWallClientParams = {
 export class BidWallClient {
   public readonly provider: AnchorProvider;
   public readonly bidWallProgram: Program<BidWallProgram>;
+  public readonly programId: PublicKey;
 
   constructor(provider: AnchorProvider, bidWallProgramId: PublicKey) {
     this.provider = provider;
+    this.programId = bidWallProgramId;
     this.bidWallProgram = new Program<BidWallProgram>(
       BidWallIDL,
       bidWallProgramId,
@@ -288,5 +290,21 @@ export class BidWallClient {
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     });
+  }
+
+  public getBidWallAddress({
+    baseMint,
+    creator,
+    nonce,
+  }: {
+    baseMint: PublicKey;
+    creator: PublicKey;
+    nonce: BN;
+  }): PublicKey {
+    return getBidWallAddr({ baseMint, creator, nonce })[0];
+  }
+
+  public getEventAuthorityAddress(): PublicKey {
+    return getEventAuthorityAddr(this.programId)[0];
   }
 }

@@ -29,6 +29,7 @@ import {
   DAMM_V2_PROGRAM_ID,
   SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET,
   MAINNET_METEORA_CONFIG,
+  FEE_RECIPIENT,
 } from "./constants.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -52,6 +53,7 @@ import { FutarchyClient } from "./FutarchyClient.js";
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
 import { PriceBasedPerformancePackageClient } from "./PriceBasedPerformancePackageClient.js";
+import { BidWallClient } from "./BidWallClient.js";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
@@ -59,6 +61,7 @@ export type CreateLaunchpadClientParams = {
   autocratProgramId?: PublicKey;
   conditionalVaultProgramId?: PublicKey;
   priceBasedUnlockProgramId?: PublicKey;
+  bidWallProgramId?: PublicKey;
 };
 
 export class LaunchpadClient {
@@ -66,6 +69,7 @@ export class LaunchpadClient {
   public provider: AnchorProvider;
   public autocratClient: FutarchyClient;
   public priceBasedUnlock: PriceBasedPerformancePackageClient;
+  public bidWall: BidWallClient;
 
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
@@ -82,6 +86,10 @@ export class LaunchpadClient {
     this.priceBasedUnlock = PriceBasedPerformancePackageClient.createClient({
       provider: this.provider,
       priceBasedTokenLockProgramId: params.priceBasedUnlockProgramId,
+    });
+    this.bidWall = BidWallClient.createClient({
+      provider: this.provider,
+      bidWallProgramId: params.bidWallProgramId,
     });
   }
 
@@ -285,6 +293,7 @@ export class LaunchpadClient {
     launchAuthority,
     isDevnet = false,
     meteoraConfig = MAINNET_METEORA_CONFIG,
+    feeRecipient = FEE_RECIPIENT,
   }: {
     launch: PublicKey;
     quoteMint?: PublicKey;
@@ -292,6 +301,7 @@ export class LaunchpadClient {
     launchAuthority: PublicKey | null;
     isDevnet?: boolean;
     meteoraConfig?: PublicKey;
+    feeRecipient?: PublicKey;
   }) {
     const launchSigner = this.getLaunchSignerAddress({ launch });
 
@@ -416,6 +426,17 @@ export class LaunchpadClient {
 
     const [dammV2EventAuthority] = getEventAuthorityAddr(DAMM_V2_PROGRAM_ID);
 
+    const bidWall = this.bidWall.getBidWallAddress({
+      baseMint,
+      creator: launchSigner,
+      nonce: new BN(0),
+    });
+    const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      bidWall,
+      true,
+    );
+
     return this.launchpad.methods
       .completeLaunch()
       .accounts({
@@ -449,15 +470,15 @@ export class LaunchpadClient {
           squadsProgramConfigTreasury: isDevnet
             ? SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET
             : SQUADS_PROGRAM_CONFIG_TREASURY,
-          priceBasedPerformancePackageProgram: this.priceBasedUnlock.programId,
-          priceBasedPerformancePackageEventAuthority:
-            this.priceBasedUnlock.getEventAuthorityAddress(),
+          bidWallProgram: this.bidWall.programId,
+          bidWallEventAuthority: this.bidWall.getEventAuthorityAddress(),
         },
         squadsMultisig: multisigPda,
         squadsMultisigVault: multisigVault,
         spendingLimit,
-        performancePackage,
-        performancePackageTokenAccount,
+        bidWall,
+        bidWallQuoteTokenAccount,
+        feeRecipient,
         meteoraAccounts: {
           dammV2Program: DAMM_V2_PROGRAM_ID,
           positionNftMint,

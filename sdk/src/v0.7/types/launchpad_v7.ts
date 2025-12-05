@@ -319,13 +319,18 @@ export type LaunchpadV7 = {
           isSigner: false;
         },
         {
-          name: "performancePackage";
+          name: "bidWall";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "performancePackageTokenAccount";
+          name: "bidWallQuoteTokenAccount";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "feeRecipient";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -377,12 +382,12 @@ export type LaunchpadV7 = {
               isSigner: false;
             },
             {
-              name: "priceBasedPerformancePackageProgram";
+              name: "bidWallProgram";
               isMut: false;
               isSigner: false;
             },
             {
-              name: "priceBasedPerformancePackageEventAuthority";
+              name: "bidWallEventAuthority";
               isMut: false;
               isSigner: false;
             },
@@ -1885,13 +1890,18 @@ export const IDL: LaunchpadV7 = {
           isSigner: false,
         },
         {
-          name: "performancePackage",
+          name: "bidWall",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "performancePackageTokenAccount",
+          name: "bidWallQuoteTokenAccount",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "feeRecipient",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1943,12 +1953,12 @@ export const IDL: LaunchpadV7 = {
               isSigner: false,
             },
             {
-              name: "priceBasedPerformancePackageProgram",
+              name: "bidWallProgram",
               isMut: false,
               isSigner: false,
             },
             {
-              name: "priceBasedPerformancePackageEventAuthority",
+              name: "bidWallEventAuthority",
               isMut: false,
               isSigner: false,
             },
