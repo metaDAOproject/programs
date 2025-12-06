@@ -8,6 +8,12 @@ import {
 export { LaunchpadProgram, LaunchpadIDL };
 
 import {
+  Launchpad as v0_6_0_Launchpad,
+  IDL as v0_6_0_LaunchpadIDL,
+} from "./v0.6.0-launchpad.js";
+export { v0_6_0_Launchpad, v0_6_0_LaunchpadIDL };
+
+import {
   ConditionalVault as ConditionalVaultProgram,
   IDL as ConditionalVaultIDL,
 } from "./conditional_vault.js";
@@ -15,6 +21,12 @@ export { ConditionalVaultProgram, ConditionalVaultIDL };
 
 import { Futarchy as FutarchyProgram, IDL as FutarchyIDL } from "./futarchy.js";
 export { FutarchyProgram, FutarchyIDL };
+
+import {
+  Futarchy as v0_6_0_Futarchy,
+  IDL as v0_6_0_FutarchyIDL,
+} from "./v0.6.0-futarchy.js";
+export { v0_6_0_Futarchy, v0_6_0_FutarchyIDL };
 
 import {
   PriceBasedPerformancePackage as PriceBasedPerformancePackageProgram,
@@ -111,6 +123,29 @@ export type LaunchpadEvent =
   | LaunchStartedEvent
   | LaunchCloseEvent;
 
+export type v0_6_0_LaunchClaimEvent =
+  IdlEvents<v0_6_0_Launchpad>["LaunchClaimEvent"];
+export type v0_6_0_LaunchCompletedEvent =
+  IdlEvents<v0_6_0_Launchpad>["LaunchCompletedEvent"];
+export type v0_6_0_LaunchFundedEvent =
+  IdlEvents<v0_6_0_Launchpad>["LaunchFundedEvent"];
+export type v0_6_0_LaunchInitializedEvent =
+  IdlEvents<v0_6_0_Launchpad>["LaunchInitializedEvent"];
+export type v0_6_0_LaunchRefundedEvent =
+  IdlEvents<v0_6_0_Launchpad>["LaunchRefundedEvent"];
+export type v0_6_0_LaunchStartedEvent =
+  IdlEvents<v0_6_0_Launchpad>["LaunchStartedEvent"];
+export type v0_6_0_LaunchCloseEvent =
+  IdlEvents<v0_6_0_Launchpad>["LaunchCloseEvent"];
+export type v0_6_0_LaunchpadEvent =
+  | v0_6_0_LaunchClaimEvent
+  | v0_6_0_LaunchCompletedEvent
+  | v0_6_0_LaunchFundedEvent
+  | v0_6_0_LaunchInitializedEvent
+  | v0_6_0_LaunchRefundedEvent
+  | v0_6_0_LaunchStartedEvent
+  | v0_6_0_LaunchCloseEvent;
+
 export type CollectFeesEvent = IdlEvents<FutarchyProgram>["CollectFeesEvent"];
 export type InitializeDaoEvent =
   IdlEvents<FutarchyProgram>["InitializeDaoEvent"];
@@ -145,6 +180,43 @@ export type FutarchyEvent =
   | ConditionalSwapEvent
   | ProvideLiquidityEvent
   | WithdrawLiquidityEvent;
+
+export type v0_6_0_CollectFeesEvent =
+  IdlEvents<v0_6_0_Futarchy>["CollectFeesEvent"];
+export type v0_6_0_InitializeDaoEvent =
+  IdlEvents<v0_6_0_Futarchy>["InitializeDaoEvent"];
+export type v0_6_0_UpdateDaoEvent =
+  IdlEvents<v0_6_0_Futarchy>["UpdateDaoEvent"];
+export type v0_6_0_InitializeProposalEvent =
+  IdlEvents<v0_6_0_Futarchy>["InitializeProposalEvent"];
+export type v0_6_0_StakeToProposalEvent =
+  IdlEvents<v0_6_0_Futarchy>["StakeToProposalEvent"];
+export type v0_6_0_UnstakeFromProposalEvent =
+  IdlEvents<v0_6_0_Futarchy>["UnstakeFromProposalEvent"];
+export type v0_6_0_LaunchProposalEvent =
+  IdlEvents<v0_6_0_Futarchy>["LaunchProposalEvent"];
+export type v0_6_0_FinalizeProposalEvent =
+  IdlEvents<v0_6_0_Futarchy>["FinalizeProposalEvent"];
+export type v0_6_0_SpotSwapEvent = IdlEvents<v0_6_0_Futarchy>["SpotSwapEvent"];
+export type v0_6_0_ConditionalSwapEvent =
+  IdlEvents<v0_6_0_Futarchy>["ConditionalSwapEvent"];
+export type v0_6_0_ProvideLiquidityEvent =
+  IdlEvents<v0_6_0_Futarchy>["ProvideLiquidityEvent"];
+export type v0_6_0_WithdrawLiquidityEvent =
+  IdlEvents<v0_6_0_Futarchy>["WithdrawLiquidityEvent"];
+export type v0_6_0_FutarchyEvent =
+  | v0_6_0_CollectFeesEvent
+  | v0_6_0_InitializeDaoEvent
+  | v0_6_0_UpdateDaoEvent
+  | v0_6_0_InitializeProposalEvent
+  | v0_6_0_StakeToProposalEvent
+  | v0_6_0_UnstakeFromProposalEvent
+  | v0_6_0_LaunchProposalEvent
+  | v0_6_0_FinalizeProposalEvent
+  | v0_6_0_SpotSwapEvent
+  | v0_6_0_ConditionalSwapEvent
+  | v0_6_0_ProvideLiquidityEvent
+  | v0_6_0_WithdrawLiquidityEvent;
 
 export type PerformancePackageInitializedEvent =
   IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageInitialized"];
