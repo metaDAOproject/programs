@@ -1,0 +1,87 @@
+name: "Program Upgrade"
+description: "Upgrades or deploys a Solana program"
+inputs:
+  program-id:
+    description: "Program ID to upgrade"
+    required: true
+  program:
+    description: "Program name"
+    required: true
+  buffer:
+    description: "Buffer address"
+    required: true
+  rpc-url:
+    description: "Solana RPC URL"
+    required: true
+  keypair:
+    description: "Deployer keypair"
+    required: true
+  program-keypair:
+    description: "Program address keypair for initial deployment"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Write keypairs
+      shell: bash
+      run: |
+        echo "$DEPLOY_KEYPAIR" > ./deploy-keypair.json && chmod 600 ./deploy-keypair.json
+        echo "$PROGRAM_KEYPAIR" > ./program-keypair.json && chmod 600 ./program-keypair.json
+      env:
+        DEPLOY_KEYPAIR: ${{ inputs.keypair }}
+        PROGRAM_KEYPAIR: ${{ inputs.program-keypair }}
+
+    - name: Check if program exists
+      id: check-program
+      shell: bash
+      run: |
+        if solana program show ${{ inputs.program-id }} --url ${{ inputs.rpc-url }} 2>&1 | grep -q "Data Length:"; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Deploy new program
+      if: steps.check-program.outputs.exists == 'false'
+      uses: nick-fields/retry@v2
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: |
+          solana program deploy \
+            --url ${{ inputs.rpc-url }} \
+            --keypair ./deploy-keypair.json \
+            --program-id ./program-keypair.json \
+            ./target/deploy/${{ inputs.program }}.so
+
+    - name: Upgrade existing program
+      if: steps.check-program.outputs.exists == 'true'
+      uses: nick-fields/retry@v2
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: |
+          echo "Debug: Buffer value is '${{ inputs.buffer }}'"
+          if [ -z "${{ inputs.buffer }}" ]; then
+            echo "Error: No buffer provided"
+            exit 1
+          fi
+
+          # Upgrade program
+          solana program upgrade "${{ inputs.buffer }}" "${{ inputs.program-id }}" -k ./deploy-keypair.json -u "${{ inputs.rpc-url }}"
+
+      env:
+        BUFFER: ${{ inputs.buffer }}
+        PROGRAM_ID: ${{ inputs.program-id }}
+        PROGRAM: ${{ inputs.program }}
+        RPC_URL: ${{ inputs.rpc-url }}
+
+    - name: Cleanup
+      if: always()
+      shell: bash
+      run: |
+        rm -f ./deploy-keypair.json
+        rm -f ./program-keypair.json

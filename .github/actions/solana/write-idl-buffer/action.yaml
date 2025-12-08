@@ -1,0 +1,108 @@
+name: "Write IDL Buffer"
+description: "Creates a buffer for the program IDL"
+inputs:
+  program-id:
+    description: "Program ID"
+    required: true
+  program:
+    description: "Program name"
+    required: true
+  rpc-url:
+    description: "Solana RPC URL"
+    required: true
+  keypair:
+    description: "The keypair to use for buffer creation"
+    required: true
+  idl-authority:
+    description: "The address of the idl buffer authority"
+    required: true
+
+outputs:
+  buffer:
+    description: "Created IDL buffer address"
+    value: ${{ steps.write-buffer.outputs.buffer }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Write keypair
+      shell: bash
+      run: echo "$DEPLOY_KEYPAIR" > ./deploy-keypair.json && chmod 600 ./deploy-keypair.json
+      env:
+        DEPLOY_KEYPAIR: ${{ inputs.keypair }}
+
+    - name: Check if IDL exists
+      id: check-idl
+      shell: bash
+      run: |
+        if anchor idl fetch ${{ inputs.program-id }} --provider.cluster ${{ inputs.rpc-url }} > /dev/null 2>&1; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Write IDL buffer
+      id: write-buffer
+      if: steps.check-idl.outputs.exists == 'true'
+      uses: nick-fields/retry@v2
+      with:
+        timeout_minutes: 5
+        max_attempts: 3
+        shell: bash
+        command: |
+          # Write buffer with retries
+          for i in {1..5}; do
+            echo "Attempt $i to write IDL buffer..."
+            sleep $((i * 2))
+
+            anchor idl write-buffer ${{ inputs.program-id }} \
+              --filepath ./target/idl/${{ inputs.program }}.json \
+              --provider.cluster ${{ inputs.rpc-url }} \
+              --provider.wallet ./deploy-keypair.json > buffer.out
+
+            BUFFER=$(cat buffer.out | grep -o 'Idl buffer created: [^ ]*' | cut -d' ' -f4)
+            if [ ! -z "$BUFFER" ]; then
+              echo "buffer=$BUFFER" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
+
+          if [ -z "$BUFFER" ]; then
+            echo "Failed to create IDL buffer after 5 attempts"
+            exit 1
+          fi
+
+    - name: Set Buffer Authority
+      if: steps.write-buffer.outputs.buffer != ''
+      uses: nick-fields/retry@v2
+      with:
+        timeout_minutes: 5
+        max_attempts: 3
+        shell: bash
+        command: |
+          echo "Setting buffer authority..."
+          anchor idl set-authority ${{ steps.write-buffer.outputs.buffer }} \
+            --program-id ${{ inputs.program-id }} \
+            --new-authority ${{ inputs.idl-authority }} \
+            --provider.cluster ${{ inputs.rpc-url }} \
+            --provider.wallet ./deploy-keypair.json
+
+    - name: Set Program IDL Authority
+      if: steps.write-buffer.outputs.buffer != ''
+      uses: nick-fields/retry@v2
+      with:
+        timeout_minutes: 5
+        max_attempts: 3
+        shell: bash
+        command: |
+          echo "Setting program IDL authority..."
+          anchor idl set-authority \
+            --program-id ${{ inputs.program-id }} \
+            --new-authority ${{ inputs.idl-authority }} \
+            --provider.cluster ${{ inputs.rpc-url }} \
+            --provider.wallet ./deploy-keypair.json || echo "Failed to set program IDL authority (this is ok if the authority is already set to squads for example)"
+
+    - name: Cleanup
+      if: always()
+      shell: bash
+      run: rm -f ./deploy-keypair.json
