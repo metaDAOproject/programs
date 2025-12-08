@@ -1,4 +1,9 @@
-use crate::{error::BidWallError, state::BidWall, usdc_mint, FEE_BPS, TOKENS_TO_PARTICIPANTS};
+use crate::{
+    error::BidWallError,
+    events::{BidWallTokensSoldEvent, CommonFields},
+    state::BidWall,
+    usdc_mint, FEE_BPS, TOKENS_TO_PARTICIPANTS,
+};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
@@ -135,6 +140,21 @@ impl SellTokens<'_> {
         // Track fees collected and base tokens bought up by the bid wall
         ctx.accounts.bid_wall.fees_collected += fee;
         ctx.accounts.bid_wall.base_bought_amount += amount_in;
+        ctx.accounts.bid_wall.seq_num += 1;
+
+        emit_cpi!(BidWallTokensSoldEvent {
+            common: CommonFields::new(&Clock::get()?, ctx.accounts.bid_wall.seq_num),
+            bid_wall: ctx.accounts.bid_wall.key(),
+            amount_in: amount_in,
+            amount_out: amount_out_after_fee,
+            fee: fee,
+            post_bid_wall_quote_token_account_amount: ctx
+                .accounts
+                .bid_wall_quote_token_account
+                .amount,
+            post_bid_wall_base_bought_amount: ctx.accounts.bid_wall.base_bought_amount,
+            user: ctx.accounts.user.key(),
+        });
 
         Ok(())
     }

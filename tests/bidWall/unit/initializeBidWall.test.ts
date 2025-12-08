@@ -182,6 +182,7 @@ export default function suite() {
     );
     assert.equal(bidWallAccount.feesCollected.toString(), "0");
     assert.equal(bidWallAccount.baseBoughtAmount.toString(), "0");
+    assert.equal(bidWallAccount.seqNum.toString(), "0");
     assert.equal(
       bidWallAccount.creator.toBase58(),
       this.payer.publicKey.toBase58(),

@@ -1,7 +1,11 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::{state::BidWall, usdc_mint};
+use crate::{
+    events::{BidWallCanceledEvent, CommonFields},
+    state::BidWall,
+    usdc_mint,
+};
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -111,6 +115,13 @@ impl CancelBidWall<'_> {
                 &[ctx.accounts.bid_wall.pda_bump],
             ]],
         ))?;
+
+        ctx.accounts.bid_wall.seq_num += 1;
+
+        emit_cpi!(BidWallCanceledEvent {
+            common: CommonFields::new(&Clock::get()?, ctx.accounts.bid_wall.seq_num),
+            bid_wall: ctx.accounts.bid_wall.key(),
+        });
 
         // Bid wall account gets closed using close constraint
 

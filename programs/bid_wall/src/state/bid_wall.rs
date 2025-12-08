@@ -13,6 +13,8 @@ pub struct BidWall {
     pub fees_collected: u64,
     /// The amount of base tokens bought up by the bid wall.
     pub base_bought_amount: u64,
+    /// The event sequence number of the bid wall.
+    pub seq_num: u64,
     /// The authority of the bid wall.
     pub creator: Pubkey,
     /// The authority of the bid wall.

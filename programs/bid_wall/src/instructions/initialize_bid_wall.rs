@@ -4,7 +4,11 @@ use anchor_spl::{
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
 
-use crate::{state::BidWall, usdc_mint};
+use crate::{
+    events::{BidWallInitializedEvent, CommonFields},
+    state::BidWall,
+    usdc_mint,
+};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeBidWallArgs {
@@ -80,13 +84,31 @@ impl InitializeBidWall<'_> {
             args.amount,
         )?;
 
+        let clock = Clock::get()?;
+
         // Initialize bid wall account
         ctx.accounts.bid_wall.set_inner(BidWall {
             nonce: args.nonce,
-            created_timestamp: Clock::get()?.unix_timestamp,
+            created_timestamp: clock.unix_timestamp,
             initial_amm_quote_reserves: args.initial_amm_quote_reserves,
             fees_collected: 0,
             base_bought_amount: 0,
+            seq_num: 0,
+            creator: ctx.accounts.creator.key(),
+            authority: ctx.accounts.authority.key(),
+            dao_treasury: ctx.accounts.dao_treasury.key(),
+            base_mint: ctx.accounts.base_mint.key(),
+            fee_recipient: ctx.accounts.fee_recipient.key(),
+            duration_seconds: args.duration_seconds,
+            pda_bump: ctx.bumps.bid_wall,
+        });
+
+        emit_cpi!(BidWallInitializedEvent {
+            common: CommonFields::new(&clock, ctx.accounts.bid_wall.seq_num),
+            bid_wall: ctx.accounts.bid_wall.key(),
+            nonce: args.nonce,
+            initial_amm_quote_reserves: args.initial_amm_quote_reserves,
+            amount: args.amount,
             creator: ctx.accounts.creator.key(),
             authority: ctx.accounts.authority.key(),
             dao_treasury: ctx.accounts.dao_treasury.key(),

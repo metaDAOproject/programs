@@ -394,6 +394,11 @@ export type BidWall = {
             type: "u64";
           },
           {
+            name: "seqNum";
+            docs: ["The event sequence number of the bid wall."];
+            type: "u64";
+          },
+          {
             name: "creator";
             docs: ["The authority of the bid wall."];
             type: "publicKey";
@@ -436,6 +441,26 @@ export type BidWall = {
   ];
   types: [
     {
+      name: "CommonFields";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "slot";
+            type: "u64";
+          },
+          {
+            name: "unixTimestamp";
+            type: "i64";
+          },
+          {
+            name: "bidWallSeqNum";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
       name: "InitializeBidWallArgs";
       type: {
         kind: "struct";
@@ -470,6 +495,183 @@ export type BidWall = {
           },
         ];
       };
+    },
+  ];
+  events: [
+    {
+      name: "BidWallInitializedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "bidWall";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "nonce";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "initialAmmQuoteReserves";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "amount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "creator";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "authority";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "daoTreasury";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "baseMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "feeRecipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "durationSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "pdaBump";
+          type: "u8";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "BidWallTokensSoldEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "bidWall";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amountIn";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "amountOut";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "fee";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "postBidWallQuoteTokenAccountAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "postBidWallBaseBoughtAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "user";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "BidWallFeesCollectedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "bidWall";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "feesCollected";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "postBidWallQuoteTokenAccountAmount";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "BidWallClosedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "bidWall";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "BidWallCanceledEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "bidWall";
+          type: "publicKey";
+          index: false;
+        },
+      ];
     },
   ];
   errors: [
@@ -887,6 +1089,11 @@ export const IDL: BidWall = {
             type: "u64",
           },
           {
+            name: "seqNum",
+            docs: ["The event sequence number of the bid wall."],
+            type: "u64",
+          },
+          {
             name: "creator",
             docs: ["The authority of the bid wall."],
             type: "publicKey",
@@ -929,6 +1136,26 @@ export const IDL: BidWall = {
   ],
   types: [
     {
+      name: "CommonFields",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "slot",
+            type: "u64",
+          },
+          {
+            name: "unixTimestamp",
+            type: "i64",
+          },
+          {
+            name: "bidWallSeqNum",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "InitializeBidWallArgs",
       type: {
         kind: "struct",
@@ -963,6 +1190,183 @@ export const IDL: BidWall = {
           },
         ],
       },
+    },
+  ],
+  events: [
+    {
+      name: "BidWallInitializedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "bidWall",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "nonce",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "initialAmmQuoteReserves",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "amount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "creator",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "authority",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "daoTreasury",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "baseMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "feeRecipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "durationSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "pdaBump",
+          type: "u8",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "BidWallTokensSoldEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "bidWall",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amountIn",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "amountOut",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "fee",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "postBidWallQuoteTokenAccountAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "postBidWallBaseBoughtAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "user",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "BidWallFeesCollectedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "bidWall",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "feesCollected",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "postBidWallQuoteTokenAccountAmount",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "BidWallClosedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "bidWall",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "BidWallCanceledEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "bidWall",
+          type: "publicKey",
+          index: false,
+        },
+      ],
     },
   ],
   errors: [
