@@ -152,12 +152,14 @@ async function main() {
     }
   }
 
-  // A small dust difference will occur due to rounding which could normally fail the launch, so we need to add 1 to all of the records that have an amount to approve that is not equal to the committed amount.
-  for (const record of allFundingRecordsWithPointsOwners) {
-    if (record.amountToApprove.lt(record.account.committedAmount)) {
-      record.amountToApprove = record.amountToApprove.add(new BN(1));
-    }
-  }
+  // // Uncomment this if we want the final raise amount to be a bit over the total committed amount
+  // // This might be important if we want to ensure that the launch is successful in cases where the final raise amount is exactly equal to the minimum raise amount.
+  // // A small dust difference will occur due to rounding which could normally fail the launch, so we need to add 1 to all of the records that have an amount to approve that is not equal to the committed amount.
+  // for (const record of allFundingRecordsWithPointsOwners) {
+  //   if (record.amountToApprove.lt(record.account.committedAmount)) {
+  //     record.amountToApprove = record.amountToApprove.add(new BN(1));
+  //   }
+  // }
 
   // Sum up total amount to approve and render it to the user
   const finalAmountToApprove = allFundingRecordsWithPointsOwners.reduce(
