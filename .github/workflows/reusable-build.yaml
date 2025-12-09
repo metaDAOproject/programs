@@ -386,7 +386,7 @@ jobs:
         run: sleep 14
 
       - name: Verify Build
-        uses: solana-developers/github-actions/verify-build@v0.2.5
+        uses: ./.github/actions/solana/verify-build
         id: verify-build
         if: inputs.verify
         with:
