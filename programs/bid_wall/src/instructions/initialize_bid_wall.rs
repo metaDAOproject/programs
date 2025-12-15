@@ -91,6 +91,7 @@ impl InitializeBidWall<'_> {
             nonce: args.nonce,
             created_timestamp: clock.unix_timestamp,
             initial_amm_quote_reserves: args.initial_amm_quote_reserves,
+            quote_amount: args.amount,
             fees_collected: 0,
             base_bought_amount: 0,
             seq_num: 0,

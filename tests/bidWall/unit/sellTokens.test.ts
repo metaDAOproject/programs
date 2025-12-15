@@ -346,6 +346,9 @@ export default function suite() {
         quoteMint: MAINNET_USDC,
         user: this.payer.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
+      ])
       .rpc();
 
     const usdcBalanceAfterSecondSell = await this.getTokenBalance(
@@ -388,7 +391,7 @@ export default function suite() {
         user: this.payer.publicKey,
       })
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_002 }),
       ])
       .rpc();
 
@@ -422,6 +425,37 @@ export default function suite() {
     assert.equal(bidWallUsdcBalanceAfterThirdSell, 10_900_000000n);
   });
 
+  it("sending quote tokens to a bid wall beyond what was originally allocated doesn't change the NAV per token", async function () {
+    // Send 1M USDC to the bid wall
+    await this.transfer(MAINNET_USDC, this.payer, bidWall, 1_000_000_000000);
+
+    const usdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 5_000_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .rpc();
+
+    const usdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    // User received 99_000_000000 USDC (99K), which is 100_000_000000 - 1_000_000000 (fee)
+    // This is the same case as in the "successfully sells tokens into a bid wall" test
+    // Bid wall remains unaffected by the transfer of USDC into it
+    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 99_000_000000n);
+  });
+
   it("fails to sell tokens into a bid wall when bid wall is expired", async function () {
     await this.advanceBySeconds(durationSeconds + 1);
 
@@ -439,6 +473,24 @@ export default function suite() {
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "BidWallExpired");
+    }
+  });
+
+  it("fails to sell tokens into a bid wall beyond what was originally allocated to the bid wall", async function () {
+    try {
+      await bidWallClient
+        .sellTokensIx({
+          amount: 5_000_001_000000,
+          bidWall,
+          baseMint: META,
+          daoTreasury: daoTreasury,
+          quoteMint: MAINNET_USDC,
+          user: this.payer.publicKey,
+        })
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "InsufficientQuoteReserves");
     }
   });
 }

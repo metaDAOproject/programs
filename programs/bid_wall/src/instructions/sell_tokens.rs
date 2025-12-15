@@ -88,8 +88,7 @@ impl SellTokens<'_> {
         // We must subtract the fees collected by the bid wall because the fees are not part of the NAV
         let total_nav: u128 = (ctx.accounts.bid_wall.initial_amm_quote_reserves
             + ctx.accounts.dao_treasury_quote_token_account.amount
-            + ctx.accounts.bid_wall_quote_token_account.amount
-            - ctx.accounts.bid_wall.fees_collected) as u128;
+            + ctx.accounts.bid_wall.quote_amount) as u128;
 
         // We work under the assumption that the total supply is 10M tokens
         // We then assume that base tokens are only burned by the bid wall.
@@ -98,6 +97,12 @@ impl SellTokens<'_> {
 
         let amount_out_before_fee =
             (amount_in as u128 * total_nav as u128 / remaining_base as u128) as u64;
+
+        require_gte!(
+            ctx.accounts.bid_wall.quote_amount,
+            amount_out_before_fee,
+            BidWallError::InsufficientQuoteReserves
+        );
 
         let amount_out_after_fee =
             ((10_000_u128 - FEE_BPS as u128) * amount_out_before_fee as u128 / 10_000_u128) as u64;
@@ -137,9 +142,13 @@ impl SellTokens<'_> {
             amount_out_after_fee,
         )?;
 
-        // Track fees collected and base tokens bought up by the bid wall
+        // Fees can't be used for future token buys, so we subtract the quote amount before fees.
+        ctx.accounts.bid_wall.quote_amount -= amount_out_before_fee;
+        // Track fees collected for fee distribution.
         ctx.accounts.bid_wall.fees_collected += fee;
+        // Track base tokens bought up by the bid wall for NAV calculation.
         ctx.accounts.bid_wall.base_bought_amount += amount_in;
+        // Increment the event sequence number.
         ctx.accounts.bid_wall.seq_num += 1;
 
         emit_cpi!(BidWallTokensSoldEvent {
@@ -148,10 +157,7 @@ impl SellTokens<'_> {
             amount_in: amount_in,
             amount_out: amount_out_after_fee,
             fee: fee,
-            post_bid_wall_quote_token_account_amount: ctx
-                .accounts
-                .bid_wall_quote_token_account
-                .amount,
+            post_bid_wall_quote_token_account_amount: ctx.accounts.bid_wall.quote_amount,
             post_bid_wall_base_bought_amount: ctx.accounts.bid_wall.base_bought_amount,
             user: ctx.accounts.user.key(),
         });

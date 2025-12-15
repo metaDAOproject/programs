@@ -8,4 +8,6 @@ pub enum BidWallError {
     BidWallNotExpired,
     #[msg("Fee recipient mismatch")]
     FeeRecipientMismatch,
+    #[msg("Insufficient quote reserves")]
+    InsufficientQuoteReserves,
 }

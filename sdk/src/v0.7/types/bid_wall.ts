@@ -384,6 +384,15 @@ export type BidWall = {
             type: "u64";
           },
           {
+            name: "quoteAmount";
+            docs: [
+              "The current amount of quote tokens assigned to the bid wall.",
+              "This is different from the amount in the bid wall quote token account,",
+              "because anyone can transfer quote tokens to the bid wall, and we don't want that to affect the bid wall's NAV calculation.",
+            ];
+            type: "u64";
+          },
+          {
             name: "feesCollected";
             docs: ["The fees collected by the bid wall."];
             type: "u64";
@@ -689,6 +698,11 @@ export type BidWall = {
       code: 6002;
       name: "FeeRecipientMismatch";
       msg: "Fee recipient mismatch";
+    },
+    {
+      code: 6003;
+      name: "InsufficientQuoteReserves";
+      msg: "Insufficient quote reserves";
     },
   ];
 };
@@ -1079,6 +1093,15 @@ export const IDL: BidWall = {
             type: "u64",
           },
           {
+            name: "quoteAmount",
+            docs: [
+              "The current amount of quote tokens assigned to the bid wall.",
+              "This is different from the amount in the bid wall quote token account,",
+              "because anyone can transfer quote tokens to the bid wall, and we don't want that to affect the bid wall's NAV calculation.",
+            ],
+            type: "u64",
+          },
+          {
             name: "feesCollected",
             docs: ["The fees collected by the bid wall."],
             type: "u64",
@@ -1384,6 +1407,11 @@ export const IDL: BidWall = {
       code: 6002,
       name: "FeeRecipientMismatch",
       msg: "Fee recipient mismatch",
+    },
+    {
+      code: 6003,
+      name: "InsufficientQuoteReserves",
+      msg: "Insufficient quote reserves",
     },
   ],
 };
