@@ -155,7 +155,7 @@ export default function suite() {
       },
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeSpendingLimitChange()
       .accounts({
         squadsMultisig: multisigPda,
@@ -271,7 +271,7 @@ export default function suite() {
       "The transaction should not be executed because it contains a call to remove the DAO as a member",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeSpendingLimitChange()
       .accounts({
         squadsMultisig: multisigPda,
@@ -388,7 +388,7 @@ export default function suite() {
       "The transaction should not be executed because it contains a call to remove the DAO as a member",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeSpendingLimitChange()
       .accounts({
         squadsMultisig: multisigPda,
