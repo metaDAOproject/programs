@@ -2,24 +2,30 @@ import {
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
+  Transaction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
 import {
+  DAMM_V2_PROGRAM_ID,
   FutarchyClient,
-  getMetadataAddr,
   LaunchpadClient,
   MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
 } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
-import { deserializeMetadata } from "@metaplex-foundation/mpl-token-metadata";
-import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { initializeMintWithSeeds } from "../../launchpad/utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
 import * as multisig from "@sqds/multisig";
 import { assert } from "chai";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.6/constants.js";
+import { CpAmm } from "@meteora-ag/cp-amm-sdk";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -108,8 +114,117 @@ export default function suite() {
   });
 
   it("collects Meteora DAMM fees successfully after a successful launch", async function () {
-    // NOTE - This test shows that fee collections works correctly for a successfully launched DAO.
-    // Essentially, this test shows how to integrate fee collection into a script.
+    const payerUsdcTokenAccount = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      this.payer.publicKey,
+      true,
+    );
+    const payerMetaTokenAccount = getAssociatedTokenAddressSync(
+      META,
+      this.payer.publicKey,
+      true,
+    );
+
+    let payerUsdcTokenBalanceBeforeSwap = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+    let payerMetaTokenBalanceBeforeSwap = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+
+    // Assert that the payer has no META tokens before the swap
+    assert.equal(payerMetaTokenBalanceBeforeSwap, 0n);
+
+    ///////////////////////////
+    // Swap to generate fees //
+    ///////////////////////////
+
+    // Helper function to sort mints for Meteora pool PDA
+    const sortMints = (
+      mint1: PublicKey,
+      mint2: PublicKey,
+    ): [Buffer, Buffer] => {
+      const buf1 = mint1.toBuffer();
+      const buf2 = mint2.toBuffer();
+      if (Buffer.compare(buf1, buf2) > 0) {
+        return [buf1, buf2];
+      }
+      return [buf2, buf1];
+    };
+
+    const [sortedMint1, sortedMint2] = sortMints(MAINNET_USDC, META);
+
+    const cpAmm = new CpAmm(this.squadsConnection);
+
+    const [pool] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("pool"),
+        MAINNET_METEORA_CONFIG.toBuffer(),
+        sortedMint1,
+        sortedMint2,
+      ],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [tokenAVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), META.toBuffer(), pool.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [tokenBVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), MAINNET_USDC.toBuffer(), pool.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const swapTx = await cpAmm._program.methods
+      .swap({
+        amountIn: new BN(1_000_000), // 1 USDC swap
+        minimumAmountOut: new BN(0),
+      })
+      .accounts({
+        tokenAMint: META,
+        tokenBMint: MAINNET_USDC,
+        tokenAProgram: TOKEN_PROGRAM_ID,
+        tokenBProgram: TOKEN_PROGRAM_ID,
+        referralTokenAccount: null,
+        inputTokenAccount: payerUsdcTokenAccount,
+        outputTokenAccount: payerMetaTokenAccount,
+        payer: this.payer.publicKey,
+        pool: pool,
+        program: DAMM_V2_PROGRAM_ID,
+        tokenAVault: tokenAVault,
+        tokenBVault: tokenBVault,
+      })
+      .transaction();
+
+    swapTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    swapTx.feePayer = this.payer.publicKey;
+    swapTx.sign(this.payer);
+
+    await this.banksClient.processTransaction(swapTx);
+
+    let payerUsdcTokenBalanceAfterSwap = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+    let payerMetaTokenBalanceAfterSwap = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+
+    // Payer spent 1 USDC for swap
+    assert.equal(
+      payerUsdcTokenBalanceAfterSwap,
+      payerUsdcTokenBalanceBeforeSwap - 1_000_000n,
+    );
+    // Payer received META tokens from swap
+    assert(payerMetaTokenBalanceAfterSwap > 0n);
+
+    //////////////////
+    // Extract fees //
+    //////////////////
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
 
@@ -120,6 +235,54 @@ export default function suite() {
         this.squadsConnection,
         dao.squadsMultisig,
       );
+
+    const metaDaoBaseTokenAccount = getAssociatedTokenAddressSync(
+      META,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+
+    const metaDaoQuoteTokenAccount = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+
+    const metaDaoBaseTokenBalanceBeforeCollect = await this.getTokenBalance(
+      META,
+      METADAO_MULTISIG_VAULT,
+    );
+    const metaDaoQuoteTokenBalanceBeforeCollect = await this.getTokenBalance(
+      MAINNET_USDC,
+      METADAO_MULTISIG_VAULT,
+    );
+
+    assert.equal(metaDaoBaseTokenBalanceBeforeCollect, 0n);
+    assert.equal(metaDaoQuoteTokenBalanceBeforeCollect, 0n);
+
+    const tx = new Transaction()
+      .add(
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          metaDaoBaseTokenAccount,
+          METADAO_MULTISIG_VAULT,
+          META,
+        ),
+      )
+      .add(
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          metaDaoQuoteTokenAccount,
+          METADAO_MULTISIG_VAULT,
+          MAINNET_USDC,
+        ),
+      );
+
+    tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = this.payer.publicKey;
+    tx.sign(this.payer);
+
+    await this.banksClient.processTransaction(tx);
 
     await futarchyClient
       .collectMeteoraDammFeesIx({
@@ -137,31 +300,18 @@ export default function suite() {
       .signers([this.payer, PERMISSIONLESS_ACCOUNT])
       .rpc();
 
-    // Alternatively, use the multisig.rpc.vaultTransactionExecute function
-    const vaultTransactionExecuteTx =
-      await multisig.transactions.vaultTransactionExecute({
-        blockhash: (await this.banksClient.getLatestBlockhash())[0],
-        feePayer: this.payer.publicKey,
-        multisigPda: dao.squadsMultisig,
-        transactionIndex: 1n,
-        member: PERMISSIONLESS_ACCOUNT.publicKey,
-        connection: this.squadsConnection,
-      });
-
-    await this.banksClient.processTransaction(vaultTransactionExecuteTx);
-
-    const squadsMultisigProposal = multisig.getProposalPda({
-      multisigPda: dao.squadsMultisig,
-      transactionIndex: 1n,
-    })[0];
-
-    const proposalAccount = await multisig.accounts.Proposal.fromAccountAddress(
-      this.squadsConnection,
-      squadsMultisigProposal,
+    const metaDaoBaseTokenBalanceAfterCollect = await this.getTokenBalance(
+      META,
+      METADAO_MULTISIG_VAULT,
+    );
+    const metaDaoQuoteTokenBalanceAfterCollect = await this.getTokenBalance(
+      MAINNET_USDC,
+      METADAO_MULTISIG_VAULT,
     );
 
-    assert.isTrue(
-      multisig.types.isProposalStatusExecuted(proposalAccount.status),
-    );
+    // MetaDAO received base tokens from swap
+    assert(metaDaoBaseTokenBalanceAfterCollect > 0n);
+    // MetaDAO received no quote tokens from swap, as the swap was not in that direction
+    assert.equal(metaDaoQuoteTokenBalanceAfterCollect, 0n);
   });
 }

@@ -3065,6 +3065,11 @@ export type Futarchy = {
       name: "InvalidTeamSponsoredPassThreshold";
       msg: "Team sponsored pass threshold must be between -10% and 10%";
     },
+    {
+      code: 6034;
+      name: "InvalidTransactionMessage";
+      msg: "Failed to compile transaction message for Squads vault transaction";
+    },
   ];
 };
 
@@ -6134,6 +6139,11 @@ export const IDL: Futarchy = {
       code: 6033,
       name: "InvalidTeamSponsoredPassThreshold",
       msg: "Team sponsored pass threshold must be between -10% and 10%",
+    },
+    {
+      code: 6034,
+      name: "InvalidTransactionMessage",
+      msg: "Failed to compile transaction message for Squads vault transaction",
     },
   ],
 };

@@ -40,6 +40,7 @@ import {
   DAMM_V2_POOL_AUTHORITY,
   MAINNET_METEORA_CONFIG,
   LAUNCHPAD_PROGRAM_ID,
+  METADAO_MULTISIG_VAULT,
 } from "./constants.js";
 import {
   DEFAULT_CU_PRICE,
@@ -1037,12 +1038,12 @@ export class FutarchyClient {
     // Token accounts for receiving fees
     const baseTokenAccount = getAssociatedTokenAddressSync(
       baseMint,
-      squadsMultisigVault,
+      METADAO_MULTISIG_VAULT,
       true,
     );
     const quoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
-      squadsMultisigVault,
+      METADAO_MULTISIG_VAULT,
       true,
     );
 

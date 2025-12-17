@@ -72,4 +72,6 @@ pub enum FutarchyError {
     ProposalAlreadySponsored,
     #[msg("Team sponsored pass threshold must be between -10% and 10%")]
     InvalidTeamSponsoredPassThreshold,
+    #[msg("Failed to compile transaction message for Squads vault transaction")]
+    InvalidTransactionMessage,
 }
