@@ -1,4 +1,5 @@
-use damm_v2_cpi::{constants::seeds::POSITION_NFT_ACCOUNT_PREFIX, program::DammV2Cpi};
+use anchor_lang::InstructionData;
+use damm_v2_cpi::program::DammV2Cpi;
 
 use super::*;
 
@@ -21,15 +22,8 @@ pub mod pool_authority {
 pub struct CollectMeteoraDammFees<'info> {
     #[account(mut)]
     pub dao: Account<'info, Dao>,
+    #[account(mut)]
     pub admin: Signer<'info>,
-
-    // Meteora DAMM - token_a_account
-    #[account(mut, token::mint = dao.base_mint, address = meteora_claim_position_fees_accounts.token_a_account.key())]
-    pub base_token_account: Account<'info, TokenAccount>,
-
-    // Meteora DAMM - token_b_account
-    #[account(mut, token::mint = dao.quote_mint, address = meteora_claim_position_fees_accounts.token_b_account.key())]
-    pub quote_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: checked by autocrat program
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
@@ -39,11 +33,13 @@ pub struct CollectMeteoraDammFees<'info> {
     pub squads_multisig_vault: UncheckedAccount<'info>,
     /// CHECK: checked by squads multisig program
     #[account(mut)]
-    pub squads_multisig_vault_transaction:
-        Account<'info, squads_multisig_program::VaultTransaction>,
+    pub squads_multisig_vault_transaction: UncheckedAccount<'info>,
     /// CHECK: checked by squads multisig program
     #[account(mut)]
-    pub squads_multisig_proposal: Account<'info, squads_multisig_program::Proposal>,
+    pub squads_multisig_proposal: UncheckedAccount<'info>,
+
+    #[account(address = permissionless_account::id())]
+    pub squads_multisig_permissionless_account: Signer<'info>,
 
     pub meteora_claim_position_fees_accounts: MeteoraClaimPositionFeesAccounts<'info>,
 
@@ -57,6 +53,9 @@ pub struct MeteoraClaimPositionFeesAccounts<'info> {
     pub damm_v2_program: Program<'info, DammV2Cpi>,
 
     /// CHECK: checked by damm v2 program
+    pub damm_v2_event_authority: UncheckedAccount<'info>,
+
+    /// CHECK: checked by damm v2 program
     #[account(address = pool_authority::ID)]
     pub pool_authority: UncheckedAccount<'info>,
 
@@ -67,41 +66,34 @@ pub struct MeteoraClaimPositionFeesAccounts<'info> {
     #[account(mut)]
     pub position: UncheckedAccount<'info>,
 
-    /// The user token a account (base token)
     /// CHECK: checked by damm v2 program
     #[account(mut)]
     pub token_a_account: UncheckedAccount<'info>,
 
-    /// The user token b account (quote token)
     /// CHECK: checked by damm v2 program
     #[account(mut)]
     pub token_b_account: UncheckedAccount<'info>,
 
-    /// The vault token account for input token (base token)
     /// CHECK: checked by damm v2 program
     #[account(mut)]
     pub token_a_vault: UncheckedAccount<'info>,
 
-    /// The vault token account for output token (quote token)
     /// CHECK: checked by damm v2 program
     #[account(mut)]
     pub token_b_vault: UncheckedAccount<'info>,
 
-    /// The mint of token a (base mint)
     /// CHECK: Checked from dao struct
     pub token_a_mint: UncheckedAccount<'info>,
 
-    /// The mint of token b (quote mint)
     /// CHECK: Checked from dao struct
     pub token_b_mint: UncheckedAccount<'info>,
 
-    /// The token account for nft (derived from base token mint)
     /// CHECK: CPI
-    #[account(mut, seeds = [POSITION_NFT_ACCOUNT_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
     pub position_nft_account: UncheckedAccount<'info>,
 
     /// owner of position - DAO's squads multisig
-    pub owner: Signer<'info>,
+    /// CHECK: checked by damm v2 program
+    pub owner: UncheckedAccount<'info>,
 
     /// Token a program
     /// CHECK: CPI
@@ -110,10 +102,6 @@ pub struct MeteoraClaimPositionFeesAccounts<'info> {
     /// Token b program
     /// CHECK: CPI
     pub token_b_program: UncheckedAccount<'info>,
-
-    /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [b"position_nft_mint", token_a_mint.key().as_ref()], bump)]
-    pub position_nft_mint: UncheckedAccount<'info>,
 }
 
 impl CollectMeteoraDammFees<'_> {
@@ -125,29 +113,118 @@ impl CollectMeteoraDammFees<'_> {
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        // TODO - Add the actual instruction to claim fees here.
-        let ix = anchor_lang::solana_program::system_instruction::transfer(
-            &ctx.accounts
+        let ix_data = damm_v2_cpi::instruction::ClaimPositionFee {}.data();
+
+        let account_infos = damm_v2_cpi::cpi::accounts::ClaimPositionFeeCtx {
+            pool_authority: ctx
+                .accounts
                 .meteora_claim_position_fees_accounts
-                .token_a_vault
-                .key(),
-            &ctx.accounts
+                .pool_authority
+                .to_account_info(),
+            pool: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .pool
+                .to_account_info(),
+            position: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .position
+                .to_account_info(),
+            token_a_account: ctx
+                .accounts
                 .meteora_claim_position_fees_accounts
                 .token_a_account
-                .key(),
-            100,
-        );
+                .to_account_info(),
+            token_b_account: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .token_b_account
+                .to_account_info(),
+            token_a_vault: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .token_a_vault
+                .to_account_info(),
+            token_b_vault: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .token_b_vault
+                .to_account_info(),
+            token_a_mint: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .token_a_mint
+                .to_account_info(),
+            token_b_mint: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .token_b_mint
+                .to_account_info(),
+            position_nft_account: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .position_nft_account
+                .to_account_info(),
+            owner: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .owner
+                .to_account_info(),
+            token_a_program: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .token_a_program
+                .to_account_info(),
+            token_b_program: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .token_b_program
+                .to_account_info(),
+            event_authority: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .damm_v2_event_authority
+                .to_account_info(),
+            program: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .damm_v2_program
+                .to_account_info(),
+        };
+
+        let accounts = account_infos.to_account_metas(None);
+
+        let ix = anchor_lang::solana_program::instruction::Instruction {
+            program_id: damm_v2_cpi::ID,
+            accounts,
+            data: ix_data,
+        };
 
         let transaction_message = anchor_lang::solana_program::message::Message::new(
             &[ix],
             Some(&ctx.accounts.admin.key()),
         );
 
+        let dao_nonce = &ctx.accounts.dao.nonce.to_le_bytes();
+        let dao_creator_key = ctx.accounts.dao.dao_creator.as_ref();
+        let dao_seeds = &[
+            b"dao".as_ref(),
+            dao_creator_key,
+            dao_nonce,
+            &[ctx.accounts.dao.pda_bump],
+        ];
+
+        let dao_signer = &[&dao_seeds[..]];
+
         squads_multisig_program::cpi::vault_transaction_create(
             CpiContext::new(
                 ctx.accounts.squads_program.to_account_info(),
                 squads_multisig_program::cpi::accounts::VaultTransactionCreate {
-                    creator: ctx.accounts.dao.to_account_info(), // DAO should be the creator?
+                    creator: ctx
+                        .accounts
+                        .squads_multisig_permissionless_account
+                        .to_account_info(),
                     multisig: ctx.accounts.squads_multisig.to_account_info(),
                     rent_payer: ctx.accounts.admin.to_account_info(),
                     system_program: ctx.accounts.system_program.to_account_info(),
@@ -170,7 +247,7 @@ impl CollectMeteoraDammFees<'_> {
         let transaction_index = ctx.accounts.squads_multisig.transaction_index;
 
         squads_multisig_program::cpi::proposal_create(
-            CpiContext::new(
+            CpiContext::new_with_signer(
                 ctx.accounts.squads_program.to_account_info(),
                 squads_multisig_program::cpi::accounts::ProposalCreate {
                     // DAO is the config authority - maybe this needs to be the permissionless account instead?
@@ -180,6 +257,7 @@ impl CollectMeteoraDammFees<'_> {
                     system_program: ctx.accounts.system_program.to_account_info(),
                     proposal: ctx.accounts.squads_multisig_proposal.to_account_info(),
                 },
+                dao_signer,
             ),
             squads_multisig_program::ProposalCreateArgs {
                 transaction_index,
@@ -188,29 +266,17 @@ impl CollectMeteoraDammFees<'_> {
         )?;
 
         squads_multisig_program::cpi::proposal_approve(
-            CpiContext::new(
+            CpiContext::new_with_signer(
                 ctx.accounts.squads_program.to_account_info(),
                 squads_multisig_program::cpi::accounts::ProposalVote {
                     proposal: ctx.accounts.squads_multisig_proposal.to_account_info(),
                     multisig: ctx.accounts.squads_multisig.to_account_info(),
                     member: ctx.accounts.dao.to_account_info(), // DAO is the config authority
                 },
+                dao_signer,
             ),
             squads_multisig_program::ProposalVoteArgs { memo: None },
         )?;
-
-        squads_multisig_program::cpi::vault_transaction_execute(CpiContext::new(
-            ctx.accounts.squads_program.to_account_info(),
-            squads_multisig_program::cpi::accounts::VaultTransactionExecute {
-                transaction: ctx
-                    .accounts
-                    .squads_multisig_vault_transaction
-                    .to_account_info(),
-                proposal: ctx.accounts.squads_multisig_proposal.to_account_info(),
-                multisig: ctx.accounts.squads_multisig.to_account_info(),
-                member: ctx.accounts.dao.to_account_info(), // DAO is the config authority
-            },
-        ))?;
 
         Ok(())
     }

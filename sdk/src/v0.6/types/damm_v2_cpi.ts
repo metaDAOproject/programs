@@ -121,6 +121,97 @@ export type DammV2Cpi = {
         },
       ];
     },
+    {
+      name: "claimPositionFee";
+      accounts: [
+        {
+          name: "poolAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "pool";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "position";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenAAccount";
+          isMut: true;
+          isSigner: false;
+          docs: ["The user token a account"];
+        },
+        {
+          name: "tokenBAccount";
+          isMut: true;
+          isSigner: false;
+          docs: ["The user token b account"];
+        },
+        {
+          name: "tokenAVault";
+          isMut: true;
+          isSigner: false;
+          docs: ["The vault token account for input token"];
+        },
+        {
+          name: "tokenBVault";
+          isMut: true;
+          isSigner: false;
+          docs: ["The vault token account for output token"];
+        },
+        {
+          name: "tokenAMint";
+          isMut: false;
+          isSigner: false;
+          docs: ["The mint of token a"];
+        },
+        {
+          name: "tokenBMint";
+          isMut: false;
+          isSigner: false;
+          docs: ["The mint of token b"];
+        },
+        {
+          name: "positionNftAccount";
+          isMut: false;
+          isSigner: false;
+          docs: ["The token account for nft"];
+        },
+        {
+          name: "owner";
+          isMut: false;
+          isSigner: true;
+          docs: ["owner of position"];
+        },
+        {
+          name: "tokenAProgram";
+          isMut: false;
+          isSigner: false;
+          docs: ["Token a program"];
+        },
+        {
+          name: "tokenBProgram";
+          isMut: false;
+          isSigner: false;
+          docs: ["Token b program"];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   types: [
     {
@@ -403,6 +494,97 @@ export const IDL: DammV2Cpi = {
           },
         },
       ],
+    },
+    {
+      name: "claimPositionFee",
+      accounts: [
+        {
+          name: "poolAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "pool",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "position",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenAAccount",
+          isMut: true,
+          isSigner: false,
+          docs: ["The user token a account"],
+        },
+        {
+          name: "tokenBAccount",
+          isMut: true,
+          isSigner: false,
+          docs: ["The user token b account"],
+        },
+        {
+          name: "tokenAVault",
+          isMut: true,
+          isSigner: false,
+          docs: ["The vault token account for input token"],
+        },
+        {
+          name: "tokenBVault",
+          isMut: true,
+          isSigner: false,
+          docs: ["The vault token account for output token"],
+        },
+        {
+          name: "tokenAMint",
+          isMut: false,
+          isSigner: false,
+          docs: ["The mint of token a"],
+        },
+        {
+          name: "tokenBMint",
+          isMut: false,
+          isSigner: false,
+          docs: ["The mint of token b"],
+        },
+        {
+          name: "positionNftAccount",
+          isMut: false,
+          isSigner: false,
+          docs: ["The token account for nft"],
+        },
+        {
+          name: "owner",
+          isMut: false,
+          isSigner: true,
+          docs: ["owner of position"],
+        },
+        {
+          name: "tokenAProgram",
+          isMut: false,
+          isSigner: false,
+          docs: ["Token a program"],
+        },
+        {
+          name: "tokenBProgram",
+          isMut: false,
+          isSigner: false,
+          docs: ["Token b program"],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   types: [

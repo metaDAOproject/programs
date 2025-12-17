@@ -142,4 +142,9 @@ pub mod futarchy {
     pub fn sponsor_proposal(ctx: Context<SponsorProposal>) -> Result<()> {
         SponsorProposal::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn collect_meteora_damm_fees(ctx: Context<CollectMeteoraDammFees>) -> Result<()> {
+        CollectMeteoraDammFees::handle(ctx)
+    }
 }

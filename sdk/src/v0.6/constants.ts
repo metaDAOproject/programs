@@ -65,6 +65,10 @@ export const DAMM_V2_PROGRAM_ID = new PublicKey(
   "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
 );
 
+export const DAMM_V2_POOL_AUTHORITY = new PublicKey(
+  "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+);
+
 export const LOW_FEE_RAYDIUM_CONFIG = new PublicKey(
   "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2",
 );

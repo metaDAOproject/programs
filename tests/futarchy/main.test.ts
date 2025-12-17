@@ -9,6 +9,8 @@ import conditionalSwap from "./unit/conditionalSwap.test.js";
 
 import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
 
+import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
+
 export default function suite() {
   describe("#initialize_dao", initializeDao);
   describe("#initialize_proposal", initializeProposal);
@@ -17,6 +19,8 @@ export default function suite() {
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);
   describe("#execute_spending_limit_change", executeSpendingLimitChange);
+
+  describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
 
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);

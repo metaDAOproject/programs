@@ -32,6 +32,10 @@ import {
   SQUADS_PROGRAM_ID,
   USDC_DECIMALS,
   SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
+  DAMM_V2_PROGRAM_ID,
+  DAMM_V2_POOL_AUTHORITY,
+  MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_PROGRAM_ID,
 } from "./constants.js";
 import {
   DEFAULT_CU_PRICE,
@@ -985,6 +989,127 @@ export class FutarchyClient {
       proposal,
       dao,
       teamAddress,
+    });
+  }
+
+  collectMeteoraDammFeesIx({
+    dao,
+    baseMint,
+    quoteMint = MAINNET_USDC,
+    transactionIndex,
+    meteoraConfig = MAINNET_METEORA_CONFIG,
+    admin = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint?: PublicKey;
+    transactionIndex: bigint;
+    meteoraConfig?: PublicKey;
+    admin?: PublicKey;
+  }) {
+    // Squads accounts
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
+    const squadsMultisigVaultTransaction = multisig.getTransactionPda({
+      multisigPda,
+      index: transactionIndex,
+    })[0];
+    const squadsMultisigProposal = multisig.getProposalPda({
+      multisigPda,
+      transactionIndex,
+    })[0];
+
+    // Token accounts for receiving fees
+    const baseTokenAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      squadsMultisigVault,
+      true,
+    );
+    const quoteTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      squadsMultisigVault,
+      true,
+    );
+
+    // Helper function to sort mints for Meteora pool PDA
+    const sortMints = (
+      mint1: PublicKey,
+      mint2: PublicKey,
+    ): [Buffer, Buffer] => {
+      const buf1 = mint1.toBuffer();
+      const buf2 = mint2.toBuffer();
+      if (Buffer.compare(buf1, buf2) > 0) {
+        return [buf1, buf2];
+      }
+      return [buf2, buf1];
+    };
+
+    const [sortedMint1, sortedMint2] = sortMints(baseMint, quoteMint);
+
+    // Meteora DAMM accounts
+    const [pool] = PublicKey.findProgramAddressSync(
+      [Buffer.from("pool"), meteoraConfig.toBuffer(), sortedMint1, sortedMint2],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [positionNftMint] = PublicKey.findProgramAddressSync(
+      [Buffer.from("position_nft_mint"), baseMint.toBuffer()],
+      LAUNCHPAD_PROGRAM_ID,
+    );
+
+    const [positionNftAccount] = PublicKey.findProgramAddressSync(
+      [Buffer.from("position_nft_account"), positionNftMint.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [position] = PublicKey.findProgramAddressSync(
+      [Buffer.from("position"), positionNftMint.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [tokenAVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), baseMint.toBuffer(), pool.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [tokenBVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), quoteMint.toBuffer(), pool.toBuffer()],
+      DAMM_V2_PROGRAM_ID,
+    );
+
+    const [dammV2EventAuthority] = getEventAuthorityAddr(DAMM_V2_PROGRAM_ID);
+
+    return this.autocrat.methods.collectMeteoraDammFees().accounts({
+      dao,
+      admin,
+      squadsMultisig: multisigPda,
+      squadsMultisigVault,
+      squadsMultisigVaultTransaction,
+      squadsMultisigProposal,
+      squadsMultisigPermissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
+      meteoraClaimPositionFeesAccounts: {
+        dammV2Program: DAMM_V2_PROGRAM_ID,
+        dammV2EventAuthority,
+        poolAuthority: DAMM_V2_POOL_AUTHORITY,
+        pool,
+        position,
+        tokenAAccount: baseTokenAccount,
+        tokenBAccount: quoteTokenAccount,
+        tokenAVault,
+        tokenBVault,
+        tokenAMint: baseMint,
+        tokenBMint: quoteMint,
+        positionNftAccount,
+        owner: squadsMultisigVault,
+        tokenAProgram: TOKEN_PROGRAM_ID,
+        tokenBProgram: TOKEN_PROGRAM_ID,
+      },
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      squadsProgram: SQUADS_PROGRAM_ID,
     });
   }
 }
