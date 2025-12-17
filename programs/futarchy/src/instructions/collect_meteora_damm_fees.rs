@@ -17,7 +17,7 @@ pub mod metadao_admin {
 
     // TODO: Change this to a non-Squads signer
     // We must use a non-Squads signer because of CPI depth limits
-    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+    declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
 }
 
 pub mod pool_authority {
