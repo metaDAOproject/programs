@@ -67,12 +67,15 @@ export default function suite() {
         dao,
         params: {
           passThresholdBps: 500,
-          slotsPerProposal: null,
+          secondsPerProposal: null,
           twapInitialObservation: null,
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
           minBaseFutarchicLiquidity: null,
           baseToStake: null,
+          twapStartDelaySeconds: null,
+          teamSponsoredPassThresholdBps: null,
+          teamAddress: null,
         },
       })
       .instruction();
@@ -216,6 +219,7 @@ export default function suite() {
         market: "pass",
         swapType: "buy",
         inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
       })
       .rpc();
 
@@ -233,6 +237,7 @@ export default function suite() {
           market: "pass",
           swapType: "buy",
           inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
           payer: this.payer.publicKey,
         })
         .preInstructions([
