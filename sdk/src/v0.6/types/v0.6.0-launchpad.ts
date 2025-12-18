@@ -1,5 +1,5 @@
 export type Launchpad = {
-  version: "0.6.1";
+  version: "0.6.0";
   name: "launchpad";
   instructions: [
     {
@@ -779,11 +779,6 @@ export type Launchpad = {
             ];
             type: "u8";
           },
-          {
-            name: "teamAddress";
-            docs: ["The initial address used to sponsor team proposals."];
-            type: "publicKey";
-          },
         ];
       };
     },
@@ -870,10 +865,6 @@ export type Launchpad = {
             name: "monthsUntilInsidersCanUnlock";
             type: "u8";
           },
-          {
-            name: "teamAddress";
-            type: "publicKey";
-          },
         ];
       };
     },
@@ -945,33 +936,6 @@ export type Launchpad = {
         {
           name: "launchTokenVault";
           type: "publicKey";
-          index: false;
-        },
-        {
-          name: "performancePackageGrantee";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "performancePackageTokenAmount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "monthsUntilInsidersCanUnlock";
-          type: "u8";
-          index: false;
-        },
-        {
-          name: "monthlySpendingLimitAmount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "monthlySpendingLimitMembers";
-          type: {
-            vec: "publicKey";
-          };
           index: false;
         },
         {
@@ -1103,13 +1067,6 @@ export type Launchpad = {
           name: "daoTreasury";
           type: {
             option: "publicKey";
-          };
-          index: false;
-        },
-        {
-          name: "finalRaiseAmount";
-          type: {
-            option: "u64";
           };
           index: false;
         },
@@ -1273,7 +1230,7 @@ export type Launchpad = {
     {
       code: 6013;
       name: "InvalidPriceBasedPremineAmount";
-      msg: "Cannot do more than a 50% premine, minimum is 10 atoms of token";
+      msg: "Cannot do more than a 50% premine";
     },
     {
       code: 6014;
@@ -1319,7 +1276,7 @@ export type Launchpad = {
 };
 
 export const IDL: Launchpad = {
-  version: "0.6.1",
+  version: "0.6.0",
   name: "launchpad",
   instructions: [
     {
@@ -2099,11 +2056,6 @@ export const IDL: Launchpad = {
             ],
             type: "u8",
           },
-          {
-            name: "teamAddress",
-            docs: ["The initial address used to sponsor team proposals."],
-            type: "publicKey",
-          },
         ],
       },
     },
@@ -2190,10 +2142,6 @@ export const IDL: Launchpad = {
             name: "monthsUntilInsidersCanUnlock",
             type: "u8",
           },
-          {
-            name: "teamAddress",
-            type: "publicKey",
-          },
         ],
       },
     },
@@ -2265,33 +2213,6 @@ export const IDL: Launchpad = {
         {
           name: "launchTokenVault",
           type: "publicKey",
-          index: false,
-        },
-        {
-          name: "performancePackageGrantee",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "performancePackageTokenAmount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "monthsUntilInsidersCanUnlock",
-          type: "u8",
-          index: false,
-        },
-        {
-          name: "monthlySpendingLimitAmount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "monthlySpendingLimitMembers",
-          type: {
-            vec: "publicKey",
-          },
           index: false,
         },
         {
@@ -2423,13 +2344,6 @@ export const IDL: Launchpad = {
           name: "daoTreasury",
           type: {
             option: "publicKey",
-          },
-          index: false,
-        },
-        {
-          name: "finalRaiseAmount",
-          type: {
-            option: "u64",
           },
           index: false,
         },
@@ -2593,7 +2507,7 @@ export const IDL: Launchpad = {
     {
       code: 6013,
       name: "InvalidPriceBasedPremineAmount",
-      msg: "Cannot do more than a 50% premine, minimum is 10 atoms of token",
+      msg: "Cannot do more than a 50% premine",
     },
     {
       code: 6014,

@@ -157,6 +157,72 @@ export default function suite() {
     assert.equal(refundAmount, 61_000n * 1_000_000n);
   });
 
+  it("properly rounds down when refunding (doesn't fail for last refund with insufficient funds)", async function () {
+    const fund1Amount = new BN(100_000 * 1e6);
+    const fund2Amount = new BN(66_666 * 1e6);
+
+    const funder1 = new Keypair();
+    const funder2 = new Keypair();
+
+    await this.createTokenAccount(MAINNET_USDC, funder1.publicKey);
+    await this.createTokenAccount(MAINNET_USDC, funder2.publicKey);
+
+    // Mint USDC to funders
+    await this.transfer(
+      MAINNET_USDC,
+      this.payer,
+      funder1.publicKey,
+      fund1Amount.toNumber(),
+    );
+    await this.transfer(
+      MAINNET_USDC,
+      this.payer,
+      funder2.publicKey,
+      fund2Amount.toNumber(),
+    );
+
+    await launchpadClient
+      .fundIx({ launch, funder: funder1.publicKey, amount: fund1Amount })
+      .signers([funder1])
+      .rpc();
+    await launchpadClient
+      .fundIx({ launch, funder: funder2.publicKey, amount: fund2Amount })
+      .signers([funder2])
+      .rpc();
+
+    await this.advanceBySeconds(60 * 60 * 24 * 7);
+
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    const completeLaunchTx = await launchpadClient
+      .completeLaunchIx({
+        launch,
+        baseMint: META,
+        finalRaiseAmount: new BN(100_000 * 1e6),
+        launchAuthority: this.payer.publicKey,
+      })
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this,
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer]);
+
+    await this.banksClient.processTransaction(tx);
+
+    await launchpadClient.refundIx({ launch, funder: funder1.publicKey }).rpc();
+    await launchpadClient.refundIx({ launch, funder: funder2.publicKey }).rpc();
+  });
+
   it("fails when launch is not in refunding state", async function () {
     const partialAmount = new BN(100_000_000_000).divn(2); // 50k USDC
 

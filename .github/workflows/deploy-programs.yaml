@@ -1,0 +1,96 @@
+name: Deploy Programs to Mainnet with IDL and Verified builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      program:
+        description: "Program to deploy"
+        required: true
+        type: choice
+        options:
+          - all
+          - conditional_vault_v4
+          - futarchy_v6
+          - launchpad_v6
+          - price_based_performance_package_v6
+      priority-fee:
+        description: "Priority fee in microlamports"
+        required: true
+        default: "300000"
+        type: string
+
+jobs:
+  conditional-vault-v4:
+    if: inputs.program == 'conditional_vault_v4' || inputs.program == 'all'
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      program: "conditional_vault"
+      override-program-id: "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGeHV"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
+
+  futarchy-v6:
+    if: inputs.program == 'futarchy_v6' || inputs.program == 'all'
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      program: "futarchy"
+      override-program-id: "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
+
+  launchpad-v6:
+    if: inputs.program == 'launchpad_v6' || inputs.program == 'all'
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      program: "launchpad"
+      override-program-id: "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
+
+  price-based-performance-package-v6:
+    if: inputs.program == 'price_based_performance_package_v6' || inputs.program == 'all'
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      program: "price_based_performance_package"
+      override-program-id: "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}

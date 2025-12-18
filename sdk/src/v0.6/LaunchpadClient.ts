@@ -7,6 +7,10 @@ import {
 } from "@solana/web3.js";
 import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
 import {
+  Launchpad as v0_6_0_launchpad,
+  IDL as v0_6_0_launchpadIDL,
+} from "./types/v0.6.0-launchpad.js";
+import {
   LAUNCHPAD_PROGRAM_ID,
   RAYDIUM_AUTHORITY,
   LOW_FEE_RAYDIUM_CONFIG,
@@ -50,7 +54,7 @@ import { PriceBasedPerformancePackageClient } from "./PriceBasedPerformancePacka
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
   launchpadProgramId?: PublicKey;
-  autocratProgramId?: PublicKey;
+  futarchyProgramId?: PublicKey;
   conditionalVaultProgramId?: PublicKey;
   priceBasedUnlockProgramId?: PublicKey;
 };
@@ -58,7 +62,9 @@ export type CreateLaunchpadClientParams = {
 export class LaunchpadClient {
   public launchpad: Program<Launchpad>;
   public provider: AnchorProvider;
-  public autocratClient: FutarchyClient;
+  // useful for parsing old events
+  public v0_6_0_launchpad: Program<v0_6_0_launchpad>;
+  public futarchyClient: FutarchyClient;
   public priceBasedUnlock: PriceBasedPerformancePackageClient;
 
   private constructor(params: CreateLaunchpadClientParams) {
@@ -68,9 +74,14 @@ export class LaunchpadClient {
       params.launchpadProgramId || LAUNCHPAD_PROGRAM_ID,
       this.provider,
     );
-    this.autocratClient = FutarchyClient.createClient({
+    this.v0_6_0_launchpad = new Program<v0_6_0_launchpad>(
+      v0_6_0_launchpadIDL,
+      params.launchpadProgramId || LAUNCHPAD_PROGRAM_ID,
+      this.provider,
+    );
+    this.futarchyClient = FutarchyClient.createClient({
       provider: this.provider,
-      autocratProgramId: params.autocratProgramId,
+      futarchyProgramId: params.futarchyProgramId,
       conditionalVaultProgramId: params.conditionalVaultProgramId,
     });
     this.priceBasedUnlock = PriceBasedPerformancePackageClient.createClient({
@@ -303,7 +314,7 @@ export class LaunchpadClient {
     });
 
     const [autocratEventAuthority] = getEventAuthorityAddr(
-      this.autocratClient.getProgramId(),
+      this.futarchyClient.getProgramId(),
     );
 
     const [tokenMetadata] = getMetadataAddr(baseMint);
@@ -327,7 +338,7 @@ export class LaunchpadClient {
 
     const [ammPosition] = PublicKey.findProgramAddressSync(
       [Buffer.from("amm_position"), dao.toBuffer(), multisigVault.toBuffer()],
-      this.autocratClient.getProgramId(),
+      this.futarchyClient.getProgramId(),
     );
 
     const [performancePackage] = getPerformancePackageAddr({
@@ -431,7 +442,7 @@ export class LaunchpadClient {
           true,
         ),
         staticAccounts: {
-          futarchyProgram: this.autocratClient.getProgramId(),
+          futarchyProgram: this.futarchyClient.getProgramId(),
           tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
           autocratEventAuthority,
           squadsProgram: SQUADS_PROGRAM_ID,

@@ -1,5 +1,5 @@
 export type Futarchy = {
-  version: "0.6.1";
+  version: "0.6.0";
   name: "futarchy";
   instructions: [
     {
@@ -991,79 +991,6 @@ export type Futarchy = {
       ];
       args: [];
     },
-    {
-      name: "sponsorProposal";
-      accounts: [
-        {
-          name: "proposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "teamAddress";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
-      name: "resizeDao";
-      accounts: [
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
-      name: "resizeProposal";
-      accounts: [
-        {
-          name: "proposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
   ];
   accounts: [
     {
@@ -1205,20 +1132,6 @@ export type Futarchy = {
               };
             };
           },
-          {
-            name: "teamSponsoredPassThresholdBps";
-            docs: [
-              "The percentage, in basis points, the pass price needs to be above the",
-              "fail price in order for the proposal to pass for team-sponsored proposals.",
-              "",
-              "Can be negative to allow for team-sponsored proposals to pass by default.",
-            ];
-            type: "i16";
-          },
-          {
-            name: "teamAddress";
-            type: "publicKey";
-          },
         ];
       };
     },
@@ -1288,10 +1201,6 @@ export type Futarchy = {
           {
             name: "failQuoteMint";
             type: "publicKey";
-          },
-          {
-            name: "isTeamSponsored";
-            type: "bool";
           },
         ];
       };
@@ -1419,14 +1328,6 @@ export type Futarchy = {
               };
             };
           },
-          {
-            name: "teamSponsoredPassThresholdBps";
-            type: "i16";
-          },
-          {
-            name: "teamAddress";
-            type: "publicKey";
-          },
         ];
       };
     },
@@ -1537,12 +1438,6 @@ export type Futarchy = {
             };
           },
           {
-            name: "twapStartDelaySeconds";
-            type: {
-              option: "u32";
-            };
-          },
-          {
             name: "minQuoteFutarchicLiquidity";
             type: {
               option: "u64";
@@ -1558,18 +1453,6 @@ export type Futarchy = {
             name: "baseToStake";
             type: {
               option: "u64";
-            };
-          },
-          {
-            name: "teamSponsoredPassThresholdBps";
-            type: {
-              option: "i16";
-            };
-          },
-          {
-            name: "teamAddress";
-            type: {
-              option: "publicKey";
             };
           },
         ];
@@ -1611,96 +1494,6 @@ export type Futarchy = {
             name: "members";
             type: {
               vec: "publicKey";
-            };
-          },
-        ];
-      };
-    },
-    {
-      name: "OldDao";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "amm";
-            type: {
-              defined: "FutarchyAmm";
-            };
-          },
-          {
-            name: "nonce";
-            type: "u64";
-          },
-          {
-            name: "daoCreator";
-            type: "publicKey";
-          },
-          {
-            name: "pdaBump";
-            type: "u8";
-          },
-          {
-            name: "squadsMultisig";
-            type: "publicKey";
-          },
-          {
-            name: "squadsMultisigVault";
-            type: "publicKey";
-          },
-          {
-            name: "baseMint";
-            type: "publicKey";
-          },
-          {
-            name: "quoteMint";
-            type: "publicKey";
-          },
-          {
-            name: "proposalCount";
-            type: "u32";
-          },
-          {
-            name: "passThresholdBps";
-            type: "u16";
-          },
-          {
-            name: "secondsPerProposal";
-            type: "u32";
-          },
-          {
-            name: "twapInitialObservation";
-            type: "u128";
-          },
-          {
-            name: "twapMaxObservationChangePerUpdate";
-            type: "u128";
-          },
-          {
-            name: "twapStartDelaySeconds";
-            type: "u32";
-          },
-          {
-            name: "minQuoteFutarchicLiquidity";
-            type: "u64";
-          },
-          {
-            name: "minBaseFutarchicLiquidity";
-            type: "u64";
-          },
-          {
-            name: "baseToStake";
-            type: "u64";
-          },
-          {
-            name: "seqNum";
-            type: "u64";
-          },
-          {
-            name: "initialSpendingLimit";
-            type: {
-              option: {
-                defined: "InitialSpendingLimit";
-              };
             };
           },
         ];
@@ -1838,76 +1631,6 @@ export type Futarchy = {
           {
             name: "baseProtocolFeeBalance";
             type: "u64";
-          },
-        ];
-      };
-    },
-    {
-      name: "OldProposal";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "number";
-            type: "u32";
-          },
-          {
-            name: "proposer";
-            type: "publicKey";
-          },
-          {
-            name: "timestampEnqueued";
-            type: "i64";
-          },
-          {
-            name: "state";
-            type: {
-              defined: "ProposalState";
-            };
-          },
-          {
-            name: "baseVault";
-            type: "publicKey";
-          },
-          {
-            name: "quoteVault";
-            type: "publicKey";
-          },
-          {
-            name: "dao";
-            type: "publicKey";
-          },
-          {
-            name: "pdaBump";
-            type: "u8";
-          },
-          {
-            name: "question";
-            type: "publicKey";
-          },
-          {
-            name: "durationInSeconds";
-            type: "u32";
-          },
-          {
-            name: "squadsProposal";
-            type: "publicKey";
-          },
-          {
-            name: "passBaseMint";
-            type: "publicKey";
-          },
-          {
-            name: "passQuoteMint";
-            type: "publicKey";
-          },
-          {
-            name: "failBaseMint";
-            type: "publicKey";
-          },
-          {
-            name: "failQuoteMint";
-            type: "publicKey";
           },
         ];
       };
@@ -2137,11 +1860,6 @@ export type Futarchy = {
           index: false;
         },
         {
-          name: "twapStartDelaySeconds";
-          type: "u32";
-          index: false;
-        },
-        {
           name: "minQuoteFutarchicLiquidity";
           type: "u64";
           index: false;
@@ -2172,16 +1890,6 @@ export type Futarchy = {
         },
         {
           name: "squadsMultisigVault";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "teamSponsoredPassThresholdBps";
-          type: "i16";
-          index: false;
-        },
-        {
-          name: "teamAddress";
           type: "publicKey";
           index: false;
         },
@@ -2223,11 +1931,6 @@ export type Futarchy = {
           index: false;
         },
         {
-          name: "twapStartDelaySeconds";
-          type: "u32";
-          index: false;
-        },
-        {
           name: "minQuoteFutarchicLiquidity";
           type: "u64";
           index: false;
@@ -2240,16 +1943,6 @@ export type Futarchy = {
         {
           name: "baseToStake";
           type: "u64";
-          index: false;
-        },
-        {
-          name: "teamSponsoredPassThresholdBps";
-          type: "i16";
-          index: false;
-        },
-        {
-          name: "teamAddress";
-          type: "publicKey";
           index: false;
         },
       ];
@@ -2411,11 +2104,6 @@ export type Futarchy = {
           index: false;
         },
         {
-          name: "timestampEnqueued";
-          type: "i64";
-          index: false;
-        },
-        {
           name: "totalStaked";
           type: "u64";
           index: false;
@@ -2486,11 +2174,6 @@ export type Futarchy = {
           type: {
             defined: "FutarchyAmm";
           };
-          index: false;
-        },
-        {
-          name: "isTeamSponsored";
-          type: "bool";
           index: false;
         },
       ];
@@ -2717,33 +2400,6 @@ export type Futarchy = {
         },
       ];
     },
-    {
-      name: "SponsorProposalEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "proposal";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "dao";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "teamAddress";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
   ];
   errors: [
     {
@@ -2906,21 +2562,11 @@ export type Futarchy = {
       name: "InvalidTransaction";
       msg: "This Squads transaction should only contain calls to update spending limits";
     },
-    {
-      code: 6032;
-      name: "ProposalAlreadySponsored";
-      msg: "Proposal has already been sponsored";
-    },
-    {
-      code: 6033;
-      name: "InvalidTeamSponsoredPassThreshold";
-      msg: "Team sponsored pass threshold must be between -10% and 10%";
-    },
   ];
 };
 
 export const IDL: Futarchy = {
-  version: "0.6.1",
+  version: "0.6.0",
   name: "futarchy",
   instructions: [
     {
@@ -3912,79 +3558,6 @@ export const IDL: Futarchy = {
       ],
       args: [],
     },
-    {
-      name: "sponsorProposal",
-      accounts: [
-        {
-          name: "proposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "teamAddress",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "resizeDao",
-      accounts: [
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "resizeProposal",
-      accounts: [
-        {
-          name: "proposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
   ],
   accounts: [
     {
@@ -4126,20 +3699,6 @@ export const IDL: Futarchy = {
               },
             },
           },
-          {
-            name: "teamSponsoredPassThresholdBps",
-            docs: [
-              "The percentage, in basis points, the pass price needs to be above the",
-              "fail price in order for the proposal to pass for team-sponsored proposals.",
-              "",
-              "Can be negative to allow for team-sponsored proposals to pass by default.",
-            ],
-            type: "i16",
-          },
-          {
-            name: "teamAddress",
-            type: "publicKey",
-          },
         ],
       },
     },
@@ -4209,10 +3768,6 @@ export const IDL: Futarchy = {
           {
             name: "failQuoteMint",
             type: "publicKey",
-          },
-          {
-            name: "isTeamSponsored",
-            type: "bool",
           },
         ],
       },
@@ -4340,14 +3895,6 @@ export const IDL: Futarchy = {
               },
             },
           },
-          {
-            name: "teamSponsoredPassThresholdBps",
-            type: "i16",
-          },
-          {
-            name: "teamAddress",
-            type: "publicKey",
-          },
         ],
       },
     },
@@ -4458,12 +4005,6 @@ export const IDL: Futarchy = {
             },
           },
           {
-            name: "twapStartDelaySeconds",
-            type: {
-              option: "u32",
-            },
-          },
-          {
             name: "minQuoteFutarchicLiquidity",
             type: {
               option: "u64",
@@ -4479,18 +4020,6 @@ export const IDL: Futarchy = {
             name: "baseToStake",
             type: {
               option: "u64",
-            },
-          },
-          {
-            name: "teamSponsoredPassThresholdBps",
-            type: {
-              option: "i16",
-            },
-          },
-          {
-            name: "teamAddress",
-            type: {
-              option: "publicKey",
             },
           },
         ],
@@ -4532,96 +4061,6 @@ export const IDL: Futarchy = {
             name: "members",
             type: {
               vec: "publicKey",
-            },
-          },
-        ],
-      },
-    },
-    {
-      name: "OldDao",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "amm",
-            type: {
-              defined: "FutarchyAmm",
-            },
-          },
-          {
-            name: "nonce",
-            type: "u64",
-          },
-          {
-            name: "daoCreator",
-            type: "publicKey",
-          },
-          {
-            name: "pdaBump",
-            type: "u8",
-          },
-          {
-            name: "squadsMultisig",
-            type: "publicKey",
-          },
-          {
-            name: "squadsMultisigVault",
-            type: "publicKey",
-          },
-          {
-            name: "baseMint",
-            type: "publicKey",
-          },
-          {
-            name: "quoteMint",
-            type: "publicKey",
-          },
-          {
-            name: "proposalCount",
-            type: "u32",
-          },
-          {
-            name: "passThresholdBps",
-            type: "u16",
-          },
-          {
-            name: "secondsPerProposal",
-            type: "u32",
-          },
-          {
-            name: "twapInitialObservation",
-            type: "u128",
-          },
-          {
-            name: "twapMaxObservationChangePerUpdate",
-            type: "u128",
-          },
-          {
-            name: "twapStartDelaySeconds",
-            type: "u32",
-          },
-          {
-            name: "minQuoteFutarchicLiquidity",
-            type: "u64",
-          },
-          {
-            name: "minBaseFutarchicLiquidity",
-            type: "u64",
-          },
-          {
-            name: "baseToStake",
-            type: "u64",
-          },
-          {
-            name: "seqNum",
-            type: "u64",
-          },
-          {
-            name: "initialSpendingLimit",
-            type: {
-              option: {
-                defined: "InitialSpendingLimit",
-              },
             },
           },
         ],
@@ -4759,76 +4198,6 @@ export const IDL: Futarchy = {
           {
             name: "baseProtocolFeeBalance",
             type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "OldProposal",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "number",
-            type: "u32",
-          },
-          {
-            name: "proposer",
-            type: "publicKey",
-          },
-          {
-            name: "timestampEnqueued",
-            type: "i64",
-          },
-          {
-            name: "state",
-            type: {
-              defined: "ProposalState",
-            },
-          },
-          {
-            name: "baseVault",
-            type: "publicKey",
-          },
-          {
-            name: "quoteVault",
-            type: "publicKey",
-          },
-          {
-            name: "dao",
-            type: "publicKey",
-          },
-          {
-            name: "pdaBump",
-            type: "u8",
-          },
-          {
-            name: "question",
-            type: "publicKey",
-          },
-          {
-            name: "durationInSeconds",
-            type: "u32",
-          },
-          {
-            name: "squadsProposal",
-            type: "publicKey",
-          },
-          {
-            name: "passBaseMint",
-            type: "publicKey",
-          },
-          {
-            name: "passQuoteMint",
-            type: "publicKey",
-          },
-          {
-            name: "failBaseMint",
-            type: "publicKey",
-          },
-          {
-            name: "failQuoteMint",
-            type: "publicKey",
           },
         ],
       },
@@ -5058,11 +4427,6 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
-          name: "twapStartDelaySeconds",
-          type: "u32",
-          index: false,
-        },
-        {
           name: "minQuoteFutarchicLiquidity",
           type: "u64",
           index: false,
@@ -5093,16 +4457,6 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisigVault",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "teamSponsoredPassThresholdBps",
-          type: "i16",
-          index: false,
-        },
-        {
-          name: "teamAddress",
           type: "publicKey",
           index: false,
         },
@@ -5144,11 +4498,6 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
-          name: "twapStartDelaySeconds",
-          type: "u32",
-          index: false,
-        },
-        {
           name: "minQuoteFutarchicLiquidity",
           type: "u64",
           index: false,
@@ -5161,16 +4510,6 @@ export const IDL: Futarchy = {
         {
           name: "baseToStake",
           type: "u64",
-          index: false,
-        },
-        {
-          name: "teamSponsoredPassThresholdBps",
-          type: "i16",
-          index: false,
-        },
-        {
-          name: "teamAddress",
-          type: "publicKey",
           index: false,
         },
       ],
@@ -5332,11 +4671,6 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
-          name: "timestampEnqueued",
-          type: "i64",
-          index: false,
-        },
-        {
           name: "totalStaked",
           type: "u64",
           index: false,
@@ -5407,11 +4741,6 @@ export const IDL: Futarchy = {
           type: {
             defined: "FutarchyAmm",
           },
-          index: false,
-        },
-        {
-          name: "isTeamSponsored",
-          type: "bool",
           index: false,
         },
       ],
@@ -5638,33 +4967,6 @@ export const IDL: Futarchy = {
         },
       ],
     },
-    {
-      name: "SponsorProposalEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "proposal",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "dao",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "teamAddress",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
   ],
   errors: [
     {
@@ -5826,16 +5128,6 @@ export const IDL: Futarchy = {
       code: 6031,
       name: "InvalidTransaction",
       msg: "This Squads transaction should only contain calls to update spending limits",
-    },
-    {
-      code: 6032,
-      name: "ProposalAlreadySponsored",
-      msg: "Proposal has already been sponsored",
-    },
-    {
-      code: 6033,
-      name: "InvalidTeamSponsoredPassThreshold",
-      msg: "Team sponsored pass threshold must be between -10% and 10%",
     },
   ],
 };
