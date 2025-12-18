@@ -3,7 +3,8 @@ members = [
     "programs/*"
 ]
 exclude = [
-    "jup-sdk"
+    "jup-sdk",
+    "programs/launchpad" # This is just a symlink to the latest launchpad program (currently launchpad_v7)
 ]
 resolver = "2"
 
