@@ -1092,11 +1092,13 @@ export type Futarchy = {
               name: "tokenAAccount";
               isMut: true;
               isSigner: false;
+              docs: ["Token account of base tokens recipient"];
             },
             {
               name: "tokenBAccount";
               isMut: true;
               isSigner: false;
+              docs: ["Token account of quote tokens recipient"];
             },
             {
               name: "tokenAVault";
@@ -1127,19 +1129,16 @@ export type Futarchy = {
               name: "owner";
               isMut: false;
               isSigner: false;
-              docs: ["owner of position - DAO's squads multisig"];
             },
             {
               name: "tokenAProgram";
               isMut: false;
               isSigner: false;
-              docs: ["Token a program"];
             },
             {
               name: "tokenBProgram";
               isMut: false;
               isSigner: false;
-              docs: ["Token b program"];
             },
           ];
         },
@@ -4167,11 +4166,13 @@ export const IDL: Futarchy = {
               name: "tokenAAccount",
               isMut: true,
               isSigner: false,
+              docs: ["Token account of base tokens recipient"],
             },
             {
               name: "tokenBAccount",
               isMut: true,
               isSigner: false,
+              docs: ["Token account of quote tokens recipient"],
             },
             {
               name: "tokenAVault",
@@ -4202,19 +4203,16 @@ export const IDL: Futarchy = {
               name: "owner",
               isMut: false,
               isSigner: false,
-              docs: ["owner of position - DAO's squads multisig"],
             },
             {
               name: "tokenAProgram",
               isMut: false,
               isSigner: false,
-              docs: ["Token a program"],
             },
             {
               name: "tokenBProgram",
               isMut: false,
               isSigner: false,
-              docs: ["Token b program"],
             },
           ],
         },

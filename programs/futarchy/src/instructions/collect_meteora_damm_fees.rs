@@ -15,7 +15,6 @@ pub mod metadao_multisig_vault {
 pub mod metadao_admin {
     use anchor_lang::prelude::declare_id;
 
-    // TODO: Change this to a non-Squads signer
     // We must use a non-Squads signer because of CPI depth limits
     declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
 }
@@ -38,13 +37,13 @@ pub struct CollectMeteoraDammFees<'info> {
     /// CHECK: checked by autocrat program
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
-    /// CHECK: just a signer
+    /// CHECK: signer for the squads transaction, checked by squads program
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig_vault: UncheckedAccount<'info>,
-    /// CHECK: checked by squads multisig program
+    /// CHECK: squads transaction, initialized by squads multisig program, checked by squads multisig program
     #[account(mut)]
     pub squads_multisig_vault_transaction: UncheckedAccount<'info>,
-    /// CHECK: checked by squads multisig program
+    /// CHECK: squads proposal, initialized by squads multisig program, checked by squads multisig program
     #[account(mut)]
     pub squads_multisig_proposal: UncheckedAccount<'info>,
 
@@ -76,41 +75,38 @@ pub struct MeteoraClaimPositionFeesAccounts<'info> {
     #[account(mut)]
     pub position: UncheckedAccount<'info>,
 
-    /// CHECK: checked by damm v2 program
+    /// Token account of base tokens recipient
     #[account(mut, token::mint = token_a_mint, token::authority = metadao_multisig_vault::ID)]
     pub token_a_account: Account<'info, TokenAccount>,
 
-    /// CHECK: checked by damm v2 program
+    /// Token account of quote tokens recipient
     #[account(mut, token::mint = token_b_mint, token::authority = metadao_multisig_vault::ID)]
     pub token_b_account: Account<'info, TokenAccount>,
 
-    /// CHECK: checked by damm v2 program
+    /// CHECK: checked by damm v2 program, base token vault of the pool
     #[account(mut)]
     pub token_a_vault: UncheckedAccount<'info>,
 
-    /// CHECK: checked by damm v2 program
+    /// CHECK: checked by damm v2 program, quote token vault of the pool
     #[account(mut)]
     pub token_b_vault: UncheckedAccount<'info>,
 
-    /// CHECK: Checked from dao struct
+    /// CHECK: Checked from dao struct, base mint
     pub token_a_mint: UncheckedAccount<'info>,
 
-    /// CHECK: Checked from dao struct
+    /// CHECK: Checked from dao struct, quote mint
     pub token_b_mint: UncheckedAccount<'info>,
 
-    /// CHECK: CPI
+    /// CHECK: checked by damm v2 program
     pub position_nft_account: UncheckedAccount<'info>,
 
-    /// owner of position - DAO's squads multisig
-    /// CHECK: checked by damm v2 program
+    /// CHECK: checked by damm v2 program, owner of position - usually the DAO's squads multisig vault
     pub owner: UncheckedAccount<'info>,
 
-    /// Token a program
-    /// CHECK: CPI
+    /// CHECK: checked by damm v2 program, base token program
     pub token_a_program: UncheckedAccount<'info>,
 
-    /// Token b program
-    /// CHECK: CPI
+    /// CHECK: checked by damm v2 program, quote token program
     pub token_b_program: UncheckedAccount<'info>,
 }
 
