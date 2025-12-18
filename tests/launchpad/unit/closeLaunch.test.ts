@@ -20,13 +20,13 @@ export default function suite() {
   const premineAmount = new BN(600_000_000_000_0);
 
   before(async function () {
-    launchpadClient = this.launchpad;
+    launchpadClient = this.launchpad_v6;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v6,
       this.payer,
     );
 
@@ -136,7 +136,7 @@ export default function suite() {
     // Create a new launch that stays in Initialized state
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v6,
       this.payer,
     );
     const newLaunch = result.launch;
@@ -156,6 +156,7 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
       })
       .rpc();
 
