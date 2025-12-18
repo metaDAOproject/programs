@@ -60,19 +60,10 @@ runs:
               --provider.cluster ${{ inputs.rpc-url }} \
               --provider.wallet ./deploy-keypair.json 2>&1 | tee buffer.out
 
-            echo "=== Raw buffer.out contents ==="
-            cat buffer.out
-            echo "==============================="
-
             BUFFER=$(cat buffer.out | grep -o 'Idl buffer created: [^ ]*' | cut -d' ' -f4)
-            echo "Extracted BUFFER value: '$BUFFER'"
-
             if [ ! -z "$BUFFER" ]; then
-              echo "Successfully extracted IDL buffer: $BUFFER"
               echo "buffer=$BUFFER" >> $GITHUB_OUTPUT
               break
-            else
-              echo "Failed to extract buffer address from output"
             fi
           done
 
