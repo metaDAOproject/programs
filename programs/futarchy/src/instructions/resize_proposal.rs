@@ -31,6 +31,28 @@ impl ResizeProposal<'_> {
             return Ok(());
         }
 
+        let old_proposal_data =
+            OldProposal::deserialize(&mut &proposal.try_borrow_data().unwrap()[8..])?;
+
+        let new_proposal_data = Proposal {
+            number: old_proposal_data.number,
+            proposer: old_proposal_data.proposer,
+            timestamp_enqueued: old_proposal_data.timestamp_enqueued,
+            state: old_proposal_data.state,
+            base_vault: old_proposal_data.base_vault,
+            quote_vault: old_proposal_data.quote_vault,
+            dao: old_proposal_data.dao,
+            pda_bump: old_proposal_data.pda_bump,
+            question: old_proposal_data.question,
+            duration_in_seconds: old_proposal_data.duration_in_seconds,
+            squads_proposal: old_proposal_data.squads_proposal,
+            pass_base_mint: old_proposal_data.pass_base_mint,
+            pass_quote_mint: old_proposal_data.pass_quote_mint,
+            fail_base_mint: old_proposal_data.fail_base_mint,
+            fail_quote_mint: old_proposal_data.fail_quote_mint,
+            is_team_sponsored: false,
+        };
+
         proposal.realloc(AFTER_REALLOC_SIZE, true)?;
 
         let lamports_needed = Rent::get()?.minimum_balance(AFTER_REALLOC_SIZE);
@@ -48,12 +70,7 @@ impl ResizeProposal<'_> {
             )?;
         }
 
-        let mut proposal_data =
-            Proposal::deserialize(&mut &proposal.try_borrow_mut_data().unwrap()[8..])?;
-
-        proposal_data.is_team_sponsored = false;
-
-        proposal_data.serialize(&mut &mut proposal.try_borrow_mut_data().unwrap()[8..])?;
+        new_proposal_data.serialize(&mut &mut proposal.try_borrow_mut_data().unwrap()[8..])?;
 
         Ok(())
     }

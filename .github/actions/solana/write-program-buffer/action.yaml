@@ -1,0 +1,115 @@
+name: "Write Program Buffer"
+description: "Creates a buffer for the program binary"
+inputs:
+  program-id:
+    description: "Program ID to check"
+    required: true
+  program:
+    description: "Program name"
+    required: true
+  rpc-url:
+    description: "Solana RPC URL"
+    required: true
+  keypair:
+    description: "The keypair to use for buffer creation"
+    required: true
+  buffer-authority-address:
+    description: "The buffer authority address. Could be the local address or the squads authority"
+    required: true
+  priority-fee:
+    description: "Priority fee in microlamports (kept for API compatibility, not used)"
+    required: false
+    default: "100000"
+
+outputs:
+  buffer:
+    description: "Created program buffer address"
+    value: ${{ steps.write-buffer.outputs.buffer }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Write keypair
+      shell: bash
+      run: echo "$DEPLOY_KEYPAIR" > ./deploy-keypair.json && chmod 600 ./deploy-keypair.json
+      env:
+        DEPLOY_KEYPAIR: ${{ inputs.keypair }}
+
+    - name: Check if program exists
+      id: check-program
+      shell: bash
+      run: |
+        set +e  # Don't exit on error
+
+        echo "Checking if program exists..."
+        solana program show ${{ inputs.program-id }} -u ${{ inputs.rpc-url }} > /dev/null 2>&1
+        EXIT_CODE=$?
+
+        if [ $EXIT_CODE -eq 0 ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Program exists"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Program does not exist yet"
+        fi
+
+        set -e  # Restore error checking
+
+    - name: Write program buffer
+      id: write-buffer
+      uses: nick-fields/retry@v2
+      with:
+        timeout_minutes: 60
+        max_attempts: 3
+        shell: bash
+        command: |
+          echo "Creating program buffer... (Attempt $RETRY_ATTEMPT of 3)"
+          OUTPUT=$(solana program write-buffer \
+            ./target/deploy/${{ inputs.program }}.so \
+            --url ${{ inputs.rpc-url }} \
+            --keypair ./deploy-keypair.json \
+            2>&1)
+
+          # Print output in real-time
+          echo "$OUTPUT"
+
+          # Check for success
+          if ! echo "$OUTPUT" | grep -q "Buffer:"; then
+            echo "Error: Buffer creation failed"
+            exit 1
+          fi
+
+          # Extract buffer if successful
+          BUFFER=$(echo "$OUTPUT" | grep "Buffer:" | cut -d " " -f2)
+          if [ -z "$BUFFER" ]; then
+            echo "Error: Could not extract buffer address"
+            exit 1
+          fi
+
+          echo "Found buffer: $BUFFER"
+          echo "buffer=$BUFFER" >> $GITHUB_OUTPUT
+
+    # We can not set authority and upgrade program in the same instruction so it needs to be here
+    # The rent for the buffer will be returned to the local keypair though once the program gets deployed in squads. So its fine.
+    # If the deploy fails you can also close the buffer with the multisig using the cli command squad-closebuffer
+    - name: Transfer buffer authority
+      if: steps.check-program.outputs.exists == 'true'
+      uses: nick-fields/retry@v2
+      with:
+        timeout_minutes: 10
+        max_attempts: 50
+        shell: bash
+        command: |
+          BUFFER="${{ steps.write-buffer.outputs.buffer }}"
+          echo "Transferring buffer authority for $BUFFER to ${{ inputs.buffer-authority-address }}"
+          solana program set-buffer-authority $BUFFER \
+            --keypair ./deploy-keypair.json \
+            --new-buffer-authority ${{ inputs.buffer-authority-address }} \
+            --url ${{ inputs.rpc-url }}
+
+    - name: Cleanup
+      if: always()
+      shell: bash
+      run: |
+        rm -f ./deploy-keypair.json
+        rm -f ./authority-keypair.json
