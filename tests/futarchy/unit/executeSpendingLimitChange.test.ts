@@ -62,7 +62,7 @@ export default function suite() {
       createKey: dao,
       vaultIndex: 0,
       mint: USDC,
-      amount: new BN(50_000 * 10 ** 6), // 50,000 USDC
+      amount: BigInt(50_000 * 10 ** 6), // 50,000 USDC
       period: multisig.types.Period.Month,
       members: [this.payer.publicKey], // Only the DAO can use this spending limit
       destinations: [], // No specific destinations
@@ -98,6 +98,7 @@ export default function suite() {
         market: "pass",
         swapType: "buy",
         inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
       })
       .rpc();
 
@@ -114,6 +115,7 @@ export default function suite() {
           market: "pass",
           swapType: "buy",
           inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
         })
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
@@ -209,6 +211,7 @@ export default function suite() {
         market: "pass",
         swapType: "buy",
         inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
       })
       .rpc();
 
@@ -225,6 +228,7 @@ export default function suite() {
           market: "pass",
           swapType: "buy",
           inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
         })
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
@@ -326,6 +330,7 @@ export default function suite() {
         market: "pass",
         swapType: "buy",
         inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
       })
       .rpc();
 
@@ -342,6 +347,7 @@ export default function suite() {
           market: "pass",
           swapType: "buy",
           inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
         })
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),

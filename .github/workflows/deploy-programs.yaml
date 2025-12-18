@@ -22,18 +22,16 @@ on:
 jobs:
   conditional-vault-v4:
     if: inputs.program == 'conditional_vault_v4' || inputs.program == 'all'
-    uses: solana-developers/github-workflows/.github/workflows/reusable-build.yaml@v0.2.9
+    uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "conditional_vault"
-      program-id: "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGeHV"
+      override-program-id: "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGeHV"
       network: "mainnet"
       deploy: true
       upload_idl: true
       verify: true
       use-squads: true
       features: "production"
-      override-solana-version: "1.17.31"
-      override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
     secrets:
       MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
@@ -43,18 +41,16 @@ jobs:
 
   futarchy-v6:
     if: inputs.program == 'futarchy_v6' || inputs.program == 'all'
-    uses: solana-developers/github-workflows/.github/workflows/reusable-build.yaml@v0.2.9
+    uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "futarchy"
-      program-id: "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
+      override-program-id: "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
       network: "mainnet"
       deploy: true
       upload_idl: true
       verify: true
       use-squads: true
       features: "production"
-      override-solana-version: "1.17.31"
-      override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
     secrets:
       MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
@@ -64,18 +60,16 @@ jobs:
 
   launchpad-v6:
     if: inputs.program == 'launchpad_v6' || inputs.program == 'all'
-    uses: solana-developers/github-workflows/.github/workflows/reusable-build.yaml@v0.2.9
+    uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "launchpad"
-      program-id: "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
+      override-program-id: "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
       network: "mainnet"
       deploy: true
       upload_idl: true
       verify: true
       use-squads: true
       features: "production"
-      override-solana-version: "1.17.31"
-      override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
     secrets:
       MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
@@ -85,17 +79,15 @@ jobs:
 
   price-based-performance-package-v6:
     if: inputs.program == 'price_based_performance_package_v6' || inputs.program == 'all'
-    uses: solana-developers/github-workflows/.github/workflows/reusable-build.yaml@v0.2.9
+    uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "price_based_performance_package"
-      program-id: "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
+      override-program-id: "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
       network: "mainnet"
       deploy: true
       upload_idl: true
       verify: true
       use-squads: true
-      override-solana-version: "1.17.31"
-      override-anchor-version: "0.29.0"
       priority-fee: ${{ inputs.priority-fee }}
     secrets:
       MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
