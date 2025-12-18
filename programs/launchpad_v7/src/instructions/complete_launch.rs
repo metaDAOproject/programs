@@ -725,9 +725,11 @@ impl CompleteLaunch<'_> {
         self.launch_base_vault.reload()?;
         self.launch_quote_vault.reload()?;
 
+        // We have to add the additional tokens amount to the tokens to participatns because the additional tokens
+        // can only be claimed after the launch is complete
         require_gte!(
             self.launch_base_vault.amount,
-            TOKENS_TO_PARTICIPANTS,
+            TOKENS_TO_PARTICIPANTS + self.launch.additional_tokens_amount,
             LaunchpadError::InvariantViolated
         );
         require_gte!(

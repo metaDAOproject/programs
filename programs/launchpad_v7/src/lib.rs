@@ -98,4 +98,11 @@ pub mod launchpad_v7 {
     pub fn close_launch(ctx: Context<CloseLaunch>) -> Result<()> {
         CloseLaunch::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn claim_additional_token_allocation(
+        ctx: Context<ClaimAdditionalTokenAllocation>,
+    ) -> Result<()> {
+        ClaimAdditionalTokenAllocation::handle(ctx)
+    }
 }
