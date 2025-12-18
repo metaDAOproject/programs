@@ -14,13 +14,14 @@
     "./v0.3": "./dist/v0.3/index.js",
     "./v0.4": "./dist/v0.4/index.js",
     "./v0.5": "./dist/v0.5/index.js",
-    "./v0.6": "./dist/v0.6/index.js"
+    "./v0.6": "./dist/v0.6/index.js",
+    "./v0.7": "./dist/v0.7/index.js"
   },
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "build": "tsc",
-    "build-local": "rm -rf ./dist && cp ../target/types/* ./src/v0.6/types && yarn tsc",
+    "build-local": "rm -rf ./dist && cp ../target/types/* ./src/v0.7/types && yarn tsc",
     "publish": "yarn lint:fix && yarn build && yarn publish"
   },
   "dependencies": {

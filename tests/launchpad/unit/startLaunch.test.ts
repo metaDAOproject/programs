@@ -18,13 +18,13 @@ export default function suite() {
 
   before(async function () {
     futarchyClient = this.futarchy;
-    launchpadClient = this.launchpad;
+    launchpadClient = this.launchpad_v6;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v6,
       this.payer,
     );
 
@@ -54,6 +54,7 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
       })
       .rpc();
   });
