@@ -1,0 +1,132 @@
+name: "Verify Build"
+description: "Verifies a Solana program build matches its source code"
+inputs:
+  program-id:
+    description: "Program ID to verify"
+    required: true
+  program:
+    description: "Program name"
+    required: true
+  rpc-url:
+    description: "Solana RPC URL"
+    required: true
+  keypair:
+    description: "The keypair with authority to write verify data"
+    required: true
+  skip-build:
+    description: "Skip building the program"
+    required: false
+    default: "true"
+  skip-prompt:
+    description: "Skip interactive questions"
+    required: false
+    default: "true"
+  repo-url:
+    description: "GitHub repository URL"
+    required: true
+  commit-hash:
+    description: "Git commit hash to verify against"
+    required: false
+  mount-path:
+    description: "Path to the program directory"
+    required: false
+  network:
+    description: "Target network (mainnet/devnet)"
+    required: true
+  use-squads:
+    description: "Whether to use Squads for deployment"
+    required: false
+    default: "false"
+  vault-address:
+    description: "The Squads vault address (required if use-squads is true)"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Write keypair
+      shell: bash
+      run: |
+        echo "$DEPLOY_KEYPAIR" > ./deploy-keypair.json
+        chmod 600 ./deploy-keypair.json
+      env:
+        DEPLOY_KEYPAIR: ${{ inputs.keypair }}
+
+    - name: Debug Environment
+      shell: bash
+      run: |
+        echo "Network: ${{ inputs.network }}"
+        echo "Program: ${{ inputs.program }}"
+        echo "Program ID: ${{ inputs.program-id }}"
+        echo "Use Squads: ${{ inputs.use-squads }}"
+        echo "Has keypair: ${{ inputs.keypair != '' }}"
+
+    - name: Verify Build
+      shell: bash
+      if: inputs.use-squads == 'false'
+      run: |
+        ARGS=""
+
+        if [ "${{ inputs.skip-build }}" = "true" ]; then
+          ARGS="$ARGS --skip-build"
+        fi
+
+        if [ "${{ inputs.skip-prompt }}" = "true" ]; then
+          ARGS="$ARGS --skip-prompt"
+        fi
+
+        if [ -n "${{ inputs.mount-path }}" ]; then
+          ARGS="$ARGS --mount-path ${{ inputs.mount-path }}"
+        fi
+
+        if [ -n "${{ inputs.commit-hash }}" ]; then
+          ARGS="$ARGS --commit-hash ${{ inputs.commit-hash }}"
+        fi
+
+        if [ "${{ inputs.network }}" = "mainnet" ]; then
+          ARGS="$ARGS --remote"
+        fi
+
+        solana-verify verify-from-repo \
+          --program-id ${{ inputs.program-id }} \
+          --url ${{ inputs.rpc-url }} \
+          --library-name ${{ inputs.program }} \
+          -k ./deploy-keypair.json \
+          $ARGS \
+          ${{ inputs.repo-url }}
+
+    - name: Export PDA Transaction
+      id: export-pda
+      if: inputs.use-squads == 'true'
+      shell: bash
+      run: |
+        echo "=== Exporting PDA Transaction ==="
+
+        # Get the last line which should be the base64 transaction
+        TX=$(solana-verify export-pda-tx \
+          ${{ inputs.repo-url }} \
+          --program-id ${{ inputs.program-id }} \
+          --library-name ${{ inputs.program }} \
+          --uploader ${{ inputs.vault-address }} \
+          --commit-hash ${{ inputs.commit-hash }} \
+          --url ${{ inputs.rpc-url }} \
+          --encoding base64 | tail -n 1)
+
+        # Verify we got a base64 string
+        if [[ ! "$TX" =~ ^[A-Za-z0-9+/=]*$ ]]; then
+          echo "Error: Invalid base64 transaction"
+          echo "Got: $TX"
+          exit 1
+        fi
+
+        echo "tx=$TX" >> $GITHUB_OUTPUT
+
+    - name: Cleanup keypair
+      shell: bash
+      if: always()
+      run: rm -f ./deploy-keypair.json
+
+outputs:
+  pda_tx:
+    description: "PDA verification transaction (only set if use-squads is true)"
+    value: ${{ steps.export-pda.outputs.tx }}
