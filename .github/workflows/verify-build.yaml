@@ -22,6 +22,15 @@ on:
         description: 'Solana CLI version'
         required: true
         default: '1.17.16'
+      features:
+        description: 'Build features'
+        required: true
+        type: choice
+        options:
+          - none
+          - production
+          - devnet
+        default: 'production'
 
 jobs:
   verify-build:
@@ -53,4 +62,8 @@ jobs:
         shell: bash
       - name: Verify build
         run: |
-          solana-verify verify-from-repo --remote -um --program-id ${{ inputs.program_id }} https://github.com/${{ github.repository }} --library-name ${{ inputs.program_name }}
+          if [ "${{ inputs.features }}" = "none" ]; then
+            solana-verify verify-from-repo --remote -um --program-id ${{ inputs.program_id }} https://github.com/${{ github.repository }} --library-name ${{ inputs.program_name }}
+          else
+            solana-verify verify-from-repo --remote -um --program-id ${{ inputs.program_id }} https://github.com/${{ github.repository }} --library-name ${{ inputs.program_name }} -- --features ${{ inputs.features }}
+          fi
