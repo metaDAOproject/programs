@@ -87,7 +87,7 @@ export const createDao = async () => {
     mintInfo.decimals,
     6, // USDC decimals
   );
-  const twapMaxObservationChangePerUpdate = twapInitialObservation.divn(100);
+  const twapMaxObservationChangePerUpdate = twapInitialObservation.divn(20);
 
   const nonce = new BN(Math.floor(Math.random() * 2 ** 50));
 
