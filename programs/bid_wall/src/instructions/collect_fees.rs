@@ -59,9 +59,6 @@ impl CollectFees<'_> {
             ctx.accounts.bid_wall.fees_collected,
         )?;
 
-        ctx.accounts.bid_wall.fees_collected = 0;
-        ctx.accounts.bid_wall.seq_num += 1;
-
         emit_cpi!(BidWallFeesCollectedEvent {
             common: CommonFields::new(&Clock::get()?, ctx.accounts.bid_wall.seq_num),
             bid_wall: ctx.accounts.bid_wall.key(),
@@ -71,6 +68,9 @@ impl CollectFees<'_> {
                 .bid_wall_quote_token_account
                 .amount,
         });
+
+        ctx.accounts.bid_wall.fees_collected = 0;
+        ctx.accounts.bid_wall.seq_num += 1;
 
         Ok(())
     }
