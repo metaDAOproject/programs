@@ -75,6 +75,15 @@ pub struct Launch {
     /// The initial address used to sponsor team proposals.
     pub team_address: Pubkey,
     /// The amount of USDC that the launch authority has approved across all funders.
-    /// If zero, no approval has been given, thus this can be ignored.
     pub total_approved_amount: u64,
+    /// The amount of additional tokens to be minted on a successful launch.
+    pub additional_tokens_amount: u64,
+    /// The token account that will receive the additional tokens.
+    pub additional_tokens_recipient: Option<Pubkey>,
+    /// Are the additional tokens claimed
+    pub additional_tokens_claimed: bool,
+    /// The unix timestamp when the launch was completed.
+    pub unix_timestamp_completed: Option<i64>,
+    /// Whether the performance package has been initialized.
+    pub is_performance_package_initialized: bool,
 }

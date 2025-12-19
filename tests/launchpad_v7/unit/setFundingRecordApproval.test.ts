@@ -291,9 +291,35 @@ export default function suite() {
 
     // Skip waiting for the launch period to end
 
+    const callbacks = expectError("InvalidLaunchState", "Invalid launch state");
+
+    // Set funder1's funding record approval to the full amount
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder1Amount,
+        funder: funder1.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("can't set funding record approval after the funding record approval period ends (2 days after launch is closed)", async function () {
+    // Fully fund the launch
+    await fundLaunch();
+
+    await this.advanceBySeconds(secondsForLaunch + 1);
+
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    // Advance time by 2 days + 1 second
+    await this.advanceBySeconds(60 * 60 * 24 * 2 + 1);
+
     const callbacks = expectError(
-      "LaunchPeriodNotOver",
-      "Launch is complete, no more funding allowed",
+      "FundingRecordApprovalPeriodOver",
+      "Funding record approval period is over",
     );
 
     // Set funder1's funding record approval to the full amount

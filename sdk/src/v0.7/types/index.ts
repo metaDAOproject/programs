@@ -22,6 +22,9 @@ import {
 } from "./price_based_performance_package.js";
 export { PriceBasedPerformancePackageProgram, PriceBasedPerformancePackageIDL };
 
+import { BidWall as BidWallProgram, IDL as BidWallIDL } from "./bid_wall.js";
+export { BidWallProgram, BidWallIDL };
+
 export { LowercaseKeys } from "./utils.js";
 
 import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
@@ -53,6 +56,25 @@ export type Tranche = IdlTypes<PriceBasedPerformancePackageProgram>["Tranche"];
 //   IdlAccounts<SharedLiquidityManagerProgram>["sharedLiquidityPool"];
 // export type SharedLiquidityPoolPosition =
 //   IdlAccounts<SharedLiquidityManagerProgram>["liquidityPosition"];
+
+export type BidWall = IdlAccounts<BidWallProgram>["bidWall"];
+
+export type BidWallInitializedEvent =
+  IdlEvents<BidWallProgram>["BidWallInitializedEvent"];
+export type BidWallTokensSoldEvent =
+  IdlEvents<BidWallProgram>["BidWallTokensSoldEvent"];
+export type BidWallFeesCollectedEvent =
+  IdlEvents<BidWallProgram>["BidWallFeesCollectedEvent"];
+export type BidWallClosedEvent =
+  IdlEvents<BidWallProgram>["BidWallClosedEvent"];
+export type BidWallCanceledEvent =
+  IdlEvents<BidWallProgram>["BidWallCanceledEvent"];
+export type BidWallEvent =
+  | BidWallInitializedEvent
+  | BidWallTokensSoldEvent
+  | BidWallFeesCollectedEvent
+  | BidWallClosedEvent
+  | BidWallCanceledEvent;
 
 export type SwapEvent = IdlEvents<AmmProgram>["SwapEvent"];
 export type AddLiquidityEvent = IdlEvents<AmmProgram>["AddLiquidityEvent"];
@@ -102,6 +124,12 @@ export type LaunchRefundedEvent =
 export type LaunchStartedEvent =
   IdlEvents<LaunchpadProgram>["LaunchStartedEvent"];
 export type LaunchCloseEvent = IdlEvents<LaunchpadProgram>["LaunchCloseEvent"];
+export type FundingRecordApprovalSetEvent =
+  IdlEvents<LaunchpadProgram>["FundingRecordApprovalSetEvent"];
+export type LaunchClaimAdditionalTokenAllocationEvent =
+  IdlEvents<LaunchpadProgram>["LaunchClaimAdditionalTokenAllocationEvent"];
+export type LaunchPerformancePackageInitializedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchPerformancePackageInitializedEvent"];
 export type LaunchpadEvent =
   | LaunchClaimEvent
   | LaunchCompletedEvent
@@ -109,7 +137,10 @@ export type LaunchpadEvent =
   | LaunchInitializedEvent
   | LaunchRefundedEvent
   | LaunchStartedEvent
-  | LaunchCloseEvent;
+  | LaunchCloseEvent
+  | FundingRecordApprovalSetEvent
+  | LaunchClaimAdditionalTokenAllocationEvent
+  | LaunchPerformancePackageInitializedEvent;
 
 export type CollectFeesEvent = IdlEvents<FutarchyProgram>["CollectFeesEvent"];
 export type InitializeDaoEvent =
@@ -132,6 +163,8 @@ export type ProvideLiquidityEvent =
   IdlEvents<FutarchyProgram>["ProvideLiquidityEvent"];
 export type WithdrawLiquidityEvent =
   IdlEvents<FutarchyProgram>["WithdrawLiquidityEvent"];
+export type SponsorProposalEvent =
+  IdlEvents<FutarchyProgram>["SponsorProposalEvent"];
 export type FutarchyEvent =
   | CollectFeesEvent
   | InitializeDaoEvent
@@ -144,7 +177,8 @@ export type FutarchyEvent =
   | SpotSwapEvent
   | ConditionalSwapEvent
   | ProvideLiquidityEvent
-  | WithdrawLiquidityEvent;
+  | WithdrawLiquidityEvent
+  | SponsorProposalEvent;
 
 export type PerformancePackageInitializedEvent =
   IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageInitialized"];

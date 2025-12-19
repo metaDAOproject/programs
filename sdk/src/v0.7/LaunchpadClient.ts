@@ -4,6 +4,7 @@ import {
   Keypair,
   AccountInfo,
   ComputeBudgetProgram,
+  SystemProgram,
 } from "@solana/web3.js";
 import {
   LaunchpadV7 as Launchpad,
@@ -28,11 +29,14 @@ import {
   DAMM_V2_PROGRAM_ID,
   SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET,
   MAINNET_METEORA_CONFIG,
+  FEE_RECIPIENT,
 } from "./constants.js";
 import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
   TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import BN from "bn.js";
 import { FundingRecord, Launch } from "./types/index.js";
@@ -49,6 +53,7 @@ import { FutarchyClient } from "./FutarchyClient.js";
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
 import { PriceBasedPerformancePackageClient } from "./PriceBasedPerformancePackageClient.js";
+import { BidWallClient } from "./BidWallClient.js";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
@@ -56,6 +61,7 @@ export type CreateLaunchpadClientParams = {
   autocratProgramId?: PublicKey;
   conditionalVaultProgramId?: PublicKey;
   priceBasedUnlockProgramId?: PublicKey;
+  bidWallProgramId?: PublicKey;
 };
 
 export class LaunchpadClient {
@@ -63,6 +69,7 @@ export class LaunchpadClient {
   public provider: AnchorProvider;
   public autocratClient: FutarchyClient;
   public priceBasedUnlock: PriceBasedPerformancePackageClient;
+  public bidWall: BidWallClient;
 
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
@@ -79,6 +86,10 @@ export class LaunchpadClient {
     this.priceBasedUnlock = PriceBasedPerformancePackageClient.createClient({
       provider: this.provider,
       priceBasedTokenLockProgramId: params.priceBasedUnlockProgramId,
+    });
+    this.bidWall = BidWallClient.createClient({
+      provider: this.provider,
+      bidWallProgramId: params.bidWallProgramId,
     });
   }
 
@@ -137,8 +148,10 @@ export class LaunchpadClient {
     performancePackageTokenAmount,
     monthsUntilInsidersCanUnlock,
     teamAddress,
-    launchAuthority,
+    launchAuthority = this.provider.publicKey,
     payer = this.provider.publicKey,
+    additionalTokensRecipient,
+    additionalTokensAmount,
   }: {
     tokenName: string;
     tokenSymbol: string;
@@ -153,8 +166,10 @@ export class LaunchpadClient {
     performancePackageTokenAmount: BN;
     monthsUntilInsidersCanUnlock: number;
     teamAddress: PublicKey;
-    launchAuthority: PublicKey;
+    launchAuthority?: PublicKey;
     payer?: PublicKey;
+    additionalTokensRecipient?: PublicKey;
+    additionalTokensAmount?: BN;
   }) {
     const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
     const [launchSigner] = getLaunchSignerAddr(
@@ -187,6 +202,7 @@ export class LaunchpadClient {
         performancePackageTokenAmount,
         monthsUntilInsidersCanUnlock,
         teamAddress,
+        additionalTokensAmount: additionalTokensAmount ?? new BN(0),
       })
       .accounts({
         launch,
@@ -199,6 +215,7 @@ export class LaunchpadClient {
         tokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         payer,
+        additionalTokensRecipient: additionalTokensRecipient ?? null,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
@@ -216,7 +233,7 @@ export class LaunchpadClient {
     launchAuthority = this.provider.publicKey,
   }: {
     launch: PublicKey;
-    launchAuthority: PublicKey;
+    launchAuthority?: PublicKey;
   }) {
     return this.launchpad.methods.startLaunch().accounts({
       launch,
@@ -276,6 +293,7 @@ export class LaunchpadClient {
     launchAuthority,
     isDevnet = false,
     meteoraConfig = MAINNET_METEORA_CONFIG,
+    feeRecipient = FEE_RECIPIENT,
   }: {
     launch: PublicKey;
     quoteMint?: PublicKey;
@@ -283,6 +301,7 @@ export class LaunchpadClient {
     launchAuthority: PublicKey | null;
     isDevnet?: boolean;
     meteoraConfig?: PublicKey;
+    feeRecipient?: PublicKey;
   }) {
     const launchSigner = this.getLaunchSignerAddress({ launch });
 
@@ -407,6 +426,17 @@ export class LaunchpadClient {
 
     const [dammV2EventAuthority] = getEventAuthorityAddr(DAMM_V2_PROGRAM_ID);
 
+    const bidWall = this.bidWall.getBidWallAddress({
+      baseMint,
+      creator: launchSigner,
+      nonce: new BN(0),
+    });
+    const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      bidWall,
+      true,
+    );
+
     return this.launchpad.methods
       .completeLaunch()
       .accounts({
@@ -440,15 +470,15 @@ export class LaunchpadClient {
           squadsProgramConfigTreasury: isDevnet
             ? SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET
             : SQUADS_PROGRAM_CONFIG_TREASURY,
-          priceBasedPerformancePackageProgram: this.priceBasedUnlock.programId,
-          priceBasedPerformancePackageEventAuthority:
-            this.priceBasedUnlock.getEventAuthorityAddress(),
+          bidWallProgram: this.bidWall.programId,
+          bidWallEventAuthority: this.bidWall.getEventAuthorityAddress(),
         },
         squadsMultisig: multisigPda,
         squadsMultisigVault: multisigVault,
         spendingLimit,
-        performancePackage,
-        performancePackageTokenAccount,
+        bidWall,
+        bidWallQuoteTokenAccount,
+        feeRecipient,
         meteoraAccounts: {
           dammV2Program: DAMM_V2_PROGRAM_ID,
           positionNftMint,
@@ -563,12 +593,12 @@ export class LaunchpadClient {
   setFundingRecordApprovalIx({
     launch,
     funder,
-    launchAuthority,
+    launchAuthority = this.provider.publicKey,
     approvedAmount,
   }: {
     launch: PublicKey;
     funder: PublicKey;
-    launchAuthority: PublicKey;
+    launchAuthority?: PublicKey;
     approvedAmount: BN;
   }) {
     let fundingRecord = getFundingRecordAddr(
@@ -586,12 +616,122 @@ export class LaunchpadClient {
       });
   }
 
+  claimAdditionalTokenAllocationIx({
+    launch,
+    baseMint,
+    additionalTokensRecipient,
+    payer = this.provider.publicKey,
+  }: {
+    launch: PublicKey;
+    baseMint: PublicKey;
+    additionalTokensRecipient: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    return this.launchpad.methods.claimAdditionalTokenAllocation().accounts({
+      launch,
+      payer,
+      launchSigner,
+      launchBaseVault: getAssociatedTokenAddressSync(
+        baseMint,
+        launchSigner,
+        true,
+      ),
+      baseMint,
+      additionalTokensRecipient,
+      additionalTokensRecipientTokenAccount: getAssociatedTokenAddressSync(
+        baseMint,
+        additionalTokensRecipient,
+        true,
+      ),
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    });
+  }
+
+  initializePerformancePackageIx({
+    launch,
+    baseMint,
+    payer = this.provider.publicKey,
+  }: {
+    launch: PublicKey;
+    baseMint: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    const [dao] = getDaoAddr({
+      nonce: new BN(0),
+      daoCreator: launchSigner,
+    });
+
+    const [multisigPda] = multisig.getMultisigPda({ createKey: dao });
+    const [multisigVault] = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    });
+
+    const launchBaseVault = getAssociatedTokenAddressSync(
+      baseMint,
+      launchSigner,
+      true,
+    );
+
+    const performancePackage = this.getLaunchPerformancePackageAddress({
+      launch,
+    });
+
+    const performancePackageTokenAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      performancePackage,
+      true,
+    );
+
+    return this.launchpad.methods.initializePerformancePackage().accounts({
+      launch,
+      performancePackage,
+      performancePackageTokenAccount,
+      dao,
+      squadsMultisig: multisigPda,
+      squadsMultisigVault: multisigVault,
+      launchBaseVault,
+      baseMint,
+      payer,
+      launchSigner,
+      squadsProgram: SQUADS_PROGRAM_ID,
+      priceBasedPerformancePackageEventAuthority:
+        this.priceBasedUnlock.getEventAuthorityAddress(),
+      priceBasedPerformancePackageProgram: this.priceBasedUnlock.programId,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    });
+  }
+
   getLaunchAddress({ baseMint }: { baseMint: PublicKey }): PublicKey {
     return getLaunchAddr(this.launchpad.programId, baseMint)[0];
   }
 
   getLaunchSignerAddress({ launch }: { launch: PublicKey }): PublicKey {
     return getLaunchSignerAddr(this.launchpad.programId, launch)[0];
+  }
+
+  getLaunchPerformancePackageAddress({
+    launch,
+  }: {
+    launch: PublicKey;
+  }): PublicKey {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    return getPerformancePackageAddr({ createKey: launchSigner })[0];
+  }
+
+  getLaunchDaoAddress({ launch }: { launch: PublicKey }): PublicKey {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    return getDaoAddr({ nonce: new BN(0), daoCreator: launchSigner })[0];
   }
 
   getFundingRecordAddress({

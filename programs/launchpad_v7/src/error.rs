@@ -50,4 +50,16 @@ pub enum LaunchpadError {
     FinalRaiseAmountAlreadySet,
     #[msg("Total approved amount must be greater than or equal to the minimum raise amount")]
     TotalApprovedAmountTooLow,
+    #[msg("Invalid additional tokens recipient - should be set if additional tokens amount is greater than 0")]
+    InvalidAdditionalTokensRecipient,
+    #[msg("No additional tokens recipient set")]
+    NoAdditionalTokensRecipientSet,
+    #[msg("Additional tokens already claimed")]
+    AdditionalTokensAlreadyClaimed,
+    #[msg("Funding record approval period is over")]
+    FundingRecordApprovalPeriodOver,
+    #[msg("Performance package already initialized")]
+    PerformancePackageAlreadyInitialized,
+    #[msg("Invalid DAO")]
+    InvalidDao,
 }

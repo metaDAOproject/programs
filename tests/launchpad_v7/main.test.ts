@@ -6,6 +6,8 @@ import claim from "./unit/claim.test.js";
 import refund from "./unit/refund.test.js";
 import closeLaunch from "./unit/closeLaunch.test.js";
 import setFundingRecordApproval from "./unit/setFundingRecordApproval.test.js";
+import claimAdditionalTokenAllocation from "./unit/claimAdditionalTokenAllocation.test.js";
+import initializePerformancePackage from "./unit/initializePerformancePackage.test.js";
 import { PublicKey } from "@solana/web3.js";
 import {
   LAUNCHPAD_PROGRAM_ID,
@@ -75,6 +77,11 @@ export default function suite() {
   describe("#close_launch_v7", closeLaunch);
   describe("#set_funding_record_approval_v7", setFundingRecordApproval);
   describe("#complete_launch_v7", completeLaunch);
+  describe("#initialize_performance_package_v7", initializePerformancePackage);
   describe("#claim_v7", claim);
   describe("#refund_v7", refund);
+  describe(
+    "#claim_additional_token_allocation_v7",
+    claimAdditionalTokenAllocation,
+  );
 }

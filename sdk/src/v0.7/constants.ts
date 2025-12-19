@@ -20,6 +20,9 @@ export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
 export const PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID = new PublicKey(
   "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS",
 );
+export const BID_WALL_PROGRAM_ID = new PublicKey(
+  "WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx",
+);
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
@@ -102,7 +105,12 @@ export const SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET = new PublicKey(
 );
 
 export const MAINNET_METEORA_CONFIG = new PublicKey(
-  "Asv1KQqeop9e4FFvTzEBZhwtTjuWHXPq5thUGtQrzzA3",
+  "FaA6RM9enPh1tU9Y8LiGCq715JubLc49WGcYTdNvDfsc",
+);
+
+// MetaDAO multisig vault
+export const FEE_RECIPIENT = new PublicKey(
+  "6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf",
 );
 
 export const PERMISSIONLESS_ACCOUNT = Keypair.fromSecretKey(

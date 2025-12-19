@@ -26,20 +26,25 @@ impl SetFundingRecordApproval<'_> {
     pub fn validate(&self, approved_amount: u64) -> Result<()> {
         let clock = Clock::get()?;
 
-        // Check that the launch funding period is over (not accepting new contributions)
-        require_gte!(
-            clock.unix_timestamp,
-            self.launch
-                .unix_timestamp_started
-                .unwrap()
-                .saturating_add(self.launch.seconds_for_launch.try_into().unwrap()),
-            LaunchpadError::LaunchPeriodNotOver
-        );
-
         // We can only set approval amounts for a launch that is closed
+        // This also implies that the launch funding period is over (not accepting new contributions)
         require!(
             self.launch.state == LaunchState::Closed,
             LaunchpadError::InvalidLaunchState
+        );
+
+        // The funding record approval period is 2 days after the launch is closed
+        // Same as the period to complete the launch before anyone can complete it
+        let two_days_after_close = self
+            .launch
+            .unix_timestamp_closed
+            .unwrap()
+            .saturating_add(60 * 60 * 24 * 2);
+
+        require_gte!(
+            two_days_after_close,
+            clock.unix_timestamp,
+            LaunchpadError::FundingRecordApprovalPeriodOver
         );
 
         // Can't approve more than the committed amount
