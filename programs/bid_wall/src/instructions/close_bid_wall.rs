@@ -53,15 +53,18 @@ impl CloseBidWall<'_> {
     pub fn validate(&self) -> Result<()> {
         let clock = Clock::get()?;
 
-        // Only allow closing the bid wall if it has been open for at least the minimum duration.
-        require_gt!(
-            clock.unix_timestamp,
-            self.bid_wall
-                .created_timestamp
-                .checked_add(self.bid_wall.duration_seconds as i64)
-                .unwrap(),
-            BidWallError::BidWallNotExpired
-        );
+        // We can close the bid wall if it is depleted, thus only need to check expiration if it is not depleted.
+        if self.bid_wall.quote_amount > 0 {
+            // Only allow closing the bid wall if it has been open for at least the minimum duration.
+            require_gt!(
+                clock.unix_timestamp,
+                self.bid_wall
+                    .created_timestamp
+                    .checked_add(self.bid_wall.duration_seconds as i64)
+                    .unwrap(),
+                BidWallError::BidWallNotExpired
+            );
+        }
 
         Ok(())
     }

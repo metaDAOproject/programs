@@ -1,4 +1,5 @@
 import {
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   TransactionMessage,
@@ -238,7 +239,139 @@ export default function suite() {
     );
   });
 
-  it("fails to close bid wall when bid wall is not expired", async function () {
+  it("successfully closes a bid wall when it is depleted", async function () {
+    // Deplete the bid wall
+    await bidWallClient
+      .sellTokensIx({
+        amount: 2_500_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+      ])
+      .rpc();
+
+    const authorityUsdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    const feeRecipientUsdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      feeRecipient,
+    );
+
+    await bidWallClient
+      .closeBidWallIx({
+        bidWall,
+        authority: this.payer.publicKey,
+        baseMint: META,
+        feeRecipient: feeRecipient,
+        quoteMint: MAINNET_USDC,
+        payer: this.payer.publicKey,
+      })
+      .rpc();
+
+    const bidWallUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      bidWall,
+    );
+
+    const authorityUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    const feeRecipientUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      feeRecipient,
+    );
+
+    // Bid wall is now closed and has no remaining USDC
+    assert.equal(bidWallUsdcBalanceAfter, 0n);
+    // Authority received no USDC, as none is left over from the bid wall
+    assert.equal(authorityUsdcBalanceAfter, authorityUsdcBalanceBefore);
+    // Fee recipient received 1000 USDC in fees
+    assert.equal(
+      feeRecipientUsdcBalanceAfter,
+      feeRecipientUsdcBalanceBefore + 1_000_000000n,
+    );
+  });
+
+  it("successfully closes a bid wall when it is depleted, but someone deposited additional quote tokens to the bid wall", async function () {
+    // Deplete the bid wall
+    await bidWallClient
+      .sellTokensIx({
+        amount: 2_500_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+      ])
+      .rpc();
+
+    // Deposit additional quote tokens to the bid wall - 1000 USDC
+    await this.transfer(MAINNET_USDC, this.payer, bidWall, 1_000_000000);
+
+    const authorityUsdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    const feeRecipientUsdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      feeRecipient,
+    );
+
+    await bidWallClient
+      .closeBidWallIx({
+        bidWall,
+        authority: this.payer.publicKey,
+        baseMint: META,
+        feeRecipient: feeRecipient,
+        quoteMint: MAINNET_USDC,
+        payer: this.payer.publicKey,
+      })
+      .rpc();
+
+    const bidWallUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      bidWall,
+    );
+
+    const authorityUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    const feeRecipientUsdcBalanceAfter = await this.getTokenBalance(
+      MAINNET_USDC,
+      feeRecipient,
+    );
+
+    // Bid wall is now closed and has no remaining USDC
+    assert.equal(bidWallUsdcBalanceAfter, 0n);
+    // Authority received 1000 USDC, as 1000 USDC is left over from the additional deposit
+    assert.equal(
+      authorityUsdcBalanceAfter,
+      authorityUsdcBalanceBefore + 1_000_000000n,
+    );
+    // Fee recipient received 1000 USDC in fees
+    assert.equal(
+      feeRecipientUsdcBalanceAfter,
+      feeRecipientUsdcBalanceBefore + 1_000_000000n,
+    );
+  });
+
+  it("fails to close bid wall when bid wall is not expired or depleted", async function () {
     try {
       await bidWallClient
         .closeBidWallIx({
