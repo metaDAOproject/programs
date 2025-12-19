@@ -108,8 +108,10 @@ export const MAINNET_METEORA_CONFIG = new PublicKey(
   "FaA6RM9enPh1tU9Y8LiGCq715JubLc49WGcYTdNvDfsc",
 );
 
-// TODO - Pileks: change to the actual fee recipient
-export const FEE_RECIPIENT = new PublicKey("11111111111111111111111111111111");
+// MetaDAO multisig vault
+export const FEE_RECIPIENT = new PublicKey(
+  "6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf",
+);
 
 export const PERMISSIONLESS_ACCOUNT = Keypair.fromSecretKey(
   Uint8Array.from([
