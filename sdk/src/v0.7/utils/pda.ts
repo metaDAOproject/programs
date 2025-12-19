@@ -16,7 +16,11 @@ import {
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
 } from "../constants.js";
-import { LAUNCHPAD_PROGRAM_ID, FUTARCHY_PROGRAM_ID } from "../constants.js";
+import {
+  LAUNCHPAD_PROGRAM_ID,
+  FUTARCHY_PROGRAM_ID,
+  BID_WALL_PROGRAM_ID,
+} from "../constants.js";
 
 export const getEventAuthorityAddr = (programId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
@@ -232,6 +236,28 @@ export const getChangeRequestAddr = ({
       performancePackage.toBuffer(),
       proposer.toBuffer(),
       Buffer.from(new Uint8Array(new Uint32Array([pdaNonce]).buffer)),
+    ],
+    programId,
+  );
+};
+
+export const getBidWallAddr = ({
+  programId = BID_WALL_PROGRAM_ID,
+  baseMint,
+  creator,
+  nonce,
+}: {
+  programId?: PublicKey;
+  baseMint: PublicKey;
+  creator: PublicKey;
+  nonce: BN;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("bid_wall"),
+      baseMint.toBuffer(),
+      creator.toBuffer(),
+      nonce.toArrayLike(Buffer, "le", 8),
     ],
     programId,
   );

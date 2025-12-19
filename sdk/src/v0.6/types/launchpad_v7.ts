@@ -319,18 +319,13 @@ export type LaunchpadV7 = {
           isSigner: false;
         },
         {
-          name: "bidWall";
+          name: "performancePackage";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "bidWallQuoteTokenAccount";
+          name: "performancePackageTokenAccount";
           isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "feeRecipient";
-          isMut: false;
           isSigner: false;
         },
         {
@@ -382,12 +377,12 @@ export type LaunchpadV7 = {
               isSigner: false;
             },
             {
-              name: "bidWallProgram";
+              name: "priceBasedPerformancePackageProgram";
               isMut: false;
               isSigner: false;
             },
             {
-              name: "bidWallEventAuthority";
+              name: "priceBasedPerformancePackageEventAuthority";
               isMut: false;
               isSigner: false;
             },
@@ -685,102 +680,6 @@ export type LaunchpadV7 = {
       ];
       args: [];
     },
-    {
-      name: "initializePerformancePackage";
-      accounts: [
-        {
-          name: "launch";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "launchSigner";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "launchBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "baseMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisig";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigVault";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "performancePackage";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "performancePackageTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "priceBasedPerformancePackageProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "priceBasedPerformancePackageEventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
   ];
   accounts: [
     {
@@ -1015,18 +914,6 @@ export type LaunchpadV7 = {
             docs: ["Are the additional tokens claimed"];
             type: "bool";
           },
-          {
-            name: "unixTimestampCompleted";
-            docs: ["The unix timestamp when the launch was completed."];
-            type: {
-              option: "i64";
-            };
-          },
-          {
-            name: "isPerformancePackageInitialized";
-            docs: ["Whether the performance package has been initialized."];
-            type: "bool";
-          },
         ];
       };
     },
@@ -1227,18 +1114,6 @@ export type LaunchpadV7 = {
           type: "u32";
           index: false;
         },
-        {
-          name: "additionalTokensAmount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "additionalTokensRecipient";
-          type: {
-            option: "publicKey";
-          };
-          index: false;
-        },
       ];
     },
     {
@@ -1393,18 +1268,6 @@ export type LaunchpadV7 = {
           type: "u64";
           index: false;
         },
-        {
-          name: "bidWall";
-          type: {
-            option: "publicKey";
-          };
-          index: false;
-        },
-        {
-          name: "bidWallAmount";
-          type: "u64";
-          index: false;
-        },
       ];
     },
     {
@@ -1517,28 +1380,6 @@ export type LaunchpadV7 = {
         },
         {
           name: "additionalTokensRecipient";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "LaunchPerformancePackageInitializedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "launch";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "performancePackage";
           type: "publicKey";
           index: false;
         },
@@ -1680,21 +1521,6 @@ export type LaunchpadV7 = {
       code: 6026;
       name: "AdditionalTokensAlreadyClaimed";
       msg: "Additional tokens already claimed";
-    },
-    {
-      code: 6027;
-      name: "FundingRecordApprovalPeriodOver";
-      msg: "Funding record approval period is over";
-    },
-    {
-      code: 6028;
-      name: "PerformancePackageAlreadyInitialized";
-      msg: "Performance package already initialized";
-    },
-    {
-      code: 6029;
-      name: "InvalidDao";
-      msg: "Invalid DAO";
     },
   ];
 };
@@ -2020,18 +1846,13 @@ export const IDL: LaunchpadV7 = {
           isSigner: false,
         },
         {
-          name: "bidWall",
+          name: "performancePackage",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "bidWallQuoteTokenAccount",
+          name: "performancePackageTokenAccount",
           isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "feeRecipient",
-          isMut: false,
           isSigner: false,
         },
         {
@@ -2083,12 +1904,12 @@ export const IDL: LaunchpadV7 = {
               isSigner: false,
             },
             {
-              name: "bidWallProgram",
+              name: "priceBasedPerformancePackageProgram",
               isMut: false,
               isSigner: false,
             },
             {
-              name: "bidWallEventAuthority",
+              name: "priceBasedPerformancePackageEventAuthority",
               isMut: false,
               isSigner: false,
             },
@@ -2386,102 +2207,6 @@ export const IDL: LaunchpadV7 = {
       ],
       args: [],
     },
-    {
-      name: "initializePerformancePackage",
-      accounts: [
-        {
-          name: "launch",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "launchSigner",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "baseMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisig",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigVault",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "performancePackage",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "performancePackageTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "priceBasedPerformancePackageProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "priceBasedPerformancePackageEventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
   ],
   accounts: [
     {
@@ -2716,18 +2441,6 @@ export const IDL: LaunchpadV7 = {
             docs: ["Are the additional tokens claimed"],
             type: "bool",
           },
-          {
-            name: "unixTimestampCompleted",
-            docs: ["The unix timestamp when the launch was completed."],
-            type: {
-              option: "i64",
-            },
-          },
-          {
-            name: "isPerformancePackageInitialized",
-            docs: ["Whether the performance package has been initialized."],
-            type: "bool",
-          },
         ],
       },
     },
@@ -2928,18 +2641,6 @@ export const IDL: LaunchpadV7 = {
           type: "u32",
           index: false,
         },
-        {
-          name: "additionalTokensAmount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "additionalTokensRecipient",
-          type: {
-            option: "publicKey",
-          },
-          index: false,
-        },
       ],
     },
     {
@@ -3094,18 +2795,6 @@ export const IDL: LaunchpadV7 = {
           type: "u64",
           index: false,
         },
-        {
-          name: "bidWall",
-          type: {
-            option: "publicKey",
-          },
-          index: false,
-        },
-        {
-          name: "bidWallAmount",
-          type: "u64",
-          index: false,
-        },
       ],
     },
     {
@@ -3218,28 +2907,6 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "additionalTokensRecipient",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "LaunchPerformancePackageInitializedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "launch",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "performancePackage",
           type: "publicKey",
           index: false,
         },
@@ -3381,21 +3048,6 @@ export const IDL: LaunchpadV7 = {
       code: 6026,
       name: "AdditionalTokensAlreadyClaimed",
       msg: "Additional tokens already claimed",
-    },
-    {
-      code: 6027,
-      name: "FundingRecordApprovalPeriodOver",
-      msg: "Funding record approval period is over",
-    },
-    {
-      code: 6028,
-      name: "PerformancePackageAlreadyInitialized",
-      msg: "Performance package already initialized",
-    },
-    {
-      code: 6029,
-      name: "InvalidDao",
-      msg: "Invalid DAO",
     },
   ],
 };

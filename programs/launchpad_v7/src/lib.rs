@@ -27,6 +27,8 @@ declare_id!("moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM");
 
 pub const TOKEN_SCALE: u64 = 1_000_000;
 
+pub const PRICE_SCALE: u128 = 1_000_000_000_000;
+
 /// 10M tokens with 6 decimals
 pub const TOKENS_TO_PARTICIPANTS: u64 = 10_000_000 * TOKEN_SCALE;
 /// 20% to liquidity
@@ -47,6 +49,14 @@ pub mod usdc_mint {
 
     #[cfg(not(feature = "devnet"))]
     declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+}
+
+// TODO - Pileks: Set this to the correct fee recipient address
+pub mod fee_recipient {
+    use anchor_lang::prelude::declare_id;
+
+    // MetaDAO multisig vault
+    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
 #[program]
@@ -104,5 +114,12 @@ pub mod launchpad_v7 {
         ctx: Context<ClaimAdditionalTokenAllocation>,
     ) -> Result<()> {
         ClaimAdditionalTokenAllocation::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn initialize_performance_package(
+        ctx: Context<InitializePerformancePackage>,
+    ) -> Result<()> {
+        InitializePerformancePackage::handle(ctx)
     }
 }

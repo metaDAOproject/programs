@@ -260,6 +260,15 @@ export default async function suite() {
 
     await this.banksClient.processTransaction(tx);
 
+    // Initialize performance package
+    await this.launchpad_v7
+      .initializePerformancePackageIx({
+        launch,
+        payer: this.payer.publicKey,
+        baseMint: META,
+      })
+      .rpc();
+
     // Verify launch completion and DAO creation
     const launchAccount = await this.launchpad_v7.fetchLaunch(launch);
     assert.exists(launchAccount.state.complete);
