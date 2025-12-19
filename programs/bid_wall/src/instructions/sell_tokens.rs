@@ -62,7 +62,7 @@ pub struct SellTokens<'info> {
 // the NAV per token, meaning that selling into bid wall would be LESS profitable, not more.
 
 impl SellTokens<'_> {
-    pub fn validate(&self, _args: &SellTokensArgs) -> Result<()> {
+    pub fn validate(&self, args: &SellTokensArgs) -> Result<()> {
         let clock = Clock::get()?;
 
         // Only allow selling tokens if the bid wall has not yet expired.
@@ -75,6 +75,12 @@ impl SellTokens<'_> {
             BidWallError::BidWallExpired
         );
 
+        // Can't sell tokens if the bid wall is depleted.
+        require_gt!(self.bid_wall.quote_amount, 0, BidWallError::BidWallDepleted);
+
+        // Input amount must be greater than 0.
+        require_gt!(args.amount_in, 0, BidWallError::InvalidInputAmount);
+
         Ok(())
     }
 
@@ -84,8 +90,7 @@ impl SellTokens<'_> {
         // We calculate the total NAV as as sum of:
         // - The initial quote reserves of the Futarchy AMM
         // - The quote tokens in the DAO treasury (which can be spent by the DAO)
-        // - The quote tokens in the bid wall minus the fees collected by the bid wall
-        // We must subtract the fees collected by the bid wall because the fees are not part of the NAV
+        // - The quote tokens assigned to the bid wall (this also excludes the fees collected by the bid wall)
         let total_nav: u128 = (ctx.accounts.bid_wall.initial_amm_quote_reserves
             + ctx.accounts.dao_treasury_quote_token_account.amount
             + ctx.accounts.bid_wall.quote_amount) as u128;

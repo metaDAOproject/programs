@@ -704,6 +704,16 @@ export type BidWall = {
       name: "InsufficientQuoteReserves";
       msg: "Insufficient quote reserves";
     },
+    {
+      code: 6004;
+      name: "BidWallDepleted";
+      msg: "Bid wall depleted";
+    },
+    {
+      code: 6005;
+      name: "InvalidInputAmount";
+      msg: "Invalid input amount";
+    },
   ];
 };
 
@@ -1412,6 +1422,16 @@ export const IDL: BidWall = {
       code: 6003,
       name: "InsufficientQuoteReserves",
       msg: "Insufficient quote reserves",
+    },
+    {
+      code: 6004,
+      name: "BidWallDepleted",
+      msg: "Bid wall depleted",
+    },
+    {
+      code: 6005,
+      name: "InvalidInputAmount",
+      msg: "Invalid input amount",
     },
   ],
 };

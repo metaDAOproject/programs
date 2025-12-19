@@ -493,4 +493,53 @@ export default function suite() {
       assert.include(e.message, "InsufficientQuoteReserves");
     }
   });
+
+  it("fails to sell tokens into a bid wall when the bid wall is depleted", async function () {
+    // Deplete the bid wall
+    await bidWallClient
+      .sellTokensIx({
+        amount: 5_000_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .rpc();
+
+    try {
+      await bidWallClient
+        .sellTokensIx({
+          amount: 1,
+          bidWall,
+          baseMint: META,
+          daoTreasury: daoTreasury,
+          quoteMint: MAINNET_USDC,
+          user: this.payer.publicKey,
+        })
+        .rpc();
+
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "BidWallDepleted");
+    }
+  });
+
+  it("fails to sell tokens into a bid wall when the input amount is 0", async function () {
+    try {
+      await bidWallClient
+        .sellTokensIx({
+          amount: 0,
+          bidWall,
+          baseMint: META,
+          daoTreasury: daoTreasury,
+          quoteMint: MAINNET_USDC,
+          user: this.payer.publicKey,
+        })
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "InvalidInputAmount");
+    }
+  });
 }
