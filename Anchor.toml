@@ -6,9 +6,11 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
+bid_wall = "WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx"
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 futarchy = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
 launchpad = "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
+launchpad_v7 = "moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM"
 price_based_performance_package = "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
 
 [registry]
@@ -44,6 +46,8 @@ v06-execute-proposal = "yarn run tsx scripts/v0.6/executeProposal.ts"
 v06-execute-general-proposal = "yarn run tsx scripts/v0.6/executeGeneralProposal.ts"
 v06-dump-daos-proposals = "yarn run tsx scripts/v0.6/dumpDaosProposals.ts"
 v06-migrate-daos-proposals = "yarn run tsx scripts/v0.6/migrateDaosProposals.ts"
+v06-create-dao = "yarn run tsx scripts/v0.6/createDao.ts"
+v06-provide-liquidity = "yarn run tsx scripts/v0.6/provideLiquidity.ts"
 
 [test]
 startup_wait = 5000

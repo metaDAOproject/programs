@@ -41,13 +41,13 @@ export default function suite() {
 
   before(async function () {
     futarchyClient = this.futarchy;
-    launchpadClient = this.launchpad;
+    launchpadClient = this.launchpad_v6;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v6,
       this.payer,
     );
 
@@ -70,6 +70,7 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
       })
       .rpc();
 
@@ -172,7 +173,7 @@ export default function suite() {
   it("works with a 0 token premine (today we do a 10 token premine)", async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v6,
       this.payer,
     );
 
@@ -195,6 +196,7 @@ export default function suite() {
         performancePackageGrantee: recipientAddress,
         performancePackageTokenAmount: new BN(10),
         monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
       })
       .rpc();
 
@@ -368,6 +370,7 @@ export default function suite() {
         quoteMint: MAINNET_USDC,
         baseMint: META,
         finalRaiseAmount: minRaise,
+        launchAuthority: null,
       })
       .transaction();
 
