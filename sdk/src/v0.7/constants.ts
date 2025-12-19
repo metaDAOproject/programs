@@ -68,6 +68,10 @@ export const DAMM_V2_PROGRAM_ID = new PublicKey(
   "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
 );
 
+export const DAMM_V2_POOL_AUTHORITY = new PublicKey(
+  "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+);
+
 export const LOW_FEE_RAYDIUM_CONFIG = new PublicKey(
   "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2",
 );
@@ -108,8 +112,7 @@ export const MAINNET_METEORA_CONFIG = new PublicKey(
   "FaA6RM9enPh1tU9Y8LiGCq715JubLc49WGcYTdNvDfsc",
 );
 
-// MetaDAO multisig vault
-export const FEE_RECIPIENT = new PublicKey(
+export const METADAO_MULTISIG_VAULT = new PublicKey(
   "6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf",
 );
 

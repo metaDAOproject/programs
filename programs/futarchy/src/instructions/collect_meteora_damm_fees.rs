@@ -125,6 +125,18 @@ impl CollectMeteoraDammFees<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let ix_data = damm_v2_cpi::instruction::ClaimPositionFee {}.data();
 
+        // Record token balances before the fee claim
+        let base_token_account_balance_before = ctx
+            .accounts
+            .meteora_claim_position_fees_accounts
+            .token_a_account
+            .amount;
+        let quote_token_account_balance_before = ctx
+            .accounts
+            .meteora_claim_position_fees_accounts
+            .token_b_account
+            .amount;
+
         let account_infos = damm_v2_cpi::cpi::accounts::ClaimPositionFeeCtx {
             pool_authority: ctx
                 .accounts
@@ -331,6 +343,52 @@ impl CollectMeteoraDammFees<'_> {
             )
             .with_remaining_accounts(remaining_accounts),
         )?;
+
+        // Reload token accounts and record token balances after the fee claim
+        ctx.accounts
+            .meteora_claim_position_fees_accounts
+            .token_a_account
+            .reload()?;
+        ctx.accounts
+            .meteora_claim_position_fees_accounts
+            .token_b_account
+            .reload()?;
+
+        let base_token_account_balance_after = ctx
+            .accounts
+            .meteora_claim_position_fees_accounts
+            .token_a_account
+            .amount;
+        let quote_token_account_balance_after = ctx
+            .accounts
+            .meteora_claim_position_fees_accounts
+            .token_b_account
+            .amount;
+
+        let base_fees_collected =
+            base_token_account_balance_after - base_token_account_balance_before;
+        let quote_fees_collected =
+            quote_token_account_balance_after - quote_token_account_balance_before;
+
+        emit_cpi!(CollectMeteoraDammFeesEvent {
+            common: CommonFields::new(&Clock::get()?, ctx.accounts.dao.seq_num),
+            dao: ctx.accounts.dao.key(),
+            base_token_account: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .token_a_account
+                .key(),
+            quote_token_account: ctx
+                .accounts
+                .meteora_claim_position_fees_accounts
+                .token_b_account
+                .key(),
+            pool: ctx.accounts.meteora_claim_position_fees_accounts.pool.key(),
+            quote_mint: ctx.accounts.dao.quote_mint,
+            base_mint: ctx.accounts.dao.base_mint,
+            quote_fees_collected: quote_fees_collected,
+            base_fees_collected: base_fees_collected,
+        });
 
         Ok(())
     }

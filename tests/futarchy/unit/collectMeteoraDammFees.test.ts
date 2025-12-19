@@ -13,9 +13,9 @@ import {
   MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/futarchy/v0.7";
 import { BN } from "bn.js";
-import { initializeMintWithSeeds } from "../../launchpad/utils.js";
+import { initializeMintWithSeeds } from "../../launchpad_v7/utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
 import * as multisig from "@sqds/multisig";
 import { assert } from "chai";
@@ -24,7 +24,7 @@ import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.6/constants.js";
+import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.7/constants.js";
 import { CpAmm } from "@meteora-ag/cp-amm-sdk";
 
 export default function suite() {
@@ -43,13 +43,13 @@ export default function suite() {
 
   before(async function () {
     futarchyClient = this.futarchy;
-    launchpadClient = this.launchpad;
+    launchpadClient = this.launchpad_v7;
   });
 
   beforeEach(async function () {
     const result = await initializeMintWithSeeds(
       this.banksClient,
-      this.launchpad,
+      this.launchpad_v7,
       this.payer,
     );
 
@@ -86,12 +86,20 @@ export default function suite() {
 
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        funder: this.payer.publicKey,
+        approvedAmount: minRaise,
+        launchAuthority: this.payer.publicKey,
+      })
+      .rpc();
+
     const completeLaunchTx = await launchpadClient
       .completeLaunchIx({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,
-        finalRaiseAmount: null,
         launchAuthority: this.payer.publicKey,
       })
       .transaction();

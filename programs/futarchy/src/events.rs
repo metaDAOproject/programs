@@ -190,3 +190,16 @@ pub struct SponsorProposalEvent {
     pub dao: Pubkey,
     pub team_address: Pubkey,
 }
+
+#[event]
+pub struct CollectMeteoraDammFeesEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub pool: Pubkey,
+    pub base_token_account: Pubkey,
+    pub quote_token_account: Pubkey,
+    pub quote_mint: Pubkey,
+    pub base_mint: Pubkey,
+    pub quote_fees_collected: u64,
+    pub base_fees_collected: u64,
+}
