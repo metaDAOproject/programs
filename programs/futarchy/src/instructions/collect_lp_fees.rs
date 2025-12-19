@@ -139,6 +139,20 @@ impl CollectLpFees<'_> {
             quote_fees,
         )?;
 
+        emit_cpi!(CollectFeesEvent {
+            common: CommonFields::new(&Clock::get()?, ctx.accounts.dao.seq_num),
+            dao: ctx.accounts.dao.key(),
+            base_token_account: ctx.accounts.base_token_account.key(),
+            quote_token_account: ctx.accounts.quote_token_account.key(),
+            amm_base_vault: ctx.accounts.amm_base_vault.key(),
+            amm_quote_vault: ctx.accounts.amm_quote_vault.key(),
+            quote_mint: ctx.accounts.dao.quote_mint,
+            base_mint: ctx.accounts.dao.base_mint,
+            quote_fees_collected: quote_fees,
+            base_fees_collected: base_fees,
+            post_amm_state: ctx.accounts.dao.amm.clone(),
+        });
+
         Ok(())
     }
 }
