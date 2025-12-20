@@ -14,6 +14,7 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
+production = []
 
 [dependencies]
 anchor-lang = { version = "0.29.0", features = ["event-cpi", "init-if-needed"] }

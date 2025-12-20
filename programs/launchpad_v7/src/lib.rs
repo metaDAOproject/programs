@@ -55,7 +55,8 @@ pub mod usdc_mint {
 pub mod fee_recipient {
     use anchor_lang::prelude::declare_id;
 
-    declare_id!("11111111111111111111111111111111");
+    // MetaDAO multisig vault
+    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
 #[program]

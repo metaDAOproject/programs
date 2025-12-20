@@ -113,6 +113,13 @@ impl InitializeLaunch<'_> {
         //     LaunchpadError::InvalidSecondsForLaunch
         // );
 
+        // Minimum raise amount must be greater than 0
+        require_gt!(
+            args.minimum_raise_amount,
+            0,
+            LaunchpadError::InvalidMinimumRaiseAmount
+        );
+
         require_gte!(
             60 * 60 * 24 * 14,
             args.seconds_for_launch,

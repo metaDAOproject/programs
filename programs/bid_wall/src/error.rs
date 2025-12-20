@@ -10,4 +10,8 @@ pub enum BidWallError {
     FeeRecipientMismatch,
     #[msg("Insufficient quote reserves")]
     InsufficientQuoteReserves,
+    #[msg("Bid wall depleted")]
+    BidWallDepleted,
+    #[msg("Invalid input amount")]
+    InvalidInputAmount,
 }

@@ -167,6 +167,8 @@ export type ProvideLiquidityEvent =
   IdlEvents<FutarchyProgram>["ProvideLiquidityEvent"];
 export type WithdrawLiquidityEvent =
   IdlEvents<FutarchyProgram>["WithdrawLiquidityEvent"];
+export type SponsorProposalEvent =
+  IdlEvents<FutarchyProgram>["SponsorProposalEvent"];
 export type FutarchyEvent =
   | CollectFeesEvent
   | InitializeDaoEvent
@@ -179,7 +181,8 @@ export type FutarchyEvent =
   | SpotSwapEvent
   | ConditionalSwapEvent
   | ProvideLiquidityEvent
-  | WithdrawLiquidityEvent;
+  | WithdrawLiquidityEvent
+  | SponsorProposalEvent;
 
 export type v0_6_0_CollectFeesEvent =
   IdlEvents<v0_6_0_Futarchy>["CollectFeesEvent"];

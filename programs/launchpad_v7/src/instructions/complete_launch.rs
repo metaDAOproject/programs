@@ -709,7 +709,9 @@ impl CompleteLaunch<'_> {
         // can only be claimed after the launch is complete
         require_gte!(
             self.launch_base_vault.amount,
-            TOKENS_TO_PARTICIPANTS + self.launch.additional_tokens_amount,
+            TOKENS_TO_PARTICIPANTS
+                + self.launch.additional_tokens_amount
+                + self.launch.performance_package_token_amount,
             LaunchpadError::InvariantViolated
         );
         require_gte!(
