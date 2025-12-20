@@ -44,7 +44,7 @@ jobs:
         with:
           default_author: github_actions
           message: 'Update conditional_vault verifiable build'
-  generate-verifiable-launchpad:
+  generate-verifiable-launchpad-v6:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +60,7 @@ jobs:
         uses: EndBug/add-and-commit@v9.1.4
         with:
           default_author: github_actions
-          message: 'Update launchpad verifiable build'
+          message: 'Update launchpad_v6 verifiable build'
   generate-verifiable-price-based-performance-package:
     runs-on: ubuntu-22.04
     steps:
