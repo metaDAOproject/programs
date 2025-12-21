@@ -28,7 +28,7 @@ export const collectMeteoraDammFees = async () => {
 
   const squadsMultisigAccount =
     await multisig.accounts.Multisig.fromAccountAddress(
-      anchor.getProvider().connection,
+      provider.connection,
       daoAccount.squadsMultisig,
     );
 
@@ -37,9 +37,8 @@ export const collectMeteoraDammFees = async () => {
       dao,
       baseMint: daoAccount.baseMint,
       quoteMint: daoAccount.quoteMint,
-      transactionIndex: BigInt(
-        squadsMultisigAccount.transactionIndex.toString(),
-      ),
+      transactionIndex:
+        BigInt(squadsMultisigAccount.transactionIndex.toString()) + 1n,
       meteoraConfig: V0_6_MAINNET_METEORA_CONFIG,
     })
     .signers([payer])
