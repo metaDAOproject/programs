@@ -8,9 +8,15 @@ import {
 } from "@metadaoproject/futarchy/v0.7";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { BN } from "@coral-xyz/anchor";
 
 // Set the DAO address before running the script
 const dao = new PublicKey("");
+
+// Set the target K before running the script
+const initialBaseReserves = new BN(0);
+const initialQuoteReserves = new BN(0);
+const targetK = new BN(initialBaseReserves.mul(initialQuoteReserves));
 
 const provider = anchor.AnchorProvider.env();
 
@@ -30,7 +36,16 @@ const metadaoSquadsMultisig = new PublicKey(
 );
 const metadaoSquadsMultisigVault = FEE_RECIPIENT;
 
-export const collectFees = async () => {
+// This should only be run once per DAO/AMM
+// It's meant to be a one-off operation that reduces liquidity to a target K (the inital pool's liquidity) and collect it as "fees"
+// We're using this because we didn't track LP fee collection in the pool state, nor did we exclude those fees from liquidity
+export const collectLpFees = async () => {
+  if (targetK.isZero()) {
+    throw new Error(
+      "Target K is zero. Please set initial base and quote reserves before running the script.",
+    );
+  }
+
   const daoAccount = await futarchy.fetchDao(dao);
 
   // We call the collect fees instruction from Metadao DAO's multisig account
@@ -55,18 +70,19 @@ export const collectFees = async () => {
   );
 
   // Prepare transaction message
-  const collectFeesIx = await futarchy
-    .collectFeesIx({
+  const collectLpFeesIx = await futarchy
+    .collectLpFeesIx({
       dao,
       baseMint: daoAccount.baseMint,
       quoteMint: daoAccount.quoteMint,
       baseTokenAccount: feeRecipientBaseTokenAccount,
       quoteTokenAccount: feeRecipientQuoteTokenAccount,
+      targetK: targetK,
     })
     .instruction();
 
   const transactionMessage = new TransactionMessage({
-    instructions: [collectFeesIx],
+    instructions: [collectLpFeesIx],
     payerKey: metadaoSquadsMultisigVault,
     recentBlockhash: (await provider.connection.getLatestBlockhash()).blockhash,
   });
@@ -91,4 +107,4 @@ export const collectFees = async () => {
   console.log("Go ahead and execute the transaction through Squads.");
 };
 
-collectFees().catch(console.error);
+collectLpFees().catch(console.error);
