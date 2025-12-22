@@ -987,4 +987,35 @@ export class FutarchyClient {
       teamAddress,
     });
   }
+
+  collectLpFeesIx({
+    dao,
+    baseMint,
+    quoteMint,
+    baseTokenAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      this.provider.publicKey,
+    ),
+    quoteTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      this.provider.publicKey,
+    ),
+    targetK,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    baseTokenAccount?: PublicKey;
+    quoteTokenAccount?: PublicKey;
+    targetK: BN;
+  }) {
+    return this.autocrat.methods.collectLpFees({ targetK }).accounts({
+      dao,
+      admin: this.provider.publicKey,
+      ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
+      ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
+      baseTokenAccount,
+      quoteTokenAccount,
+    });
+  }
 }

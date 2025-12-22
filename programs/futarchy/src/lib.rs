@@ -42,9 +42,9 @@ pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 // by default, the pass price needs to be 3% higher than the fail price
 pub const DEFAULT_PASS_THRESHOLD_BPS: u16 = 300;
 
-// MetaDAO takes 0.25%, LP takes 0.25%
-pub const LP_TAKER_FEE_BPS: u16 = 25;
-pub const PROTOCOL_TAKER_FEE_BPS: u16 = 25;
+// MetaDAO takes 0.5%, LP takes 0%
+pub const LP_TAKER_FEE_BPS: u16 = 0;
+pub const PROTOCOL_TAKER_FEE_BPS: u16 = 50;
 pub const MAX_BPS: u16 = 10_000;
 
 // the index of the fail and pass outcomes in the question and the index of
@@ -129,6 +129,11 @@ pub mod futarchy {
     #[access_control(ctx.accounts.validate())]
     pub fn collect_fees(ctx: Context<CollectFees>) -> Result<()> {
         CollectFees::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn collect_lp_fees(ctx: Context<CollectLpFees>, args: CollectLpFeesArgs) -> Result<()> {
+        CollectLpFees::handle(ctx, args)
     }
 
     #[access_control(ctx.accounts.validate())]

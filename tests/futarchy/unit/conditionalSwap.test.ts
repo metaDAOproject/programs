@@ -85,7 +85,7 @@ export default function suite() {
     );
     assert.equal(
       postAmmState.state.futarchy.pass.quoteProtocolFeeBalance.toString(),
-      "25000",
+      "50000",
     ); // 2.5 cent fee on $100 swap
     assert.equal(
       postAmmState.state.futarchy.pass.baseProtocolFeeBalance.toString(),
@@ -102,7 +102,7 @@ export default function suite() {
 
     // I ran the math by hand assuming 50k reserves on each side and got these results
     assert.equal(postPassQuoteBalance, 40_000_000n);
-    assert.equal(postPassBaseBalance, 9_948_082n);
+    assert.equal(postPassBaseBalance, 9_948_020n);
 
     // now we do a swap that should trigger arbitrage
 
@@ -128,7 +128,7 @@ export default function suite() {
     );
 
     assert.equal(postFailQuoteBalance, 40_000_000n);
-    assert.equal(postFailBaseBalance, 9_948_082n + 991n); // extra profit
+    assert.equal(postFailBaseBalance, 9_948_020n + 988n); // extra profit
   });
 
   it("fails when user has insufficient balance", async function () {

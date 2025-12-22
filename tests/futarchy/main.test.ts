@@ -5,6 +5,7 @@ import initializeProposal from "./unit/initializeProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
+import collectLpFees from "./unit/collectLpFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
 
 import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
@@ -15,9 +16,9 @@ export default function suite() {
   describe("#finalize_proposal", finalizeProposal);
 
   describe("#collect_fees", collectFees);
+  describe("#collect_lp_fees", collectLpFees);
   describe("#conditional_swap", conditionalSwap);
   describe("#execute_spending_limit_change", executeSpendingLimitChange);
-
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);
