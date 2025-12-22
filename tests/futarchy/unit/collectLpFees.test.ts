@@ -30,6 +30,9 @@ export default function suite() {
     // This is meant to be a one-off operation that reduces liquidity to a target K (the inital pool's liquidity) and collect it as "fees"
     // We're using this because we didn't track LP fee collection in the pool state, nor did we exclude those fees from liquidity
 
+    let daoAccount = await this.futarchy.fetchDao(dao);
+    let seqNum = daoAccount.seqNum;
+
     const preQuoteBalance = await this.getTokenBalance(
       USDC,
       this.payer.publicKey,
@@ -69,6 +72,83 @@ export default function suite() {
 
     assert.equal(quoteFeesCollected, 10_000n * 10n ** 6n);
     assert.equal(baseFeesCollected, 10_000n * 10n ** 6n);
+
+    daoAccount = await this.futarchy.fetchDao(dao);
+    assert.equal(
+      daoAccount.seqNum.toString(),
+      seqNum.add(new BN(1)).toString(),
+    );
+    assert.equal(
+      daoAccount.amm.state.spot.spot.baseReserves.toString(),
+      targetBaseReserves.toString(),
+    );
+    assert.equal(
+      daoAccount.amm.state.spot.spot.quoteReserves.toString(),
+      targetQuoteReserves.toString(),
+    );
+  });
+
+  it("collects LP fees by reducing liquidity to a target K whose square root is not an exact integer", async function () {
+    // In cases where target K is not an exact square, we want to round up the target reserves
+    // We want to favor the protocol in this case instead of taking the atom to ourselves
+
+    let daoAccount = await this.futarchy.fetchDao(dao);
+    let seqNum = daoAccount.seqNum;
+
+    const preQuoteBalance = await this.getTokenBalance(
+      USDC,
+      this.payer.publicKey,
+    );
+    const preBaseBalance = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+
+    // We can calculate K and know the "fees collected" this way because we know the price is 1:1
+    // Usually, we'd want to calculate K based on the target liquidity, which is usually what K was when the pool was initialized
+    const targetQuoteReserves = new BN(90_000 * 10 ** 6);
+    const targetBaseReserves = new BN(90_000 * 10 ** 6);
+
+    // Slighly lower target K to ensure we round up to the correct amount
+    const targetK = targetBaseReserves.mul(targetQuoteReserves).sub(new BN(1));
+
+    await this.futarchy
+      .collectLpFeesIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        targetK,
+      })
+      .rpc();
+
+    const postQuoteBalance = await this.getTokenBalance(
+      USDC,
+      this.payer.publicKey,
+    );
+    const postBaseBalance = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+
+    const quoteFeesCollected = postQuoteBalance - preQuoteBalance;
+    const baseFeesCollected = postBaseBalance - preBaseBalance;
+
+    assert.equal(quoteFeesCollected, 10_000n * 10n ** 6n);
+    assert.equal(baseFeesCollected, 10_000n * 10n ** 6n);
+
+    daoAccount = await this.futarchy.fetchDao(dao);
+    assert.equal(
+      daoAccount.seqNum.toString(),
+      seqNum.add(new BN(1)).toString(),
+    );
+    assert.equal(
+      daoAccount.amm.state.spot.spot.baseReserves.toString(),
+      targetBaseReserves.toString(),
+    );
+    assert.equal(
+      daoAccount.amm.state.spot.spot.quoteReserves.toString(),
+      targetQuoteReserves.toString(),
+    );
   });
 
   it("fails when the pool is not in the spot state", async function () {

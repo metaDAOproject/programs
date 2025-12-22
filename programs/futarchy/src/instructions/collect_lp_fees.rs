@@ -94,8 +94,12 @@ impl CollectLpFees<'_> {
         let sqrt_k = sqrt_u128(spot.k(), false);
         let sqrt_target_k = sqrt_u128(args.target_k, true);
 
-        let target_base_reserves = (spot.base_reserves as u128 * sqrt_target_k / sqrt_k) as u64;
-        let target_quote_reserves = (spot.quote_reserves as u128 * sqrt_target_k / sqrt_k) as u64;
+        require_gt!(sqrt_k, sqrt_target_k, FutarchyError::InvalidTargetK);
+
+        let target_base_reserves =
+            div_ceil_u128(spot.base_reserves as u128 * sqrt_target_k, sqrt_k) as u64;
+        let target_quote_reserves =
+            div_ceil_u128(spot.quote_reserves as u128 * sqrt_target_k, sqrt_k) as u64;
 
         let base_fees = spot.base_reserves - target_base_reserves;
         let quote_fees = spot.quote_reserves - target_quote_reserves;
@@ -138,6 +142,8 @@ impl CollectLpFees<'_> {
             ),
             quote_fees,
         )?;
+
+        ctx.accounts.dao.seq_num += 1;
 
         emit_cpi!(CollectFeesEvent {
             common: CommonFields::new(&Clock::get()?, ctx.accounts.dao.seq_num),
@@ -184,4 +190,8 @@ fn sqrt_u128(n: u128, ceil: bool) -> u128 {
     } else {
         x
     }
+}
+
+fn div_ceil_u128(a: u128, b: u128) -> u128 {
+    a / b + if a % b == 0 { 0 } else { 1 }
 }
