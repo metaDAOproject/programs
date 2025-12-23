@@ -131,11 +131,6 @@ pub mod futarchy {
         CollectFees::handle(ctx)
     }
 
-    #[access_control(ctx.accounts.validate(&args))]
-    pub fn collect_lp_fees(ctx: Context<CollectLpFees>, args: CollectLpFeesArgs) -> Result<()> {
-        CollectLpFees::handle(ctx, args)
-    }
-
     #[access_control(ctx.accounts.validate())]
     pub fn execute_spending_limit_change<'c: 'info, 'info>(
         ctx: Context<'_, '_, 'c, 'info, ExecuteSpendingLimitChange<'info>>,
