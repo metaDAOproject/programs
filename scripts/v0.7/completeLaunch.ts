@@ -7,28 +7,33 @@ import {
 } from "@solana/web3.js";
 import { createLookupTableForTransaction } from "../utils/utils.js";
 
+const LAUNCH_TO_COMPLETE: PublicKey | undefined = undefined;
+const BID_WALL_FEE_RECIPIENT: PublicKey | undefined = undefined;
+
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
-const BID_WALL_FEE_RECIPIENT: PublicKey | undefined = undefined;
-
 export const completeLaunch = async () => {
+  if (LAUNCH_TO_COMPLETE === undefined) {
+    throw new Error(
+      "LAUNCH_TO_COMPLETE is not set. Please set it in the script.",
+    );
+  }
+
   if (BID_WALL_FEE_RECIPIENT === undefined) {
     throw new Error(
       "BID_WALL_FEE_RECIPIENT is not set. Please set it in the script.",
     );
   }
 
-  const mintKp = new PublicKey("PRVT6TB7uss3FrUd2D9xs2zqDBsa3GbMJMwCQsgmeta");
-
-  const [launch] = getLaunchAddr(undefined, mintKp);
+  const launchAccount = await launchpad.fetchLaunch(LAUNCH_TO_COMPLETE);
 
   const tx = await launchpad
     .completeLaunchIx({
-      launch,
-      baseMint: mintKp,
+      launch: LAUNCH_TO_COMPLETE,
+      baseMint: launchAccount.baseMint,
       launchAuthority: payer.publicKey,
       feeRecipient: BID_WALL_FEE_RECIPIENT,
     })
@@ -63,8 +68,8 @@ export const completeLaunch = async () => {
 
   const initializePerformancePackageTxHash = await launchpad
     .initializePerformancePackageIx({
-      launch,
-      baseMint: mintKp,
+      launch: LAUNCH_TO_COMPLETE,
+      baseMint: launchAccount.baseMint,
       payer: payer.publicKey,
     })
     .rpc();

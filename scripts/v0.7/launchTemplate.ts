@@ -77,7 +77,7 @@ export const launch = async () => {
   const txHash = await provider.connection.sendRawTransaction(tx.serialize());
   await provider.connection.confirmTransaction(txHash, "confirmed");
 
-  const launchIx = await launchpad
+  const initializeLaunchTxSignature = await launchpad
     .initializeLaunchIx({
       tokenName: TOKEN_NAME,
       tokenSymbol: TOKEN_SYMBOL,
@@ -101,7 +101,9 @@ export const launch = async () => {
     })
     .rpc();
 
-  console.log("Launch initialized", launchIx);
+  console.log("Launch initialized", initializeLaunchTxSignature);
+
+  console.log("Launch address:", launch.toBase58());
   // await launchpad.startLaunchIx({ launch }).rpc();
 };
 
