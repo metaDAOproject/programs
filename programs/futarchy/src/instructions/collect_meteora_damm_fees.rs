@@ -29,7 +29,11 @@ pub mod pool_authority {
 #[derive(Accounts)]
 #[event_cpi]
 pub struct CollectMeteoraDammFees<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = dao.base_mint == meteora_claim_position_fees_accounts.token_a_mint.key(),
+        constraint = dao.quote_mint == meteora_claim_position_fees_accounts.token_b_mint.key()
+    )]
     pub dao: Account<'info, Dao>,
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -76,11 +80,11 @@ pub struct MeteoraClaimPositionFeesAccounts<'info> {
     pub position: UncheckedAccount<'info>,
 
     /// Token account of base tokens recipient
-    #[account(mut, token::mint = token_a_mint, token::authority = metadao_multisig_vault::ID)]
+    #[account(mut, associated_token::mint = token_a_mint, associated_token::authority = metadao_multisig_vault::ID)]
     pub token_a_account: Account<'info, TokenAccount>,
 
     /// Token account of quote tokens recipient
-    #[account(mut, token::mint = token_b_mint, token::authority = metadao_multisig_vault::ID)]
+    #[account(mut, associated_token::mint = token_b_mint, associated_token::authority = metadao_multisig_vault::ID)]
     pub token_b_account: Account<'info, TokenAccount>,
 
     /// CHECK: checked by damm v2 program, base token vault of the pool
@@ -369,6 +373,8 @@ impl CollectMeteoraDammFees<'_> {
             base_token_account_balance_after - base_token_account_balance_before;
         let quote_fees_collected =
             quote_token_account_balance_after - quote_token_account_balance_before;
+
+        ctx.accounts.dao.seq_num += 1;
 
         emit_cpi!(CollectMeteoraDammFeesEvent {
             common: CommonFields::new(&Clock::get()?, ctx.accounts.dao.seq_num),

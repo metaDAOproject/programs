@@ -236,12 +236,12 @@ export default function suite() {
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
 
-    const dao = await futarchyClient.getDao(launchAccount.dao);
+    let daoAccount = await futarchyClient.getDao(launchAccount.dao);
 
     const squadsMultisigAccount =
       await multisig.accounts.Multisig.fromAccountAddress(
         this.squadsConnection,
-        dao.squadsMultisig,
+        daoAccount.squadsMultisig,
       );
 
     const metaDaoBaseTokenAccount = getAssociatedTokenAddressSync(
@@ -292,6 +292,10 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx);
 
+    daoAccount = await futarchyClient.getDao(launchAccount.dao);
+
+    const daoSeqNumBeforeCollect = daoAccount.seqNum;
+
     await futarchyClient
       .collectMeteoraDammFeesIx({
         dao: launchAccount.dao,
@@ -307,6 +311,16 @@ export default function suite() {
       ])
       .signers([this.payer, PERMISSIONLESS_ACCOUNT])
       .rpc();
+
+    daoAccount = await futarchyClient.getDao(launchAccount.dao);
+
+    const daoSeqNumAfterCollect = daoAccount.seqNum;
+
+    // Assert that the DAO sequence number was incremented
+    assert.equal(
+      daoSeqNumAfterCollect.toString(),
+      daoSeqNumBeforeCollect.add(new BN(1)).toString(),
+    );
 
     const metaDaoBaseTokenBalanceAfterCollect = await this.getTokenBalance(
       META,
