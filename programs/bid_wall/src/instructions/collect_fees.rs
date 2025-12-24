@@ -59,6 +59,10 @@ impl CollectFees<'_> {
             ctx.accounts.bid_wall.fees_collected,
         )?;
 
+        // reload bid wall quote token account to get updated amount for event
+        ctx.accounts.bid_wall_quote_token_account.reload()?;
+        ctx.accounts.bid_wall.seq_num += 1;
+
         emit_cpi!(BidWallFeesCollectedEvent {
             common: CommonFields::new(&Clock::get()?, ctx.accounts.bid_wall.seq_num),
             bid_wall: ctx.accounts.bid_wall.key(),
@@ -70,7 +74,6 @@ impl CollectFees<'_> {
         });
 
         ctx.accounts.bid_wall.fees_collected = 0;
-        ctx.accounts.bid_wall.seq_num += 1;
 
         Ok(())
     }
