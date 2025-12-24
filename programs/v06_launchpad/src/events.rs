@@ -93,3 +93,11 @@ pub struct LaunchCloseEvent {
     pub launch: Pubkey,
     pub new_state: LaunchState,
 }
+
+#[event]
+pub struct LaunchFundsReturnedEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub recipient: Pubkey,
+    pub usdc_returned: u64,
+}
