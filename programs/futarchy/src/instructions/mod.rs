@@ -1,6 +1,7 @@
 use super::*;
 
 pub mod collect_fees;
+pub mod collect_meteora_damm_fees;
 pub mod conditional_swap;
 pub mod execute_spending_limit_change;
 pub mod finalize_proposal;
@@ -18,6 +19,7 @@ pub mod update_dao;
 pub mod withdraw_liquidity;
 
 pub use collect_fees::*;
+pub use collect_meteora_damm_fees::*;
 pub use conditional_swap::*;
 pub use execute_spending_limit_change::*;
 pub use finalize_proposal::*;

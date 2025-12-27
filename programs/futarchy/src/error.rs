@@ -74,4 +74,6 @@ pub enum FutarchyError {
     InvalidTeamSponsoredPassThreshold,
     #[msg("Target K must be greater than the current K")]
     InvalidTargetK,
+    #[msg("Failed to compile transaction message for Squads vault transaction")]
+    InvalidTransactionMessage,
 }

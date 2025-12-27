@@ -143,6 +143,11 @@ pub mod futarchy {
         SponsorProposal::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate())]
+    pub fn collect_meteora_damm_fees(ctx: Context<CollectMeteoraDammFees>) -> Result<()> {
+        CollectMeteoraDammFees::handle(ctx)
+    }
+
     pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
         ResizeDao::handle(ctx)
     }
