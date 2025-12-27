@@ -946,6 +946,64 @@ export type Futarchy = {
       args: [];
     },
     {
+      name: "collectLpFees";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "baseTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "CollectLpFeesArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "executeSpendingLimitChange";
       accounts: [
         {
@@ -1486,6 +1544,18 @@ export type Futarchy = {
           {
             name: "daoSeqNum";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "CollectLpFeesArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "targetK";
+            type: "u128";
           },
         ];
       };
@@ -4020,6 +4090,64 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
+      name: "collectLpFees",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "baseTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "CollectLpFeesArgs",
+          },
+        },
+      ],
+    },
+    {
       name: "executeSpendingLimitChange",
       accounts: [
         {
@@ -4560,6 +4688,18 @@ export const IDL: Futarchy = {
           {
             name: "daoSeqNum",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "CollectLpFeesArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "targetK",
+            type: "u128",
           },
         ],
       },

@@ -80,8 +80,8 @@ export default function suite() {
     const quoteFeesCollected = postQuoteBalance - preQuoteBalance;
     const baseFeesCollected = postBaseBalance - preBaseBalance;
 
-    assert.equal(quoteFeesCollected, 250_000n);
-    assert.equal(baseFeesCollected, 5_000n);
+    assert.equal(quoteFeesCollected, 500_000n);
+    assert.equal(baseFeesCollected, 10_000n);
   });
 
   it("fails when the pool is not in the spot state", async function () {
