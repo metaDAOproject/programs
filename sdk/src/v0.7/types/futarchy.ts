@@ -3118,6 +3118,11 @@ export type Futarchy = {
     },
     {
       code: 6034;
+      name: "InvalidTargetK";
+      msg: "Target K must be greater than the current K";
+    },
+    {
+      code: 6035;
       name: "InvalidTransactionMessage";
       msg: "Failed to compile transaction message for Squads vault transaction";
     },
@@ -6244,6 +6249,11 @@ export const IDL: Futarchy = {
     },
     {
       code: 6034,
+      name: "InvalidTargetK",
+      msg: "Target K must be greater than the current K",
+    },
+    {
+      code: 6035,
       name: "InvalidTransactionMessage",
       msg: "Failed to compile transaction message for Squads vault transaction",
     },
