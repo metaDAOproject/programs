@@ -7,8 +7,9 @@ import {
 } from "@solana/web3.js";
 import { createLookupTableForTransaction } from "../utils/utils.js";
 
-const LAUNCH_TO_COMPLETE: PublicKey | undefined = undefined;
-const BID_WALL_FEE_RECIPIENT: PublicKey | undefined = undefined;
+const LAUNCH_TO_COMPLETE: PublicKey | undefined = new PublicKey(
+  "FvQCwxmELEr7Dis8eQsij1F53wxgMohSiEZ9jMLMCapm",
+);
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
@@ -22,20 +23,13 @@ export const completeLaunch = async () => {
     );
   }
 
-  if (BID_WALL_FEE_RECIPIENT === undefined) {
-    throw new Error(
-      "BID_WALL_FEE_RECIPIENT is not set. Please set it in the script.",
-    );
-  }
-
-  const launchAccount = await launchpad.fetchLaunch(LAUNCH_TO_COMPLETE);
+  let launchAccount = await launchpad.fetchLaunch(LAUNCH_TO_COMPLETE);
 
   const tx = await launchpad
     .completeLaunchIx({
       launch: LAUNCH_TO_COMPLETE,
       baseMint: launchAccount.baseMint,
       launchAuthority: payer.publicKey,
-      feeRecipient: BID_WALL_FEE_RECIPIENT,
     })
     .transaction();
 
@@ -56,15 +50,16 @@ export const completeLaunch = async () => {
   const vtx = new VersionedTransaction(message);
   vtx.sign([payer]);
 
-  const completeTxHash = await provider.connection.sendTransaction(vtx, {
-    skipPreflight: true,
-  });
+  const completeTxHash = await provider.connection.sendTransaction(vtx);
 
   console.log(`Complete launch transaction sent: ${completeTxHash}`);
 
   console.log("Launch completed successfully!");
 
   console.log("Setting up performance package...");
+
+  // Refresh launch account to get the updated base mint
+  launchAccount = await launchpad.fetchLaunch(LAUNCH_TO_COMPLETE);
 
   const initializePerformancePackageTxHash = await launchpad
     .initializePerformancePackageIx({

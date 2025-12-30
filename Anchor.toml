@@ -48,6 +48,13 @@ v06-dump-daos-proposals = "yarn run tsx scripts/v0.6/dumpDaosProposals.ts"
 v06-migrate-daos-proposals = "yarn run tsx scripts/v0.6/migrateDaosProposals.ts"
 v06-create-dao = "yarn run tsx scripts/v0.6/createDao.ts"
 v06-provide-liquidity = "yarn run tsx scripts/v0.6/provideLiquidity.ts"
+v07-launch-template = "yarn run tsx scripts/v0.7/launchTemplate.ts"
+v07-start-launch = "yarn run tsx scripts/v0.7/startLaunch.ts"
+v07-complete-launch = "yarn run tsx scripts/v0.7/completeLaunch.ts"
+v07-claim-all-launch = "yarn run tsx scripts/v0.7/claimAllLaunch.ts"
+v07-approve-points-based = "yarn run tsx scripts/v0.7/pointsBased/approveWithPointsWeightedPhase.ts"
+v07-close-launch = "yarn run tsx scripts/v0.7/closeLaunch.ts"
+v07-initialize-performance-package = "yarn run tsx scripts/v0.7/initializePerformancePackage.ts"
 
 [test]
 startup_wait = 5000

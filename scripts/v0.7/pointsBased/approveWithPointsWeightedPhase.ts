@@ -26,19 +26,22 @@ const payer = provider.wallet["payer"];
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
 // How many approvals to perform per transaction
-const batchSize = 5;
+const batchSize = 20;
 
 // The launch address
 const launchAddr = new PublicKey(
-  "9kx7UDFzFt7e2V4pFtawnupKKvRR3EhV7P1Pxmc5XCQj",
+  "FvQCwxmELEr7Dis8eQsij1F53wxgMohSiEZ9jMLMCapm",
 );
 
 // The final raise amount (USDC, in atoms)
-const finalRaiseAmount = 1_000_000_000000;
+const finalRaiseAmount = 10_000000;
 
 async function main() {
   const pointsAllocations: PointsAllocation[] = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "pointsAllocations.json"), "utf8"),
+    fs.readFileSync(
+      path.join(process.cwd(), "scripts/v0.7/pointsBased/points.json"),
+      "utf8",
+    ),
   ).map((x) => ({
     user: new PublicKey(x.user),
     points: x.points,
@@ -115,9 +118,12 @@ async function main() {
 
   // Assign amount to approve to each record
   for (const record of allFundingRecordsWithPointsOwners) {
-    record.amountToApprove = record.account.committedAmount
-      .mul(new BN(record.pointsOwner?.points ?? 0)) // In this phase, if there is no points owner, then they get no allocation, so we multiply by 0.
-      .div(totalPointsWithinLaunch);
+    record.amountToApprove = BN.min(
+      record.account.committedAmount,
+      new BN(finalRaiseAmount)
+        .mul(new BN(record.pointsOwner?.points ?? 0)) // In this phase, if there is no points owner, then they get no allocation, so we multiply by 0.
+        .div(totalPointsWithinLaunch),
+    );
   }
 
   // Sum up total amount to approve
@@ -152,14 +158,21 @@ async function main() {
     }
   }
 
+  // // IMPORTANT - PLEASE READ
   // // Uncomment this if we want the final raise amount to be a bit over the total committed amount
   // // This might be important if we want to ensure that the launch is successful in cases where the final raise amount is exactly equal to the minimum raise amount.
-  // // A small dust difference will occur due to rounding which could normally fail the launch, so we need to add 1 to all of the records that have an amount to approve that is not equal to the committed amount.
+  // // A small dust difference will occur due to rounding which could normally fail the launch, so we need to add 1 atom to all of the records that have an amount to approve that is not equal to the committed amount.
   // for (const record of allFundingRecordsWithPointsOwners) {
   //   if (record.amountToApprove.lt(record.account.committedAmount)) {
   //     record.amountToApprove = record.amountToApprove.add(new BN(1));
   //   }
   // }
+
+  for (const record of allFundingRecordsWithPointsOwners) {
+    console.log(
+      `${record.account.funder.toBase58()}:\t${record.amountToApprove.toString()}`,
+    );
+  }
 
   // Sum up total amount to approve and render it to the user
   const finalAmountToApprove = allFundingRecordsWithPointsOwners.reduce(

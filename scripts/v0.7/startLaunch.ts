@@ -10,7 +10,7 @@ const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const LAUNCH_TO_START = new PublicKey(
-  "7DzBXBYSKhrXHPWT6mAKq394vKupaKaqLn9bK1wscpBz",
+  "FvQCwxmELEr7Dis8eQsij1F53wxgMohSiEZ9jMLMCapm",
 );
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
