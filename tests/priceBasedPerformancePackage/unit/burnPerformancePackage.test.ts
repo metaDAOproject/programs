@@ -120,7 +120,7 @@ export default function () {
     await this.banksClient.processTransaction(tx);
   });
 
-  it.only("should burn a performance package successfully", async function () {
+  it("should burn a performance package successfully", async function () {
     const performancePackageTokenVault = await getAssociatedTokenAddress(
       tokenMint,
       performancePackage,
