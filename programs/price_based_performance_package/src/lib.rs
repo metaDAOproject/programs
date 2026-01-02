@@ -72,4 +72,9 @@ pub mod price_based_performance_package {
     ) -> Result<()> {
         ChangePerformancePackageAuthority::handle(ctx, params)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn burn_performance_package(ctx: Context<BurnPerformancePackage>) -> Result<()> {
+        BurnPerformancePackage::handle(ctx)
+    }
 }
