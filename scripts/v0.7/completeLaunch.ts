@@ -1,5 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient, getLaunchAddr } from "@metadaoproject/futarchy/v0.7";
+import {
+  LaunchpadClient,
+  getLaunchAddr,
+  FEE_RECIPIENT,
+} from "@metadaoproject/futarchy/v0.7";
 import {
   PublicKey,
   TransactionMessage,
@@ -12,7 +16,9 @@ const payer = provider.wallet["payer"];
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
-const BID_WALL_FEE_RECIPIENT: PublicKey | undefined = undefined;
+const BID_WALL_FEE_RECIPIENT: PublicKey | undefined = new PublicKey(
+  "6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf",
+);
 
 export const completeLaunch = async () => {
   if (BID_WALL_FEE_RECIPIENT === undefined) {
@@ -21,14 +27,16 @@ export const completeLaunch = async () => {
     );
   }
 
-  const mintKp = new PublicKey("PRVT6TB7uss3FrUd2D9xs2zqDBsa3GbMJMwCQsgmeta");
+  const BASE_MINT = new PublicKey(
+    "7EJRXkBfoAYtzAXE7PRry4gqh6NciY3Yt5YF3GR8LC8V",
+  );
 
-  const [launch] = getLaunchAddr(undefined, mintKp);
+  const [launch] = getLaunchAddr(undefined, BASE_MINT);
 
   const tx = await launchpad
     .completeLaunchIx({
       launch,
-      baseMint: mintKp,
+      baseMint: BASE_MINT,
       launchAuthority: payer.publicKey,
       feeRecipient: BID_WALL_FEE_RECIPIENT,
     })
@@ -64,7 +72,7 @@ export const completeLaunch = async () => {
   const initializePerformancePackageTxHash = await launchpad
     .initializePerformancePackageIx({
       launch,
-      baseMint: mintKp,
+      baseMint: BASE_MINT,
       payer: payer.publicKey,
     })
     .rpc();

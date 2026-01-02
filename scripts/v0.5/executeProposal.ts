@@ -41,7 +41,7 @@ const payer = provider.wallet["payer"];
 
 const autocrat: AutocratClient = AutocratClient.createClient({ provider });
 
-const PROPOSAL = new PublicKey("GfJhLniJENRzYTrYA9x75JaMc3DcEvoLKijtynx3yRSQ");
+const PROPOSAL = new PublicKey("45gE3jiEuCMmkcV3xS7QP21sE5iA26FJ19TZ89DDXdwE");
 
 const executeProposal = async () => {
   const proposal = await autocrat.getProposal(PROPOSAL);

@@ -13,22 +13,23 @@ import BN from "bn.js";
 import * as token from "@solana/spl-token";
 
 // The base token mint for the DAO (e.g., META for MetaDAO)
-const BASE_MINT = new PublicKey("BASE_MINT_HERE");
+const BASE_MINT = new PublicKey("E3yUqBNTZxV8ELvW99oRLC7z4ddbJqqR4NphwrMug9zu");
 
 // Team address for sponsored proposals (recommend setting to a multisig for flexibility)
-const TEAM_ADDRESS = new PublicKey("TEAM_ADDRESS_HERE");
+// const TEAM_ADDRESS = new PublicKey("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+const TEAM_ADDRESS = PublicKey.default;
 
 // Initial token price in USD (e.g., 1.5 for $1.50)
 // Used to calculate TWAP initial observation
-const INITIAL_TOKEN_PRICE_USD = 1;
+const INITIAL_TOKEN_PRICE_USD = 0.06;
 
 // Pass threshold in basis points
 // Constraint: 0 - 1000 (0% - 10%)
-const PASS_THRESHOLD_BPS = 500;
+const PASS_THRESHOLD_BPS = 150;
 
 // Team sponsored pass threshold in basis points
-// Constraint: -1000 to 1000 (-10% to 10%), use -1 to disable team-sponsored proposals
-const TEAM_SPONSORED_PASS_THRESHOLD_BPS = -1;
+// Constraint: -1000 to 1000 (-10% to 10)
+const TEAM_SPONSORED_PASS_THRESHOLD_BPS = 150;
 
 // Proposal duration in days
 // Constraint: >= 1 day AND >= TWAP_START_DELAY_HOURS * 2
@@ -51,12 +52,13 @@ const MIN_BASE_FUTARCHIC_LIQUIDITY = 0;
 
 // Initial spending limit configuration
 // Allows specified members to spend quote tokens from the DAO vault without a proposal
-// Set amount to 0 to disable
-const INITIAL_SPENDING_LIMIT_AMOUNT_PER_MONTH = 10_000; // USDC per month
+// Set to false to disable
+const ENABLE_SPENDING_LIMIT = false;
+const SPENDING_LIMIT_AMOUNT_PER_MONTH = 1000; // USDC per month (only used if ENABLE_SPENDING_LIMIT is true)
 // Constraint: max 10 members
-const INITIAL_SPENDING_LIMIT_MEMBERS = [
-  new PublicKey("YOUR_MEMBER_ADDRESS_1"),
-  // new PublicKey("YOUR_MEMBER_ADDRESS_2"),
+const SPENDING_LIMIT_MEMBERS: PublicKey[] = [
+  // new PublicKey("4LpE9Lxqb4jYYh8jA8oDhsGDKPNBNkcoXobbAJTa3pWw"),
+  // new PublicKey("613BRiXuAEn7vibs2oAYzpGW9fXgjzDNuFMM4wPzLdY"),
 ];
 
 // ============================================
@@ -123,7 +125,7 @@ export const createDao = async () => {
     `Min Base Futarchic Liquidity: ${MIN_BASE_FUTARCHIC_LIQUIDITY > 0 ? `${MIN_BASE_FUTARCHIC_LIQUIDITY.toLocaleString()} tokens` : "None"}`,
   );
   console.log(
-    `Spending Limit: ${INITIAL_SPENDING_LIMIT_AMOUNT_PER_MONTH > 0 ? `${INITIAL_SPENDING_LIMIT_AMOUNT_PER_MONTH.toLocaleString()} USDC/month for ${INITIAL_SPENDING_LIMIT_MEMBERS.length} member(s)` : "Disabled"}`,
+    `Spending Limit: ${ENABLE_SPENDING_LIMIT ? `${SPENDING_LIMIT_AMOUNT_PER_MONTH.toLocaleString()} USDC/month for ${SPENDING_LIMIT_MEMBERS.length} member(s)` : "Disabled"}`,
   );
   console.log("========================\n");
 
@@ -140,21 +142,20 @@ export const createDao = async () => {
         twapMaxObservationChangePerUpdate,
         twapStartDelaySeconds,
         minQuoteFutarchicLiquidity: new BN(MIN_QUOTE_FUTARCHIC_LIQUIDITY * 1e6),
-        minBaseFutarchicLiquidity: new BN(
-          MIN_BASE_FUTARCHIC_LIQUIDITY * 10 ** mintInfo.decimals,
+        minBaseFutarchicLiquidity: new BN(MIN_BASE_FUTARCHIC_LIQUIDITY).mul(
+          new BN(10).pow(new BN(mintInfo.decimals)),
         ),
         passThresholdBps: PASS_THRESHOLD_BPS,
         nonce,
-        initialSpendingLimit:
-          INITIAL_SPENDING_LIMIT_AMOUNT_PER_MONTH > 0
-            ? {
-                amountPerMonth: new BN(
-                  INITIAL_SPENDING_LIMIT_AMOUNT_PER_MONTH * 1e6,
-                ),
-                members: INITIAL_SPENDING_LIMIT_MEMBERS,
-              }
-            : null,
-        baseToStake: new BN(BASE_TO_STAKE * 10 ** mintInfo.decimals),
+        initialSpendingLimit: ENABLE_SPENDING_LIMIT
+          ? {
+              amountPerMonth: new BN(SPENDING_LIMIT_AMOUNT_PER_MONTH * 1e6),
+              members: SPENDING_LIMIT_MEMBERS,
+            }
+          : null,
+        baseToStake: new BN(BASE_TO_STAKE).mul(
+          new BN(10).pow(new BN(mintInfo.decimals)),
+        ),
         secondsPerProposal,
         teamSponsoredPassThresholdBps: TEAM_SPONSORED_PASS_THRESHOLD_BPS,
         teamAddress: TEAM_ADDRESS,
