@@ -30,6 +30,10 @@ pub mod damm_v2_cpi {
     ) -> Result<()> {
         Ok(())
     }
+
+    pub fn claim_position_fee(_ctx: Context<ClaimPositionFeeCtx>) -> Result<()> {
+        Ok(())
+    }
 }
 
 /// Information regarding fee charges
@@ -150,4 +154,61 @@ pub struct InitializePoolWithDynamicConfigCtx<'info> {
 
     // Sysvar for program account
     pub system_program: Program<'info, System>,
+}
+
+#[event_cpi]
+#[derive(Accounts)]
+pub struct ClaimPositionFeeCtx<'info> {
+    /// CHECK: pool authority
+    pub pool_authority: UncheckedAccount<'info>,
+
+    /// CHECK: CPI
+    pub pool: UncheckedAccount<'info>,
+
+    /// CHECK: CPI
+    #[account(mut)]
+    pub position: UncheckedAccount<'info>,
+
+    /// The user token a account
+    /// CHECK: CPI
+    #[account(mut)]
+    pub token_a_account: UncheckedAccount<'info>,
+
+    /// The user token b account
+    /// CHECK: CPI
+    #[account(mut)]
+    pub token_b_account: UncheckedAccount<'info>,
+
+    /// The vault token account for input token
+    /// CHECK: CPI
+    #[account(mut)]
+    pub token_a_vault: UncheckedAccount<'info>,
+
+    /// The vault token account for output token
+    /// CHECK: CPI
+    #[account(mut)]
+    pub token_b_vault: UncheckedAccount<'info>,
+
+    /// The mint of token a
+    /// CHECK: CPI
+    pub token_a_mint: UncheckedAccount<'info>,
+
+    /// The mint of token b
+    /// CHECK: CPI
+    pub token_b_mint: UncheckedAccount<'info>,
+
+    /// The token account for nft
+    /// CHECK: CPI
+    pub position_nft_account: UncheckedAccount<'info>,
+
+    /// owner of position
+    pub owner: Signer<'info>,
+
+    /// Token a program
+    /// CHECK: CPI
+    pub token_a_program: UncheckedAccount<'info>,
+
+    /// Token b program
+    /// CHECK: CPI
+    pub token_b_program: UncheckedAccount<'info>,
 }

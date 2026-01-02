@@ -131,11 +131,6 @@ pub mod futarchy {
         CollectFees::handle(ctx)
     }
 
-    #[access_control(ctx.accounts.validate(&args))]
-    pub fn collect_lp_fees(ctx: Context<CollectLpFees>, args: CollectLpFeesArgs) -> Result<()> {
-        CollectLpFees::handle(ctx, args)
-    }
-
     #[access_control(ctx.accounts.validate())]
     pub fn execute_spending_limit_change<'c: 'info, 'info>(
         ctx: Context<'_, '_, 'c, 'info, ExecuteSpendingLimitChange<'info>>,
@@ -148,11 +143,8 @@ pub mod futarchy {
         SponsorProposal::handle(ctx)
     }
 
-    pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
-        ResizeDao::handle(ctx)
-    }
-
-    pub fn resize_proposal(ctx: Context<ResizeProposal>) -> Result<()> {
-        ResizeProposal::handle(ctx)
+    #[access_control(ctx.accounts.validate())]
+    pub fn collect_meteora_damm_fees(ctx: Context<CollectMeteoraDammFees>) -> Result<()> {
+        CollectMeteoraDammFees::handle(ctx)
     }
 }

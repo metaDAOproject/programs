@@ -1,7 +1,7 @@
 use super::*;
 
 pub mod collect_fees;
-pub mod collect_lp_fees;
+pub mod collect_meteora_damm_fees;
 pub mod conditional_swap;
 pub mod execute_spending_limit_change;
 pub mod finalize_proposal;
@@ -9,8 +9,6 @@ pub mod initialize_dao;
 pub mod initialize_proposal;
 pub mod launch_proposal;
 pub mod provide_liquidity;
-pub mod resize_dao;
-pub mod resize_proposal;
 pub mod sponsor_proposal;
 pub mod spot_swap;
 pub mod stake_to_proposal;
@@ -19,7 +17,7 @@ pub mod update_dao;
 pub mod withdraw_liquidity;
 
 pub use collect_fees::*;
-pub use collect_lp_fees::*;
+pub use collect_meteora_damm_fees::*;
 pub use conditional_swap::*;
 pub use execute_spending_limit_change::*;
 pub use finalize_proposal::*;
@@ -27,8 +25,6 @@ pub use initialize_dao::*;
 pub use initialize_proposal::*;
 pub use launch_proposal::*;
 pub use provide_liquidity::*;
-pub use resize_dao::*;
-pub use resize_proposal::*;
 pub use sponsor_proposal::*;
 pub use spot_swap::*;
 pub use stake_to_proposal::*;

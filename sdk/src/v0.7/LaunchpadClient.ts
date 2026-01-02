@@ -29,7 +29,7 @@ import {
   DAMM_V2_PROGRAM_ID,
   SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET,
   MAINNET_METEORA_CONFIG,
-  FEE_RECIPIENT,
+  METADAO_MULTISIG_VAULT,
 } from "./constants.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -293,7 +293,7 @@ export class LaunchpadClient {
     launchAuthority,
     isDevnet = false,
     meteoraConfig = MAINNET_METEORA_CONFIG,
-    feeRecipient = FEE_RECIPIENT,
+    feeRecipient = METADAO_MULTISIG_VAULT,
   }: {
     launch: PublicKey;
     quoteMint?: PublicKey;

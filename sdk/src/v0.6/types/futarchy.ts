@@ -946,64 +946,6 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "collectLpFees";
-      accounts: [
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "baseTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "quoteTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [
-        {
-          name: "args";
-          type: {
-            defined: "CollectLpFeesArgs";
-          };
-        },
-      ];
-    },
-    {
       name: "executeSpendingLimitChange";
       accounts: [
         {
@@ -1081,7 +1023,7 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "resizeDao";
+      name: "collectMeteoraDammFees";
       accounts: [
         {
           name: "dao";
@@ -1089,33 +1031,139 @@ export type Futarchy = {
           isSigner: false;
         },
         {
-          name: "payer";
+          name: "admin";
           isMut: true;
           isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVaultTransaction";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigPermissionlessAccount";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "meteoraClaimPositionFeesAccounts";
+          accounts: [
+            {
+              name: "dammV2Program";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "dammV2EventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "poolAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "pool";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "position";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenAAccount";
+              isMut: true;
+              isSigner: false;
+              docs: ["Token account of base tokens recipient"];
+            },
+            {
+              name: "tokenBAccount";
+              isMut: true;
+              isSigner: false;
+              docs: ["Token account of quote tokens recipient"];
+            },
+            {
+              name: "tokenAVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenBVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenAMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenBMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "positionNftAccount";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "owner";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenAProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenBProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
         },
         {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
-      ];
-      args: [];
-    },
-    {
-      name: "resizeProposal";
-      accounts: [
         {
-          name: "proposal";
-          isMut: true;
+          name: "tokenProgram";
+          isMut: false;
           isSigner: false;
         },
         {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
         },
         {
-          name: "systemProgram";
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         },
@@ -1401,18 +1449,6 @@ export type Futarchy = {
       };
     },
     {
-      name: "CollectLpFeesArgs";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "targetK";
-            type: "u128";
-          },
-        ];
-      };
-    },
-    {
       name: "ConditionalSwapParams";
       type: {
         kind: "struct";
@@ -1687,96 +1723,6 @@ export type Futarchy = {
       };
     },
     {
-      name: "OldDao";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "amm";
-            type: {
-              defined: "FutarchyAmm";
-            };
-          },
-          {
-            name: "nonce";
-            type: "u64";
-          },
-          {
-            name: "daoCreator";
-            type: "publicKey";
-          },
-          {
-            name: "pdaBump";
-            type: "u8";
-          },
-          {
-            name: "squadsMultisig";
-            type: "publicKey";
-          },
-          {
-            name: "squadsMultisigVault";
-            type: "publicKey";
-          },
-          {
-            name: "baseMint";
-            type: "publicKey";
-          },
-          {
-            name: "quoteMint";
-            type: "publicKey";
-          },
-          {
-            name: "proposalCount";
-            type: "u32";
-          },
-          {
-            name: "passThresholdBps";
-            type: "u16";
-          },
-          {
-            name: "secondsPerProposal";
-            type: "u32";
-          },
-          {
-            name: "twapInitialObservation";
-            type: "u128";
-          },
-          {
-            name: "twapMaxObservationChangePerUpdate";
-            type: "u128";
-          },
-          {
-            name: "twapStartDelaySeconds";
-            type: "u32";
-          },
-          {
-            name: "minQuoteFutarchicLiquidity";
-            type: "u64";
-          },
-          {
-            name: "minBaseFutarchicLiquidity";
-            type: "u64";
-          },
-          {
-            name: "baseToStake";
-            type: "u64";
-          },
-          {
-            name: "seqNum";
-            type: "u64";
-          },
-          {
-            name: "initialSpendingLimit";
-            type: {
-              option: {
-                defined: "InitialSpendingLimit";
-              };
-            };
-          },
-        ];
-      };
-    },
-    {
       name: "FutarchyAmm";
       type: {
         kind: "struct";
@@ -1908,76 +1854,6 @@ export type Futarchy = {
           {
             name: "baseProtocolFeeBalance";
             type: "u64";
-          },
-        ];
-      };
-    },
-    {
-      name: "OldProposal";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "number";
-            type: "u32";
-          },
-          {
-            name: "proposer";
-            type: "publicKey";
-          },
-          {
-            name: "timestampEnqueued";
-            type: "i64";
-          },
-          {
-            name: "state";
-            type: {
-              defined: "ProposalState";
-            };
-          },
-          {
-            name: "baseVault";
-            type: "publicKey";
-          },
-          {
-            name: "quoteVault";
-            type: "publicKey";
-          },
-          {
-            name: "dao";
-            type: "publicKey";
-          },
-          {
-            name: "pdaBump";
-            type: "u8";
-          },
-          {
-            name: "question";
-            type: "publicKey";
-          },
-          {
-            name: "durationInSeconds";
-            type: "u32";
-          },
-          {
-            name: "squadsProposal";
-            type: "publicKey";
-          },
-          {
-            name: "passBaseMint";
-            type: "publicKey";
-          },
-          {
-            name: "passQuoteMint";
-            type: "publicKey";
-          },
-          {
-            name: "failBaseMint";
-            type: "publicKey";
-          },
-          {
-            name: "failQuoteMint";
-            type: "publicKey";
           },
         ];
       };
@@ -2814,6 +2690,58 @@ export type Futarchy = {
         },
       ];
     },
+    {
+      name: "CollectMeteoraDammFeesEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "pool";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "baseTokenAccount";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "quoteTokenAccount";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "quoteMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "baseMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "quoteFeesCollected";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "baseFeesCollected";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -2990,6 +2918,11 @@ export type Futarchy = {
       code: 6034;
       name: "InvalidTargetK";
       msg: "Target K must be greater than the current K";
+    },
+    {
+      code: 6035;
+      name: "InvalidTransactionMessage";
+      msg: "Failed to compile transaction message for Squads vault transaction";
     },
   ];
 };
@@ -3942,64 +3875,6 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
-      name: "collectLpFees",
-      accounts: [
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "baseTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "quoteTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "CollectLpFeesArgs",
-          },
-        },
-      ],
-    },
-    {
       name: "executeSpendingLimitChange",
       accounts: [
         {
@@ -4077,7 +3952,7 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
-      name: "resizeDao",
+      name: "collectMeteoraDammFees",
       accounts: [
         {
           name: "dao",
@@ -4085,33 +3960,139 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
-          name: "payer",
+          name: "admin",
           isMut: true,
           isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVaultTransaction",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigPermissionlessAccount",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "meteoraClaimPositionFeesAccounts",
+          accounts: [
+            {
+              name: "dammV2Program",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "dammV2EventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "poolAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "pool",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "position",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenAAccount",
+              isMut: true,
+              isSigner: false,
+              docs: ["Token account of base tokens recipient"],
+            },
+            {
+              name: "tokenBAccount",
+              isMut: true,
+              isSigner: false,
+              docs: ["Token account of quote tokens recipient"],
+            },
+            {
+              name: "tokenAVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenBVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenAMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenBMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "positionNftAccount",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "owner",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenAProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenBProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
         },
         {
           name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
-      ],
-      args: [],
-    },
-    {
-      name: "resizeProposal",
-      accounts: [
         {
-          name: "proposal",
-          isMut: true,
+          name: "tokenProgram",
+          isMut: false,
           isSigner: false,
         },
         {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
         },
         {
-          name: "systemProgram",
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -4397,18 +4378,6 @@ export const IDL: Futarchy = {
       },
     },
     {
-      name: "CollectLpFeesArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "targetK",
-            type: "u128",
-          },
-        ],
-      },
-    },
-    {
       name: "ConditionalSwapParams",
       type: {
         kind: "struct",
@@ -4683,96 +4652,6 @@ export const IDL: Futarchy = {
       },
     },
     {
-      name: "OldDao",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "amm",
-            type: {
-              defined: "FutarchyAmm",
-            },
-          },
-          {
-            name: "nonce",
-            type: "u64",
-          },
-          {
-            name: "daoCreator",
-            type: "publicKey",
-          },
-          {
-            name: "pdaBump",
-            type: "u8",
-          },
-          {
-            name: "squadsMultisig",
-            type: "publicKey",
-          },
-          {
-            name: "squadsMultisigVault",
-            type: "publicKey",
-          },
-          {
-            name: "baseMint",
-            type: "publicKey",
-          },
-          {
-            name: "quoteMint",
-            type: "publicKey",
-          },
-          {
-            name: "proposalCount",
-            type: "u32",
-          },
-          {
-            name: "passThresholdBps",
-            type: "u16",
-          },
-          {
-            name: "secondsPerProposal",
-            type: "u32",
-          },
-          {
-            name: "twapInitialObservation",
-            type: "u128",
-          },
-          {
-            name: "twapMaxObservationChangePerUpdate",
-            type: "u128",
-          },
-          {
-            name: "twapStartDelaySeconds",
-            type: "u32",
-          },
-          {
-            name: "minQuoteFutarchicLiquidity",
-            type: "u64",
-          },
-          {
-            name: "minBaseFutarchicLiquidity",
-            type: "u64",
-          },
-          {
-            name: "baseToStake",
-            type: "u64",
-          },
-          {
-            name: "seqNum",
-            type: "u64",
-          },
-          {
-            name: "initialSpendingLimit",
-            type: {
-              option: {
-                defined: "InitialSpendingLimit",
-              },
-            },
-          },
-        ],
-      },
-    },
-    {
       name: "FutarchyAmm",
       type: {
         kind: "struct",
@@ -4904,76 +4783,6 @@ export const IDL: Futarchy = {
           {
             name: "baseProtocolFeeBalance",
             type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "OldProposal",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "number",
-            type: "u32",
-          },
-          {
-            name: "proposer",
-            type: "publicKey",
-          },
-          {
-            name: "timestampEnqueued",
-            type: "i64",
-          },
-          {
-            name: "state",
-            type: {
-              defined: "ProposalState",
-            },
-          },
-          {
-            name: "baseVault",
-            type: "publicKey",
-          },
-          {
-            name: "quoteVault",
-            type: "publicKey",
-          },
-          {
-            name: "dao",
-            type: "publicKey",
-          },
-          {
-            name: "pdaBump",
-            type: "u8",
-          },
-          {
-            name: "question",
-            type: "publicKey",
-          },
-          {
-            name: "durationInSeconds",
-            type: "u32",
-          },
-          {
-            name: "squadsProposal",
-            type: "publicKey",
-          },
-          {
-            name: "passBaseMint",
-            type: "publicKey",
-          },
-          {
-            name: "passQuoteMint",
-            type: "publicKey",
-          },
-          {
-            name: "failBaseMint",
-            type: "publicKey",
-          },
-          {
-            name: "failQuoteMint",
-            type: "publicKey",
           },
         ],
       },
@@ -5810,6 +5619,58 @@ export const IDL: Futarchy = {
         },
       ],
     },
+    {
+      name: "CollectMeteoraDammFeesEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "pool",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "baseTokenAccount",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "quoteTokenAccount",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "quoteMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "baseMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "quoteFeesCollected",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "baseFeesCollected",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -5986,6 +5847,11 @@ export const IDL: Futarchy = {
       code: 6034,
       name: "InvalidTargetK",
       msg: "Target K must be greater than the current K",
+    },
+    {
+      code: 6035,
+      name: "InvalidTransactionMessage",
+      msg: "Failed to compile transaction message for Squads vault transaction",
     },
   ],
 };
