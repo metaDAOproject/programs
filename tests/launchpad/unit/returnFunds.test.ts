@@ -1,9 +1,4 @@
-import {
-  Keypair,
-  PublicKey,
-  TransactionMessage,
-  VersionedTransaction,
-} from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   FutarchyClient,
@@ -12,9 +7,11 @@ import {
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.6";
 import { BN } from "bn.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
-import { createLookupTableForTransaction } from "../../utils.js";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -84,7 +81,7 @@ export default function suite() {
       true,
     );
 
-    // Transfer wrongly sent USDC to the launch signer
+    // Transfer some USDC to the launch signer, thus simulating wrongful sending of funds
     await this.transfer(
       MAINNET_USDC,
       this.payer,
@@ -102,6 +99,14 @@ export default function suite() {
         launchSigner,
         admin: this.payer.publicKey, // This should be the multisig vault, but without the `production` flag, it can be anyone
       })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey, // When executing through the multisig vault, the payer should be the multisig vault
+          recipientQuoteAccount,
+          this.payer.publicKey,
+          MAINNET_USDC,
+        ),
+      ])
       .rpc();
 
     const finalUsdcBalance = await this.getTokenBalance(
