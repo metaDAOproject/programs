@@ -7,12 +7,10 @@ const payer = provider.wallet["payer"];
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
+const launch = new PublicKey("111111111111111111111111111111111");
+
 export const closeLaunch = async () => {
-  const mintKp = new PublicKey("PRVT6TB7uss3FrUd2D9xs2zqDBsa3GbMJMwCQsgmeta");
-
-  const [launch] = getLaunchAddr(undefined, mintKp);
-
-  console.log(`Closing launch at address: ${launch.toString()}`);
+  console.log(`Closing launch at address: ${launch.toBase58()}`);
 
   await launchpad.closeLaunchIx({ launch }).rpc();
 

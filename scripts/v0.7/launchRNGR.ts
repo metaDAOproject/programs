@@ -13,32 +13,38 @@ const payer = provider.wallet["payer"];
 
 const LAUNCH_AUTHORITY = payer.publicKey;
 
-const TEAM_ADDRESS = new PublicKey("111111111111111111111111111111111");
+const TEAM_ADDRESS = new PublicKey(
+  "CHQXGzhweUQ4wrWCta6koL4iQGZNdWQuJmGHxHpRzjBq",
+); // Ranger team address
 
 // Launch details
-const MIN_GOAL = 10;
+const MIN_GOAL = 6_000_000; // 6M USDC
 
-const SPENDING_MEMBERS = [TEAM_ADDRESS];
-const SPENDING_LIMIT = 1;
+const SPENDING_MEMBERS = [
+  new PublicKey("BXDKN7Bb9s5TPUJksT1HfGgDpYvEGnPwagostU79hAM5"),
+  new PublicKey("5aaFjteWwEeDPZ69j8BmqsGS1KviqzG4V8CMedCkbkhe"),
+];
+const SPENDING_LIMIT = 250_000; // 250k USDC
 
 const PERFORMANCE_PACKAGE_GRANTEE = TEAM_ADDRESS;
-const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 7_600_000;
-const PERFORMANCE_PACKAGE_UNLOCK_MONTHS = 18;
+const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 7_600_000; // 7.6M RNGR
+const PERFORMANCE_PACKAGE_UNLOCK_MONTHS = 18; // 18 months
 
-// Additional carveout details - leave undefined if not used
-const ADDITIONAL_CARVEOUT: number | undefined = undefined;
-const ADDITIONAL_CARVEOUT_RECIPIENT: PublicKey | undefined = undefined;
+// Additional carveout details
+const ADDITIONAL_CARVEOUT = 5_125_000; // 5.125M RNGR
+const ADDITIONAL_CARVEOUT_RECIPIENT = new PublicKey(
+  "6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf",
+); // MetaDAO operational multisig vault
 
-const TOKEN_SEED = "YacrMS3w7lcgi44d";
-const TOKEN_NAME = "Test";
-const TOKEN_SYMBOL = "TEST";
+const TOKEN_SEED = "S6Bc84f7fzY6eviV";
+const TOKEN_NAME = "Ranger";
+const TOKEN_SYMBOL = "RNGR";
 const TOKEN_URI =
-  "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/LOYAL/LOYAL.json";
+  "https://raw.githubusercontent.com/metaDAOproject/programs/refs/heads/develop/scripts/assets/RNGR/RNGR.json";
 
 const secondsPerDay = 86_400;
 const numberOfDays = 4;
-// const launchDurationSeconds = secondsPerDay * numberOfDays;
-const launchDurationSeconds = 3600;
+const launchDurationSeconds = secondsPerDay * numberOfDays; // 4 days
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
@@ -78,7 +84,7 @@ export const launch = async () => {
   const txHash = await provider.connection.sendRawTransaction(tx.serialize());
   await provider.connection.confirmTransaction(txHash, "confirmed");
 
-  const initializeLaunchTxSignature = await launchpad
+  const launchIx = await launchpad
     .initializeLaunchIx({
       tokenName: TOKEN_NAME,
       tokenSymbol: TOKEN_SYMBOL,
@@ -102,9 +108,7 @@ export const launch = async () => {
     })
     .rpc();
 
-  console.log("Launch initialized", initializeLaunchTxSignature);
-
-  console.log("Launch address:", launch.toBase58());
+  console.log("Launch initialized", launchIx);
   // await launchpad.startLaunchIx({ launch }).rpc();
 };
 
