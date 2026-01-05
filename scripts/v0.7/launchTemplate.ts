@@ -13,31 +13,32 @@ const payer = provider.wallet["payer"];
 
 const LAUNCH_AUTHORITY = payer.publicKey;
 
-const TEAM_ADDRESS = PublicKey.default;
+const TEAM_ADDRESS = new PublicKey("111111111111111111111111111111111");
 
 // Launch details
-const MIN_GOAL = 500_000;
+const MIN_GOAL = 10;
 
 const SPENDING_MEMBERS = [TEAM_ADDRESS];
-const SPENDING_LIMIT = 60_000;
+const SPENDING_LIMIT = 1;
 
 const PERFORMANCE_PACKAGE_GRANTEE = TEAM_ADDRESS;
-const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 8_076_923;
+const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 7_600_000;
 const PERFORMANCE_PACKAGE_UNLOCK_MONTHS = 18;
 
 // Additional carveout details - leave undefined if not used
-const ADDITIONAL_CARVEOUT = undefined;
-const ADDITIONAL_CARVEOUT_RECIPIENT = undefined;
+const ADDITIONAL_CARVEOUT: number | undefined = undefined;
+const ADDITIONAL_CARVEOUT_RECIPIENT: PublicKey | undefined = undefined;
 
-const TOKEN_SEED = "YacrMS3w7lcgi44t";
-const TOKEN_NAME = "Loyal";
-const TOKEN_SYMBOL = "LOYAL";
+const TOKEN_SEED = "YacrMS3w7lcgi44d";
+const TOKEN_NAME = "Test";
+const TOKEN_SYMBOL = "TEST";
 const TOKEN_URI =
   "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/LOYAL/LOYAL.json";
 
 const secondsPerDay = 86_400;
 const numberOfDays = 4;
-const launchDurationSeconds = secondsPerDay * numberOfDays;
+// const launchDurationSeconds = secondsPerDay * numberOfDays;
+const launchDurationSeconds = 3600;
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 

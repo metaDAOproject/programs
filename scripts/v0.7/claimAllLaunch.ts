@@ -13,9 +13,7 @@ dotenv.config();
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const launchAddr = new PublicKey(
-  "FvQCwxmELEr7Dis8eQsij1F53wxgMohSiEZ9jMLMCapm",
-);
+const launchAddr = new PublicKey("111111111111111111111111111111111");
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
@@ -67,8 +65,6 @@ async function main() {
       }
     }
 
-    await sendAndConfirmTransaction(tx, `Claim batch ${i / batchSize + 1}`);
-
     for (const record of batch) {
       if (!record.account.isUsdcRefunded) {
         const refundIx = await launchpad
@@ -83,7 +79,10 @@ async function main() {
       }
     }
 
-    await sendAndConfirmTransaction(tx, `Refund batch ${i / batchSize + 1}`);
+    await sendAndConfirmTransaction(
+      tx,
+      `Claim and refund batch ${i / batchSize + 1}`,
+    );
   }
 
   console.log("All claims processed successfully!");

@@ -3,7 +3,7 @@ import { LaunchpadClient } from "@metadaoproject/futarchy/v0.7";
 import { PublicKey } from "@solana/web3.js";
 
 const LAUNCH_TO_COMPLETE: PublicKey | undefined = new PublicKey(
-  "FvQCwxmELEr7Dis8eQsij1F53wxgMohSiEZ9jMLMCapm",
+  "111111111111111111111111111111111",
 );
 
 const provider = anchor.AnchorProvider.env();

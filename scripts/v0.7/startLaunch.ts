@@ -9,9 +9,7 @@ dotenv.config();
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const LAUNCH_TO_START = new PublicKey(
-  "FvQCwxmELEr7Dis8eQsij1F53wxgMohSiEZ9jMLMCapm",
-);
+const LAUNCH_TO_START = new PublicKey("111111111111111111111111111111111");
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
