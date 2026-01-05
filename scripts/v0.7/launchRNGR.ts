@@ -40,7 +40,7 @@ const TOKEN_SEED = "S6Bc84f7fzY6eviV";
 const TOKEN_NAME = "Ranger";
 const TOKEN_SYMBOL = "RNGR";
 const TOKEN_URI =
-  "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/RNGR/RNGR.json";
+  "https://raw.githubusercontent.com/metaDAOproject/programs/refs/heads/develop/scripts/assets/RNGR/RNGR.json";
 
 const secondsPerDay = 86_400;
 const numberOfDays = 4;
