@@ -1,10 +1,16 @@
 use super::*;
 
-pub mod admin {
+pub mod metadao_multisig_vault {
     use anchor_lang::prelude::declare_id;
 
-    // MetaDAO multisig
+    // MetaDAO multisig - hardcoded fee destination
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+}
+
+pub mod metadao_admin {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
 }
 
 #[derive(Accounts)]
@@ -13,9 +19,9 @@ pub struct CollectFees<'info> {
     #[account(mut)]
     pub dao: Account<'info, Dao>,
     pub admin: Signer<'info>,
-    #[account(mut, token::mint = dao.base_mint)]
+    #[account(mut, associated_token::mint = dao.base_mint, associated_token::authority = metadao_multisig_vault::ID)]
     pub base_token_account: Account<'info, TokenAccount>,
-    #[account(mut, token::mint = dao.quote_mint)]
+    #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = metadao_multisig_vault::ID)]
     pub quote_token_account: Account<'info, TokenAccount>,
     #[account(mut, associated_token::mint = dao.base_mint, associated_token::authority = dao)]
     pub amm_base_vault: Account<'info, TokenAccount>,
@@ -27,7 +33,11 @@ pub struct CollectFees<'info> {
 impl CollectFees<'_> {
     pub fn validate(&self) -> Result<()> {
         #[cfg(feature = "production")]
-        require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
+        require_keys_eq!(
+            self.admin.key(),
+            metadao_admin::ID,
+            FutarchyError::InvalidAdmin
+        );
 
         Ok(())
     }
