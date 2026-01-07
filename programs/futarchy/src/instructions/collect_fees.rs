@@ -3,7 +3,7 @@ use super::*;
 pub mod metadao_multisig_vault {
     use anchor_lang::prelude::declare_id;
 
-    // MetaDAO multisig - hardcoded fee destination
+    // MetaDAO operations multisig vault - hardcoded fee destination
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
