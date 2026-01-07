@@ -293,6 +293,10 @@ export default function suite() {
       treasuryUSDCBalance.toString(),
       minRaise.muln(8).divn(10).toString(),
     );
+
+    const daoAccount = await futarchyClient.getDao(launchAccount.dao);
+    assert.equal(daoAccount.passThresholdBps, 300);
+    assert.equal(daoAccount.teamSponsoredPassThresholdBps, -300);
   });
 
   it("fails when launch is in refunding state", async function () {
