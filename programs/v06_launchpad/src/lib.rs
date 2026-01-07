@@ -90,4 +90,9 @@ pub mod launchpad {
     pub fn close_launch(ctx: Context<CloseLaunch>) -> Result<()> {
         CloseLaunch::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn return_funds(ctx: Context<ReturnFunds>, args: ReturnFundsArgs) -> Result<()> {
+        ReturnFunds::handle(ctx, args)
+    }
 }

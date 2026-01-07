@@ -5,6 +5,7 @@ import completeLaunch from "./unit/completeLaunch.test.js";
 import claim from "./unit/claim.test.js";
 import refund from "./unit/refund.test.js";
 import closeLaunch from "./unit/closeLaunch.test.js";
+import returnFunds from "./unit/returnFunds.test.js";
 import { PublicKey } from "@solana/web3.js";
 import {
   LAUNCHPAD_PROGRAM_ID,
@@ -75,4 +76,6 @@ export default function suite() {
   describe("#claim", claim);
   describe("#refund", refund);
   describe("#close_launch", closeLaunch);
+
+  describe("#return_funds", returnFunds);
 }
