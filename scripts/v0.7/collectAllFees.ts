@@ -65,34 +65,33 @@ const collectAllFees = async () => {
       meteoraFees: { success: false },
     };
 
+    // Create ATA addresses and instructions (used by both fee collection methods)
+    const baseAta = getAssociatedTokenAddressSync(
+      dao.account.baseMint,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+    const quoteAta = getAssociatedTokenAddressSync(
+      dao.account.quoteMint,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+
+    const createBaseAtaIx = createAssociatedTokenAccountIdempotentInstruction(
+      payer.publicKey,
+      baseAta,
+      METADAO_MULTISIG_VAULT,
+      dao.account.baseMint,
+    );
+    const createQuoteAtaIx = createAssociatedTokenAccountIdempotentInstruction(
+      payer.publicKey,
+      quoteAta,
+      METADAO_MULTISIG_VAULT,
+      dao.account.quoteMint,
+    );
+
     // Collect internal Futarchy AMM fees
     try {
-      // Create ATAs for destination if needed
-      const baseAta = getAssociatedTokenAddressSync(
-        dao.account.baseMint,
-        METADAO_MULTISIG_VAULT,
-        true,
-      );
-      const quoteAta = getAssociatedTokenAddressSync(
-        dao.account.quoteMint,
-        METADAO_MULTISIG_VAULT,
-        true,
-      );
-
-      const createBaseAtaIx = createAssociatedTokenAccountIdempotentInstruction(
-        payer.publicKey,
-        baseAta,
-        METADAO_MULTISIG_VAULT,
-        dao.account.baseMint,
-      );
-      const createQuoteAtaIx =
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer.publicKey,
-          quoteAta,
-          METADAO_MULTISIG_VAULT,
-          dao.account.quoteMint,
-        );
-
       const signature = await futarchy
         .collectFeesIx({
           dao: dao.publicKey,
@@ -136,6 +135,7 @@ const collectAllFees = async () => {
             BigInt(squadsMultisigAccount.transactionIndex.toString()) + 1n,
           meteoraConfig: MAINNET_METEORA_CONFIG,
         })
+        .preInstructions([createBaseAtaIx, createQuoteAtaIx])
         .rpc();
 
       result.meteoraFees = { success: true, signature };

@@ -8,10 +8,15 @@ import {
   Transaction,
   TransactionMessage,
 } from "@solana/web3.js";
+import {
+  getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountIdempotentInstruction,
+} from "@solana/spl-token";
 import BN from "bn.js";
 import { setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
+import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.6/constants.js";
 const { Permissions, Permission } = multisig.types;
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
@@ -251,6 +256,54 @@ export default function suite() {
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.passed);
 
+    // Create ATAs for METADAO_MULTISIG_VAULT before collecting fees
+    const metaDaoBaseTokenAccount = getAssociatedTokenAddressSync(
+      META,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+    const metaDaoQuoteTokenAccount = getAssociatedTokenAddressSync(
+      USDC,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+
+    const createAtasTx = new Transaction()
+      .add(
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          metaDaoBaseTokenAccount,
+          METADAO_MULTISIG_VAULT,
+          META,
+        ),
+      )
+      .add(
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          metaDaoQuoteTokenAccount,
+          METADAO_MULTISIG_VAULT,
+          USDC,
+        ),
+      );
+
+    createAtasTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    createAtasTx.feePayer = this.payer.publicKey;
+    createAtasTx.sign(this.payer);
+
+    await this.banksClient.processTransaction(createAtasTx);
+
+    // Get pre-balances of METADAO_MULTISIG_VAULT
+    const preBaseBalance = await this.getTokenBalance(
+      META,
+      METADAO_MULTISIG_VAULT,
+    );
+    const preQuoteBalance = await this.getTokenBalance(
+      USDC,
+      METADAO_MULTISIG_VAULT,
+    );
+
     // Collect fees
     await this.futarchy
       .collectFeesIx({
@@ -259,5 +312,21 @@ export default function suite() {
         quoteMint: USDC,
       })
       .rpc();
+
+    // Get post-balances of METADAO_MULTISIG_VAULT
+    const postBaseBalance = await this.getTokenBalance(
+      META,
+      METADAO_MULTISIG_VAULT,
+    );
+    const postQuoteBalance = await this.getTokenBalance(
+      USDC,
+      METADAO_MULTISIG_VAULT,
+    );
+
+    // Verify fees were collected to METADAO_MULTISIG_VAULT
+    assert(
+      postBaseBalance > preBaseBalance || postQuoteBalance > preQuoteBalance,
+      "Fees should have been collected to METADAO_MULTISIG_VAULT",
+    );
   });
 }

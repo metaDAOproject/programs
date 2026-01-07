@@ -966,11 +966,13 @@ export class FutarchyClient {
     quoteMint,
     baseTokenAccount = getAssociatedTokenAddressSync(
       baseMint,
-      this.provider.publicKey,
+      METADAO_MULTISIG_VAULT,
+      true,
     ),
     quoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
-      this.provider.publicKey,
+      METADAO_MULTISIG_VAULT,
+      true,
     ),
   }: {
     dao: PublicKey;
