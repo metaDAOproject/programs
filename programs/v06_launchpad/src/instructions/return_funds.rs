@@ -51,7 +51,11 @@ pub struct ReturnFunds<'info> {
 impl ReturnFunds<'_> {
     pub fn validate(&self) -> Result<()> {
         #[cfg(feature = "production")]
-        require_keys_eq!(self.admin.key(), admin::ID, LaunchpadError::InvalidAdmin);
+        require_keys_eq!(
+            self.admin.key(),
+            admin::ID,
+            crate::error::LaunchpadError::InvalidAdmin
+        );
 
         Ok(())
     }
