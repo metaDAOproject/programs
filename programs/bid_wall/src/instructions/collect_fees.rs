@@ -44,15 +44,11 @@ pub struct CollectFees<'info> {
 impl CollectFees<'_> {
     pub fn validate(&self) -> Result<()> {
         #[cfg(feature = "production")]
-        {
-            use crate::error::BidWallError;
-
-            require_keys_eq!(
-                self.admin.key(),
-                metadao_admin::ID,
-                BidWallError::InvalidAdmin
-            );
-        }
+        require_keys_eq!(
+            self.admin.key(),
+            metadao_admin::ID,
+            crate::error::BidWallError::InvalidAdmin
+        );
 
         Ok(())
     }
