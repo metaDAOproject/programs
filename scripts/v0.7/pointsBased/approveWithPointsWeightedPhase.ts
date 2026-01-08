@@ -45,6 +45,26 @@ async function main() {
     ),
   ) as PointsAllocations;
 
+  let invalidKeysCount = 0;
+
+  console.log(`Checking ${Object.keys(pointsAllocations).length} keys...`);
+
+  for (const key of Object.keys(pointsAllocations)) {
+    try {
+      const pubKey = new PublicKey(key);
+    } catch (error) {
+      console.error(`Invalid public key: ${key}`);
+      invalidKeysCount++;
+    }
+  }
+
+  if (invalidKeysCount > 0) {
+    console.log(`Found ${invalidKeysCount} invalid keys. Exiting...`);
+    return;
+  } else {
+    console.log("All keys are valid. Continuing...");
+  }
+
   console.log(
     `Found ${Object.keys(pointsAllocations).length} points allocations`,
   );
