@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
+#[cfg(feature = "production")]
+use crate::error::BidWallError;
 use crate::{
     events::{BidWallFeesCollectedEvent, CommonFields},
     state::BidWall,
@@ -14,7 +16,7 @@ pub mod metadao_multisig_vault {
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
-pub mod metadao_admin {
+pub mod metadao_cranker {
     use anchor_lang::prelude::declare_id;
 
     declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
@@ -46,8 +48,8 @@ impl CollectFees<'_> {
         #[cfg(feature = "production")]
         require_keys_eq!(
             self.admin.key(),
-            metadao_admin::ID,
-            crate::error::BidWallError::InvalidAdmin
+            metadao_cranker::ID,
+            BidWallError::InvalidAdmin
         );
 
         Ok(())
