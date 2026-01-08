@@ -212,6 +212,9 @@ impl InitializeDao<'_> {
             },
             team_sponsored_pass_threshold_bps,
             team_address,
+            active_optimistic_squads_proposal: None,
+            active_optimistic_squads_proposal_enqueued_timestamp: None,
+            is_optimistic_governance_enabled: false,
         });
 
         dao.invariant()?;

@@ -74,8 +74,7 @@ export const launch = async () => {
     .initializeLaunchIx({
       tokenName: "Solomon",
       tokenSymbol: "SOLO",
-      tokenUri:
-        "https://solomonlabs.org/assets/solo.json",
+      tokenUri: "https://solomonlabs.org/assets/solo.json",
       minimumRaiseAmount: new BN(MIN_GOAL * 10 ** 6),
       baseMint: TOKEN,
       monthlySpendingLimitAmount: new BN(SPENDING_LIMIT * 10 ** 6),

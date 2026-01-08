@@ -12,6 +12,7 @@ pub struct UpdateDaoParams {
     pub base_to_stake: Option<u64>,
     pub team_sponsored_pass_threshold_bps: Option<i16>,
     pub team_address: Option<Pubkey>,
+    pub is_optimistic_governance_enabled: Option<bool>,
 }
 
 #[derive(Accounts)]
@@ -64,6 +65,12 @@ impl UpdateDao<'_> {
                 .team_sponsored_pass_threshold_bps
                 .unwrap_or(dao.team_sponsored_pass_threshold_bps),
             team_address: dao_params.team_address.unwrap_or(dao.team_address),
+            active_optimistic_squads_proposal: dao.active_optimistic_squads_proposal,
+            active_optimistic_squads_proposal_enqueued_timestamp: dao
+                .active_optimistic_squads_proposal_enqueued_timestamp,
+            is_optimistic_governance_enabled: dao_params
+                .is_optimistic_governance_enabled
+                .unwrap_or(dao.is_optimistic_governance_enabled),
         });
 
         dao.seq_num += 1;
@@ -84,6 +91,7 @@ impl UpdateDao<'_> {
             base_to_stake: dao.base_to_stake,
             team_sponsored_pass_threshold_bps: dao.team_sponsored_pass_threshold_bps,
             team_address: dao.team_address,
+            is_optimistic_governance_enabled: dao.is_optimistic_governance_enabled,
         });
 
         Ok(())

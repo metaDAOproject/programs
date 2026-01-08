@@ -69,6 +69,7 @@ pub struct UpdateDaoEvent {
     pub base_to_stake: u64,
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
+    pub is_optimistic_governance_enabled: bool,
 }
 
 #[event]
