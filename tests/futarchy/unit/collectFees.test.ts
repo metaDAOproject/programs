@@ -2,13 +2,19 @@ import {
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
+  Transaction,
   TransactionMessage,
 } from "@solana/web3.js";
+import {
+  getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountIdempotentInstruction,
+} from "@solana/spl-token";
 import { expectError, setupBasicDao } from "../../utils.js";
 import BN from "bn.js";
 import { assert } from "chai";
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.6";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
+import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.6/constants.js";
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
@@ -29,6 +35,46 @@ export default function suite() {
   it("collects fees", async function () {
     // they buy 100 USDC worth, then sell 2 META worth. so we should collect 0.25 USDC and 0.005 META
 
+    // Get the ATA addresses for METADAO_MULTISIG_VAULT
+    const metaDaoBaseTokenAccount = getAssociatedTokenAddressSync(
+      META,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+    const metaDaoQuoteTokenAccount = getAssociatedTokenAddressSync(
+      USDC,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+
+    // Create ATAs for METADAO_MULTISIG_VAULT in a separate transaction first
+    const createAtasTx = new Transaction()
+      .add(
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          metaDaoBaseTokenAccount,
+          METADAO_MULTISIG_VAULT,
+          META,
+        ),
+      )
+      .add(
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          metaDaoQuoteTokenAccount,
+          METADAO_MULTISIG_VAULT,
+          USDC,
+        ),
+      );
+
+    createAtasTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    createAtasTx.feePayer = this.payer.publicKey;
+    createAtasTx.sign(this.payer);
+
+    await this.banksClient.processTransaction(createAtasTx);
+
+    // Do swaps to generate fees
     await this.futarchy
       .spotSwapIx({
         dao,
@@ -51,15 +97,17 @@ export default function suite() {
       })
       .rpc();
 
+    // Get pre-balances
     const preQuoteBalance = await this.getTokenBalance(
       USDC,
-      this.payer.publicKey,
+      METADAO_MULTISIG_VAULT,
     );
     const preBaseBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey,
+      METADAO_MULTISIG_VAULT,
     );
 
+    // Collect fees
     await this.futarchy
       .collectFeesIx({
         dao,
@@ -68,13 +116,14 @@ export default function suite() {
       })
       .rpc();
 
+    // Get post-balances
     const postQuoteBalance = await this.getTokenBalance(
       USDC,
-      this.payer.publicKey,
+      METADAO_MULTISIG_VAULT,
     );
     const postBaseBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey,
+      METADAO_MULTISIG_VAULT,
     );
 
     const quoteFeesCollected = postQuoteBalance - preQuoteBalance;
@@ -85,6 +134,45 @@ export default function suite() {
   });
 
   it("fails when the pool is not in the spot state", async function () {
+    // Get the ATA addresses for METADAO_MULTISIG_VAULT
+    const metaDaoBaseTokenAccount = getAssociatedTokenAddressSync(
+      META,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+    const metaDaoQuoteTokenAccount = getAssociatedTokenAddressSync(
+      USDC,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+
+    // Create ATAs for METADAO_MULTISIG_VAULT in a separate transaction first
+    const createAtasTx = new Transaction()
+      .add(
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          metaDaoBaseTokenAccount,
+          METADAO_MULTISIG_VAULT,
+          META,
+        ),
+      )
+      .add(
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          metaDaoQuoteTokenAccount,
+          METADAO_MULTISIG_VAULT,
+          USDC,
+        ),
+      );
+
+    createAtasTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    createAtasTx.feePayer = this.payer.publicKey;
+    createAtasTx.sign(this.payer);
+
+    await this.banksClient.processTransaction(createAtasTx);
+
     const { proposal, question, baseVault, squadsProposal } =
       await this.initializeAndLaunchProposal({
         dao,
@@ -143,11 +231,11 @@ export default function suite() {
 
     const preQuoteBalance = await this.getTokenBalance(
       USDC,
-      this.payer.publicKey,
+      METADAO_MULTISIG_VAULT,
     );
     const preBaseBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey,
+      METADAO_MULTISIG_VAULT,
     );
 
     await this.futarchy
@@ -163,11 +251,11 @@ export default function suite() {
 
     const postQuoteBalance = await this.getTokenBalance(
       USDC,
-      this.payer.publicKey,
+      METADAO_MULTISIG_VAULT,
     );
     const postBaseBalance = await this.getTokenBalance(
       META,
-      this.payer.publicKey,
+      METADAO_MULTISIG_VAULT,
     );
 
     const quoteFeesCollected = postQuoteBalance - preQuoteBalance;

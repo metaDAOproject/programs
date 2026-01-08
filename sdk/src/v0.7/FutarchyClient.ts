@@ -952,21 +952,23 @@ export class FutarchyClient {
     dao,
     baseMint,
     quoteMint,
-    baseTokenAccount = getAssociatedTokenAddressSync(
-      baseMint,
-      this.provider.publicKey,
-    ),
-    quoteTokenAccount = getAssociatedTokenAddressSync(
-      quoteMint,
-      this.provider.publicKey,
-    ),
   }: {
     dao: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
-    baseTokenAccount?: PublicKey;
-    quoteTokenAccount?: PublicKey;
   }) {
+    // Hardcode destination to MetaDAO multisig vault
+    const baseTokenAccount = getAssociatedTokenAddressSync(
+      baseMint,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+    const quoteTokenAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      METADAO_MULTISIG_VAULT,
+      true,
+    );
+
     return this.autocrat.methods.collectFees().accounts({
       dao,
       admin: this.provider.publicKey,
