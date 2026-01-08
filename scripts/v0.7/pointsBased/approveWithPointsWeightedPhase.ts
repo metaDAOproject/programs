@@ -14,9 +14,10 @@ import fs from "fs";
 import path from "path";
 import BN from "bn.js";
 
-type PointsAllocation = {
-  user: PublicKey;
-  points: number;
+type PointsAllocations = {
+  [key: string]: {
+    points: number;
+  };
 };
 
 dotenv.config();
@@ -29,25 +30,32 @@ const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 const batchSize = 20;
 
 // The launch address
-const launchAddr = new PublicKey("111111111111111111111111111111111");
+const launchAddr = PublicKey.default;
 
 // The final raise amount (USDC, in atoms)
-const finalRaiseAmount = 20_000000;
+const finalRaiseAmount = 2_000_000_000000;
 
 async function main() {
-  const pointsAllocations: PointsAllocation[] = JSON.parse(
+  // Script expects a keyed JSON file like:
+  // { "11111111111111111111111111111111": { "points": 100 }, "22222222222222222222222222222222": { "points": 100 } }
+  const pointsAllocations = JSON.parse(
     fs.readFileSync(
       path.join(process.cwd(), "scripts/v0.7/pointsBased/points.json"),
       "utf8",
     ),
-  ).map((x) => ({
-    user: new PublicKey(x.user),
-    points: x.points,
-  }));
+  ) as PointsAllocations;
 
-  console.log(`Found ${pointsAllocations.length} points allocations`);
+  console.log(
+    `Found ${Object.keys(pointsAllocations).length} points allocations`,
+  );
 
-  if (pointsAllocations.length === 0) {
+  const totalPoints = Object.values(pointsAllocations).reduce(
+    (acc, curr) => acc + curr.points,
+    0,
+  );
+  console.log(`Total points: ${totalPoints}`);
+
+  if (Object.keys(pointsAllocations).length === 0) {
     console.log("No points allocations found");
     return;
   }
@@ -73,10 +81,7 @@ async function main() {
   // Filter funding records to only include those with points owners
   const allFundingRecordsWithPointsOwners = launchFundingRecords.map(
     (record) => {
-      const pointsOwner = pointsAllocations.find(
-        (allocation) =>
-          allocation.user.toString() === record.account.funder.toString(),
-      );
+      const pointsOwner = pointsAllocations[record.account.funder.toString()];
       return {
         ...record,
         pointsOwner,
@@ -160,19 +165,21 @@ async function main() {
     }
   }
 
-  // IMPORTANT - PLEASE READ
-  // Uncomment this if we want the final raise amount to be a bit over the total committed amount
-  // This might be important if we want to ensure that the launch is successful in cases where the final raise amount is exactly equal to the minimum raise amount.
-  // A small dust difference will occur due to rounding which could normally fail the launch, so we need to add 1 atom to all of the records that have an amount to approve that is not equal to the committed amount.
-  for (const record of allFundingRecordsWithPointsOwners) {
-    if (record.amountToApprove.lt(record.account.committedAmount)) {
-      record.amountToApprove = record.amountToApprove.add(new BN(1));
-    }
-  }
+  // // IMPORTANT - PLEASE READ
+  // // Uncomment this if we want the final raise amount to be a bit over the total committed amount
+  // // This might be important if we want to ensure that the launch is successful in cases where the final raise amount is exactly equal to the minimum raise amount.
+  // // A small dust difference will occur due to rounding which could normally fail the launch, so we need to add 1 atom to all of the records that have an amount to approve that is not equal to the committed amount.
+  // for (const record of allFundingRecordsWithPointsOwners) {
+  //   if (record.amountToApprove.lt(record.account.committedAmount)) {
+  //     record.amountToApprove = record.amountToApprove.add(new BN(1));
+  //   }
+  // }
+
+  console.log("funder\tamountCommitted\tamountToApprove");
 
   for (const record of allFundingRecordsWithPointsOwners) {
     console.log(
-      `${record.account.funder.toBase58()}:\t${record.amountToApprove.toString()}`,
+      `${record.account.funder.toBase58()}\t${record.account.committedAmount.toString()}\t${record.amountToApprove.toString()}`,
     );
   }
 
@@ -185,6 +192,9 @@ async function main() {
   console.log(
     `Final amount to approve across all records: ${finalAmountToApprove}`,
   );
+
+  // Remove this to approve the funding records.
+  return;
 
   // Now we approve all records, in batches of BATCH_SIZE per transaction.
 
