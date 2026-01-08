@@ -28,7 +28,7 @@ pub struct CollectFees<'info> {
     #[account(mut)]
     pub bid_wall: Account<'info, BidWall>,
 
-    pub metadao_cranker: Signer<'info>,
+    pub cranker: Signer<'info>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
     pub bid_wall_quote_token_account: Account<'info, TokenAccount>,
@@ -47,7 +47,7 @@ impl CollectFees<'_> {
     pub fn validate(&self) -> Result<()> {
         #[cfg(feature = "production")]
         require_keys_eq!(
-            self.metadao_cranker.key(),
+            self.cranker.key(),
             metadao_cranker::ID,
             BidWallError::InvalidCrankAddress
         );
