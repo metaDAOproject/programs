@@ -82,19 +82,6 @@ impl BurnPerformancePackage<'_> {
             )?;
         }
 
-        token::close_account(CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            token::CloseAccount {
-                account: ctx
-                    .accounts
-                    .performance_package_token_vault
-                    .to_account_info(),
-                destination: ctx.accounts.spill_account.to_account_info(),
-                authority: ctx.accounts.performance_package.to_account_info(),
-            },
-            signer,
-        ))?;
-
         // Performance package account gets closed using close constraint
 
         Ok(())

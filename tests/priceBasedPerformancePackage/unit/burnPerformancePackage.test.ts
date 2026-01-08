@@ -149,14 +149,9 @@ export default function () {
       })
       .rpc();
 
-    // Confirm that the performance package and token vault accounts are closed
+    // Confirm that the performance package account is closed
     performancePackageAccount =
       await this.banksClient.getAccount(performancePackage);
     assert.isNull(performancePackageAccount);
-
-    performancePackageTokenVaultAccount = await this.banksClient.getAccount(
-      performancePackageTokenVault,
-    );
-    assert.isNull(performancePackageTokenVaultAccount);
   });
 }
