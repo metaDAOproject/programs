@@ -217,7 +217,10 @@ async function main() {
     const tx = new Transaction();
 
     // Add compute budget instruction to handle multiple approvals
-    tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }));
+    // Each approval costs ~15,000 compute units, increase to 16,000 to be safe.
+    tx.add(
+      ComputeBudgetProgram.setComputeUnitLimit({ units: batchSize * 16_000 }),
+    );
 
     // Add claim instructions for each record in the batch
     for (const approveIx of batch) {
