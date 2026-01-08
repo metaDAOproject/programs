@@ -7,30 +7,29 @@ import {
 } from "@solana/web3.js";
 import { createLookupTableForTransaction } from "../utils/utils.js";
 
+const LAUNCH_TO_COMPLETE: PublicKey | undefined = new PublicKey(
+  "111111111111111111111111111111111",
+);
+
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
-const BID_WALL_FEE_RECIPIENT: PublicKey | undefined = undefined;
-
 export const completeLaunch = async () => {
-  if (BID_WALL_FEE_RECIPIENT === undefined) {
+  if (LAUNCH_TO_COMPLETE === undefined) {
     throw new Error(
-      "BID_WALL_FEE_RECIPIENT is not set. Please set it in the script.",
+      "LAUNCH_TO_COMPLETE is not set. Please set it in the script.",
     );
   }
 
-  const mintKp = new PublicKey("PRVT6TB7uss3FrUd2D9xs2zqDBsa3GbMJMwCQsgmeta");
-
-  const [launch] = getLaunchAddr(undefined, mintKp);
+  let launchAccount = await launchpad.fetchLaunch(LAUNCH_TO_COMPLETE);
 
   const tx = await launchpad
     .completeLaunchIx({
-      launch,
-      baseMint: mintKp,
+      launch: LAUNCH_TO_COMPLETE,
+      baseMint: launchAccount.baseMint,
       launchAuthority: payer.publicKey,
-      feeRecipient: BID_WALL_FEE_RECIPIENT,
     })
     .transaction();
 
@@ -51,9 +50,7 @@ export const completeLaunch = async () => {
   const vtx = new VersionedTransaction(message);
   vtx.sign([payer]);
 
-  const completeTxHash = await provider.connection.sendTransaction(vtx, {
-    skipPreflight: true,
-  });
+  const completeTxHash = await provider.connection.sendTransaction(vtx);
 
   console.log(`Complete launch transaction sent: ${completeTxHash}`);
 
@@ -61,10 +58,13 @@ export const completeLaunch = async () => {
 
   console.log("Setting up performance package...");
 
+  // Refresh launch account to get the updated base mint
+  launchAccount = await launchpad.fetchLaunch(LAUNCH_TO_COMPLETE);
+
   const initializePerformancePackageTxHash = await launchpad
     .initializePerformancePackageIx({
-      launch,
-      baseMint: mintKp,
+      launch: LAUNCH_TO_COMPLETE,
+      baseMint: launchAccount.baseMint,
       payer: payer.publicKey,
     })
     .rpc();

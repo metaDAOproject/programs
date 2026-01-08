@@ -93,7 +93,8 @@ runs:
           --library-name ${{ inputs.program }} \
           -k ./deploy-keypair.json \
           $ARGS \
-          ${{ inputs.repo-url }}
+          ${{ inputs.repo-url }} \
+          -- --features production
 
     - name: Export PDA Transaction
       id: export-pda
@@ -110,7 +111,8 @@ runs:
           --uploader ${{ inputs.vault-address }} \
           --commit-hash ${{ inputs.commit-hash }} \
           --url ${{ inputs.rpc-url }} \
-          --encoding base64 | tail -n 1)
+          --encoding base64 \
+          -- --features production | tail -n 1)
 
         # Verify we got a base64 string
         if [[ ! "$TX" =~ ^[A-Za-z0-9+/=]*$ ]]; then

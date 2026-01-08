@@ -425,7 +425,7 @@ impl CompleteLaunch<'_> {
                 // We're providing liquidity, so that can be used for proposals
                 min_quote_futarchic_liquidity: 0,
                 min_base_futarchic_liquidity: 0,
-                pass_threshold_bps: 150,
+                pass_threshold_bps: 300,
                 base_to_stake: TOKENS_TO_PARTICIPANTS / 20,
                 seconds_per_proposal: 3 * 24 * 60 * 60,
                 twap_start_delay_seconds: 24 * 60 * 60,
@@ -434,7 +434,7 @@ impl CompleteLaunch<'_> {
                     amount_per_month: self.launch.monthly_spending_limit_amount,
                     members: self.launch.monthly_spending_limit_members.clone(),
                 }),
-                team_sponsored_pass_threshold_bps: -500,
+                team_sponsored_pass_threshold_bps: -300,
                 team_address: self.launch.team_address,
             },
         )

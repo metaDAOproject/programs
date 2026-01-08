@@ -579,6 +579,69 @@ export type Launchpad = {
       ];
       args: [];
     },
+    {
+      name: "returnFunds";
+      accounts: [
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "recipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "recipientQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "ReturnFundsArgs";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -873,6 +936,18 @@ export type Launchpad = {
           {
             name: "teamAddress";
             type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "ReturnFundsArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
+            type: "u64";
           },
         ];
       };
@@ -1203,6 +1278,33 @@ export type Launchpad = {
         },
       ];
     },
+    {
+      name: "LaunchFundsReturnedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "recipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "usdcReturned";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -1314,6 +1416,11 @@ export type Launchpad = {
       code: 6021;
       name: "InvalidMinimumRaiseAmount";
       msg: "Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch";
+    },
+    {
+      code: 6022;
+      name: "InvalidAdmin";
+      msg: "Invalid admin";
     },
   ];
 };
@@ -1899,6 +2006,69 @@ export const IDL: Launchpad = {
       ],
       args: [],
     },
+    {
+      name: "returnFunds",
+      accounts: [
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "recipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "recipientQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "ReturnFundsArgs",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -2193,6 +2363,18 @@ export const IDL: Launchpad = {
           {
             name: "teamAddress",
             type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "ReturnFundsArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
+            type: "u64",
           },
         ],
       },
@@ -2523,6 +2705,33 @@ export const IDL: Launchpad = {
         },
       ],
     },
+    {
+      name: "LaunchFundsReturnedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "recipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "usdcReturned",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -2634,6 +2843,11 @@ export const IDL: Launchpad = {
       code: 6021,
       name: "InvalidMinimumRaiseAmount",
       msg: "Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch",
+    },
+    {
+      code: 6022,
+      name: "InvalidAdmin",
+      msg: "Invalid admin",
     },
   ],
 };

@@ -225,6 +225,13 @@ export default function suite() {
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.passed);
 
+    // Create ATAs for the metadao multisig vault (hardcoded fee destination)
+    const METADAO_MULTISIG = new PublicKey(
+      "6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf",
+    );
+    await this.createTokenAccount(META, METADAO_MULTISIG);
+    await this.createTokenAccount(USDC, METADAO_MULTISIG);
+
     await this.futarchy
       .collectFeesIx({
         dao,

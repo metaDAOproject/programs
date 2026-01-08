@@ -13,9 +13,7 @@ dotenv.config();
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
-const launchAddr = new PublicKey(
-  "9kx7UDFzFt7e2V4pFtawnupKKvRR3EhV7P1Pxmc5XCQj",
-);
+const launchAddr = new PublicKey("111111111111111111111111111111111");
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
@@ -54,32 +52,37 @@ async function main() {
     const tx = new Transaction();
 
     // Add compute budget instruction to handle multiple claims
-    tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }));
+    // tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }));
 
     // Add claim instructions for each record in the batch
     for (const record of batch) {
-      const claimIx = await launchpad
-        .claimIx(launchAddr, launch.baseMint, record.account.funder)
-        .transaction();
+      if (!record.account.isTokensClaimed) {
+        const claimIx = await launchpad
+          .claimIx(launchAddr, launch.baseMint, record.account.funder)
+          .transaction();
 
-      tx.add(claimIx);
+        tx.add(claimIx);
+      }
     }
-
-    await sendAndConfirmTransaction(tx, `Claim batch ${i / batchSize + 1}`);
 
     for (const record of batch) {
-      const refundIx = await launchpad
-        .refundIx({
-          launch: launchAddr,
-          funder: record.account.funder,
-          quoteMint: launch.baseMint,
-        })
-        .transaction();
+      if (!record.account.isUsdcRefunded) {
+        const refundIx = await launchpad
+          .refundIx({
+            launch: launchAddr,
+            funder: record.account.funder,
+            quoteMint: launch.quoteMint,
+          })
+          .transaction();
 
-      tx.add(refundIx);
+        tx.add(refundIx);
+      }
     }
 
-    await sendAndConfirmTransaction(tx, `Refund batch ${i / batchSize + 1}`);
+    await sendAndConfirmTransaction(
+      tx,
+      `Claim and refund batch ${i / batchSize + 1}`,
+    );
   }
 
   console.log("All claims processed successfully!");

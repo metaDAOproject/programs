@@ -3,53 +3,45 @@ import {
   LaunchpadClient,
   getLaunchAddr,
   getLaunchSignerAddr,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/futarchy/v0.6";
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";
 
-const provider = anchor.AnchorProvider.env();
-const payer = provider.wallet["payer"];
+// DAO DETAILS
+const SPENDING_MEMBERS = [
+  new PublicKey("5wXBWMea5KWQHUjtcK5Np5zubMqYuicCLnvFZYbYt2ik"), // SOLO 1
+  new PublicKey("BCNsaGbVu4KdwWu2uS59628Un8uFWv9KG15JFkqYQtLT"), // SOLO 2
+  new PublicKey("CNbdt6wVxpRdDJ5Tu179wVMEyoLeokdMchBgx5Lkat22"), // SOLO 3
+];
+const PERFORMANCE_PACKAGE_GRANTEE = new PublicKey(
+  "9LuV5LrXJjpzb7rxhYwBwnraq9XEYcxA1mkuWTqUy2or",
+);
+const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 12_900_000;
+const PERFORMANCE_PACKAGE_UNLOCK_TIME = 18;
 
-const LAUNCH_AUTHORITY = payer.publicKey;
+const SPENDING_LIMIT = 100_000;
+const MIN_GOAL = 2_000_000;
 
-const TEAM_ADDRESS = new PublicKey("111111111111111111111111111111111");
-
-// Launch details
-const MIN_GOAL = 10;
-
-const SPENDING_MEMBERS = [TEAM_ADDRESS];
-const SPENDING_LIMIT = 1;
-
-const PERFORMANCE_PACKAGE_GRANTEE = TEAM_ADDRESS;
-const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 7_600_000;
-const PERFORMANCE_PACKAGE_UNLOCK_MONTHS = 18;
-
-// Additional carveout details - leave undefined if not used
-const ADDITIONAL_CARVEOUT: number | undefined = undefined;
-const ADDITIONAL_CARVEOUT_RECIPIENT: PublicKey | undefined = undefined;
-
-const TOKEN_SEED = "YacrMS3w7lcgi44d";
-const TOKEN_NAME = "Test";
-const TOKEN_SYMBOL = "TEST";
-const TOKEN_URI =
-  "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/LOYAL/LOYAL.json";
+const TOKEN_SEED = "QOOD2FDAocrPF1ms";
 
 const secondsPerDay = 86_400;
-const numberOfDays = 4;
-// const launchDurationSeconds = secondsPerDay * numberOfDays;
-const launchDurationSeconds = 3600;
+const fourDays = secondsPerDay * 4;
+
+const provider = anchor.AnchorProvider.env();
+const payer = provider.wallet["payer"];
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
 export const launch = async () => {
+  const seed = TOKEN_SEED;
   const lamports = await provider.connection.getMinimumBalanceForRentExemption(
     token.MINT_SIZE,
   );
 
   const TOKEN = await PublicKey.createWithSeed(
     payer.publicKey,
-    TOKEN_SEED,
+    seed,
     token.TOKEN_PROGRAM_ID,
   );
   console.log("Token address:", TOKEN.toBase58());
@@ -62,7 +54,7 @@ export const launch = async () => {
       fromPubkey: payer.publicKey,
       newAccountPubkey: TOKEN,
       basePubkey: payer.publicKey,
-      seed: TOKEN_SEED,
+      seed,
       lamports: lamports,
       space: token.MINT_SIZE,
       programId: token.TOKEN_PROGRAM_ID,
@@ -78,11 +70,12 @@ export const launch = async () => {
   const txHash = await provider.connection.sendRawTransaction(tx.serialize());
   await provider.connection.confirmTransaction(txHash, "confirmed");
 
-  const initializeLaunchTxSignature = await launchpad
+  const launchIx = await launchpad
     .initializeLaunchIx({
-      tokenName: TOKEN_NAME,
-      tokenSymbol: TOKEN_SYMBOL,
-      tokenUri: TOKEN_URI,
+      tokenName: "Solomon",
+      tokenSymbol: "SOLO",
+      tokenUri:
+        "https://solomonlabs.org/assets/solo.json",
       minimumRaiseAmount: new BN(MIN_GOAL * 10 ** 6),
       baseMint: TOKEN,
       monthlySpendingLimitAmount: new BN(SPENDING_LIMIT * 10 ** 6),
@@ -91,20 +84,12 @@ export const launch = async () => {
       performancePackageTokenAmount: new BN(
         PERFORMANCE_PACKAGE_TOKEN_AMOUNT * 10 ** 6,
       ),
-      monthsUntilInsidersCanUnlock: PERFORMANCE_PACKAGE_UNLOCK_MONTHS,
-      secondsForLaunch: launchDurationSeconds,
-      teamAddress: TEAM_ADDRESS,
-      additionalTokensAmount: ADDITIONAL_CARVEOUT
-        ? new BN(ADDITIONAL_CARVEOUT * 10 ** 6)
-        : undefined,
-      additionalTokensRecipient: ADDITIONAL_CARVEOUT_RECIPIENT,
-      launchAuthority: LAUNCH_AUTHORITY,
+      monthsUntilInsidersCanUnlock: PERFORMANCE_PACKAGE_UNLOCK_TIME,
+      secondsForLaunch: fourDays,
     })
     .rpc();
 
-  console.log("Launch initialized", initializeLaunchTxSignature);
-
-  console.log("Launch address:", launch.toBase58());
+  console.log("Launch initialized - YaaS Baby!", launchIx);
   // await launchpad.startLaunchIx({ launch }).rpc();
 };
 
