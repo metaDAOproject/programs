@@ -14,6 +14,6 @@ pub enum BidWallError {
     BidWallDepleted,
     #[msg("Invalid input amount")]
     InvalidInputAmount,
-    #[msg("Invalid admin")]
-    InvalidAdmin,
+    #[msg("Invalid crank address")]
+    InvalidCrankAddress,
 }
