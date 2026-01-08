@@ -248,13 +248,13 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "bidWallQuoteTokenAccount";
-          isMut: true;
-          isSigner: false;
+          name: "admin";
+          isMut: false;
+          isSigner: true;
         },
         {
-          name: "feeRecipient";
-          isMut: false;
+          name: "bidWallQuoteTokenAccount";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -714,6 +714,11 @@ export type BidWall = {
       name: "InvalidInputAmount";
       msg: "Invalid input amount";
     },
+    {
+      code: 6006;
+      name: "InvalidAdmin";
+      msg: "Invalid admin";
+    },
   ];
 };
 
@@ -967,13 +972,13 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "bidWallQuoteTokenAccount",
-          isMut: true,
-          isSigner: false,
+          name: "admin",
+          isMut: false,
+          isSigner: true,
         },
         {
-          name: "feeRecipient",
-          isMut: false,
+          name: "bidWallQuoteTokenAccount",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1432,6 +1437,11 @@ export const IDL: BidWall = {
       code: 6005,
       name: "InvalidInputAmount",
       msg: "Invalid input amount",
+    },
+    {
+      code: 6006,
+      name: "InvalidAdmin",
+      msg: "Invalid admin",
     },
   ],
 };

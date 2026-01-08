@@ -1,6 +1,10 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
-import { MAINNET_USDC, BID_WALL_PROGRAM_ID } from "../v0.7/constants.js";
+import {
+  MAINNET_USDC,
+  BID_WALL_PROGRAM_ID,
+  METADAO_MULTISIG_VAULT,
+} from "../v0.7/constants.js";
 import { BidWallProgram, BidWallIDL, BidWall } from "../v0.7/types/index.js";
 import BN from "bn.js";
 import {
@@ -170,12 +174,12 @@ export class BidWallClient {
 
   collectFeesIx({
     bidWall,
-    feeRecipient,
+    admin = this.provider.publicKey,
     quoteMint = MAINNET_USDC,
   }: {
     bidWall: PublicKey;
-    feeRecipient: PublicKey;
-    quoteMint: PublicKey;
+    admin?: PublicKey;
+    quoteMint?: PublicKey;
   }) {
     const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
@@ -185,14 +189,14 @@ export class BidWallClient {
 
     const feeRecipientQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
-      feeRecipient,
+      METADAO_MULTISIG_VAULT,
       true,
     );
 
     return this.bidWallProgram.methods.collectFees().accounts({
       bidWall,
+      admin,
       bidWallQuoteTokenAccount,
-      feeRecipient,
       feeRecipientQuoteTokenAccount,
       quoteMint,
       tokenProgram: TOKEN_PROGRAM_ID,
