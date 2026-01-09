@@ -3140,6 +3140,11 @@ export type Futarchy = {
       name: "OptimisticGovernanceDisabled";
       msg: "Optimistic governance is disabled";
     },
+    {
+      code: 6038;
+      name: "ActiveOptimisticProposalAlreadyEnqueued";
+      msg: "An active optimistic proposal is already enqueued";
+    },
   ];
 };
 
@@ -6284,6 +6289,11 @@ export const IDL: Futarchy = {
       code: 6037,
       name: "OptimisticGovernanceDisabled",
       msg: "Optimistic governance is disabled",
+    },
+    {
+      code: 6038,
+      name: "ActiveOptimisticProposalAlreadyEnqueued",
+      msg: "An active optimistic proposal is already enqueued",
     },
   ],
 };

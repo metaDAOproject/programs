@@ -62,15 +62,18 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
             }
         }
 
+        // There should be no active optimistic proposal
+        require!(
+            self.dao.optimistic_proposal.is_none(),
+            FutarchyError::ActiveOptimisticProposalAlreadyEnqueued
+        );
+
         // A minimum of proposal duration must have passed since the last optimistic proposal was enqueued
-        match self
-            .dao
-            .active_optimistic_squads_proposal_enqueued_timestamp
-        {
-            Some(enqueued_timestamp) => {
+        match self.dao.optimistic_proposal {
+            Some(ref optimistic_proposal) => {
                 require_gte!(
                     Clock::get()?.unix_timestamp,
-                    enqueued_timestamp + self.dao.seconds_per_proposal as i64,
+                    optimistic_proposal.enqueued_timestamp + self.dao.seconds_per_proposal as i64,
                     FutarchyError::ProposalDurationTooShort
                 );
             }
@@ -111,6 +114,7 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
             dao_quote_vault_account,
         } = ctx.accounts;
 
+        // Prepare the transfer instruction
         let ix = anchor_spl::token::spl_token::instruction::transfer(
             &token_program.key(),
             &dao_quote_vault_account.key(),
@@ -121,7 +125,8 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
         )?;
 
         // Compile the transaction message in Squads' format
-        let transaction_message = compile_transaction_message(&squads_multisig_vault.key(), &[ix])?;
+        let transaction_message =
+            compile_squads_transaction_message(&squads_multisig_vault.key(), &[ix])?;
 
         let transaction_message_bytes = transaction_message.try_to_vec()?;
 
@@ -160,8 +165,7 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
             CpiContext::new_with_signer(
                 squads_program.to_account_info(),
                 squads_multisig_program::cpi::accounts::ProposalCreate {
-                    // DAO is the config authority - maybe this needs to be the permissionless account instead?
-                    creator: dao.to_account_info(),
+                    creator: squads_multisig_permissionless_account.to_account_info(),
                     multisig: squads_multisig.to_account_info(),
                     rent_payer: proposer.to_account_info(),
                     system_program: system_program.to_account_info(),
@@ -178,8 +182,10 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
         // Update the DAO state
         let clock = Clock::get()?;
 
-        dao.active_optimistic_squads_proposal = Some(squads_proposal.key());
-        dao.active_optimistic_squads_proposal_enqueued_timestamp = Some(clock.unix_timestamp);
+        dao.optimistic_proposal = Some(OptimisticProposal {
+            squads_proposal: squads_proposal.key(),
+            enqueued_timestamp: clock.unix_timestamp,
+        });
         dao.seq_num += 1;
 
         emit_cpi!(InitiateVaultSpendOptimisticProposalEvent {

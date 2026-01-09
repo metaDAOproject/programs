@@ -80,4 +80,8 @@ pub enum FutarchyError {
     InvalidRecipient,
     #[msg("Optimistic governance is disabled")]
     OptimisticGovernanceDisabled,
+    #[msg("An active optimistic proposal is already enqueued")]
+    ActiveOptimisticProposalAlreadyEnqueued,
+    #[msg("No active optimistic proposal")]
+    NoActiveOptimisticProposal,
 }

@@ -65,9 +65,7 @@ impl UpdateDao<'_> {
                 .team_sponsored_pass_threshold_bps
                 .unwrap_or(dao.team_sponsored_pass_threshold_bps),
             team_address: dao_params.team_address.unwrap_or(dao.team_address),
-            active_optimistic_squads_proposal: dao.active_optimistic_squads_proposal,
-            active_optimistic_squads_proposal_enqueued_timestamp: dao
-                .active_optimistic_squads_proposal_enqueued_timestamp,
+            optimistic_proposal: dao.optimistic_proposal.clone(),
             is_optimistic_governance_enabled: dao_params
                 .is_optimistic_governance_enabled
                 .unwrap_or(dao.is_optimistic_governance_enabled),

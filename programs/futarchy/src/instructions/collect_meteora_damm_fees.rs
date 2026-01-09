@@ -230,7 +230,7 @@ impl CollectMeteoraDammFees<'_> {
         // This correctly sets num_writable_signers and num_writable_non_signers
         // instead of the inverted readonly counts from Solana's Message::serialize()
         let transaction_message =
-            compile_transaction_message(&ctx.accounts.squads_multisig_vault.key(), &[ix])?;
+            compile_squads_transaction_message(&ctx.accounts.squads_multisig_vault.key(), &[ix])?;
 
         let transaction_message_bytes = transaction_message.try_to_vec()?;
 

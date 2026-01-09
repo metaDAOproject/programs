@@ -56,12 +56,16 @@ pub struct Dao {
     /// Can be negative to allow for team-sponsored proposals to pass by default.
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
-    /// The squads proposal currently enqueued for execution if not challenged by a new proposal.
-    pub active_optimistic_squads_proposal: Option<Pubkey>,
-    /// The timestamp when the active optimistic squads proposal was enqueued.
-    pub active_optimistic_squads_proposal_enqueued_timestamp: Option<i64>,
-    /// Whether optimistic governance is enabled for this DAO.
+    pub optimistic_proposal: Option<OptimisticProposal>,
     pub is_optimistic_governance_enabled: bool,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
+pub struct OptimisticProposal {
+    /// The squads proposal currently enqueued for execution if not challenged by a new proposal.
+    pub squads_proposal: Pubkey,
+    /// The timestamp when the active optimistic squads proposal was enqueued.
+    pub enqueued_timestamp: i64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]

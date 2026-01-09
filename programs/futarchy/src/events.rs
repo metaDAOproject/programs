@@ -219,3 +219,10 @@ pub struct InitiateVaultSpendOptimisticProposalEvent {
     pub recipient_quote_account: Pubkey,
     pub enqueued_timestamp: i64,
 }
+
+#[event]
+pub struct FinalizeOptimisticProposalEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub squads_proposal: Pubkey,
+}

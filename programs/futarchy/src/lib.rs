@@ -157,4 +157,9 @@ pub mod futarchy {
     ) -> Result<()> {
         InitiateVaultSpendOptimisticProposal::handle(ctx, params)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn finalize_optimistic_proposal(ctx: Context<FinalizeOptimisticProposal>) -> Result<()> {
+        FinalizeOptimisticProposal::handle(ctx)
+    }
 }

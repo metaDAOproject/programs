@@ -8,7 +8,7 @@ use crate::FutarchyError;
 /// This is necessary because Solana's Message::serialize() uses a different header format
 /// (num_readonly_signed_accounts, num_readonly_unsigned_accounts) than Squads expects
 /// (num_writable_signers, num_writable_non_signers).
-pub fn compile_transaction_message(
+pub fn compile_squads_transaction_message(
     vault_key: &Pubkey,
     instructions: &[anchor_lang::solana_program::instruction::Instruction],
 ) -> Result<squads_multisig_program::TransactionMessage> {
