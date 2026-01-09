@@ -10,6 +10,7 @@ pub struct InitiateVaultSpendOptimisticProposalParams {
 pub struct InitiateVaultSpendOptimisticProposal<'info> {
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
+    /// CHECK: The squads multisig vault that executes the transaction
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig_vault: UncheckedAccount<'info>,
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = squads_program)]
@@ -28,6 +29,7 @@ pub struct InitiateVaultSpendOptimisticProposal<'info> {
     #[account(address = permissionless_account::id())]
     pub squads_multisig_permissionless_account: Signer<'info>,
 
+    /// CHECK: Used for constraints
     pub recipient: UncheckedAccount<'info>,
     #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = recipient)]
     pub recipient_quote_account: Account<'info, TokenAccount>,
@@ -92,17 +94,17 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
         let Self {
             squads_multisig,
             squads_multisig_vault,
-            squads_spending_limit,
+            squads_spending_limit: _,
             squads_proposal,
-            squads_vault_transaction: squads_transaction,
+            squads_vault_transaction,
             dao,
             payer: _,
-            system_program: _,
+            system_program,
             event_authority: _,
             program: _,
-            squads_program: _,
+            squads_program,
             proposer,
-            recipient,
+            recipient: _,
             recipient_quote_account,
             squads_multisig_permissionless_account,
             token_program,
@@ -110,44 +112,35 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
         } = ctx.accounts;
 
         let ix = anchor_spl::token::spl_token::instruction::transfer(
-            &ctx.accounts.token_program.key(),
-            &ctx.accounts.dao_quote_vault_account.key(),
-            &ctx.accounts.recipient_quote_account.key(),
-            &ctx.accounts.dao.squads_multisig_vault.key(),
-            &[&ctx.accounts.squads_multisig_vault.key()],
+            &token_program.key(),
+            &dao_quote_vault_account.key(),
+            &recipient_quote_account.key(),
+            &squads_multisig_vault.key(),
+            &[&squads_multisig_vault.key()],
             params.amount,
         )?;
 
         // Compile the transaction message in Squads' format
-        let transaction_message =
-            compile_transaction_message(&ctx.accounts.squads_multisig_vault.key(), &[ix])?;
+        let transaction_message = compile_transaction_message(&squads_multisig_vault.key(), &[ix])?;
 
         let transaction_message_bytes = transaction_message.try_to_vec()?;
 
-        let dao_nonce = &ctx.accounts.dao.nonce.to_le_bytes();
-        let dao_creator_key = ctx.accounts.dao.dao_creator.as_ref();
-        let dao_seeds = &[
-            b"dao".as_ref(),
-            dao_creator_key,
-            dao_nonce,
-            &[ctx.accounts.dao.pda_bump],
-        ];
+        let dao_nonce = &dao.nonce.to_le_bytes();
+        let dao_creator_key = dao.dao_creator.as_ref();
+        let dao_seeds = &[b"dao".as_ref(), dao_creator_key, dao_nonce, &[dao.pda_bump]];
 
         let dao_signer = &[&dao_seeds[..]];
 
         // Create the squads transaction
         squads_multisig_program::cpi::vault_transaction_create(
             CpiContext::new(
-                ctx.accounts.squads_program.to_account_info(),
+                squads_program.to_account_info(),
                 squads_multisig_program::cpi::accounts::VaultTransactionCreate {
-                    creator: ctx
-                        .accounts
-                        .squads_multisig_permissionless_account
-                        .to_account_info(),
-                    multisig: ctx.accounts.squads_multisig.to_account_info(),
-                    rent_payer: ctx.accounts.proposer.to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    transaction: ctx.accounts.squads_vault_transaction.to_account_info(),
+                    creator: squads_multisig_permissionless_account.to_account_info(),
+                    multisig: squads_multisig.to_account_info(),
+                    rent_payer: proposer.to_account_info(),
+                    system_program: system_program.to_account_info(),
+                    transaction: squads_vault_transaction.to_account_info(),
                 },
             ),
             squads_multisig_program::VaultTransactionCreateArgs {
@@ -157,31 +150,51 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
                 memo: None,
             },
         )?;
+
+        // Reload the squads multisig account to get the latest transaction index
+        squads_multisig.reload()?;
+        let transaction_index = squads_multisig.transaction_index;
+
         // Create the squads proposal
+        squads_multisig_program::cpi::proposal_create(
+            CpiContext::new_with_signer(
+                squads_program.to_account_info(),
+                squads_multisig_program::cpi::accounts::ProposalCreate {
+                    // DAO is the config authority - maybe this needs to be the permissionless account instead?
+                    creator: dao.to_account_info(),
+                    multisig: squads_multisig.to_account_info(),
+                    rent_payer: proposer.to_account_info(),
+                    system_program: system_program.to_account_info(),
+                    proposal: squads_proposal.to_account_info(),
+                },
+                dao_signer,
+            ),
+            squads_multisig_program::ProposalCreateArgs {
+                transaction_index,
+                draft: false,
+            },
+        )?;
 
         // Update the DAO state
         let clock = Clock::get()?;
 
-        ctx.accounts.dao.active_optimistic_squads_proposal = Some(squads_proposal.key());
-        ctx.accounts
-            .dao
-            .active_optimistic_squads_proposal_enqueued_timestamp = Some(clock.unix_timestamp);
+        dao.active_optimistic_squads_proposal = Some(squads_proposal.key());
+        dao.active_optimistic_squads_proposal_enqueued_timestamp = Some(clock.unix_timestamp);
+        dao.seq_num += 1;
 
-        // emit_cpi!(InitializeProposalEvent {
-        //     common: CommonFields::new(&clock, dao.seq_num),
-        //     proposal: proposal.key(),
-        //     dao: dao.key(),
-        //     question: question.key(),
-        //     base_vault: base_vault.key(),
-        //     quote_vault: quote_vault.key(),
-        //     proposer: proposer.key(),
-        //     number: dao.proposal_count,
-        //     pda_bump: ctx.bumps.proposal,
-        //     duration_in_seconds: proposal.duration_in_seconds,
-        //     squads_proposal: squads_proposal.key(),
-        //     squads_multisig: dao.squads_multisig,
-        //     squads_multisig_vault: dao.squads_multisig_vault,
-        // });
+        emit_cpi!(InitiateVaultSpendOptimisticProposalEvent {
+            common: CommonFields::new(&clock, dao.seq_num),
+            dao: dao.key(),
+            proposer: proposer.key(),
+            squads_proposal: squads_proposal.key(),
+            squads_multisig: squads_multisig.key(),
+            squads_multisig_vault: squads_multisig_vault.key(),
+            amount: params.amount,
+            recipient: ctx.accounts.recipient.key(),
+            dao_quote_vault_account: dao_quote_vault_account.key(),
+            recipient_quote_account: recipient_quote_account.key(),
+            enqueued_timestamp: clock.unix_timestamp,
+        });
 
         Ok(())
     }

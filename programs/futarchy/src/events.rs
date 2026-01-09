@@ -204,3 +204,18 @@ pub struct CollectMeteoraDammFeesEvent {
     pub quote_fees_collected: u64,
     pub base_fees_collected: u64,
 }
+
+#[event]
+pub struct InitiateVaultSpendOptimisticProposalEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub proposer: Pubkey,
+    pub squads_proposal: Pubkey,
+    pub squads_multisig: Pubkey,
+    pub squads_multisig_vault: Pubkey,
+    pub amount: u64,
+    pub recipient: Pubkey,
+    pub dao_quote_vault_account: Pubkey,
+    pub recipient_quote_account: Pubkey,
+    pub enqueued_timestamp: i64,
+}
