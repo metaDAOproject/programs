@@ -76,4 +76,8 @@ pub enum FutarchyError {
     InvalidTargetK,
     #[msg("Failed to compile transaction message for Squads vault transaction")]
     InvalidTransactionMessage,
+    #[msg("Invalid recipient")]
+    InvalidRecipient,
+    #[msg("Optimistic governance is disabled")]
+    OptimisticGovernanceDisabled,
 }

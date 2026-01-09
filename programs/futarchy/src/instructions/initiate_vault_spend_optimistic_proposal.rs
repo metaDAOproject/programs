@@ -1,0 +1,188 @@
+use super::*;
+
+#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
+pub struct InitiateVaultSpendOptimisticProposalParams {
+    pub amount: u64,
+}
+
+#[derive(Accounts)]
+#[event_cpi]
+pub struct InitiateVaultSpendOptimisticProposal<'info> {
+    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
+    pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
+    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
+    pub squads_multisig_vault: UncheckedAccount<'info>,
+    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = squads_program)]
+    pub squads_spending_limit: Account<'info, squads_multisig_program::SpendingLimit>,
+    // Probably need to use unchecked account, as these are not yet initialized
+    #[account(mut)]
+    pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
+    #[account(mut)]
+    pub squads_vault_transaction: Box<Account<'info, squads_multisig_program::VaultTransaction>>,
+
+    #[account(mut)]
+    pub dao: Box<Account<'info, Dao>>,
+    #[account(mut, address = dao.team_address)]
+    pub proposer: Signer<'info>,
+
+    #[account(address = permissionless_account::id())]
+    pub squads_multisig_permissionless_account: Signer<'info>,
+
+    pub recipient: UncheckedAccount<'info>,
+    #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = recipient)]
+    pub recipient_quote_account: Account<'info, TokenAccount>,
+
+    #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = dao.squads_multisig_vault)]
+    pub dao_quote_vault_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
+    pub token_program: Program<'info, Token>,
+}
+
+impl InitiateVaultSpendOptimisticProposal<'_> {
+    pub fn validate(&self, params: &InitiateVaultSpendOptimisticProposalParams) -> Result<()> {
+        require_keys_eq!(self.squads_proposal.multisig, self.dao.squads_multisig);
+
+        // Optimistic governance must be enabled
+        require!(
+            self.dao.is_optimistic_governance_enabled,
+            FutarchyError::OptimisticGovernanceDisabled
+        );
+
+        // Pool must be in spot state - no active proposals
+        match self.dao.amm.state {
+            PoolState::Spot { spot: _ } => {}
+            _ => {
+                return Err(FutarchyError::PoolNotInSpotState.into());
+            }
+        }
+
+        // A minimum of proposal duration must have passed since the last optimistic proposal was enqueued
+        match self
+            .dao
+            .active_optimistic_squads_proposal_enqueued_timestamp
+        {
+            Some(enqueued_timestamp) => {
+                require_gte!(
+                    Clock::get()?.unix_timestamp,
+                    enqueued_timestamp + self.dao.seconds_per_proposal as i64,
+                    FutarchyError::ProposalDurationTooShort
+                );
+            }
+            None => {}
+        };
+
+        // Amount must be less than or equal to 3 times the spending limit
+        require_gte!(
+            self.squads_spending_limit.amount.checked_mul(3).unwrap(),
+            params.amount,
+            FutarchyError::InvalidAmount
+        );
+
+        Ok(())
+    }
+
+    pub fn handle(
+        ctx: Context<Self>,
+        params: InitiateVaultSpendOptimisticProposalParams,
+    ) -> Result<()> {
+        let Self {
+            squads_multisig,
+            squads_multisig_vault,
+            squads_spending_limit,
+            squads_proposal,
+            squads_vault_transaction: squads_transaction,
+            dao,
+            payer: _,
+            system_program: _,
+            event_authority: _,
+            program: _,
+            squads_program: _,
+            proposer,
+            recipient,
+            recipient_quote_account,
+            squads_multisig_permissionless_account,
+            token_program,
+            dao_quote_vault_account,
+        } = ctx.accounts;
+
+        let ix = anchor_spl::token::spl_token::instruction::transfer(
+            &ctx.accounts.token_program.key(),
+            &ctx.accounts.dao_quote_vault_account.key(),
+            &ctx.accounts.recipient_quote_account.key(),
+            &ctx.accounts.dao.squads_multisig_vault.key(),
+            &[&ctx.accounts.squads_multisig_vault.key()],
+            params.amount,
+        )?;
+
+        // Compile the transaction message in Squads' format
+        let transaction_message =
+            compile_transaction_message(&ctx.accounts.squads_multisig_vault.key(), &[ix])?;
+
+        let transaction_message_bytes = transaction_message.try_to_vec()?;
+
+        let dao_nonce = &ctx.accounts.dao.nonce.to_le_bytes();
+        let dao_creator_key = ctx.accounts.dao.dao_creator.as_ref();
+        let dao_seeds = &[
+            b"dao".as_ref(),
+            dao_creator_key,
+            dao_nonce,
+            &[ctx.accounts.dao.pda_bump],
+        ];
+
+        let dao_signer = &[&dao_seeds[..]];
+
+        // Create the squads transaction
+        squads_multisig_program::cpi::vault_transaction_create(
+            CpiContext::new(
+                ctx.accounts.squads_program.to_account_info(),
+                squads_multisig_program::cpi::accounts::VaultTransactionCreate {
+                    creator: ctx
+                        .accounts
+                        .squads_multisig_permissionless_account
+                        .to_account_info(),
+                    multisig: ctx.accounts.squads_multisig.to_account_info(),
+                    rent_payer: ctx.accounts.proposer.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                    transaction: ctx.accounts.squads_vault_transaction.to_account_info(),
+                },
+            ),
+            squads_multisig_program::VaultTransactionCreateArgs {
+                ephemeral_signers: 0,
+                vault_index: 0,
+                transaction_message: transaction_message_bytes,
+                memo: None,
+            },
+        )?;
+        // Create the squads proposal
+
+        // Update the DAO state
+        let clock = Clock::get()?;
+
+        ctx.accounts.dao.active_optimistic_squads_proposal = Some(squads_proposal.key());
+        ctx.accounts
+            .dao
+            .active_optimistic_squads_proposal_enqueued_timestamp = Some(clock.unix_timestamp);
+
+        // emit_cpi!(InitializeProposalEvent {
+        //     common: CommonFields::new(&clock, dao.seq_num),
+        //     proposal: proposal.key(),
+        //     dao: dao.key(),
+        //     question: question.key(),
+        //     base_vault: base_vault.key(),
+        //     quote_vault: quote_vault.key(),
+        //     proposer: proposer.key(),
+        //     number: dao.proposal_count,
+        //     pda_bump: ctx.bumps.proposal,
+        //     duration_in_seconds: proposal.duration_in_seconds,
+        //     squads_proposal: squads_proposal.key(),
+        //     squads_multisig: dao.squads_multisig,
+        //     squads_multisig_vault: dao.squads_multisig_vault,
+        // });
+
+        Ok(())
+    }
+}

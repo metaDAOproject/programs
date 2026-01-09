@@ -1325,6 +1325,29 @@ export type Futarchy = {
             name: "teamAddress";
             type: "publicKey";
           },
+          {
+            name: "activeOptimisticSquadsProposal";
+            docs: [
+              "The squads proposal currently enqueued for execution if not challenged by a new proposal.",
+            ];
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "activeOptimisticSquadsProposalEnqueuedTimestamp";
+            docs: [
+              "The timestamp when the active optimistic squads proposal was enqueued.",
+            ];
+            type: {
+              option: "i64";
+            };
+          },
+          {
+            name: "isOptimisticGovernanceEnabled";
+            docs: ["Whether optimistic governance is enabled for this DAO."];
+            type: "bool";
+          },
         ];
       };
     },
@@ -1676,6 +1699,12 @@ export type Futarchy = {
             name: "teamAddress";
             type: {
               option: "publicKey";
+            };
+          },
+          {
+            name: "isOptimisticGovernanceEnabled";
+            type: {
+              option: "bool";
             };
           },
         ];
@@ -2196,6 +2225,11 @@ export type Futarchy = {
         {
           name: "teamAddress";
           type: "publicKey";
+          index: false;
+        },
+        {
+          name: "isOptimisticGovernanceEnabled";
+          type: "bool";
           index: false;
         },
       ];
@@ -4254,6 +4288,29 @@ export const IDL: Futarchy = {
             name: "teamAddress",
             type: "publicKey",
           },
+          {
+            name: "activeOptimisticSquadsProposal",
+            docs: [
+              "The squads proposal currently enqueued for execution if not challenged by a new proposal.",
+            ],
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "activeOptimisticSquadsProposalEnqueuedTimestamp",
+            docs: [
+              "The timestamp when the active optimistic squads proposal was enqueued.",
+            ],
+            type: {
+              option: "i64",
+            },
+          },
+          {
+            name: "isOptimisticGovernanceEnabled",
+            docs: ["Whether optimistic governance is enabled for this DAO."],
+            type: "bool",
+          },
         ],
       },
     },
@@ -4605,6 +4662,12 @@ export const IDL: Futarchy = {
             name: "teamAddress",
             type: {
               option: "publicKey",
+            },
+          },
+          {
+            name: "isOptimisticGovernanceEnabled",
+            type: {
+              option: "bool",
             },
           },
         ],
@@ -5125,6 +5188,11 @@ export const IDL: Futarchy = {
         {
           name: "teamAddress",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "isOptimisticGovernanceEnabled",
+          type: "bool",
           index: false,
         },
       ],
