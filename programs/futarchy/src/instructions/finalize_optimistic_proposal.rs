@@ -8,7 +8,7 @@ pub struct FinalizeOptimisticProposal<'info> {
     #[account(mut, address = dao.optimistic_proposal.as_ref().unwrap().squads_proposal)]
     pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
 
-    #[account(mut)]
+    #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
 
     pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,

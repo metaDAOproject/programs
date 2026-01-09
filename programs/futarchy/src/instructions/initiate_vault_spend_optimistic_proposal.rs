@@ -10,35 +10,42 @@ pub struct InitiateVaultSpendOptimisticProposalParams {
 pub struct InitiateVaultSpendOptimisticProposal<'info> {
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
+
     /// CHECK: The squads multisig vault that executes the transaction
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig_vault: UncheckedAccount<'info>,
-    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = squads_program)]
-    pub squads_spending_limit: Account<'info, squads_multisig_program::SpendingLimit>,
-    // Probably need to use unchecked account, as these are not yet initialized
-    #[account(mut)]
-    pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
-    #[account(mut)]
-    pub squads_vault_transaction: Box<Account<'info, squads_multisig_program::VaultTransaction>>,
 
+    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = squads_program)]
+    pub squads_spending_limit: Account<'info, squads_multisig_program::SpendingLimit>,
+
+    /// CHECK: Squads multisig proposal, initialized by squads multisig program, checked by squads multisig program
     #[account(mut)]
-    pub dao: Box<Account<'info, Dao>>,
-    #[account(mut, address = dao.team_address)]
-    pub proposer: Signer<'info>,
+    pub squads_proposal: UncheckedAccount<'info>,
+
+    /// CHECK: Squads multisig vault transaction, initialized by squads multisig program, checked by squads multisig program
+    #[account(mut)]
+    pub squads_vault_transaction: UncheckedAccount<'info>,
 
     #[account(address = permissionless_account::id())]
     pub squads_multisig_permissionless_account: Signer<'info>,
+
+    #[account(mut, has_one = squads_multisig, has_one = squads_multisig_vault)]
+    pub dao: Box<Account<'info, Dao>>,
+    #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = dao.squads_multisig_vault)]
+    pub dao_quote_vault_account: Account<'info, TokenAccount>,
+
+    // Only the team can initiate an optimistic proposal
+    #[account(mut, address = dao.team_address)]
+    pub proposer: Signer<'info>,
 
     /// CHECK: Used for constraints
     pub recipient: UncheckedAccount<'info>,
     #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = recipient)]
     pub recipient_quote_account: Account<'info, TokenAccount>,
 
-    #[account(mut, associated_token::mint = dao.quote_mint, associated_token::authority = dao.squads_multisig_vault)]
-    pub dao_quote_vault_account: Account<'info, TokenAccount>,
-
     #[account(mut)]
     pub payer: Signer<'info>,
+
     pub system_program: Program<'info, System>,
     pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
     pub token_program: Program<'info, Token>,
@@ -46,15 +53,13 @@ pub struct InitiateVaultSpendOptimisticProposal<'info> {
 
 impl InitiateVaultSpendOptimisticProposal<'_> {
     pub fn validate(&self, params: &InitiateVaultSpendOptimisticProposalParams) -> Result<()> {
-        require_keys_eq!(self.squads_proposal.multisig, self.dao.squads_multisig);
-
         // Optimistic governance must be enabled
         require!(
             self.dao.is_optimistic_governance_enabled,
             FutarchyError::OptimisticGovernanceDisabled
         );
 
-        // Pool must be in spot state - no active proposals
+        // Pool must be in spot state - no active proposal
         match self.dao.amm.state {
             PoolState::Spot { spot: _ } => {}
             _ => {
@@ -115,7 +120,7 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
         } = ctx.accounts;
 
         // Prepare the transfer instruction
-        let ix = anchor_spl::token::spl_token::instruction::transfer(
+        let transfer_ix = anchor_spl::token::spl_token::instruction::transfer(
             &token_program.key(),
             &dao_quote_vault_account.key(),
             &recipient_quote_account.key(),
@@ -126,7 +131,7 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
 
         // Compile the transaction message in Squads' format
         let transaction_message =
-            compile_squads_transaction_message(&squads_multisig_vault.key(), &[ix])?;
+            compile_squads_transaction_message(&squads_multisig_vault.key(), &[transfer_ix])?;
 
         let transaction_message_bytes = transaction_message.try_to_vec()?;
 

@@ -1185,7 +1185,7 @@ export type Futarchy = {
         },
         {
           name: "squadsSpendingLimit";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -1199,7 +1199,17 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "squadsMultisigPermissionlessAccount";
+          isMut: false;
+          isSigner: true;
+        },
+        {
           name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "daoQuoteVaultAccount";
           isMut: true;
           isSigner: false;
         },
@@ -1209,22 +1219,12 @@ export type Futarchy = {
           isSigner: true;
         },
         {
-          name: "squadsMultisigPermissionlessAccount";
-          isMut: false;
-          isSigner: true;
-        },
-        {
           name: "recipient";
           isMut: false;
           isSigner: false;
         },
         {
           name: "recipientQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "daoQuoteVaultAccount";
           isMut: true;
           isSigner: false;
         },
@@ -1267,6 +1267,42 @@ export type Futarchy = {
           };
         },
       ];
+    },
+    {
+      name: "finalizeOptimisticProposal";
+      accounts: [
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
     },
   ];
   accounts: [
@@ -1424,26 +1460,15 @@ export type Futarchy = {
             type: "publicKey";
           },
           {
-            name: "activeOptimisticSquadsProposal";
-            docs: [
-              "The squads proposal currently enqueued for execution if not challenged by a new proposal.",
-            ];
+            name: "optimisticProposal";
             type: {
-              option: "publicKey";
-            };
-          },
-          {
-            name: "activeOptimisticSquadsProposalEnqueuedTimestamp";
-            docs: [
-              "The timestamp when the active optimistic squads proposal was enqueued.",
-            ];
-            type: {
-              option: "i64";
+              option: {
+                defined: "OptimisticProposal";
+              };
             };
           },
           {
             name: "isOptimisticGovernanceEnabled";
-            docs: ["Whether optimistic governance is enabled for this DAO."];
             type: "bool";
           },
         ];
@@ -1839,6 +1864,28 @@ export type Futarchy = {
             name: "minQuoteAmount";
             docs: ["Minimum quote tokens to receive"];
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "OptimisticProposal";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "squadsProposal";
+            docs: [
+              "The squads proposal currently enqueued for execution if not challenged by a new proposal.",
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "enqueuedTimestamp";
+            docs: [
+              "The timestamp when the active optimistic squads proposal was enqueued.",
+            ];
+            type: "i64";
           },
         ];
       };
@@ -2948,6 +2995,28 @@ export type Futarchy = {
         },
       ];
     },
+    {
+      name: "FinalizeOptimisticProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsProposal";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -3144,6 +3213,11 @@ export type Futarchy = {
       code: 6038;
       name: "ActiveOptimisticProposalAlreadyEnqueued";
       msg: "An active optimistic proposal is already enqueued";
+    },
+    {
+      code: 6039;
+      name: "NoActiveOptimisticProposal";
+      msg: "No active optimistic proposal";
     },
   ];
 };
@@ -4335,7 +4409,7 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsSpendingLimit",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -4349,7 +4423,17 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
+          name: "squadsMultisigPermissionlessAccount",
+          isMut: false,
+          isSigner: true,
+        },
+        {
           name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "daoQuoteVaultAccount",
           isMut: true,
           isSigner: false,
         },
@@ -4359,22 +4443,12 @@ export const IDL: Futarchy = {
           isSigner: true,
         },
         {
-          name: "squadsMultisigPermissionlessAccount",
-          isMut: false,
-          isSigner: true,
-        },
-        {
           name: "recipient",
           isMut: false,
           isSigner: false,
         },
         {
           name: "recipientQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "daoQuoteVaultAccount",
           isMut: true,
           isSigner: false,
         },
@@ -4417,6 +4491,42 @@ export const IDL: Futarchy = {
           },
         },
       ],
+    },
+    {
+      name: "finalizeOptimisticProposal",
+      accounts: [
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [
@@ -4574,26 +4684,15 @@ export const IDL: Futarchy = {
             type: "publicKey",
           },
           {
-            name: "activeOptimisticSquadsProposal",
-            docs: [
-              "The squads proposal currently enqueued for execution if not challenged by a new proposal.",
-            ],
+            name: "optimisticProposal",
             type: {
-              option: "publicKey",
-            },
-          },
-          {
-            name: "activeOptimisticSquadsProposalEnqueuedTimestamp",
-            docs: [
-              "The timestamp when the active optimistic squads proposal was enqueued.",
-            ],
-            type: {
-              option: "i64",
+              option: {
+                defined: "OptimisticProposal",
+              },
             },
           },
           {
             name: "isOptimisticGovernanceEnabled",
-            docs: ["Whether optimistic governance is enabled for this DAO."],
             type: "bool",
           },
         ],
@@ -4989,6 +5088,28 @@ export const IDL: Futarchy = {
             name: "minQuoteAmount",
             docs: ["Minimum quote tokens to receive"],
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "OptimisticProposal",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "squadsProposal",
+            docs: [
+              "The squads proposal currently enqueued for execution if not challenged by a new proposal.",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "enqueuedTimestamp",
+            docs: [
+              "The timestamp when the active optimistic squads proposal was enqueued.",
+            ],
+            type: "i64",
           },
         ],
       },
@@ -6098,6 +6219,28 @@ export const IDL: Futarchy = {
         },
       ],
     },
+    {
+      name: "FinalizeOptimisticProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsProposal",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -6294,6 +6437,11 @@ export const IDL: Futarchy = {
       code: 6038,
       name: "ActiveOptimisticProposalAlreadyEnqueued",
       msg: "An active optimistic proposal is already enqueued",
+    },
+    {
+      code: 6039,
+      name: "NoActiveOptimisticProposal",
+      msg: "No active optimistic proposal",
     },
   ],
 };
