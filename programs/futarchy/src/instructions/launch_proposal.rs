@@ -51,6 +51,16 @@ impl LaunchProposal<'_> {
             );
         }
 
+        // If there is an active optimistic proposal, it must be for the same squads proposal
+        // as the futarchy proposal we're launching, thus challenging the optimistic proposal.
+        // This follows the logic that a DAO can have only one proposal active at a time.
+        if let Some(optimistic_proposal) = &self.dao.optimistic_proposal {
+            require_keys_eq!(
+                optimistic_proposal.squads_proposal,
+                self.proposal.squads_proposal
+            );
+        }
+
         Ok(())
     }
 
@@ -138,6 +148,14 @@ impl LaunchProposal<'_> {
         // Update proposal state to Pending and set timestamp enqueued
         proposal.state = ProposalState::Pending;
         proposal.timestamp_enqueued = clock.unix_timestamp;
+
+        // Update the DAO state
+        if dao.optimistic_proposal.is_some() {
+            // The optimistic proposal is being challenged, so we are moving it into the futarchy proposal
+            // This means that the optimistic proposal now has to pass a decision market in order to be approved/executed
+            // verify() ensures that the optimistic proposal and squads proposal are the same
+            dao.optimistic_proposal = None;
+        }
 
         dao.seq_num += 1;
 
