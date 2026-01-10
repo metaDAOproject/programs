@@ -23,6 +23,15 @@ impl SponsorProposal<'_> {
             FutarchyError::ProposalAlreadySponsored
         );
 
+        // Team cannot sponsor a challenge to an optimistic proposal
+        if let Some(optimistic_proposal) = &self.dao.optimistic_proposal {
+            require_keys_neq!(
+                optimistic_proposal.squads_proposal,
+                self.proposal.squads_proposal,
+                FutarchyError::CannotSponsorOptimisticProposalChallenge
+            );
+        }
+
         Ok(())
     }
 

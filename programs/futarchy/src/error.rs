@@ -86,4 +86,6 @@ pub enum FutarchyError {
     NoActiveOptimisticProposal,
     #[msg("Optimistic proposal has already passed")]
     OptimisticProposalAlreadyPassed,
+    #[msg("Team cannot sponsor a challenge to an optimistic proposal")]
+    CannotSponsorOptimisticProposalChallenge,
 }

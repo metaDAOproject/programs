@@ -3224,6 +3224,11 @@ export type Futarchy = {
       name: "OptimisticProposalAlreadyPassed";
       msg: "Optimistic proposal has already passed";
     },
+    {
+      code: 6041;
+      name: "CannotSponsorOptimisticProposalChallenge";
+      msg: "Team cannot sponsor a challenge to an optimistic proposal";
+    },
   ];
 };
 
@@ -6452,6 +6457,11 @@ export const IDL: Futarchy = {
       code: 6040,
       name: "OptimisticProposalAlreadyPassed",
       msg: "Optimistic proposal has already passed",
+    },
+    {
+      code: 6041,
+      name: "CannotSponsorOptimisticProposalChallenge",
+      msg: "Team cannot sponsor a challenge to an optimistic proposal",
     },
   ],
 };
