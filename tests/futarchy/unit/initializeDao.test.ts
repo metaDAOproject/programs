@@ -36,6 +36,8 @@ export default function suite() {
           passThresholdBps: 300,
           nonce: new BN(1337),
           initialSpendingLimit: null,
+          teamAddress: this.payer.publicKey,
+          teamSponsoredPassThresholdBps: 123,
         },
       })
       .preInstructions([
@@ -70,6 +72,12 @@ export default function suite() {
     assert.equal(storedDao.minBaseFutarchicLiquidity.toString(), "1000");
     assert.equal(storedDao.passThresholdBps, 300);
     assert.isNull(storedDao.initialSpendingLimit);
+
+    assert.isTrue(storedDao.teamAddress.equals(this.payer.publicKey));
+    assert.equal(storedDao.teamSponsoredPassThresholdBps, 123);
+
+    assert.isNull(storedDao.optimisticProposal);
+    assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
@@ -131,6 +139,8 @@ export default function suite() {
             amountPerMonth: new BN(10_000 * 10 ** 6),
             members: [spender.publicKey],
           },
+          teamSponsoredPassThresholdBps: 123,
+          teamAddress: this.payer.publicKey,
         },
       })
       .rpc();
@@ -175,6 +185,10 @@ export default function suite() {
     assert.equal(storedSpendingLimit.members.length, 1);
     assert.ok(storedSpendingLimit.members[0].equals(spender.publicKey));
     assert.equal(storedSpendingLimit.destinations.length, 0);
+    assert.isTrue(storedDao.teamAddress.equals(this.payer.publicKey));
+    assert.equal(storedDao.teamSponsoredPassThresholdBps, 123);
+    assert.isNull(storedDao.optimisticProposal);
+    assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
   });
 
   it("doesn't allow DAOs with proposal duration less than TWAP start delay", async function () {
@@ -197,6 +211,9 @@ export default function suite() {
           secondsPerProposal: 5000,
           nonce: new BN(1338),
           initialSpendingLimit: null,
+          baseToStake: new BN(1000),
+          teamSponsoredPassThresholdBps: 123,
+          teamAddress: this.payer.publicKey,
         },
       })
       .rpc()

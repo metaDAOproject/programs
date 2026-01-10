@@ -1115,4 +1115,93 @@ export class FutarchyClient {
       squadsProgram: SQUADS_PROGRAM_ID,
     });
   }
+
+  initiateVaultSpendOptimisticProposalIx({
+    dao,
+    quoteMint = MAINNET_USDC,
+    amount,
+    recipient,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    quoteMint?: PublicKey;
+    amount: BN;
+    recipient: PublicKey;
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
+    const squadsSpendingLimit = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    })[0];
+    const squadsProposal = multisig.getProposalPda({
+      multisigPda,
+      transactionIndex,
+    })[0];
+    const squadsVaultTransaction = multisig.getTransactionPda({
+      multisigPda,
+      index: transactionIndex,
+    })[0];
+
+    return this.autocrat.methods
+      .initiateVaultSpendOptimisticProposal({ amount })
+      .accounts({
+        squadsMultisig: multisigPda,
+        squadsMultisigVault,
+        squadsSpendingLimit,
+        squadsProposal,
+        squadsVaultTransaction,
+        squadsMultisigPermissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
+        dao,
+        daoQuoteVaultAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          squadsMultisigVault,
+          true,
+        ),
+        proposer,
+        recipient,
+        recipientQuoteAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          recipient,
+          true,
+        ),
+        payer,
+        systemProgram: SystemProgram.programId,
+        squadsProgram: SQUADS_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          getAssociatedTokenAddressSync(quoteMint, recipient, true),
+          recipient,
+          quoteMint,
+        ),
+      ]);
+  }
+
+  finalizeOptimisticProposalIx({
+    dao,
+    squadsProposal,
+  }: {
+    dao: PublicKey;
+    squadsProposal: PublicKey;
+  }) {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+
+    return this.autocrat.methods.finalizeOptimisticProposal().accounts({
+      squadsMultisig: multisigPda,
+      squadsProposal,
+      dao,
+      squadsProgram: SQUADS_PROGRAM_ID,
+    });
+  }
 }

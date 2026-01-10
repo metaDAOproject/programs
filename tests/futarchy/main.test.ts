@@ -9,6 +9,8 @@ import conditionalSwap from "./unit/conditionalSwap.test.js";
 
 import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
 
+import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
+
 import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -49,6 +51,11 @@ export default function suite() {
   describe("#execute_spending_limit_change", executeSpendingLimitChange);
 
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
+
+  describe(
+    "#initiate_vault_spend_optimistic_proposal",
+    initiateVaultSpendOptimisticProposal,
+  );
 
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
