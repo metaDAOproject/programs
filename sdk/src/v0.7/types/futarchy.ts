@@ -3219,6 +3219,11 @@ export type Futarchy = {
       name: "NoActiveOptimisticProposal";
       msg: "No active optimistic proposal";
     },
+    {
+      code: 6040;
+      name: "OptimisticProposalAlreadyPassed";
+      msg: "Optimistic proposal has already passed";
+    },
   ];
 };
 
@@ -6442,6 +6447,11 @@ export const IDL: Futarchy = {
       code: 6039,
       name: "NoActiveOptimisticProposal",
       msg: "No active optimistic proposal",
+    },
+    {
+      code: 6040,
+      name: "OptimisticProposalAlreadyPassed",
+      msg: "Optimistic proposal has already passed",
     },
   ],
 };

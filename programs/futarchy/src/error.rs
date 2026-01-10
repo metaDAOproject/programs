@@ -84,4 +84,6 @@ pub enum FutarchyError {
     ActiveOptimisticProposalAlreadyEnqueued,
     #[msg("No active optimistic proposal")]
     NoActiveOptimisticProposal,
+    #[msg("Optimistic proposal has already passed")]
+    OptimisticProposalAlreadyPassed,
 }

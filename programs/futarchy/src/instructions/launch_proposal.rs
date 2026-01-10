@@ -59,6 +59,13 @@ impl LaunchProposal<'_> {
                 optimistic_proposal.squads_proposal,
                 self.proposal.squads_proposal
             );
+
+            // The optimistic proposal must be younger than seconds_per_proposal, otherwise it is considered passed and must be finalized
+            require_gt!(
+                optimistic_proposal.enqueued_timestamp + self.dao.seconds_per_proposal as i64,
+                Clock::get()?.unix_timestamp,
+                FutarchyError::OptimisticProposalAlreadyPassed
+            );
         }
 
         Ok(())

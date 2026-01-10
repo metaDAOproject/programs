@@ -1,10 +1,16 @@
 import {
+  getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
-} from "@metadaoproject/futarchy/v0.6";
-import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
+} from "@metadaoproject/futarchy/v0.7";
+import {
+  ComputeBudgetProgram,
+  PublicKey,
+  Transaction,
+  TransactionMessage,
+} from "@solana/web3.js";
 import BN from "bn.js";
-import { setupBasicDao } from "../../utils.js";
+import { expectError, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -14,7 +20,29 @@ const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
 
+  let setOptimisticGovernanceEnabled: (
+    dao: PublicKey,
+    enabled: boolean,
+  ) => Promise<void>;
+
   beforeEach(async function () {
+    setOptimisticGovernanceEnabled = async (
+      dao: PublicKey,
+      enabled: boolean,
+    ) => {
+      const daoAccount = await this.futarchy.getDao(dao);
+      daoAccount.isOptimisticGovernanceEnabled = enabled;
+      const daoAccountBuffer =
+        await this.futarchy.autocrat.account.dao.coder.accounts.encode(
+          "dao",
+          daoAccount,
+        );
+
+      const daoBanksAccount = await this.banksClient.getAccount(dao);
+      daoBanksAccount.data.set(daoAccountBuffer, 0);
+      this.context.setAccount(dao, daoBanksAccount);
+    };
+
     META = await this.createMint(this.payer.publicKey, 9);
     USDC = await this.createMint(this.payer.publicKey, 6);
 
@@ -31,10 +59,39 @@ export default function suite() {
       100_000 * 1_000_000,
     );
 
-    dao = await setupBasicDao({
-      context: this,
-      baseMint: META,
-      quoteMint: USDC,
+    const nonce = new BN(Math.floor(Math.random() * 1000000));
+
+    await this.futarchy
+      .initializeDaoIx({
+        baseMint: META,
+        quoteMint: USDC,
+        params: {
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(10_000),
+          minBaseFutarchicLiquidity: new BN(10_000),
+          passThresholdBps: 300,
+          nonce,
+          initialSpendingLimit: {
+            amountPerMonth: new BN(10_000),
+            members: [this.payer.publicKey],
+          },
+          baseToStake: new BN(0),
+          teamSponsoredPassThresholdBps: 0,
+          teamAddress: this.payer.publicKey,
+        },
+        provideLiquidity: true,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    [dao] = getDaoAddr({
+      nonce,
+      daoCreator: this.payer.publicKey,
     });
   });
 
@@ -51,6 +108,10 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
           minBaseFutarchicLiquidity: null,
+          twapStartDelaySeconds: null,
+          teamSponsoredPassThresholdBps: null,
+          teamAddress: null,
+          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();
@@ -123,5 +184,37 @@ export default function suite() {
     // Verify the DAO proposal count was incremented
     const storedDao = await this.futarchy.getDao(dao);
     assert.equal(storedDao.proposalCount, 1);
+  });
+
+  it("doesn't allow challenging an optimistic proposal which has already passed due to age", async function () {
+    let daoAccount = await this.futarchy.getDao(dao);
+
+    await this.createTokenAccount(USDC, daoAccount.squadsMultisigVault);
+
+    await setOptimisticGovernanceEnabled(dao, true);
+
+    await this.futarchy
+      .initiateVaultSpendOptimisticProposalIx({
+        dao,
+        amount: new BN(1000),
+        recipient: this.payer.publicKey,
+        transactionIndex: 1n,
+        quoteMint: USDC,
+      })
+      .signers([this.payer, PERMISSIONLESS_ACCOUNT])
+      .rpc();
+
+    daoAccount = await this.futarchy.getDao(dao);
+
+    this.advanceBySeconds(daoAccount.secondsPerProposal);
+
+    const callbacks = expectError(
+      "OptimisticProposalAlreadyPassed",
+      "Optimistic proposal has already passed",
+    );
+
+    await this.futarchy
+      .initializeProposal(dao, daoAccount.optimisticProposal.squadsProposal)
+      .then(callbacks[0], callbacks[1]);
   });
 }
