@@ -6,7 +6,6 @@ import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { expectError } from "../../utils.js";
 import { getDaoAddr, MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { assert } from "chai";
 import * as squads from "@sqds/multisig";
 
@@ -81,18 +80,7 @@ export default function suite() {
 
     const daoAccount = await this.futarchy.getDao(dao);
 
-    console.log("daoAccount", JSON.stringify(daoAccount, null, 2));
-
-    const daoQuoteVaultAddress = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
-      daoAccount.squadsMultisigVault,
-      true,
-    );
-
     await this.createTokenAccount(MAINNET_USDC, daoAccount.squadsMultisigVault);
-
-    // const balance = await this.getTokenBalance(MAINNET_USDC, daoQuoteVaultAddress);
-    // console.log("balance", balance.toString());
 
     await this.transfer(
       MAINNET_USDC,
@@ -104,7 +92,7 @@ export default function suite() {
     await setOptimisticGovernanceEnabled(dao, true);
   });
 
-  it("can initiate a vault spend optimistic proposal if the DAO has optimistic governance enabled", async function () {
+  it("can initiate a vault spend optimistic proposal", async function () {
     await this.futarchy
       .initiateVaultSpendOptimisticProposalIx({
         dao,

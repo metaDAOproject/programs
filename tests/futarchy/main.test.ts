@@ -9,9 +9,11 @@ import conditionalSwap from "./unit/conditionalSwap.test.js";
 
 import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
 
-import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
-
 import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
+
+import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
+import finalizeOptimisticProposal from "./unit/finalizeOptimisticProposal.test.js";
+
 import { PublicKey } from "@solana/web3.js";
 import {
   LAUNCHPAD_PROGRAM_ID,
@@ -56,6 +58,7 @@ export default function suite() {
     "#initiate_vault_spend_optimistic_proposal",
     initiateVaultSpendOptimisticProposal,
   );
+  describe.only("#finalize_optimistic_proposal", finalizeOptimisticProposal);
 
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);

@@ -18,23 +18,21 @@ impl FinalizeOptimisticProposal<'_> {
     pub fn validate(&self) -> Result<()> {
         require_keys_eq!(self.squads_proposal.multisig, self.dao.squads_multisig);
 
-        // There should be an active optimistic proposal
-        let optimistic_proposal = match self.dao.optimistic_proposal {
-            Some(ref optimistic_proposal) => optimistic_proposal,
-            None => {
-                return Err(FutarchyError::NoActiveOptimisticProposal.into());
-            }
-        };
-
         // A minimum of proposal duration must have passed since the the optimistic proposal was enqueued
+        // We know that the optimistic proposal is not None, because the address constraint would have already panicked
         require_gte!(
             Clock::get()?.unix_timestamp,
-            optimistic_proposal.enqueued_timestamp + self.dao.seconds_per_proposal as i64,
-            FutarchyError::ProposalDurationTooShort
+            self.dao
+                .optimistic_proposal
+                .as_ref()
+                .unwrap()
+                .enqueued_timestamp
+                + self.dao.seconds_per_proposal as i64,
+            FutarchyError::ProposalTooYoung
         );
 
         // Pool must be in spot state - no active proposals
-        // Realistically, this should never be hit, but it's here for completeness
+        // This should never be hit, but it's here for completeness
         match self.dao.amm.state {
             PoolState::Spot { spot: _ } => {}
             _ => {
