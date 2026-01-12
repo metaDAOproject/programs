@@ -1,5 +1,7 @@
 use super::*;
 
+pub const SEED_QUESTION: &[u8] = b"question";
+
 /// Questions represent statements about future events.
 ///
 /// These statements include:
@@ -25,6 +27,7 @@ use super::*;
 pub struct Question {
     pub question_id: [u8; 32],
     pub oracle: Pubkey,
+    // It is up to the initializer to increase the space of the account to include the payout numerators.
     #[max_len(0)]
     pub payout_numerators: Vec<u32>,
     pub payout_denominator: u32,

@@ -30,9 +30,9 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
         let seeds = generate_vault_seeds!(vault);
         let signer = &[&seeds[..]];
 
-        let user_underlying_balance_before = accs.user_underlying_token_account.amount;
-        let vault_underlying_balance_before = accs.vault_underlying_token_account.amount;
-        // safe because there is always at least two conditional tokens and thus
+        let pre_user_underlying_balance = accs.user_underlying_token_account.amount;
+        let pre_vault_underlying_balance = accs.vault_underlying_token_account.amount;
+        // safe because there are always at least two conditional tokens and thus
         // at least two user conditional token accounts
         let max_redeemable = user_conditional_token_accounts
             .iter()
@@ -42,17 +42,12 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
 
         let mut total_numerator: u128 = 0;
 
-        for (conditional_mint, user_conditional_token_account) in conditional_token_mints
-            .iter()
-            .zip(user_conditional_token_accounts.iter())
-        {
-            // this is safe because we check that every conditional mint is a part of the vault
-            let payout_index = vault
-                .conditional_token_mints
+        for (payout_index, (conditional_mint, user_conditional_token_account)) in
+            conditional_token_mints
                 .iter()
-                .position(|mint| mint == &conditional_mint.key())
-                .unwrap();
-
+                .zip(user_conditional_token_accounts.iter())
+                .enumerate()
+        {
             total_numerator += user_conditional_token_account.amount as u128
                 * question.payout_numerators[payout_index] as u128;
 
@@ -91,13 +86,13 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
 
         require_eq!(
             ctx.accounts.user_underlying_token_account.amount,
-            user_underlying_balance_before + total_redeemable,
+            pre_user_underlying_balance + total_redeemable,
             VaultError::AssertFailed
         );
 
         require_eq!(
             ctx.accounts.vault_underlying_token_account.amount,
-            vault_underlying_balance_before - total_redeemable,
+            pre_vault_underlying_balance - total_redeemable,
             VaultError::AssertFailed
         );
 

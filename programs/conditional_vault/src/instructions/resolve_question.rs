@@ -18,11 +18,7 @@ impl ResolveQuestion<'_> {
     pub fn handle(ctx: Context<Self>, args: ResolveQuestionArgs) -> Result<()> {
         let question = &mut ctx.accounts.question;
 
-        require_eq!(
-            question.payout_denominator,
-            0,
-            VaultError::QuestionAlreadyResolved
-        );
+        require!(!question.is_resolved(), VaultError::QuestionAlreadyResolved);
 
         require_eq!(
             args.payout_numerators.len(),

@@ -1,11 +1,15 @@
 use super::*;
 
+pub const SEED_CONDITIONAL_VAULT: &[u8] = b"conditional_vault";
+pub const SEED_CONDITIONAL_TOKEN: &[u8] = b"conditional_token";
+
 #[account]
 #[derive(InitSpace)]
 pub struct ConditionalVault {
     pub question: Pubkey,
     pub underlying_token_mint: Pubkey,
     pub underlying_token_account: Pubkey,
+    // It is up to the initializer to increase the space of the account to include the conditional token mints.
     #[max_len(0)]
     pub conditional_token_mints: Vec<Pubkey>,
     pub pda_bump: u8,
@@ -60,7 +64,7 @@ impl ConditionalVault {
 macro_rules! generate_vault_seeds {
     ($vault:expr) => {{
         &[
-            b"conditional_vault",
+            SEED_CONDITIONAL_VAULT,
             $vault.question.as_ref(),
             $vault.underlying_token_mint.as_ref(),
             &[$vault.pda_bump],

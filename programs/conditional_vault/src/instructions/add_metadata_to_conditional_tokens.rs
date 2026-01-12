@@ -45,7 +45,7 @@ impl AddMetadataToConditionalTokens<'_> {
         );
 
         #[cfg(feature = "production")]
-        require_eq!(self.payer.key(), proph3t_deployer::ID);
+        require_keys_eq!(self.payer.key(), proph3t_deployer::ID);
 
         Ok(())
     }

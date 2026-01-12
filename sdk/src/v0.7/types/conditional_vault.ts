@@ -93,7 +93,7 @@ export type ConditionalVault = {
         },
         {
           name: "vaultUnderlyingTokenAccount";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -1011,7 +1011,7 @@ export const IDL: ConditionalVault = {
         },
         {
           name: "vaultUnderlyingTokenAccount",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
