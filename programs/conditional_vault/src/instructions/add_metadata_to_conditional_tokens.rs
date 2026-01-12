@@ -32,11 +32,6 @@ pub struct AddMetadataToConditionalTokens<'info> {
 
 impl AddMetadataToConditionalTokens<'_> {
     pub fn validate(&self) -> Result<()> {
-        // require!(
-        //     self.vault.status == VaultStatus::Active,
-        //     VaultError::VaultAlreadySettled
-        // );
-
         require!(
             self.vault
                 .conditional_token_mints

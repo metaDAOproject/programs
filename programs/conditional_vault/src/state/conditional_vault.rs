@@ -21,9 +21,8 @@ pub struct ConditionalVault {
 }
 
 impl ConditionalVault {
-    /// Checks that the vault's assets are always greater than its potential
-    /// liabilities. Should be called anytime you mint or burn conditional
-    /// tokens.
+    /// Checks that the vault's assets are always greater than or equal to its potential
+    /// liabilities. Should be called anytime you mint or burn conditional tokens.
     ///
     /// `conditional_token_supplies` should be in the same order as
     /// `vault.conditional_token_mints`.
