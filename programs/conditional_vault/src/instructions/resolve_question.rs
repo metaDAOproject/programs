@@ -30,7 +30,11 @@ impl ResolveQuestion<'_> {
             VaultError::InvalidNumPayoutNumerators
         );
 
-        question.payout_denominator = args.payout_numerators.iter().sum();
+        question.payout_denominator = args
+            .payout_numerators
+            .iter()
+            .try_fold(0u32, |acc, &x| acc.checked_add(x))
+            .ok_or(VaultError::InvalidPayoutNumerators)?;
         question.payout_numerators = args.payout_numerators.clone();
 
         require_gt!(question.payout_denominator, 0, VaultError::PayoutZero);

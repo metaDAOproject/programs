@@ -920,6 +920,11 @@ export type ConditionalVault = {
       name: "UnauthorizedConditionalTokenAccount";
       msg: "Conditional token account is not owned by the authority";
     },
+    {
+      code: 6017;
+      name: "InvalidPayoutNumerators";
+      msg: "Invalid payout numerators";
+    },
   ];
 };
 
@@ -1844,6 +1849,11 @@ export const IDL: ConditionalVault = {
       code: 6016,
       name: "UnauthorizedConditionalTokenAccount",
       msg: "Conditional token account is not owned by the authority",
+    },
+    {
+      code: 6017,
+      name: "InvalidPayoutNumerators",
+      msg: "Invalid payout numerators",
     },
   ],
 };

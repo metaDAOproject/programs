@@ -36,4 +36,6 @@ pub enum VaultError {
     ConditionalTokenMetadataAlreadySet,
     #[msg("Conditional token account is not owned by the authority")]
     UnauthorizedConditionalTokenAccount,
+    #[msg("Invalid payout numerators")]
+    InvalidPayoutNumerators,
 }
