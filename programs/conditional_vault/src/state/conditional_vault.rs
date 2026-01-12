@@ -1,12 +1,5 @@
 use super::*;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
-pub enum VaultStatus {
-    Active,
-    Finalized,
-    Reverted,
-}
-
 #[account]
 #[derive(InitSpace)]
 pub struct ConditionalVault {

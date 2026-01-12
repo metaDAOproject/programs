@@ -127,10 +127,7 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
 
         let clock = Clock::get()?;
         emit_cpi!(RedeemTokensEvent {
-            common: CommonFields {
-                slot: clock.slot,
-                unix_timestamp: clock.unix_timestamp,
-            },
+            common: CommonFields::new(&clock),
             user: ctx.accounts.authority.key(),
             vault: ctx.accounts.vault.key(),
             amount: total_redeemable,

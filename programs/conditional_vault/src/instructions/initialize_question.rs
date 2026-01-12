@@ -51,10 +51,7 @@ impl InitializeQuestion<'_> {
 
         let clock = Clock::get()?;
         emit_cpi!(InitializeQuestionEvent {
-            common: CommonFields {
-                slot: clock.slot,
-                unix_timestamp: clock.unix_timestamp,
-            },
+            common: CommonFields::new(&clock),
             question_id,
             oracle,
             num_outcomes,

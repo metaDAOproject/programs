@@ -41,10 +41,7 @@ impl ResolveQuestion<'_> {
 
         let clock = Clock::get()?;
         emit_cpi!(ResolveQuestionEvent {
-            common: CommonFields {
-                slot: clock.slot,
-                unix_timestamp: clock.unix_timestamp,
-            },
+            common: CommonFields::new(&clock),
             question: question.key(),
             payout_numerators: args.payout_numerators,
         });

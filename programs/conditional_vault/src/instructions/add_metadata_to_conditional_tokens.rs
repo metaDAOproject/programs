@@ -86,10 +86,7 @@ impl AddMetadataToConditionalTokens<'_> {
 
         let clock = Clock::get()?;
         emit_cpi!(AddMetadataToConditionalTokensEvent {
-            common: CommonFields {
-                slot: clock.slot,
-                unix_timestamp: clock.unix_timestamp,
-            },
+            common: CommonFields::new(&clock),
             vault: ctx.accounts.vault.key(),
             conditional_token_mint: ctx.accounts.conditional_token_mint.key(),
             conditional_token_metadata: ctx.accounts.conditional_token_metadata.key(),

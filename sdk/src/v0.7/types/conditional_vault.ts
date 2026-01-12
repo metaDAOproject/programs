@@ -499,23 +499,6 @@ export type ConditionalVault = {
         ];
       };
     },
-    {
-      name: "VaultStatus";
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Active";
-          },
-          {
-            name: "Finalized";
-          },
-          {
-            name: "Reverted";
-          },
-        ];
-      };
-    },
   ];
   events: [
     {
@@ -1430,23 +1413,6 @@ export const IDL: ConditionalVault = {
             type: {
               vec: "u32",
             },
-          },
-        ],
-      },
-    },
-    {
-      name: "VaultStatus",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Active",
-          },
-          {
-            name: "Finalized",
-          },
-          {
-            name: "Reverted",
           },
         ],
       },

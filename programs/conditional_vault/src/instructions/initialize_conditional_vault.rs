@@ -112,10 +112,7 @@ impl<'info, 'c: 'info> InitializeConditionalVault<'info> {
 
         let clock = Clock::get()?;
         emit_cpi!(InitializeConditionalVaultEvent {
-            common: CommonFields {
-                slot: clock.slot,
-                unix_timestamp: clock.unix_timestamp,
-            },
+            common: CommonFields::new(&clock),
             vault: vault.key(),
             question: vault.question,
             underlying_token_mint: vault.underlying_token_mint,
