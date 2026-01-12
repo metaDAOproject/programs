@@ -292,7 +292,7 @@ export type ConditionalVault = {
         },
         {
           name: "conditionalTokenMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -1227,7 +1227,7 @@ export const IDL: ConditionalVault = {
         },
         {
           name: "conditionalTokenMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {

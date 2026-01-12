@@ -20,10 +20,7 @@ pub struct AddMetadataToConditionalTokens<'info> {
     pub payer: Signer<'info>,
     #[account(mut)]
     pub vault: Account<'info, ConditionalVault>,
-    #[account(
-        mut,
-        mint::authority = vault,
-    )]
+    #[account(mint::authority = vault)]
     pub conditional_token_mint: Account<'info, Mint>,
     /// CHECK: verified via cpi into token metadata
     #[account(mut)]
