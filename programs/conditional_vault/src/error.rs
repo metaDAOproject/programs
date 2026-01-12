@@ -38,4 +38,6 @@ pub enum VaultError {
     UnauthorizedConditionalTokenAccount,
     #[msg("Invalid payout numerators")]
     InvalidPayoutNumerators,
+    #[msg("Questions can only have up to 10 outcomes")]
+    TooManyOutcomes,
 }

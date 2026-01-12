@@ -32,6 +32,7 @@ pub struct InitializeQuestion<'info> {
 impl InitializeQuestion<'_> {
     pub fn handle(ctx: Context<Self>, args: InitializeQuestionArgs) -> Result<()> {
         require_gte!(args.num_outcomes, 2, VaultError::InsufficientNumConditions);
+        require_gte!(10, args.num_outcomes, VaultError::TooManyOutcomes);
 
         let question = &mut ctx.accounts.question;
 

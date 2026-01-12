@@ -925,6 +925,11 @@ export type ConditionalVault = {
       name: "InvalidPayoutNumerators";
       msg: "Invalid payout numerators";
     },
+    {
+      code: 6018;
+      name: "TooManyOutcomes";
+      msg: "Questions can only have up to 10 outcomes";
+    },
   ];
 };
 
@@ -1854,6 +1859,11 @@ export const IDL: ConditionalVault = {
       code: 6017,
       name: "InvalidPayoutNumerators",
       msg: "Invalid payout numerators",
+    },
+    {
+      code: 6018,
+      name: "TooManyOutcomes",
+      msg: "Questions can only have up to 10 outcomes",
     },
   ],
 };
