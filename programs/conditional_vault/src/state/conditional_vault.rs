@@ -29,10 +29,10 @@ impl ConditionalVault {
         conditional_token_supplies: Vec<u64>,
         vault_underlying_balance: u64,
     ) -> Result<()> {
-        // if the question isn't resolved, the vault should have more underlying
+        // if the question isn't resolved, the vault should have more than or equal to underlying
         // tokens than ANY conditional token mint's supply
 
-        // if the question is resolved, the vault should have more underlying
+        // if the question is resolved, the vault should have more than or equal to underlying
         // tokens than the sum of the conditional token mint's supplies multiplied
         // by their respective payouts
 
