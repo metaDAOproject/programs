@@ -1,5 +1,10 @@
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.6";
-import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  PublicKey,
+  Transaction,
+  TransactionMessage,
+} from "@solana/web3.js";
 import { expectError, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
@@ -236,6 +241,9 @@ export default function suite() {
           meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta,
         ),
       )
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .signers([this.payer])
       .rpc()
       .then(callbacks[0], callbacks[1]);

@@ -506,6 +506,7 @@ export default async function suite() {
         dao,
         baseMint: META,
         quoteMint: MAINNET_USDC,
+        squadsProposal: squadsProposalPda,
       })
       .rpc();
 

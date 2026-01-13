@@ -119,6 +119,11 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "dao";
           isMut: true;
           isSigner: false;
@@ -368,6 +373,16 @@ export type Futarchy = {
         {
           name: "ammFailQuoteVault";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -3094,6 +3109,11 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "dao",
           isMut: true,
           isSigner: false,
@@ -3343,6 +3363,16 @@ export const IDL: Futarchy = {
         {
           name: "ammFailQuoteVault",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: false,
           isSigner: false,
         },
         {
