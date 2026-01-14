@@ -31,7 +31,7 @@ pub struct InitializeQuestion<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// The InitializeQuestion instruction is permissionless.
+// The InitializeQuestion instruction is permissionless, thus can be front-run by anyone.
 // This is acceptable because no extra ownership is granted to the caller of the instruction.
 impl InitializeQuestion<'_> {
     pub fn handle(ctx: Context<Self>, args: InitializeQuestionArgs) -> Result<()> {
