@@ -906,7 +906,7 @@ export type ConditionalVault = {
     {
       code: 6017;
       name: "InvalidPayoutNumerators";
-      msg: "Invalid payout numerators";
+      msg: "Payout numerators are too large, causing an overflow";
     },
     {
       code: 6018;
@@ -1824,7 +1824,7 @@ export const IDL: ConditionalVault = {
     {
       code: 6017,
       name: "InvalidPayoutNumerators",
-      msg: "Invalid payout numerators",
+      msg: "Payout numerators are too large, causing an overflow",
     },
     {
       code: 6018,

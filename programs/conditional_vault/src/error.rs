@@ -36,7 +36,7 @@ pub enum VaultError {
     ConditionalTokenMetadataAlreadySet,
     #[msg("Conditional token account is not owned by the authority")]
     UnauthorizedConditionalTokenAccount,
-    #[msg("Invalid payout numerators")]
+    #[msg("Payout numerators are too large, causing an overflow")]
     InvalidPayoutNumerators,
     #[msg("Questions can only have up to 10 outcomes")]
     TooManyOutcomes,

@@ -34,9 +34,8 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
             VaultError::InvalidConditionals
         );
 
-        let mut conditional_token_mints = Vec::with_capacity(expected_num_conditional_tokens);
-        let mut user_conditional_token_accounts =
-            Vec::with_capacity(expected_num_conditional_tokens);
+        let mut conditional_token_mints = vec![];
+        let mut user_conditional_token_accounts = vec![];
 
         for i in 0..expected_num_conditional_tokens {
             let conditional_token_mint = next_account_info(remaining_accs)?;

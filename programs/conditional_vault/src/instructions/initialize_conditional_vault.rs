@@ -50,7 +50,7 @@ impl<'info, 'c: 'info> InitializeConditionalVault<'info> {
         let remaining_accs = &mut ctx.remaining_accounts.iter();
 
         let expected_num_conditional_tokens = ctx.accounts.question.num_outcomes();
-        let mut conditional_token_mints = Vec::with_capacity(expected_num_conditional_tokens);
+        let mut conditional_token_mints = vec![];
 
         let mint_lamports = Rent::get()?.minimum_balance(Mint::LEN);
         for i in 0..expected_num_conditional_tokens {
