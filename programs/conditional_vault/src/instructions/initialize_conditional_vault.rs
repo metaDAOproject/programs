@@ -1,3 +1,5 @@
+use std::mem::size_of;
+
 use super::*;
 
 use anchor_lang::system_program;
@@ -9,9 +11,9 @@ pub struct InitializeConditionalVault<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + ConditionalVault::INIT_SPACE + (32 * question.num_outcomes()),
+        space = 8 + ConditionalVault::INIT_SPACE + (size_of::<Pubkey>() * question.num_outcomes()),
         seeds = [
-            b"conditional_vault", 
+            SEED_CONDITIONAL_VAULT,
             question.key().as_ref(),
             underlying_token_mint.key().as_ref(),
         ],
@@ -21,6 +23,8 @@ pub struct InitializeConditionalVault<'info> {
     pub question: Account<'info, Question>,
     pub underlying_token_mint: Account<'info, Mint>,
     #[account(
+        init_if_needed,
+        payer = payer,
         associated_token::authority = vault,
         associated_token::mint = underlying_token_mint
     )]
@@ -51,12 +55,12 @@ impl<'info, 'c: 'info> InitializeConditionalVault<'info> {
         let mint_lamports = Rent::get()?.minimum_balance(Mint::LEN);
         for i in 0..expected_num_conditional_tokens {
             let (conditional_token_mint_address, pda_bump) = Pubkey::find_program_address(
-                &[b"conditional_token", vault.key().as_ref(), &[i as u8]],
+                &[SEED_CONDITIONAL_TOKEN, vault.key().as_ref(), &[i as u8]],
                 ctx.program_id,
             );
 
             let conditional_token_mint = next_account_info(remaining_accs)?;
-            require_eq!(conditional_token_mint.key(), conditional_token_mint_address);
+            require_keys_eq!(conditional_token_mint.key(), conditional_token_mint_address);
 
             conditional_token_mints.push(conditional_token_mint_address);
 
@@ -70,7 +74,7 @@ impl<'info, 'c: 'info> InitializeConditionalVault<'info> {
 
             let vault_key = vault.key();
             let seeds = &[
-                b"conditional_token",
+                SEED_CONDITIONAL_TOKEN,
                 vault_key.as_ref(),
                 &[i as u8],
                 &[pda_bump],
@@ -112,10 +116,7 @@ impl<'info, 'c: 'info> InitializeConditionalVault<'info> {
 
         let clock = Clock::get()?;
         emit_cpi!(InitializeConditionalVaultEvent {
-            common: CommonFields {
-                slot: clock.slot,
-                unix_timestamp: clock.unix_timestamp,
-            },
+            common: CommonFields::new(&clock),
             vault: vault.key(),
             question: vault.question,
             underlying_token_mint: vault.underlying_token_mint,

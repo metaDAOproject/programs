@@ -121,4 +121,32 @@ export default function suite() {
       });
     });
   });
+
+  it("doesn't allow initializing vault for question with less than 2 outcomes", async function () {
+    const oracle = Keypair.generate();
+    const questionId = sha256(new Uint8Array([1, 2, 3]));
+    const callbacks = expectError(
+      "InsufficientNumConditions",
+      "Vault initialized despite question having less than 2 outcomes",
+    );
+
+    await vaultClient
+      .initializeQuestionIx(questionId, oracle.publicKey, 1)
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("doesn't allow initializing vault for question with more than 10 outcomes", async function () {
+    const oracle = Keypair.generate();
+    const questionId = sha256(new Uint8Array([1, 2, 3]));
+    const callbacks = expectError(
+      "TooManyOutcomes",
+      "Vault initialized despite question having more than 10 outcomes",
+    );
+
+    await vaultClient
+      .initializeQuestionIx(questionId, oracle.publicKey, 11)
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
 }

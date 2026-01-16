@@ -27,7 +27,6 @@ pub struct AddMetadataToConditionalTokensEvent {
     pub seq_num: u64,
 }
 
-// TODO add `vault` to this event
 #[event]
 pub struct InitializeConditionalVaultEvent {
     pub common: CommonFields,

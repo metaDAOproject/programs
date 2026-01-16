@@ -39,7 +39,7 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
 
         for i in 0..expected_num_conditional_tokens {
             let conditional_token_mint = next_account_info(remaining_accs)?;
-            require_eq!(
+            require_keys_eq!(
                 ctx.accounts.vault.conditional_token_mints[i],
                 conditional_token_mint.key(),
                 VaultError::ConditionalMintMismatch
@@ -59,13 +59,13 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
                 Account::<TokenAccount>::try_from(user_conditional_token_account)
                     .or(Err(VaultError::BadConditionalTokenAccount))?;
 
-            require_eq!(
+            require_keys_eq!(
                 user_conditional_token_account.mint,
                 conditional_token_mints[i].key(),
                 VaultError::ConditionalTokenMintMismatch
             );
 
-            require_eq!(
+            require_keys_eq!(
                 user_conditional_token_account.owner,
                 ctx.accounts.authority.key(),
                 VaultError::UnauthorizedConditionalTokenAccount
