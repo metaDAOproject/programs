@@ -2,15 +2,13 @@ import { PublicKey, Transaction } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
-import { getSquadsPdasFromDao } from "../utils/squads.js";
+import { getSquadsPdasFromDao } from "../../utils/squads.js";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 
 const DAO_ADDRESS = new PublicKey("");
-const PROPOSAL_PDA = new PublicKey(
-  "HDyg2gbibGfDf672KN9MU38Z5dnNVaSiTsVQw33WnY5Q",
-);
+const PROPOSAL_PDA = new PublicKey("");
 
 async function main() {
   const { multisigPda, vaultPda } = await getSquadsPdasFromDao(DAO_ADDRESS);
@@ -23,17 +21,11 @@ async function main() {
 
   const proposalTransactionIndex = Number(proposalAccountInfo.transactionIndex);
   console.log(
-    "Proposal transaction index:",
+    "Squads proposal transaction index:",
     proposalTransactionIndex.toString(),
   );
 
   console.log("Vault address:", vaultPda.toBase58());
-
-  const proposalApproveIx = multisig.instructions.proposalApprove({
-    multisigPda,
-    transactionIndex: BigInt(proposalTransactionIndex.toString()),
-    member: PERMISSIONLESS_ACCOUNT.publicKey,
-  });
 
   const vaultTxExecuteIx = multisig.instructions.vaultTransactionExecute({
     connection: provider.connection,
@@ -44,10 +36,7 @@ async function main() {
 
   // Add both instructions to create the proposal
   const vaultTxExecuteIxResolved = await vaultTxExecuteIx;
-  const tx = new Transaction().add(
-    proposalApproveIx,
-    vaultTxExecuteIxResolved.instruction,
-  );
+  const tx = new Transaction().add(vaultTxExecuteIxResolved.instruction);
   tx.recentBlockhash = (
     await provider.connection.getLatestBlockhash()
   ).blockhash;
@@ -59,12 +48,11 @@ async function main() {
   const txHash = await provider.connection.sendRawTransaction(tx.serialize());
   await provider.connection.confirmTransaction(txHash, "confirmed");
 
-  console.log("USDC transfer proposal executed successfully!");
   console.log("Transaction hash:", txHash);
-  console.log("Proposal index:", proposalTransactionIndex.toString());
+  console.log("Squads proposal index:", proposalTransactionIndex.toString());
 }
 
 main().catch((error) => {
-  console.error("Error creating transfer:", error);
+  console.error("Error executing Squads proposal:", error);
   process.exit(1);
 });

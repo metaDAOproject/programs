@@ -1,11 +1,7 @@
 use super::*;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
-pub enum VaultStatus {
-    Active,
-    Finalized,
-    Reverted,
-}
+pub const SEED_CONDITIONAL_VAULT: &[u8] = b"conditional_vault";
+pub const SEED_CONDITIONAL_TOKEN: &[u8] = b"conditional_token";
 
 #[account]
 #[derive(InitSpace)]
@@ -13,6 +9,7 @@ pub struct ConditionalVault {
     pub question: Pubkey,
     pub underlying_token_mint: Pubkey,
     pub underlying_token_account: Pubkey,
+    // It is up to the initializer to increase the space of the account to include the conditional token mints.
     #[max_len(0)]
     pub conditional_token_mints: Vec<Pubkey>,
     pub pda_bump: u8,
@@ -21,9 +18,8 @@ pub struct ConditionalVault {
 }
 
 impl ConditionalVault {
-    /// Checks that the vault's assets are always greater than its potential
-    /// liabilities. Should be called anytime you mint or burn conditional
-    /// tokens.
+    /// Checks that the vault's assets are always greater than or equal to its potential
+    /// liabilities. Should be called anytime you mint or burn conditional tokens.
     ///
     /// `conditional_token_supplies` should be in the same order as
     /// `vault.conditional_token_mints`.
@@ -33,10 +29,10 @@ impl ConditionalVault {
         conditional_token_supplies: Vec<u64>,
         vault_underlying_balance: u64,
     ) -> Result<()> {
-        // if the question isn't resolved, the vault should have more underlying
+        // if the question isn't resolved, the vault should have more than or equal to underlying
         // tokens than ANY conditional token mint's supply
 
-        // if the question is resolved, the vault should have more underlying
+        // if the question is resolved, the vault should have more than or equal to underlying
         // tokens than the sum of the conditional token mint's supplies multiplied
         // by their respective payouts
 
@@ -68,7 +64,7 @@ impl ConditionalVault {
 macro_rules! generate_vault_seeds {
     ($vault:expr) => {{
         &[
-            b"conditional_vault",
+            SEED_CONDITIONAL_VAULT,
             $vault.question.as_ref(),
             $vault.underlying_token_mint.as_ref(),
             &[$vault.pda_bump],

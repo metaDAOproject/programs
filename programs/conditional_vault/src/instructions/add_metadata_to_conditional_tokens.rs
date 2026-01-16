@@ -20,10 +20,7 @@ pub struct AddMetadataToConditionalTokens<'info> {
     pub payer: Signer<'info>,
     #[account(mut)]
     pub vault: Account<'info, ConditionalVault>,
-    #[account(
-        mut,
-        mint::authority = vault,
-    )]
+    #[account(mint::authority = vault)]
     pub conditional_token_mint: Account<'info, Mint>,
     /// CHECK: verified via cpi into token metadata
     #[account(mut)]
@@ -35,11 +32,6 @@ pub struct AddMetadataToConditionalTokens<'info> {
 
 impl AddMetadataToConditionalTokens<'_> {
     pub fn validate(&self) -> Result<()> {
-        // require!(
-        //     self.vault.status == VaultStatus::Active,
-        //     VaultError::VaultAlreadySettled
-        // );
-
         require!(
             self.vault
                 .conditional_token_mints
@@ -53,7 +45,7 @@ impl AddMetadataToConditionalTokens<'_> {
         );
 
         #[cfg(feature = "production")]
-        require_eq!(self.payer.key(), proph3t_deployer::ID);
+        require_keys_eq!(self.payer.key(), proph3t_deployer::ID);
 
         Ok(())
     }
@@ -94,10 +86,7 @@ impl AddMetadataToConditionalTokens<'_> {
 
         let clock = Clock::get()?;
         emit_cpi!(AddMetadataToConditionalTokensEvent {
-            common: CommonFields {
-                slot: clock.slot,
-                unix_timestamp: clock.unix_timestamp,
-            },
+            common: CommonFields::new(&clock),
             vault: ctx.accounts.vault.key(),
             conditional_token_mint: ctx.accounts.conditional_token_mint.key(),
             conditional_token_metadata: ctx.accounts.conditional_token_metadata.key(),

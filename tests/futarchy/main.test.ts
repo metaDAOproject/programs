@@ -14,6 +14,7 @@ import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 
 import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
 import finalizeOptimisticProposal from "./unit/finalizeOptimisticProposal.test.js";
+import adminApproveProposal from "./unit/adminApproveExecuteMultisigProposal.test.js";
 
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -61,6 +62,7 @@ export default function suite() {
     initiateVaultSpendOptimisticProposal,
   );
   describe("#finalize_optimistic_proposal", finalizeOptimisticProposal);
+  describe("#admin_approve_proposal", adminApproveProposal);
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);

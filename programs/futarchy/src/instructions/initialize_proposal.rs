@@ -12,6 +12,7 @@ pub struct InitializeProposal<'info> {
     )]
     pub proposal: Box<Account<'info, Proposal>>,
     pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
+    pub squads_multisig: Box<Account<'info, squads_multisig_program::Multisig>>,
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(
@@ -65,6 +66,12 @@ impl InitializeProposal<'_> {
             }
         }
 
+        // Ensure the squads proposal is not invalidated by a previous config transaction
+        require_gt!(
+            self.squads_proposal.transaction_index,
+            self.squads_multisig.stale_transaction_index
+        );
+
         // Should never be the case because the oracle is the proposal account, and you can't re-initialize a proposal
         assert!(!self.question.is_resolved());
 
@@ -78,6 +85,7 @@ impl InitializeProposal<'_> {
             question,
             proposal,
             squads_proposal,
+            squads_multisig: _,
             dao,
             proposer,
             payer: _,

@@ -279,11 +279,13 @@ export class FutarchyClient {
     dao,
     baseMint,
     quoteMint,
+    squadsProposal,
   }: {
     proposal: PublicKey;
     dao: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
+    squadsProposal: PublicKey;
   }) {
     const {
       baseVault,
@@ -293,6 +295,8 @@ export class FutarchyClient {
       failBaseMint,
       failQuoteMint,
     } = this.getProposalPdas(proposal, baseMint, quoteMint, dao);
+
+    const squadsMultisig = multisig.getMultisigPda({ createKey: dao })[0];
 
     return this.autocrat.methods
       .launchProposal()
@@ -325,6 +329,8 @@ export class FutarchyClient {
           dao,
           true,
         ),
+        squadsMultisig,
+        squadsProposal,
         payer: this.provider.publicKey,
       })
       .preInstructions([
@@ -695,6 +701,8 @@ export class FutarchyClient {
       this.getProgramId(),
     );
 
+    const squadsMultisig = multisig.getMultisigPda({ createKey: dao })[0];
+
     return this.autocrat.methods
       .initializeProposal()
       .accounts({
@@ -705,6 +713,7 @@ export class FutarchyClient {
         baseVault,
         quoteVault,
         proposer,
+        squadsMultisig,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(

@@ -93,7 +93,7 @@ export type ConditionalVault = {
         },
         {
           name: "vaultUnderlyingTokenAccount";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -292,7 +292,7 @@ export type ConditionalVault = {
         },
         {
           name: "conditionalTokenMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -495,23 +495,6 @@ export type ConditionalVault = {
             type: {
               vec: "u32";
             };
-          },
-        ];
-      };
-    },
-    {
-      name: "VaultStatus";
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Active";
-          },
-          {
-            name: "Finalized";
-          },
-          {
-            name: "Reverted";
           },
         ];
       };
@@ -920,6 +903,16 @@ export type ConditionalVault = {
       name: "UnauthorizedConditionalTokenAccount";
       msg: "Conditional token account is not owned by the authority";
     },
+    {
+      code: 6017;
+      name: "InvalidPayoutNumerators";
+      msg: "Payout numerators are too large, causing an overflow";
+    },
+    {
+      code: 6018;
+      name: "TooManyOutcomes";
+      msg: "Questions can only have up to 10 outcomes";
+    },
   ];
 };
 
@@ -1018,7 +1011,7 @@ export const IDL: ConditionalVault = {
         },
         {
           name: "vaultUnderlyingTokenAccount",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1217,7 +1210,7 @@ export const IDL: ConditionalVault = {
         },
         {
           name: "conditionalTokenMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1420,23 +1413,6 @@ export const IDL: ConditionalVault = {
             type: {
               vec: "u32",
             },
-          },
-        ],
-      },
-    },
-    {
-      name: "VaultStatus",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Active",
-          },
-          {
-            name: "Finalized",
-          },
-          {
-            name: "Reverted",
           },
         ],
       },
@@ -1844,6 +1820,16 @@ export const IDL: ConditionalVault = {
       code: 6016,
       name: "UnauthorizedConditionalTokenAccount",
       msg: "Conditional token account is not owned by the authority",
+    },
+    {
+      code: 6017,
+      name: "InvalidPayoutNumerators",
+      msg: "Payout numerators are too large, causing an overflow",
+    },
+    {
+      code: 6018,
+      name: "TooManyOutcomes",
+      msg: "Questions can only have up to 10 outcomes",
     },
   ],
 };
