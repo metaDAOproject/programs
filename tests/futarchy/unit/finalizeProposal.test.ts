@@ -70,6 +70,9 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
           minBaseFutarchicLiquidity: null,
+          twapStartDelaySeconds: null,
+          teamSponsoredPassThresholdBps: null,
+          teamAddress: null,
         },
       })
       .instruction();
@@ -120,6 +123,7 @@ export default function suite() {
         dao,
         baseMint: META,
         quoteMint: USDC,
+        squadsProposal: squadsProposalPda,
       })
       .rpc();
   });
@@ -347,6 +351,9 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
           minBaseFutarchicLiquidity: null,
+          twapStartDelaySeconds: null,
+          teamSponsoredPassThresholdBps: null,
+          teamAddress: null,
         },
       })
       .instruction();
@@ -411,6 +418,7 @@ export default function suite() {
         dao: daoWithTeamSponsorship,
         baseMint: META,
         quoteMint: USDC,
+        squadsProposal: squadsProposalPda,
       })
       .rpc();
 

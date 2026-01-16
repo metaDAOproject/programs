@@ -147,4 +147,11 @@ pub mod futarchy {
     pub fn collect_meteora_damm_fees(ctx: Context<CollectMeteoraDammFees>) -> Result<()> {
         CollectMeteoraDammFees::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn admin_approve_execute_multisig_proposal<'c: 'info, 'info>(
+        ctx: Context<'_, '_, 'c, 'info, AdminApproveExecuteMultisigProposal<'info>>,
+    ) -> Result<()> {
+        AdminApproveExecuteMultisigProposal::handle(ctx)
+    }
 }

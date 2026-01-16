@@ -639,6 +639,7 @@ before(async function () {
         dao,
         baseMint: storedDao.baseMint,
         quoteMint: storedDao.quoteMint,
+        squadsProposal,
       })
       .rpc();
 
