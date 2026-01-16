@@ -3229,6 +3229,11 @@ export type Futarchy = {
       name: "CannotSponsorOptimisticProposalChallenge";
       msg: "Team cannot sponsor a challenge to an optimistic proposal";
     },
+    {
+      code: 6042;
+      name: "InvalidSpendingLimitMint";
+      msg: "Invalid spending limit mint. Must be the same as the DAO's quote mint";
+    },
   ];
 };
 
@@ -6462,6 +6467,11 @@ export const IDL: Futarchy = {
       code: 6041,
       name: "CannotSponsorOptimisticProposalChallenge",
       msg: "Team cannot sponsor a challenge to an optimistic proposal",
+    },
+    {
+      code: 6042,
+      name: "InvalidSpendingLimitMint",
+      msg: "Invalid spending limit mint. Must be the same as the DAO's quote mint",
     },
   ],
 };

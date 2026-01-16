@@ -33,12 +33,10 @@ impl FinalizeOptimisticProposal<'_> {
 
         // Pool must be in spot state - no active proposals
         // This should never be hit, but it's here for completeness
-        match self.dao.amm.state {
-            PoolState::Spot { spot: _ } => {}
-            _ => {
-                return Err(FutarchyError::PoolNotInSpotState.into());
-            }
-        }
+        require!(
+            matches!(self.dao.amm.state, PoolState::Spot { .. }),
+            FutarchyError::PoolNotInSpotState
+        );
 
         Ok(())
     }

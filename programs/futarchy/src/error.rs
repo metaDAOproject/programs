@@ -88,4 +88,6 @@ pub enum FutarchyError {
     OptimisticProposalAlreadyPassed,
     #[msg("Team cannot sponsor a challenge to an optimistic proposal")]
     CannotSponsorOptimisticProposalChallenge,
+    #[msg("Invalid spending limit mint. Must be the same as the DAO's quote mint")]
+    InvalidSpendingLimitMint,
 }

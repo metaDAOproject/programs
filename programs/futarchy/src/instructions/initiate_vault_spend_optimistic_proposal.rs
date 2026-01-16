@@ -60,12 +60,10 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
         );
 
         // Pool must be in spot state - no active proposal
-        match self.dao.amm.state {
-            PoolState::Spot { spot: _ } => {}
-            _ => {
-                return Err(FutarchyError::PoolNotInSpotState.into());
-            }
-        }
+        require!(
+            matches!(self.dao.amm.state, PoolState::Spot { spot: _ }),
+            FutarchyError::PoolNotInSpotState
+        );
 
         // There should be no active optimistic proposal
         require!(
@@ -73,21 +71,22 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
             FutarchyError::ActiveOptimisticProposalAlreadyEnqueued
         );
 
-        // A minimum of proposal duration must have passed since the last optimistic proposal was enqueued
-        match self.dao.optimistic_proposal {
-            Some(ref optimistic_proposal) => {
-                require_gte!(
-                    Clock::get()?.unix_timestamp,
-                    optimistic_proposal.enqueued_timestamp + self.dao.seconds_per_proposal as i64,
-                    FutarchyError::ProposalDurationTooShort
-                );
-            }
-            None => {}
-        };
+        // No existing optimistic proposal can be present. If one has passed, it can be finalized (finalize_optimistic_proposal)
+        require!(
+            self.dao.optimistic_proposal.is_none(),
+            FutarchyError::ProposalDurationTooShort
+        );
+
+        // Spending limit mint must be the same as the DAO's quote mint
+        require_eq!(
+            self.squads_spending_limit.mint,
+            self.dao.quote_mint,
+            FutarchyError::InvalidSpendingLimitMint
+        );
 
         // Amount must be less than or equal to 3 times the spending limit
         require_gte!(
-            self.squads_spending_limit.amount.checked_mul(3).unwrap(),
+            self.squads_spending_limit.amount * 3,
             params.amount,
             FutarchyError::InvalidAmount
         );
