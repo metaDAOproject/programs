@@ -27,7 +27,9 @@ pub struct LaunchProposal<'info> {
     pub amm_fail_base_vault: Box<Account<'info, TokenAccount>>,
     #[account(init_if_needed, payer = payer, associated_token::mint = fail_quote_mint, associated_token::authority = dao)]
     pub amm_fail_quote_vault: Box<Account<'info, TokenAccount>>,
+    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_multisig_program::ID)]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
+    #[account(owner = squads_multisig_program::ID)]
     pub squads_proposal: Account<'info, squads_multisig_program::Proposal>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,

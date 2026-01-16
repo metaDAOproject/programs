@@ -60,11 +60,8 @@ impl<'info, 'c: 'info> AdminApproveExecuteMultisigProposal<'info> {
             FutarchyError::InvalidAdmin
         );
 
-        match self.dao.amm.state {
-            PoolState::Spot { .. } => {}
-            _ => {
-                return Err(FutarchyError::PoolNotInSpotState.into());
-            }
+        if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
+            return Err(FutarchyError::PoolNotInSpotState.into());
         }
 
         Ok(())
