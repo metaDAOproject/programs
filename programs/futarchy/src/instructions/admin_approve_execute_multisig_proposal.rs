@@ -19,11 +19,33 @@ pub struct AdminApproveExecuteMultisigProposal<'info> {
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_multisig_program)]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
     /// CHECK: squads proposal, initialized by squads multisig program, checked by squads multisig program
-    #[account(mut)]
-    pub squads_multisig_proposal: UncheckedAccount<'info>,
+    #[account(
+        mut,
+        seeds = [
+            squads_multisig_program::SEED_PREFIX,
+            squads_multisig.key().as_ref(),
+            squads_multisig_program::SEED_TRANSACTION,
+            squads_multisig_vault_transaction.index.to_le_bytes().as_ref(),
+            squads_multisig_program::SEED_PROPOSAL,
+        ],
+        bump,
+        seeds::program = squads_multisig_program
+    )]
+    pub squads_multisig_proposal: Account<'info, squads_multisig_program::Proposal>,
     /// CHECK: squads vault transaction, initialized by squads multisig program, checked by squads multisig program
-    #[account(mut)]
-    pub squads_multisig_vault_transaction: UncheckedAccount<'info>,
+    #[account(
+        mut,
+        seeds = [
+            squads_multisig_program::SEED_PREFIX,
+            squads_multisig.key().as_ref(),
+            squads_multisig_program::SEED_TRANSACTION,
+            squads_multisig_vault_transaction.index.to_le_bytes().as_ref(),
+        ],
+        bump,
+        seeds::program = squads_multisig_program
+    )]
+    pub squads_multisig_vault_transaction:
+        Account<'info, squads_multisig_program::VaultTransaction>,
 
     pub squads_multisig_program:
         Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
