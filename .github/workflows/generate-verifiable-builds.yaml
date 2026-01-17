@@ -70,6 +70,7 @@ jobs:
           program: price_based_performance_package
           anchor-version: '0.29.0'
           solana-cli-version: '1.17.31'
+          features: 'production'
       - run: 'git pull --rebase'
       - run: cp target/deploy/price_based_performance_package.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
