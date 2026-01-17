@@ -195,7 +195,7 @@ export class BidWallClient {
 
     return this.bidWallProgram.methods.collectFees().accounts({
       bidWall,
-      admin,
+      cranker: admin,
       bidWallQuoteTokenAccount,
       feeRecipientQuoteTokenAccount,
       quoteMint,

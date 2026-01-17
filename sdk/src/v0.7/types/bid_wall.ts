@@ -248,7 +248,7 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "admin";
+          name: "cranker";
           isMut: false;
           isSigner: true;
         },
@@ -716,8 +716,8 @@ export type BidWall = {
     },
     {
       code: 6006;
-      name: "InvalidAdmin";
-      msg: "Invalid admin";
+      name: "InvalidCrankAddress";
+      msg: "Invalid crank address";
     },
   ];
 };
@@ -972,7 +972,7 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "admin",
+          name: "cranker",
           isMut: false,
           isSigner: true,
         },
@@ -1440,8 +1440,8 @@ export const IDL: BidWall = {
     },
     {
       code: 6006,
-      name: "InvalidAdmin",
-      msg: "Invalid admin",
+      name: "InvalidCrankAddress",
+      msg: "Invalid crank address",
     },
   ],
 };
