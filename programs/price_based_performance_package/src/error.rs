@@ -28,4 +28,6 @@ pub enum PriceBasedPerformancePackageError {
     TrancheTokenAmountZero,
     #[msg("TWAP length must be greater than or equal to 1 day and less than 1 year")]
     InvalidTwapLength,
+    #[msg("Invalid admin")]
+    InvalidAdmin,
 }

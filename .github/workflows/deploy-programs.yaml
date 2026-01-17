@@ -90,6 +90,7 @@ jobs:
       upload_idl: true
       verify: true
       use-squads: true
+      features: "production"
       priority-fee: ${{ inputs.priority-fee }}
     secrets:
       MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}

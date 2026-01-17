@@ -1,5 +1,6 @@
 use super::*;
 
+pub mod burn_performance_package;
 pub mod change_performance_package_authority;
 pub mod complete_unlock;
 pub mod execute_change;
@@ -7,6 +8,7 @@ pub mod initialize_performance_package;
 pub mod propose_change;
 pub mod start_unlock;
 
+pub use burn_performance_package::*;
 pub use change_performance_package_authority::*;
 pub use complete_unlock::*;
 pub use execute_change::*;
