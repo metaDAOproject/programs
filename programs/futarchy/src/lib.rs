@@ -100,6 +100,10 @@ pub mod futarchy {
         UpdateDao::handle(ctx, dao_params)
     }
 
+    pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
+        ResizeDao::handle(ctx)
+    }
+
     // AMM instructions
 
     pub fn spot_swap(ctx: Context<SpotSwap>, params: SpotSwapParams) -> Result<()> {
