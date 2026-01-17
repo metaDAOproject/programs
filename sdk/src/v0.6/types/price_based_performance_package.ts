@@ -288,6 +288,52 @@ export type PriceBasedPerformancePackage = {
         },
       ];
     },
+    {
+      name: "burnPerformancePackage";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "performancePackageTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "spillAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -891,6 +937,11 @@ export type PriceBasedPerformancePackage = {
       name: "InvalidTwapLength";
       msg: "TWAP length must be greater than or equal to 1 day and less than 1 year";
     },
+    {
+      code: 6013;
+      name: "InvalidAdmin";
+      msg: "Invalid admin";
+    },
   ];
 };
 
@@ -1183,6 +1234,52 @@ export const IDL: PriceBasedPerformancePackage = {
           },
         },
       ],
+    },
+    {
+      name: "burnPerformancePackage",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "performancePackageTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "spillAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [
@@ -1786,6 +1883,11 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6012,
       name: "InvalidTwapLength",
       msg: "TWAP length must be greater than or equal to 1 day and less than 1 year",
+    },
+    {
+      code: 6013,
+      name: "InvalidAdmin",
+      msg: "Invalid admin",
     },
   ],
 };
