@@ -153,6 +153,7 @@ export default function suite() {
         dao,
         baseMint: META,
         quoteMint: MAINNET_USDC,
+        squadsProposal,
       })
       .rpc();
 
@@ -217,6 +218,7 @@ export default function suite() {
         dao,
         baseMint: META,
         quoteMint: MAINNET_USDC,
+        squadsProposal,
       })
       .rpc()
       .then(callbacks[0], callbacks[1]);

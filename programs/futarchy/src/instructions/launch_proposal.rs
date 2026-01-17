@@ -72,6 +72,17 @@ impl LaunchProposal<'_> {
             );
         }
 
+        // Can only launch a proposal if the underlying squads proposal is active
+        // This check exists mainly to prevent a situation where we try to launch a proposal for a passed optimistic proposal.
+        // However, it also applies in general, to prevent a situation where we enter futarchy with an invalid squads proposal state, thus bricking it.
+        require!(
+            matches!(
+                self.squads_proposal.status,
+                squads_multisig_program::ProposalStatus::Active { .. }
+            ),
+            FutarchyError::InvalidSquadsProposalStatus
+        );
+
         // Ensure the squads proposal is not invalidated by a previous config transaction
         require_gt!(
             self.squads_proposal.transaction_index,
@@ -168,13 +179,15 @@ impl LaunchProposal<'_> {
         proposal.state = ProposalState::Pending;
         proposal.timestamp_enqueued = clock.unix_timestamp;
 
-        // Update the DAO state
+        // If this is moving an optimistic proposal into the futarchy proposal, the futarchy proposal will be treated as team-sponsored (lower pass threshold)
         if dao.optimistic_proposal.is_some() {
-            // The optimistic proposal is being challenged, so we are moving it into the futarchy proposal
-            // This means that the optimistic proposal now has to pass a decision market in order to be approved/executed
-            // verify() ensures that the optimistic proposal and squads proposal are the same
-            dao.optimistic_proposal = None;
+            proposal.is_team_sponsored = true;
         }
+
+        // Update the DAO state
+        // There either is no optimistic proposal, or the optimistic proposal is being moved into the futarchy proposal
+        // This means that the optimistic proposal now has to pass a decision market in order to be approved/executed
+        dao.optimistic_proposal = None;
 
         dao.seq_num += 1;
 
