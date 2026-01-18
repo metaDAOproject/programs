@@ -1,11 +1,26 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
+#[cfg(feature = "production")]
+use crate::error::BidWallError;
 use crate::{
     events::{BidWallFeesCollectedEvent, CommonFields},
     state::BidWall,
     usdc_mint,
 };
+
+pub mod metadao_multisig_vault {
+    use anchor_lang::prelude::declare_id;
+
+    // MetaDAO operations multisig vault - hardcoded fee destination
+    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+}
+
+pub mod metadao_cranker {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
+}
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -13,14 +28,12 @@ pub struct CollectFees<'info> {
     #[account(mut)]
     pub bid_wall: Account<'info, BidWall>,
 
+    pub cranker: Signer<'info>,
+
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]
     pub bid_wall_quote_token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: used for constraints
-    #[account(address = bid_wall.fee_recipient)]
-    pub fee_recipient: UncheckedAccount<'info>,
-
-    #[account(mut, associated_token::mint = quote_mint, associated_token::authority = fee_recipient)]
+    #[account(mut, associated_token::mint = quote_mint, associated_token::authority = metadao_multisig_vault::ID)]
     pub fee_recipient_quote_token_account: Account<'info, TokenAccount>,
 
     #[account(address = usdc_mint::id())]
@@ -32,6 +45,13 @@ pub struct CollectFees<'info> {
 
 impl CollectFees<'_> {
     pub fn validate(&self) -> Result<()> {
+        #[cfg(feature = "production")]
+        require_keys_eq!(
+            self.cranker.key(),
+            metadao_cranker::ID,
+            BidWallError::InvalidCrankAddress
+        );
+
         Ok(())
     }
 

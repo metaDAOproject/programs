@@ -1,6 +1,6 @@
 {
   "name": "@metadaoproject/futarchy",
-  "version": "0.7.0-alpha.6",
+  "version": "0.7.0-alpha.8",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -22,7 +22,7 @@
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "build": "tsc",
     "build-local": "rm -rf ./dist && cp ../target/types/* ./src/v0.7/types && yarn tsc",
-    "publish": "yarn lint:fix && yarn build && yarn publish"
+    "prepublishOnly": "yarn lint:fix && yarn build"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",

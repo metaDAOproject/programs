@@ -5,6 +5,8 @@ import {
   FUTARCHY_PROGRAM_ID,
   FutarchyClient,
   MAINNET_METEORA_CONFIG,
+  BidWallClient,
+  BID_WALL_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.7";
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -31,17 +33,33 @@ const futarchy: FutarchyClient = new FutarchyClient(
   [],
 );
 
+const bidWallClient: BidWallClient = BidWallClient.createClient({
+  provider,
+  bidWallProgramId: BID_WALL_PROGRAM_ID,
+});
+
 interface FeeCollectionResult {
   dao: string;
   internalFees: { success: boolean; signature?: string; error?: string };
   meteoraFees: { success: boolean; signature?: string; error?: string };
+  bidWallFees: {
+    success: boolean;
+    signature?: string;
+    error?: string;
+    bidWallsProcessed?: number;
+  };
 }
 
 const collectAllFees = async () => {
   // Fetch all DAOs
   console.log("[1] Fetching all DAOs...");
   const allDaos = await futarchy.autocrat.account.dao.all();
-  console.log(`Found ${allDaos.length} DAOs\n`);
+  console.log(`Found ${allDaos.length} DAOs`);
+
+  // Fetch all bid walls
+  console.log("[2] Fetching all Bid Walls...");
+  const allBidWalls = await bidWallClient.bidWallProgram.account.bidWall.all();
+  console.log(`Found ${allBidWalls.length} Bid Walls\n`);
 
   const results: FeeCollectionResult[] = [];
 
@@ -63,6 +81,7 @@ const collectAllFees = async () => {
       dao: daoKey,
       internalFees: { success: false },
       meteoraFees: { success: false },
+      bidWallFees: { success: false },
     };
 
     // Create ATA addresses and instructions (used by both fee collection methods)
@@ -92,6 +111,7 @@ const collectAllFees = async () => {
 
     // Collect internal Futarchy AMM fees
     try {
+      console.log("  - Collecting internal Futarchy AMM fees...");
       const signature = await futarchy
         .collectFeesIx({
           dao: dao.publicKey,
@@ -156,6 +176,55 @@ const collectAllFees = async () => {
       }
     }
 
+    // Collect Bid Wall fees
+    try {
+      console.log("  - Collecting Bid Wall fees...");
+
+      // Filter bid walls for this DAO's base mint
+      const bidWalls = allBidWalls.filter(
+        (bw) =>
+          bw.account.baseMint.toBase58() === dao.account.baseMint.toBase58(),
+      );
+
+      if (bidWalls.length === 0) {
+        console.log(`    Skipped: No bid walls found for this DAO`);
+        result.bidWallFees = { success: true, bidWallsProcessed: 0 };
+      } else {
+        let bidWallsWithFees = 0;
+        for (const bidWall of bidWalls) {
+          if (bidWall.account.feesCollected.toNumber() > 0) {
+            bidWallsWithFees++;
+            const signature = await bidWallClient
+              .collectFeesIx({
+                bidWall: bidWall.publicKey,
+                admin: payer.publicKey,
+              })
+              .preInstructions([createQuoteAtaIx])
+              .rpc();
+
+            console.log(
+              `    Bid wall ${bidWall.publicKey.toBase58().slice(0, 8)}... fees collected: ${signature}`,
+            );
+          }
+        }
+
+        if (bidWallsWithFees === 0) {
+          console.log(
+            `    Skipped: ${bidWalls.length} bid wall(s) found but none have fees to collect`,
+          );
+        }
+
+        result.bidWallFees = {
+          success: true,
+          bidWallsProcessed: bidWallsWithFees,
+        };
+      }
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : String(e);
+      result.bidWallFees = { success: false, error: errorMsg };
+      console.log(`    Failed: ${errorMsg.slice(0, 100)}`);
+    }
+
     results.push(result);
     console.log("");
   }
@@ -163,18 +232,39 @@ const collectAllFees = async () => {
   console.log(`Total DAOs processed: ${results.length}`);
 
   // Show failures
-  const failures = results.filter(
+  const internalFailures = results.filter(
     (r) =>
       !r.internalFees.success &&
       r.internalFees.error &&
       !r.internalFees.error.includes("PoolNotInSpotState"),
   );
-  if (failures.length > 0) {
+  if (internalFailures.length > 0) {
     console.log(`\nInternal fee collection failures:`);
-    failures.forEach((f) => {
+    internalFailures.forEach((f) => {
       console.log(`  - ${f.dao}: ${f.internalFees.error?.slice(0, 80)}`);
     });
   }
+
+  const bidWallFailures = results.filter(
+    (r) =>
+      !r.bidWallFees.success &&
+      r.bidWallFees.error &&
+      !r.bidWallFees.error.includes("Account does not exist") &&
+      !r.bidWallFees.error.includes("AccountNotFound"),
+  );
+  if (bidWallFailures.length > 0) {
+    console.log(`\nBid wall fee collection failures:`);
+    bidWallFailures.forEach((f) => {
+      console.log(`  - ${f.dao}: ${f.bidWallFees.error?.slice(0, 80)}`);
+    });
+  }
+
+  // Summary of bid wall fees collected
+  const bidWallsProcessed = results.reduce(
+    (acc, r) => acc + (r.bidWallFees.bidWallsProcessed || 0),
+    0,
+  );
+  console.log(`\nTotal bid walls with fees collected: ${bidWallsProcessed}`);
 };
 
 collectAllFees().catch(console.error);
