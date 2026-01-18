@@ -27,7 +27,7 @@ jobs:
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "conditional_vault"
-      override-program-id: "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGeHV"
+      override-program-id: "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
       network: "mainnet"
       deploy: true
       upload_idl: true
