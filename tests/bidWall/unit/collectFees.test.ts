@@ -173,6 +173,9 @@ export default function suite() {
       .initializeBidWallIx({
         amount: 100_000_000000,
         durationSeconds,
+        feeDecayDurationSeconds: 2,
+        maxFeeBps: 200,
+        minFeeBps: 100,
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         creator: this.payer.publicKey,
@@ -234,7 +237,7 @@ export default function suite() {
       METADAO_MULTISIG_VAULT,
     );
 
-    const expectedFeesCollected = 1_000_000000n;
+    const expectedFeesCollected = 2_000_000000n;
 
     assert.equal(
       bidWallUsdcBalanceAfter,

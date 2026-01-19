@@ -150,6 +150,9 @@ export default function suite() {
       .initializeBidWallIx({
         amount: 100_000_000000,
         durationSeconds,
+        feeDecayDurationSeconds: 2,
+        maxFeeBps: 200,
+        minFeeBps: 100,
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         creator: this.payer.publicKey,
@@ -216,15 +219,15 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    // Seller received 99_000_000000 USDC (99K), which is 100_000_000000 - 1_000_000000 (fee)
-    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 99_000_000000n);
+    // Seller received 98_000_000000 USDC (98K), which is 100_000_000000 - 2_000_000000 (fee)
+    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 98_000_000000n);
     assert.equal(metaBalanceAfter, 5_000_000_000000n);
 
-    // Bid wall collected 1_000_000000 USDC (1K) in fees
+    // Bid wall collected 2_000_000000 USDC (2K) in fees
     const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
     assert.equal(
       bidWallAccount.feesCollected.toString(),
-      new BN(1_000_000000).toString(),
+      new BN(2_000_000000).toString(),
     );
   });
 
@@ -273,24 +276,24 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    // Seller received 39_600_000000 USDC (39.6K), which is 40_000_000000 - 400_000000 (fee)
-    assert.equal(usdcBalanceAfterFirstSell, usdcBalanceBefore + 39_600_000000n);
+    // Seller received 39_200_000000 USDC (39.2K), which is 40_000_000000 - 800_000000 (fee)
+    assert.equal(usdcBalanceAfterFirstSell, usdcBalanceBefore + 39_200_000000n);
     assert.equal(metaBalanceAfterFirstSell, 8_000_000_000000n);
 
-    // Bid wall collected 400_000000 USDC (0.4K) in fees
+    // Bid wall collected 800_000000 USDC (0.8K) in fees
     let bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
     assert.equal(
       bidWallAccount.feesCollected.toString(),
-      new BN(400_000000).toString(),
+      new BN(800_000000).toString(),
     );
 
     const bidWallUsdcBalanceAfterFirstSell = await this.getTokenBalance(
       MAINNET_USDC,
       bidWall,
     );
-    // Bid wall should have 60.4K USDC after the first sell
-    // That is 100k (initial bid wall balance) reduced by 40k (bought) minus the fee (400)
-    assert.equal(bidWallUsdcBalanceAfterFirstSell, 60_400_000000n);
+    // Bid wall should have 60.8K USDC after the first sell
+    // That is 100k (initial bid wall balance) reduced by 40k (bought) minus the fee (800)
+    assert.equal(bidWallUsdcBalanceAfterFirstSell, 60_800_000000n);
 
     const daoTreasuryQuoteTokenAccountAddress = getAssociatedTokenAddressSync(
       MAINNET_USDC,
@@ -335,7 +338,7 @@ export default function suite() {
     // Active supply = 8_000_000_000000 META (8M)
     // Price = 100_000_000000 / 8_000_000_000000 = ~0.0125 USDC per META
     // Assume user sells 2M META
-    // User will receive 24_750 USDC, which is 25_000 USDC (2M * 0.0125) minus 1% fee (250 USDC), rounded down.
+    // User will receive 24_500 USDC, which is 25_000 USDC (2M * 0.0125) minus 2% fee (500 USDC), rounded down.
 
     await bidWallClient
       .sellTokensIx({
@@ -361,24 +364,24 @@ export default function suite() {
     );
     assert.equal(
       usdcBalanceAfterSecondSell,
-      usdcBalanceAfterFirstSell + 24_750_000000n,
+      usdcBalanceAfterFirstSell + 24_500_000000n,
     );
     assert.equal(metaBalanceAfterSecondSell, 6_000_000_000000n);
 
-    // Bid wall collected an additional 250_000000 USDC (250) in fees, totalling 650 USDC
+    // Bid wall collected an additional 500_000000 USDC (500) in fees, totalling 1,300 USDC
     bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
     assert.equal(
       bidWallAccount.feesCollected.toString(),
-      new BN(650_000000).toString(),
+      new BN(1_300_000000).toString(),
     );
 
     const bidWallUsdcBalanceAfterSecondSell = await this.getTokenBalance(
       MAINNET_USDC,
       bidWall,
     );
-    // Bid wall should have 35_650 USDC after the second sell
-    // That is 60_400 (after first sell) reduced by 25_000 (bought) minus the fee (250)
-    assert.equal(bidWallUsdcBalanceAfterSecondSell, 35_650_000_000n);
+    // Bid wall should have 36_300 USDC after the second sell
+    // That is 60_800 (after first sell) reduced by 25_000 (bought) minus the fee (1,300)
+    assert.equal(bidWallUsdcBalanceAfterSecondSell, 36_300_000_000n);
 
     // Confirm that a third sell would get the same price per token as the second sell
     await bidWallClient
@@ -405,24 +408,24 @@ export default function suite() {
     );
     assert.equal(
       usdcBalanceAfterThirdSell,
-      usdcBalanceAfterSecondSell + 24_750_000000n,
+      usdcBalanceAfterSecondSell + 24_500_000000n,
     );
     assert.equal(metaBalanceAfterThirdSell, 4_000_000_000000n);
 
-    // Bid wall collected an additional 250 USDC in fees, totalling 900 USDC
+    // Bid wall collected an additional 500 USDC in fees, totalling 1800 USDC
     bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
     assert.equal(
       bidWallAccount.feesCollected.toString(),
-      new BN(900_000000).toString(),
+      new BN(1_800_000000).toString(),
     );
 
     const bidWallUsdcBalanceAfterThirdSell = await this.getTokenBalance(
       MAINNET_USDC,
       bidWall,
     );
-    // Bid wall should have 10_900 USDC after the third sell
-    // That is 35_650 (after second sell) reduced by 25_000 (bought) minus the fee (250)
-    assert.equal(bidWallUsdcBalanceAfterThirdSell, 10_900_000000n);
+    // Bid wall should have 11_800 USDC after the third sell
+    // That is 36_300 (after second sell) reduced by 25_000 (bought) minus the fee (500)
+    assert.equal(bidWallUsdcBalanceAfterThirdSell, 11_800_000000n);
   });
 
   it("sending quote tokens to a bid wall beyond what was originally allocated doesn't change the NAV per token", async function () {
@@ -450,10 +453,163 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    // User received 99_000_000000 USDC (99K), which is 100_000_000000 - 1_000_000000 (fee)
+    // User received 98_000_000000 USDC (98K), which is 100_000_000000 - 2_000_000000 (fee)
     // This is the same case as in the "successfully sells tokens into a bid wall" test
     // Bid wall remains unaffected by the transfer of USDC into it
-    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 99_000_000000n);
+    assert.equal(usdcBalanceAfter, usdcBalanceBefore + 98_000_000000n);
+  });
+
+  it("fee decays over time", async function () {
+    const usdcBalanceBefore = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    const metaBalanceBefore = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+
+    // User should have gotten 10M META from the launch
+    assert.equal(metaBalanceBefore, 10_000_000_000000n);
+
+    // As it stands:
+    // DAO treasury = 80_000_000000 USDC (100K)
+    // Futarchy AMM = 20_000_000000 USDC (20K)
+    // Bid wall = 100_000_000000 USDC (100K)
+    // Total assumed NAV = 200_000_000000 USDC (200K)
+    // Active supply = 10_000_000_000000 META (10M)
+    // Price = 200_000_000000 / 10_000_000_000000 = ~0.02 USDC per META
+    // Assume user sells 1M META
+    // User will receive ~20_000 USDC (1M * 0.02) minus 2% fee, rounded down.
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 1_000_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .rpc();
+
+    const usdcBalanceAfterFirstSell = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+
+    const metaBalanceAfterFirstSell = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+
+    // Seller received 19_600_000000 USDC (19.6K), which is 20_000_000000 - 400_000000 (2% fee)
+    assert.equal(usdcBalanceAfterFirstSell, usdcBalanceBefore + 19_600_000000n);
+    assert.equal(metaBalanceAfterFirstSell, 9_000_000_000000n);
+
+    // Bid wall collected 400_000000 USDC (400) in fees
+    const bidWallAccount = await bidWallClient.fetchBidWall(bidWall);
+    assert.equal(
+      bidWallAccount.feesCollected.toString(),
+      new BN(400_000000).toString(),
+    );
+
+    // One second passes, making the fee decay by 0.5% - from 2% to 1.5%
+    await this.advanceBySeconds(1);
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 1_000_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_003 }),
+      ])
+      .rpc();
+
+    const usdcBalanceAfterSecondSell = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+    const metaBalanceAfterSecondSell = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+    // Seller received 19_700_000000 USDC (19.7K), which is 20_000_000000 - 300_000000 (1.5% fee)
+    assert.equal(
+      usdcBalanceAfterSecondSell,
+      usdcBalanceAfterFirstSell + 19_700_000000n,
+    );
+    assert.equal(metaBalanceAfterSecondSell, 8_000_000_000000n);
+
+    // Another second passes, making the fee decay by 0.5% - from 1.5% to 1%
+    await this.advanceBySeconds(1);
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 1_000_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_004 }),
+      ])
+      .rpc();
+
+    const usdcBalanceAfterThirdSell = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+    const metaBalanceAfterThirdSell = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+    // Seller received 19_800_000000 USDC (19.8K), which is 20_000_000000 - 200_000000 (1% fee)
+    assert.equal(
+      usdcBalanceAfterThirdSell,
+      usdcBalanceAfterSecondSell + 19_800_000000n,
+    );
+    assert.equal(metaBalanceAfterThirdSell, 7_000_000_000000n);
+
+    // Another second passes, but the fee doesn't decay anymore because it's at the minimum
+    await this.advanceBySeconds(1);
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 1_000_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_005 }),
+      ])
+      .rpc();
+
+    const usdcBalanceAfterFourthSell = await this.getTokenBalance(
+      MAINNET_USDC,
+      this.payer.publicKey,
+    );
+    const metaBalanceAfterFourthSell = await this.getTokenBalance(
+      META,
+      this.payer.publicKey,
+    );
+    // Seller received 19_800_000000 USDC (19.8K), which is 20_000_000000 - 200_000000 (1% fee)
+    assert.equal(
+      usdcBalanceAfterFourthSell,
+      usdcBalanceAfterThirdSell + 19_800_000000n,
+    );
+    assert.equal(metaBalanceAfterFourthSell, 6_000_000_000000n);
   });
 
   it("fails to sell tokens into a bid wall when bid wall is expired", async function () {

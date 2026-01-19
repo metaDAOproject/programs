@@ -29,6 +29,8 @@ use futarchy::{InitialSpendingLimit, InitializeDaoParams, ProvideLiquidityParams
 
 use damm_v2_cpi::program::DammV2Cpi;
 
+pub const PASS_THRESHOLD_BPS: u16 = 300; // 3%
+
 /// Static accounts for completing a launch, used to reduce code duplication
 /// and conserve stack space.
 #[derive(Accounts)]
@@ -425,7 +427,7 @@ impl CompleteLaunch<'_> {
                 // We're providing liquidity, so that can be used for proposals
                 min_quote_futarchic_liquidity: 0,
                 min_base_futarchic_liquidity: 0,
-                pass_threshold_bps: 300,
+                pass_threshold_bps: PASS_THRESHOLD_BPS,
                 base_to_stake: TOKENS_TO_PARTICIPANTS / 20,
                 seconds_per_proposal: 3 * 24 * 60 * 60,
                 twap_start_delay_seconds: 24 * 60 * 60,
@@ -478,6 +480,9 @@ impl CompleteLaunch<'_> {
                 nonce: 0,
                 initial_amm_quote_reserves: usdc_to_lp,
                 duration_seconds: 3 * 30 * 24 * 60 * 60, // 3 months
+                fee_decay_duration_seconds: 14 * 24 * 60 * 60, // 14 days
+                max_fee_bps: PASS_THRESHOLD_BPS + 200,   // 2% more than the pass threshold = 5%
+                min_fee_bps: PASS_THRESHOLD_BPS, // Set min_fee to be the same as the pass threshold
             },
         )
     }

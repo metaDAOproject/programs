@@ -153,6 +153,9 @@ export default function suite() {
       .initializeBidWallIx({
         amount: fundAmount.sub(minRaiseAmount).toNumber(),
         durationSeconds,
+        feeDecayDurationSeconds: 1,
+        maxFeeBps: 500,
+        minFeeBps: 300,
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         creator: this.payer.publicKey,
@@ -197,6 +200,9 @@ export default function suite() {
     );
     assert.equal(bidWallAccount.baseMint.toBase58(), META.toBase58());
     assert.equal(bidWallAccount.durationSeconds, durationSeconds);
+    assert.equal(bidWallAccount.feeDecayDurationSeconds, 1);
+    assert.equal(bidWallAccount.maxFeeBps, 500);
+    assert.equal(bidWallAccount.minFeeBps, 300);
     assert.equal(bidWallAccount.pdaBump, bump);
   });
 }

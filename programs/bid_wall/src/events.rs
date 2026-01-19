@@ -30,6 +30,9 @@ pub struct BidWallInitializedEvent {
     pub base_mint: Pubkey,
     pub fee_recipient: Pubkey,
     pub duration_seconds: u32,
+    pub fee_decay_duration_seconds: u32,
+    pub max_fee_bps: u16,
+    pub min_fee_bps: u16,
     pub pda_bump: u8,
 }
 

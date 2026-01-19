@@ -16,4 +16,6 @@ pub enum BidWallError {
     InvalidInputAmount,
     #[msg("Invalid crank address")]
     InvalidCrankAddress,
+    #[msg("Invalid fee decay duration. Must be greater than 0")]
+    InvalidFeeDecayDuration,
 }

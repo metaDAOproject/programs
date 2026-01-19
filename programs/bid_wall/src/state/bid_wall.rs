@@ -31,6 +31,12 @@ pub struct BidWall {
     pub fee_recipient: Pubkey,
     /// The minimum duration in seconds before the bid wall can be closed.
     pub duration_seconds: u32,
+    /// The duration in seconds over which the fee linearly decays from the max fee to the min fee.
+    pub fee_decay_duration_seconds: u32,
+    /// The maximum fee in basis points.
+    pub max_fee_bps: u16,
+    /// The minimum fee in basis points.
+    pub min_fee_bps: u16,
     /// The PDA bump.
     pub pda_bump: u8,
 }

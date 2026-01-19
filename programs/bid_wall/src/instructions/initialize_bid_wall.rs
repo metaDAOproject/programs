@@ -5,6 +5,7 @@ use anchor_spl::{
 };
 
 use crate::{
+    error::BidWallError,
     events::{BidWallInitializedEvent, CommonFields},
     state::BidWall,
     usdc_mint,
@@ -16,6 +17,9 @@ pub struct InitializeBidWallArgs {
     pub nonce: u64,
     pub initial_amm_quote_reserves: u64,
     pub duration_seconds: u32,
+    pub fee_decay_duration_seconds: u32,
+    pub max_fee_bps: u16,
+    pub min_fee_bps: u16,
 }
 
 #[event_cpi]
@@ -63,7 +67,14 @@ pub struct InitializeBidWall<'info> {
 }
 
 impl InitializeBidWall<'_> {
-    pub fn validate(&self, _args: &InitializeBidWallArgs) -> Result<()> {
+    pub fn validate(&self, args: &InitializeBidWallArgs) -> Result<()> {
+        // Prevents division by zero in the sell_tokens instruction
+        require_gt!(
+            args.fee_decay_duration_seconds,
+            0,
+            BidWallError::InvalidFeeDecayDuration
+        );
+
         Ok(())
     }
 
@@ -101,6 +112,9 @@ impl InitializeBidWall<'_> {
             base_mint: ctx.accounts.base_mint.key(),
             fee_recipient: ctx.accounts.fee_recipient.key(),
             duration_seconds: args.duration_seconds,
+            fee_decay_duration_seconds: args.fee_decay_duration_seconds,
+            max_fee_bps: args.max_fee_bps,
+            min_fee_bps: args.min_fee_bps,
             pda_bump: ctx.bumps.bid_wall,
         });
 
@@ -116,6 +130,9 @@ impl InitializeBidWall<'_> {
             base_mint: ctx.accounts.base_mint.key(),
             fee_recipient: ctx.accounts.fee_recipient.key(),
             duration_seconds: args.duration_seconds,
+            fee_decay_duration_seconds: ctx.accounts.bid_wall.fee_decay_duration_seconds,
+            max_fee_bps: ctx.accounts.bid_wall.max_fee_bps,
+            min_fee_bps: ctx.accounts.bid_wall.min_fee_bps,
             pda_bump: ctx.bumps.bid_wall,
         });
 

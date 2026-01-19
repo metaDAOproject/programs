@@ -149,6 +149,9 @@ export default function suite() {
       .initializeBidWallIx({
         amount: 100_000_000000,
         durationSeconds,
+        feeDecayDurationSeconds: 2,
+        maxFeeBps: 200,
+        minFeeBps: 100,
         initialAmmQuoteReserves: ammQuoteVaultReserves.toNumber(),
         authority: this.payer.publicKey,
         creator: this.payer.publicKey,
@@ -229,10 +232,10 @@ export default function suite() {
       authorityUsdcBalanceAfter,
       authorityUsdcBalanceBefore + 50_000_000000n,
     );
-    // Fee recipient received 500 USDC in fees
+    // Fee recipient received 1000 USDC in fees
     assert.equal(
       feeRecipientUsdcBalanceAfter,
-      feeRecipientUsdcBalanceBefore + 500_000000n,
+      feeRecipientUsdcBalanceBefore + 1_000_000000n,
     );
   });
 

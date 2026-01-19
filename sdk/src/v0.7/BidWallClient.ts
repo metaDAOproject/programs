@@ -56,6 +56,9 @@ export class BidWallClient {
   initializeBidWallIx({
     amount,
     durationSeconds,
+    feeDecayDurationSeconds,
+    maxFeeBps,
+    minFeeBps,
     initialAmmQuoteReserves,
     daoTreasury,
     authority,
@@ -68,6 +71,9 @@ export class BidWallClient {
   }: {
     amount: number;
     durationSeconds: number;
+    feeDecayDurationSeconds: number;
+    maxFeeBps: number;
+    minFeeBps: number;
     initialAmmQuoteReserves: number;
     daoTreasury: PublicKey;
     creator?: PublicKey;
@@ -98,6 +104,9 @@ export class BidWallClient {
         nonce,
         durationSeconds,
         initialAmmQuoteReserves: new BN(initialAmmQuoteReserves),
+        feeDecayDurationSeconds,
+        maxFeeBps,
+        minFeeBps,
       })
       .accounts({
         bidWall,

@@ -2,7 +2,7 @@ use crate::{
     error::BidWallError,
     events::{BidWallTokensSoldEvent, CommonFields},
     state::BidWall,
-    usdc_mint, FEE_BPS, TOKENS_TO_PARTICIPANTS,
+    usdc_mint, TOKENS_TO_PARTICIPANTS,
 };
 
 use anchor_lang::prelude::*;
@@ -87,6 +87,8 @@ impl SellTokens<'_> {
     pub fn handle(ctx: Context<Self>, args: SellTokensArgs) -> Result<()> {
         let SellTokensArgs { amount_in } = args;
 
+        let clock = Clock::get()?;
+
         // We calculate the total NAV as as sum of:
         // - The initial quote reserves of the Futarchy AMM
         // - The quote tokens in the DAO treasury (which can be spent by the DAO)
@@ -109,8 +111,22 @@ impl SellTokens<'_> {
             BidWallError::InsufficientQuoteReserves
         );
 
+        let bid_wall_age_seconds = clock.unix_timestamp - ctx.accounts.bid_wall.created_timestamp;
+
+        let min_fee_bps = ctx.accounts.bid_wall.min_fee_bps as u128;
+        let max_fee_bps = ctx.accounts.bid_wall.max_fee_bps as u128;
+
+        // Calculate the fee in basis points based on the bid wall age.
+        // Formula is simple linear decay based on the fee decay duration.
+        // max_fee - (max_fee - min_fee) * bid_wall_age / fee_decay_duration_seconds
+        let fee_bps = min_fee_bps.max(
+            max_fee_bps
+                - (max_fee_bps - min_fee_bps) * bid_wall_age_seconds as u128
+                    / ctx.accounts.bid_wall.fee_decay_duration_seconds as u128,
+        );
+
         let amount_out_after_fee =
-            ((10_000_u128 - FEE_BPS as u128) * amount_out_before_fee as u128 / 10_000_u128) as u64;
+            ((10_000_u128 - fee_bps) * amount_out_before_fee as u128 / 10_000_u128) as u64;
 
         let fee = amount_out_before_fee - amount_out_after_fee;
 
@@ -157,7 +173,7 @@ impl SellTokens<'_> {
         ctx.accounts.bid_wall.seq_num += 1;
 
         emit_cpi!(BidWallTokensSoldEvent {
-            common: CommonFields::new(&Clock::get()?, ctx.accounts.bid_wall.seq_num),
+            common: CommonFields::new(&clock, ctx.accounts.bid_wall.seq_num),
             bid_wall: ctx.accounts.bid_wall.key(),
             amount_in: amount_in,
             amount_out: amount_out_after_fee,

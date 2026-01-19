@@ -440,6 +440,23 @@ export type BidWall = {
             type: "u32";
           },
           {
+            name: "feeDecayDurationSeconds";
+            docs: [
+              "The duration in seconds over which the fee linearly decays from the max fee to the min fee.",
+            ];
+            type: "u32";
+          },
+          {
+            name: "maxFeeBps";
+            docs: ["The maximum fee in basis points."];
+            type: "u16";
+          },
+          {
+            name: "minFeeBps";
+            docs: ["The minimum fee in basis points."];
+            type: "u16";
+          },
+          {
             name: "pdaBump";
             docs: ["The PDA bump."];
             type: "u8";
@@ -489,6 +506,18 @@ export type BidWall = {
           {
             name: "durationSeconds";
             type: "u32";
+          },
+          {
+            name: "feeDecayDurationSeconds";
+            type: "u32";
+          },
+          {
+            name: "maxFeeBps";
+            type: "u16";
+          },
+          {
+            name: "minFeeBps";
+            type: "u16";
           },
         ];
       };
@@ -565,6 +594,21 @@ export type BidWall = {
         {
           name: "durationSeconds";
           type: "u32";
+          index: false;
+        },
+        {
+          name: "feeDecayDurationSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "maxFeeBps";
+          type: "u16";
+          index: false;
+        },
+        {
+          name: "minFeeBps";
+          type: "u16";
           index: false;
         },
         {
@@ -718,6 +762,11 @@ export type BidWall = {
       code: 6006;
       name: "InvalidCrankAddress";
       msg: "Invalid crank address";
+    },
+    {
+      code: 6007;
+      name: "InvalidFeeDecayDuration";
+      msg: "Invalid fee decay duration. Must be greater than 0";
     },
   ];
 };
@@ -1164,6 +1213,23 @@ export const IDL: BidWall = {
             type: "u32",
           },
           {
+            name: "feeDecayDurationSeconds",
+            docs: [
+              "The duration in seconds over which the fee linearly decays from the max fee to the min fee.",
+            ],
+            type: "u32",
+          },
+          {
+            name: "maxFeeBps",
+            docs: ["The maximum fee in basis points."],
+            type: "u16",
+          },
+          {
+            name: "minFeeBps",
+            docs: ["The minimum fee in basis points."],
+            type: "u16",
+          },
+          {
             name: "pdaBump",
             docs: ["The PDA bump."],
             type: "u8",
@@ -1213,6 +1279,18 @@ export const IDL: BidWall = {
           {
             name: "durationSeconds",
             type: "u32",
+          },
+          {
+            name: "feeDecayDurationSeconds",
+            type: "u32",
+          },
+          {
+            name: "maxFeeBps",
+            type: "u16",
+          },
+          {
+            name: "minFeeBps",
+            type: "u16",
           },
         ],
       },
@@ -1289,6 +1367,21 @@ export const IDL: BidWall = {
         {
           name: "durationSeconds",
           type: "u32",
+          index: false,
+        },
+        {
+          name: "feeDecayDurationSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "maxFeeBps",
+          type: "u16",
+          index: false,
+        },
+        {
+          name: "minFeeBps",
+          type: "u16",
           index: false,
         },
         {
@@ -1442,6 +1535,11 @@ export const IDL: BidWall = {
       code: 6006,
       name: "InvalidCrankAddress",
       msg: "Invalid crank address",
+    },
+    {
+      code: 6007,
+      name: "InvalidFeeDecayDuration",
+      msg: "Invalid fee decay duration. Must be greater than 0",
     },
   ],
 };
