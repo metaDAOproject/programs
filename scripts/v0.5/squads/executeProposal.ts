@@ -36,9 +36,7 @@ async function main() {
 
   // Add both instructions to create the proposal
   const vaultTxExecuteIxResolved = await vaultTxExecuteIx;
-  const tx = new Transaction().add(
-    vaultTxExecuteIxResolved.instruction,
-  );
+  const tx = new Transaction().add(vaultTxExecuteIxResolved.instruction);
   tx.recentBlockhash = (
     await provider.connection.getLatestBlockhash()
   ).blockhash;
