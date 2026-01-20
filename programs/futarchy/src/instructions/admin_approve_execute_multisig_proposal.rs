@@ -3,8 +3,8 @@ use super::*;
 pub mod metadao_multisig_vault {
     use anchor_lang::prelude::declare_id;
 
-    // MetaDAO multisig
-    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+    // MetaDAO-controlled admin - cannot be a Squads signer because of reentrancy blocks set up by Squads
+    declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
 }
 
 #[derive(Accounts)]
