@@ -13,7 +13,7 @@ use crate::{
 pub struct CloseBidWall<'info> {
     #[account(
         mut,
-        close=payer,
+        close=authority,
         has_one = authority
     )]
     pub bid_wall: Account<'info, BidWall>,
@@ -22,7 +22,7 @@ pub struct CloseBidWall<'info> {
     pub payer: Signer<'info>,
 
     /// CHECK: used for constraints
-    #[account(address = bid_wall.authority)]
+    #[account(mut, address = bid_wall.authority)]
     pub authority: UncheckedAccount<'info>,
 
     /// CHECK: used for constraints

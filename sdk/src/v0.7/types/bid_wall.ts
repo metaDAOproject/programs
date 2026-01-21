@@ -105,7 +105,7 @@ export type BidWall = {
         },
         {
           name: "authority";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -829,7 +829,7 @@ export const IDL: BidWall = {
         },
         {
           name: "authority",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
