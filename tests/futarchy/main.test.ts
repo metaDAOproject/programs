@@ -10,8 +10,6 @@ import conditionalSwap from "./unit/conditionalSwap.test.js";
 import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
 
 import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
-import adminApproveProposal from "./unit/adminApproveExecuteMultisigProposal.test.js";
-
 import { PublicKey } from "@solana/web3.js";
 import {
   LAUNCHPAD_PROGRAM_ID,
@@ -52,7 +50,6 @@ export default function suite() {
 
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
 
-  describe("#admin_approve_proposal", adminApproveProposal);
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);

@@ -36,6 +36,11 @@ import {
   BidWallClient,
 } from "@metadaoproject/futarchy/v0.7";
 import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/futarchy/v0.6";
+import {
+  LAUNCHPAD_PROGRAM_ID as LAUNCHPAD_V5_PROGRAM_ID,
+  AUTOCRAT_PROGRAM_ID as AUTOCRAT_V5_PROGRAM_ID,
+  AMM_PROGRAM_ID as AMM_V5_PROGRAM_ID,
+} from "@metadaoproject/futarchy/v0.5";
 
 import {
   PublicKey,
@@ -45,6 +50,7 @@ import {
   Transaction,
   ComputeBudgetProgram,
   TransactionInstruction,
+  AddressLookupTableAccount,
 } from "@solana/web3.js";
 
 import {
@@ -74,6 +80,7 @@ const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
 import fullLaunch_v7 from "./integration/fullLaunch_v7.test.js";
+import migrateToV6Raydium from "./integration/migrateToV6Raydium.test.js";
 import { BN } from "bn.js";
 import { sha256 } from "@metadaoproject/futarchy";
 
@@ -185,6 +192,26 @@ before(async function () {
       {
         name: "cp_amm",
         programId: DAMM_V2_PROGRAM_ID,
+      },
+      {
+        name: "raydium_cp_swap",
+        programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
+      },
+      {
+        name: "launchpad_v5",
+        programId: LAUNCHPAD_V5_PROGRAM_ID,
+      },
+      {
+        name: "autocrat_v5",
+        programId: AUTOCRAT_V5_PROGRAM_ID,
+      },
+      {
+        name: "amm_v5",
+        programId: AMM_V5_PROGRAM_ID,
+      },
+      {
+        name: "raydium_migration_helper",
+        programId: new PublicKey("migR87BnBEkJbbDECLzRxhmNsQ44WMzhDCpCJhfPvR1"),
       },
     ],
     [
@@ -311,6 +338,19 @@ before(async function () {
         data: Buffer.from(rawAccount.data),
       };
       return accountInfo;
+    },
+    getAddressLookupTable: async (address: PublicKey) => {
+      try {
+        const rawAccount = await this.banksClient.getAccount(address);
+        return {
+          value: {
+            key: address,
+            state: AddressLookupTableAccount.deserialize(rawAccount.data),
+          },
+        };
+      } catch (e) {
+        return { value: null };
+      }
     },
   } as Connection;
 
@@ -639,7 +679,6 @@ before(async function () {
         dao,
         baseMint: storedDao.baseMint,
         quoteMint: storedDao.quoteMint,
-        squadsProposal,
       })
       .rpc();
 
@@ -741,4 +780,5 @@ describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);
   describe("full launch v7", fullLaunch_v7);
+  describe("migrate to v6 raydium", migrateToV6Raydium);
 });

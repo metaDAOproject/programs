@@ -1,0 +1,32 @@
+[package]
+name = "raydium_migration_helper"
+version = "0.1.0"
+description = "Helper program for migrating autocrat v5 daos to futarchy v6 daos"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "raydium_migration_helper"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+production= []
+
+[dependencies]
+anchor-lang = "0.29.0"
+anchor-spl = "0.29.0"
+spl-memo = "=4.0.0"
+solana-program = "=1.17.14"
+spl-token = "=4.0.0"
+spl-associated-token-account = "2.2"
+ahash = "=0.8.6"
+solana-security-txt = "1.1.1"
+raydium-cpmm-cpi = { git = "https://github.com/raydium-io/raydium-cpi", package = "raydium-cpmm-cpi", branch = "anchor-0.29.0" }
+futarchy = { path = "../futarchy", features = ["cpi"] }
+damm_v2_cpi = { path = "../damm_v2_cpi", features = ["cpi"] }
+
+

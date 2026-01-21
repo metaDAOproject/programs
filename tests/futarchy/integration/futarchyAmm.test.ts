@@ -211,16 +211,8 @@ export default function suite() {
       dao,
     );
 
-    const proposalAccount = await this.futarchy.getProposal(proposal);
-
     await this.futarchy
-      .launchProposalIx({
-        proposal,
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        squadsProposal: proposalAccount.squadsProposal,
-      })
+      .launchProposalIx({ proposal, dao, baseMint: META, quoteMint: USDC })
       .rpc();
 
     await this.futarchy

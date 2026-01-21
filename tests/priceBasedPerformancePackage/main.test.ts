@@ -4,7 +4,6 @@ import completeUnlock from "./unit/completeUnlock.test.js";
 import proposeChange from "./unit/proposeChange.test.js";
 import changePerformancePackageAuthority from "./unit/changePerformancePackageAuthority.test.js";
 import executeChange from "./unit/executeChange.test.js";
-import burnPerformancePackage from "./unit/burnPerformancePackage.test.js";
 
 export default function suite() {
   describe("#initialize_performance_package", initializePerformancePackage);
@@ -16,5 +15,4 @@ export default function suite() {
     changePerformancePackageAuthority,
   );
   describe("#execute_change", executeChange);
-  describe("#burn_performance_package", burnPerformancePackage);
 }

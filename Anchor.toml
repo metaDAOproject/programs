@@ -12,6 +12,7 @@ futarchy = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
 launchpad = "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
 launchpad_v7 = "moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM"
 price_based_performance_package = "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
+raydium_migration_helper = "migR87BnBEkJbbDECLzRxhmNsQ44WMzhDCpCJhfPvR1"
 
 [registry]
 url = "https://api.apr.dev"
@@ -29,6 +30,8 @@ initialize-dao = "yarn run tsx scripts/v0.6/initializeDao.ts"
 initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
 initialize-proposal = "yarn run tsx scripts/v0.5/initializeProposal.ts"
 migrate-meta = "yarn run tsx scripts/v0.5/migrateMeta.ts"
+migrate-to-v6-raydium = "yarn run tsx scripts/v0.5/migrateToV6Raydium.ts"
+preview-migration-raydium = "yarn run tsx scripts/v0.5/previewMigrationRaydium.ts"
 remove-spending-limit = "yarn run tsx scripts/v0.5/squads/removeSpendingLimit.ts"
 start-launch = "yarn run tsx scripts/v0.5/startLaunch.ts"
 test = "npx mocha --import=tsx --bail tests/main.test.ts --timeout 5000"
@@ -49,7 +52,6 @@ v06-migrate-daos-proposals = "yarn run tsx scripts/v0.6/migrateDaosProposals.ts"
 v06-create-dao = "yarn run tsx scripts/v0.6/createDao.ts"
 v06-provide-liquidity = "yarn run tsx scripts/v0.6/provideLiquidity.ts"
 v06-collect-meteora-damm-fees = "yarn run tsx scripts/v0.6/collectMeteoraDammFees.ts"
-v06-return-funds = "yarn run tsx scripts/v0.6/returnFunds.ts"
 v07-collect-meteora-damm-fees = "yarn run tsx scripts/v0.7/collectMeteoraDammFees.ts"
 v07-launch-template = "yarn run tsx scripts/v0.7/launchTemplate.ts"
 v07-start-launch = "yarn run tsx scripts/v0.7/startLaunch.ts"
@@ -76,3 +78,27 @@ program = "./tests/fixtures/openbook_twap.so"
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 program = "./tests/fixtures/mpl_token_metadata.so"
+
+[[test.genesis]]
+address = "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+program = "./tests/fixtures/raydium_cp_swap.so"
+
+[[test.genesis]]
+address = "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA"
+program = "./tests/fixtures/launchpad_v5.so"
+
+[[test.genesis]]
+address = "auToUr3CQza3D4qreT6Std2MTomfzvrEeCC5qh7ivW5"
+program = "./tests/fixtures/autocrat_v5.so"
+
+[[test.genesis]]
+address = "AMMJdEiCCa8mdugg6JPF7gFirmmxisTfDJoSNSUi5zDJ"
+program = "./tests/fixtures/amm_v5.so"
+
+[[test.genesis]]
+address = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
+program = "./target/deploy/conditional_vault.so"
+
+[[test.genesis]]
+address = "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
+program = "./tests/fixtures/squads_multisig.so"
