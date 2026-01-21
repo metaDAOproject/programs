@@ -558,4 +558,23 @@ export default function suite() {
       assert.include(e.message, "InvalidInputAmount");
     }
   });
+
+  it("fails to sell tokens into a bid wall when the input amount would result in a zero output amount", async function () {
+    const callbacks = expectError(
+      "InsufficientOutputAmount",
+      "bid wall should fail to sell tokens when the input amount would result in a zero output amount",
+    );
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 1,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
 }

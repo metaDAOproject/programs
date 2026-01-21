@@ -157,6 +157,12 @@ impl SellTokens<'_> {
             BidWallError::InsufficientOutputAmount
         );
 
+        require_gt!(
+            amount_out_after_fee,
+            0,
+            BidWallError::InsufficientOutputAmount
+        );
+
         // Fees can't be used for future token buys, so we subtract the quote amount before fees.
         ctx.accounts.bid_wall.quote_amount -= amount_out_before_fee;
         // Track fees collected for fee distribution.
