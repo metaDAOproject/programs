@@ -31,7 +31,6 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
   let bidWall: PublicKey;
-  let feeRecipient: PublicKey;
   let durationSeconds: number;
 
   before(async function () {
@@ -138,9 +137,6 @@ export default function suite() {
       await this.getTokenBalance(MAINNET_USDC, dao),
     );
 
-    feeRecipient = Keypair.generate().publicKey;
-    await this.createTokenAccount(MAINNET_USDC, feeRecipient);
-
     // Claim tokens for the payer
     await launchpadClient.claimIx(launch, META).rpc();
 
@@ -156,7 +152,6 @@ export default function suite() {
         nonce: new BN(0),
         daoTreasury: daoTreasury,
         baseMint: META,
-        feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
       })

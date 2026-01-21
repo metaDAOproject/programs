@@ -62,7 +62,7 @@ export class BidWallClient {
     baseMint,
     creator = this.provider.publicKey,
     nonce = new BN(0),
-    feeRecipient,
+    feeRecipient = METADAO_MULTISIG_VAULT,
     quoteMint = MAINNET_USDC,
     payer = this.provider.publicKey,
   }: {
@@ -74,7 +74,7 @@ export class BidWallClient {
     nonce?: BN;
     authority?: PublicKey;
     baseMint: PublicKey;
-    feeRecipient: PublicKey;
+    feeRecipient?: PublicKey;
     quoteMint?: PublicKey;
     payer?: PublicKey;
   }) {
@@ -208,7 +208,7 @@ export class BidWallClient {
     bidWall,
     authority,
     baseMint,
-    feeRecipient = PublicKey.default,
+    feeRecipient = METADAO_MULTISIG_VAULT,
     quoteMint = MAINNET_USDC,
     payer = this.provider.publicKey,
   }: {
@@ -254,7 +254,7 @@ export class BidWallClient {
     bidWall,
     authority,
     baseMint,
-    feeRecipient = PublicKey.default,
+    feeRecipient = METADAO_MULTISIG_VAULT,
     quoteMint = MAINNET_USDC,
     payer = this.provider.publicKey,
   }: {
