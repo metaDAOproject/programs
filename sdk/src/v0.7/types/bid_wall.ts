@@ -502,6 +502,10 @@ export type BidWall = {
             name: "amountIn";
             type: "u64";
           },
+          {
+            name: "minAmountOut";
+            type: "u64";
+          },
         ];
       };
     },
@@ -718,6 +722,11 @@ export type BidWall = {
       code: 6006;
       name: "InvalidCrankAddress";
       msg: "Invalid crank address";
+    },
+    {
+      code: 6007;
+      name: "InsufficientOutputAmount";
+      msg: "Insufficient output amount";
     },
   ];
 };
@@ -1226,6 +1235,10 @@ export const IDL: BidWall = {
             name: "amountIn",
             type: "u64",
           },
+          {
+            name: "minAmountOut",
+            type: "u64",
+          },
         ],
       },
     },
@@ -1442,6 +1455,11 @@ export const IDL: BidWall = {
       code: 6006,
       name: "InvalidCrankAddress",
       msg: "Invalid crank address",
+    },
+    {
+      code: 6007,
+      name: "InsufficientOutputAmount",
+      msg: "Insufficient output amount",
     },
   ],
 };

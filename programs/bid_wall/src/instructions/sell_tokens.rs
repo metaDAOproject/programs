@@ -11,6 +11,7 @@ use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct SellTokensArgs {
     pub amount_in: u64,
+    pub min_amount_out: u64,
 }
 
 #[event_cpi]
@@ -85,7 +86,10 @@ impl SellTokens<'_> {
     }
 
     pub fn handle(ctx: Context<Self>, args: SellTokensArgs) -> Result<()> {
-        let SellTokensArgs { amount_in } = args;
+        let SellTokensArgs {
+            amount_in,
+            min_amount_out,
+        } = args;
 
         // We calculate the total NAV as as sum of:
         // - The initial quote reserves of the Futarchy AMM
@@ -146,6 +150,12 @@ impl SellTokens<'_> {
             ),
             amount_out_after_fee,
         )?;
+
+        require_gte!(
+            amount_out_after_fee,
+            min_amount_out,
+            BidWallError::InsufficientOutputAmount
+        );
 
         // Fees can't be used for future token buys, so we subtract the quote amount before fees.
         ctx.accounts.bid_wall.quote_amount -= amount_out_before_fee;

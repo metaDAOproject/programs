@@ -16,7 +16,7 @@ import {
 import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
-import { createLookupTableForTransaction } from "../../utils.js";
+import { createLookupTableForTransaction, expectError } from "../../utils.js";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -193,6 +193,7 @@ export default function suite() {
     await bidWallClient
       .sellTokensIx({
         amount: 5_000_000_000000,
+        minAmountOut: 99_000_000000, // We should receive exactly 99K USDC
         bidWall,
         baseMint: META,
         daoTreasury: daoTreasury,
@@ -418,6 +419,26 @@ export default function suite() {
     // Bid wall should have 10_900 USDC after the third sell
     // That is 35_650 (after second sell) reduced by 25_000 (bought) minus the fee (250)
     assert.equal(bidWallUsdcBalanceAfterThirdSell, 10_900_000000n);
+  });
+
+  it("fails to sell tokens into a bid wall when the output amount is less than the minimum output amount", async function () {
+    const callbacks = expectError(
+      "InsufficientOutputAmount",
+      "bid wall should fail to sell tokens when the output amount is less than the minimum output amount",
+    );
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 5_000_000_000000,
+        minAmountOut: 100_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("sending quote tokens to a bid wall beyond what was originally allocated doesn't change the NAV per token", async function () {
