@@ -1310,6 +1310,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mint_governor"
+version = "0.7.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "solana-security-txt",
+]
+
+[[package]]
 name = "mpl-token-metadata"
 version = "3.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
