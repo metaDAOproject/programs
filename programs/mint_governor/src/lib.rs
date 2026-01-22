@@ -6,19 +6,16 @@
 use anchor_lang::prelude::*;
 
 pub mod constants;
-pub use constants::*;
-
-pub mod events;
-pub use events::*;
-
 pub mod error;
-pub use error::*;
-
-pub mod state;
-pub use state::*;
-
+pub mod events;
 pub mod instructions;
+pub mod state;
+
+pub use constants::*;
+pub use error::*;
+pub use events::*;
 pub use instructions::*;
+pub use state::*;
 
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
@@ -39,4 +36,50 @@ declare_id!("gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH");
 #[program]
 pub mod mint_governor {
     use super::*;
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn initialize_mint_governor(ctx: Context<InitializeMintGovernor>) -> Result<()> {
+        InitializeMintGovernor::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn transfer_authority_to_governor(ctx: Context<TransferAuthorityToGovernor>) -> Result<()> {
+        TransferAuthorityToGovernor::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn add_mint_authority(
+        ctx: Context<AddMintAuthority>,
+        args: AddMintAuthorityArgs,
+    ) -> Result<()> {
+        AddMintAuthority::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn mint_tokens(ctx: Context<MintTokens>, args: MintTokensArgs) -> Result<()> {
+        MintTokens::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn update_mint_authority(
+        ctx: Context<UpdateMintAuthority>,
+        args: UpdateMintAuthorityArgs,
+    ) -> Result<()> {
+        UpdateMintAuthority::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn remove_mint_authority(ctx: Context<RemoveMintAuthority>) -> Result<()> {
+        RemoveMintAuthority::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn update_mint_governor_admin(ctx: Context<UpdateMintGovernorAdmin>) -> Result<()> {
+        UpdateMintGovernorAdmin::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn reclaim_authority(ctx: Context<ReclaimAuthority>) -> Result<()> {
+        ReclaimAuthority::handle(ctx)
+    }
 }
