@@ -15,11 +15,10 @@ import {
   PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
-} from "../constants.js";
-import {
   LAUNCHPAD_PROGRAM_ID,
   FUTARCHY_PROGRAM_ID,
   BID_WALL_PROGRAM_ID,
+  MINT_GOVERNOR_PROGRAM_ID,
 } from "../constants.js";
 
 export const getEventAuthorityAddr = (programId: PublicKey) => {
@@ -258,6 +257,40 @@ export const getBidWallAddr = ({
       baseMint.toBuffer(),
       creator.toBuffer(),
       nonce.toArrayLike(Buffer, "le", 8),
+    ],
+    programId,
+  );
+};
+
+export const getMintGovernorAddr = ({
+  programId = MINT_GOVERNOR_PROGRAM_ID,
+  mint,
+  createKey,
+}: {
+  programId?: PublicKey;
+  mint: PublicKey;
+  createKey: PublicKey;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("mint_governor"), mint.toBuffer(), createKey.toBuffer()],
+    programId,
+  );
+};
+
+export const getMintAuthorityAddr = ({
+  programId = MINT_GOVERNOR_PROGRAM_ID,
+  mintGovernor,
+  authorizedMinter,
+}: {
+  programId?: PublicKey;
+  mintGovernor: PublicKey;
+  authorizedMinter: PublicKey;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("mint_authority"),
+      mintGovernor.toBuffer(),
+      authorizedMinter.toBuffer(),
     ],
     programId,
   );

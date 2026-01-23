@@ -25,6 +25,12 @@ export { PriceBasedPerformancePackageProgram, PriceBasedPerformancePackageIDL };
 import { BidWall as BidWallProgram, IDL as BidWallIDL } from "./bid_wall.js";
 export { BidWallProgram, BidWallIDL };
 
+import {
+  MintGovernor as MintGovernorProgram,
+  IDL as MintGovernorIDL,
+} from "./mint_governor.js";
+export { MintGovernorProgram, MintGovernorIDL };
+
 export { LowercaseKeys } from "./utils.js";
 
 import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
@@ -58,6 +64,11 @@ export type Tranche = IdlTypes<PriceBasedPerformancePackageProgram>["Tranche"];
 //   IdlAccounts<SharedLiquidityManagerProgram>["liquidityPosition"];
 
 export type BidWall = IdlAccounts<BidWallProgram>["bidWall"];
+
+export type MintGovernorAccount =
+  IdlAccounts<MintGovernorProgram>["mintGovernor"];
+export type MintAuthorityAccount =
+  IdlAccounts<MintGovernorProgram>["mintAuthority"];
 
 export type BidWallInitializedEvent =
   IdlEvents<BidWallProgram>["BidWallInitializedEvent"];
@@ -199,3 +210,29 @@ export type PriceBasedPerformancePackageEvent =
   | ChangeProposedEvent
   | ChangeExecutedEvent
   | PerformancePackageAuthorityChangedEvent;
+
+export type MintGovernorInitializedEvent =
+  IdlEvents<MintGovernorProgram>["MintGovernorInitializedEvent"];
+export type MintAuthorityTransferredEvent =
+  IdlEvents<MintGovernorProgram>["MintAuthorityTransferredEvent"];
+export type MintAuthorityAddedEvent =
+  IdlEvents<MintGovernorProgram>["MintAuthorityAddedEvent"];
+export type TokensMintedEvent =
+  IdlEvents<MintGovernorProgram>["TokensMintedEvent"];
+export type MintAuthorityUpdatedEvent =
+  IdlEvents<MintGovernorProgram>["MintAuthorityUpdatedEvent"];
+export type MintAuthorityRemovedEvent =
+  IdlEvents<MintGovernorProgram>["MintAuthorityRemovedEvent"];
+export type MintGovernorAdminUpdatedEvent =
+  IdlEvents<MintGovernorProgram>["MintGovernorAdminUpdatedEvent"];
+export type MintAuthorityReclaimedEvent =
+  IdlEvents<MintGovernorProgram>["MintAuthorityReclaimedEvent"];
+export type MintGovernorEvent =
+  | MintGovernorInitializedEvent
+  | MintAuthorityTransferredEvent
+  | MintAuthorityAddedEvent
+  | TokensMintedEvent
+  | MintAuthorityUpdatedEvent
+  | MintAuthorityRemovedEvent
+  | MintGovernorAdminUpdatedEvent
+  | MintAuthorityReclaimedEvent;
