@@ -6,6 +6,7 @@ import finalizeProposal from "./unit/finalizeProposal.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
+import provideLiquidity from "./unit/provideLiquidity.test.js";
 
 import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
 
@@ -48,6 +49,7 @@ export default function suite() {
 
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);
+  describe("#provide_liquidity", provideLiquidity);
   describe("#execute_spending_limit_change", executeSpendingLimitChange);
 
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);

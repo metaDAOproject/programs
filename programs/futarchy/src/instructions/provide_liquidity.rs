@@ -79,7 +79,7 @@ impl ProvideLiquidity<'_> {
             quote_amount,
             max_base_amount,
             min_liquidity,
-            position_authority: _,
+            position_authority,
         } = params;
 
         let total_liquidity = dao.amm.total_liquidity;
@@ -128,11 +128,19 @@ impl ProvideLiquidity<'_> {
         spot.base_reserves += base_amount;
         spot.quote_reserves += quote_amount;
 
-        amm_position.set_inner(AmmPosition {
-            dao: dao.key(),
-            position_authority: liquidity_provider.key(),
-            liquidity: amm_position.liquidity + liquidity_to_mint,
-        });
+        if amm_position.position_authority == Pubkey::default() {
+            // New account - initialize all fields
+            // Use position_authority to ensure consistency with PDA derivation
+            amm_position.set_inner(AmmPosition {
+                dao: dao.key(),
+                position_authority,
+                liquidity: liquidity_to_mint,
+            });
+        } else {
+            // Existing account - only update liquidity
+            // The position_authority is immutable once set
+            amm_position.liquidity += liquidity_to_mint;
+        }
 
         dao.amm.total_liquidity += liquidity_to_mint;
 
@@ -168,7 +176,7 @@ impl ProvideLiquidity<'_> {
             common: CommonFields::new(&clock, dao.seq_num),
             dao: dao.key(),
             liquidity_provider: liquidity_provider.key(),
-            position_authority: params.position_authority,
+            position_authority,
             quote_amount,
             base_amount,
             liquidity_minted: liquidity_to_mint,
