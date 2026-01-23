@@ -88,7 +88,7 @@ export default function suite() {
 
   it("successfully updates max_total to value <= total_minted (soft revoke)", async function () {
     // First, mint some tokens to increase total_minted
-    const destination = await this.createTokenAccount(
+    const destinationAta = await this.createTokenAccount(
       this.mint,
       this.payer.publicKey,
     );
@@ -97,7 +97,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor: this.mintGovernorAddr,
         mint: this.mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: new BN(500),
       })

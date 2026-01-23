@@ -22,7 +22,6 @@ pub struct MintAuthorityTransferredEvent {
     pub common: CommonFields,
     pub mint_governor: Pubkey,
     pub mint: Pubkey,
-    pub previous_authority: Pubkey,
 }
 
 #[event]
@@ -40,7 +39,7 @@ pub struct TokensMintedEvent {
     pub mint_governor: Pubkey,
     pub mint: Pubkey,
     pub authorized_minter: Pubkey,
-    pub destination: Pubkey,
+    pub destination_ata: Pubkey,
     pub amount: u64,
     pub post_total_minted: u64,
     pub post_mint_supply: u64,
@@ -52,8 +51,7 @@ pub struct MintAuthorityUpdatedEvent {
     pub mint_governor: Pubkey,
     pub mint_authority: Pubkey,
     pub authorized_minter: Pubkey,
-    pub previous_max_total: Option<u64>,
-    pub new_max_total: Option<u64>,
+    pub max_total: Option<u64>,
 }
 
 #[event]
@@ -68,7 +66,6 @@ pub struct MintAuthorityRemovedEvent {
 pub struct MintGovernorAdminUpdatedEvent {
     pub common: CommonFields,
     pub mint_governor: Pubkey,
-    pub previous_admin: Pubkey,
     pub new_admin: Pubkey,
 }
 

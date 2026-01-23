@@ -28,8 +28,8 @@ pub struct MintTokens<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
-    #[account(mut)]
-    pub destination: Account<'info, TokenAccount>,
+    #[account(mut, has_one = mint)]
+    pub destination_ata: Account<'info, TokenAccount>,
 
     #[account(address = mint_authority.authorized_minter @ MintGovernorError::UnauthorizedMinter)]
     pub authorized_minter: Signer<'info>,
@@ -41,11 +41,13 @@ impl MintTokens<'_> {
     pub fn validate(&self, args: &MintTokensArgs) -> Result<()> {
         // Check mint limit if max_total is set
         if let Some(max_total) = self.mint_authority.max_total {
-            require!(
-                self.mint_authority.total_minted + args.amount <= max_total,
+            require_gte!(
+                max_total,
+                self.mint_authority.total_minted + args.amount,
                 MintGovernorError::MintLimitExceeded
             );
         }
+
         Ok(())
     }
 
@@ -71,7 +73,7 @@ impl MintTokens<'_> {
                 ctx.accounts.token_program.to_account_info(),
                 MintTo {
                     mint: ctx.accounts.mint.to_account_info(),
-                    to: ctx.accounts.destination.to_account_info(),
+                    to: ctx.accounts.destination_ata.to_account_info(),
                     authority: mint_governor.to_account_info(),
                 },
                 signer_seeds,
@@ -100,7 +102,7 @@ impl MintTokens<'_> {
             mint_governor: mint_governor.key(),
             mint: mint_governor.mint,
             authorized_minter: ctx.accounts.authorized_minter.key(),
-            destination: ctx.accounts.destination.key(),
+            destination_ata: ctx.accounts.destination_ata.key(),
             amount: args.amount,
             post_total_minted: mint_authority.total_minted,
             post_mint_supply: ctx.accounts.mint.supply,

@@ -32,6 +32,9 @@ impl ReclaimAuthority<'_> {
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
+        // NOTE: After reclaim, MintGovernor and MintAuthority accounts remain but become
+        // non-functional. This is accepted behavior - no cleanup mechanism is provided.
+        // Callers attempting mint_tokens after reclaim will fail at CPI.
         let mint_governor = &mut ctx.accounts.mint_governor;
 
         // Build PDA signer seeds

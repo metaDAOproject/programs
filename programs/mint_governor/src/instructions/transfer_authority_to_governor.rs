@@ -27,7 +27,6 @@ impl TransferAuthorityToGovernor<'_> {
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let mint_governor = &mut ctx.accounts.mint_governor;
-        let previous_authority = ctx.accounts.current_authority.key();
 
         // CPI to set_authority to transfer mint authority to mint_governor PDA
         token::set_authority(
@@ -56,7 +55,6 @@ impl TransferAuthorityToGovernor<'_> {
             },
             mint_governor: mint_governor.key(),
             mint: mint_governor.mint,
-            previous_authority,
         });
 
         Ok(())

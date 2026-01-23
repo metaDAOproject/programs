@@ -6,7 +6,11 @@ import {
   MintGovernorClient,
   getMintAuthorityAddr,
 } from "@metadaoproject/futarchy/v0.7";
-import { setupMintWithGovernor, createMintAndGovernor } from "../utils.js";
+import {
+  setupMintWithGovernor,
+  createMintAndGovernor,
+  createMintWithAuthority,
+} from "../utils.js";
 import { expectError } from "../../utils.js";
 
 export default function suite() {
@@ -14,7 +18,7 @@ export default function suite() {
   let mint: PublicKey;
   let mintGovernor: PublicKey;
   let authorizedMinter: Keypair;
-  let destination: PublicKey;
+  let destinationAta: PublicKey;
 
   before(async function () {
     mintGovernorClient = this.mintGovernor;
@@ -27,7 +31,7 @@ export default function suite() {
       this.payer,
     ));
     authorizedMinter = Keypair.generate();
-    destination = await this.createTokenAccount(mint, this.payer.publicKey);
+    destinationAta = await this.createTokenAccount(mint, this.payer.publicKey);
   });
 
   it("successfully mints tokens within limit", async function () {
@@ -47,7 +51,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: mintAmount,
       })
@@ -85,7 +89,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: mintAmount,
       })
@@ -124,7 +128,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: maxTotal,
       })
@@ -165,7 +169,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: firstMint,
       })
@@ -187,7 +191,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: secondMint,
       })
@@ -205,7 +209,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: thirdMint,
       })
@@ -244,7 +248,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: firstMint,
       })
@@ -260,7 +264,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: secondMint,
       })
@@ -301,7 +305,7 @@ export default function suite() {
         mintGovernor,
         mintAuthority,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: fakeMinter.publicKey,
         tokenProgram: token.TOKEN_PROGRAM_ID,
       })
@@ -338,7 +342,7 @@ export default function suite() {
         .mintTokensIx({
           mintGovernor: governorWithoutAuth,
           mint: mintWithoutAuth,
-          destination: destAccount,
+          destinationAta: destAccount,
           authorizedMinter: authorizedMinter.publicKey,
           amount: new BN(500),
         })
@@ -387,7 +391,7 @@ export default function suite() {
           mintGovernor,
           mintAuthority: wrongMintAuthority,
           mint,
-          destination,
+          destinationAta,
           authorizedMinter: authorizedMinter.publicKey,
           tokenProgram: token.TOKEN_PROGRAM_ID,
         })
@@ -399,6 +403,55 @@ export default function suite() {
       );
     } catch (e) {
       // Anchor's has_one constraint will check that mint_authority.mint_governor == mint_governor
+      assert.include(e.message, "A has one constraint was violated");
+    }
+  });
+
+  it("fails when destination token account has wrong mint", async function () {
+    const maxTotal = new BN(1000);
+
+    // Create a different mint
+    const wrongMint = await createMintWithAuthority(
+      this.banksClient,
+      this.payer,
+      this.payer.publicKey,
+    );
+
+    // Create destination for the WRONG mint
+    const wrongDestination = await this.createTokenAccount(
+      wrongMint,
+      this.payer.publicKey,
+    );
+
+    await mintGovernorClient
+      .addMintAuthorityIx({
+        mintGovernor,
+        admin: this.payer.publicKey,
+        authorizedMinter: authorizedMinter.publicKey,
+        maxTotal,
+      })
+      .rpc();
+
+    try {
+      await mintGovernorClient.program.methods
+        .mintTokens({ amount: new BN(500) })
+        .accounts({
+          mintGovernor,
+          mintAuthority: getMintAuthorityAddr({
+            mintGovernor,
+            authorizedMinter: authorizedMinter.publicKey,
+          })[0],
+          mint,
+          destinationAta: wrongDestination, // Wrong mint!
+          authorizedMinter: authorizedMinter.publicKey,
+          tokenProgram: token.TOKEN_PROGRAM_ID,
+        })
+        .signers([authorizedMinter])
+        .rpc();
+
+      assert.fail("Should have failed due to destination mint mismatch");
+    } catch (e) {
+      // Anchor's has_one constraint will check that destination_ata.mint == mint
       assert.include(e.message, "A has one constraint was violated");
     }
   });

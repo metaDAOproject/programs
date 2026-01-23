@@ -126,7 +126,7 @@ export type MintGovernor = {
           isSigner: false;
         },
         {
-          name: "destination";
+          name: "destinationAta";
           isMut: true;
           isSigner: false;
         },
@@ -437,11 +437,6 @@ export type MintGovernor = {
           type: "publicKey";
           index: false;
         },
-        {
-          name: "previousAuthority";
-          type: "publicKey";
-          index: false;
-        },
       ];
     },
     {
@@ -504,7 +499,7 @@ export type MintGovernor = {
           index: false;
         },
         {
-          name: "destination";
+          name: "destinationAta";
           type: "publicKey";
           index: false;
         },
@@ -551,14 +546,7 @@ export type MintGovernor = {
           index: false;
         },
         {
-          name: "previousMaxTotal";
-          type: {
-            option: "u64";
-          };
-          index: false;
-        },
-        {
-          name: "newMaxTotal";
+          name: "maxTotal";
           type: {
             option: "u64";
           };
@@ -605,11 +593,6 @@ export type MintGovernor = {
         },
         {
           name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "previousAdmin";
           type: "publicKey";
           index: false;
         },
@@ -800,7 +783,7 @@ export const IDL: MintGovernor = {
           isSigner: false,
         },
         {
-          name: "destination",
+          name: "destinationAta",
           isMut: true,
           isSigner: false,
         },
@@ -1111,11 +1094,6 @@ export const IDL: MintGovernor = {
           type: "publicKey",
           index: false,
         },
-        {
-          name: "previousAuthority",
-          type: "publicKey",
-          index: false,
-        },
       ],
     },
     {
@@ -1178,7 +1156,7 @@ export const IDL: MintGovernor = {
           index: false,
         },
         {
-          name: "destination",
+          name: "destinationAta",
           type: "publicKey",
           index: false,
         },
@@ -1225,14 +1203,7 @@ export const IDL: MintGovernor = {
           index: false,
         },
         {
-          name: "previousMaxTotal",
-          type: {
-            option: "u64",
-          },
-          index: false,
-        },
-        {
-          name: "newMaxTotal",
+          name: "maxTotal",
           type: {
             option: "u64",
           },
@@ -1279,11 +1250,6 @@ export const IDL: MintGovernor = {
         },
         {
           name: "mintGovernor",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "previousAdmin",
           type: "publicKey",
           index: false,
         },

@@ -183,14 +183,14 @@ export class MintGovernorClient {
   mintTokensIx({
     mintGovernor,
     mint,
-    destination,
+    destinationAta,
     authorizedMinter,
     tokenProgram = TOKEN_PROGRAM_ID,
     amount,
   }: {
     mintGovernor: PublicKey;
     mint: PublicKey;
-    destination: PublicKey;
+    destinationAta: PublicKey;
     authorizedMinter: PublicKey;
     tokenProgram?: PublicKey;
     amount: BN;
@@ -205,7 +205,7 @@ export class MintGovernorClient {
       mintGovernor,
       mintAuthority,
       mint,
-      destination,
+      destinationAta,
       authorizedMinter,
       tokenProgram,
     });

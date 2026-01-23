@@ -30,9 +30,10 @@ impl UpdateMintAuthority<'_> {
         let mint_governor = &mut ctx.accounts.mint_governor;
         let mint_authority = &mut ctx.accounts.mint_authority;
 
-        let previous_max_total = mint_authority.max_total;
-
         // Update max total
+        // NOTE: Admin can intentionally:
+        // - Set max_total below total_minted (freezes minter's ability to mint)
+        // - Set max_total to None (upgrades limited minter to unlimited)
         mint_authority.max_total = args.max_total;
 
         // Increment seq num
@@ -50,8 +51,7 @@ impl UpdateMintAuthority<'_> {
             mint_governor: mint_governor.key(),
             mint_authority: mint_authority.key(),
             authorized_minter: mint_authority.authorized_minter,
-            previous_max_total,
-            new_max_total: args.max_total,
+            max_total: mint_authority.max_total,
         });
 
         Ok(())

@@ -22,8 +22,6 @@ impl UpdateMintGovernorAdmin<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let mint_governor = &mut ctx.accounts.mint_governor;
 
-        let previous_admin = mint_governor.admin;
-
         mint_governor.admin = ctx.accounts.new_admin.key();
         mint_governor.seq_num += 1;
 
@@ -36,7 +34,6 @@ impl UpdateMintGovernorAdmin<'_> {
                 mint_governor_seq_num: mint_governor.seq_num,
             },
             mint_governor: mint_governor.key(),
-            previous_admin,
             new_admin: ctx.accounts.new_admin.key(),
         });
 

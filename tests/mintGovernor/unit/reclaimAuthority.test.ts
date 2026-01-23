@@ -1,4 +1,4 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import BN from "bn.js";
 import { assert } from "chai";
@@ -101,7 +101,7 @@ export default function suite() {
       .rpc();
 
     // Create destination token account
-    const destination = await this.createTokenAccount(
+    const destinationAta = await this.createTokenAccount(
       mint,
       this.payer.publicKey,
     );
@@ -111,7 +111,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor,
         mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: new BN(100),
       })
@@ -140,10 +140,13 @@ export default function suite() {
         .mintTokensIx({
           mintGovernor,
           mint,
-          destination,
+          destinationAta,
           authorizedMinter: authorizedMinter.publicKey,
           amount: new BN(100),
         })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 2_000_001 }),
+        ])
         .signers([authorizedMinter])
         .rpc();
 

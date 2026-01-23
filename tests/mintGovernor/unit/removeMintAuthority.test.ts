@@ -73,7 +73,7 @@ export default function suite() {
 
   it("successfully removes mint authority that has minted tokens", async function () {
     // First, mint some tokens
-    const destination = await this.createTokenAccount(
+    const destinationAta = await this.createTokenAccount(
       this.mint,
       this.payer.publicKey,
     );
@@ -82,7 +82,7 @@ export default function suite() {
       .mintTokensIx({
         mintGovernor: this.mintGovernorAddr,
         mint: this.mint,
-        destination,
+        destinationAta,
         authorizedMinter: authorizedMinter.publicKey,
         amount: new BN(500),
       })
