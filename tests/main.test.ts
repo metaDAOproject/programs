@@ -4,6 +4,7 @@ import launchpad from "./launchpad/main.test.js";
 import launchpad_v7 from "./launchpad_v7/main.test.js";
 import priceBasedPerformancePackage from "./priceBasedPerformancePackage/main.test.js";
 import bidWall from "./bidWall/main.test.js";
+import mintGovernor from "./mintGovernor/main.test.js";
 
 import {
   BanksClient,
@@ -34,6 +35,7 @@ import {
   LAUNCHPAD_PROGRAM_ID,
   MAINNET_METEORA_CONFIG,
   BidWallClient,
+  MintGovernorClient,
 } from "@metadaoproject/futarchy/v0.7";
 import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/futarchy/v0.6";
 
@@ -89,6 +91,7 @@ export interface TestContext {
   launchpad_v6: LaunchpadClientV6;
   priceBasedPerformancePackage: PriceBasedPerformancePackageClient;
   bidWall: BidWallClient;
+  mintGovernor: MintGovernorClient;
   payer: Keypair;
   squadsConnection: Connection;
   createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
@@ -737,6 +740,7 @@ describe("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);
 describe("bid_wall", bidWall);
+describe("mint_governor", mintGovernor);
 describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);
