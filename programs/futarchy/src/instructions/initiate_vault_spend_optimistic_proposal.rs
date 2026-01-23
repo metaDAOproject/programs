@@ -65,16 +65,10 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
             FutarchyError::PoolNotInSpotState
         );
 
-        // There should be no active optimistic proposal
-        require!(
-            self.dao.optimistic_proposal.is_none(),
-            FutarchyError::ActiveOptimisticProposalAlreadyEnqueued
-        );
-
         // No existing optimistic proposal can be present. If one has passed, it can be finalized (finalize_optimistic_proposal)
         require!(
             self.dao.optimistic_proposal.is_none(),
-            FutarchyError::ProposalDurationTooShort
+            FutarchyError::ActiveOptimisticProposalAlreadyEnqueued
         );
 
         // Spending limit mint must be the same as the DAO's quote mint
