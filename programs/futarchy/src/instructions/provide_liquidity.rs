@@ -84,8 +84,7 @@ impl ProvideLiquidity<'_> {
 
         let total_liquidity = dao.amm.total_liquidity;
         let PoolState::Spot { ref mut spot } = dao.amm.state else {
-            // TODO: check that pool is already in right state
-            unreachable!();
+            return err!(FutarchyError::PoolNotInSpotState);
         };
 
         let (liquidity_to_mint, base_amount) = if total_liquidity > 0 {
