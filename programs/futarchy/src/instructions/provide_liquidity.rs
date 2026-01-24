@@ -95,8 +95,11 @@ impl ProvideLiquidity<'_> {
             let quote_reserves = spot.quote_reserves as u128;
             let base_reserves = spot.base_reserves as u128;
 
-            // this should only panic in an extreme scenario: when (quote_amount * base_reserve) / quote_reserve > u64::MAX
-            let base_amount: u64 = (((quote_amount as u128 * base_reserves) / quote_reserves) + 1)
+            // Use ceiling division to ensure the depositor provides at least their fair
+            // share of base tokens, protecting existing LPs from rounding-based value extraction.
+            // Formula: ceil(a / b) = (a + b - 1) / b
+            let numerator = quote_amount as u128 * base_reserves;
+            let base_amount: u64 = ((numerator + quote_reserves - 1) / quote_reserves)
                 .try_into()
                 .map_err(|_| FutarchyError::CastingOverflow)?;
 
