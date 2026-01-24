@@ -125,6 +125,12 @@ impl ProvideLiquidity<'_> {
 
             let initial_liquidity = quote_amount as u128 * 1_000_000_000;
 
+            require_gte!(
+                initial_liquidity,
+                min_liquidity,
+                // AmmError::AddLiquiditySlippageExceeded
+            );
+
             (initial_liquidity, base_amount)
         };
 
