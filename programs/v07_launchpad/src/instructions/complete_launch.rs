@@ -578,7 +578,7 @@ impl CompleteLaunch<'_> {
             LaunchpadError::InvariantViolated
         );
 
-        // ref: https://github.com/MeteoraAg/damm-v2-sdk/blob/3d740ea8434af20a024d5d6fd08d60792dca9ca4/src/helpers/utils.ts#L121-L133
+        // ref: https://github.com/MeteoraAg/damm-v2-sdk/blob/3d740ea8434af20a024d5d6fd08d60792dca9ca4/src/helpers/utils.ts#L135-L152
         let float_price = final_raise_amount as f64 / TOKENS_TO_PARTICIPANTS as f64;
         let sqrt_price = (float_price.sqrt() * 2_f64.powf(64.0)) as u128;
 
