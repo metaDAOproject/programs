@@ -5,7 +5,6 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchInitializedEvent};
 use crate::state::{Launch, LaunchState};
-use crate::MAX_PREMINE;
 use crate::{
     usdc_mint, TOKENS_TO_DAMM_V2_LIQUIDITY, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
 };
@@ -153,12 +152,6 @@ impl InitializeLaunch<'_> {
             futarchy::MAX_SPENDING_LIMIT_MEMBERS,
             args.monthly_spending_limit_members.len(),
             LaunchpadError::InvalidMonthlySpendingLimitMembers
-        );
-
-        require_gte!(
-            MAX_PREMINE,
-            args.performance_package_token_amount,
-            LaunchpadError::InvalidPriceBasedPremineAmount
         );
 
         require_gte!(
