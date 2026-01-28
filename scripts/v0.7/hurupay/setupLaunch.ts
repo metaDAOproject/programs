@@ -4,7 +4,12 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
 } from "@metadaoproject/futarchy/v0.7";
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";
 
@@ -107,19 +112,50 @@ export const launch = async () => {
     })
     .instruction();
 
+  // Build transaction without compute budget first
   const tx = new Transaction().add(
     createTokenAccountIx,
     initializeMintIx,
     launchIx,
   );
 
-  tx.recentBlockhash = (
-    await provider.connection.getLatestBlockhash()
-  ).blockhash;
+  const { blockhash } = await provider.connection.getLatestBlockhash();
+  tx.recentBlockhash = blockhash;
   tx.feePayer = payer.publicKey;
-  tx.sign(payer);
 
-  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
+  // Simulate transaction to get compute units used
+  tx.sign(payer);
+  const simulation = await provider.connection.simulateTransaction(tx);
+
+  if (simulation.value.err) {
+    console.error("Transaction simulation failed:", simulation.value.err);
+    throw new Error(
+      `Simulation failed: ${JSON.stringify(simulation.value.err)}`,
+    );
+  }
+
+  const computeUnitsUsed = simulation.value.unitsConsumed || 200_000;
+  // Add 20% buffer to the compute units
+  const computeUnitsWithBuffer = Math.floor(computeUnitsUsed * 1.2);
+
+  console.log(`Simulated compute units: ${computeUnitsUsed}`);
+  console.log(`Setting compute unit limit: ${computeUnitsWithBuffer}`);
+
+  // Rebuild transaction with compute budget
+  const finalTx = new Transaction().add(
+    ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnitsWithBuffer }),
+    createTokenAccountIx,
+    initializeMintIx,
+    launchIx,
+  );
+
+  finalTx.recentBlockhash = blockhash;
+  finalTx.feePayer = payer.publicKey;
+  finalTx.sign(payer);
+
+  const txHash = await provider.connection.sendRawTransaction(
+    finalTx.serialize(),
+  );
   await provider.connection.confirmTransaction(txHash, "confirmed");
 
   console.log("Launch initialized", txHash);
