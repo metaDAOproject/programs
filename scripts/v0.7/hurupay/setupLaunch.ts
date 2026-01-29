@@ -19,7 +19,7 @@ const payer = provider.wallet["payer"];
 const LAUNCH_AUTHORITY = payer.publicKey;
 
 const TEAM_ADDRESS = new PublicKey(
-  "7BPZaiS2LMhQHF7Yt8Pj16YmnCpsdiwRPSatkYjtbJVp",
+  "5ZGh1VosZepRpTamvCNLVsRx9xPy8gykFTfRS27Du4H1",
 ); // Hurupay team address
 
 // Launch details
@@ -32,6 +32,7 @@ const SPENDING_MEMBERS = [
 ];
 const SPENDING_LIMIT = 250_000; // 250k USDC
 
+// Even without a performance package, defaults need to be set
 const PERFORMANCE_PACKAGE_GRANTEE = new PublicKey(
   "11111111111111111111111111111111",
 );
