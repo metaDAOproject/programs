@@ -33,24 +33,7 @@
 
 > Reference: `001-performance-package-v2.md` → Account structures, errors, events
 
-- [NEXT] 1.1 Create program scaffold
-  - Create `programs/performance_package_v2/` directory structure
-  - Add `Cargo.toml` with dependencies (anchor-lang, anchor-spl, solana-security-txt)
-  - Create `src/lib.rs` with program declaration, module imports, security_txt, and empty `#[program]` block
-  - Create empty module files: `constants.rs`, `error.rs`, `events.rs`, `state/mod.rs`, `instructions/mod.rs`
-  - Add program to `Anchor.toml` and workspace `Cargo.toml`
-  - Verify with `anchor build -p performance_package_v2`
-
-- [ ] 1.2 Define account structures
-  - Create `state/performance_package.rs` with `PerformancePackage` struct
-  - Create `state/change_request.rs` with `ChangeRequest` struct
-  - Define enums: `PackageStatus`, `ProposerType`
-  - Define `OracleReader` enum (Time variant only for now - FutarchyTwap added in Phase 9)
-  - Define `RewardFunction` enum with `CliffLinear` and `Threshold` variants
-  - Define `ThresholdTranche` struct
-  - Export all from `state/mod.rs`
-
-- [ ] 1.3 Define constants and errors
+- [NEXT] 1.3 Define constants and errors
   - Add admin pubkey constant in `constants.rs` (MetaDAO operational multisig)
   - Define all error variants in `error.rs` (see spec's Error Conditions section)
 
