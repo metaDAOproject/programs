@@ -1,0 +1,98 @@
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AccountInfo, PublicKey } from "@solana/web3.js";
+import { PERFORMANCE_PACKAGE_V2_PROGRAM_ID } from "./constants.js";
+import {
+  getPerformancePackageV2Addr,
+  getChangeRequestV2Addr,
+} from "./utils/pda.js";
+import {
+  PerformancePackageV2 as PerformancePackageV2Program,
+  IDL as PerformancePackageV2IDL,
+} from "./types/performance_package_v2.js";
+import type {
+  PerformancePackageV2Account,
+  ChangeRequestV2Account,
+} from "./types/index.js";
+
+export type CreatePerformancePackageV2ClientParams = {
+  provider: AnchorProvider;
+  programId?: PublicKey;
+};
+
+export class PerformancePackageV2Client {
+  public readonly provider: AnchorProvider;
+  public readonly program: Program<PerformancePackageV2Program>;
+  public readonly programId: PublicKey;
+
+  constructor(provider: AnchorProvider, programId: PublicKey) {
+    this.provider = provider;
+    this.programId = programId;
+    this.program = new Program<PerformancePackageV2Program>(
+      PerformancePackageV2IDL,
+      programId,
+      provider,
+    );
+  }
+
+  public static createClient(
+    params: CreatePerformancePackageV2ClientParams,
+  ): PerformancePackageV2Client {
+    const { provider, programId } = params;
+    return new PerformancePackageV2Client(
+      provider,
+      programId || PERFORMANCE_PACKAGE_V2_PROGRAM_ID,
+    );
+  }
+
+  getPerformancePackageAddr(createKey: PublicKey): [PublicKey, number] {
+    return getPerformancePackageV2Addr({
+      programId: this.programId,
+      createKey,
+    });
+  }
+
+  getChangeRequestAddr(
+    performancePackage: PublicKey,
+    proposer: PublicKey,
+    pdaNonce: number,
+  ): [PublicKey, number] {
+    return getChangeRequestV2Addr({
+      programId: this.programId,
+      performancePackage,
+      proposer,
+      pdaNonce,
+    });
+  }
+
+  async fetchPerformancePackage(
+    performancePackage: PublicKey,
+  ): Promise<PerformancePackageV2Account | null> {
+    return this.program.account.performancePackage.fetchNullable(
+      performancePackage,
+    );
+  }
+
+  async deserializePerformancePackage(
+    accountInfo: AccountInfo<Buffer>,
+  ): Promise<PerformancePackageV2Account> {
+    return this.program.coder.accounts.decode(
+      "performancePackage",
+      accountInfo.data,
+    );
+  }
+
+  async fetchChangeRequest(
+    changeRequest: PublicKey,
+  ): Promise<ChangeRequestV2Account | null> {
+    return this.program.account.changeRequest.fetchNullable(changeRequest);
+  }
+
+  async deserializeChangeRequest(
+    accountInfo: AccountInfo<Buffer>,
+  ): Promise<ChangeRequestV2Account> {
+    return this.program.coder.accounts.decode(
+      "changeRequest",
+      accountInfo.data,
+    );
+  }
+}

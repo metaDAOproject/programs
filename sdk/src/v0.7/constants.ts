@@ -26,6 +26,9 @@ export const BID_WALL_PROGRAM_ID = new PublicKey(
 export const MINT_GOVERNOR_PROGRAM_ID = new PublicKey(
   "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH",
 );
+export const PERFORMANCE_PACKAGE_V2_PROGRAM_ID = new PublicKey(
+  "pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz",
+);
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",

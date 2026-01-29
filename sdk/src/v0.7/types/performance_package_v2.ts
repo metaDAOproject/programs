@@ -164,6 +164,7 @@ export type PerformancePackageV2 = {
   types: [
     {
       name: "CommonFields";
+      docs: ["Common fields included in all events for consistent metadata."];
       type: {
         kind: "struct";
         fields: [
@@ -299,11 +300,344 @@ export type PerformancePackageV2 = {
       };
     },
   ];
+  events: [
+    {
+      name: "PerformancePackageCreatedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "mint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "mintGovernor";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "authority";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "recipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "createKey";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "pdaBump";
+          type: "u8";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "UnlockStartedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "startTime";
+          type: "i64";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "UnlockCompletedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oracleValue";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "recipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amountMinted";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "totalRewardsPaidOut";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "AuthorityChangedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oldAuthority";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newAuthority";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "ChangeProposedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "changeRequest";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "proposerType";
+          type: {
+            defined: "ProposerType";
+          };
+          index: false;
+        },
+        {
+          name: "pdaNonce";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "newRecipient";
+          type: {
+            option: "publicKey";
+          };
+          index: false;
+        },
+        {
+          name: "newOracleReader";
+          type: {
+            option: {
+              defined: "OracleReader";
+            };
+          };
+          index: false;
+        },
+        {
+          name: "newRewardFunction";
+          type: {
+            option: {
+              defined: "RewardFunction";
+            };
+          };
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "ChangeExecutedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "executedBy";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newRecipient";
+          type: {
+            option: "publicKey";
+          };
+          index: false;
+        },
+        {
+          name: "newOracleReader";
+          type: {
+            option: {
+              defined: "OracleReader";
+            };
+          };
+          index: false;
+        },
+        {
+          name: "newRewardFunction";
+          type: {
+            option: {
+              defined: "RewardFunction";
+            };
+          };
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "PerformancePackageClosedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "totalRewardsPaidOut";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+  ];
   errors: [
     {
       code: 6000;
-      name: "Placeholder";
-      msg: "Placeholder error";
+      name: "Unauthorized";
+      msg: "Signer is neither authority nor recipient";
+    },
+    {
+      code: 6001;
+      name: "InvalidExecutor";
+      msg: "Executor is not the opposite party from proposer";
+    },
+    {
+      code: 6002;
+      name: "NotLocked";
+      msg: "Expected Locked status";
+    },
+    {
+      code: 6003;
+      name: "NotUnlocking";
+      msg: "Expected Unlocking status";
+    },
+    {
+      code: 6004;
+      name: "OracleMissingAccount";
+      msg: "Expected remaining_accounts not provided";
+    },
+    {
+      code: 6005;
+      name: "OracleInvalidAccount";
+      msg: "Account pubkey doesn't match expected";
+    },
+    {
+      code: 6006;
+      name: "OracleParseError";
+      msg: "Failed to parse account data";
+    },
+    {
+      code: 6007;
+      name: "OracleInvalidState";
+      msg: "Oracle state invalid";
+    },
+    {
+      code: 6008;
+      name: "OracleMinDurationNotReached";
+      msg: "Minimum duration hasn't passed yet";
+    },
+    {
+      code: 6009;
+      name: "UnlockTimestampNotReached";
+      msg: "Minimum unlock timestamp not yet reached";
+    },
+    {
+      code: 6010;
+      name: "RewardCalculationOverflow";
+      msg: "Math overflow in reward function";
+    },
+    {
+      code: 6011;
+      name: "InvalidTranches";
+      msg: "Tranches not sorted or empty";
+    },
+    {
+      code: 6012;
+      name: "InvalidVestingSchedule";
+      msg: "Invalid vesting schedule configuration";
+    },
+    {
+      code: 6013;
+      name: "ChangeRequestNotFound";
+      msg: "Missing proposal for execute";
+    },
+    {
+      code: 6014;
+      name: "NoChangesProposed";
+      msg: "All optional change fields are None";
     },
   ];
 };
@@ -474,6 +808,7 @@ export const IDL: PerformancePackageV2 = {
   types: [
     {
       name: "CommonFields",
+      docs: ["Common fields included in all events for consistent metadata."],
       type: {
         kind: "struct",
         fields: [
@@ -609,11 +944,344 @@ export const IDL: PerformancePackageV2 = {
       },
     },
   ],
+  events: [
+    {
+      name: "PerformancePackageCreatedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "mint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "mintGovernor",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "authority",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "recipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "createKey",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "pdaBump",
+          type: "u8",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "UnlockStartedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "startTime",
+          type: "i64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "UnlockCompletedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oracleValue",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "recipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amountMinted",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "totalRewardsPaidOut",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "AuthorityChangedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oldAuthority",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newAuthority",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "ChangeProposedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "changeRequest",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "proposerType",
+          type: {
+            defined: "ProposerType",
+          },
+          index: false,
+        },
+        {
+          name: "pdaNonce",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "newRecipient",
+          type: {
+            option: "publicKey",
+          },
+          index: false,
+        },
+        {
+          name: "newOracleReader",
+          type: {
+            option: {
+              defined: "OracleReader",
+            },
+          },
+          index: false,
+        },
+        {
+          name: "newRewardFunction",
+          type: {
+            option: {
+              defined: "RewardFunction",
+            },
+          },
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "ChangeExecutedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "executedBy",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newRecipient",
+          type: {
+            option: "publicKey",
+          },
+          index: false,
+        },
+        {
+          name: "newOracleReader",
+          type: {
+            option: {
+              defined: "OracleReader",
+            },
+          },
+          index: false,
+        },
+        {
+          name: "newRewardFunction",
+          type: {
+            option: {
+              defined: "RewardFunction",
+            },
+          },
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "PerformancePackageClosedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "totalRewardsPaidOut",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+  ],
   errors: [
     {
       code: 6000,
-      name: "Placeholder",
-      msg: "Placeholder error",
+      name: "Unauthorized",
+      msg: "Signer is neither authority nor recipient",
+    },
+    {
+      code: 6001,
+      name: "InvalidExecutor",
+      msg: "Executor is not the opposite party from proposer",
+    },
+    {
+      code: 6002,
+      name: "NotLocked",
+      msg: "Expected Locked status",
+    },
+    {
+      code: 6003,
+      name: "NotUnlocking",
+      msg: "Expected Unlocking status",
+    },
+    {
+      code: 6004,
+      name: "OracleMissingAccount",
+      msg: "Expected remaining_accounts not provided",
+    },
+    {
+      code: 6005,
+      name: "OracleInvalidAccount",
+      msg: "Account pubkey doesn't match expected",
+    },
+    {
+      code: 6006,
+      name: "OracleParseError",
+      msg: "Failed to parse account data",
+    },
+    {
+      code: 6007,
+      name: "OracleInvalidState",
+      msg: "Oracle state invalid",
+    },
+    {
+      code: 6008,
+      name: "OracleMinDurationNotReached",
+      msg: "Minimum duration hasn't passed yet",
+    },
+    {
+      code: 6009,
+      name: "UnlockTimestampNotReached",
+      msg: "Minimum unlock timestamp not yet reached",
+    },
+    {
+      code: 6010,
+      name: "RewardCalculationOverflow",
+      msg: "Math overflow in reward function",
+    },
+    {
+      code: 6011,
+      name: "InvalidTranches",
+      msg: "Tranches not sorted or empty",
+    },
+    {
+      code: 6012,
+      name: "InvalidVestingSchedule",
+      msg: "Invalid vesting schedule configuration",
+    },
+    {
+      code: 6013,
+      name: "ChangeRequestNotFound",
+      msg: "Missing proposal for execute",
+    },
+    {
+      code: 6014,
+      name: "NoChangesProposed",
+      msg: "All optional change fields are None",
     },
   ],
 };

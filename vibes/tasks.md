@@ -29,38 +29,11 @@
 
 ## Tasks
 
-### Phase 1: Program Scaffolding
-
-> Reference: `001-performance-package-v2.md` → Account structures, errors, events
-
-- [NEXT] 1.3 Define constants and errors
-  - Add admin pubkey constant in `constants.rs` (MetaDAO operational multisig)
-  - Define all error variants in `error.rs` (see spec's Error Conditions section)
-
-- [ ] 1.4 Define events and CommonFields
-  - Define `CommonFields` struct in `events.rs`
-  - Define all event structs (see spec's Events section)
-  - Export from `events.rs`
-
-- [ ] 1.5 Set up test scaffolding
-  - Create `tests/performancePackageV2/` directory
-  - Create `main.test.ts` that imports test suites (empty for now)
-  - Create `utils.ts` with helper functions (initially empty, will be populated as needed)
-  - Create `unit/` subdirectory
-  - Add import to `tests/main.test.ts`
-  - Verify tests run (even if empty) with `anchor test --skip-build`
-
-- [ ] 1.6 Add SDK scaffolding
-  - Create `sdk/src/v0.7/PerformancePackageV2Client.ts` with class skeleton
-  - Add PDA helpers to `sdk/src/v0.7/utils/pda.ts`: `getPerformancePackageAddr`, `getChangeRequestAddr`
-  - Export from `sdk/src/v0.7/index.ts`
-  - Run `./rebuild.sh` to verify types are generated
-
 ### Phase 2: initialize_performance_package
 
 > Reference: `001-performance-package-v2.md` → Instruction 1
 
-- [ ] 2.1 Write initialize_performance_package instruction
+- [NEXT] 2.1 Write initialize_performance_package instruction
   - Create `instructions/initialize_performance_package.rs`
   - Implement `InitializePerformancePackage` accounts struct with constraints
   - Implement `InitializePerformancePackageArgs` struct
