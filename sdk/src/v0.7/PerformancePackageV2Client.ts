@@ -142,4 +142,17 @@ export class PerformancePackageV2Client {
         systemProgram: SystemProgram.programId,
       });
   }
+
+  startUnlockIx({
+    performancePackage,
+    signer = this.provider.publicKey,
+  }: {
+    performancePackage: PublicKey;
+    signer?: PublicKey;
+  }) {
+    return this.program.methods.startUnlock().accounts({
+      performancePackage,
+      signer,
+    });
+  }
 }

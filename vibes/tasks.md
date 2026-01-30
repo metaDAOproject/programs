@@ -29,27 +29,11 @@
 
 ## Tasks
 
-### Phase 3: start_unlock
-
-> Reference: `001-performance-package-v2.md` → Instruction 2
-
-- [NEXT] 3.2 Add SDK method for start_unlock
-  - Add `startUnlockIx()` method to `PerformancePackageV2Client`
-  - Run `./rebuild.sh`
-
-- [ ] 3.3 Write unit tests for start_unlock
-  - Create `tests/performancePackageV2/unit/startUnlock.test.ts`
-  - Test: successfully starts when called by authority
-  - Test: successfully starts when called by recipient
-  - Test: fails when status is not Locked
-  - Test: fails when min_unlock_timestamp not reached
-  - Test: fails when signer is neither authority nor recipient
-
 ### Phase 4: complete_unlock
 
 > Reference: `001-performance-package-v2.md` → Instruction 3
 
-- [ ] 4.1 Write complete_unlock instruction
+- [NEXT] 4.1 Write complete_unlock instruction
   - Create `instructions/complete_unlock.rs`
   - Implement accounts struct with mint_governor CPI accounts
   - Implement `validate()`: check status == Unlocking, can_end(), account matches
