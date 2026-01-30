@@ -54,4 +54,8 @@ pub mod performance_package_v2 {
     pub fn complete_unlock(ctx: Context<CompleteUnlock>) -> Result<()> {
         CompleteUnlock::handle(ctx)
     }
+
+    pub fn change_authority(ctx: Context<ChangeAuthority>) -> Result<()> {
+        ChangeAuthority::handle(ctx)
+    }
 }

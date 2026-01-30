@@ -136,6 +136,29 @@ export type PerformancePackageV2 = {
       ];
       args: [];
     },
+    {
+      name: "changeAuthority";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "authority";
+          isMut: false;
+          isSigner: true;
+          docs: ["Must be the current authority of the performance package"];
+        },
+        {
+          name: "newAuthority";
+          isMut: false;
+          isSigner: false;
+          docs: ["The new authority address"];
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -726,76 +749,81 @@ export type PerformancePackageV2 = {
     },
     {
       code: 6002;
+      name: "InvalidAuthority";
+      msg: "Signer is not the current authority";
+    },
+    {
+      code: 6003;
       name: "InvalidMintGovernor";
       msg: "Mint governor does not match the provided mint";
     },
     {
-      code: 6003;
+      code: 6004;
       name: "InvalidMintAuthority";
       msg: "Mint authority does not match expected configuration";
     },
     {
-      code: 6004;
+      code: 6005;
       name: "NotLocked";
       msg: "Expected Locked status";
     },
     {
-      code: 6005;
+      code: 6006;
       name: "NotUnlocking";
       msg: "Expected Unlocking status";
     },
     {
-      code: 6006;
+      code: 6007;
       name: "OracleMissingAccount";
       msg: "Expected remaining_accounts not provided";
     },
     {
-      code: 6007;
+      code: 6008;
       name: "OracleInvalidAccount";
       msg: "Account pubkey doesn't match expected";
     },
     {
-      code: 6008;
+      code: 6009;
       name: "OracleParseError";
       msg: "Failed to parse account data";
     },
     {
-      code: 6009;
+      code: 6010;
       name: "OracleInvalidState";
       msg: "Oracle state invalid";
     },
     {
-      code: 6010;
+      code: 6011;
       name: "OracleMinDurationNotReached";
       msg: "Minimum duration hasn't passed yet";
     },
     {
-      code: 6011;
+      code: 6012;
       name: "UnlockTimestampNotReached";
       msg: "Minimum unlock timestamp not yet reached";
     },
     {
-      code: 6012;
+      code: 6013;
       name: "RewardCalculationOverflow";
       msg: "Math overflow in reward function";
     },
     {
-      code: 6013;
+      code: 6014;
       name: "InvalidTranches";
       msg: "Tranches not sorted or empty";
     },
     {
-      code: 6014;
+      code: 6015;
       name: "InvalidVestingSchedule";
       msg: "Invalid vesting schedule configuration";
     },
     {
-      code: 6015;
+      code: 6016;
       name: "ChangeRequestNotFound";
       msg: "Missing proposal for execute";
     },
     {
-      code: 6016;
+      code: 6017;
       name: "NoChangesProposed";
       msg: "All optional change fields are None";
     },
@@ -936,6 +964,29 @@ export const IDL: PerformancePackageV2 = {
           name: "mintGovernorProgram",
           isMut: false,
           isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "changeAuthority",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "authority",
+          isMut: false,
+          isSigner: true,
+          docs: ["Must be the current authority of the performance package"],
+        },
+        {
+          name: "newAuthority",
+          isMut: false,
+          isSigner: false,
+          docs: ["The new authority address"],
         },
       ],
       args: [],
@@ -1530,76 +1581,81 @@ export const IDL: PerformancePackageV2 = {
     },
     {
       code: 6002,
+      name: "InvalidAuthority",
+      msg: "Signer is not the current authority",
+    },
+    {
+      code: 6003,
       name: "InvalidMintGovernor",
       msg: "Mint governor does not match the provided mint",
     },
     {
-      code: 6003,
+      code: 6004,
       name: "InvalidMintAuthority",
       msg: "Mint authority does not match expected configuration",
     },
     {
-      code: 6004,
+      code: 6005,
       name: "NotLocked",
       msg: "Expected Locked status",
     },
     {
-      code: 6005,
+      code: 6006,
       name: "NotUnlocking",
       msg: "Expected Unlocking status",
     },
     {
-      code: 6006,
+      code: 6007,
       name: "OracleMissingAccount",
       msg: "Expected remaining_accounts not provided",
     },
     {
-      code: 6007,
+      code: 6008,
       name: "OracleInvalidAccount",
       msg: "Account pubkey doesn't match expected",
     },
     {
-      code: 6008,
+      code: 6009,
       name: "OracleParseError",
       msg: "Failed to parse account data",
     },
     {
-      code: 6009,
+      code: 6010,
       name: "OracleInvalidState",
       msg: "Oracle state invalid",
     },
     {
-      code: 6010,
+      code: 6011,
       name: "OracleMinDurationNotReached",
       msg: "Minimum duration hasn't passed yet",
     },
     {
-      code: 6011,
+      code: 6012,
       name: "UnlockTimestampNotReached",
       msg: "Minimum unlock timestamp not yet reached",
     },
     {
-      code: 6012,
+      code: 6013,
       name: "RewardCalculationOverflow",
       msg: "Math overflow in reward function",
     },
     {
-      code: 6013,
+      code: 6014,
       name: "InvalidTranches",
       msg: "Tranches not sorted or empty",
     },
     {
-      code: 6014,
+      code: 6015,
       name: "InvalidVestingSchedule",
       msg: "Invalid vesting schedule configuration",
     },
     {
-      code: 6015,
+      code: 6016,
       name: "ChangeRequestNotFound",
       msg: "Missing proposal for execute",
     },
     {
-      code: 6016,
+      code: 6017,
       name: "NoChangesProposed",
       msg: "All optional change fields are None",
     },

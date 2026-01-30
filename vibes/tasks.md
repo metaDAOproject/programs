@@ -29,33 +29,11 @@
 
 ## Tasks
 
-### Phase 5: change_authority
-
-> Reference: `001-performance-package-v2.md` → Instruction 4
-
-- [NEXT] 5.1 Write change_authority instruction
-  - Create `instructions/change_authority.rs`
-  - Implement accounts struct with authority signer check
-  - Implement `validate()` and `handle()`
-  - Emit `AuthorityChangedEvent`
-  - Wire up in `lib.rs`
-
-- [ ] 5.2 Add SDK method for change_authority
-  - Add `changeAuthorityIx()` method to `PerformancePackageV2Client`
-  - Run `./rebuild.sh`
-
-- [ ] 5.3 Write unit tests for change_authority
-  - Create `tests/performancePackageV2/unit/changeAuthority.test.ts`
-  - Test: successfully changes authority
-  - Test: new authority can perform authority actions
-  - Test: old authority cannot perform authority actions after change
-  - Test: fails when signer is not current authority
-
 ### Phase 6: propose_change
 
 > Reference: `001-performance-package-v2.md` → Instruction 5
 
-- [ ] 6.1 Write propose_change instruction
+- [NEXT] 6.1 Write propose_change instruction
   - Create `instructions/propose_change.rs`
   - Implement accounts struct with ChangeRequest PDA init
   - Implement `ProposeChangeArgs` with optional fields and pda_nonce

@@ -7,6 +7,8 @@ pub enum PerformancePackageError {
     Unauthorized,
     #[msg("Executor is not the opposite party from proposer")]
     InvalidExecutor,
+    #[msg("Signer is not the current authority")]
+    InvalidAuthority,
 
     // Account validation
     #[msg("Mint governor does not match the provided mint")]

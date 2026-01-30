@@ -193,4 +193,20 @@ export class PerformancePackageV2Client {
       mintGovernorProgram: MINT_GOVERNOR_PROGRAM_ID,
     });
   }
+
+  changeAuthorityIx({
+    performancePackage,
+    authority = this.provider.publicKey,
+    newAuthority,
+  }: {
+    performancePackage: PublicKey;
+    authority?: PublicKey;
+    newAuthority: PublicKey;
+  }) {
+    return this.program.methods.changeAuthority().accounts({
+      performancePackage,
+      authority,
+      newAuthority,
+    });
+  }
 }
