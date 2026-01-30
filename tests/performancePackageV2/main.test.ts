@@ -4,6 +4,7 @@ import completeUnlock from "./unit/completeUnlock.test.js";
 import changeAuthority from "./unit/changeAuthority.test.js";
 import proposeChange from "./unit/proposeChange.test.js";
 import executeChange from "./unit/executeChange.test.js";
+import closePerformancePackage from "./unit/closePerformancePackage.test.js";
 import {
   MintGovernorClient,
   PerformancePackageV2Client,
@@ -27,4 +28,5 @@ export default function suite() {
   describe("#change_authority", changeAuthority);
   describe("#propose_change", proposeChange);
   describe("#execute_change", executeChange);
+  describe("#close_performance_package", closePerformancePackage);
 }

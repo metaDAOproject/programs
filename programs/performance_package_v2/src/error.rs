@@ -9,6 +9,8 @@ pub enum PerformancePackageError {
     InvalidExecutor,
     #[msg("Signer is not the current authority")]
     InvalidAuthority,
+    #[msg("Signer is not the admin")]
+    InvalidAdmin,
 
     // Account validation
     #[msg("Mint governor does not match the provided mint")]

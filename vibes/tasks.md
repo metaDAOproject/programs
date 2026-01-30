@@ -29,33 +29,11 @@
 
 ## Tasks
 
-### Phase 8: close_performance_package
-
-> Reference: `001-performance-package-v2.md` → Instruction 7
-
-- [NEXT] 8.1 Write close_performance_package instruction
-  - Create `instructions/close_performance_package.rs`
-  - Implement accounts struct with admin check
-  - Implement `validate()`: admin == METADAO_ADMIN, status == Locked
-  - Implement `handle()`: close account
-  - Emit `PerformancePackageClosedEvent`
-  - Wire up in `lib.rs`
-
-- [ ] 8.2 Add SDK method for close_performance_package
-  - Add `closePerformancePackageIx()` method to `PerformancePackageV2Client`
-  - Run `./rebuild.sh`
-
-- [ ] 8.3 Write unit tests for close_performance_package
-  - Create `tests/performancePackageV2/unit/closePerformancePackage.test.ts`
-  - Test: successfully closes PP when called by admin
-  - Test: fails when caller is not admin
-  - Test: fails when status is Unlocking
-
 ### Phase 9: FutarchyTwap Oracle Support
 
 > Reference: `001-performance-package-v2.md` → OracleReader variants
 
-- [ ] 9.1 Add FutarchyTwap variant to OracleReader
+- [NEXT] 9.1 Add FutarchyTwap variant to OracleReader
   - Add `FutarchyTwap` variant with fields: amm, min_duration, start_value/time, end_value/time
   - Implement `record_start()` for FutarchyTwap (read accumulator from AMM remaining_account)
   - Implement `record_end()` for FutarchyTwap

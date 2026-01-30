@@ -267,4 +267,20 @@ export class PerformancePackageV2Client {
       rentDestination,
     });
   }
+
+  closePerformancePackageIx({
+    performancePackage,
+    admin = this.provider.publicKey,
+    rentDestination = this.provider.publicKey,
+  }: {
+    performancePackage: PublicKey;
+    admin?: PublicKey;
+    rentDestination?: PublicKey;
+  }) {
+    return this.program.methods.closePerformancePackage().accounts({
+      performancePackage,
+      admin,
+      rentDestination,
+    });
+  }
 }

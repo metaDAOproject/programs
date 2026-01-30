@@ -68,4 +68,9 @@ pub mod performance_package_v2 {
     pub fn execute_change(ctx: Context<ExecuteChange>) -> Result<()> {
         ExecuteChange::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn close_performance_package(ctx: Context<ClosePerformancePackage>) -> Result<()> {
+        ClosePerformancePackage::handle(ctx)
+    }
 }
