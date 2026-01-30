@@ -148,6 +148,27 @@ pub recipient_ata: Account<'info, TokenAccount>,
 pub funder_token_account: Account<'info, TokenAccount>,
 ```
 
+### Require Macros
+When writing validation checks, prefer specific require macros over generic `require!`:
+1. `require_keys_eq!` - when comparing two `Pubkey` values
+2. `require_eq!` - when comparing two values of the same type (requires `Display` trait)
+3. `require_neq!` - when asserting two values are not equal (requires `Display` trait)
+4. `require_gt!` / `require_gte!` - for greater than / greater than or equal comparisons
+5. `require!` - for boolean conditions, including enum comparisons where the type doesn't implement `Display`
+
+```rust
+// Good - specific macros provide better error messages
+require_keys_eq!(signer.key(), account.authority, MyError::Unauthorized);
+require_eq!(account.count, 0, MyError::InvalidCount);  // integers implement Display
+require_gte!(args.amount, 1, MyError::InvalidAmount);
+
+// OK - enums typically don't implement Display, so use require!
+require!(account.status == Status::Active, MyError::InvalidStatus);
+
+// Avoid - generic require when a specific macro exists
+require!(signer.key() == account.authority, MyError::Unauthorized);
+```
+
 ### Adding New Instructions
 1. Add instruction to Rust program in `programs/[program]/src/instructions/`
 2. Update client methods in SDK (`sdk/src/v0.7/`)

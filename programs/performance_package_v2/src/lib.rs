@@ -63,4 +63,9 @@ pub mod performance_package_v2 {
     pub fn propose_change(ctx: Context<ProposeChange>, args: ProposeChangeArgs) -> Result<()> {
         ProposeChange::handle(ctx, args)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn execute_change(ctx: Context<ExecuteChange>) -> Result<()> {
+        ExecuteChange::handle(ctx)
+    }
 }

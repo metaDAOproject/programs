@@ -33,15 +33,7 @@
 
 > Reference: `001-performance-package-v2.md` → Instruction 6
 
-- [NEXT] 7.1 Write execute_change instruction
-  - Create `instructions/execute_change.rs`
-  - Implement accounts struct with ChangeRequest validation
-  - Implement `validate()`: opposite party check, Locked status for config changes
-  - Implement `handle()`: apply changes, close ChangeRequest
-  - Emit `ChangeExecutedEvent`
-  - Wire up in `lib.rs`
-
-- [ ] 7.2 Add SDK method for execute_change
+- [NEXT] 7.2 Add SDK method for execute_change
   - Add `executeChangeIx()` method to `PerformancePackageV2Client`
   - Run `./rebuild.sh`
 

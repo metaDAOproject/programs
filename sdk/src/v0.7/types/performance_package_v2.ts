@@ -197,6 +197,32 @@ export type PerformancePackageV2 = {
         },
       ];
     },
+    {
+      name: "executeChange";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "changeRequest";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "executor";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "rentDestination";
+          isMut: true;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -1100,6 +1126,32 @@ export const IDL: PerformancePackageV2 = {
           },
         },
       ],
+    },
+    {
+      name: "executeChange",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "changeRequest",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "executor",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "rentDestination",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [
