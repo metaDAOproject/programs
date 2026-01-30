@@ -117,11 +117,27 @@ impl DoSomething<'_> {
 }
 ```
 
+### Account Constraints
+When writing Anchor account constraints, prefer more specific constraint types over generic `constraint`:
+1. `has_one` - when checking `account.field == other_account.key()` and field name matches account name
+2. `address` - when checking against a known/constant address
+3. `constraint` - only when the above don't apply (e.g., field name differs from account name)
+
+```rust
+// Good - uses has_one since field name matches account name
+#[account(has_one = mint @ MyError::InvalidMint)]
+pub mint_governor: Account<'info, MintGovernor>,
+
+// Necessary - field name (authorized_minter) differs from account name (performance_package)
+#[account(constraint = mint_authority.authorized_minter == performance_package.key() @ MyError::Invalid)]
+pub mint_authority: Account<'info, MintAuthority>,
+```
+
 ### Adding New Instructions
 1. Add instruction to Rust program in `programs/[program]/src/instructions/`
 2. Update client methods in SDK (`sdk/src/v0.7/`)
 3. Add unit tests in `tests/[program]/unit/`
-4. Run './rebuild' to sync types
+4. Run `./rebuild.sh` to sync types
 
 ### Testing with Bankrun
 Tests use `solana-bankrun` for deterministic testing without external RPC:
@@ -169,6 +185,8 @@ External programs required for tests. These are pre-compiled `.so` files in `tes
 **Module resolution errors**: `cd sdk && yarn build-local && cd .. && yarn install --force`
 
 **Tests timeout**: Increase `startup_wait` in `Anchor.toml`
+
+**Cargo.lock version error**: If `Cargo.lock` ends up with `version = 4`, simply change it back to `version = 3` to fix lockfile issues. You don't have to remove the lockfile.
 
 ## Mainnet Program IDs
 

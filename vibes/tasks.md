@@ -33,16 +33,7 @@
 
 > Reference: `001-performance-package-v2.md` → Instruction 1
 
-- [NEXT] 2.1 Write initialize_performance_package instruction
-  - Create `instructions/initialize_performance_package.rs`
-  - Implement `InitializePerformancePackage` accounts struct with constraints
-  - Implement `InitializePerformancePackageArgs` struct
-  - Implement `validate()` and `handle()` methods
-  - Add validation for reward function configuration
-  - Emit `PerformancePackageCreatedEvent`
-  - Export from `instructions/mod.rs` and wire up in `lib.rs`
-
-- [ ] 2.2 Add SDK method for initialize_performance_package
+- [NEXT] 2.2 Add SDK method for initialize_performance_package
   - Add `initializePerformancePackageIx()` method to `PerformancePackageV2Client`
   - Add `fetchPerformancePackage()` and `deserializePerformancePackage()` methods
   - Add type exports for `PerformancePackageAccount`, `OracleReader`, `RewardFunction`, etc.

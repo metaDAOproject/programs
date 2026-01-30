@@ -36,4 +36,12 @@ declare_id!("pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz");
 #[program]
 pub mod performance_package_v2 {
     use super::*;
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_performance_package(
+        ctx: Context<InitializePerformancePackage>,
+        args: InitializePerformancePackageArgs,
+    ) -> Result<()> {
+        InitializePerformancePackage::handle(ctx, args)
+    }
 }

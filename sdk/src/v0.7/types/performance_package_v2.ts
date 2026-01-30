@@ -10,7 +10,66 @@ export type PerformancePackageV2 = {
       value: "10";
     },
   ];
-  instructions: [];
+  instructions: [
+    {
+      name: "initializePerformancePackage";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintGovernor";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "createKey";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "authority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "recipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializePerformancePackageArgs";
+          };
+        },
+      ];
+    },
+  ];
   accounts: [
     {
       name: "changeRequest";
@@ -179,6 +238,30 @@ export type PerformancePackageV2 = {
           {
             name: "performancePackageSeqNum";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializePerformancePackageArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "oracleReader";
+            type: {
+              defined: "OracleReader";
+            };
+          },
+          {
+            name: "rewardFunction";
+            type: {
+              defined: "RewardFunction";
+            };
+          },
+          {
+            name: "minUnlockTimestamp";
+            type: "i64";
           },
         ];
       };
@@ -576,66 +659,76 @@ export type PerformancePackageV2 = {
     },
     {
       code: 6002;
+      name: "InvalidMintGovernor";
+      msg: "Mint governor does not match the provided mint";
+    },
+    {
+      code: 6003;
+      name: "InvalidMintAuthority";
+      msg: "Mint authority does not match expected configuration";
+    },
+    {
+      code: 6004;
       name: "NotLocked";
       msg: "Expected Locked status";
     },
     {
-      code: 6003;
+      code: 6005;
       name: "NotUnlocking";
       msg: "Expected Unlocking status";
     },
     {
-      code: 6004;
+      code: 6006;
       name: "OracleMissingAccount";
       msg: "Expected remaining_accounts not provided";
     },
     {
-      code: 6005;
+      code: 6007;
       name: "OracleInvalidAccount";
       msg: "Account pubkey doesn't match expected";
     },
     {
-      code: 6006;
+      code: 6008;
       name: "OracleParseError";
       msg: "Failed to parse account data";
     },
     {
-      code: 6007;
+      code: 6009;
       name: "OracleInvalidState";
       msg: "Oracle state invalid";
     },
     {
-      code: 6008;
+      code: 6010;
       name: "OracleMinDurationNotReached";
       msg: "Minimum duration hasn't passed yet";
     },
     {
-      code: 6009;
+      code: 6011;
       name: "UnlockTimestampNotReached";
       msg: "Minimum unlock timestamp not yet reached";
     },
     {
-      code: 6010;
+      code: 6012;
       name: "RewardCalculationOverflow";
       msg: "Math overflow in reward function";
     },
     {
-      code: 6011;
+      code: 6013;
       name: "InvalidTranches";
       msg: "Tranches not sorted or empty";
     },
     {
-      code: 6012;
+      code: 6014;
       name: "InvalidVestingSchedule";
       msg: "Invalid vesting schedule configuration";
     },
     {
-      code: 6013;
+      code: 6015;
       name: "ChangeRequestNotFound";
       msg: "Missing proposal for execute";
     },
     {
-      code: 6014;
+      code: 6016;
       name: "NoChangesProposed";
       msg: "All optional change fields are None";
     },
@@ -654,7 +747,66 @@ export const IDL: PerformancePackageV2 = {
       value: "10",
     },
   ],
-  instructions: [],
+  instructions: [
+    {
+      name: "initializePerformancePackage",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintGovernor",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "createKey",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "authority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "recipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializePerformancePackageArgs",
+          },
+        },
+      ],
+    },
+  ],
   accounts: [
     {
       name: "changeRequest",
@@ -823,6 +975,30 @@ export const IDL: PerformancePackageV2 = {
           {
             name: "performancePackageSeqNum",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializePerformancePackageArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "oracleReader",
+            type: {
+              defined: "OracleReader",
+            },
+          },
+          {
+            name: "rewardFunction",
+            type: {
+              defined: "RewardFunction",
+            },
+          },
+          {
+            name: "minUnlockTimestamp",
+            type: "i64",
           },
         ],
       },
@@ -1220,66 +1396,76 @@ export const IDL: PerformancePackageV2 = {
     },
     {
       code: 6002,
+      name: "InvalidMintGovernor",
+      msg: "Mint governor does not match the provided mint",
+    },
+    {
+      code: 6003,
+      name: "InvalidMintAuthority",
+      msg: "Mint authority does not match expected configuration",
+    },
+    {
+      code: 6004,
       name: "NotLocked",
       msg: "Expected Locked status",
     },
     {
-      code: 6003,
+      code: 6005,
       name: "NotUnlocking",
       msg: "Expected Unlocking status",
     },
     {
-      code: 6004,
+      code: 6006,
       name: "OracleMissingAccount",
       msg: "Expected remaining_accounts not provided",
     },
     {
-      code: 6005,
+      code: 6007,
       name: "OracleInvalidAccount",
       msg: "Account pubkey doesn't match expected",
     },
     {
-      code: 6006,
+      code: 6008,
       name: "OracleParseError",
       msg: "Failed to parse account data",
     },
     {
-      code: 6007,
+      code: 6009,
       name: "OracleInvalidState",
       msg: "Oracle state invalid",
     },
     {
-      code: 6008,
+      code: 6010,
       name: "OracleMinDurationNotReached",
       msg: "Minimum duration hasn't passed yet",
     },
     {
-      code: 6009,
+      code: 6011,
       name: "UnlockTimestampNotReached",
       msg: "Minimum unlock timestamp not yet reached",
     },
     {
-      code: 6010,
+      code: 6012,
       name: "RewardCalculationOverflow",
       msg: "Math overflow in reward function",
     },
     {
-      code: 6011,
+      code: 6013,
       name: "InvalidTranches",
       msg: "Tranches not sorted or empty",
     },
     {
-      code: 6012,
+      code: 6014,
       name: "InvalidVestingSchedule",
       msg: "Invalid vesting schedule configuration",
     },
     {
-      code: 6013,
+      code: 6015,
       name: "ChangeRequestNotFound",
       msg: "Missing proposal for execute",
     },
     {
-      code: 6014,
+      code: 6016,
       name: "NoChangesProposed",
       msg: "All optional change fields are None",
     },

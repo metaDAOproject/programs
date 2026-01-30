@@ -8,6 +8,12 @@ pub enum PerformancePackageError {
     #[msg("Executor is not the opposite party from proposer")]
     InvalidExecutor,
 
+    // Account validation
+    #[msg("Mint governor does not match the provided mint")]
+    InvalidMintGovernor,
+    #[msg("Mint authority does not match expected configuration")]
+    InvalidMintAuthority,
+
     // State
     #[msg("Expected Locked status")]
     NotLocked,
