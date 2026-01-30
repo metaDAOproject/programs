@@ -1,7 +1,20 @@
-// Import unit test suites here as they are created
-// import initializePerformancePackage from "./unit/initializePerformancePackage.test.js";
+import initializePerformancePackage from "./unit/initializePerformancePackage.test.js";
+import {
+  MintGovernorClient,
+  PerformancePackageV2Client,
+} from "@metadaoproject/futarchy/v0.7";
+import { BankrunProvider } from "anchor-bankrun";
 
 export default function suite() {
-  // Unit tests will be added as instructions are implemented
-  // describe("#initialize_performance_package", initializePerformancePackage);
+  before(async function () {
+    const provider = new BankrunProvider(this.context);
+    this.mintGovernor = MintGovernorClient.createClient({
+      provider: provider as any,
+    });
+    this.performancePackageV2 = PerformancePackageV2Client.createClient({
+      provider: provider as any,
+    });
+  });
+
+  describe("#initialize_performance_package", initializePerformancePackage);
 }

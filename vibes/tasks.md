@@ -29,32 +29,11 @@
 
 ## Tasks
 
-### Phase 2: initialize_performance_package
-
-> Reference: `001-performance-package-v2.md` → Instruction 1
-
-- [NEXT] 2.2 Add SDK method for initialize_performance_package
-  - Add `initializePerformancePackageIx()` method to `PerformancePackageV2Client`
-  - Add `fetchPerformancePackage()` and `deserializePerformancePackage()` methods
-  - Add type exports for `PerformancePackageAccount`, `OracleReader`, `RewardFunction`, etc.
-  - Run `./rebuild.sh`
-
-- [ ] 2.3 Write unit tests for initialize_performance_package
-  - Create `tests/performancePackageV2/unit/initializePerformancePackage.test.ts`
-  - Add test utils in `utils.ts` (e.g., `setupMintGovernorWithAuthority`)
-  - Test: successfully initializes with Time oracle and CliffLinear reward function
-  - Test: successfully initializes with Time oracle and Threshold reward function
-  - Test: fails when create_key does not sign
-  - Test: fails when mint_authority.authorized_minter does not match PP
-  - Test: fails when mint_governor.mint does not match mint
-  - Test: fails with invalid reward function config (unsorted tranches, invalid values)
-  - Import test suite in `main.test.ts`
-
 ### Phase 3: start_unlock
 
 > Reference: `001-performance-package-v2.md` → Instruction 2
 
-- [ ] 3.1 Write start_unlock instruction
+- [NEXT] 3.1 Write start_unlock instruction
   - Create `instructions/start_unlock.rs`
   - Implement accounts struct with authority/recipient check
   - Implement `validate()`: check status == Locked, min_unlock_timestamp reached

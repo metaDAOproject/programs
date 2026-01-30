@@ -1,5 +1,6 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { AccountInfo, PublicKey } from "@solana/web3.js";
+import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
+import BN from "bn.js";
 import { PERFORMANCE_PACKAGE_V2_PROGRAM_ID } from "./constants.js";
 import {
   getPerformancePackageV2Addr,
@@ -12,6 +13,8 @@ import {
 import type {
   PerformancePackageV2Account,
   ChangeRequestV2Account,
+  OracleReaderV2,
+  RewardFunctionV2,
 } from "./types/index.js";
 
 export type CreatePerformancePackageV2ClientParams = {
@@ -94,5 +97,49 @@ export class PerformancePackageV2Client {
       "changeRequest",
       accountInfo.data,
     );
+  }
+
+  initializePerformancePackageIx({
+    createKey,
+    mint,
+    mintGovernor,
+    mintAuthority,
+    authority,
+    recipient,
+    payer = this.provider.publicKey,
+    oracleReader,
+    rewardFunction,
+    minUnlockTimestamp,
+  }: {
+    createKey: PublicKey;
+    mint: PublicKey;
+    mintGovernor: PublicKey;
+    mintAuthority: PublicKey;
+    authority: PublicKey;
+    recipient: PublicKey;
+    payer?: PublicKey;
+    oracleReader: OracleReaderV2;
+    rewardFunction: RewardFunctionV2;
+    minUnlockTimestamp: BN;
+  }) {
+    const [performancePackage] = this.getPerformancePackageAddr(createKey);
+
+    return this.program.methods
+      .initializePerformancePackage({
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp,
+      })
+      .accounts({
+        performancePackage,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        createKey,
+        authority,
+        recipient,
+        payer,
+        systemProgram: SystemProgram.programId,
+      });
   }
 }
