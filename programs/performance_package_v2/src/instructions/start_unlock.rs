@@ -35,8 +35,9 @@ impl StartUnlock<'_> {
 
         // min_unlock_timestamp must have been reached
         let clock = Clock::get()?;
-        require!(
-            clock.unix_timestamp >= pp.min_unlock_timestamp,
+        require_gte!(
+            clock.unix_timestamp,
+            pp.min_unlock_timestamp,
             PerformancePackageError::UnlockTimestampNotReached
         );
 
