@@ -248,4 +248,23 @@ export class PerformancePackageV2Client {
         systemProgram: SystemProgram.programId,
       });
   }
+
+  executeChangeIx({
+    performancePackage,
+    changeRequest,
+    executor = this.provider.publicKey,
+    rentDestination = this.provider.publicKey,
+  }: {
+    performancePackage: PublicKey;
+    changeRequest: PublicKey;
+    executor?: PublicKey;
+    rentDestination?: PublicKey;
+  }) {
+    return this.program.methods.executeChange().accounts({
+      performancePackage,
+      changeRequest,
+      executor,
+      rentDestination,
+    });
+  }
 }

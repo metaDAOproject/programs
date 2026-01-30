@@ -29,32 +29,11 @@
 
 ## Tasks
 
-### Phase 7: execute_change
-
-> Reference: `001-performance-package-v2.md` → Instruction 6
-
-- [NEXT] 7.2 Add SDK method for execute_change
-  - Add `executeChangeIx()` method to `PerformancePackageV2Client`
-  - Run `./rebuild.sh`
-
-- [ ] 7.3 Write unit tests for execute_change
-  - Create `tests/performancePackageV2/unit/executeChange.test.ts`
-  - Test: successfully executes (authority proposed, recipient signs)
-  - Test: successfully executes (recipient proposed, authority signs)
-  - Test: successfully executes recipient change
-  - Test: successfully executes oracle change
-  - Test: successfully executes reward function change
-  - Test: successfully executes multiple changes at once
-  - Test: closes change_request account and returns rent
-  - Test: fails when same party tries to propose and execute
-  - Test: fails when oracle change attempted while Unlocking
-  - Test: fails when reward function change attempted while Unlocking
-
 ### Phase 8: close_performance_package
 
 > Reference: `001-performance-package-v2.md` → Instruction 7
 
-- [ ] 8.1 Write close_performance_package instruction
+- [NEXT] 8.1 Write close_performance_package instruction
   - Create `instructions/close_performance_package.rs`
   - Implement accounts struct with admin check
   - Implement `validate()`: admin == METADAO_ADMIN, status == Locked
