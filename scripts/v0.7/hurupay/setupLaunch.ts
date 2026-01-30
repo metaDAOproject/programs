@@ -40,7 +40,7 @@ const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 1; // 1 HURU
 const PERFORMANCE_PACKAGE_UNLOCK_MONTHS = 36; // 36 months
 
 // Additional carveout details
-const ADDITIONAL_CARVEOUT = 12_722_000; // 12.7225M HURU
+const ADDITIONAL_CARVEOUT = 12_725_000; // 12.725M HURU
 const ADDITIONAL_CARVEOUT_RECIPIENT = new PublicKey(
   "6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf",
 ); // MetaDAO operational multisig vault
