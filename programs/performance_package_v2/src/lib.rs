@@ -44,4 +44,9 @@ pub mod performance_package_v2 {
     ) -> Result<()> {
         InitializePerformancePackage::handle(ctx, args)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn start_unlock(ctx: Context<StartUnlock>) -> Result<()> {
+        StartUnlock::handle(ctx)
+    }
 }

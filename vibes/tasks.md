@@ -33,16 +33,7 @@
 
 > Reference: `001-performance-package-v2.md` → Instruction 2
 
-- [NEXT] 3.1 Write start_unlock instruction
-  - Create `instructions/start_unlock.rs`
-  - Implement accounts struct with authority/recipient check
-  - Implement `validate()`: check status == Locked, min_unlock_timestamp reached
-  - Implement `handle()`: call `oracle_reader.record_start()`, set status = Unlocking
-  - Add `record_start()` method to `OracleReader` (Time variant: no-op)
-  - Emit `UnlockStartedEvent`
-  - Wire up in `lib.rs`
-
-- [ ] 3.2 Add SDK method for start_unlock
+- [NEXT] 3.2 Add SDK method for start_unlock
   - Add `startUnlockIx()` method to `PerformancePackageV2Client`
   - Run `./rebuild.sh`
 

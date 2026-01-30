@@ -21,6 +21,19 @@ pub enum OracleReader {
     // FutarchyTwap variant will be added in Phase 9
 }
 
+impl OracleReader {
+    /// Records the start snapshot when unlock begins.
+    /// For Time oracle, this is a no-op since it just reads current time on demand.
+    pub fn record_start(&mut self) -> Result<()> {
+        match self {
+            OracleReader::Time => {
+                // No-op for Time oracle - just reads current time on demand
+                Ok(())
+            }
+        }
+    }
+}
+
 /// A threshold tranche for step-based rewards.
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
 pub struct ThresholdTranche {

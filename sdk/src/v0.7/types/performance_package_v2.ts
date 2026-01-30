@@ -69,6 +69,22 @@ export type PerformancePackageV2 = {
         },
       ];
     },
+    {
+      name: "startUnlock";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "signer";
+          isMut: false;
+          isSigner: true;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -805,6 +821,22 @@ export const IDL: PerformancePackageV2 = {
           },
         },
       ],
+    },
+    {
+      name: "startUnlock",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "signer",
+          isMut: false,
+          isSigner: true,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [
