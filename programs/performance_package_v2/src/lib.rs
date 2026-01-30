@@ -49,4 +49,9 @@ pub mod performance_package_v2 {
     pub fn start_unlock(ctx: Context<StartUnlock>) -> Result<()> {
         StartUnlock::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn complete_unlock(ctx: Context<CompleteUnlock>) -> Result<()> {
+        CompleteUnlock::handle(ctx)
+    }
 }

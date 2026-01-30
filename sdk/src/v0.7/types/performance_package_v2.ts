@@ -85,6 +85,57 @@ export type PerformancePackageV2 = {
       ];
       args: [];
     },
+    {
+      name: "completeUnlock";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mintGovernor";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mintAuthority";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "recipientAta";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "signer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintGovernorProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -834,6 +885,57 @@ export const IDL: PerformancePackageV2 = {
           name: "signer",
           isMut: false,
           isSigner: true,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "completeUnlock",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mintGovernor",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mintAuthority",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "recipientAta",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "signer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintGovernorProgram",
+          isMut: false,
+          isSigner: false,
         },
       ],
       args: [],

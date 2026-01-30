@@ -133,6 +133,21 @@ pub mint_governor: Account<'info, MintGovernor>,
 pub mint_authority: Account<'info, MintAuthority>,
 ```
 
+### Token Account Constraints
+For token accounts, prefer `associated_token::*` over `token::*` constraints:
+- `associated_token::mint` / `associated_token::authority` - enforces the account is at the canonical ATA address (safer, use for recipient/user-facing accounts)
+- `token::mint` / `token::authority` - allows any token account with matching mint/authority (use only when flexibility is intentionally needed, e.g., source accounts where user may fund from non-ATA)
+
+```rust
+// Good - enforces canonical ATA for recipient
+#[account(mut, associated_token::mint = mint, associated_token::authority = recipient)]
+pub recipient_ata: Account<'info, TokenAccount>,
+
+// OK - allows flexibility for source accounts
+#[account(mut, token::mint = mint, token::authority = funder)]
+pub funder_token_account: Account<'info, TokenAccount>,
+```
+
 ### Adding New Instructions
 1. Add instruction to Rust program in `programs/[program]/src/instructions/`
 2. Update client methods in SDK (`sdk/src/v0.7/`)

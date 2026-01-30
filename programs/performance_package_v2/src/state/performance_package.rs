@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::MAX_TRANCHES;
+use crate::{PerformancePackageError, MAX_TRANCHES};
 
 /// Lifecycle state for the performance package.
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
@@ -29,6 +29,120 @@ impl OracleReader {
             OracleReader::Time => {
                 // No-op for Time oracle - just reads current time on demand
                 Ok(())
+            }
+        }
+    }
+
+    /// Records the end snapshot when unlock completes.
+    /// For Time oracle, this is a no-op since it just reads current time on demand.
+    pub fn record_end(&mut self) -> Result<()> {
+        match self {
+            OracleReader::Time => {
+                // No-op for Time oracle - just reads current time on demand
+                Ok(())
+            }
+        }
+    }
+
+    /// Checks if the minimum duration has passed and unlock can be completed.
+    /// For Time oracle, always returns true (no min_duration concept).
+    pub fn can_end(&self) -> bool {
+        match self {
+            OracleReader::Time => true,
+        }
+    }
+
+    /// Computes the oracle value for reward calculation.
+    /// For Time oracle, returns the current unix timestamp.
+    pub fn compute_value(&self) -> Result<u128> {
+        match self {
+            OracleReader::Time => {
+                let clock = Clock::get()?;
+                Ok(clock.unix_timestamp as u128)
+            }
+        }
+    }
+
+    /// Resets the oracle state for the next unlock cycle.
+    /// For Time oracle, this is a no-op (no state to reset).
+    pub fn reset(&mut self) {
+        match self {
+            OracleReader::Time => {
+                // No-op for Time oracle - no state to reset
+            }
+        }
+    }
+}
+
+impl RewardFunction {
+    /// Calculates the cumulative rewards earned for a given oracle value.
+    /// Returns total tokens deserved so far (not incremental).
+    pub fn calculate(&self, value: u128) -> Result<u64> {
+        match self {
+            RewardFunction::CliffLinear {
+                start_value,
+                cliff_value,
+                end_value,
+                cliff_amount,
+                total_amount,
+            } => {
+                // Before start: 0 rewards
+                if value < *start_value {
+                    return Ok(0);
+                }
+
+                // Before cliff: 0 rewards
+                if value < *cliff_value {
+                    return Ok(0);
+                }
+
+                // At or after end: full rewards
+                if value >= *end_value {
+                    return Ok(*total_amount);
+                }
+
+                // Between cliff and end: cliff_amount + linear interpolation
+                // linear_portion = (value - cliff_value) / (end_value - cliff_value) * (total_amount - cliff_amount)
+
+                let value_progress = value.checked_sub(*cliff_value).unwrap_or(0);
+                let value_range = end_value
+                    .checked_sub(*cliff_value)
+                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?;
+
+                // Avoid division by zero
+                if value_range == 0 {
+                    return Ok(*cliff_amount);
+                }
+
+                let linear_amount = (*total_amount as u128)
+                    .checked_sub(*cliff_amount as u128)
+                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?;
+
+                // Calculate: cliff_amount + (value_progress * linear_amount / value_range)
+                let linear_portion = value_progress
+                    .checked_mul(linear_amount)
+                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?
+                    .checked_div(value_range)
+                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?;
+
+                let result = (*cliff_amount as u128)
+                    .checked_add(linear_portion)
+                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?;
+
+                // Safe to convert since total_amount is u64 and result <= total_amount
+                Ok(result as u64)
+            }
+            RewardFunction::Threshold { tranches } => {
+                // Find the highest threshold that value meets
+                let mut cumulative = 0u64;
+                for tranche in tranches.iter() {
+                    if value >= tranche.threshold {
+                        cumulative = tranche.cumulative_amount;
+                    } else {
+                        break;
+                    }
+                }
+                Ok(cumulative)
             }
         }
     }

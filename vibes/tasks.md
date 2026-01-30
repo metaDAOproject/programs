@@ -33,17 +33,7 @@
 
 > Reference: `001-performance-package-v2.md` → Instruction 3
 
-- [NEXT] 4.1 Write complete_unlock instruction
-  - Create `instructions/complete_unlock.rs`
-  - Implement accounts struct with mint_governor CPI accounts
-  - Implement `validate()`: check status == Unlocking, can_end(), account matches
-  - Implement `handle()`: record_end, compute_value, calculate rewards, CPI mint, reset, set Locked
-  - Add `record_end()`, `can_end()`, `compute_value()`, `reset()` to `OracleReader`
-  - Add `calculate()` method to `RewardFunction` (both variants)
-  - Emit `UnlockCompletedEvent`
-  - Wire up in `lib.rs`
-
-- [ ] 4.2 Add SDK method for complete_unlock
+- [NEXT] 4.2 Add SDK method for complete_unlock
   - Add `completeUnlockIx()` method to `PerformancePackageV2Client`
   - Run `./rebuild.sh`
 
