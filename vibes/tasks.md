@@ -29,33 +29,11 @@
 
 ## Tasks
 
-### Phase 4: complete_unlock
-
-> Reference: `001-performance-package-v2.md` → Instruction 3
-
-- [NEXT] 4.2 Add SDK method for complete_unlock
-  - Add `completeUnlockIx()` method to `PerformancePackageV2Client`
-  - Run `./rebuild.sh`
-
-- [ ] 4.3 Write unit tests for complete_unlock
-  - Create `tests/performancePackageV2/unit/completeUnlock.test.ts`
-  - Test: successfully completes unlock and mints tokens (CliffLinear)
-  - Test: successfully completes unlock and mints tokens (Threshold)
-  - Test: mints correct amount to recipient (cumulative - already_paid)
-  - Test: updates total_rewards_paid_out
-  - Test: resets oracle state (for Time: no state to reset)
-  - Test: rewards only increase (never decrease)
-  - Test: succeeds with zero mint amount when rewards already paid
-  - Test: can be started again after complete (cycle repeats)
-  - Test: fails when status is not Unlocking
-  - Test: fails when signer is neither authority nor recipient
-  - Test: fails when mint_governor doesn't match
-
 ### Phase 5: change_authority
 
 > Reference: `001-performance-package-v2.md` → Instruction 4
 
-- [ ] 5.1 Write change_authority instruction
+- [NEXT] 5.1 Write change_authority instruction
   - Create `instructions/change_authority.rs`
   - Implement accounts struct with authority signer check
   - Implement `validate()` and `handle()`

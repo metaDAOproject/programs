@@ -1,7 +1,15 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import BN from "bn.js";
-import { PERFORMANCE_PACKAGE_V2_PROGRAM_ID } from "./constants.js";
+import {
+  PERFORMANCE_PACKAGE_V2_PROGRAM_ID,
+  MINT_GOVERNOR_PROGRAM_ID,
+} from "./constants.js";
 import {
   getPerformancePackageV2Addr,
   getChangeRequestV2Addr,
@@ -153,6 +161,36 @@ export class PerformancePackageV2Client {
     return this.program.methods.startUnlock().accounts({
       performancePackage,
       signer,
+    });
+  }
+
+  completeUnlockIx({
+    performancePackage,
+    mintGovernor,
+    mintAuthority,
+    mint,
+    recipient,
+    signer = this.provider.publicKey,
+  }: {
+    performancePackage: PublicKey;
+    mintGovernor: PublicKey;
+    mintAuthority: PublicKey;
+    mint: PublicKey;
+    recipient: PublicKey;
+    signer?: PublicKey;
+  }) {
+    const recipientAta = getAssociatedTokenAddressSync(mint, recipient, true);
+
+    return this.program.methods.completeUnlock().accounts({
+      performancePackage,
+      mintGovernor,
+      mintAuthority,
+      mint,
+      recipientAta,
+      signer,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      mintGovernorProgram: MINT_GOVERNOR_PROGRAM_ID,
     });
   }
 }

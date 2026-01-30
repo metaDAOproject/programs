@@ -160,6 +160,40 @@ Tests use `solana-bankrun` for deterministic testing without external RPC:
 - `advanceBySlots()` - Simulate time progression
 - Time constants: `TEN_SECONDS_IN_SLOTS`, `ONE_MINUTE_IN_SLOTS`, `HOUR_IN_SLOTS`, `DAY_IN_SLOTS`
 
+**Getting unique transaction signatures:** When testing error cases that call the same instruction multiple times (e.g., verifying an action fails after state changes), add a `ComputeBudgetProgram.setComputeUnitLimit()` instruction with incrementing values to produce different transaction signatures:
+
+```typescript
+// First call (200_000), second call (200_001), etc.
+await client
+  .someIx({ ... })
+  .postInstructions([
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+  ])
+  .signers([signer])
+  .rpc();
+```
+
+Do NOT use `advanceBySlots()` for this purpose - it changes the clock which may affect time-dependent tests.
+
+**Token amounts in tests:** Use easy-to-read round numbers like hundreds or thousands of tokens. Our standard mint decimals is 6, so:
+- 100 tokens = `100_000_000` (100 * 10^6)
+- 1,000 tokens = `1_000_000_000` (1000 * 10^6)
+
+This makes test assertions and calculations much easier to verify at a glance.
+
+**Assertion messages:** Do not include assertion messages for better readability. The assertion itself should be clear enough:
+
+```typescript
+// Good - no message needed
+assert.equal(recipientBalance.toString(), "500000000");
+assert.isDefined(ppAccount.status.locked);
+
+// Avoid - unnecessary message
+assert.equal(recipientBalance.toString(), "500000000", "Recipient should have 500 tokens");
+```
+
+Exceptions: Keep messages in `expectError()` calls and `assert.fail()` within try-catch blocks, since those are part of error handling patterns and help identify which check failed.
+
 ## SDK Usage
 
 ```typescript

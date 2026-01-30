@@ -1,5 +1,6 @@
 import initializePerformancePackage from "./unit/initializePerformancePackage.test.js";
 import startUnlock from "./unit/startUnlock.test.js";
+import completeUnlock from "./unit/completeUnlock.test.js";
 import {
   MintGovernorClient,
   PerformancePackageV2Client,
@@ -19,4 +20,5 @@ export default function suite() {
 
   describe("#initialize_performance_package", initializePerformancePackage);
   describe("#start_unlock", startUnlock);
+  describe("#complete_unlock", completeUnlock);
 }

@@ -1,4 +1,4 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
 import {
@@ -123,20 +123,21 @@ export default function suite() {
       await ppClient.fetchPerformancePackage(performancePackage);
     assert.isDefined(ppAccount.status.unlocking);
 
-    // Advance by slots to get a new blockhash
-    await this.advanceBySlots(1n);
-
     // Try to call start_unlock again - should fail because status is Unlocking, not Locked
     const callbacks = expectError(
       "NotLocked",
       "Should have failed because status is not Locked",
     );
 
+    // Add a ComputeBudget instruction to get a different tx signature
     await ppClient
       .startUnlockIx({
         performancePackage,
         signer: authority.publicKey,
       })
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+      ])
       .signers([authority])
       .rpc()
       .then(callbacks[0], callbacks[1]);
