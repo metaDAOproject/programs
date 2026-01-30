@@ -209,4 +209,43 @@ export class PerformancePackageV2Client {
       newAuthority,
     });
   }
+
+  proposeChangeIx({
+    performancePackage,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+    pdaNonce,
+    newRecipient = null,
+    newOracleReader = null,
+    newRewardFunction = null,
+  }: {
+    performancePackage: PublicKey;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+    pdaNonce: number;
+    newRecipient?: PublicKey | null;
+    newOracleReader?: OracleReaderV2 | null;
+    newRewardFunction?: RewardFunctionV2 | null;
+  }) {
+    const [changeRequest] = this.getChangeRequestAddr(
+      performancePackage,
+      proposer,
+      pdaNonce,
+    );
+
+    return this.program.methods
+      .proposeChange({
+        pdaNonce,
+        newRecipient,
+        newOracleReader,
+        newRewardFunction,
+      })
+      .accounts({
+        performancePackage,
+        changeRequest,
+        proposer,
+        payer,
+        systemProgram: SystemProgram.programId,
+      });
+  }
 }

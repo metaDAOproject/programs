@@ -29,32 +29,11 @@
 
 ## Tasks
 
-### Phase 6: propose_change
-
-> Reference: `001-performance-package-v2.md` → Instruction 5
-
-- [NEXT] 6.2 Add SDK method for propose_change
-  - Add `proposeChangeIx()` method to `PerformancePackageV2Client`
-  - Add `fetchChangeRequest()` method
-  - Run `./rebuild.sh`
-
-- [ ] 6.3 Write unit tests for propose_change
-  - Create `tests/performancePackageV2/unit/proposeChange.test.ts`
-  - Test: successfully proposes change when called by authority
-  - Test: successfully proposes change when called by recipient
-  - Test: successfully proposes recipient change
-  - Test: successfully proposes oracle change
-  - Test: successfully proposes reward function change
-  - Test: successfully proposes multiple changes at once
-  - Test: allows multiple concurrent proposals with different nonces
-  - Test: fails when all optional fields are None
-  - Test: fails when signer is neither authority nor recipient
-
 ### Phase 7: execute_change
 
 > Reference: `001-performance-package-v2.md` → Instruction 6
 
-- [ ] 7.1 Write execute_change instruction
+- [NEXT] 7.1 Write execute_change instruction
   - Create `instructions/execute_change.rs`
   - Implement accounts struct with ChangeRequest validation
   - Implement `validate()`: opposite party check, Locked status for config changes
