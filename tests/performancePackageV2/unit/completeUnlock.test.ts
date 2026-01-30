@@ -16,8 +16,11 @@ import {
   setupMintGovernorWithAuthority,
   createCliffLinearReward,
   createThresholdReward,
+  createFutarchyTwapOracle,
+  setupDaoForTwapTests,
 } from "../utils.js";
 import { expectError } from "../../utils.js";
+import { getPerformancePackageV2Addr } from "@metadaoproject/futarchy/v0.7";
 
 export default function suite() {
   let mintGovernorClient: MintGovernorClient;
@@ -775,6 +778,277 @@ export default function suite() {
 
     recipientBalance = await this.getTokenBalance(mint, recipient.publicKey);
     assert.equal(recipientBalance.toString(), "300000000");
+  });
+
+  it("records end snapshot for FutarchyTwap", async function () {
+    // Setup a DAO for TWAP oracle
+    const dao = await setupDaoForTwapTests(this);
+
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    const minDuration = 10; // Short duration for testing
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+    // Use threshold reward with TWAP thresholds
+    const rewardFunction = createThresholdReward([
+      { threshold: new BN(100), cumulativeAmount: new BN(100_000_000) },
+      { threshold: new BN(500), cumulativeAmount: new BN(500_000_000) },
+    ]);
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    // Create recipient ATA
+    await createRecipientAta(this, mint, recipient.publicKey);
+
+    // Advance time so the effective aggregator will be non-zero
+    await this.advanceBySeconds(10);
+
+    // Start unlock
+    await ppClient
+      .startUnlockIx({
+        performancePackage,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Verify start snapshot was recorded
+    let ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
+    const startValue =
+      ppAccount.oracleReader.futarchyTwap.startValue.toString();
+    const startTime = ppAccount.oracleReader.futarchyTwap.startTime.toString();
+    assert.notEqual(startValue, "0");
+    assert.notEqual(startTime, "0");
+    assert.equal(ppAccount.oracleReader.futarchyTwap.endValue.toString(), "0");
+    assert.equal(ppAccount.oracleReader.futarchyTwap.endTime.toString(), "0");
+
+    // Advance time past min_duration
+    await this.advanceBySeconds(minDuration + 5);
+
+    // Complete unlock
+    await ppClient
+      .completeUnlockIx({
+        performancePackage,
+        mintGovernor,
+        mintAuthority,
+        mint,
+        recipient: recipient.publicKey,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Verify end snapshot was recorded and then reset
+    ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
+    assert.isDefined(ppAccount.status.locked);
+    // After complete, oracle state is reset
+    assert.equal(
+      ppAccount.oracleReader.futarchyTwap.startValue.toString(),
+      "0",
+    );
+    assert.equal(ppAccount.oracleReader.futarchyTwap.startTime.toString(), "0");
+    assert.equal(ppAccount.oracleReader.futarchyTwap.endValue.toString(), "0");
+    assert.equal(ppAccount.oracleReader.futarchyTwap.endTime.toString(), "0");
+  });
+
+  it("correctly computes TWAP for FutarchyTwap", async function () {
+    // Setup a DAO for TWAP oracle
+    const dao = await setupDaoForTwapTests(this);
+
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    const minDuration = 10; // Short duration for testing
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+    // Use threshold reward - any TWAP above 0 earns 100 tokens
+    const rewardFunction = createThresholdReward([
+      { threshold: new BN(1), cumulativeAmount: new BN(100_000_000) }, // Any TWAP > 0
+    ]);
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    // Create recipient ATA
+    await createRecipientAta(this, mint, recipient.publicKey);
+
+    // Advance time so the effective aggregator will be non-zero
+    await this.advanceBySeconds(10);
+
+    // Start unlock
+    await ppClient
+      .startUnlockIx({
+        performancePackage,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Advance time past min_duration
+    await this.advanceBySeconds(minDuration + 5);
+
+    // Complete unlock - TWAP should be computed
+    await ppClient
+      .completeUnlockIx({
+        performancePackage,
+        mintGovernor,
+        mintAuthority,
+        mint,
+        recipient: recipient.publicKey,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Verify the PP is back to locked and rewards were computed
+    const ppAccount =
+      await ppClient.fetchPerformancePackage(performancePackage);
+    assert.isDefined(ppAccount.status.locked);
+
+    // The DAO has a twapInitialObservation of 1000 (from setupDaoForTwapTests)
+    // So the TWAP should be around 1000, which is > 1, so we should get 100 tokens
+    const recipientBalance = await this.getTokenBalance(
+      mint,
+      recipient.publicKey,
+    );
+    assert.equal(recipientBalance.toString(), "100000000");
+    assert.equal(ppAccount.totalRewardsPaidOut.toString(), "100000000");
+  });
+
+  it("fails when min_duration not reached for FutarchyTwap", async function () {
+    // Setup a DAO for TWAP oracle
+    const dao = await setupDaoForTwapTests(this);
+
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    // Set a longer min_duration that we won't wait for
+    const minDuration = 3600; // 1 hour
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+    const rewardFunction = createThresholdReward([
+      { threshold: new BN(1), cumulativeAmount: new BN(100_000_000) },
+    ]);
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    // Create recipient ATA
+    await createRecipientAta(this, mint, recipient.publicKey);
+
+    // Start unlock
+    await ppClient
+      .startUnlockIx({
+        performancePackage,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Advance time, but NOT past min_duration (only 10 seconds instead of 3600)
+    await this.advanceBySeconds(10);
+
+    // Try to complete unlock - should fail because min_duration not reached
+    const callbacks = expectError(
+      "OracleMinDurationNotReached",
+      "Should have failed because min_duration not reached",
+    );
+
+    await ppClient
+      .completeUnlockIx({
+        performancePackage,
+        mintGovernor,
+        mintAuthority,
+        mint,
+        recipient: recipient.publicKey,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("fails when status is not Unlocking", async function () {

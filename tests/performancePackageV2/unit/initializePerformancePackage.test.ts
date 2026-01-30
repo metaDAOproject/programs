@@ -11,6 +11,8 @@ import {
   createCliffLinearReward,
   createThresholdReward,
   createMintWithAuthority,
+  createFutarchyTwapOracle,
+  setupDaoForTwapTests,
 } from "../utils.js";
 import { expectError } from "../../utils.js";
 
@@ -224,6 +226,134 @@ export default function suite() {
       ppAccount.rewardFunction.threshold.tranches[9].cumulativeAmount.toString(),
       "1000000000",
     );
+  });
+
+  it("successfully initializes with FutarchyTwap oracle and CliffLinear reward function", async function () {
+    // Setup a DAO for TWAP oracle
+    const dao = await setupDaoForTwapTests(this);
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    const minDuration = 60; // 60 seconds
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+    const rewardFunction = createCliffLinearReward({
+      startValue: new BN(0),
+      cliffValue: new BN(100), // TWAP value threshold
+      endValue: new BN(1000),
+      cliffAmount: new BN(100_000_000), // 100 tokens
+      totalAmount: new BN(1_000_000_000), // 1000 tokens
+    });
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    const ppAccount =
+      await ppClient.fetchPerformancePackage(performancePackage);
+
+    assert.isNotNull(ppAccount);
+    assert.isDefined(ppAccount.oracleReader.futarchyTwap);
+    assert.isDefined(ppAccount.rewardFunction.cliffLinear);
+    assert.isDefined(ppAccount.status.locked);
+
+    // Verify FutarchyTwap properties
+    const futarchyTwap = ppAccount.oracleReader.futarchyTwap;
+    assert.equal(futarchyTwap.amm.toBase58(), dao.toBase58());
+    assert.equal(futarchyTwap.minDuration, minDuration);
+    assert.equal(futarchyTwap.startValue.toString(), "0");
+    assert.equal(futarchyTwap.startTime.toString(), "0");
+    assert.equal(futarchyTwap.endValue.toString(), "0");
+    assert.equal(futarchyTwap.endTime.toString(), "0");
+  });
+
+  it("successfully initializes with FutarchyTwap oracle and Threshold reward function", async function () {
+    // Setup a DAO for TWAP oracle
+    const dao = await setupDaoForTwapTests(this);
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    const minDuration = 120; // 120 seconds
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+    const rewardFunction = createThresholdReward([
+      { threshold: new BN(100), cumulativeAmount: new BN(100_000_000) }, // TWAP >= 100
+      { threshold: new BN(500), cumulativeAmount: new BN(500_000_000) }, // TWAP >= 500
+      { threshold: new BN(1000), cumulativeAmount: new BN(1_000_000_000) }, // TWAP >= 1000
+    ]);
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    const ppAccount =
+      await ppClient.fetchPerformancePackage(performancePackage);
+
+    assert.isNotNull(ppAccount);
+    assert.isDefined(ppAccount.oracleReader.futarchyTwap);
+    assert.isDefined(ppAccount.rewardFunction.threshold);
+    assert.isDefined(ppAccount.status.locked);
+
+    // Verify FutarchyTwap properties
+    const futarchyTwap = ppAccount.oracleReader.futarchyTwap;
+    assert.equal(futarchyTwap.amm.toBase58(), dao.toBase58());
+    assert.equal(futarchyTwap.minDuration, minDuration);
+
+    // Verify Threshold tranches
+    const tranches = ppAccount.rewardFunction.threshold.tranches;
+    assert.equal(tranches.length, 3);
+    assert.equal(tranches[0].threshold.toString(), "100");
+    assert.equal(tranches[0].cumulativeAmount.toString(), "100000000");
+    assert.equal(tranches[1].threshold.toString(), "500");
+    assert.equal(tranches[2].threshold.toString(), "1000");
   });
 
   it("fails when create_key does not sign", async function () {

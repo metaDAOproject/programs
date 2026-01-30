@@ -8,8 +8,12 @@ import {
 import {
   setupPerformancePackageV2,
   createCliffLinearReward,
+  createFutarchyTwapOracle,
+  setupMintGovernorWithAuthority,
+  setupDaoForTwapTests,
 } from "../utils.js";
 import { expectError } from "../../utils.js";
+import { getPerformancePackageV2Addr } from "@metadaoproject/futarchy/v0.7";
 
 export default function suite() {
   let mintGovernorClient: MintGovernorClient;
@@ -223,6 +227,152 @@ export default function suite() {
     const ppAccount =
       await ppClient.fetchPerformancePackage(performancePackage);
     assert.isDefined(ppAccount.status.unlocking);
+  });
+
+  it("records start snapshot for FutarchyTwap", async function () {
+    // Setup a DAO for TWAP oracle
+    const dao = await setupDaoForTwapTests(this);
+
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    const minDuration = 60;
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+    const rewardFunction = createCliffLinearReward();
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    // Verify initial state
+    let ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
+    assert.isDefined(ppAccount.oracleReader.futarchyTwap);
+    assert.equal(
+      ppAccount.oracleReader.futarchyTwap.startValue.toString(),
+      "0",
+    );
+    assert.equal(ppAccount.oracleReader.futarchyTwap.startTime.toString(), "0");
+
+    // Advance time so the effective aggregator will be non-zero
+    // The effective_aggregator = aggregator + last_observation * time_since_update
+    // After DAO init, aggregator is 0 but last_observation = twapInitialObservation
+    // We need time_since_update > 0 for effective_aggregator to be non-zero
+    await this.advanceBySeconds(10);
+
+    // Get current time before starting unlock
+    const currentClock = await this.banksClient.getClock();
+    const currentTimestamp = Number(currentClock.unixTimestamp);
+
+    // Call start_unlock with DAO as remaining account
+    await ppClient
+      .startUnlockIx({
+        performancePackage,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Verify start snapshot was recorded
+    ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
+    assert.isDefined(ppAccount.status.unlocking);
+    assert.isDefined(ppAccount.oracleReader.futarchyTwap);
+
+    const futarchyTwap = ppAccount.oracleReader.futarchyTwap;
+    // start_value should be non-zero (the aggregator value from the DAO)
+    assert.notEqual(futarchyTwap.startValue.toString(), "0");
+    // start_time should be close to current timestamp
+    const startTime = Number(futarchyTwap.startTime.toString());
+    assert.isAtLeast(startTime, currentTimestamp);
+    // end values should still be 0 (not recorded yet)
+    assert.equal(futarchyTwap.endValue.toString(), "0");
+    assert.equal(futarchyTwap.endTime.toString(), "0");
+  });
+
+  it("fails when AMM account doesn't match for FutarchyTwap", async function () {
+    // Setup a DAO for TWAP oracle
+    const dao = await setupDaoForTwapTests(this);
+
+    // Setup a different DAO to pass as wrong account
+    const wrongDao = await setupDaoForTwapTests(this);
+
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    const minDuration = 60;
+    // Create oracle with the first DAO
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+    const rewardFunction = createCliffLinearReward();
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    // Try to start unlock with wrong DAO - should fail
+    const callbacks = expectError(
+      "OracleInvalidAccount",
+      "Should have failed because AMM account doesn't match",
+    );
+
+    await ppClient
+      .startUnlockIx({
+        performancePackage,
+        signer: authority.publicKey,
+        dao: wrongDao, // Wrong DAO!
+      })
+      .signers([authority])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("fails when signer is neither authority nor recipient", async function () {

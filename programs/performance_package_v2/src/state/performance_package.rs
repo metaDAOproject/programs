@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use futarchy::state::{Dao, PoolState};
 
 use crate::{PerformancePackageError, MAX_TRANCHES};
 
@@ -18,7 +19,68 @@ pub enum OracleReader {
     /// Reads current timestamp from Clock::get()
     /// No state needed - just reads current time on demand
     Time,
-    // FutarchyTwap variant will be added in Phase 9
+    /// Reads accumulator from Futarchy AMM, computes TWAP
+    /// Two snapshots: start (on start_unlock) and end (on complete_unlock)
+    /// TWAP = (end_value - start_value) / (end_time - start_time)
+    FutarchyTwap {
+        /// The Futarchy DAO account to read (contains embedded AMM)
+        amm: Pubkey,
+        /// Minimum seconds between start and end
+        min_duration: u32,
+        /// Start snapshot (recorded on start_unlock)
+        start_value: u128,
+        start_time: i64,
+        /// End snapshot (recorded on complete_unlock)
+        end_value: u128,
+        end_time: i64,
+    },
+}
+
+/// Reads the effective aggregator value from a Futarchy DAO account.
+/// Extrapolates the aggregator to the current timestamp using the last observation.
+fn read_futarchy_aggregator(
+    remaining_accounts: &[AccountInfo],
+    expected_amm: &Pubkey,
+) -> Result<(u128, i64)> {
+    // Get the DAO account from remaining_accounts
+    let dao_account = remaining_accounts
+        .first()
+        .ok_or(PerformancePackageError::OracleMissingAccount)?;
+
+    // Verify the account key matches the configured amm
+    require_keys_eq!(
+        dao_account.key(),
+        *expected_amm,
+        PerformancePackageError::OracleInvalidAccount
+    );
+
+    // Deserialize the Dao account
+    let dao_data = dao_account.try_borrow_data()?;
+    let dao = Dao::try_deserialize(&mut &dao_data[..])
+        .map_err(|_| PerformancePackageError::OracleParseError)?;
+
+    // Read the oracle data from the spot pool
+    let (aggregator, last_updated_timestamp, last_observation) = match &dao.amm.state {
+        PoolState::Spot { spot } => (
+            spot.oracle.aggregator,
+            spot.oracle.last_updated_timestamp,
+            spot.oracle.last_observation,
+        ),
+        PoolState::Futarchy { spot, .. } => (
+            spot.oracle.aggregator,
+            spot.oracle.last_updated_timestamp,
+            spot.oracle.last_observation,
+        ),
+    };
+
+    // Compute effective aggregator at current time by extrapolating
+    // from the last update using the last observation value
+    let clock = Clock::get()?;
+    let time_since_update = clock.unix_timestamp.saturating_sub(last_updated_timestamp) as u128;
+    let effective_aggregator =
+        aggregator.wrapping_add(last_observation.saturating_mul(time_since_update));
+
+    Ok((effective_aggregator, clock.unix_timestamp))
 }
 
 impl OracleReader {
@@ -29,15 +91,36 @@ impl OracleReader {
                 // Time oracle has no configuration to validate
                 Ok(())
             }
+            OracleReader::FutarchyTwap { min_duration, .. } => {
+                // min_duration must be > 0 to avoid division by zero in TWAP calculation
+                require!(
+                    *min_duration > 0,
+                    PerformancePackageError::InvalidVestingSchedule
+                );
+                Ok(())
+            }
         }
     }
 
     /// Records the start snapshot when unlock begins.
     /// For Time oracle, this is a no-op since it just reads current time on demand.
-    pub fn record_start(&mut self) -> Result<()> {
+    /// For FutarchyTwap, reads the accumulator from the Dao's spot pool oracle.
+    pub fn record_start(&mut self, remaining_accounts: &[AccountInfo]) -> Result<()> {
         match self {
             OracleReader::Time => {
                 // No-op for Time oracle - just reads current time on demand
+                Ok(())
+            }
+            OracleReader::FutarchyTwap {
+                amm,
+                start_value,
+                start_time,
+                ..
+            } => {
+                let (effective_aggregator, timestamp) =
+                    read_futarchy_aggregator(remaining_accounts, amm)?;
+                *start_value = effective_aggregator;
+                *start_time = timestamp;
                 Ok(())
             }
         }
@@ -45,10 +128,24 @@ impl OracleReader {
 
     /// Records the end snapshot when unlock completes.
     /// For Time oracle, this is a no-op since it just reads current time on demand.
-    pub fn record_end(&mut self) -> Result<()> {
+    /// For FutarchyTwap, reads the accumulator from the Dao's spot pool oracle.
+    pub fn record_end(&mut self, remaining_accounts: &[AccountInfo]) -> Result<()> {
         match self {
             OracleReader::Time => {
                 // No-op for Time oracle - just reads current time on demand
+                Ok(())
+            }
+            OracleReader::FutarchyTwap {
+                amm,
+                end_value,
+                end_time,
+                ..
+            } => {
+                let (effective_aggregator, timestamp) =
+                    read_futarchy_aggregator(remaining_accounts, amm)?;
+                *end_value = effective_aggregator;
+                *end_time = timestamp;
+
                 Ok(())
             }
         }
@@ -56,29 +153,85 @@ impl OracleReader {
 
     /// Checks if the minimum duration has passed and unlock can be completed.
     /// For Time oracle, always returns true (no min_duration concept).
+    /// For FutarchyTwap, checks if min_duration seconds have passed since start_time.
     pub fn can_end(&self) -> bool {
         match self {
             OracleReader::Time => true,
+            OracleReader::FutarchyTwap {
+                min_duration,
+                start_time,
+                ..
+            } => {
+                let clock = Clock::get();
+                match clock {
+                    Ok(clock) => {
+                        let elapsed = clock.unix_timestamp.saturating_sub(*start_time);
+                        elapsed >= *min_duration as i64
+                    }
+                    Err(_) => false,
+                }
+            }
         }
     }
 
     /// Computes the oracle value for reward calculation.
     /// For Time oracle, returns the current unix timestamp.
+    /// For FutarchyTwap, returns the TWAP = (end_value - start_value) / (end_time - start_time).
     pub fn compute_value(&self) -> Result<u128> {
         match self {
             OracleReader::Time => {
                 let clock = Clock::get()?;
+
                 Ok(clock.unix_timestamp as u128)
+            }
+            OracleReader::FutarchyTwap {
+                start_value,
+                start_time,
+                end_value,
+                end_time,
+                ..
+            } => {
+                // Calculate time delta
+                let time_delta = end_time
+                    .checked_sub(*start_time)
+                    .ok_or(PerformancePackageError::OracleInvalidState)?;
+
+                // Ensure time_delta > 0 to avoid division by zero
+                require!(time_delta > 0, PerformancePackageError::OracleInvalidState);
+
+                // Calculate TWAP: (end_value - start_value) / time_delta
+                // Note: end_value should always be >= start_value since aggregator is cumulative
+                // If end_value < start_value, the aggregator wrapped (extremely rare)
+                let value_delta = end_value.wrapping_sub(*start_value);
+
+                let twap = value_delta
+                    .checked_div(time_delta as u128)
+                    .ok_or(PerformancePackageError::OracleInvalidState)?;
+
+                Ok(twap)
             }
         }
     }
 
     /// Resets the oracle state for the next unlock cycle.
     /// For Time oracle, this is a no-op (no state to reset).
+    /// For FutarchyTwap, clears the start and end snapshots.
     pub fn reset(&mut self) {
         match self {
             OracleReader::Time => {
                 // No-op for Time oracle - no state to reset
+            }
+            OracleReader::FutarchyTwap {
+                start_value,
+                start_time,
+                end_value,
+                end_time,
+                ..
+            } => {
+                *start_value = 0;
+                *start_time = 0;
+                *end_value = 0;
+                *end_time = 0;
             }
         }
     }

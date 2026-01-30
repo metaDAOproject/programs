@@ -1494,6 +1494,7 @@ version = "0.7.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "futarchy",
  "mint_governor",
  "solana-security-txt",
 ]

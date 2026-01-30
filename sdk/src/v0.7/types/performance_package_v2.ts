@@ -536,6 +536,41 @@ export type PerformancePackageV2 = {
           {
             name: "Time";
           },
+          {
+            name: "FutarchyTwap";
+            fields: [
+              {
+                name: "amm";
+                docs: [
+                  "The Futarchy DAO account to read (contains embedded AMM)",
+                ];
+                type: "publicKey";
+              },
+              {
+                name: "minDuration";
+                docs: ["Minimum seconds between start and end"];
+                type: "u32";
+              },
+              {
+                name: "startValue";
+                docs: ["Start snapshot (recorded on start_unlock)"];
+                type: "u128";
+              },
+              {
+                name: "startTime";
+                type: "i64";
+              },
+              {
+                name: "endValue";
+                docs: ["End snapshot (recorded on complete_unlock)"];
+                type: "u128";
+              },
+              {
+                name: "endTime";
+                type: "i64";
+              },
+            ];
+          },
         ];
       };
     },
@@ -1491,6 +1526,41 @@ export const IDL: PerformancePackageV2 = {
         variants: [
           {
             name: "Time",
+          },
+          {
+            name: "FutarchyTwap",
+            fields: [
+              {
+                name: "amm",
+                docs: [
+                  "The Futarchy DAO account to read (contains embedded AMM)",
+                ],
+                type: "publicKey",
+              },
+              {
+                name: "minDuration",
+                docs: ["Minimum seconds between start and end"],
+                type: "u32",
+              },
+              {
+                name: "startValue",
+                docs: ["Start snapshot (recorded on start_unlock)"],
+                type: "u128",
+              },
+              {
+                name: "startTime",
+                type: "i64",
+              },
+              {
+                name: "endValue",
+                docs: ["End snapshot (recorded on complete_unlock)"],
+                type: "u128",
+              },
+              {
+                name: "endTime",
+                type: "i64",
+              },
+            ],
           },
         ],
       },

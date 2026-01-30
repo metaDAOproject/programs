@@ -154,14 +154,24 @@ export class PerformancePackageV2Client {
   startUnlockIx({
     performancePackage,
     signer = this.provider.publicKey,
+    dao,
   }: {
     performancePackage: PublicKey;
     signer?: PublicKey;
+    dao?: PublicKey;
   }) {
-    return this.program.methods.startUnlock().accounts({
+    const builder = this.program.methods.startUnlock().accounts({
       performancePackage,
       signer,
     });
+
+    if (dao) {
+      return builder.remainingAccounts([
+        { pubkey: dao, isSigner: false, isWritable: false },
+      ]);
+    }
+
+    return builder;
   }
 
   completeUnlockIx({
@@ -171,6 +181,7 @@ export class PerformancePackageV2Client {
     mint,
     recipient,
     signer = this.provider.publicKey,
+    dao,
   }: {
     performancePackage: PublicKey;
     mintGovernor: PublicKey;
@@ -178,10 +189,11 @@ export class PerformancePackageV2Client {
     mint: PublicKey;
     recipient: PublicKey;
     signer?: PublicKey;
+    dao?: PublicKey;
   }) {
     const recipientAta = getAssociatedTokenAddressSync(mint, recipient, true);
 
-    return this.program.methods.completeUnlock().accounts({
+    const builder = this.program.methods.completeUnlock().accounts({
       performancePackage,
       mintGovernor,
       mintAuthority,
@@ -192,6 +204,14 @@ export class PerformancePackageV2Client {
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       mintGovernorProgram: MINT_GOVERNOR_PROGRAM_ID,
     });
+
+    if (dao) {
+      return builder.remainingAccounts([
+        { pubkey: dao, isSigner: false, isWritable: false },
+      ]);
+    }
+
+    return builder;
   }
 
   changeAuthorityIx({

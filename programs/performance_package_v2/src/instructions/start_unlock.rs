@@ -47,8 +47,8 @@ impl StartUnlock<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let pp = &mut ctx.accounts.performance_package;
 
-        // Record start snapshot (no-op for Time oracle)
-        pp.oracle_reader.record_start()?;
+        // Record start snapshot (no-op for Time oracle, reads AMM for FutarchyTwap)
+        pp.oracle_reader.record_start(ctx.remaining_accounts)?;
 
         // Transition to Unlocking status
         pp.status = PackageStatus::Unlocking;

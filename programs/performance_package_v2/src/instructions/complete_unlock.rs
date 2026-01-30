@@ -86,8 +86,8 @@ impl CompleteUnlock<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let pp = &mut ctx.accounts.performance_package;
 
-        // Record end snapshot (no-op for Time oracle)
-        pp.oracle_reader.record_end()?;
+        // Record end snapshot (no-op for Time oracle, reads AMM for FutarchyTwap)
+        pp.oracle_reader.record_end(ctx.remaining_accounts)?;
 
         // Compute oracle value
         let oracle_value = pp.oracle_reader.compute_value()?;

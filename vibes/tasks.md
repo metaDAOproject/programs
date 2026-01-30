@@ -29,33 +29,4 @@
 
 ## Tasks
 
-### Phase 9: FutarchyTwap Oracle Support
-
-> Reference: `001-performance-package-v2.md` → OracleReader variants
-
-- [NEXT] 9.1 Add FutarchyTwap variant to OracleReader
-  - Add `FutarchyTwap` variant with fields: amm, min_duration, start_value/time, end_value/time
-  - Implement `record_start()` for FutarchyTwap (read accumulator from AMM remaining_account)
-  - Implement `record_end()` for FutarchyTwap
-  - Implement `can_end()` for FutarchyTwap (check min_duration)
-  - Implement `compute_value()` for FutarchyTwap (TWAP calculation)
-  - Implement `reset()` for FutarchyTwap
-
-- [ ] 9.2 Update instructions for FutarchyTwap
-  - Update `start_unlock` to handle remaining_accounts for FutarchyTwap
-  - Update `complete_unlock` to handle remaining_accounts for FutarchyTwap
-  - Add validation that AMM account matches oracle_reader.amm
-
-- [ ] 9.3 Update SDK for FutarchyTwap
-  - Update `startUnlockIx()` to accept optional AMM account
-  - Update `completeUnlockIx()` to accept optional AMM account
-  - Run `./rebuild.sh`
-
-- [ ] 9.4 Write unit tests for FutarchyTwap
-  - Update `initializePerformancePackage.test.ts`: add test for FutarchyTwap + CliffLinear
-  - Update `initializePerformancePackage.test.ts`: add test for FutarchyTwap + Threshold
-  - Update `startUnlock.test.ts`: add test for recording start snapshot
-  - Update `startUnlock.test.ts`: add test for wrong AMM account failure
-  - Update `completeUnlock.test.ts`: add test for recording end snapshot
-  - Update `completeUnlock.test.ts`: add test for TWAP computation
-  - Update `completeUnlock.test.ts`: add test for min_duration not reached failure
+All tasks completed! 🎉

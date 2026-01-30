@@ -3,6 +3,7 @@ import {
   PublicKey,
   Transaction,
   SystemProgram,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { BanksClient } from "solana-bankrun";
@@ -13,6 +14,8 @@ import {
   getMintGovernorAddr,
   getMintAuthorityAddr,
   getPerformancePackageV2Addr,
+  PriceMath,
+  getDaoAddr,
 } from "@metadaoproject/futarchy/v0.7";
 import type {
   OracleReaderV2,
@@ -240,4 +243,135 @@ export function createThresholdReward(
       tranches,
     },
   } as RewardFunctionV2;
+}
+
+/**
+ * Helper to create a FutarchyTwap oracle reader
+ */
+export function createFutarchyTwapOracle({
+  amm,
+  minDuration = 60, // Default 60 seconds
+}: {
+  amm: PublicKey;
+  minDuration?: number;
+}): OracleReaderV2 {
+  return {
+    futarchyTwap: {
+      amm,
+      minDuration,
+      startValue: new BN(0),
+      startTime: new BN(0),
+      endValue: new BN(0),
+      endTime: new BN(0),
+    },
+  } as OracleReaderV2;
+}
+
+const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
+
+/**
+ * Sets up a basic DAO for testing FutarchyTwap oracle
+ */
+export async function setupDaoForTwapTests(context: any): Promise<PublicKey> {
+  // Create base and quote mints
+  const baseMint = await createMintWithAuthority(
+    context.banksClient,
+    context.payer,
+    context.payer.publicKey,
+  );
+  const quoteMint = await createMintWithAuthority(
+    context.banksClient,
+    context.payer,
+    context.payer.publicKey,
+  );
+
+  // Create token accounts and mint tokens to payer
+  const payerBaseAta = token.getAssociatedTokenAddressSync(
+    baseMint,
+    context.payer.publicKey,
+    true,
+  );
+  const payerQuoteAta = token.getAssociatedTokenAddressSync(
+    quoteMint,
+    context.payer.publicKey,
+    true,
+  );
+
+  const createAtaTx = new Transaction().add(
+    token.createAssociatedTokenAccountIdempotentInstruction(
+      context.payer.publicKey,
+      payerBaseAta,
+      context.payer.publicKey,
+      baseMint,
+    ),
+    token.createAssociatedTokenAccountIdempotentInstruction(
+      context.payer.publicKey,
+      payerQuoteAta,
+      context.payer.publicKey,
+      quoteMint,
+    ),
+  );
+  createAtaTx.recentBlockhash = (
+    await context.banksClient.getLatestBlockhash()
+  )[0];
+  createAtaTx.feePayer = context.payer.publicKey;
+  createAtaTx.sign(context.payer);
+  await context.banksClient.processTransaction(createAtaTx);
+
+  // Mint tokens to payer
+  const mintBaseTx = new Transaction().add(
+    token.createMintToInstruction(
+      baseMint,
+      payerBaseAta,
+      context.payer.publicKey,
+      100_000_000_000, // 100k tokens
+    ),
+    token.createMintToInstruction(
+      quoteMint,
+      payerQuoteAta,
+      context.payer.publicKey,
+      100_000_000_000, // 100k tokens
+    ),
+  );
+  mintBaseTx.recentBlockhash = (
+    await context.banksClient.getLatestBlockhash()
+  )[0];
+  mintBaseTx.feePayer = context.payer.publicKey;
+  mintBaseTx.sign(context.payer);
+  await context.banksClient.processTransaction(mintBaseTx);
+
+  // Initialize DAO
+  const nonce = new BN(Math.floor(Math.random() * 1000000));
+
+  await context.futarchy
+    .initializeDaoIx({
+      baseMint,
+      quoteMint,
+      params: {
+        secondsPerProposal: 60 * 60 * 24 * 3,
+        twapStartDelaySeconds: 60 * 60 * 24,
+        twapInitialObservation: THOUSAND_BUCK_PRICE,
+        twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+        minQuoteFutarchicLiquidity: new BN(10_000),
+        minBaseFutarchicLiquidity: new BN(10_000),
+        passThresholdBps: 300,
+        nonce,
+        initialSpendingLimit: null,
+        baseToStake: new BN(0),
+        teamSponsoredPassThresholdBps: 300,
+        teamAddress: context.payer.publicKey,
+      },
+      provideLiquidity: true,
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ])
+    .rpc();
+
+  const [dao] = getDaoAddr({
+    nonce,
+    daoCreator: context.payer.publicKey,
+  });
+
+  return dao;
 }
