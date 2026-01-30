@@ -22,6 +22,16 @@ pub enum OracleReader {
 }
 
 impl OracleReader {
+    /// Validates the oracle reader configuration.
+    pub fn validate(&self) -> Result<()> {
+        match self {
+            OracleReader::Time => {
+                // Time oracle has no configuration to validate
+                Ok(())
+            }
+        }
+    }
+
     /// Records the start snapshot when unlock begins.
     /// For Time oracle, this is a no-op since it just reads current time on demand.
     pub fn record_start(&mut self) -> Result<()> {
@@ -75,6 +85,53 @@ impl OracleReader {
 }
 
 impl RewardFunction {
+    /// Validates the reward function configuration.
+    pub fn validate(&self) -> Result<()> {
+        match self {
+            RewardFunction::CliffLinear {
+                start_value,
+                cliff_value,
+                end_value,
+                cliff_amount,
+                total_amount,
+            } => {
+                // start_value <= cliff_value <= end_value
+                require!(
+                    start_value <= cliff_value && cliff_value <= end_value,
+                    PerformancePackageError::InvalidVestingSchedule
+                );
+                // cliff_amount <= total_amount
+                require!(
+                    cliff_amount <= total_amount,
+                    PerformancePackageError::InvalidVestingSchedule
+                );
+            }
+            RewardFunction::Threshold { tranches } => {
+                // Must have at least one tranche
+                require!(
+                    !tranches.is_empty(),
+                    PerformancePackageError::InvalidTranches
+                );
+
+                // Tranches must be sorted by threshold ascending
+                // and cumulative_amount must be non-decreasing
+                for window in tranches.windows(2) {
+                    let prev = &window[0];
+                    let curr = &window[1];
+                    require!(
+                        prev.threshold < curr.threshold,
+                        PerformancePackageError::InvalidTranches
+                    );
+                    require!(
+                        prev.cumulative_amount <= curr.cumulative_amount,
+                        PerformancePackageError::InvalidTranches
+                    );
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Calculates the cumulative rewards earned for a given oracle value.
     /// Returns total tokens deserved so far (not incremental).
     pub fn calculate(&self, value: u128) -> Result<u64> {

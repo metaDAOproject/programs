@@ -33,16 +33,7 @@
 
 > Reference: `001-performance-package-v2.md` → Instruction 5
 
-- [NEXT] 6.1 Write propose_change instruction
-  - Create `instructions/propose_change.rs`
-  - Implement accounts struct with ChangeRequest PDA init
-  - Implement `ProposeChangeArgs` with optional fields and pda_nonce
-  - Implement `validate()`: at least one Some field, validate configs
-  - Implement `handle()`: create ChangeRequest
-  - Emit `ChangeProposedEvent`
-  - Wire up in `lib.rs`
-
-- [ ] 6.2 Add SDK method for propose_change
+- [NEXT] 6.2 Add SDK method for propose_change
   - Add `proposeChangeIx()` method to `PerformancePackageV2Client`
   - Add `fetchChangeRequest()` method
   - Run `./rebuild.sh`

@@ -54,7 +54,8 @@ pub struct InitializePerformancePackage<'info> {
 
 impl InitializePerformancePackage<'_> {
     pub fn validate(&self, args: &InitializePerformancePackageArgs) -> Result<()> {
-        validate_reward_function(&args.reward_function)?;
+        args.oracle_reader.validate()?;
+        args.reward_function.validate()?;
         Ok(())
     }
 
@@ -97,51 +98,4 @@ impl InitializePerformancePackage<'_> {
 
         Ok(())
     }
-}
-
-/// Validates the reward function configuration.
-fn validate_reward_function(reward_function: &RewardFunction) -> Result<()> {
-    match reward_function {
-        RewardFunction::CliffLinear {
-            start_value,
-            cliff_value,
-            end_value,
-            cliff_amount,
-            total_amount,
-        } => {
-            // start_value <= cliff_value <= end_value
-            require!(
-                start_value <= cliff_value && cliff_value <= end_value,
-                PerformancePackageError::InvalidVestingSchedule
-            );
-            // cliff_amount <= total_amount
-            require!(
-                cliff_amount <= total_amount,
-                PerformancePackageError::InvalidVestingSchedule
-            );
-        }
-        RewardFunction::Threshold { tranches } => {
-            // Must have at least one tranche
-            require!(
-                !tranches.is_empty(),
-                PerformancePackageError::InvalidTranches
-            );
-
-            // Tranches must be sorted by threshold ascending
-            // and cumulative_amount must be non-decreasing
-            for window in tranches.windows(2) {
-                let prev = &window[0];
-                let curr = &window[1];
-                require!(
-                    prev.threshold < curr.threshold,
-                    PerformancePackageError::InvalidTranches
-                );
-                require!(
-                    prev.cumulative_amount <= curr.cumulative_amount,
-                    PerformancePackageError::InvalidTranches
-                );
-            }
-        }
-    }
-    Ok(())
 }

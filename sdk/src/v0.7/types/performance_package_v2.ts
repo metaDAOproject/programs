@@ -159,6 +159,44 @@ export type PerformancePackageV2 = {
       ];
       args: [];
     },
+    {
+      name: "proposeChange";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "changeRequest";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "proposer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "ProposeChangeArgs";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -352,6 +390,40 @@ export type PerformancePackageV2 = {
           {
             name: "minUnlockTimestamp";
             type: "i64";
+          },
+        ];
+      };
+    },
+    {
+      name: "ProposeChangeArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "pdaNonce";
+            type: "u32";
+          },
+          {
+            name: "newRecipient";
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "newOracleReader";
+            type: {
+              option: {
+                defined: "OracleReader";
+              };
+            };
+          },
+          {
+            name: "newRewardFunction";
+            type: {
+              option: {
+                defined: "RewardFunction";
+              };
+            };
           },
         ];
       };
@@ -991,6 +1063,44 @@ export const IDL: PerformancePackageV2 = {
       ],
       args: [],
     },
+    {
+      name: "proposeChange",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "changeRequest",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "proposer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "ProposeChangeArgs",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -1184,6 +1294,40 @@ export const IDL: PerformancePackageV2 = {
           {
             name: "minUnlockTimestamp",
             type: "i64",
+          },
+        ],
+      },
+    },
+    {
+      name: "ProposeChangeArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pdaNonce",
+            type: "u32",
+          },
+          {
+            name: "newRecipient",
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "newOracleReader",
+            type: {
+              option: {
+                defined: "OracleReader",
+              },
+            },
+          },
+          {
+            name: "newRewardFunction",
+            type: {
+              option: {
+                defined: "RewardFunction",
+              },
+            },
           },
         ],
       },
