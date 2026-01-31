@@ -9,6 +9,7 @@ import {
   setupPerformancePackageV2,
   createCliffLinearReward,
   createThresholdReward,
+  createFutarchyTwapOracle,
 } from "../utils.js";
 import { expectError } from "../../utils.js";
 
@@ -202,6 +203,10 @@ export default function suite() {
     const authority = Keypair.generate();
     const recipient = Keypair.generate();
 
+    // Initialize with FutarchyTwap oracle
+    const fakeAmm = Keypair.generate().publicKey;
+    const initialOracleReader = createFutarchyTwapOracle({ amm: fakeAmm });
+
     const { performancePackage } = await setupPerformancePackageV2(
       this.banksClient,
       mintGovernorClient,
@@ -210,16 +215,21 @@ export default function suite() {
       {
         authority: authority.publicKey,
         recipient: recipient.publicKey,
+        oracleReader: initialOracleReader,
         rewardFunction: createCliffLinearReward(),
         minUnlockTimestamp: new BN(0),
       },
     );
 
-    // Verify initial oracle is Time
+    // Verify initial oracle is FutarchyTwap
     let ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
-    assert.isDefined(ppAccount.oracleReader.time);
+    assert.isDefined(ppAccount.oracleReader.futarchyTwap);
+    assert.equal(
+      ppAccount.oracleReader.futarchyTwap.amm.toBase58(),
+      fakeAmm.toBase58(),
+    );
 
-    // Authority proposes oracle change (time -> time, but verifies the mechanism works)
+    // Authority proposes oracle change (FutarchyTwap -> Time)
     const pdaNonce = 1;
     const [changeRequest] = ppClient.getChangeRequestAddr(
       performancePackage,
@@ -251,7 +261,7 @@ export default function suite() {
       .signers([recipient])
       .rpc();
 
-    // Verify oracle is still Time (the change was executed successfully)
+    // Verify oracle was changed to Time
     ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
     assert.isDefined(ppAccount.oracleReader.time);
   });
@@ -352,7 +362,9 @@ export default function suite() {
       pdaNonce,
     );
 
-    const newOracleReader = { time: {} };
+    // We don't need a real AMM for this test, just a pubkey
+    const fakeAmm = Keypair.generate().publicKey;
+    const newOracleReader = createFutarchyTwapOracle({ amm: fakeAmm });
     const newRewardFunction = createThresholdReward([
       { threshold: new BN(100), cumulativeAmount: new BN(100_000_000) },
     ]);
@@ -387,7 +399,16 @@ export default function suite() {
       ppAccount.recipient.toBase58(),
       newRecipient.publicKey.toBase58(),
     );
-    assert.isDefined(ppAccount.oracleReader.time);
+    assert.isDefined(ppAccount.oracleReader.futarchyTwap);
+    assert.equal(
+      ppAccount.oracleReader.futarchyTwap.amm.toBase58(),
+      fakeAmm.toBase58(),
+    );
+    assert.equal(ppAccount.oracleReader.futarchyTwap.minDuration, 60);
+    assert.equal(ppAccount.oracleReader.futarchyTwap.startValue.toNumber(), 0);
+    assert.equal(ppAccount.oracleReader.futarchyTwap.startTime.toNumber(), 0);
+    assert.equal(ppAccount.oracleReader.futarchyTwap.endValue.toNumber(), 0);
+    assert.equal(ppAccount.oracleReader.futarchyTwap.endTime.toNumber(), 0);
     assert.isDefined(ppAccount.rewardFunction.threshold);
   });
 

@@ -24,7 +24,6 @@ pub struct ChangeRequest {
     pub pda_nonce: u32,
     pub bump: u8,
 
-    // === Optional Changes (at least one must be Some) ===
     /// New recipient address (if changing)
     pub new_recipient: Option<Pubkey>,
     /// New oracle configuration (if changing)

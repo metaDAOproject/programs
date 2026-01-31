@@ -338,12 +338,12 @@ export type PerformancePackageV2 = {
           },
           {
             name: "authority";
-            docs: ["DAO multisig vault - can modify PP"];
+            docs: ["Usually the DAO multisig vault - can modify PP"];
             type: "publicKey";
           },
           {
             name: "recipient";
-            docs: ["Team multisig - receives minted tokens"];
+            docs: ["Usually the team multisig - receives minted tokens"];
             type: "publicKey";
           },
           {
@@ -362,7 +362,7 @@ export type PerformancePackageV2 = {
           },
           {
             name: "status";
-            docs: ["Locked or Unlocking"];
+            docs: ["Locked or Unlocking state"];
             type: {
               defined: "PackageStatus";
             };
@@ -374,7 +374,7 @@ export type PerformancePackageV2 = {
           },
           {
             name: "totalRewardsPaidOut";
-            docs: ["Cumulative tokens minted to recipient"];
+            docs: ["Cumulative tokens minted to the recipient"];
             type: "u64";
           },
           {
@@ -389,6 +389,7 @@ export type PerformancePackageV2 = {
           },
           {
             name: "bump";
+            docs: ["PDA bump"];
             type: "u8";
           },
         ];
@@ -488,7 +489,9 @@ export type PerformancePackageV2 = {
           },
           {
             name: "cumulativeAmount";
-            docs: ["Total tokens at this level (cumulative, not incremental)"];
+            docs: [
+              "Total tokens at this tranche (cumulative, not incremental)",
+            ];
             type: "u64";
           },
         ];
@@ -969,7 +972,7 @@ export type PerformancePackageV2 = {
     {
       code: 6015;
       name: "InvalidTranches";
-      msg: "Tranches not sorted or empty";
+      msg: "Tranches should be sorted and non-empty";
     },
     {
       code: 6016;
@@ -1329,12 +1332,12 @@ export const IDL: PerformancePackageV2 = {
           },
           {
             name: "authority",
-            docs: ["DAO multisig vault - can modify PP"],
+            docs: ["Usually the DAO multisig vault - can modify PP"],
             type: "publicKey",
           },
           {
             name: "recipient",
-            docs: ["Team multisig - receives minted tokens"],
+            docs: ["Usually the team multisig - receives minted tokens"],
             type: "publicKey",
           },
           {
@@ -1353,7 +1356,7 @@ export const IDL: PerformancePackageV2 = {
           },
           {
             name: "status",
-            docs: ["Locked or Unlocking"],
+            docs: ["Locked or Unlocking state"],
             type: {
               defined: "PackageStatus",
             },
@@ -1365,7 +1368,7 @@ export const IDL: PerformancePackageV2 = {
           },
           {
             name: "totalRewardsPaidOut",
-            docs: ["Cumulative tokens minted to recipient"],
+            docs: ["Cumulative tokens minted to the recipient"],
             type: "u64",
           },
           {
@@ -1380,6 +1383,7 @@ export const IDL: PerformancePackageV2 = {
           },
           {
             name: "bump",
+            docs: ["PDA bump"],
             type: "u8",
           },
         ],
@@ -1479,7 +1483,9 @@ export const IDL: PerformancePackageV2 = {
           },
           {
             name: "cumulativeAmount",
-            docs: ["Total tokens at this level (cumulative, not incremental)"],
+            docs: [
+              "Total tokens at this tranche (cumulative, not incremental)",
+            ],
             type: "u64",
           },
         ],
@@ -1960,7 +1966,7 @@ export const IDL: PerformancePackageV2 = {
     {
       code: 6015,
       name: "InvalidTranches",
-      msg: "Tranches not sorted or empty",
+      msg: "Tranches should be sorted and non-empty",
     },
     {
       code: 6016,

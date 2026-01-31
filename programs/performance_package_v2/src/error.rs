@@ -45,7 +45,7 @@ pub enum PerformancePackageError {
     RewardCalculationOverflow,
 
     // Configuration
-    #[msg("Tranches not sorted or empty")]
+    #[msg("Tranches should be sorted and non-empty")]
     InvalidTranches,
     #[msg("Invalid vesting schedule configuration")]
     InvalidVestingSchedule,

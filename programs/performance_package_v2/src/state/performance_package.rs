@@ -87,14 +87,14 @@ impl OracleReader {
     /// Validates the oracle reader configuration.
     pub fn validate(&self) -> Result<()> {
         match self {
-            OracleReader::Time => {
+            &OracleReader::Time => {
                 // Time oracle has no configuration to validate
                 Ok(())
             }
-            OracleReader::FutarchyTwap { min_duration, .. } => {
+            &OracleReader::FutarchyTwap { min_duration, .. } => {
                 // min_duration must be > 0 to avoid division by zero in TWAP calculation
                 require!(
-                    *min_duration > 0,
+                    min_duration > 0,
                     PerformancePackageError::InvalidVestingSchedule
                 );
                 Ok(())
@@ -191,22 +191,18 @@ impl OracleReader {
                 end_time,
                 ..
             } => {
-                // Calculate time delta
-                let time_delta = end_time
-                    .checked_sub(*start_time)
-                    .ok_or(PerformancePackageError::OracleInvalidState)?;
+                let time_delta = end_time - start_time;
 
                 // Ensure time_delta > 0 to avoid division by zero
                 require!(time_delta > 0, PerformancePackageError::OracleInvalidState);
 
                 // Calculate TWAP: (end_value - start_value) / time_delta
                 // Note: end_value should always be >= start_value since aggregator is cumulative
-                // If end_value < start_value, the aggregator wrapped (extremely rare)
+                // If end_value < start_value, the aggregator wrapped - rare but possible
+                // wrapping_sub ensures we get the correct difference despite wrapping
                 let value_delta = end_value.wrapping_sub(*start_value);
 
-                let twap = value_delta
-                    .checked_div(time_delta as u128)
-                    .ok_or(PerformancePackageError::OracleInvalidState)?;
+                let twap = value_delta / time_delta as u128;
 
                 Ok(twap)
             }
@@ -218,9 +214,7 @@ impl OracleReader {
     /// For FutarchyTwap, clears the start and end snapshots.
     pub fn reset(&mut self) {
         match self {
-            OracleReader::Time => {
-                // No-op for Time oracle - no state to reset
-            }
+            OracleReader::Time => {}
             OracleReader::FutarchyTwap {
                 start_value,
                 start_time,
@@ -253,6 +247,7 @@ impl RewardFunction {
                     start_value <= cliff_value && cliff_value <= end_value,
                     PerformancePackageError::InvalidVestingSchedule
                 );
+
                 // cliff_amount <= total_amount
                 require!(
                     cliff_amount <= total_amount,
@@ -286,10 +281,10 @@ impl RewardFunction {
     }
 
     /// Calculates the cumulative rewards earned for a given oracle value.
-    /// Returns total tokens deserved so far (not incremental).
+    /// Returns total tokens deserved so far (cumulative, not incremental).
     pub fn calculate(&self, value: u128) -> Result<u64> {
         match self {
-            RewardFunction::CliffLinear {
+            &RewardFunction::CliffLinear {
                 start_value,
                 cliff_value,
                 end_value,
@@ -297,50 +292,41 @@ impl RewardFunction {
                 total_amount,
             } => {
                 // Before start: 0 rewards
-                if value < *start_value {
+                if value < start_value {
                     return Ok(0);
                 }
 
                 // Before cliff: 0 rewards
-                if value < *cliff_value {
+                if value < cliff_value {
                     return Ok(0);
                 }
 
                 // At or after end: full rewards
-                if value >= *end_value {
-                    return Ok(*total_amount);
+                if value >= end_value {
+                    return Ok(total_amount);
                 }
 
-                // Between cliff and end: cliff_amount + linear interpolation
-                // linear_portion = (value - cliff_value) / (end_value - cliff_value) * (total_amount - cliff_amount)
+                // Between cliff and end: cliff_amount + linear_portion
+                // linear_portion = (value - cliff_value) * (total_amount - cliff_amount) / (end_value - cliff_value)
 
-                let value_progress = value.checked_sub(*cliff_value).unwrap_or(0);
-                let value_range = end_value
-                    .checked_sub(*cliff_value)
-                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?;
+                // Value progress is zero if value is less than cliff_value
+                let value_progress = value.saturating_sub(cliff_value);
+                let value_range = end_value - cliff_value;
 
-                // Avoid division by zero
+                // If there's no linear range, it's only a cliff
                 if value_range == 0 {
-                    return Ok(*cliff_amount);
+                    return Ok(cliff_amount);
                 }
 
-                let linear_amount = (*total_amount as u128)
-                    .checked_sub(*cliff_amount as u128)
-                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?;
+                let linear_amount = (total_amount - cliff_amount) as u128;
 
                 // Calculate: cliff_amount + (value_progress * linear_amount / value_range)
-                let linear_portion = value_progress
-                    .checked_mul(linear_amount)
-                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?
-                    .checked_div(value_range)
-                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?;
+                let linear_portion = u64::try_from(value_progress * linear_amount / value_range)
+                    .map_err(|_| PerformancePackageError::RewardCalculationOverflow)?;
 
-                let result = (*cliff_amount as u128)
-                    .checked_add(linear_portion)
-                    .ok_or(PerformancePackageError::RewardCalculationOverflow)?;
+                let result = cliff_amount + linear_portion;
 
-                // Safe to convert since total_amount is u64 and result <= total_amount
-                Ok(result as u64)
+                Ok(result)
             }
             RewardFunction::Threshold { tranches } => {
                 // Find the highest threshold that value meets
@@ -363,7 +349,7 @@ impl RewardFunction {
 pub struct ThresholdTranche {
     /// Oracle value threshold
     pub threshold: u128,
-    /// Total tokens at this level (cumulative, not incremental)
+    /// Total tokens at this tranche (cumulative, not incremental)
     pub cumulative_amount: u64,
 }
 
@@ -397,7 +383,6 @@ pub enum RewardFunction {
 #[account]
 #[derive(InitSpace, Debug)]
 pub struct PerformancePackage {
-    // === Core References ===
     /// Token mint controlled by mint_governor
     pub mint: Pubkey,
     /// MintGovernor account
@@ -405,32 +390,28 @@ pub struct PerformancePackage {
     /// MintAuthority PDA for this PP
     pub mint_authority: Pubkey,
 
-    // === Authorities ===
-    /// DAO multisig vault - can modify PP
+    /// Usually the DAO multisig vault - can modify PP
     pub authority: Pubkey,
-    /// Team multisig - receives minted tokens
+    /// Usually the team multisig - receives minted tokens
     pub recipient: Pubkey,
 
-    // === Inline Configuration ===
     /// Stores start/end snapshots for oracle calculations
     pub oracle_reader: OracleReader,
     /// How to calculate rewards
     pub reward_function: RewardFunction,
 
-    // === Lifecycle ===
-    /// Locked or Unlocking
+    /// Locked or Unlocking state
     pub status: PackageStatus,
     /// Can't start unlock before this time
     pub min_unlock_timestamp: i64,
 
-    // === Payout Tracking ===
-    /// Cumulative tokens minted to recipient
+    /// Cumulative tokens minted to the recipient
     pub total_rewards_paid_out: u64,
     /// Event sequence number
     pub seq_num: u64,
 
-    // === PDA ===
     /// Used for PDA derivation
     pub create_key: Pubkey,
+    /// PDA bump
     pub bump: u8,
 }
