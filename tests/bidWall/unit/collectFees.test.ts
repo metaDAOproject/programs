@@ -234,7 +234,7 @@ export default function suite() {
       METADAO_MULTISIG_VAULT,
     );
 
-    const expectedFeesCollected = 1_000_000000n;
+    const expectedFeesCollected = 3_000_000000n;
 
     assert.equal(
       bidWallUsdcBalanceAfter,

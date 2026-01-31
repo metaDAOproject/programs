@@ -232,10 +232,10 @@ export default function suite() {
       authorityUsdcBalanceAfter,
       authorityUsdcBalanceBefore + 50_000_000000n,
     );
-    // Fee recipient received 500 USDC in fees
+    // Fee recipient received 1500 USDC in fees
     assert.equal(
       feeRecipientUsdcBalanceAfter,
-      feeRecipientUsdcBalanceBefore + 500_000000n,
+      feeRecipientUsdcBalanceBefore + 1_500_000000n,
     );
   });
 
@@ -295,10 +295,10 @@ export default function suite() {
     assert.equal(bidWallUsdcBalanceAfter, 0n);
     // Authority received no USDC, as none is left over from the bid wall
     assert.equal(authorityUsdcBalanceAfter, authorityUsdcBalanceBefore);
-    // Fee recipient received 1000 USDC in fees
+    // Fee recipient received 3000 USDC in fees
     assert.equal(
       feeRecipientUsdcBalanceAfter,
-      feeRecipientUsdcBalanceBefore + 1_000_000000n,
+      feeRecipientUsdcBalanceBefore + 3_000_000000n,
     );
   });
 
@@ -364,10 +364,10 @@ export default function suite() {
       authorityUsdcBalanceAfter,
       authorityUsdcBalanceBefore + 1_000_000000n,
     );
-    // Fee recipient received 1000 USDC in fees
+    // Fee recipient received 3000 USDC in fees
     assert.equal(
       feeRecipientUsdcBalanceAfter,
-      feeRecipientUsdcBalanceBefore + 1_000_000000n,
+      feeRecipientUsdcBalanceBefore + 3_000_000000n,
     );
   });
 
