@@ -546,6 +546,184 @@ export default function suite() {
     assert.equal(ppAccount.totalRewardsPaidOut.toString(), "300000000");
   });
 
+  it("rewards only increase (never decrease) with FutarchyTwap and CliffLinear", async function () {
+    // Setup DAO for TWAP oracle
+    const dao = await setupDaoForTwapTests(this);
+
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    // FutarchyTwap oracle with short min_duration
+    const minDuration = 10;
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+
+    // CliffLinear reward function based on TWAP thresholds
+    // The DAO's twapInitialObservation is ~1000 (from setupDaoForTwapTests)
+    // TWAP of 1000 is 50% into the 500-1500 range → earns ~300 tokens
+    const rewardFunction = createCliffLinearReward({
+      startValue: new BN(0),
+      cliffValue: new BN(500), // Cliff at TWAP = 500
+      endValue: new BN(1500), // End at TWAP = 1500
+      cliffAmount: new BN(100_000_000), // 100 tokens at cliff
+      totalAmount: new BN(500_000_000), // 500 tokens at end
+    });
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    await createRecipientAta(this, mint, recipient.publicKey);
+
+    // Advance time so effective aggregator will be non-zero
+    await this.advanceBySeconds(10);
+
+    // === FIRST UNLOCK CYCLE ===
+    await ppClient
+      .startUnlockIx({
+        performancePackage,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Record the start snapshot for later manipulation
+    let ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
+
+    await this.advanceBySeconds(minDuration + 5);
+
+    await ppClient
+      .completeUnlockIx({
+        performancePackage,
+        mintGovernor,
+        mintAuthority,
+        mint,
+        recipient: recipient.publicKey,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Verify first cycle rewards (should earn based on TWAP ~1000)
+    let recipientBalance = await this.getTokenBalance(
+      mint,
+      recipient.publicKey,
+    );
+    const firstCycleReward = Number(recipientBalance);
+    assert.isTrue(firstCycleReward > 0);
+
+    ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
+    assert.equal(
+      ppAccount.totalRewardsPaidOut.toString(),
+      recipientBalance.toString(),
+    );
+
+    // === SECOND UNLOCK CYCLE WITH MANIPULATED LOWER TWAP ===
+    await this.advanceBySeconds(10);
+
+    await ppClient
+      .startUnlockIx({
+        performancePackage,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Get the start snapshot value for second cycle
+    ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
+    const secondCycleStartValue =
+      ppAccount.oracleReader.futarchyTwap.startValue;
+    const secondCycleStartTime = ppAccount.oracleReader.futarchyTwap.startTime;
+
+    await this.advanceBySeconds(minDuration + 5);
+
+    // === MANIPULATE DAO AGGREGATOR TO PRODUCE LOW TWAP ===
+    // TWAP = (end_aggregator - start_aggregator) / (end_time - start_time)
+    // We want TWAP < 500 (below cliff) so calculated reward = 0
+    // But we've already paid firstCycleReward, so no decrease should happen
+    //
+    // Note: The aggregator always INCREASES - it's cumulative. But the RATE
+    // of increase can vary. If price is lower during cycle 2, the aggregator
+    // grows more slowly, producing a lower TWAP. This is a valid real-world
+    // scenario (price dropped).
+
+    const AGGREGATOR_OFFSET = 9; // 8 (discriminator) + 1 (enum discriminant)
+    const AGGREGATOR_SIZE = 16; // u128
+
+    const daoAccount = await this.banksClient.getAccount(dao);
+
+    // Calculate a low aggregator: startValue + (low_twap * time_delta)
+    // For TWAP = 100 (well below cliff of 500):
+    const currentClock = await this.banksClient.getClock();
+    const timeDelta =
+      Number(currentClock.unixTimestamp) - Number(secondCycleStartTime);
+    const targetTwap = new BN(100); // Very low TWAP, below cliff
+    const newAggregator = secondCycleStartValue.add(targetTwap.muln(timeDelta));
+
+    // Directly modify the aggregator at offset 9
+    const aggregatorBuffer = newAggregator.toArrayLike(
+      Buffer,
+      "le",
+      AGGREGATOR_SIZE,
+    );
+    daoAccount.data.set(aggregatorBuffer, AGGREGATOR_OFFSET);
+
+    // Update the account in the test context
+    this.context.setAccount(dao, daoAccount);
+
+    // Complete unlock - TWAP will be ~100, which is below cliff (500)
+    // So calculated reward = 0, but we've already paid firstCycleReward
+    await ppClient
+      .completeUnlockIx({
+        performancePackage,
+        mintGovernor,
+        mintAuthority,
+        mint,
+        recipient: recipient.publicKey,
+        signer: authority.publicKey,
+        dao,
+      })
+      .signers([authority])
+      .rpc();
+
+    // === VERIFY REWARDS DID NOT DECREASE ===
+    recipientBalance = await this.getTokenBalance(mint, recipient.publicKey);
+    assert.equal(recipientBalance.toString(), firstCycleReward.toString());
+
+    ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
+    assert.equal(
+      ppAccount.totalRewardsPaidOut.toString(),
+      firstCycleReward.toString(),
+    );
+  });
+
   it("succeeds with zero mint amount when rewards already paid", async function () {
     const authority = Keypair.generate();
     const recipient = Keypair.generate();
