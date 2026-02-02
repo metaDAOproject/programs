@@ -21,6 +21,7 @@ impl AdminRemoveProposal<'_> {
         #[cfg(feature = "production")]
         require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
 
+        // TODO: See how we'd handle cancelling a proposal that has already been launched (in Pending state)
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
             FutarchyError::ProposalNotInDraftState
