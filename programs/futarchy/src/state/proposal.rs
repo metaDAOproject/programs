@@ -6,6 +6,7 @@ pub enum ProposalState {
     Pending,
     Passed,
     Failed,
+    Removed,
 }
 
 impl std::fmt::Display for ProposalState {

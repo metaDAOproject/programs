@@ -96,10 +96,7 @@ impl WithdrawLiquidity<'_> {
                 // TODO: check that pool is already in right state
                 unreachable!();
             };
-            spot.get_base_and_quote_withdrawable(
-                liquidity_to_withdraw as u64,
-                total_liquidity as u64,
-            )
+            spot.get_base_and_quote_withdrawable(liquidity_to_withdraw, total_liquidity)
         };
 
         require_gte!(
