@@ -154,4 +154,9 @@ pub mod futarchy {
     ) -> Result<()> {
         AdminApproveExecuteMultisigProposal::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn admin_remove_proposal(ctx: Context<AdminRemoveProposal>) -> Result<()> {
+        AdminRemoveProposal::handle(ctx)
+    }
 }
