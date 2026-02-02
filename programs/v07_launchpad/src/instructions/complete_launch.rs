@@ -17,8 +17,8 @@ use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCloseEvent, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::{
-    fee_recipient, PRICE_SCALE, TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY,
-    TOKENS_TO_PARTICIPANTS, TOKEN_SCALE,
+    fee_recipient, PRICE_SCALE, PROPOSAL_MIN_STAKE_TOKENS, TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED,
+    TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS, TOKEN_SCALE,
 };
 use anchor_spl::metadata::{
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
@@ -426,7 +426,7 @@ impl CompleteLaunch<'_> {
                 min_quote_futarchic_liquidity: 0,
                 min_base_futarchic_liquidity: 0,
                 pass_threshold_bps: 300,
-                base_to_stake: TOKENS_TO_PARTICIPANTS / 20,
+                base_to_stake: PROPOSAL_MIN_STAKE_TOKENS,
                 seconds_per_proposal: 3 * 24 * 60 * 60,
                 twap_start_delay_seconds: 24 * 60 * 60,
                 nonce: 0,
