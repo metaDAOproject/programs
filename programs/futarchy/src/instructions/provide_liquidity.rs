@@ -136,7 +136,11 @@ impl ProvideLiquidity<'_> {
         spot.base_reserves += base_amount;
         spot.quote_reserves += quote_amount;
 
-        if amm_position.position_authority == Pubkey::default() {
+        // Check `dao` instead of `position_authority` to detect new accounts.
+        // A valid DAO is always a PDA, never Pubkey::default(). Using `position_authority`
+        // would fail for donations where position_authority = Pubkey::default(), causing
+        // subsequent donations to overwrite liquidity instead of accumulating it.
+        if amm_position.dao == Pubkey::default() {
             // New account - initialize all fields
             // Use position_authority to ensure consistency with PDA derivation
             amm_position.set_inner(AmmPosition {
