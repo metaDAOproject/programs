@@ -1231,6 +1231,37 @@ export type Futarchy = {
       ];
       args: [];
     },
+    {
+      name: "adminRemoveProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -2029,6 +2060,9 @@ export type Futarchy = {
           {
             name: "Failed";
           },
+          {
+            name: "Removed";
+          },
         ];
       };
     },
@@ -2746,6 +2780,33 @@ export type Futarchy = {
         },
         {
           name: "teamAddress";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "RemoveProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "admin";
           type: "publicKey";
           index: false;
         },
@@ -4221,6 +4282,37 @@ export const IDL: Futarchy = {
       ],
       args: [],
     },
+    {
+      name: "adminRemoveProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -5019,6 +5111,9 @@ export const IDL: Futarchy = {
           {
             name: "Failed",
           },
+          {
+            name: "Removed",
+          },
         ],
       },
     },
@@ -5736,6 +5831,33 @@ export const IDL: Futarchy = {
         },
         {
           name: "teamAddress",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "RemoveProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "admin",
           type: "publicKey",
           index: false,
         },

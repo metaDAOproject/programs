@@ -61,6 +61,7 @@ v07-approve-points-based = "yarn run tsx scripts/v0.7/pointsBased/approveWithPoi
 v07-close-launch = "yarn run tsx scripts/v0.7/closeLaunch.ts"
 v07-initialize-performance-package = "yarn run tsx scripts/v0.7/initializePerformancePackage.ts"
 v07-claim-launch-additional-tokens = "yarn run tsx scripts/v0.7/claimLaunchAdditionalTokens.ts"
+v07-remove-proposal = "yarn run tsx scripts/v0.7/removeProposal.ts"
 
 [test]
 startup_wait = 5000

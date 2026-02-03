@@ -2,6 +2,7 @@ import futarchyAmm from "./integration/futarchyAmm.test.js";
 
 import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
+import launchProposal from "./unit/launchProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
@@ -11,6 +12,7 @@ import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.j
 
 import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 import adminApproveProposal from "./unit/adminApproveExecuteMultisigProposal.test.js";
+import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
 
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -44,6 +46,7 @@ export default function suite() {
   });
   describe("#initialize_dao", initializeDao);
   describe("#initialize_proposal", initializeProposal);
+  describe("#launch_proposal", launchProposal);
   describe("#finalize_proposal", finalizeProposal);
 
   describe("#collect_fees", collectFees);
@@ -53,6 +56,7 @@ export default function suite() {
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
 
   describe("#admin_approve_proposal", adminApproveProposal);
+  describe("#admin_remove_proposal", adminRemoveProposal);
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);
