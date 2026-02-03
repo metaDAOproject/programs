@@ -18,8 +18,8 @@ import {
   getDaoAddr,
 } from "@metadaoproject/futarchy/v0.7";
 import type {
-  OracleReaderV2,
-  RewardFunctionV2,
+  PerformancePackageV2OracleReader,
+  PerformancePackageV2RewardFunction,
 } from "@metadaoproject/futarchy/v0.7";
 
 /**
@@ -145,15 +145,15 @@ export async function setupPerformancePackageV2(
   {
     authority = payer.publicKey,
     recipient = payer.publicKey,
-    oracleReader = { time: {} } as OracleReaderV2,
+    oracleReader = { time: {} } as PerformancePackageV2OracleReader,
     rewardFunction,
     minUnlockTimestamp = new BN(0),
     maxTotal = null,
   }: {
     authority?: PublicKey;
     recipient?: PublicKey;
-    oracleReader?: OracleReaderV2;
-    rewardFunction: RewardFunctionV2;
+    oracleReader?: PerformancePackageV2OracleReader;
+    rewardFunction: PerformancePackageV2RewardFunction;
     minUnlockTimestamp?: BN;
     maxTotal?: BN | null;
   },
@@ -220,7 +220,7 @@ export function createCliffLinearReward({
   endValue?: BN;
   cliffAmount?: BN;
   totalAmount?: BN;
-} = {}): RewardFunctionV2 {
+} = {}): PerformancePackageV2RewardFunction {
   return {
     cliffLinear: {
       startValue,
@@ -229,7 +229,7 @@ export function createCliffLinearReward({
       cliffAmount,
       totalAmount,
     },
-  } as RewardFunctionV2;
+  } as PerformancePackageV2RewardFunction;
 }
 
 /**
@@ -237,12 +237,12 @@ export function createCliffLinearReward({
  */
 export function createThresholdReward(
   tranches: Array<{ threshold: BN; cumulativeAmount: BN }>,
-): RewardFunctionV2 {
+): PerformancePackageV2RewardFunction {
   return {
     threshold: {
       tranches,
     },
-  } as RewardFunctionV2;
+  } as PerformancePackageV2RewardFunction;
 }
 
 /**
@@ -254,7 +254,7 @@ export function createFutarchyTwapOracle({
 }: {
   amm: PublicKey;
   minDuration?: number;
-}): OracleReaderV2 {
+}): PerformancePackageV2OracleReader {
   return {
     futarchyTwap: {
       amm,
@@ -264,7 +264,7 @@ export function createFutarchyTwapOracle({
       endValue: new BN(0),
       endTime: new BN(0),
     },
-  } as OracleReaderV2;
+  } as PerformancePackageV2OracleReader;
 }
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);

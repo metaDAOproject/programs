@@ -20,9 +20,9 @@ import {
 } from "./types/performance_package_v2.js";
 import type {
   PerformancePackageV2Account,
-  ChangeRequestV2Account,
-  OracleReaderV2,
-  RewardFunctionV2,
+  PerformancePackageV2ChangeRequestAccount,
+  PerformancePackageV2OracleReader,
+  PerformancePackageV2RewardFunction,
 } from "./types/index.js";
 
 export type CreatePerformancePackageV2ClientParams = {
@@ -94,13 +94,13 @@ export class PerformancePackageV2Client {
 
   async fetchChangeRequest(
     changeRequest: PublicKey,
-  ): Promise<ChangeRequestV2Account | null> {
+  ): Promise<PerformancePackageV2ChangeRequestAccount | null> {
     return this.program.account.changeRequest.fetchNullable(changeRequest);
   }
 
   async deserializeChangeRequest(
     accountInfo: AccountInfo<Buffer>,
-  ): Promise<ChangeRequestV2Account> {
+  ): Promise<PerformancePackageV2ChangeRequestAccount> {
     return this.program.coder.accounts.decode(
       "changeRequest",
       accountInfo.data,
@@ -126,8 +126,8 @@ export class PerformancePackageV2Client {
     authority: PublicKey;
     recipient: PublicKey;
     payer?: PublicKey;
-    oracleReader: OracleReaderV2;
-    rewardFunction: RewardFunctionV2;
+    oracleReader: PerformancePackageV2OracleReader;
+    rewardFunction: PerformancePackageV2RewardFunction;
     minUnlockTimestamp: BN;
   }) {
     const [performancePackage] = this.getPerformancePackageAddr(createKey);
@@ -244,8 +244,8 @@ export class PerformancePackageV2Client {
     payer?: PublicKey;
     pdaNonce: number;
     newRecipient?: PublicKey | null;
-    newOracleReader?: OracleReaderV2 | null;
-    newRewardFunction?: RewardFunctionV2 | null;
+    newOracleReader?: PerformancePackageV2OracleReader | null;
+    newRewardFunction?: PerformancePackageV2RewardFunction | null;
   }) {
     const [changeRequest] = this.getChangeRequestAddr(
       performancePackage,

@@ -78,17 +78,17 @@ export type MintAuthorityAccount =
 
 export type PerformancePackageV2Account =
   IdlAccounts<PerformancePackageV2Program>["performancePackage"];
-export type ChangeRequestV2Account =
+export type PerformancePackageV2ChangeRequestAccount =
   IdlAccounts<PerformancePackageV2Program>["changeRequest"];
-export type OracleReaderV2 =
+export type PerformancePackageV2OracleReader =
   IdlTypes<PerformancePackageV2Program>["OracleReader"];
-export type RewardFunctionV2 =
+export type PerformancePackageV2RewardFunction =
   IdlTypes<PerformancePackageV2Program>["RewardFunction"];
-export type PackageStatusV2 =
+export type PerformancePackageV2PackageStatus =
   IdlTypes<PerformancePackageV2Program>["PackageStatus"];
-export type ProposerTypeV2 =
+export type PerformancePackageV2ProposerType =
   IdlTypes<PerformancePackageV2Program>["ProposerType"];
-export type ThresholdTrancheV2 =
+export type PerformancePackageV2ThresholdTranche =
   IdlTypes<PerformancePackageV2Program>["ThresholdTranche"];
 
 export type BidWallInitializedEvent =
