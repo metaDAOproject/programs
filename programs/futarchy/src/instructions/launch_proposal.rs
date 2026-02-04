@@ -46,13 +46,15 @@ impl LaunchProposal<'_> {
 
         require_keys_eq!(self.proposal.dao, self.dao.key());
 
-        // Check if sufficient stake has been accumulated
-        if let ProposalState::Draft { amount_staked } = self.proposal.state {
-            require_gte!(
-                amount_staked,
-                self.dao.base_to_stake,
-                FutarchyError::InsufficientStakeToLaunch
-            );
+        // If the proposal is not team sponsored, check if sufficient stake has been accumulated
+        if !self.proposal.is_team_sponsored {
+            if let ProposalState::Draft { amount_staked } = self.proposal.state {
+                require_gte!(
+                    amount_staked,
+                    self.dao.base_to_stake,
+                    FutarchyError::InsufficientStakeToLaunch
+                );
+            }
         }
 
         // Ensure the squads proposal is not invalidated by a previous config transaction

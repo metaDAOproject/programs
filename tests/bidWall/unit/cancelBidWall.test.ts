@@ -256,10 +256,10 @@ export default function suite() {
       authorityUsdcBalanceAfter,
       authorityUsdcBalanceBefore + 50_000_000000n,
     );
-    // Fee recipient received 500 USDC in fees
+    // Fee recipient received 1500 USDC in fees
     assert.equal(
       feeRecipientUsdcBalanceAfter,
-      feeRecipientUsdcBalanceBefore + 500_000000n,
+      feeRecipientUsdcBalanceBefore + 1_500_000000n,
     );
   });
 

@@ -41,7 +41,7 @@ pub mod metadao_multisig_vault {
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
-pub const FEE_BPS: u16 = 100;
+pub const FEE_BPS: u16 = 300;
 
 pub const TOKEN_SCALE: u64 = 1_000_000;
 /// 10M tokens with 6 decimals - the exact amount of tokens that end up in floating supply at launch
