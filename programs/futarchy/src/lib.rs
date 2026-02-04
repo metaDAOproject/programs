@@ -94,6 +94,7 @@ pub mod futarchy {
         FinalizeProposal::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate())]
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {
         UpdateDao::handle(ctx, dao_params)
     }
