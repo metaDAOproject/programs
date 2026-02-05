@@ -97,6 +97,18 @@ impl Dao {
             FutarchyError::InvalidTeamSponsoredPassThreshold
         );
 
+        require_gt!(
+            self.min_base_futarchic_liquidity,
+            0,
+            FutarchyError::InsufficientLiquidity
+        );
+
+        require_gt!(
+            self.min_quote_futarchic_liquidity,
+            0,
+            FutarchyError::InsufficientLiquidity
+        );
+
         Ok(())
     }
 }

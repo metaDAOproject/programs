@@ -105,6 +105,11 @@ impl LaunchProposal<'_> {
         let base_to_lp = spot.base_reserves / 2;
         let quote_to_lp = spot.quote_reserves / 2;
 
+        // Prevent launching proposals with zero reserves, which would permanently
+        // freeze the DAO (no swaps possible, finalize_proposal fails, no recovery path)
+        require_gt!(base_to_lp, 0, FutarchyError::InsufficientLiquidity);
+        require_gt!(quote_to_lp, 0, FutarchyError::InsufficientLiquidity);
+
         spot.base_reserves -= base_to_lp;
         spot.quote_reserves -= quote_to_lp;
 
