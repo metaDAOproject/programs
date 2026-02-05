@@ -119,6 +119,7 @@ impl ProvideLiquidity<'_> {
         } else {
             // equivalent to $0.1 if the quote is USDC, here for rounding
             require_gte!(quote_amount, MIN_QUOTE_LIQUIDITY);
+            require_gt!(max_base_amount, 0);
 
             let base_amount = max_base_amount;
 
