@@ -1,10 +1,10 @@
 use super::*;
 
-pub mod metadao_multisig_vault {
+pub mod admin {
     use anchor_lang::prelude::declare_id;
 
-    // MetaDAO-controlled admin - cannot be a Squads signer because of reentrancy blocks set up by Squads
-    declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
+    // MetaDAO-controlled admin - cannot be a Squads signer because of reentrancy
+    declare_id!("CWGawadYU8CzRVBecnJymNw97H7E3ndDinV5sMzesgY2");
 }
 
 #[derive(Accounts)]
@@ -54,11 +54,7 @@ pub struct AdminApproveExecuteMultisigProposal<'info> {
 impl<'info, 'c: 'info> AdminApproveExecuteMultisigProposal<'info> {
     pub fn validate(&self) -> Result<()> {
         #[cfg(feature = "production")]
-        require_keys_eq!(
-            self.admin.key(),
-            metadao_multisig_vault::ID,
-            FutarchyError::InvalidAdmin
-        );
+        require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
 
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());

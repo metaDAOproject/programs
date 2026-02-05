@@ -2,7 +2,7 @@ use super::*;
 
 pub mod admin {
     use anchor_lang::prelude::declare_id;
-    declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
+    declare_id!("CWGawadYU8CzRVBecnJymNw97H7E3ndDinV5sMzesgY2");
 }
 
 #[derive(Accounts)]
