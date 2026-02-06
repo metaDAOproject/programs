@@ -268,16 +268,16 @@ impl PoolState {
 
 #[derive(Default, Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, InitSpace)]
 pub struct TwapOracle {
-    /// Running sum of slots_per_last_update * last_observation.
+    /// Running sum of seconds_since_last_update * last_observation.
     ///
     /// Assuming latest observations are as big as possible (u64::MAX * 1e12),
-    /// we can store 18 million slots worth of observations, which turns out to
-    /// be ~85 days worth of slots.
+    /// we can store 18 million seconds worth of observations, which turns out to
+    /// be ~208 days.
     ///
     /// Assuming that latest observations are 100x smaller than they could theoretically
-    /// be, we can store 8500 days (23 years) worth of them. Even this is a very
+    /// be, we can store ~57 years worth of them. Even this is a very
     /// very conservative assumption - META/USDC prices should be between 1e9 and
-    /// 1e15, which would overflow after 1e15 years worth of slots.
+    /// 1e15, which would overflow after 1e15 years.
     ///
     /// So in the case of an overflow, the aggregator rolls back to 0. It's the
     /// client's responsibility to sanity check the assets or to handle an
@@ -400,13 +400,13 @@ impl Pool {
             let effective_last_updated_timestamp =
                 oracle.last_updated_timestamp.max(twap_start_timestamp);
 
-            let slot_difference: u128 = (current_timestamp - effective_last_updated_timestamp)
+            let time_difference: u128 = (current_timestamp - effective_last_updated_timestamp)
                 .try_into()
                 .unwrap();
 
             // if this saturates, the aggregator will wrap back to 0, so this value doesn't
             // really matter. we just can't panic.
-            let weighted_observation = new_observation.saturating_mul(slot_difference);
+            let weighted_observation = new_observation.saturating_mul(time_difference);
 
             oracle.aggregator.wrapping_add(weighted_observation)
         };
