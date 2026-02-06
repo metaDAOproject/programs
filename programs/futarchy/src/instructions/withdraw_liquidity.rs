@@ -44,7 +44,7 @@ pub struct WithdrawLiquidity<'info> {
     pub amm_quote_vault: Account<'info, TokenAccount>,
     #[account(
         mut,
-        seeds = [b"amm_position", dao.key().as_ref(), position_authority.key().as_ref()],
+        seeds = [SEED_AMM_POSITION, dao.key().as_ref(), position_authority.key().as_ref()],
         bump,
         has_one = dao,
         has_one = position_authority,
@@ -125,7 +125,7 @@ impl WithdrawLiquidity<'_> {
         let dao_creator = dao.dao_creator;
         let nonce = dao.nonce.to_le_bytes();
         let signer_seeds = &[
-            b"dao".as_ref(),
+            SEED_DAO,
             dao_creator.as_ref(),
             nonce.as_ref(),
             &[dao.pda_bump],

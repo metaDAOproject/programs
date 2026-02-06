@@ -73,7 +73,7 @@ impl<'info, 'c: 'info> ExecuteSpendingLimitChange<'info> {
 
         let dao_nonce = &dao.nonce.to_le_bytes();
         let dao_creator_key = &dao.dao_creator.as_ref();
-        let dao_seeds = &[b"dao".as_ref(), dao_creator_key, dao_nonce, &[dao.pda_bump]];
+        let dao_seeds = &[SEED_DAO, dao_creator_key, dao_nonce, &[dao.pda_bump]];
         let dao_signer = &[&dao_seeds[..]];
 
         squads_multisig_program::cpi::vault_transaction_execute(

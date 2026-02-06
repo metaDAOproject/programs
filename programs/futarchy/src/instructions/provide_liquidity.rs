@@ -50,7 +50,7 @@ pub struct ProvideLiquidity<'info> {
     #[account(
         init_if_needed,
         payer = payer,
-        seeds = [b"amm_position", dao.key().as_ref(), params.position_authority.key().as_ref()],
+        seeds = [SEED_AMM_POSITION, dao.key().as_ref(), params.position_authority.key().as_ref()],
         bump,
         space = 8 + AmmPosition::INIT_SPACE,
     )]

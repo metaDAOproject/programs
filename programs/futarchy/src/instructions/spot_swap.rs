@@ -98,13 +98,9 @@ impl SpotSwap<'_> {
             input_amount,
         )?;
 
-        // let dao_key = dao.key();
-        // let dao_creator = dao.dao_creator;
-        // let nonce = dao.nonce;
-        // let signer_seeds = &[b"dao".as_ref(), dao_creator.as_ref(), nonce.to_le_bytes().as_ref(), &[dao.pda_bump]];
         let dao_nonce = &dao.nonce.to_le_bytes();
         let dao_creator_key = &dao.dao_creator.as_ref();
-        let dao_seeds = &[b"dao".as_ref(), dao_creator_key, dao_nonce, &[dao.pda_bump]];
+        let dao_seeds = &[SEED_DAO, dao_creator_key, dao_nonce, &[dao.pda_bump]];
 
         token::transfer(
             CpiContext::new_with_signer(

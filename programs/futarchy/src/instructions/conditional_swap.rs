@@ -164,7 +164,7 @@ impl ConditionalSwap<'_> {
         let dao_creator = dao.dao_creator;
         let nonce = dao.nonce.to_le_bytes();
         let signer_seeds = &[
-            b"dao".as_ref(),
+            SEED_DAO,
             dao_creator.as_ref(),
             nonce.as_ref(),
             &[dao.pda_bump],

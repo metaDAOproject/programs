@@ -7,7 +7,7 @@ pub struct InitializeProposal<'info> {
         init,
         payer = payer,
         space = 8 + Proposal::INIT_SPACE,
-        seeds = [b"proposal", squads_proposal.key().as_ref()],
+        seeds = [SEED_PROPOSAL, squads_proposal.key().as_ref()],
         bump
     )]
     pub proposal: Box<Account<'info, Proposal>>,

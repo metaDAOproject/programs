@@ -109,7 +109,7 @@ impl FinalizeProposal<'_> {
 
         let squads_proposal_key = squads_proposal.key();
         let proposal_seeds = &[
-            b"proposal",
+            SEED_PROPOSAL,
             squads_proposal_key.as_ref(),
             &[proposal.pda_bump],
         ];
@@ -175,7 +175,7 @@ impl FinalizeProposal<'_> {
 
         let dao_nonce = &dao.nonce.to_le_bytes();
         let dao_creator_key = &dao.dao_creator.as_ref();
-        let dao_seeds = &[b"dao".as_ref(), dao_creator_key, dao_nonce, &[dao.pda_bump]];
+        let dao_seeds = &[SEED_DAO, dao_creator_key, dao_nonce, &[dao.pda_bump]];
         let dao_signer = &[&dao_seeds[..]];
 
         if new_proposal_state == ProposalState::Passed {
