@@ -154,6 +154,19 @@ impl InitializeLaunch<'_> {
             LaunchpadError::InvalidMonthlySpendingLimitMembers
         );
 
+        require!(
+            !args.monthly_spending_limit_members.is_empty(),
+            LaunchpadError::InvalidMonthlySpendingLimitMembers
+        );
+
+        let mut sorted_members = args.monthly_spending_limit_members.clone();
+        sorted_members.sort();
+        let has_duplicates = sorted_members.windows(2).any(|win| win[0] == win[1]);
+        require!(
+            !has_duplicates,
+            LaunchpadError::InvalidMonthlySpendingLimitMembers
+        );
+
         require_gte!(
             args.months_until_insiders_can_unlock,
             18,
