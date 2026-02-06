@@ -117,6 +117,12 @@ impl Dao {
             FutarchyError::InsufficientLiquidity
         );
 
+        require_gt!(
+            self.twap_max_observation_change_per_update,
+            0u128,
+            FutarchyError::InvalidMaxObservationChange
+        );
+
         Ok(())
     }
 }
