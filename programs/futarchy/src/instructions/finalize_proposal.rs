@@ -142,7 +142,8 @@ impl FinalizeProposal<'_> {
         let threshold_bps = if proposal.is_team_sponsored {
             dao.team_sponsored_pass_threshold_bps
         } else {
-            dao.pass_threshold_bps as i16
+            // Thanks to invariants this will never error - still it's better to be safe here.
+            i16::try_from(dao.pass_threshold_bps).map_err(|_| FutarchyError::CastingOverflow)?
         };
 
         // this can't overflow because each twap can only be MAX_PRICE (~1e31),
