@@ -668,6 +668,15 @@ pub fn arbitrage_after_spot_swap(
         }
     }
 
+    // No profitable arbitrage found — skip the feeless swaps to save compute
+    if best_input_amount == 0 {
+        return Ok(ArbitrageResult {
+            spot_profit: 0,
+            pass_profit: 0,
+            fail_profit: 0,
+        });
+    }
+
     let final_spot_output = spot
         .feeless_swap(best_input_amount, spot_direction)
         .unwrap();
@@ -787,6 +796,15 @@ pub fn arbitrage_after_conditional_swap(
         } else {
             unreachable!()
         }
+    }
+
+    // No profitable arbitrage found — skip the feeless swaps to save compute
+    if best_arb_input_amount == 0 {
+        return Ok(ArbitrageResult {
+            spot_profit: 0,
+            pass_profit: 0,
+            fail_profit: 0,
+        });
     }
 
     let final_pass_output = pass
