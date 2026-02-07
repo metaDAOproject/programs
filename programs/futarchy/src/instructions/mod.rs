@@ -1,6 +1,7 @@
 use super::*;
 
 pub mod admin_approve_execute_multisig_proposal;
+pub mod admin_cancel_proposal;
 pub mod admin_remove_proposal;
 pub mod collect_fees;
 pub mod collect_meteora_damm_fees;
@@ -19,6 +20,7 @@ pub mod update_dao;
 pub mod withdraw_liquidity;
 
 pub use admin_approve_execute_multisig_proposal::*;
+pub use admin_cancel_proposal::*;
 pub use admin_remove_proposal::*;
 pub use collect_fees::*;
 pub use collect_meteora_damm_fees::*;
