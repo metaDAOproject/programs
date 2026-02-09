@@ -127,7 +127,7 @@ export default function suite() {
       .rpc();
   });
 
-  it.only("should cancel a pending proposal", async function () {
+  it("should cancel a pending proposal", async function () {
     let storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.pending);
 
