@@ -202,6 +202,22 @@ Do NOT use `advanceBySlots()` for this purpose - it changes the clock which may 
 
 This makes test assertions and calculations much easier to verify at a glance.
 
+**Isolating tests during development:** When developing or debugging tests, use `.only` to run only the tests you're working on:
+
+```typescript
+// Run only this specific test
+it.only("throws error when trying to split tokens after question is resolved", async function () {
+  // ...
+});
+
+// Run only this describe block
+describe.only("#split_tokens", function () {
+  // ...
+});
+```
+
+This significantly speeds up iteration and makes test output easier to read. Remember to remove `.only` before finishing development.
+
 **Assertion messages:** Do not include assertion messages for better readability. The assertion itself should be clear enough:
 
 ```typescript

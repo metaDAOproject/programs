@@ -12,6 +12,7 @@ import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.j
 
 import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 import adminApproveProposal from "./unit/adminApproveExecuteMultisigProposal.test.js";
+import adminCancelProposal from "./unit/adminCancelProposal.test.js";
 import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
 
 import { PublicKey } from "@solana/web3.js";
@@ -56,6 +57,7 @@ export default function suite() {
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
 
   describe("#admin_approve_proposal", adminApproveProposal);
+  describe("#admin_cancel_proposal", adminCancelProposal);
   describe("#admin_remove_proposal", adminRemoveProposal);
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
