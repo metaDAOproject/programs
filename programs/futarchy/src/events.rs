@@ -200,6 +200,15 @@ pub struct RemoveProposalEvent {
 }
 
 #[event]
+pub struct AdminCancelProposalEvent {
+    pub common: CommonFields,
+    pub proposal: Pubkey,
+    pub dao: Pubkey,
+    pub admin: Pubkey,
+    pub post_amm_state: FutarchyAmm,
+}
+
+#[event]
 pub struct CollectMeteoraDammFeesEvent {
     pub common: CommonFields,
     pub dao: Pubkey,

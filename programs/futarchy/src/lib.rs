@@ -157,6 +157,11 @@ pub mod futarchy {
     }
 
     #[access_control(ctx.accounts.validate())]
+    pub fn admin_cancel_proposal(ctx: Context<AdminCancelProposal>) -> Result<()> {
+        AdminCancelProposal::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
     pub fn admin_remove_proposal(ctx: Context<AdminRemoveProposal>) -> Result<()> {
         AdminRemoveProposal::handle(ctx)
     }

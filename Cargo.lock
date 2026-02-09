@@ -1310,6 +1310,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mint_governor"
+version = "0.7.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "solana-security-txt",
+]
+
+[[package]]
 name = "mpl-token-metadata"
 version = "3.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1478,6 +1487,17 @@ name = "percent-encoding"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
+
+[[package]]
+name = "performance_package_v2"
+version = "0.7.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "futarchy",
+ "mint_governor",
+ "solana-security-txt",
+]
 
 [[package]]
 name = "polyval"
