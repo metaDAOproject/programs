@@ -13,6 +13,7 @@ import {
   DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
   MPL_TOKEN_METADATA_PROGRAM_ID,
   PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
+  PERFORMANCE_PACKAGE_V2_PROGRAM_ID,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
   LAUNCHPAD_PROGRAM_ID,
@@ -291,6 +292,41 @@ export const getMintAuthorityAddr = ({
       Buffer.from("mint_authority"),
       mintGovernor.toBuffer(),
       authorizedMinter.toBuffer(),
+    ],
+    programId,
+  );
+};
+
+export const getPerformancePackageV2Addr = ({
+  programId = PERFORMANCE_PACKAGE_V2_PROGRAM_ID,
+  createKey,
+}: {
+  programId?: PublicKey;
+  createKey: PublicKey;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("performance_package"), createKey.toBuffer()],
+    programId,
+  );
+};
+
+export const getChangeRequestV2Addr = ({
+  programId = PERFORMANCE_PACKAGE_V2_PROGRAM_ID,
+  performancePackage,
+  proposer,
+  pdaNonce,
+}: {
+  programId?: PublicKey;
+  performancePackage: PublicKey;
+  proposer: PublicKey;
+  pdaNonce: number;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("change_request"),
+      performancePackage.toBuffer(),
+      proposer.toBuffer(),
+      Buffer.from(new Uint8Array(new Uint32Array([pdaNonce]).buffer)),
     ],
     programId,
   );

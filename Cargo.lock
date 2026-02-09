@@ -1489,6 +1489,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
+name = "performance_package_v2"
+version = "0.7.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "futarchy",
+ "mint_governor",
+ "solana-security-txt",
+]
+
+[[package]]
 name = "polyval"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

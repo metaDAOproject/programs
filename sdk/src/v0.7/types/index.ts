@@ -31,6 +31,12 @@ import {
 } from "./mint_governor.js";
 export { MintGovernorProgram, MintGovernorIDL };
 
+import {
+  PerformancePackageV2 as PerformancePackageV2Program,
+  IDL as PerformancePackageV2IDL,
+} from "./performance_package_v2.js";
+export { PerformancePackageV2Program, PerformancePackageV2IDL };
+
 export { LowercaseKeys } from "./utils.js";
 
 import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
@@ -69,6 +75,21 @@ export type MintGovernorAccount =
   IdlAccounts<MintGovernorProgram>["mintGovernor"];
 export type MintAuthorityAccount =
   IdlAccounts<MintGovernorProgram>["mintAuthority"];
+
+export type PerformancePackageV2Account =
+  IdlAccounts<PerformancePackageV2Program>["performancePackage"];
+export type PerformancePackageV2ChangeRequestAccount =
+  IdlAccounts<PerformancePackageV2Program>["changeRequest"];
+export type PerformancePackageV2OracleReader =
+  IdlTypes<PerformancePackageV2Program>["OracleReader"];
+export type PerformancePackageV2RewardFunction =
+  IdlTypes<PerformancePackageV2Program>["RewardFunction"];
+export type PerformancePackageV2PackageStatus =
+  IdlTypes<PerformancePackageV2Program>["PackageStatus"];
+export type PerformancePackageV2ProposerType =
+  IdlTypes<PerformancePackageV2Program>["ProposerType"];
+export type PerformancePackageV2ThresholdTranche =
+  IdlTypes<PerformancePackageV2Program>["ThresholdTranche"];
 
 export type BidWallInitializedEvent =
   IdlEvents<BidWallProgram>["BidWallInitializedEvent"];
