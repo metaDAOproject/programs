@@ -6,3 +6,4 @@ export * from "./FutarchyClient.js";
 export * from "./ConditionalVaultClient.js";
 export * from "./LaunchpadClient.js";
 export * from "./PriceBasedPerformancePackageClient.js";
+export * from "./MintGovernorClient.js";
