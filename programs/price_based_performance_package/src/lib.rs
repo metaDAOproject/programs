@@ -56,7 +56,7 @@ pub mod price_based_performance_package {
         CompleteUnlock::handle(ctx)
     }
 
-    #[access_control(ctx.accounts.validate())]
+    #[access_control(ctx.accounts.validate(&params))]
     pub fn propose_change(ctx: Context<ProposeChange>, params: ProposeChangeParams) -> Result<()> {
         ProposeChange::handle(ctx, params)
     }

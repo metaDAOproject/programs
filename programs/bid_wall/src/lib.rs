@@ -34,6 +34,13 @@ pub mod usdc_mint {
     declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 }
 
+pub mod metadao_multisig_vault {
+    use anchor_lang::prelude::declare_id;
+
+    // MetaDAO operations multisig vault - hardcoded fee destination
+    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+}
+
 pub const FEE_BPS: u16 = 300;
 
 pub const TOKEN_SCALE: u64 = 1_000_000;

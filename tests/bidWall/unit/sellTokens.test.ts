@@ -16,7 +16,7 @@ import {
 import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
-import { createLookupTableForTransaction } from "../../utils.js";
+import { createLookupTableForTransaction, expectError } from "../../utils.js";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -31,7 +31,6 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
   let secondFunder: Keypair;
   let bidWall: PublicKey;
-  let feeRecipient: PublicKey;
   let durationSeconds: number;
 
   before(async function () {
@@ -138,9 +137,6 @@ export default function suite() {
       await this.getTokenBalance(MAINNET_USDC, dao),
     );
 
-    feeRecipient = Keypair.generate().publicKey;
-    await this.createTokenAccount(MAINNET_USDC, feeRecipient);
-
     // Claim tokens for the payer
     await launchpadClient.claimIx(launch, META).rpc();
 
@@ -156,7 +152,6 @@ export default function suite() {
         nonce: new BN(0),
         daoTreasury: daoTreasury,
         baseMint: META,
-        feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
       })
@@ -198,6 +193,7 @@ export default function suite() {
     await bidWallClient
       .sellTokensIx({
         amount: 5_000_000_000000,
+        minAmountOut: 97_000_000000, // We should receive exactly 97K USDC
         bidWall,
         baseMint: META,
         daoTreasury: daoTreasury,
@@ -425,6 +421,26 @@ export default function suite() {
     assert.equal(bidWallUsdcBalanceAfterThirdSell, 12_700_000000n);
   });
 
+  it("fails to sell tokens into a bid wall when the output amount is less than the minimum output amount", async function () {
+    const callbacks = expectError(
+      "InsufficientOutputAmount",
+      "bid wall should fail to sell tokens when the output amount is less than the minimum output amount",
+    );
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 5_000_000_000000,
+        minAmountOut: 100_000_000000,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   it("sending quote tokens to a bid wall beyond what was originally allocated doesn't change the NAV per token", async function () {
     // Send 1M USDC to the bid wall
     await this.transfer(MAINNET_USDC, this.payer, bidWall, 1_000_000_000000);
@@ -541,5 +557,24 @@ export default function suite() {
     } catch (e) {
       assert.include(e.message, "InvalidInputAmount");
     }
+  });
+
+  it("fails to sell tokens into a bid wall when the input amount would result in a zero output amount", async function () {
+    const callbacks = expectError(
+      "InsufficientOutputAmount",
+      "bid wall should fail to sell tokens when the input amount would result in a zero output amount",
+    );
+
+    await bidWallClient
+      .sellTokensIx({
+        amount: 1,
+        bidWall,
+        baseMint: META,
+        daoTreasury: daoTreasury,
+        quoteMint: MAINNET_USDC,
+        user: this.payer.publicKey,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

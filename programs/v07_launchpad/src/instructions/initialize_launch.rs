@@ -5,7 +5,6 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchInitializedEvent};
 use crate::state::{Launch, LaunchState};
-use crate::MAX_PREMINE;
 use crate::{
     usdc_mint, TOKENS_TO_DAMM_V2_LIQUIDITY, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
 };
@@ -155,10 +154,17 @@ impl InitializeLaunch<'_> {
             LaunchpadError::InvalidMonthlySpendingLimitMembers
         );
 
-        require_gte!(
-            MAX_PREMINE,
-            args.performance_package_token_amount,
-            LaunchpadError::InvalidPriceBasedPremineAmount
+        require!(
+            !args.monthly_spending_limit_members.is_empty(),
+            LaunchpadError::InvalidMonthlySpendingLimitMembers
+        );
+
+        let mut sorted_members = args.monthly_spending_limit_members.clone();
+        sorted_members.sort();
+        let has_duplicates = sorted_members.windows(2).any(|win| win[0] == win[1]);
+        require!(
+            !has_duplicates,
+            LaunchpadError::InvalidMonthlySpendingLimitMembers
         );
 
         require_gte!(

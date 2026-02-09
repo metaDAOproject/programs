@@ -4,9 +4,11 @@ import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
+import updateDao from "./unit/updateDao.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
+import provideLiquidity from "./unit/provideLiquidity.test.js";
 
 import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
 
@@ -49,9 +51,11 @@ export default function suite() {
   describe("#initialize_proposal", initializeProposal);
   describe("#launch_proposal", launchProposal);
   describe("#finalize_proposal", finalizeProposal);
+  describe("#update_dao", updateDao);
 
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);
+  describe("#provide_liquidity", provideLiquidity);
   describe("#execute_spending_limit_change", executeSpendingLimitChange);
 
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);

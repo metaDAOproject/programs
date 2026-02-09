@@ -59,6 +59,7 @@ pub mod conditional_vault {
         InitializeConditionalVault::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate_split_tokens())]
     pub fn split_tokens<'c: 'info, 'info>(
         ctx: Context<'_, '_, 'c, 'info, InteractWithVault<'info>>,
         amount: u64,
@@ -66,6 +67,7 @@ pub mod conditional_vault {
         InteractWithVault::handle_split_tokens(ctx, amount)
     }
 
+    #[access_control(ctx.accounts.validate_merge_tokens())]
     pub fn merge_tokens<'c: 'info, 'info>(
         ctx: Context<'_, '_, 'c, 'info, InteractWithVault<'info>>,
         amount: u64,

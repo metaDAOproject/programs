@@ -12,6 +12,7 @@ export default function suite() {
   let question: PublicKey;
   let vault: PublicKey;
   let underlyingTokenMint: PublicKey;
+  let oracle: Keypair;
 
   before(function () {
     vaultClient = this.conditionalVault;
@@ -19,7 +20,7 @@ export default function suite() {
 
   beforeEach(async function () {
     const questionId = sha256(new Uint8Array([5, 2, 1]));
-    const oracle = Keypair.generate();
+    oracle = Keypair.generate();
 
     question = await vaultClient.initializeQuestion(
       questionId,
@@ -237,5 +238,36 @@ export default function suite() {
       assert.equal(storedMint.supply.toString(), "2000");
       await this.assertBalance(mint, this.payer.publicKey, 2000);
     }
+  });
+
+  it("throws error when trying to split tokens after question is resolved", async function () {
+    // First, split some tokens while the question is unresolved
+    await vaultClient
+      .splitTokensIx(question, vault, underlyingTokenMint, new BN(1000), 2)
+      .rpc();
+
+    // Resolve the question
+    await vaultClient.vaultProgram.methods
+      .resolveQuestion({ payoutNumerators: [1, 0] })
+      .accounts({
+        question,
+        oracle: oracle.publicKey,
+      })
+      .signers([oracle])
+      .rpc();
+
+    // Attempt to split tokens after resolution should fail
+    const callbacks = expectError(
+      "QuestionAlreadyResolved",
+      "split succeeded despite question being resolved",
+    );
+
+    await vaultClient
+      .splitTokensIx(question, vault, underlyingTokenMint, new BN(1000), 2)
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+      ])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

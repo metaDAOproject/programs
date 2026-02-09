@@ -35,8 +35,8 @@ use damm_v2_cpi::program::DammV2Cpi;
 pub struct StaticCompleteLaunchAccounts<'info> {
     pub futarchy_program: Program<'info, Futarchy>,
     pub token_metadata_program: Program<'info, Metadata>,
-    /// CHECK: checked by autocrat program
-    pub autocrat_event_authority: UncheckedAccount<'info>,
+    /// CHECK: checked by futarchy program
+    pub futarchy_event_authority: UncheckedAccount<'info>,
     pub squads_program: Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
     /// CHECK: checked by squads multisig program
     #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_PROGRAM_CONFIG], bump, seeds::program = squads_program)]
@@ -178,23 +178,23 @@ pub struct CompleteLaunch<'info> {
     #[account(address = meteora_accounts.quote_mint.key())]
     pub quote_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: init by autocrat
+    /// CHECK: init by futarchy program
     #[account(mut, seeds = [b"amm_position", dao.key().as_ref(), squads_multisig_vault.key().as_ref()], bump, seeds::program = static_accounts.futarchy_program)]
     pub dao_owned_lp_position: UncheckedAccount<'info>,
 
-    /// CHECK: checked by autocrat
+    /// CHECK: checked by futarchy program
     #[account(mut)]
     pub futarchy_amm_base_vault: UncheckedAccount<'info>,
 
-    /// CHECK: checked by autocrat
+    /// CHECK: checked by futarchy program
     #[account(mut)]
     pub futarchy_amm_quote_vault: UncheckedAccount<'info>,
 
-    /// CHECK: this is the DAO account, init by autocrat
+    /// CHECK: this is the DAO account, init by futarchy program
     #[account(mut)]
     pub dao: UncheckedAccount<'info>,
 
-    /// CHECK: checked by autocrat program
+    /// CHECK: checked by futarchy program
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
     pub squads_multisig: UncheckedAccount<'info>,
     /// CHECK: just a signer
@@ -397,7 +397,7 @@ impl CompleteLaunch<'_> {
                     quote_mint: self.quote_mint.to_account_info(),
                     event_authority: self
                         .static_accounts
-                        .autocrat_event_authority
+                        .futarchy_event_authority
                         .to_account_info(),
                     program: self.static_accounts.futarchy_program.to_account_info(),
                     squads_multisig: self.squads_multisig.to_account_info(),
@@ -506,7 +506,7 @@ impl CompleteLaunch<'_> {
                     program: self.static_accounts.futarchy_program.to_account_info(),
                     event_authority: self
                         .static_accounts
-                        .autocrat_event_authority
+                        .futarchy_event_authority
                         .to_account_info(),
                 },
                 launch_signer,
@@ -578,7 +578,7 @@ impl CompleteLaunch<'_> {
             LaunchpadError::InvariantViolated
         );
 
-        // ref: https://github.com/MeteoraAg/damm-v2-sdk/blob/3d740ea8434af20a024d5d6fd08d60792dca9ca4/src/helpers/utils.ts#L121-L133
+        // ref: https://github.com/MeteoraAg/damm-v2-sdk/blob/3d740ea8434af20a024d5d6fd08d60792dca9ca4/src/helpers/utils.ts#L135-L152
         let float_price = final_raise_amount as f64 / TOKENS_TO_PARTICIPANTS as f64;
         let sqrt_price = (float_price.sqrt() * 2_f64.powf(64.0)) as u128;
 

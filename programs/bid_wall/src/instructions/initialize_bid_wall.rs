@@ -6,6 +6,7 @@ use anchor_spl::{
 
 use crate::{
     events::{BidWallInitializedEvent, CommonFields},
+    metadao_multisig_vault,
     state::BidWall,
     usdc_mint,
 };
@@ -34,8 +35,9 @@ pub struct InitializeBidWall<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// CHECK: This is the recipient of the fees collected by the bid wall, no need to validate
-    pub fee_recipient: AccountInfo<'info>,
+    /// CHECK: The fee recipient is always the metadao multisig vault
+    #[account(address = metadao_multisig_vault::ID)]
+    pub fee_recipient: UncheckedAccount<'info>,
 
     // Creator must sign to prevent unauthorized bid wall initialization on their behalf
     pub creator: Signer<'info>,

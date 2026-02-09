@@ -509,13 +509,13 @@ impl Pool {
         require_neq!(input_reserve, 0);
         require_neq!(output_reserve, 0);
 
-        let input_amount_with_lp_fee =
+        let input_amount_after_lp_fee =
             input_amount_after_protocol_fee as u128 * (MAX_BPS - LP_TAKER_FEE_BPS) as u128;
 
-        let numerator = input_amount_with_lp_fee * output_reserve as u128;
+        let numerator = input_amount_after_lp_fee * output_reserve as u128;
 
         let denominator =
-            (input_reserve as u128 * MAX_BPS as u128) + input_amount_with_lp_fee as u128;
+            (input_reserve as u128 * MAX_BPS as u128) + input_amount_after_lp_fee as u128;
 
         let output_amount = (numerator / denominator) as u64;
 

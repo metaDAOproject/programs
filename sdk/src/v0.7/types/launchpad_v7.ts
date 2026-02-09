@@ -362,7 +362,7 @@ export type LaunchpadV7 = {
               isSigner: false;
             },
             {
-              name: "autocratEventAuthority";
+              name: "futarchyEventAuthority";
               isMut: false;
               isSigner: false;
             },
@@ -2063,7 +2063,7 @@ export const IDL: LaunchpadV7 = {
               isSigner: false,
             },
             {
-              name: "autocratEventAuthority",
+              name: "futarchyEventAuthority",
               isMut: false,
               isSigner: false,
             },

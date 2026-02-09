@@ -40,9 +40,6 @@ pub const TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED: u64 = 900_000;
 /// 15% of the floating supply to stake
 pub const PROPOSAL_MIN_STAKE_TOKENS: u64 = 1_500_000 * TOKEN_SCALE;
 
-/// Max 50% premine
-pub const MAX_PREMINE: u64 = 15_000_000 * TOKEN_SCALE;
-
 pub mod usdc_mint {
     use anchor_lang::prelude::declare_id;
 

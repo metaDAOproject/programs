@@ -2,6 +2,7 @@ import {
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
+  Transaction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -12,11 +13,13 @@ import {
   BidWallClient,
   MAINNET_USDC,
   getBidWallAddr,
+  METADAO_MULTISIG_VAULT,
 } from "@metadaoproject/futarchy/v0.7";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
+import { createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;
@@ -138,8 +141,30 @@ export default function suite() {
       await this.getTokenBalance(MAINNET_USDC, dao),
     );
 
-    feeRecipient = Keypair.generate().publicKey;
-    await this.createTokenAccount(MAINNET_USDC, feeRecipient);
+    feeRecipient = METADAO_MULTISIG_VAULT;
+
+    const feeRecipientQuoteTokenAccount = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      feeRecipient,
+      true,
+    );
+
+    const createAtaTx = new Transaction().add(
+      createAssociatedTokenAccountIdempotentInstruction(
+        this.payer.publicKey,
+        feeRecipientQuoteTokenAccount,
+        feeRecipient,
+        MAINNET_USDC,
+      ),
+    );
+
+    createAtaTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    createAtaTx.feePayer = this.payer.publicKey;
+    createAtaTx.sign(this.payer);
+
+    await this.banksClient.processTransaction(createAtaTx);
 
     // Claim tokens for the payer
     await launchpadClient.claimIx(launch, META).rpc();
@@ -156,7 +181,6 @@ export default function suite() {
         nonce: new BN(0),
         daoTreasury: daoTreasury,
         baseMint: META,
-        feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
       })

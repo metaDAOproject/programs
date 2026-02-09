@@ -11,6 +11,7 @@ import {
   BidWallClient,
   MAINNET_USDC,
   getBidWallAddr,
+  METADAO_MULTISIG_VAULT,
 } from "@metadaoproject/futarchy/v0.7";
 import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
@@ -144,9 +145,6 @@ export default function suite() {
   it("successfully initializes a bid wall", async function () {
     let durationSeconds = 100;
 
-    const feeRecipient = Keypair.generate().publicKey;
-    await this.createTokenAccount(MAINNET_USDC, feeRecipient);
-
     let launchAccount = await this.launchpad_v7.fetchLaunch(launch);
 
     await bidWallClient
@@ -159,7 +157,6 @@ export default function suite() {
         nonce: new BN(0),
         daoTreasury: launchAccount.daoVault,
         baseMint: META,
-        feeRecipient,
         quoteMint: MAINNET_USDC,
         payer: this.payer.publicKey,
       })

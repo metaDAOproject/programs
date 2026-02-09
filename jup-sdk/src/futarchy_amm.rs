@@ -1,7 +1,7 @@
 use anchor_lang::prelude::{
-    AccountMeta, AnchorDeserialize, AnchorSerialize, InitSpace, Pubkey, borsh,
+    borsh, AccountMeta, AnchorDeserialize, AnchorSerialize, InitSpace, Pubkey,
 };
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 
 use crate::FutarchyAmmError;
 
@@ -206,18 +206,18 @@ impl Pool {
             bail!(FutarchyAmmError::InvalidReserves);
         }
 
-        let input_amount_with_lp_fee = (input_amount_after_protocol_fee as u128)
+        let input_amount_after_lp_fee = (input_amount_after_protocol_fee as u128)
             .checked_mul((MAX_BPS - LP_TAKER_FEE_BPS) as u128)
             .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
 
-        let numerator = input_amount_with_lp_fee
+        let numerator = input_amount_after_lp_fee
             .checked_mul(output_reserve as u128)
             .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
 
         let denominator = (input_reserve as u128)
             .checked_mul(MAX_BPS as u128)
             .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?
-            .checked_add(input_amount_with_lp_fee as u128)
+            .checked_add(input_amount_after_lp_fee as u128)
             .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
 
         let output_amount = (numerator
