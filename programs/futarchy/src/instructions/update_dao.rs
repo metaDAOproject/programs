@@ -24,6 +24,14 @@ pub struct UpdateDao<'info> {
 }
 
 impl UpdateDao<'_> {
+    pub fn validate(&self) -> Result<()> {
+        // Prevent parameter updates during active futarchy markets
+        if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
+            return Err(FutarchyError::PoolNotInSpotState.into());
+        }
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, dao_params: UpdateDaoParams) -> Result<()> {
         let dao = &mut ctx.accounts.dao;
 

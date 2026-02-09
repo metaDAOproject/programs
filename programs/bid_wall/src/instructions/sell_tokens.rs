@@ -11,6 +11,7 @@ use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct SellTokensArgs {
     pub amount_in: u64,
+    pub min_amount_out: u64,
 }
 
 #[event_cpi]
@@ -85,7 +86,10 @@ impl SellTokens<'_> {
     }
 
     pub fn handle(ctx: Context<Self>, args: SellTokensArgs) -> Result<()> {
-        let SellTokensArgs { amount_in } = args;
+        let SellTokensArgs {
+            amount_in,
+            min_amount_out,
+        } = args;
 
         // We calculate the total NAV as as sum of:
         // - The initial quote reserves of the Futarchy AMM
@@ -103,16 +107,22 @@ impl SellTokens<'_> {
         let amount_out_before_fee =
             (amount_in as u128 * total_nav as u128 / remaining_base as u128) as u64;
 
+        // Ceiling division: ensures rounding dust is debited from quote_amount
+        // rather than accumulating and inflating total_nav on subsequent sells.
+        let quote_amount_debit = ((amount_in as u128 * total_nav as u128 + remaining_base as u128
+            - 1)
+            / remaining_base as u128) as u64;
+
         require_gte!(
             ctx.accounts.bid_wall.quote_amount,
-            amount_out_before_fee,
+            quote_amount_debit,
             BidWallError::InsufficientQuoteReserves
         );
 
         let amount_out_after_fee =
             ((10_000_u128 - FEE_BPS as u128) * amount_out_before_fee as u128 / 10_000_u128) as u64;
 
-        let fee = amount_out_before_fee - amount_out_after_fee;
+        let fee = quote_amount_debit - amount_out_after_fee;
 
         // Burn base tokens
         token::burn(
@@ -147,8 +157,21 @@ impl SellTokens<'_> {
             amount_out_after_fee,
         )?;
 
-        // Fees can't be used for future token buys, so we subtract the quote amount before fees.
-        ctx.accounts.bid_wall.quote_amount -= amount_out_before_fee;
+        require_gte!(
+            amount_out_after_fee,
+            min_amount_out,
+            BidWallError::InsufficientOutputAmount
+        );
+
+        require_gt!(
+            amount_out_after_fee,
+            0,
+            BidWallError::InsufficientOutputAmount
+        );
+
+        // Fees can't be used for future token buys, so we subtract
+        // the quote amount debit (total amount of quote debited from the bid wall).
+        ctx.accounts.bid_wall.quote_amount -= quote_amount_debit;
         // Track fees collected for fee distribution.
         ctx.accounts.bid_wall.fees_collected += fee;
         // Track base tokens bought up by the bid wall for NAV calculation.

@@ -1,10 +1,10 @@
 use super::*;
 
-pub mod metadao_multisig_vault {
+pub mod admin {
     use anchor_lang::prelude::declare_id;
 
-    // MetaDAO multisig
-    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+    // MetaDAO-controlled admin - cannot be a Squads signer because of reentrancy
+    declare_id!("CWGawadYU8CzRVBecnJymNw97H7E3ndDinV5sMzesgY2");
 }
 
 #[derive(Accounts)]
@@ -15,7 +15,7 @@ pub struct AdminApproveExecuteMultisigProposal<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
-    /// CHECK: checked by autocrat program
+    /// CHECK: checked by futarchy program
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_multisig_program)]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
     /// CHECK: squads proposal, initialized by squads multisig program, checked by squads multisig program
@@ -54,11 +54,7 @@ pub struct AdminApproveExecuteMultisigProposal<'info> {
 impl<'info, 'c: 'info> AdminApproveExecuteMultisigProposal<'info> {
     pub fn validate(&self) -> Result<()> {
         #[cfg(feature = "production")]
-        require_keys_eq!(
-            self.admin.key(),
-            metadao_multisig_vault::ID,
-            FutarchyError::InvalidAdmin
-        );
+        require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
 
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());

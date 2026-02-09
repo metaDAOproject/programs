@@ -37,7 +37,7 @@ pub struct CollectMeteoraDammFees<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
-    /// CHECK: checked by autocrat program
+    /// CHECK: checked by futarchy program
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
     /// CHECK: signer for the squads transaction, checked by squads program

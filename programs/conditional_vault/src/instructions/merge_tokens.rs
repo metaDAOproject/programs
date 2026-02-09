@@ -1,6 +1,14 @@
 use super::*;
 
 impl<'info, 'c: 'info> InteractWithVault<'info> {
+    pub fn validate_merge_tokens(&self) -> Result<()> {
+        require!(
+            !self.question.is_resolved(),
+            VaultError::QuestionAlreadyResolved
+        );
+        Ok(())
+    }
+
     pub fn handle_merge_tokens(ctx: Context<'_, '_, 'c, 'info, Self>, amount: u64) -> Result<()> {
         let accs = &ctx.accounts;
 

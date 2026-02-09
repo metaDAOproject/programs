@@ -18,13 +18,15 @@ export default function suite() {
   let vault: PublicKey;
   let underlyingTokenMint: PublicKey;
   let userUnderlyingTokenAccount: PublicKey;
+  let oracle: Keypair;
+
   before(function () {
     vaultClient = this.conditionalVault;
   });
 
   beforeEach(async function () {
     const questionId = sha256(new Uint8Array([9, 2, 1]));
-    const oracle = Keypair.generate();
+    oracle = Keypair.generate();
 
     question = await vaultClient.initializeQuestion(
       questionId,
@@ -150,5 +152,31 @@ export default function suite() {
     assert.equal(balanceAfter - balanceBefore, 500);
     updatedVault = await vaultClient.fetchVault(vault);
     assert.equal(updatedVault.seqNum.toString(), "3");
+  });
+
+  it("throws error when trying to merge tokens after question is resolved", async function () {
+    // Resolve the question
+    await vaultClient.vaultProgram.methods
+      .resolveQuestion({ payoutNumerators: [1, 0] })
+      .accounts({
+        question,
+        oracle: oracle.publicKey,
+      })
+      .signers([oracle])
+      .rpc();
+
+    // Attempt to merge tokens after resolution should fail
+    const callbacks = expectError(
+      "QuestionAlreadyResolved",
+      "merge succeeded despite question being resolved",
+    );
+
+    await vaultClient
+      .mergeTokensIx(question, vault, underlyingTokenMint, new BN(500), 2)
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+      ])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

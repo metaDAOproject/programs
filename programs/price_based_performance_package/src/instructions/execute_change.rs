@@ -1,6 +1,6 @@
 use crate::{
     ChangeExecuted, ChangeRequest, ChangeType, CommonFields, PerformancePackage,
-    PriceBasedPerformancePackageError, ProposerType,
+    PerformancePackageState, PriceBasedPerformancePackageError, ProposerType,
 };
 use anchor_lang::prelude::*;
 
@@ -48,6 +48,18 @@ impl<'info> ExecuteChange<'info> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let performance_package = &mut ctx.accounts.performance_package;
         let change_request = &ctx.accounts.change_request;
+
+        // Disallow oracle changes while in Unlocking state to prevent TWAP corruption.
+        // This is checked here (in addition to propose_change) because a change request
+        // could have been proposed before start_unlock was called.
+        if matches!(change_request.change_type, ChangeType::Oracle { .. })
+            && matches!(
+                performance_package.state,
+                PerformancePackageState::Unlocking { .. }
+            )
+        {
+            return Err(PriceBasedPerformancePackageError::InvalidPerformancePackageState.into());
+        }
 
         // Apply the change based on type
         match &change_request.change_type {

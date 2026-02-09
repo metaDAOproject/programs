@@ -39,7 +39,7 @@ pub struct InitializePerformancePackage<'info> {
     #[account(mut, address = launch.base_mint.key())]
     pub base_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: this is the DAO account, init by autocrat
+    /// CHECK: this is the DAO account, init by futarchy program
     #[account(address = launch.dao.as_ref().unwrap().key())]
     pub dao: UncheckedAccount<'info>,
 

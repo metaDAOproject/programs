@@ -96,6 +96,7 @@ pub mod futarchy {
         FinalizeProposal::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate())]
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {
         UpdateDao::handle(ctx, dao_params)
     }
@@ -172,5 +173,15 @@ pub mod futarchy {
         ctx: Context<'_, '_, 'c, 'info, AdminApproveExecuteMultisigProposal<'info>>,
     ) -> Result<()> {
         AdminApproveExecuteMultisigProposal::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn admin_cancel_proposal(ctx: Context<AdminCancelProposal>) -> Result<()> {
+        AdminCancelProposal::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn admin_remove_proposal(ctx: Context<AdminRemoveProposal>) -> Result<()> {
+        AdminRemoveProposal::handle(ctx)
     }
 }

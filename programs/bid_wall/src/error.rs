@@ -16,4 +16,6 @@ pub enum BidWallError {
     InvalidInputAmount,
     #[msg("Invalid crank address")]
     InvalidCrankAddress,
+    #[msg("Insufficient output amount")]
+    InsufficientOutputAmount,
 }

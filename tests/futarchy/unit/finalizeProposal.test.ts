@@ -293,6 +293,20 @@ export default function suite() {
 
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.failed);
+
+    // Verify Squads proposal is rejected
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const [squadsProposalPda] = multisig.getProposalPda({
+      multisigPda,
+      transactionIndex: 1n,
+    });
+    const squadsProposal = await multisig.accounts.Proposal.fromAccountAddress(
+      this.squadsConnection,
+      squadsProposalPda,
+    );
+    assert.isTrue(
+      multisig.generated.isProposalStatusRejected(squadsProposal.status),
+    );
   });
 
   it("passes proposals when the team sponsors them and pass twap is slightly below fail twap", async function () {

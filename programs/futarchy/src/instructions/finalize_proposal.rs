@@ -197,6 +197,19 @@ impl FinalizeProposal<'_> {
             spot.base_protocol_fee_balance += pass.base_protocol_fee_balance;
             spot.quote_protocol_fee_balance += pass.quote_protocol_fee_balance;
         } else {
+            squads_multisig_program::cpi::proposal_reject(
+                CpiContext::new_with_signer(
+                    squads_multisig_program.to_account_info(),
+                    squads_multisig_program::cpi::accounts::ProposalVote {
+                        proposal: squads_proposal.to_account_info(),
+                        multisig: squads_multisig.to_account_info(),
+                        member: dao.to_account_info(),
+                    },
+                    dao_signer,
+                ),
+                squads_multisig_program::ProposalVoteArgs { memo: None },
+            )?;
+
             spot.base_reserves += fail.base_reserves;
             spot.quote_reserves += fail.quote_reserves;
             spot.base_protocol_fee_balance += fail.base_protocol_fee_balance;

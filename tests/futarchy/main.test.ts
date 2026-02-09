@@ -4,9 +4,11 @@ import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
+import updateDao from "./unit/updateDao.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
+import provideLiquidity from "./unit/provideLiquidity.test.js";
 
 import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
 
@@ -15,6 +17,8 @@ import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
 import finalizeOptimisticProposal from "./unit/finalizeOptimisticProposal.test.js";
 import adminApproveProposal from "./unit/adminApproveExecuteMultisigProposal.test.js";
+import adminCancelProposal from "./unit/adminCancelProposal.test.js";
+import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
 
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -50,9 +54,11 @@ export default function suite() {
   describe("#initialize_proposal", initializeProposal);
   describe("#launch_proposal", launchProposal);
   describe("#finalize_proposal", finalizeProposal);
+  describe("#update_dao", updateDao);
 
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);
+  describe("#provide_liquidity", provideLiquidity);
   describe("#execute_spending_limit_change", executeSpendingLimitChange);
 
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
@@ -63,6 +69,8 @@ export default function suite() {
   );
   describe("#finalize_optimistic_proposal", finalizeOptimisticProposal);
   describe("#admin_approve_proposal", adminApproveProposal);
+  describe("#admin_cancel_proposal", adminCancelProposal);
+  describe("#admin_remove_proposal", adminRemoveProposal);
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);
