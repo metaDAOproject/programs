@@ -121,7 +121,7 @@ impl CloseBidWall<'_> {
             ctx.accounts.token_program.to_account_info(),
             token::CloseAccount {
                 account: ctx.accounts.bid_wall_quote_token_account.to_account_info(),
-                destination: ctx.accounts.payer.to_account_info(),
+                destination: ctx.accounts.authority.to_account_info(),
                 authority: ctx.accounts.bid_wall.to_account_info(),
             },
             &[&[
