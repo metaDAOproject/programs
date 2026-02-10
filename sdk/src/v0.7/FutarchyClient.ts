@@ -53,6 +53,7 @@ import {
 import { ConditionalVaultClient } from "./ConditionalVaultClient.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
+  createTransferInstruction,
   getAssociatedTokenAddressSync,
   unpackMint,
   TOKEN_PROGRAM_ID,
@@ -1160,6 +1161,48 @@ export class FutarchyClient {
       index: transactionIndex,
     })[0];
 
+    const daoQuoteVaultAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      squadsMultisigVault,
+      true,
+    );
+    const recipientQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      recipient,
+      true,
+    );
+
+    // Build the SPL token transfer instruction for the vault transaction
+    const transferIx = createTransferInstruction(
+      daoQuoteVaultAccount,
+      recipientQuoteAccount,
+      squadsMultisigVault,
+      BigInt(amount.toString()),
+    );
+
+    const transactionMessage = new TransactionMessage({
+      payerKey: payer,
+      recentBlockhash: "",
+      instructions: [transferIx],
+    });
+
+    const vaultTxCreate = multisig.instructions.vaultTransactionCreate({
+      multisigPda,
+      transactionIndex,
+      creator: PERMISSIONLESS_ACCOUNT.publicKey,
+      rentPayer: payer,
+      vaultIndex: 0,
+      ephemeralSigners: 0,
+      transactionMessage,
+    });
+
+    const proposalCreate = multisig.instructions.proposalCreate({
+      multisigPda,
+      transactionIndex,
+      creator: PERMISSIONLESS_ACCOUNT.publicKey,
+      rentPayer: payer,
+    });
+
     return this.autocrat.methods
       .initiateVaultSpendOptimisticProposal({ amount })
       .accounts({
@@ -1168,32 +1211,23 @@ export class FutarchyClient {
         squadsSpendingLimit,
         squadsProposal,
         squadsVaultTransaction,
-        squadsMultisigPermissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
         dao,
-        daoQuoteVaultAccount: getAssociatedTokenAddressSync(
-          quoteMint,
-          squadsMultisigVault,
-          true,
-        ),
+        daoQuoteVaultAccount,
         proposer,
         recipient,
-        recipientQuoteAccount: getAssociatedTokenAddressSync(
-          quoteMint,
-          recipient,
-          true,
-        ),
-        payer,
-        systemProgram: SystemProgram.programId,
+        recipientQuoteAccount,
         squadsProgram: SQUADS_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           payer,
-          getAssociatedTokenAddressSync(quoteMint, recipient, true),
+          recipientQuoteAccount,
           recipient,
           quoteMint,
         ),
+        vaultTxCreate,
+        proposalCreate,
       ]);
   }
 

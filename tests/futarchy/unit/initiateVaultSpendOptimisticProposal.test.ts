@@ -1,11 +1,26 @@
 import {
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
+  SQUADS_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.7";
-import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+  TransactionMessage,
+} from "@solana/web3.js";
 import BN from "bn.js";
 import { expectError } from "../../utils.js";
 import { getDaoAddr, MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  createTransferInstruction,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { assert } from "chai";
 import * as squads from "@sqds/multisig";
 
@@ -315,7 +330,7 @@ export default function suite() {
         dao,
         amount: new BN(1000),
         recipient: this.payer.publicKey,
-        transactionIndex: 0n,
+        transactionIndex: 1n,
       })
       .signers([this.payer, PERMISSIONLESS_ACCOUNT])
       .rpc()
@@ -396,9 +411,9 @@ export default function suite() {
         dao,
         amount: new BN(1000),
         recipient: this.payer.publicKey,
-        transactionIndex: 1n,
+        transactionIndex: 2n,
       })
-      .preInstructions([
+      .postInstructions([
         // Add any instruction to prevent banksClient from reverting the transaction - compute budget is perfectly fine
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
       ])
@@ -432,12 +447,353 @@ export default function suite() {
         recipient: this.payer.publicKey,
         transactionIndex: 1n,
       })
-      .preInstructions([
+      .postInstructions([
         // Add any instruction to prevent banksClient from reverting the transaction - compute budget is perfectly fine
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
       ])
       .signers([this.payer, PERMISSIONLESS_ACCOUNT])
       .rpc()
       .then(callbacks[0], callbacks[1]);
+  });
+
+  describe("vault transaction validation", function () {
+    async function createSquadsVtAndProposal(
+      ctx: any,
+      multisigPda: PublicKey,
+      instructions: TransactionInstruction[],
+      transactionIndex: bigint,
+      isDraft: boolean = false,
+    ) {
+      const transactionMessage = new TransactionMessage({
+        payerKey: ctx.payer.publicKey,
+        recentBlockhash: (await ctx.banksClient.getLatestBlockhash())[0],
+        instructions,
+      });
+
+      const tx = new Transaction().add(
+        squads.instructions.vaultTransactionCreate({
+          multisigPda,
+          transactionIndex,
+          creator: PERMISSIONLESS_ACCOUNT.publicKey,
+          rentPayer: ctx.payer.publicKey,
+          vaultIndex: 0,
+          ephemeralSigners: 0,
+          transactionMessage,
+        }),
+        squads.instructions.proposalCreate({
+          multisigPda,
+          transactionIndex,
+          creator: PERMISSIONLESS_ACCOUNT.publicKey,
+          rentPayer: ctx.payer.publicKey,
+          isDraft,
+        }),
+      );
+
+      tx.recentBlockhash = (await ctx.banksClient.getLatestBlockhash())[0];
+      tx.feePayer = ctx.payer.publicKey;
+      tx.sign(ctx.payer, PERMISSIONLESS_ACCOUNT);
+
+      await ctx.banksClient.processTransaction(tx);
+
+      const [squadsProposal] = squads.getProposalPda({
+        multisigPda,
+        transactionIndex,
+      });
+      const [squadsVaultTransaction] = squads.getTransactionPda({
+        multisigPda,
+        index: transactionIndex,
+      });
+
+      return { squadsProposal, squadsVaultTransaction };
+    }
+
+    async function callInitiateRaw(
+      ctx: any,
+      dao: PublicKey,
+      amount: BN,
+      recipient: PublicKey,
+      squadsProposal: PublicKey,
+      squadsVaultTransaction: PublicKey,
+    ) {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const squadsMultisigVault = squads.getVaultPda({
+        multisigPda,
+        index: 0,
+      })[0];
+      const squadsSpendingLimit = squads.getSpendingLimitPda({
+        multisigPda,
+        createKey: dao,
+      })[0];
+      const daoAccount = await ctx.futarchy.getDao(dao);
+      const daoQuoteVaultAccount = getAssociatedTokenAddressSync(
+        daoAccount.quoteMint,
+        squadsMultisigVault,
+        true,
+      );
+      const recipientQuoteAccount = getAssociatedTokenAddressSync(
+        daoAccount.quoteMint,
+        recipient,
+        true,
+      );
+
+      return ctx.futarchy.autocrat.methods
+        .initiateVaultSpendOptimisticProposal({ amount })
+        .accounts({
+          squadsMultisig: multisigPda,
+          squadsMultisigVault,
+          squadsSpendingLimit,
+          squadsProposal,
+          squadsVaultTransaction,
+          dao,
+          daoQuoteVaultAccount,
+          proposer: ctx.payer.publicKey,
+          recipient,
+          recipientQuoteAccount,
+          squadsProgram: SQUADS_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .preInstructions([
+          createAssociatedTokenAccountIdempotentInstruction(
+            ctx.payer.publicKey,
+            recipientQuoteAccount,
+            recipient,
+            daoAccount.quoteMint,
+          ),
+        ]);
+    }
+
+    it("fails when vault transaction has wrong transfer amount", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const wrongAmountIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        500n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [wrongAmountIx], 1n);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "VT amount doesn't match instruction amount",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when vault transaction has wrong recipient", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+      const wrongRecipient = Keypair.generate().publicKey;
+
+      // Create the wrong-recipient's ATA so the instruction references it
+      const wrongRecipientAta = getAssociatedTokenAddressSync(
+        MAINNET_USDC,
+        wrongRecipient,
+      );
+
+      const wrongDestIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        wrongRecipientAta,
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [wrongDestIx], 1n);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "VT destination doesn't match recipient",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when vault transaction has wrong source", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+      const wrongSource = Keypair.generate().publicKey;
+      const wrongSourceAta = getAssociatedTokenAddressSync(
+        MAINNET_USDC,
+        wrongSource,
+      );
+
+      const wrongSrcIx = createTransferInstruction(
+        wrongSourceAta,
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [wrongSrcIx], 1n);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "VT source doesn't match dao vault account",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when vault transaction uses wrong program", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      // Build a raw instruction targeting SystemProgram with SPL Transfer-like data
+      const data = Buffer.alloc(9);
+      data[0] = 3; // SPL Transfer discriminator
+      data.writeBigUInt64LE(1000n, 1);
+
+      const wrongProgramIx = new TransactionInstruction({
+        programId: SystemProgram.programId,
+        keys: [
+          {
+            pubkey: getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: getAssociatedTokenAddressSync(
+              MAINNET_USDC,
+              this.payer.publicKey,
+            ),
+            isSigner: false,
+            isWritable: true,
+          },
+          { pubkey: vault, isSigner: true, isWritable: false },
+        ],
+        data,
+      });
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(
+          this,
+          multisigPda,
+          [wrongProgramIx],
+          1n,
+        );
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "VT instruction targets wrong program",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when vault transaction has multiple instructions", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      // Two identical transfer instructions
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(
+          this,
+          multisigPda,
+          [transferIx, transferIx],
+          1n,
+        );
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "VT has multiple instructions",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when squads proposal is in Draft status", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(
+          this,
+          multisigPda,
+          [transferIx],
+          1n,
+          true, // isDraft = true
+        );
+
+      const callbacks = expectError(
+        "InvalidSquadsProposalStatus",
+        "Squads proposal is in Draft status",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
   });
 }

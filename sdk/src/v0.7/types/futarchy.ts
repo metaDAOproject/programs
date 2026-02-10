@@ -1211,7 +1211,7 @@ export type Futarchy = {
       accounts: [
         {
           name: "squadsMultisig";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -1226,18 +1226,13 @@ export type Futarchy = {
         },
         {
           name: "squadsProposal";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
           name: "squadsVaultTransaction";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigPermissionlessAccount";
           isMut: false;
-          isSigner: true;
+          isSigner: false;
         },
         {
           name: "dao";
@@ -1246,12 +1241,12 @@ export type Futarchy = {
         },
         {
           name: "daoQuoteVaultAccount";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
           name: "proposer";
-          isMut: true;
+          isMut: false;
           isSigner: true;
         },
         {
@@ -1261,16 +1256,6 @@ export type Futarchy = {
         },
         {
           name: "recipientQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -4899,7 +4884,7 @@ export const IDL: Futarchy = {
       accounts: [
         {
           name: "squadsMultisig",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -4914,18 +4899,13 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsProposal",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
           name: "squadsVaultTransaction",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigPermissionlessAccount",
           isMut: false,
-          isSigner: true,
+          isSigner: false,
         },
         {
           name: "dao",
@@ -4934,12 +4914,12 @@ export const IDL: Futarchy = {
         },
         {
           name: "daoQuoteVaultAccount",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
           name: "proposer",
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -4949,16 +4929,6 @@ export const IDL: Futarchy = {
         },
         {
           name: "recipientQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },

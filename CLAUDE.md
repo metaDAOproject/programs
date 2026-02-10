@@ -196,13 +196,7 @@ await client
 
 Do NOT use `advanceBySlots()` for this purpose - it changes the clock which may affect time-dependent tests.
 
-**Token amounts in tests:** Use easy-to-read round numbers like hundreds or thousands of tokens. Our standard mint decimals is 6, so:
-- 100 tokens = `100_000_000` (100 * 10^6)
-- 1,000 tokens = `1_000_000_000` (1000 * 10^6)
-
-This makes test assertions and calculations much easier to verify at a glance.
-
-**Isolating tests during development:** When developing or debugging tests, use `.only` to run only the tests you're working on:
+**Isolating tests during development:** When writing or editing tests, ALWAYS add `.only` to the `describe`/`it` block you're working on before running. This keeps feedback fast and output clean. Once your changes pass, remove `.only` and run the full suite (`anchor test --skip-build`) to confirm nothing else broke.
 
 ```typescript
 // Run only this specific test
@@ -216,8 +210,6 @@ describe.only("#split_tokens", function () {
 });
 ```
 
-This significantly speeds up iteration and makes test output easier to read. Remember to remove `.only` before finishing development.
-
 **Assertion messages:** Do not include assertion messages for better readability. The assertion itself should be clear enough:
 
 ```typescript
@@ -230,6 +222,22 @@ assert.equal(recipientBalance.toString(), "500000000", "Recipient should have 50
 ```
 
 Exceptions: Keep messages in `expectError()` calls and `assert.fail()` within try-catch blocks, since those are part of error handling patterns and help identify which check failed.
+
+
+**Token amounts in tests:** Use easy-to-read round numbers like hundreds or thousands of tokens. Our standard mint decimals is 6, so:
+- 100 tokens = `100_000_000` (100 * 10^6)
+- 1,000 tokens = `1_000_000_000` (1000 * 10^6)
+
+This makes test assertions and calculations much easier to verify at a glance.
+
+### Solana Reentrancy Guard
+The Solana runtime prevents a program from appearing more than once in the same CPI stack. This affects two patterns in our codebase:
+
+1. **futarchy → squads → futarchy** (e.g., admin-executing a DAO config change): Futarchy cannot CPI into Squads to execute a vault transaction whose inner instructions CPI back into futarchy. Workaround: futarchy only approves/validates the Squads transaction, then the client executes it as a separate top-level transaction.
+
+2. **squads → futarchy → squads** (e.g., a team multisig that is itself a Squads wallet): If a Squads-initiated transaction calls a futarchy instruction that needs to CPI into Squads, the runtime will reject it. Workaround: have futarchy validate pre-created Squads accounts on-chain instead of creating them via CPI.
+
+When designing instructions that involve Squads CPIs, check whether either pattern applies and flag it early. The general solution is: split the operation across multiple transactions — validate/approve in one, execute in another.
 
 ## SDK Usage
 
