@@ -731,7 +731,7 @@ before(async function () {
   await mintToOverride(
     this.context,
     token.getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
-    10_000_000n * 10n ** 6n,
+    100_000_000n * 10n ** 6n,
   );
 });
 
