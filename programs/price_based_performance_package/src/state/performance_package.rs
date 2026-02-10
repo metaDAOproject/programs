@@ -93,8 +93,6 @@ pub enum PerformancePackageState {
         /// The timestamp when unlocking started
         start_timestamp: i64,
     },
-    /// Tokens have been unlocked and sent to recipient
-    Unlocked,
 }
 
 impl ToString for PerformancePackageState {
@@ -108,7 +106,6 @@ impl ToString for PerformancePackageState {
                 "Unlocking (start_aggregator: {}, start_timestamp: {})",
                 start_aggregator, start_timestamp
             ),
-            PerformancePackageState::Unlocked => "Unlocked".to_string(),
         }
     }
 }

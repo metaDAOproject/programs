@@ -656,9 +656,6 @@ export type PriceBasedPerformancePackage = {
               },
             ];
           },
-          {
-            name: "Unlocked";
-          },
         ];
       };
     },
@@ -1602,9 +1599,6 @@ export const IDL: PriceBasedPerformancePackage = {
                 type: "i64",
               },
             ],
-          },
-          {
-            name: "Unlocked",
           },
         ],
       },

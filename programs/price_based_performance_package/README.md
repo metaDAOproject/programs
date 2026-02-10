@@ -14,7 +14,7 @@ The program allows users to:
 ### State
 
 - **Locker**: The main account that holds the locked tokens and configuration
-- **LockerState**: Enum representing the current state (Locked, Unlocking, Unlocked)
+- **LockerState**: Enum representing the current state (Locked, Unlocking)
 
 ### Instructions
 
