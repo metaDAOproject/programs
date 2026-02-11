@@ -220,3 +220,13 @@ pub struct CollectMeteoraDammFeesEvent {
     pub quote_fees_collected: u64,
     pub base_fees_collected: u64,
 }
+
+#[event]
+pub struct AdminFixPositionAuthorityEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub admin: Pubkey,
+    pub amm_position: Pubkey,
+    pub old_authority: Pubkey,
+    pub new_authority: Pubkey,
+}
