@@ -1368,6 +1368,37 @@ export type Futarchy = {
       args: [];
     },
     {
+      name: "adminFixPositionAuthority";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammPosition";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "adminRemoveProposal";
       accounts: [
         {
@@ -3034,6 +3065,43 @@ export type Futarchy = {
         },
       ];
     },
+    {
+      name: "AdminFixPositionAuthorityEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "admin";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "ammPosition";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oldAuthority";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newAuthority";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -4567,6 +4635,37 @@ export const IDL: Futarchy = {
         },
         {
           name: "baseVaultUnderlyingTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "adminFixPositionAuthority",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammPosition",
           isMut: true,
           isSigner: false,
         },
@@ -6251,6 +6350,43 @@ export const IDL: Futarchy = {
         {
           name: "baseFeesCollected",
           type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "AdminFixPositionAuthorityEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "admin",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "ammPosition",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oldAuthority",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newAuthority",
+          type: "publicKey",
           index: false,
         },
       ],
