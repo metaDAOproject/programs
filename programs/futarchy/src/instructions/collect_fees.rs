@@ -17,7 +17,7 @@ pub mod metadao_admin {
 #[event_cpi]
 pub struct CollectFees<'info> {
     #[account(mut)]
-    pub dao: Account<'info, Dao>,
+    pub dao: Box<Account<'info, Dao>>,
     pub admin: Signer<'info>,
     #[account(mut, associated_token::mint = dao.base_mint, associated_token::authority = metadao_multisig_vault::ID)]
     pub base_token_account: Account<'info, TokenAccount>,

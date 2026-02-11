@@ -16,7 +16,7 @@ pub struct WithdrawLiquidityParams {
 #[event_cpi]
 pub struct WithdrawLiquidity<'info> {
     #[account(mut)]
-    pub dao: Account<'info, Dao>,
+    pub dao: Box<Account<'info, Dao>>,
     pub position_authority: Signer<'info>,
     #[account(
         mut,
