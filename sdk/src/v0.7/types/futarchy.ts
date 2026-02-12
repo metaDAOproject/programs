@@ -1368,37 +1368,6 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "adminFixPositionAuthority";
-      accounts: [
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammPosition";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
       name: "adminRemoveProposal";
       accounts: [
         {
@@ -4635,37 +4604,6 @@ export const IDL: Futarchy = {
         },
         {
           name: "baseVaultUnderlyingTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "adminFixPositionAuthority",
-      accounts: [
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammPosition",
           isMut: true,
           isSigner: false,
         },

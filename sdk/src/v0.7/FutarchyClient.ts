@@ -1004,35 +1004,6 @@ export class FutarchyClient {
     });
   }
 
-  adminFixPositionAuthorityIx({
-    dao,
-    admin = this.provider.publicKey,
-  }: {
-    dao: PublicKey;
-    admin?: PublicKey;
-  }) {
-    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
-    const squadsMultisigVault = multisig.getVaultPda({
-      multisigPda,
-      index: 0,
-    })[0];
-
-    const ammPosition = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("amm_position"),
-        dao.toBuffer(),
-        squadsMultisigVault.toBuffer(),
-      ],
-      this.getProgramId(),
-    )[0];
-
-    return this.autocrat.methods.adminFixPositionAuthority().accounts({
-      dao,
-      ammPosition,
-      admin,
-    });
-  }
-
   collectMeteoraDammFeesIx({
     dao,
     baseMint,
