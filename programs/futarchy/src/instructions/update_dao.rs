@@ -29,6 +29,12 @@ impl UpdateDao<'_> {
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
+
+        // Prevent updates to DAO parameters if an optimistic proposal is enqueued
+        if matches!(self.dao.optimistic_proposal, Some(_)) {
+            return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
+        }
+
         Ok(())
     }
 
