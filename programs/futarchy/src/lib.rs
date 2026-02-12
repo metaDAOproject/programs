@@ -162,11 +162,6 @@ pub mod futarchy {
     }
 
     #[access_control(ctx.accounts.validate())]
-    pub fn admin_fix_position_authority(ctx: Context<AdminFixPositionAuthority>) -> Result<()> {
-        AdminFixPositionAuthority::handle(ctx)
-    }
-
-    #[access_control(ctx.accounts.validate())]
     pub fn admin_remove_proposal(ctx: Context<AdminRemoveProposal>) -> Result<()> {
         AdminRemoveProposal::handle(ctx)
     }
