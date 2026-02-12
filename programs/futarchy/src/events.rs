@@ -223,6 +223,16 @@ pub struct CollectMeteoraDammFeesEvent {
 }
 
 #[event]
+pub struct AdminFixPositionAuthorityEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub admin: Pubkey,
+    pub amm_position: Pubkey,
+    pub old_authority: Pubkey,
+    pub new_authority: Pubkey,
+}
+
+#[event]
 pub struct InitiateVaultSpendOptimisticProposalEvent {
     pub common: CommonFields,
     pub dao: Pubkey,
