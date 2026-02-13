@@ -12,6 +12,8 @@ pub struct SpotSwapParams {
 pub struct SpotSwap<'info> {
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
+    // Intentionally using `token::` instead of `associated_token::`
+    // DEX integrators may route through non-ATA token accounts.
     #[account(
         mut,
         token::mint = dao.base_mint,
