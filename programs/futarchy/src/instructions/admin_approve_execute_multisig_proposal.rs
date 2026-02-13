@@ -53,7 +53,7 @@ pub struct AdminApproveExecuteMultisigProposal<'info> {
 
 impl<'info, 'c: 'info> AdminApproveExecuteMultisigProposal<'info> {
     pub fn validate(&self) -> Result<()> {
-        #[cfg(feature = "production")]
+        // Security fix: Always verify admin key at runtime, not just in production builds.
         require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
 
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {

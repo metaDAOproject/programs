@@ -70,7 +70,9 @@ pub struct AdminCancelProposal<'info> {
 
 impl AdminCancelProposal<'_> {
     pub fn validate(&self) -> Result<()> {
-        #[cfg(feature = "production")]
+        // Security fix: Always verify admin key at runtime, not just in production builds.
+        // Without this, non-production deployments allow ANY signer to cancel proposals,
+        // which can cause fund loss (pass pool reserves are dropped from accounting).
         require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
 
         require!(
@@ -119,7 +121,7 @@ impl AdminCancelProposal<'_> {
         ];
         let proposal_signer = &[&proposal_seeds[..]];
 
-        let PoolState::Futarchy { fail, mut spot, .. } = dao.amm.state.to_owned() else {
+        let PoolState::Futarchy { pass, fail, mut spot, .. } = dao.amm.state.to_owned() else {
             unreachable!();
         };
 
@@ -158,10 +160,19 @@ impl AdminCancelProposal<'_> {
             squads_multisig_program::ProposalVoteArgs { memo: None },
         )?;
 
+        // Merge fail pool reserves back to spot
         spot.base_reserves += fail.base_reserves;
         spot.quote_reserves += fail.quote_reserves;
         spot.base_protocol_fee_balance += fail.base_protocol_fee_balance;
         spot.quote_protocol_fee_balance += fail.quote_protocol_fee_balance;
+
+        // Security fix: Also merge pass pool reserves back to spot.
+        // Previously, the `..` pattern silently dropped pass pool reserves,
+        // causing permanent loss of tokens held in the pass AMM pool.
+        spot.base_reserves += pass.base_reserves;
+        spot.quote_reserves += pass.quote_reserves;
+        spot.base_protocol_fee_balance += pass.base_protocol_fee_balance;
+        spot.quote_protocol_fee_balance += pass.quote_protocol_fee_balance;
 
         let quote_cpi_context = CpiContext::new_with_signer(
             vault_program.to_account_info(),

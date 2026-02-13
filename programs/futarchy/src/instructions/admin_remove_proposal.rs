@@ -18,7 +18,8 @@ pub struct AdminRemoveProposal<'info> {
 
 impl AdminRemoveProposal<'_> {
     pub fn validate(&self) -> Result<()> {
-        #[cfg(feature = "production")]
+        // Security fix: Always verify admin key at runtime, not just in production builds.
+        // Without this, non-production deployments allow ANY signer to remove proposals.
         require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
 
         // TODO: See how we'd handle cancelling a proposal that has already been launched (in Pending state)

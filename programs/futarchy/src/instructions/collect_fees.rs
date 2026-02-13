@@ -32,7 +32,7 @@ pub struct CollectFees<'info> {
 
 impl CollectFees<'_> {
     pub fn validate(&self) -> Result<()> {
-        #[cfg(feature = "production")]
+        // Security fix: Always verify admin key at runtime, not just in production builds.
         require_keys_eq!(
             self.admin.key(),
             metadao_admin::ID,
