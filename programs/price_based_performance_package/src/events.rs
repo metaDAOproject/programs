@@ -45,6 +45,7 @@ pub struct UnlockCompleted {
 
 #[event]
 pub struct ChangeProposed {
+    pub common: CommonFields,
     pub locker: Pubkey,
     pub change_request: Pubkey,
     pub proposer: Pubkey,
