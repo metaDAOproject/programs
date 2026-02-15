@@ -5,16 +5,10 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::error::BidWallError;
 use crate::{
     events::{BidWallFeesCollectedEvent, CommonFields},
+    metadao_multisig_vault,
     state::BidWall,
     usdc_mint,
 };
-
-pub mod metadao_multisig_vault {
-    use anchor_lang::prelude::declare_id;
-
-    // MetaDAO operations multisig vault - hardcoded fee destination
-    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
-}
 
 pub mod metadao_cranker {
     use anchor_lang::prelude::declare_id;

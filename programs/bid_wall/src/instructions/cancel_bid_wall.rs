@@ -3,6 +3,7 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::{
     events::{BidWallCanceledEvent, CommonFields},
+    metadao_multisig_vault,
     state::BidWall,
     usdc_mint,
 };
@@ -24,8 +25,8 @@ pub struct CancelBidWall<'info> {
     #[account(address = bid_wall.authority)]
     pub authority: Signer<'info>,
 
-    /// CHECK: used for constraints
-    #[account(address = bid_wall.fee_recipient)]
+    /// CHECK: the fee recipient is always the metadao multisig vault
+    #[account(address = metadao_multisig_vault::ID)]
     pub fee_recipient: UncheckedAccount<'info>,
 
     #[account(mut, associated_token::mint = quote_mint, associated_token::authority = bid_wall)]

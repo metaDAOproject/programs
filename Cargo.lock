@@ -1310,6 +1310,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mint_governor"
+version = "0.7.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "solana-security-txt",
+]
+
+[[package]]
 name = "mpl-token-metadata"
 version = "3.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1478,6 +1487,17 @@ name = "percent-encoding"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
+
+[[package]]
+name = "performance_package_v2"
+version = "0.7.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "futarchy",
+ "mint_governor",
+ "solana-security-txt",
+]
 
 [[package]]
 name = "polyval"
@@ -1650,6 +1670,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f97cdb2a36ed4183de61b2f824cc45c9f1037f28afe0a322e9fff4c108b5aaa"
 dependencies = [
  "rand_core 0.6.4",
+]
+
+[[package]]
+name = "raydium-cpmm-cpi"
+version = "0.1.0"
+source = "git+https://github.com/raydium-io/raydium-cpi?branch=anchor-0.29.0#576be7111dd5523fafdb284e46e55003ee0ace3f"
+dependencies = [
+ "ahash 0.8.6",
+ "anchor-lang",
+ "anchor-spl",
+ "num_enum 0.7.0",
+ "solana-program",
+ "spl-memo",
+ "spl-token",
+]
+
+[[package]]
+name = "raydium_migration_helper"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.6",
+ "anchor-lang",
+ "anchor-spl",
+ "damm_v2_cpi",
+ "futarchy",
+ "raydium-cpmm-cpi",
+ "solana-program",
+ "solana-security-txt",
+ "spl-associated-token-account",
+ "spl-memo",
+ "spl-token",
 ]
 
 [[package]]

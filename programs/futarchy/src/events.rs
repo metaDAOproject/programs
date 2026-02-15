@@ -192,6 +192,23 @@ pub struct SponsorProposalEvent {
 }
 
 #[event]
+pub struct RemoveProposalEvent {
+    pub common: CommonFields,
+    pub proposal: Pubkey,
+    pub dao: Pubkey,
+    pub admin: Pubkey,
+}
+
+#[event]
+pub struct AdminCancelProposalEvent {
+    pub common: CommonFields,
+    pub proposal: Pubkey,
+    pub dao: Pubkey,
+    pub admin: Pubkey,
+    pub post_amm_state: FutarchyAmm,
+}
+
+#[event]
 pub struct CollectMeteoraDammFeesEvent {
     pub common: CommonFields,
     pub dao: Pubkey,
@@ -202,4 +219,14 @@ pub struct CollectMeteoraDammFeesEvent {
     pub base_mint: Pubkey,
     pub quote_fees_collected: u64,
     pub base_fees_collected: u64,
+}
+
+#[event]
+pub struct AdminFixPositionAuthorityEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub admin: Pubkey,
+    pub amm_position: Pubkey,
+    pub old_authority: Pubkey,
+    pub new_authority: Pubkey,
 }

@@ -62,7 +62,7 @@ export class BidWallClient {
     baseMint,
     creator = this.provider.publicKey,
     nonce = new BN(0),
-    feeRecipient,
+    feeRecipient = METADAO_MULTISIG_VAULT,
     quoteMint = MAINNET_USDC,
     payer = this.provider.publicKey,
   }: {
@@ -74,7 +74,7 @@ export class BidWallClient {
     nonce?: BN;
     authority?: PublicKey;
     baseMint: PublicKey;
-    feeRecipient: PublicKey;
+    feeRecipient?: PublicKey;
     quoteMint?: PublicKey;
     payer?: PublicKey;
   }) {
@@ -118,6 +118,7 @@ export class BidWallClient {
 
   sellTokensIx({
     amount,
+    minAmountOut = 0,
     bidWall,
     baseMint,
     daoTreasury,
@@ -125,6 +126,7 @@ export class BidWallClient {
     user = this.provider.publicKey,
   }: {
     amount: number;
+    minAmountOut?: number;
     bidWall: PublicKey;
     baseMint: PublicKey;
     daoTreasury: PublicKey;
@@ -156,7 +158,10 @@ export class BidWallClient {
     );
 
     return this.bidWallProgram.methods
-      .sellTokens({ amountIn: new BN(amount) })
+      .sellTokens({
+        amountIn: new BN(amount),
+        minAmountOut: new BN(minAmountOut),
+      })
       .accounts({
         bidWall,
         user,
@@ -208,7 +213,7 @@ export class BidWallClient {
     bidWall,
     authority,
     baseMint,
-    feeRecipient = PublicKey.default,
+    feeRecipient = METADAO_MULTISIG_VAULT,
     quoteMint = MAINNET_USDC,
     payer = this.provider.publicKey,
   }: {
@@ -254,7 +259,7 @@ export class BidWallClient {
     bidWall,
     authority,
     baseMint,
-    feeRecipient = PublicKey.default,
+    feeRecipient = METADAO_MULTISIG_VAULT,
     quoteMint = MAINNET_USDC,
     payer = this.provider.publicKey,
   }: {

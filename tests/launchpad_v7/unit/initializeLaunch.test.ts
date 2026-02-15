@@ -108,6 +108,73 @@ export default function suite() {
     assert.isNull(storedLaunch.dao);
   });
 
+  it("fails when monthly spending limit members contains duplicates", async function () {
+    const minRaise = new BN(1000_000000);
+    const secondsForLaunch = 60 * 60 * 24 * 7;
+    const monthlySpend = new BN(100_000000);
+    const recipientAddress = Keypair.generate().publicKey;
+    const premineAmount = new BN(500_000_000);
+
+    try {
+      await launchpadClient
+        .initializeLaunchIx({
+          tokenName: "META",
+          tokenSymbol: "META",
+          tokenUri: "https://example.com",
+          minimumRaiseAmount: minRaise,
+          secondsForLaunch: secondsForLaunch,
+          baseMint: META,
+          quoteMint: MAINNET_USDC,
+          monthlySpendingLimitAmount: monthlySpend,
+          monthlySpendingLimitMembers: [
+            this.payer.publicKey,
+            this.payer.publicKey,
+          ],
+          performancePackageGrantee: recipientAddress,
+          performancePackageTokenAmount: premineAmount,
+          monthsUntilInsidersCanUnlock: 18,
+          teamAddress: PublicKey.default,
+          launchAuthority: launchAuthority.publicKey,
+        })
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "InvalidMonthlySpendingLimitMembers");
+    }
+  });
+
+  it("fails when monthly spending limit members is empty", async function () {
+    const minRaise = new BN(1000_000000);
+    const secondsForLaunch = 60 * 60 * 24 * 7;
+    const monthlySpend = new BN(100_000000);
+    const recipientAddress = Keypair.generate().publicKey;
+    const premineAmount = new BN(500_000_000);
+
+    try {
+      await launchpadClient
+        .initializeLaunchIx({
+          tokenName: "META",
+          tokenSymbol: "META",
+          tokenUri: "https://example.com",
+          minimumRaiseAmount: minRaise,
+          secondsForLaunch: secondsForLaunch,
+          baseMint: META,
+          quoteMint: MAINNET_USDC,
+          monthlySpendingLimitAmount: monthlySpend,
+          monthlySpendingLimitMembers: [],
+          performancePackageGrantee: recipientAddress,
+          performancePackageTokenAmount: premineAmount,
+          monthsUntilInsidersCanUnlock: 18,
+          teamAddress: PublicKey.default,
+          launchAuthority: launchAuthority.publicKey,
+        })
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "InvalidMonthlySpendingLimitMembers");
+    }
+  });
+
   it("fails when launch signer is faked", async function () {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week

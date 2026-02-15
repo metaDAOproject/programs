@@ -93,13 +93,9 @@ impl WithdrawLiquidity<'_> {
 
         let (base_to_withdraw, quote_to_withdraw) = {
             let PoolState::Spot { ref spot } = dao.amm.state else {
-                // TODO: check that pool is already in right state
-                unreachable!();
+                return err!(FutarchyError::PoolNotInSpotState);
             };
-            spot.get_base_and_quote_withdrawable(
-                liquidity_to_withdraw as u64,
-                total_liquidity as u64,
-            )
+            spot.get_base_and_quote_withdrawable(liquidity_to_withdraw, total_liquidity)
         };
 
         require_gte!(
@@ -120,7 +116,7 @@ impl WithdrawLiquidity<'_> {
         dao.amm.total_liquidity -= liquidity_to_withdraw;
         {
             let PoolState::Spot { ref mut spot } = dao.amm.state else {
-                unreachable!();
+                return err!(FutarchyError::PoolNotInSpotState);
             };
             spot.base_reserves -= base_to_withdraw;
             spot.quote_reserves -= quote_to_withdraw;

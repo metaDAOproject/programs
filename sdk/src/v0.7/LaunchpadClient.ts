@@ -322,7 +322,7 @@ export class LaunchpadClient {
       daoCreator: launchSigner,
     });
 
-    const [autocratEventAuthority] = getEventAuthorityAddr(
+    const [futarchyEventAuthority] = getEventAuthorityAddr(
       this.autocratClient.getProgramId(),
     );
 
@@ -464,7 +464,7 @@ export class LaunchpadClient {
         staticAccounts: {
           futarchyProgram: this.autocratClient.getProgramId(),
           tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
-          autocratEventAuthority,
+          futarchyEventAuthority,
           squadsProgram: SQUADS_PROGRAM_ID,
           squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
           squadsProgramConfigTreasury: isDevnet

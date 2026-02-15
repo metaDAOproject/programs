@@ -15,6 +15,31 @@ export type RaydiumMigrationHelper = {
           ];
         },
         {
+          name: "migrationSigner";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "Migration signer PDA - used to sign for Meteora CPI token transfers",
+            'Seeds: ["migration_signer", base_mint]',
+          ];
+        },
+        {
+          name: "migrationSignerBaseAta";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "Migration signer's base token account (receives tokens from vault, transfers to Meteora)",
+          ];
+        },
+        {
+          name: "migrationSignerQuoteAta";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "Migration signer's quote token account (receives tokens from vault, transfers to Meteora)",
+          ];
+        },
+        {
           name: "poolState";
           isMut: true;
           isSigner: false;
@@ -177,6 +202,81 @@ export type RaydiumMigrationHelper = {
           isSigner: false;
           docs: ["Memo program (required by Raydium for withdrawal logs)"];
         },
+        {
+          name: "meteoraAccounts";
+          accounts: [
+            {
+              name: "dammV2Program";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "config";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "token2022Program";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "positionNftAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "pool";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "position";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "positionNftMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenAVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenBVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "poolCreatorAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "poolAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "dammV2EventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
       ];
       args: [
         {
@@ -220,6 +320,31 @@ export type RaydiumMigrationHelper = {
         {
           name: "withdrawnQuote";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "baseToMeteora";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "quoteToMeteora";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "baseToFutarchy";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "quoteToFutarchy";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "meteoraPool";
+          type: "publicKey";
           index: false;
         },
         {
@@ -278,6 +403,31 @@ export const IDL: RaydiumMigrationHelper = {
           docs: [
             "The vault/DAO that owns the LP tokens (must sign)",
             "This will be the V5 vault PDA signing via Squads",
+          ],
+        },
+        {
+          name: "migrationSigner",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "Migration signer PDA - used to sign for Meteora CPI token transfers",
+            'Seeds: ["migration_signer", base_mint]',
+          ],
+        },
+        {
+          name: "migrationSignerBaseAta",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "Migration signer's base token account (receives tokens from vault, transfers to Meteora)",
+          ],
+        },
+        {
+          name: "migrationSignerQuoteAta",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "Migration signer's quote token account (receives tokens from vault, transfers to Meteora)",
           ],
         },
         {
@@ -443,6 +593,81 @@ export const IDL: RaydiumMigrationHelper = {
           isSigner: false,
           docs: ["Memo program (required by Raydium for withdrawal logs)"],
         },
+        {
+          name: "meteoraAccounts",
+          accounts: [
+            {
+              name: "dammV2Program",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "config",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "token2022Program",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "positionNftAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "pool",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "position",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "positionNftMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenAVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenBVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "poolCreatorAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "poolAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "dammV2EventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
       ],
       args: [
         {
@@ -486,6 +711,31 @@ export const IDL: RaydiumMigrationHelper = {
         {
           name: "withdrawnQuote",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "baseToMeteora",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "quoteToMeteora",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "baseToFutarchy",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "quoteToFutarchy",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "meteoraPool",
+          type: "publicKey",
           index: false,
         },
         {

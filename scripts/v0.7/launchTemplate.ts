@@ -57,28 +57,24 @@ export const launch = async () => {
   const [launch] = getLaunchAddr(undefined, TOKEN);
   const [launchSigner] = getLaunchSignerAddr(undefined, launch);
 
-  const tx = new Transaction().add(
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: payer.publicKey,
-      newAccountPubkey: TOKEN,
-      basePubkey: payer.publicKey,
-      seed: TOKEN_SEED,
-      lamports: lamports,
-      space: token.MINT_SIZE,
-      programId: token.TOKEN_PROGRAM_ID,
-    }),
-    token.createInitializeMint2Instruction(TOKEN, 6, launchSigner, null),
+  const createAccountIx = SystemProgram.createAccountWithSeed({
+    fromPubkey: payer.publicKey,
+    newAccountPubkey: TOKEN,
+    basePubkey: payer.publicKey,
+    seed: TOKEN_SEED,
+    lamports: lamports,
+    space: token.MINT_SIZE,
+    programId: token.TOKEN_PROGRAM_ID,
+  });
+
+  const createMintIx = token.createInitializeMint2Instruction(
+    TOKEN,
+    6,
+    launchSigner,
+    null,
   );
-  tx.recentBlockhash = (
-    await provider.connection.getLatestBlockhash()
-  ).blockhash;
-  tx.feePayer = payer.publicKey;
-  tx.sign(payer);
 
-  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
-  await provider.connection.confirmTransaction(txHash, "confirmed");
-
-  const initializeLaunchTxSignature = await launchpad
+  const initializeLaunchIx = await launchpad
     .initializeLaunchIx({
       tokenName: TOKEN_NAME,
       tokenSymbol: TOKEN_SYMBOL,
@@ -100,12 +96,25 @@ export const launch = async () => {
       additionalTokensRecipient: ADDITIONAL_CARVEOUT_RECIPIENT,
       launchAuthority: LAUNCH_AUTHORITY,
     })
-    .rpc();
+    .instruction();
 
-  console.log("Launch initialized", initializeLaunchTxSignature);
+  const tx = new Transaction().add(
+    createAccountIx,
+    createMintIx,
+    initializeLaunchIx,
+  );
+  tx.recentBlockhash = (
+    await provider.connection.getLatestBlockhash()
+  ).blockhash;
+  tx.feePayer = payer.publicKey;
+  tx.sign(payer);
+
+  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
+  await provider.connection.confirmTransaction(txHash, "confirmed");
+
+  console.log("Launch initialized", txHash);
 
   console.log("Launch address:", launch.toBase58());
-  // await launchpad.startLaunchIx({ launch }).rpc();
 };
 
 launch().catch(console.error);
