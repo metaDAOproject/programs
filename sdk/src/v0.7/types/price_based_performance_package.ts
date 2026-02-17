@@ -783,6 +783,13 @@ export type PriceBasedPerformancePackage = {
       name: "ChangeProposed";
       fields: [
         {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
           name: "locker";
           type: "publicKey";
           index: false;
@@ -1726,6 +1733,13 @@ export const IDL: PriceBasedPerformancePackage = {
     {
       name: "ChangeProposed",
       fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
         {
           name: "locker",
           type: "publicKey",

@@ -314,8 +314,8 @@ export default function suite() {
 
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
-    // Advance time by 2 days + 1 second
-    await this.advanceBySeconds(60 * 60 * 24 * 2 + 1);
+    // Advance time by exactly 2 days (the boundary)
+    await this.advanceBySeconds(60 * 60 * 24 * 2);
 
     const callbacks = expectError(
       "FundingRecordApprovalPeriodOver",
