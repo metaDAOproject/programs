@@ -966,6 +966,11 @@ export type PriceBasedPerformancePackage = {
       name: "InvalidAdmin";
       msg: "Invalid admin";
     },
+    {
+      code: 6014;
+      name: "TotalTokenAmountOverflow";
+      msg: "Total token amount calculation would overflow";
+    },
   ];
 };
 
@@ -1936,6 +1941,11 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6013,
       name: "InvalidAdmin",
       msg: "Invalid admin",
+    },
+    {
+      code: 6014,
+      name: "TotalTokenAmountOverflow",
+      msg: "Total token amount calculation would overflow",
     },
   ],
 };
