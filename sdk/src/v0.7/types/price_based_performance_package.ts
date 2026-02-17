@@ -262,6 +262,16 @@ export type PriceBasedPerformancePackage = {
             "The party executing the change (must be opposite of proposer)",
           ];
         },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [];
     },
@@ -277,6 +287,16 @@ export type PriceBasedPerformancePackage = {
           name: "currentAuthority";
           isMut: false;
           isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         },
       ];
       args: [
@@ -1213,6 +1233,16 @@ export const IDL: PriceBasedPerformancePackage = {
             "The party executing the change (must be opposite of proposer)",
           ],
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [],
     },
@@ -1228,6 +1258,16 @@ export const IDL: PriceBasedPerformancePackage = {
           name: "currentAuthority",
           isMut: false,
           isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
         },
       ],
       args: [

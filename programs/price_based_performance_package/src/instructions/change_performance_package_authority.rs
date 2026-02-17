@@ -9,6 +9,7 @@ pub struct ChangePerformancePackageAuthorityParams {
     pub new_performance_package_authority: Pubkey,
 }
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct ChangePerformancePackageAuthority<'info> {
     #[account(mut)]
@@ -26,6 +27,7 @@ impl<'info> ChangePerformancePackageAuthority<'info> {
         let Self {
             performance_package,
             current_authority: _,
+            ..
         } = ctx.accounts;
 
         let ChangePerformancePackageAuthorityParams {
@@ -41,7 +43,7 @@ impl<'info> ChangePerformancePackageAuthority<'info> {
         performance_package.seq_num += 1;
 
         // Emit event
-        emit!(PerformancePackageAuthorityChanged {
+        emit_cpi!(PerformancePackageAuthorityChanged {
             common: CommonFields::new(&clock, performance_package.seq_num),
             locker: performance_package.key(),
             old_authority,
