@@ -169,11 +169,13 @@ require!(account.status == Status::Active, MyError::InvalidStatus);
 require!(signer.key() == account.authority, MyError::Unauthorized);
 ```
 
+### After Editing Program Code
+**Always run `./rebuild.sh` after modifying any Rust code under `programs/`.** This rebuilds all programs, regenerates the SDK types, and lints — ensuring tests run against your latest changes.
+
 ### Adding New Instructions
 1. Add instruction to Rust program in `programs/[program]/src/instructions/`
 2. Update client methods in SDK (`sdk/src/v0.7/`)
 3. Add unit tests in `tests/[program]/unit/`
-4. Run `./rebuild.sh` to sync types
 
 ### Testing with Bankrun
 Tests use `solana-bankrun` for deterministic testing without external RPC:

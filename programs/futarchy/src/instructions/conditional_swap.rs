@@ -37,6 +37,8 @@ pub struct ConditionalSwap<'info> {
     pub amm_fail_quote_vault: Box<Account<'info, TokenAccount>>,
 
     pub trader: Signer<'info>,
+    // Intentionally using `token::` instead of `associated_token::`
+    // DEX integrators may route through non-ATA token accounts.
     #[account(mut, token::authority = trader)]
     pub user_input_account: Account<'info, TokenAccount>,
     #[account(mut)]

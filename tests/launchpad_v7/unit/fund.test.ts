@@ -172,6 +172,26 @@ export default function suite() {
     );
   });
 
+  it("fails to fund the launch at the exact boundary second", async function () {
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
+    await this.createTokenAccount(META, this.payer.publicKey);
+
+    const fundAmount = new BN(100_000000); // 100 USDC
+
+    // Advance time to exactly the boundary (start + secondsForLaunch)
+    await this.advanceBySeconds(secondsForLaunch);
+
+    try {
+      await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
+      assert.fail("Expected fund instruction to fail at exact boundary");
+    } catch (e) {
+      assert.include(e.message, "LaunchExpired");
+    }
+  });
+
   it("fails to fund the launch after time expires", async function () {
     await launchpadClient
       .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })

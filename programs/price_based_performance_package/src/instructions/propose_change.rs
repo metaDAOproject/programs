@@ -1,6 +1,6 @@
 use crate::{
-    ChangeProposed, ChangeRequest, ChangeType, PerformancePackage, PerformancePackageState,
-    PriceBasedPerformancePackageError, ProposerType,
+    ChangeProposed, ChangeRequest, ChangeType, CommonFields, PerformancePackage,
+    PerformancePackageState, PriceBasedPerformancePackageError, ProposerType,
 };
 use anchor_lang::prelude::*;
 
@@ -92,8 +92,11 @@ impl<'info> ProposeChange<'info> {
             pda_bump: ctx.bumps.change_request,
         });
 
+        performance_package.seq_num += 1;
+
         // Emit event
         emit!(ChangeProposed {
+            common: CommonFields::new(&clock, performance_package.seq_num),
             locker: performance_package.key(),
             change_request: change_request.key(),
             proposer: proposer.key(),
