@@ -85,6 +85,12 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
             FutarchyError::InvalidSquadsProposalStatus
         );
 
+        // Ensure the squads proposal is not invalidated by a previous config transaction
+        require_gt!(
+            self.squads_proposal.transaction_index,
+            self.squads_multisig.stale_transaction_index
+        );
+
         // Validate the proposal references the vault transaction
         require_eq!(
             self.squads_proposal.transaction_index,

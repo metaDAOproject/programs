@@ -175,6 +175,154 @@ export default function suite() {
       .rpc();
   });
 
+  it("throws if the DAO has an active optimistic proposal", async function () {
+    const newSpendingLimitPda = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    })[0];
+
+    const addSpendingLimitIx = multisig.instructions.multisigAddSpendingLimit({
+      multisigPda,
+      spendingLimit: newSpendingLimitPda,
+      configAuthority: dao,
+      rentPayer: this.payer.publicKey,
+      createKey: dao,
+      vaultIndex: 0,
+      mint: USDC,
+      amount: BigInt(50_000 * 10 ** 6),
+      period: multisig.types.Period.Month,
+      members: [this.payer.publicKey],
+      destinations: [],
+      memo: "",
+    });
+
+    const proposalResult = await this.initializeAndLaunchProposal({
+      dao,
+      instructions: [addSpendingLimitIx],
+    });
+
+    proposal = proposalResult.proposal;
+    squadsProposal = proposalResult.squadsProposal;
+
+    const { question, quoteVault } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao,
+    );
+
+    await this.conditionalVault
+      .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
+      .rpc();
+
+    // Trade heavily on pass market to make it pass
+    await this.futarchy
+      .conditionalSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        proposal,
+        market: "pass",
+        swapType: "buy",
+        inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
+      })
+      .rpc();
+
+    // Crank TWAP to build up price history
+    for (let i = 0; i < 100; i++) {
+      this.advanceBySeconds(10_000);
+
+      await this.futarchy
+        .conditionalSwapIx({
+          dao,
+          baseMint: META,
+          quoteMint: USDC,
+          proposal,
+          market: "pass",
+          swapType: "buy",
+          inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+        ])
+        .rpc();
+    }
+
+    // Finalize the proposal
+    await this.futarchy.finalizeProposal(proposal);
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.exists(storedProposal.state.passed);
+
+    // Set an active optimistic proposal on the DAO
+    const daoAccount = await this.futarchy.getDao(dao);
+    daoAccount.optimisticProposal = {
+      squadsProposal: PublicKey.default,
+      enqueuedTimestamp: new BN(0),
+    };
+    const daoAccountBuffer =
+      await this.futarchy.autocrat.account.dao.coder.accounts.encode(
+        "dao",
+        daoAccount,
+      );
+    const daoBanksAccount = await this.banksClient.getAccount(dao);
+    daoBanksAccount.data.set(daoAccountBuffer, 0);
+    this.context.setAccount(dao, daoBanksAccount);
+
+    const [vaultTransactionPda] = multisig.getTransactionPda({
+      multisigPda: multisigPda,
+      index: 1n,
+    });
+
+    const transactionAccount =
+      await multisig.accounts.VaultTransaction.fromAccountAddress(
+        this.squadsConnection,
+        vaultTransactionPda,
+      );
+
+    const [vaultPda] = multisig.getVaultPda({
+      multisigPda,
+      index: transactionAccount.vaultIndex,
+      programId: multisig.PROGRAM_ID,
+    });
+
+    const { accountMetas } = await multisig.utils.accountsForTransactionExecute(
+      {
+        connection: this.squadsConnection,
+        message: transactionAccount.message,
+        ephemeralSignerBumps: [...transactionAccount.ephemeralSignerBumps],
+        vaultPda,
+        transactionPda: vaultTransactionPda,
+        programId: multisig.PROGRAM_ID,
+      },
+    );
+
+    const callbacks = expectError(
+      "ActiveOptimisticProposalAlreadyEnqueued",
+      "Should fail because there is an active optimistic proposal",
+    );
+
+    await this.futarchy.autocrat.methods
+      .executeSpendingLimitChange()
+      .accounts({
+        squadsMultisig: multisigPda,
+        proposal,
+        dao,
+        squadsProposal,
+        squadsMultisigProgram: multisig.PROGRAM_ID,
+        vaultTransaction: vaultTransactionPda,
+      })
+      .remainingAccounts(
+        accountMetas.map((meta) =>
+          meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta,
+        ),
+      )
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   it("throws if the transaction is to remove the DAO as a member", async function () {
     const removeMemberIx = multisig.instructions.multisigRemoveMember({
       multisigPda,

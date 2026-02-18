@@ -795,5 +795,54 @@ export default function suite() {
         .then((b: any) => b.signers([this.payer]).rpc())
         .then(callbacks[0], callbacks[1]);
     });
+
+    it("fails when squads proposal is stale", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      // Create the squads proposal while stale_transaction_index is 0
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      // Now mutate the multisig to set staleTransactionIndex = 1
+      const multisigAccount = await squads.accounts.Multisig.fromAccountAddress(
+        this.squadsConnection,
+        multisigPda,
+      );
+
+      const modifiedMultisig = squads.accounts.Multisig.fromArgs({
+        ...multisigAccount,
+        staleTransactionIndex: new BN(1),
+      });
+      const [serialized] = modifiedMultisig.serialize();
+
+      const multisigBanksAccount =
+        await this.banksClient.getAccount(multisigPda);
+      multisigBanksAccount.data.set(serialized, 0);
+      this.context.setAccount(multisigPda, multisigBanksAccount);
+
+      const callbacks = expectError(
+        "RequireGtViolated",
+        "Squads proposal is stale",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
   });
 }
