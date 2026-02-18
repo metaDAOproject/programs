@@ -18,7 +18,7 @@ pub struct UpdateDaoParams {
 #[event_cpi]
 pub struct UpdateDao<'info> {
     #[account(mut, has_one = squads_multisig_vault)]
-    pub dao: Account<'info, Dao>,
+    pub dao: Box<Account<'info, Dao>>,
     pub squads_multisig_vault: Signer<'info>,
 }
 

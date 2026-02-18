@@ -27,7 +27,7 @@ pub struct InitializeDao<'info> {
     #[account(
         init,
         payer = payer,
-        seeds = [b"dao", dao_creator.key().as_ref(), params.nonce.to_le_bytes().as_ref()],
+        seeds = [SEED_DAO, dao_creator.key().as_ref(), params.nonce.to_le_bytes().as_ref()],
         bump,
         space = 8 + Dao::INIT_SPACE,
     )]
@@ -90,7 +90,7 @@ impl InitializeDao<'_> {
 
         let creator_key = ctx.accounts.dao_creator.key();
         let dao_seeds = &[
-            b"dao".as_ref(),
+            SEED_DAO,
             creator_key.as_ref(),
             &nonce.to_le_bytes(),
             &[ctx.bumps.dao],

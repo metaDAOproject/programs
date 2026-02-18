@@ -109,7 +109,7 @@ impl FinalizeProposal<'_> {
 
         let squads_proposal_key = squads_proposal.key();
         let proposal_seeds = &[
-            b"proposal",
+            SEED_PROPOSAL,
             squads_proposal_key.as_ref(),
             &[proposal.pda_bump],
         ];
@@ -142,7 +142,8 @@ impl FinalizeProposal<'_> {
         let threshold_bps = if proposal.is_team_sponsored {
             dao.team_sponsored_pass_threshold_bps
         } else {
-            dao.pass_threshold_bps as i16
+            // Thanks to invariants this will never error - still it's better to be safe here.
+            i16::try_from(dao.pass_threshold_bps).map_err(|_| FutarchyError::CastingOverflow)?
         };
 
         // this can't overflow because each twap can only be MAX_PRICE (~1e31),
@@ -175,7 +176,7 @@ impl FinalizeProposal<'_> {
 
         let dao_nonce = &dao.nonce.to_le_bytes();
         let dao_creator_key = &dao.dao_creator.as_ref();
-        let dao_seeds = &[b"dao".as_ref(), dao_creator_key, dao_nonce, &[dao.pda_bump]];
+        let dao_seeds = &[SEED_DAO, dao_creator_key, dao_nonce, &[dao.pda_bump]];
         let dao_signer = &[&dao_seeds[..]];
 
         if new_proposal_state == ProposalState::Passed {
