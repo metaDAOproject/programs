@@ -3034,6 +3034,43 @@ export type Futarchy = {
         },
       ];
     },
+    {
+      name: "AdminFixPositionAuthorityEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "admin";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "ammPosition";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oldAuthority";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newAuthority";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -6251,6 +6288,43 @@ export const IDL: Futarchy = {
         {
           name: "baseFeesCollected",
           type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "AdminFixPositionAuthorityEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "admin",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "ammPosition",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oldAuthority",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newAuthority",
+          type: "publicKey",
           index: false,
         },
       ],

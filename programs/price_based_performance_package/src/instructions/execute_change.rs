@@ -4,6 +4,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct ExecuteChange<'info> {
     #[account(
@@ -74,7 +75,7 @@ impl<'info> ExecuteChange<'info> {
         performance_package.seq_num += 1;
         // Emit event
         let clock = Clock::get()?;
-        emit!(ChangeExecuted {
+        emit_cpi!(ChangeExecuted {
             common: CommonFields::new(&clock, performance_package.seq_num),
             performance_package: performance_package.key(),
             change_request: change_request.key(),

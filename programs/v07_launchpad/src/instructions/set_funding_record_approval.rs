@@ -41,7 +41,7 @@ impl SetFundingRecordApproval<'_> {
             .unwrap()
             .saturating_add(60 * 60 * 24 * 2);
 
-        require_gte!(
+        require_gt!(
             two_days_after_close,
             clock.unix_timestamp,
             LaunchpadError::FundingRecordApprovalPeriodOver

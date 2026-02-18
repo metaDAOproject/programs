@@ -36,8 +36,8 @@ pub struct Fund<'info> {
 
     #[account(
         mut,
-        token::mint = launch.quote_mint,
-        token::authority = funder
+        associated_token::mint = launch.quote_mint,
+        associated_token::authority = funder
     )]
     pub funder_quote_account: Account<'info, TokenAccount>,
 
@@ -62,7 +62,7 @@ impl Fund<'_> {
 
         let clock = Clock::get()?;
 
-        require_gte!(
+        require_gt!(
             self.launch.unix_timestamp_started.unwrap() + self.launch.seconds_for_launch as i64,
             clock.unix_timestamp,
             LaunchpadError::LaunchExpired
