@@ -6,6 +6,7 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import BN from "bn.js";
+import { expectError } from "../../utils.js";
 
 export default function () {
   let createKey: Keypair;
@@ -88,6 +89,22 @@ export default function () {
       })
       .signers([newAuthority])
       .rpc();
+  });
+
+  it("should fail if new authority equals current recipient", async function () {
+    const callbacks = expectError(
+      "RecipientAuthorityMustDiffer",
+      "Recipient and performance package authority must be different keys",
+    );
+
+    await this.priceBasedPerformancePackage
+      .changePerformancePackageAuthorityIx({
+        performancePackage,
+        currentAuthority: this.payer.publicKey,
+        newPerformancePackageAuthority: recipient.publicKey,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("should fail if unauthorized party tries to change authority", async function () {
