@@ -70,6 +70,15 @@ pub mod permissionless_account {
 }
 
 impl InitializeDao<'_> {
+    pub fn validate(&self) -> Result<()> {
+        require_keys_neq!(
+            self.base_mint.key(),
+            self.quote_mint.key(),
+            FutarchyError::InvalidMint
+        );
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, params: InitializeDaoParams) -> Result<()> {
         let InitializeDaoParams {
             twap_initial_observation,

@@ -177,6 +177,34 @@ export default function suite() {
     assert.equal(storedSpendingLimit.destinations.length, 0);
   });
 
+  it("doesn't allow DAOs with identical base and quote mints", async function () {
+    const SAME_MINT = await this.createMint(this.payer.publicKey, 6);
+
+    const callbacks = expectError(
+      "InvalidMint",
+      "DAO initialized despite base and quote mints being identical",
+    );
+
+    await this.futarchy
+      .initializeDaoIx({
+        baseMint: SAME_MINT,
+        quoteMint: SAME_MINT,
+        params: {
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(1),
+          minBaseFutarchicLiquidity: new BN(1000),
+          passThresholdBps: 300,
+          nonce: new BN(9999),
+          initialSpendingLimit: null,
+        },
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   it("doesn't allow DAOs with proposal duration less than TWAP start delay", async function () {
     const callbacks = expectError(
       "ProposalDurationTooShort",
