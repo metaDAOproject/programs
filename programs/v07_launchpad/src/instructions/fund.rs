@@ -90,13 +90,13 @@ impl Fund<'_> {
 
         if funding_record.funder == ctx.accounts.funder.key() {
             // Existing funding record — flush accumulator before changing committed_amount
-            let activation_ts = ctx.accounts.launch.unix_timestamp_started.unwrap()
+            let activation_timestamp = ctx.accounts.launch.unix_timestamp_started.unwrap()
                 + ctx.accounts.launch.accumulator_activation_delay_seconds as i64;
             let now = clock.unix_timestamp;
 
-            if funding_record.last_accumulator_update > 0 && now > activation_ts {
+            if funding_record.last_accumulator_update > 0 && now > activation_timestamp {
                 let period_start =
-                    std::cmp::max(funding_record.last_accumulator_update, activation_ts);
+                    std::cmp::max(funding_record.last_accumulator_update, activation_timestamp);
                 let elapsed = now - period_start;
                 funding_record.committed_amount_accumulator +=
                     (funding_record.committed_amount as u128) * (elapsed as u128);
