@@ -826,6 +826,18 @@ export type LaunchpadV7 = {
             ];
             type: "u64";
           },
+          {
+            name: "committedAmountAccumulator";
+            docs: [
+              "Running integral of committed_amount over time (committed_amount * seconds).",
+            ];
+            type: "u128";
+          },
+          {
+            name: "lastAccumulatorUpdate";
+            docs: ["Unix timestamp of the last accumulator update."];
+            type: "i64";
+          },
         ];
       };
     },
@@ -1027,6 +1039,14 @@ export type LaunchpadV7 = {
             docs: ["Whether the performance package has been initialized."];
             type: "bool";
           },
+          {
+            name: "accumulatorActivationDelaySeconds";
+            docs: [
+              "Number of seconds after launch start before the funding accumulator",
+              "begins tracking.",
+            ];
+            type: "u32";
+          },
         ];
       };
     },
@@ -1106,6 +1126,10 @@ export type LaunchpadV7 = {
           {
             name: "additionalTokensAmount";
             type: "u64";
+          },
+          {
+            name: "accumulatorActivationDelaySeconds";
+            type: "u32";
           },
         ];
       };
@@ -1239,6 +1263,11 @@ export type LaunchpadV7 = {
           };
           index: false;
         },
+        {
+          name: "accumulatorActivationDelaySeconds";
+          type: "u32";
+          index: false;
+        },
       ];
     },
     {
@@ -1306,6 +1335,11 @@ export type LaunchpadV7 = {
         {
           name: "totalCommitted";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "committedAmountAccumulator";
+          type: "u128";
           index: false;
         },
       ];
@@ -1695,6 +1729,11 @@ export type LaunchpadV7 = {
       code: 6029;
       name: "InvalidDao";
       msg: "Invalid DAO";
+    },
+    {
+      code: 6030;
+      name: "InvalidAccumulatorActivationDelaySeconds";
+      msg: "Accumulator activation delay must be less than the launch duration";
     },
   ];
 };
@@ -2527,6 +2566,18 @@ export const IDL: LaunchpadV7 = {
             ],
             type: "u64",
           },
+          {
+            name: "committedAmountAccumulator",
+            docs: [
+              "Running integral of committed_amount over time (committed_amount * seconds).",
+            ],
+            type: "u128",
+          },
+          {
+            name: "lastAccumulatorUpdate",
+            docs: ["Unix timestamp of the last accumulator update."],
+            type: "i64",
+          },
         ],
       },
     },
@@ -2728,6 +2779,14 @@ export const IDL: LaunchpadV7 = {
             docs: ["Whether the performance package has been initialized."],
             type: "bool",
           },
+          {
+            name: "accumulatorActivationDelaySeconds",
+            docs: [
+              "Number of seconds after launch start before the funding accumulator",
+              "begins tracking.",
+            ],
+            type: "u32",
+          },
         ],
       },
     },
@@ -2807,6 +2866,10 @@ export const IDL: LaunchpadV7 = {
           {
             name: "additionalTokensAmount",
             type: "u64",
+          },
+          {
+            name: "accumulatorActivationDelaySeconds",
+            type: "u32",
           },
         ],
       },
@@ -2940,6 +3003,11 @@ export const IDL: LaunchpadV7 = {
           },
           index: false,
         },
+        {
+          name: "accumulatorActivationDelaySeconds",
+          type: "u32",
+          index: false,
+        },
       ],
     },
     {
@@ -3007,6 +3075,11 @@ export const IDL: LaunchpadV7 = {
         {
           name: "totalCommitted",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "committedAmountAccumulator",
+          type: "u128",
           index: false,
         },
       ],
@@ -3396,6 +3469,11 @@ export const IDL: LaunchpadV7 = {
       code: 6029,
       name: "InvalidDao",
       msg: "Invalid DAO",
+    },
+    {
+      code: 6030,
+      name: "InvalidAccumulatorActivationDelaySeconds",
+      msg: "Accumulator activation delay must be less than the launch duration",
     },
   ],
 };
