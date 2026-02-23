@@ -62,4 +62,6 @@ pub enum LaunchpadError {
     PerformancePackageAlreadyInitialized,
     #[msg("Invalid DAO")]
     InvalidDao,
+    #[msg("Accumulator activation delay must be less than the launch duration")]
+    InvalidAccumulatorActivationDelaySeconds,
 }
