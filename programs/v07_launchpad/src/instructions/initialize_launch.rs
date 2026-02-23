@@ -30,6 +30,7 @@ pub struct InitializeLaunchArgs {
     pub months_until_insiders_can_unlock: u8,
     pub team_address: Pubkey,
     pub additional_tokens_amount: u64,
+    pub accumulator_activation_delay_seconds: u32,
 }
 
 #[event_cpi]
@@ -123,6 +124,12 @@ impl InitializeLaunch<'_> {
             60 * 60 * 24 * 14,
             args.seconds_for_launch,
             LaunchpadError::InvalidSecondsForLaunch
+        );
+
+        require_gt!(
+            args.seconds_for_launch,
+            args.accumulator_activation_delay_seconds,
+            LaunchpadError::InvalidAccumulatorActivationDelaySeconds
         );
 
         require!(
@@ -239,6 +246,7 @@ impl InitializeLaunch<'_> {
             additional_tokens_claimed: false,
             unix_timestamp_completed: None,
             is_performance_package_initialized: false,
+            accumulator_activation_delay_seconds: args.accumulator_activation_delay_seconds,
         });
 
         let clock = Clock::get()?;
@@ -266,6 +274,7 @@ impl InitializeLaunch<'_> {
                 .additional_tokens_recipient
                 .as_ref()
                 .map(|a| a.key()),
+            accumulator_activation_delay_seconds: args.accumulator_activation_delay_seconds,
         });
 
         let launch_key = ctx.accounts.launch.key();

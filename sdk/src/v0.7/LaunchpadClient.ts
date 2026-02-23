@@ -152,6 +152,7 @@ export class LaunchpadClient {
     payer = this.provider.publicKey,
     additionalTokensRecipient,
     additionalTokensAmount,
+    accumulatorActivationDelaySeconds = 0,
   }: {
     tokenName: string;
     tokenSymbol: string;
@@ -170,6 +171,7 @@ export class LaunchpadClient {
     payer?: PublicKey;
     additionalTokensRecipient?: PublicKey;
     additionalTokensAmount?: BN;
+    accumulatorActivationDelaySeconds?: number;
   }) {
     const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
     const [launchSigner] = getLaunchSignerAddr(
@@ -203,6 +205,7 @@ export class LaunchpadClient {
         monthsUntilInsidersCanUnlock,
         teamAddress,
         additionalTokensAmount: additionalTokensAmount ?? new BN(0),
+        accumulatorActivationDelaySeconds,
       })
       .accounts({
         launch,
