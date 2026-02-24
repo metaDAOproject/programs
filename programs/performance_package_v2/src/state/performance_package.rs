@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use futarchy::state::{Dao, PoolState};
 
-use crate::{PerformancePackageError, MAX_TRANCHES};
+use crate::{PerformancePackageError, MAX_MIN_DURATION, MAX_TRANCHES};
 
 /// Lifecycle state for the performance package.
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
@@ -97,6 +97,11 @@ impl OracleReader {
                 require!(
                     min_duration > 0,
                     PerformancePackageError::InvalidVestingSchedule
+                );
+                require_gte!(
+                    MAX_MIN_DURATION,
+                    min_duration,
+                    PerformancePackageError::MinDurationTooLarge
                 );
                 Ok(())
             }

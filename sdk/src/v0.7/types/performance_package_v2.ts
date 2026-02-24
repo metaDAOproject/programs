@@ -9,6 +9,11 @@ export type PerformancePackageV2 = {
       };
       value: "10";
     },
+    {
+      name: "MAX_MIN_DURATION";
+      type: "u32";
+      value: "60 * 60 * 24 * 365";
+    },
   ];
   instructions: [
     {
@@ -989,6 +994,11 @@ export type PerformancePackageV2 = {
       name: "NoChangesProposed";
       msg: "All optional change fields are None";
     },
+    {
+      code: 6019;
+      name: "MinDurationTooLarge";
+      msg: "min_duration exceeds maximum allowed (365 days)";
+    },
   ];
 };
 
@@ -1002,6 +1012,11 @@ export const IDL: PerformancePackageV2 = {
         defined: "usize",
       },
       value: "10",
+    },
+    {
+      name: "MAX_MIN_DURATION",
+      type: "u32",
+      value: "60 * 60 * 24 * 365",
     },
   ],
   instructions: [
@@ -1982,6 +1997,11 @@ export const IDL: PerformancePackageV2 = {
       code: 6018,
       name: "NoChangesProposed",
       msg: "All optional change fields are None",
+    },
+    {
+      code: 6019,
+      name: "MinDurationTooLarge",
+      msg: "min_duration exceeds maximum allowed (365 days)",
     },
   ],
 };
