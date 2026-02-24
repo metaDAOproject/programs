@@ -168,6 +168,10 @@ impl OracleReader {
                 start_time,
                 ..
             } => {
+                // record_start() has not been called yet
+                if *start_time == 0 {
+                    return false;
+                }
                 let clock = Clock::get();
                 match clock {
                     Ok(clock) => {
