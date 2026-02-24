@@ -12,6 +12,7 @@ pub mod admin {
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct ClosePerformancePackage<'info> {
     #[account(
@@ -51,7 +52,7 @@ impl ClosePerformancePackage<'_> {
         let pp = &ctx.accounts.performance_package;
         let clock = Clock::get()?;
 
-        emit!(PerformancePackageClosedEvent {
+        emit_cpi!(PerformancePackageClosedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

@@ -95,7 +95,7 @@ impl<'info> ProposeChange<'info> {
         performance_package.seq_num += 1;
 
         // Emit event
-        emit!(ChangeProposed {
+        emit_cpi!(ChangeProposed {
             common: CommonFields::new(&clock, performance_package.seq_num),
             locker: performance_package.key(),
             change_request: change_request.key(),

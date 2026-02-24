@@ -5,6 +5,7 @@ use crate::{
     PERFORMANCE_PACKAGE_SEED,
 };
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct ChangeAuthority<'info> {
     #[account(
@@ -37,7 +38,7 @@ impl ChangeAuthority<'_> {
 
         let clock = Clock::get()?;
 
-        emit!(AuthorityChangedEvent {
+        emit_cpi!(AuthorityChangedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

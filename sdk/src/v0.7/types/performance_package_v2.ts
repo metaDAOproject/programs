@@ -64,6 +64,16 @@ export type PerformancePackageV2 = {
           isMut: false;
           isSigner: false;
         },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [
         {
@@ -86,6 +96,16 @@ export type PerformancePackageV2 = {
           name: "signer";
           isMut: false;
           isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         },
       ];
       args: [];
@@ -138,6 +158,21 @@ export type PerformancePackageV2 = {
           isMut: false;
           isSigner: false;
         },
+        {
+          name: "mintGovernorEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [];
     },
@@ -160,6 +195,16 @@ export type PerformancePackageV2 = {
           isMut: false;
           isSigner: false;
           docs: ["The new authority address"];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         },
       ];
       args: [];
@@ -189,6 +234,16 @@ export type PerformancePackageV2 = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         },
@@ -225,6 +280,16 @@ export type PerformancePackageV2 = {
           isMut: true;
           isSigner: false;
         },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [];
     },
@@ -244,6 +309,16 @@ export type PerformancePackageV2 = {
         {
           name: "rentDestination";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
           isSigner: false;
         },
       ];
@@ -1068,6 +1143,16 @@ export const IDL: PerformancePackageV2 = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [
         {
@@ -1090,6 +1175,16 @@ export const IDL: PerformancePackageV2 = {
           name: "signer",
           isMut: false,
           isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
         },
       ],
       args: [],
@@ -1142,6 +1237,21 @@ export const IDL: PerformancePackageV2 = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "mintGovernorEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [],
     },
@@ -1164,6 +1274,16 @@ export const IDL: PerformancePackageV2 = {
           isMut: false,
           isSigner: false,
           docs: ["The new authority address"],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
         },
       ],
       args: [],
@@ -1193,6 +1313,16 @@ export const IDL: PerformancePackageV2 = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -1229,6 +1359,16 @@ export const IDL: PerformancePackageV2 = {
           isMut: true,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [],
     },
@@ -1248,6 +1388,16 @@ export const IDL: PerformancePackageV2 = {
         {
           name: "rentDestination",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
           isSigner: false,
         },
       ],

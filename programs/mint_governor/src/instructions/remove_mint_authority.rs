@@ -4,6 +4,7 @@ use crate::{
     CommonFields, MintAuthority, MintAuthorityRemovedEvent, MintGovernor, MintGovernorError,
 };
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct RemoveMintAuthority<'info> {
     #[account(mut)]
@@ -39,7 +40,7 @@ impl RemoveMintAuthority<'_> {
         // Emit event
         let clock = Clock::get()?;
 
-        emit!(MintAuthorityRemovedEvent {
+        emit_cpi!(MintAuthorityRemovedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,
