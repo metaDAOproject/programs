@@ -599,9 +599,6 @@ export default function suite() {
 
     await createRecipientAta(this, mint, recipient.publicKey);
 
-    // Advance time so effective aggregator will be non-zero
-    await this.advanceBySeconds(10);
-
     // === FIRST UNLOCK CYCLE ===
     await ppClient
       .startUnlockIx({
@@ -1005,9 +1002,6 @@ export default function suite() {
     // Create recipient ATA
     await createRecipientAta(this, mint, recipient.publicKey);
 
-    // Advance time so the effective aggregator will be non-zero
-    await this.advanceBySeconds(10);
-
     // Start unlock
     await ppClient
       .startUnlockIx({
@@ -1020,10 +1014,7 @@ export default function suite() {
 
     // Verify start snapshot was recorded
     let ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
-    const startValue =
-      ppAccount.oracleReader.futarchyTwap.startValue.toString();
     const startTime = ppAccount.oracleReader.futarchyTwap.startTime.toString();
-    assert.notEqual(startValue, "0");
     assert.notEqual(startTime, "0");
     assert.equal(ppAccount.oracleReader.futarchyTwap.endValue.toString(), "0");
     assert.equal(ppAccount.oracleReader.futarchyTwap.endTime.toString(), "0");
@@ -1103,9 +1094,6 @@ export default function suite() {
 
     // Create recipient ATA
     await createRecipientAta(this, mint, recipient.publicKey);
-
-    // Advance time so the effective aggregator will be non-zero
-    await this.advanceBySeconds(10);
 
     // Start unlock
     await ppClient

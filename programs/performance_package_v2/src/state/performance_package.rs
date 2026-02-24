@@ -59,26 +59,27 @@ fn read_futarchy_aggregator(
     let dao = Dao::try_deserialize(&mut &dao_data[..])
         .map_err(|_| PerformancePackageError::OracleParseError)?;
 
-    // Read the oracle data from the spot pool
-    let (aggregator, last_updated_timestamp, last_observation) = match &dao.amm.state {
-        PoolState::Spot { spot } => (
-            spot.oracle.aggregator,
-            spot.oracle.last_updated_timestamp,
-            spot.oracle.last_observation,
-        ),
-        PoolState::Futarchy { spot, .. } => (
-            spot.oracle.aggregator,
-            spot.oracle.last_updated_timestamp,
-            spot.oracle.last_observation,
-        ),
+    // Read the spot oracle
+    let oracle = match &dao.amm.state {
+        PoolState::Spot { spot } | PoolState::Futarchy { spot, .. } => &spot.oracle,
     };
 
-    // Compute effective aggregator at current time by extrapolating
-    // from the last update using the last observation value
+    // Ensure the oracle's start delay has passed before reading the aggregator.
+    // During the delay period, the aggregator stays at zero while the observation
+    // tracks price changes. Reading it during or right after the delay would
+    // produce an artificially low effective aggregator, distorting the TWAP.
     let clock = Clock::get()?;
-    let time_since_update = clock.unix_timestamp.saturating_sub(last_updated_timestamp) as u128;
-    let effective_aggregator =
-        aggregator.wrapping_add(last_observation.saturating_mul(time_since_update));
+    let twap_start_timestamp = oracle.created_at_timestamp + oracle.start_delay_seconds as i64;
+    require!(
+        clock.unix_timestamp >= twap_start_timestamp,
+        PerformancePackageError::OracleInvalidState
+    );
+    let time_since_update = clock
+        .unix_timestamp
+        .saturating_sub(oracle.last_updated_timestamp) as u128;
+    let effective_aggregator = oracle
+        .aggregator
+        .wrapping_add(oracle.last_observation.saturating_mul(time_since_update));
 
     Ok((effective_aggregator, clock.unix_timestamp))
 }

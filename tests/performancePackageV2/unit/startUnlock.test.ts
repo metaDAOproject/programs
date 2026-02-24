@@ -278,12 +278,6 @@ export default function suite() {
     );
     assert.equal(ppAccount.oracleReader.futarchyTwap.startTime.toString(), "0");
 
-    // Advance time so the effective aggregator will be non-zero
-    // The effective_aggregator = aggregator + last_observation * time_since_update
-    // After DAO init, aggregator is 0 but last_observation = twapInitialObservation
-    // We need time_since_update > 0 for effective_aggregator to be non-zero
-    await this.advanceBySeconds(10);
-
     // Get current time before starting unlock
     const currentClock = await this.banksClient.getClock();
     const currentTimestamp = Number(currentClock.unixTimestamp);
@@ -304,11 +298,7 @@ export default function suite() {
     assert.isDefined(ppAccount.oracleReader.futarchyTwap);
 
     const futarchyTwap = ppAccount.oracleReader.futarchyTwap;
-    // start_value should be non-zero (the aggregator value from the DAO)
-    assert.notEqual(futarchyTwap.startValue.toString(), "0");
-    // start_time should be close to current timestamp
-    const startTime = Number(futarchyTwap.startTime.toString());
-    assert.isAtLeast(startTime, currentTimestamp);
+    assert.equal(Number(futarchyTwap.startTime.toString()), currentTimestamp);
     // end values should still be 0 (not recorded yet)
     assert.equal(futarchyTwap.endValue.toString(), "0");
     assert.equal(futarchyTwap.endTime.toString(), "0");
