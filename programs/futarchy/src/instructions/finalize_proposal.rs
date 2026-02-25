@@ -118,11 +118,12 @@ impl FinalizeProposal<'_> {
         let clock = Clock::get()?;
 
         let calculate_twap = |amm: &Pool| -> Result<u128> {
-            let seconds_passed = amm.oracle.last_updated_timestamp - proposal.timestamp_enqueued;
+            let twap_start_timestamp =
+                amm.oracle.created_at_timestamp + amm.oracle.start_delay_seconds as i64;
 
-            require_gte!(
-                seconds_passed,
-                proposal.duration_in_seconds as i64,
+            require_gt!(
+                amm.oracle.last_updated_timestamp,
+                twap_start_timestamp,
                 FutarchyError::MarketsTooYoung
             );
 
