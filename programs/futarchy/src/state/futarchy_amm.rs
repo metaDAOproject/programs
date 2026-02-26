@@ -406,7 +406,7 @@ impl Pool {
 
             // if this saturates, the aggregator will wrap back to 0, so this value doesn't
             // really matter. we just can't panic.
-            let weighted_observation = new_observation.saturating_mul(time_difference);
+            let weighted_observation = last_observation.saturating_mul(time_difference);
 
             oracle.aggregator.wrapping_add(weighted_observation)
         };
@@ -449,17 +449,23 @@ impl Pool {
     }
 
     /// Returns the time-weighted average price since market creation
-    pub fn get_twap(&self) -> Result<u128> {
+    pub fn get_twap(&self, current_timestamp: i64) -> Result<u128> {
         let start_timestamp =
             self.oracle.created_at_timestamp + self.oracle.start_delay_seconds as i64;
 
         require_gt!(self.oracle.last_updated_timestamp, start_timestamp);
-        let seconds_passed = (self.oracle.last_updated_timestamp - start_timestamp) as u128;
+
+        let seconds_passed = (current_timestamp - start_timestamp) as u128;
 
         require_neq!(seconds_passed, 0);
         require_neq!(self.oracle.aggregator, 0);
 
-        Ok(self.oracle.aggregator / seconds_passed)
+        // include the final interval that hasn't been accumulated yet
+        let final_interval = (current_timestamp - self.oracle.last_updated_timestamp) as u128;
+        let final_contribution = self.oracle.last_observation.saturating_mul(final_interval);
+        let total_aggregator = self.oracle.aggregator.wrapping_add(final_contribution);
+
+        Ok(total_aggregator / seconds_passed)
     }
 }
 

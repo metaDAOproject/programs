@@ -309,6 +309,85 @@ export default function suite() {
     );
   });
 
+  it("finalizes when last trade is before the deadline (virtual crank covers the gap)", async function () {
+    // Trade for ~200,000s of the 259,200s proposal duration, then stop
+    // trading and advance the clock past the deadline before finalizing.
+    // The virtual crank in get_twap() fills in the gap after the last trade.
+
+    const { baseVault, quoteVault, question } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao,
+    );
+
+    await this.conditionalVault
+      .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
+      .rpc();
+    await this.conditionalVault
+      .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
+      .rpc();
+
+    // Initial swap to seed the pass market
+    await this.futarchy
+      .conditionalSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        proposal,
+        market: "pass",
+        swapType: "buy",
+        inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
+      })
+      .rpc();
+
+    // Trade for ~200,000 seconds (10 swaps × 20,000s each)
+    // This is ~77% of the 259,200s proposal duration
+    for (let i = 0; i < 10; i++) {
+      await this.advanceBySeconds(20_000);
+
+      await this.futarchy
+        .conditionalSwapIx({
+          dao,
+          baseMint: META,
+          quoteMint: USDC,
+          proposal,
+          market: "pass",
+          swapType: "buy",
+          inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+        ])
+        .rpc();
+    }
+
+    // At ~200,000s into a 259,200s proposal — finalization should fail
+    // because wall-clock time hasn't reached the deadline yet.
+    const earlyCallbacks = expectError(
+      "ProposalTooYoung",
+      "proposal should not finalize before the deadline",
+    );
+    await this.futarchy
+      .finalizeProposal(proposal)
+      .then(earlyCallbacks[0], earlyCallbacks[1]);
+
+    // Stop trading. Advance time past the proposal deadline (259,200s).
+    // Last trade was at ~200,000s. We need at least 60,000 more seconds.
+    await this.advanceBySeconds(70_000);
+
+    // Finalize — should succeed because:
+    // 1. Wall-clock time is past the deadline (validate() passes)
+    // 2. At least one trade occurred after TWAP start delay (new check passes)
+    // 3. get_twap()'s virtual crank extends the last observation to current time
+    await this.futarchy.finalizeProposal(proposal);
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.exists(storedProposal.state.passed);
+  });
+
   it("passes proposals when the team sponsors them and pass twap is slightly below fail twap", async function () {
     // Create a new DAO with -5% team-sponsored threshold
     const META = await this.createMint(this.payer.publicKey, 6);

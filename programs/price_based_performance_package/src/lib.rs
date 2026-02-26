@@ -39,6 +39,7 @@ declare_id!("pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS");
 pub mod price_based_performance_package {
     use super::*;
 
+    #[access_control(ctx.accounts.validate(&params))]
     pub fn initialize_performance_package(
         ctx: Context<InitializePerformancePackage>,
         params: InitializePerformancePackageParams,
@@ -66,6 +67,7 @@ pub mod price_based_performance_package {
         ExecuteChange::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate(&params))]
     pub fn change_performance_package_authority(
         ctx: Context<ChangePerformancePackageAuthority>,
         params: ChangePerformancePackageAuthorityParams,

@@ -244,6 +244,47 @@ export default function () {
     }
   });
 
+  it("should fail if recipient equals authority", async function () {
+    const sameKeyCreateKey = Keypair.generate();
+
+    const params = {
+      tranches: [
+        {
+          priceThreshold: new BN(1000000),
+          tokenAmount: new BN(100000),
+        },
+      ],
+      grantee: this.payer.publicKey,
+      performancePackageAuthority: this.payer.publicKey,
+      minUnlockTimestamp: new BN(
+        Number((await this.context.banksClient.getClock()).unixTimestamp) +
+          3600,
+      ),
+      oracleConfig: {
+        oracleAccount: oracleAccount.publicKey,
+        byteOffset: 0,
+      },
+      twapLengthSeconds: new BN(86_400),
+      tokenRecipient: this.payer.publicKey,
+    };
+
+    const callbacks = expectError(
+      "RecipientAuthorityMustDiffer",
+      "Recipient and performance package authority must be different keys",
+    );
+
+    await this.priceBasedPerformancePackage
+      .initializePerformancePackageIx({
+        params,
+        createKey: sameKeyCreateKey.publicKey,
+        tokenMint,
+        grantor: tokenAuthority.publicKey,
+      })
+      .signers([sameKeyCreateKey, tokenAuthority])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   it("should fail if token amount is zero", async function () {
     const zeroCreateKey = Keypair.generate();
 

@@ -3146,7 +3146,7 @@ export type Futarchy = {
     {
       code: 6014;
       name: "InvalidSquadsProposalStatus";
-      msg: "Squads proposal must be in Draft status";
+      msg: "Squads proposal must be in Active status";
     },
     {
       code: 6015;
@@ -3252,6 +3252,11 @@ export type Futarchy = {
       code: 6035;
       name: "InvalidTransactionMessage";
       msg: "Failed to compile transaction message for Squads vault transaction";
+    },
+    {
+      code: 6036;
+      name: "InvalidMint";
+      msg: "Base mint and quote mint must be different";
     },
   ];
 };
@@ -6404,7 +6409,7 @@ export const IDL: Futarchy = {
     {
       code: 6014,
       name: "InvalidSquadsProposalStatus",
-      msg: "Squads proposal must be in Draft status",
+      msg: "Squads proposal must be in Active status",
     },
     {
       code: 6015,
@@ -6510,6 +6515,11 @@ export const IDL: Futarchy = {
       code: 6035,
       name: "InvalidTransactionMessage",
       msg: "Failed to compile transaction message for Squads vault transaction",
+    },
+    {
+      code: 6036,
+      name: "InvalidMint",
+      msg: "Base mint and quote mint must be different",
     },
   ],
 };
