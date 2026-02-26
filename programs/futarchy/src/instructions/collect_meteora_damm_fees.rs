@@ -237,7 +237,7 @@ impl CollectMeteoraDammFees<'_> {
         let dao_nonce = &ctx.accounts.dao.nonce.to_le_bytes();
         let dao_creator_key = ctx.accounts.dao.dao_creator.as_ref();
         let dao_seeds = &[
-            b"dao".as_ref(),
+            SEED_DAO,
             dao_creator_key,
             dao_nonce,
             &[ctx.accounts.dao.pda_bump],

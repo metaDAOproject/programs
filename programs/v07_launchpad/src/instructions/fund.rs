@@ -36,8 +36,8 @@ pub struct Fund<'info> {
 
     #[account(
         mut,
-        token::mint = launch.quote_mint,
-        token::authority = funder
+        associated_token::mint = launch.quote_mint,
+        associated_token::authority = funder
     )]
     pub funder_quote_account: Account<'info, TokenAccount>,
 
@@ -62,7 +62,7 @@ impl Fund<'_> {
 
         let clock = Clock::get()?;
 
-        require_gte!(
+        require_gt!(
             self.launch.unix_timestamp_started.unwrap() + self.launch.seconds_for_launch as i64,
             clock.unix_timestamp,
             LaunchpadError::LaunchExpired
@@ -86,8 +86,23 @@ impl Fund<'_> {
         )?;
 
         let funding_record = &mut ctx.accounts.funding_record;
+        let clock = Clock::get()?;
 
         if funding_record.funder == ctx.accounts.funder.key() {
+            // Existing funding record — flush accumulator before changing committed_amount
+            let activation_timestamp = ctx.accounts.launch.unix_timestamp_started.unwrap()
+                + ctx.accounts.launch.accumulator_activation_delay_seconds as i64;
+            let now = clock.unix_timestamp;
+
+            if funding_record.last_accumulator_update > 0 && now > activation_timestamp {
+                let period_start =
+                    std::cmp::max(funding_record.last_accumulator_update, activation_timestamp);
+                let elapsed = now - period_start;
+                funding_record.committed_amount_accumulator +=
+                    (funding_record.committed_amount as u128) * (elapsed as u128);
+            }
+
+            funding_record.last_accumulator_update = now;
             funding_record.committed_amount += amount;
         } else {
             funding_record.set_inner(FundingRecord {
@@ -98,6 +113,8 @@ impl Fund<'_> {
                 is_tokens_claimed: false,
                 is_usdc_refunded: false,
                 approved_amount: 0,
+                committed_amount_accumulator: 0,
+                last_accumulator_update: clock.unix_timestamp,
             });
         }
 
@@ -106,7 +123,6 @@ impl Fund<'_> {
 
         ctx.accounts.launch.seq_num += 1;
 
-        let clock = Clock::get()?;
         emit_cpi!(LaunchFundedEvent {
             common: CommonFields::new(&clock, ctx.accounts.launch.seq_num),
             launch: ctx.accounts.launch.key(),
@@ -115,6 +131,7 @@ impl Fund<'_> {
             total_committed: ctx.accounts.launch.total_committed_amount,
             funding_record: funding_record.key(),
             total_committed_by_funder: funding_record.committed_amount,
+            committed_amount_accumulator: funding_record.committed_amount_accumulator,
         });
 
         Ok(())

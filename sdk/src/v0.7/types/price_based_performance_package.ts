@@ -262,6 +262,16 @@ export type PriceBasedPerformancePackage = {
             "The party executing the change (must be opposite of proposer)",
           ];
         },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
       ];
       args: [];
     },
@@ -277,6 +287,16 @@ export type PriceBasedPerformancePackage = {
           name: "currentAuthority";
           isMut: false;
           isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         },
       ];
       args: [
@@ -656,9 +676,6 @@ export type PriceBasedPerformancePackage = {
               },
             ];
           },
-          {
-            name: "Unlocked";
-          },
         ];
       };
     },
@@ -785,6 +802,13 @@ export type PriceBasedPerformancePackage = {
     {
       name: "ChangeProposed";
       fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
         {
           name: "locker";
           type: "publicKey";
@@ -941,6 +965,16 @@ export type PriceBasedPerformancePackage = {
       code: 6013;
       name: "InvalidAdmin";
       msg: "Invalid admin";
+    },
+    {
+      code: 6014;
+      name: "TotalTokenAmountOverflow";
+      msg: "Total token amount calculation would overflow";
+    },
+    {
+      code: 6015;
+      name: "RecipientAuthorityMustDiffer";
+      msg: "Recipient and performance package authority must be different keys";
     },
   ];
 };
@@ -1209,6 +1243,16 @@ export const IDL: PriceBasedPerformancePackage = {
             "The party executing the change (must be opposite of proposer)",
           ],
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [],
     },
@@ -1224,6 +1268,16 @@ export const IDL: PriceBasedPerformancePackage = {
           name: "currentAuthority",
           isMut: false,
           isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
         },
       ],
       args: [
@@ -1603,9 +1657,6 @@ export const IDL: PriceBasedPerformancePackage = {
               },
             ],
           },
-          {
-            name: "Unlocked",
-          },
         ],
       },
     },
@@ -1732,6 +1783,13 @@ export const IDL: PriceBasedPerformancePackage = {
     {
       name: "ChangeProposed",
       fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
         {
           name: "locker",
           type: "publicKey",
@@ -1888,6 +1946,16 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6013,
       name: "InvalidAdmin",
       msg: "Invalid admin",
+    },
+    {
+      code: 6014,
+      name: "TotalTokenAmountOverflow",
+      msg: "Total token amount calculation would overflow",
+    },
+    {
+      code: 6015,
+      name: "RecipientAuthorityMustDiffer",
+      msg: "Recipient and performance package authority must be different keys",
     },
   ],
 };

@@ -56,6 +56,16 @@ pub struct InitializePerformancePackage<'info> {
 }
 
 impl InitializePerformancePackage<'_> {
+    pub fn validate(&self, params: &InitializePerformancePackageParams) -> Result<()> {
+        require_keys_neq!(
+            params.grantee,
+            params.performance_package_authority,
+            PriceBasedPerformancePackageError::RecipientAuthorityMustDiffer
+        );
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, params: InitializePerformancePackageParams) -> Result<()> {
         let Self {
             performance_package,
@@ -123,7 +133,11 @@ impl InitializePerformancePackage<'_> {
             PriceBasedPerformancePackageError::UnlockTimestampInThePast
         );
 
-        let total_token_amount = tranches.iter().map(|tranche| tranche.token_amount).sum();
+        let total_token_amount = tranches.iter().try_fold(0u64, |acc, tranche| {
+            acc.checked_add(tranche.token_amount).ok_or(error!(
+                PriceBasedPerformancePackageError::TotalTokenAmountOverflow
+            ))
+        })?;
 
         require_gt!(total_token_amount, 0);
 

@@ -39,6 +39,7 @@ pub struct LaunchInitializedEvent {
     pub seconds_for_launch: u32,
     pub additional_tokens_amount: u64,
     pub additional_tokens_recipient: Option<Pubkey>,
+    pub accumulator_activation_delay_seconds: u32,
 }
 
 #[event]
@@ -58,6 +59,7 @@ pub struct LaunchFundedEvent {
     pub amount: u64,
     pub total_committed_by_funder: u64,
     pub total_committed: u64,
+    pub committed_amount_accumulator: u128,
 }
 
 #[event]

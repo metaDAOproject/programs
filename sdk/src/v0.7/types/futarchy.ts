@@ -2320,16 +2320,16 @@ export type Futarchy = {
           {
             name: "aggregator";
             docs: [
-              "Running sum of slots_per_last_update * last_observation.",
+              "Running sum of seconds_since_last_update * last_observation.",
               "",
               "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
-              "we can store 18 million slots worth of observations, which turns out to",
-              "be ~85 days worth of slots.",
+              "we can store 18 million seconds worth of observations, which turns out to",
+              "be ~208 days.",
               "",
               "Assuming that latest observations are 100x smaller than they could theoretically",
-              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
+              "be, we can store ~57 years worth of them. Even this is a very",
               "very conservative assumption - META/USDC prices should be between 1e9 and",
-              "1e15, which would overflow after 1e15 years worth of slots.",
+              "1e15, which would overflow after 1e15 years.",
               "",
               "So in the case of an overflow, the aggregator rolls back to 0. It's the",
               "client's responsibility to sanity check the assets or to handle an",
@@ -3563,7 +3563,7 @@ export type Futarchy = {
     {
       code: 6014;
       name: "InvalidSquadsProposalStatus";
-      msg: "Squads proposal must be in Draft status";
+      msg: "Squads proposal must be in Active status";
     },
     {
       code: 6015;
@@ -3672,36 +3672,41 @@ export type Futarchy = {
     },
     {
       code: 6036;
+      name: "InvalidMint";
+      msg: "Base mint and quote mint must be different";
+    },
+    {
+      code: 6037;
       name: "InvalidRecipient";
       msg: "Invalid recipient";
     },
     {
-      code: 6037;
+      code: 6038;
       name: "OptimisticGovernanceDisabled";
       msg: "Optimistic governance is disabled";
     },
     {
-      code: 6038;
+      code: 6039;
       name: "ActiveOptimisticProposalAlreadyEnqueued";
       msg: "An active optimistic proposal is already enqueued";
     },
     {
-      code: 6039;
+      code: 6040;
       name: "NoActiveOptimisticProposal";
       msg: "No active optimistic proposal";
     },
     {
-      code: 6040;
+      code: 6041;
       name: "OptimisticProposalAlreadyPassed";
       msg: "Optimistic proposal has already passed";
     },
     {
-      code: 6041;
+      code: 6042;
       name: "CannotSponsorOptimisticProposalChallenge";
       msg: "Team cannot sponsor a challenge to an optimistic proposal";
     },
     {
-      code: 6042;
+      code: 6043;
       name: "InvalidSpendingLimitMint";
       msg: "Invalid spending limit mint. Must be the same as the DAO's quote mint";
     },
@@ -6030,16 +6035,16 @@ export const IDL: Futarchy = {
           {
             name: "aggregator",
             docs: [
-              "Running sum of slots_per_last_update * last_observation.",
+              "Running sum of seconds_since_last_update * last_observation.",
               "",
               "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
-              "we can store 18 million slots worth of observations, which turns out to",
-              "be ~85 days worth of slots.",
+              "we can store 18 million seconds worth of observations, which turns out to",
+              "be ~208 days.",
               "",
               "Assuming that latest observations are 100x smaller than they could theoretically",
-              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
+              "be, we can store ~57 years worth of them. Even this is a very",
               "very conservative assumption - META/USDC prices should be between 1e9 and",
-              "1e15, which would overflow after 1e15 years worth of slots.",
+              "1e15, which would overflow after 1e15 years.",
               "",
               "So in the case of an overflow, the aggregator rolls back to 0. It's the",
               "client's responsibility to sanity check the assets or to handle an",
@@ -7273,7 +7278,7 @@ export const IDL: Futarchy = {
     {
       code: 6014,
       name: "InvalidSquadsProposalStatus",
-      msg: "Squads proposal must be in Draft status",
+      msg: "Squads proposal must be in Active status",
     },
     {
       code: 6015,
@@ -7382,36 +7387,41 @@ export const IDL: Futarchy = {
     },
     {
       code: 6036,
+      name: "InvalidMint",
+      msg: "Base mint and quote mint must be different",
+    },
+    {
+      code: 6037,
       name: "InvalidRecipient",
       msg: "Invalid recipient",
     },
     {
-      code: 6037,
+      code: 6038,
       name: "OptimisticGovernanceDisabled",
       msg: "Optimistic governance is disabled",
     },
     {
-      code: 6038,
+      code: 6039,
       name: "ActiveOptimisticProposalAlreadyEnqueued",
       msg: "An active optimistic proposal is already enqueued",
     },
     {
-      code: 6039,
+      code: 6040,
       name: "NoActiveOptimisticProposal",
       msg: "No active optimistic proposal",
     },
     {
-      code: 6040,
+      code: 6041,
       name: "OptimisticProposalAlreadyPassed",
       msg: "Optimistic proposal has already passed",
     },
     {
-      code: 6041,
+      code: 6042,
       name: "CannotSponsorOptimisticProposalChallenge",
       msg: "Team cannot sponsor a challenge to an optimistic proposal",
     },
     {
-      code: 6042,
+      code: 6043,
       name: "InvalidSpendingLimitMint",
       msg: "Invalid spending limit mint. Must be the same as the DAO's quote mint",
     },

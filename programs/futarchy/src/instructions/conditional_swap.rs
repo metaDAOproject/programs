@@ -37,6 +37,8 @@ pub struct ConditionalSwap<'info> {
     pub amm_fail_quote_vault: Box<Account<'info, TokenAccount>>,
 
     pub trader: Signer<'info>,
+    // Intentionally using `token::` instead of `associated_token::`
+    // DEX integrators may route through non-ATA token accounts.
     #[account(mut, token::authority = trader)]
     pub user_input_account: Account<'info, TokenAccount>,
     #[account(mut)]
@@ -164,7 +166,7 @@ impl ConditionalSwap<'_> {
         let dao_creator = dao.dao_creator;
         let nonce = dao.nonce.to_le_bytes();
         let signer_seeds = &[
-            b"dao".as_ref(),
+            SEED_DAO,
             dao_creator.as_ref(),
             nonce.as_ref(),
             &[dao.pda_bump],

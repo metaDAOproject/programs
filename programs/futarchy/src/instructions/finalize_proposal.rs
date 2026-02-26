@@ -109,22 +109,25 @@ impl FinalizeProposal<'_> {
 
         let squads_proposal_key = squads_proposal.key();
         let proposal_seeds = &[
-            b"proposal",
+            SEED_PROPOSAL,
             squads_proposal_key.as_ref(),
             &[proposal.pda_bump],
         ];
         let proposal_signer = &[&proposal_seeds[..]];
 
-        let calculate_twap = |amm: &Pool| -> Result<u128> {
-            let seconds_passed = amm.oracle.last_updated_timestamp - proposal.timestamp_enqueued;
+        let clock = Clock::get()?;
 
-            require_gte!(
-                seconds_passed,
-                proposal.duration_in_seconds as i64,
+        let calculate_twap = |amm: &Pool| -> Result<u128> {
+            let twap_start_timestamp =
+                amm.oracle.created_at_timestamp + amm.oracle.start_delay_seconds as i64;
+
+            require_gt!(
+                amm.oracle.last_updated_timestamp,
+                twap_start_timestamp,
                 FutarchyError::MarketsTooYoung
             );
 
-            amm.get_twap()
+            amm.get_twap(clock.unix_timestamp)
         };
 
         let PoolState::Futarchy {
@@ -142,7 +145,8 @@ impl FinalizeProposal<'_> {
         let threshold_bps = if proposal.is_team_sponsored {
             dao.team_sponsored_pass_threshold_bps
         } else {
-            dao.pass_threshold_bps as i16
+            // Thanks to invariants this will never error - still it's better to be safe here.
+            i16::try_from(dao.pass_threshold_bps).map_err(|_| FutarchyError::CastingOverflow)?
         };
 
         // this can't overflow because each twap can only be MAX_PRICE (~1e31),
@@ -175,7 +179,7 @@ impl FinalizeProposal<'_> {
 
         let dao_nonce = &dao.nonce.to_le_bytes();
         let dao_creator_key = &dao.dao_creator.as_ref();
-        let dao_seeds = &[b"dao".as_ref(), dao_creator_key, dao_nonce, &[dao.pda_bump]];
+        let dao_seeds = &[SEED_DAO, dao_creator_key, dao_nonce, &[dao.pda_bump]];
         let dao_signer = &[&dao_seeds[..]];
 
         if new_proposal_state == ProposalState::Passed {
@@ -267,8 +271,6 @@ impl FinalizeProposal<'_> {
         dao.amm.state = PoolState::Spot { spot };
 
         dao.seq_num += 1;
-
-        let clock = Clock::get()?;
 
         emit_cpi!(FinalizeProposalEvent {
             common: CommonFields::new(&clock, dao.seq_num),

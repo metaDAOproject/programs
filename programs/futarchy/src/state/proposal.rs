@@ -1,5 +1,7 @@
 use super::*;
 
+pub const SEED_PROPOSAL: &[u8] = b"proposal";
+
 #[derive(Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, InitSpace)]
 pub enum ProposalState {
     Draft { amount_staked: u64 },

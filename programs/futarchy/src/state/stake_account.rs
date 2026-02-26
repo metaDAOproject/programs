@@ -1,5 +1,7 @@
 use super::*;
 
+pub const SEED_STAKE: &[u8] = b"stake";
+
 #[account]
 #[derive(InitSpace)]
 pub struct StakeAccount {

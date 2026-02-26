@@ -27,7 +27,7 @@ pub struct UnstakeFromProposal<'info> {
     pub proposal_base_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [b"stake", proposal.key().as_ref(), staker.key().as_ref()],
+        seeds = [SEED_STAKE, proposal.key().as_ref(), staker.key().as_ref()],
         bump = stake_account.bump,
     )]
     pub stake_account: Box<Account<'info, StakeAccount>>,
@@ -70,7 +70,7 @@ impl UnstakeFromProposal<'_> {
 
         // Transfer tokens from proposal back to staker
         let seeds = &[
-            b"proposal",
+            SEED_PROPOSAL,
             proposal.squads_proposal.as_ref(),
             &[proposal.pda_bump],
         ];

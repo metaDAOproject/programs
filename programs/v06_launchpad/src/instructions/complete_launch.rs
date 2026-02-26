@@ -400,8 +400,8 @@ impl CompleteLaunch<'_> {
                 twap_initial_observation: launch_price_1e12,
                 twap_max_observation_change_per_update: launch_price_1e12 / 20,
                 // We're providing liquidity, so that can be used for proposals
-                min_quote_futarchic_liquidity: 0,
-                min_base_futarchic_liquidity: 0,
+                min_quote_futarchic_liquidity: 1,
+                min_base_futarchic_liquidity: 1,
                 pass_threshold_bps: 150,
                 base_to_stake: TOKENS_TO_PARTICIPANTS / 20,
                 seconds_per_proposal: 3 * 24 * 60 * 60,

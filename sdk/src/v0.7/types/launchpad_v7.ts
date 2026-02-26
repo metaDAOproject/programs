@@ -781,10 +781,110 @@ export type LaunchpadV7 = {
       ];
       args: [];
     },
+    {
+      name: "resizeFundingRecord";
+      accounts: [
+        {
+          name: "fundingRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "resizeLaunch";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
       name: "fundingRecord";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "pdaBump";
+            docs: ["The PDA bump."];
+            type: "u8";
+          },
+          {
+            name: "funder";
+            docs: ["The funder."];
+            type: "publicKey";
+          },
+          {
+            name: "launch";
+            docs: ["The launch."];
+            type: "publicKey";
+          },
+          {
+            name: "committedAmount";
+            docs: ["The amount of USDC that has been committed by the funder."];
+            type: "u64";
+          },
+          {
+            name: "isTokensClaimed";
+            docs: ["Whether the tokens have been claimed."];
+            type: "bool";
+          },
+          {
+            name: "isUsdcRefunded";
+            docs: ["Whether the USDC has been refunded."];
+            type: "bool";
+          },
+          {
+            name: "approvedAmount";
+            docs: [
+              "The amount of USDC that the launch authority has approved for the funder.",
+              "If zero, the funder has not been approved for any amount.",
+            ];
+            type: "u64";
+          },
+          {
+            name: "committedAmountAccumulator";
+            docs: [
+              "Running integral of committed_amount over time (committed_amount * seconds).",
+            ];
+            type: "u128";
+          },
+          {
+            name: "lastAccumulatorUpdate";
+            docs: ["Unix timestamp of the last accumulator update."];
+            type: "i64";
+          },
+        ];
+      };
+    },
+    {
+      name: "oldFundingRecord";
       type: {
         kind: "struct";
         fields: [
@@ -831,6 +931,214 @@ export type LaunchpadV7 = {
     },
     {
       name: "launch";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "pdaBump";
+            docs: ["The PDA bump."];
+            type: "u8";
+          },
+          {
+            name: "minimumRaiseAmount";
+            docs: [
+              "The minimum amount of USDC that must be raised, otherwise",
+              "everyone can get their USDC back.",
+            ];
+            type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitAmount";
+            docs: [
+              "The monthly spending limit the DAO allocates to the team. Must be",
+              "less than 1/6th of the minimum raise amount (so 6 months of burn).",
+            ];
+            type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitMembers";
+            docs: [
+              "The wallets that have access to the monthly spending limit.",
+            ];
+            type: {
+              vec: "publicKey";
+            };
+          },
+          {
+            name: "launchAuthority";
+            docs: ["The account that can start the launch."];
+            type: "publicKey";
+          },
+          {
+            name: "launchSigner";
+            docs: [
+              "The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.",
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "launchSignerPdaBump";
+            docs: ["The PDA bump for the launch signer."];
+            type: "u8";
+          },
+          {
+            name: "launchQuoteVault";
+            docs: [
+              "The USDC vault that will hold the USDC raised until the launch is over.",
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "launchBaseVault";
+            docs: ["The token vault, used to send tokens to Raydium."];
+            type: "publicKey";
+          },
+          {
+            name: "baseMint";
+            docs: [
+              "The token that will be minted to funders and that will control the DAO.",
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "quoteMint";
+            docs: ["The USDC mint."];
+            type: "publicKey";
+          },
+          {
+            name: "unixTimestampStarted";
+            docs: ["The unix timestamp when the launch was started."];
+            type: {
+              option: "i64";
+            };
+          },
+          {
+            name: "unixTimestampClosed";
+            docs: [
+              "The unix timestamp when the launch stopped taking new contributions.",
+            ];
+            type: {
+              option: "i64";
+            };
+          },
+          {
+            name: "totalCommittedAmount";
+            docs: ["The amount of USDC that has been committed by the users."];
+            type: "u64";
+          },
+          {
+            name: "state";
+            docs: ["The state of the launch."];
+            type: {
+              defined: "LaunchState";
+            };
+          },
+          {
+            name: "seqNum";
+            docs: [
+              "The sequence number of this launch. Useful for sorting events.",
+            ];
+            type: "u64";
+          },
+          {
+            name: "secondsForLaunch";
+            docs: ["The number of seconds that the launch will be live for."];
+            type: "u32";
+          },
+          {
+            name: "dao";
+            docs: ["The DAO, if the launch is complete."];
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "daoVault";
+            docs: [
+              "The DAO treasury that USDC / LP is sent to, if the launch is complete.",
+            ];
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "performancePackageGrantee";
+            docs: [
+              "The address that will receive the performance package tokens.",
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "performancePackageTokenAmount";
+            docs: [
+              "The amount of tokens to be granted to the performance package grantee.",
+            ];
+            type: "u64";
+          },
+          {
+            name: "monthsUntilInsidersCanUnlock";
+            docs: [
+              "The number of months that insiders must wait before unlocking their tokens.",
+            ];
+            type: "u8";
+          },
+          {
+            name: "teamAddress";
+            docs: ["The initial address used to sponsor team proposals."];
+            type: "publicKey";
+          },
+          {
+            name: "totalApprovedAmount";
+            docs: [
+              "The amount of USDC that the launch authority has approved across all funders.",
+            ];
+            type: "u64";
+          },
+          {
+            name: "additionalTokensAmount";
+            docs: [
+              "The amount of additional tokens to be minted on a successful launch.",
+            ];
+            type: "u64";
+          },
+          {
+            name: "additionalTokensRecipient";
+            docs: [
+              "The token account that will receive the additional tokens.",
+            ];
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "additionalTokensClaimed";
+            docs: ["Are the additional tokens claimed"];
+            type: "bool";
+          },
+          {
+            name: "unixTimestampCompleted";
+            docs: ["The unix timestamp when the launch was completed."];
+            type: {
+              option: "i64";
+            };
+          },
+          {
+            name: "isPerformancePackageInitialized";
+            type: "bool";
+          },
+          {
+            name: "accumulatorActivationDelaySeconds";
+            docs: [
+              "Number of seconds after launch start before the funding accumulator",
+              "begins tracking.",
+            ];
+            type: "u32";
+          },
+        ];
+      };
+    },
+    {
+      name: "oldLaunch";
       type: {
         kind: "struct";
         fields: [
@@ -1107,6 +1415,10 @@ export type LaunchpadV7 = {
             name: "additionalTokensAmount";
             type: "u64";
           },
+          {
+            name: "accumulatorActivationDelaySeconds";
+            type: "u32";
+          },
         ];
       };
     },
@@ -1239,6 +1551,11 @@ export type LaunchpadV7 = {
           };
           index: false;
         },
+        {
+          name: "accumulatorActivationDelaySeconds";
+          type: "u32";
+          index: false;
+        },
       ];
     },
     {
@@ -1306,6 +1623,11 @@ export type LaunchpadV7 = {
         {
           name: "totalCommitted";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "committedAmountAccumulator";
+          type: "u128";
           index: false;
         },
       ];
@@ -1695,6 +2017,11 @@ export type LaunchpadV7 = {
       code: 6029;
       name: "InvalidDao";
       msg: "Invalid DAO";
+    },
+    {
+      code: 6030;
+      name: "InvalidAccumulatorActivationDelaySeconds";
+      msg: "Accumulator activation delay must be less than the launch duration";
     },
   ];
 };
@@ -2482,10 +2809,110 @@ export const IDL: LaunchpadV7 = {
       ],
       args: [],
     },
+    {
+      name: "resizeFundingRecord",
+      accounts: [
+        {
+          name: "fundingRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "resizeLaunch",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
       name: "fundingRecord",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pdaBump",
+            docs: ["The PDA bump."],
+            type: "u8",
+          },
+          {
+            name: "funder",
+            docs: ["The funder."],
+            type: "publicKey",
+          },
+          {
+            name: "launch",
+            docs: ["The launch."],
+            type: "publicKey",
+          },
+          {
+            name: "committedAmount",
+            docs: ["The amount of USDC that has been committed by the funder."],
+            type: "u64",
+          },
+          {
+            name: "isTokensClaimed",
+            docs: ["Whether the tokens have been claimed."],
+            type: "bool",
+          },
+          {
+            name: "isUsdcRefunded",
+            docs: ["Whether the USDC has been refunded."],
+            type: "bool",
+          },
+          {
+            name: "approvedAmount",
+            docs: [
+              "The amount of USDC that the launch authority has approved for the funder.",
+              "If zero, the funder has not been approved for any amount.",
+            ],
+            type: "u64",
+          },
+          {
+            name: "committedAmountAccumulator",
+            docs: [
+              "Running integral of committed_amount over time (committed_amount * seconds).",
+            ],
+            type: "u128",
+          },
+          {
+            name: "lastAccumulatorUpdate",
+            docs: ["Unix timestamp of the last accumulator update."],
+            type: "i64",
+          },
+        ],
+      },
+    },
+    {
+      name: "oldFundingRecord",
       type: {
         kind: "struct",
         fields: [
@@ -2532,6 +2959,214 @@ export const IDL: LaunchpadV7 = {
     },
     {
       name: "launch",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pdaBump",
+            docs: ["The PDA bump."],
+            type: "u8",
+          },
+          {
+            name: "minimumRaiseAmount",
+            docs: [
+              "The minimum amount of USDC that must be raised, otherwise",
+              "everyone can get their USDC back.",
+            ],
+            type: "u64",
+          },
+          {
+            name: "monthlySpendingLimitAmount",
+            docs: [
+              "The monthly spending limit the DAO allocates to the team. Must be",
+              "less than 1/6th of the minimum raise amount (so 6 months of burn).",
+            ],
+            type: "u64",
+          },
+          {
+            name: "monthlySpendingLimitMembers",
+            docs: [
+              "The wallets that have access to the monthly spending limit.",
+            ],
+            type: {
+              vec: "publicKey",
+            },
+          },
+          {
+            name: "launchAuthority",
+            docs: ["The account that can start the launch."],
+            type: "publicKey",
+          },
+          {
+            name: "launchSigner",
+            docs: [
+              "The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "launchSignerPdaBump",
+            docs: ["The PDA bump for the launch signer."],
+            type: "u8",
+          },
+          {
+            name: "launchQuoteVault",
+            docs: [
+              "The USDC vault that will hold the USDC raised until the launch is over.",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "launchBaseVault",
+            docs: ["The token vault, used to send tokens to Raydium."],
+            type: "publicKey",
+          },
+          {
+            name: "baseMint",
+            docs: [
+              "The token that will be minted to funders and that will control the DAO.",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "quoteMint",
+            docs: ["The USDC mint."],
+            type: "publicKey",
+          },
+          {
+            name: "unixTimestampStarted",
+            docs: ["The unix timestamp when the launch was started."],
+            type: {
+              option: "i64",
+            },
+          },
+          {
+            name: "unixTimestampClosed",
+            docs: [
+              "The unix timestamp when the launch stopped taking new contributions.",
+            ],
+            type: {
+              option: "i64",
+            },
+          },
+          {
+            name: "totalCommittedAmount",
+            docs: ["The amount of USDC that has been committed by the users."],
+            type: "u64",
+          },
+          {
+            name: "state",
+            docs: ["The state of the launch."],
+            type: {
+              defined: "LaunchState",
+            },
+          },
+          {
+            name: "seqNum",
+            docs: [
+              "The sequence number of this launch. Useful for sorting events.",
+            ],
+            type: "u64",
+          },
+          {
+            name: "secondsForLaunch",
+            docs: ["The number of seconds that the launch will be live for."],
+            type: "u32",
+          },
+          {
+            name: "dao",
+            docs: ["The DAO, if the launch is complete."],
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "daoVault",
+            docs: [
+              "The DAO treasury that USDC / LP is sent to, if the launch is complete.",
+            ],
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "performancePackageGrantee",
+            docs: [
+              "The address that will receive the performance package tokens.",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "performancePackageTokenAmount",
+            docs: [
+              "The amount of tokens to be granted to the performance package grantee.",
+            ],
+            type: "u64",
+          },
+          {
+            name: "monthsUntilInsidersCanUnlock",
+            docs: [
+              "The number of months that insiders must wait before unlocking their tokens.",
+            ],
+            type: "u8",
+          },
+          {
+            name: "teamAddress",
+            docs: ["The initial address used to sponsor team proposals."],
+            type: "publicKey",
+          },
+          {
+            name: "totalApprovedAmount",
+            docs: [
+              "The amount of USDC that the launch authority has approved across all funders.",
+            ],
+            type: "u64",
+          },
+          {
+            name: "additionalTokensAmount",
+            docs: [
+              "The amount of additional tokens to be minted on a successful launch.",
+            ],
+            type: "u64",
+          },
+          {
+            name: "additionalTokensRecipient",
+            docs: [
+              "The token account that will receive the additional tokens.",
+            ],
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "additionalTokensClaimed",
+            docs: ["Are the additional tokens claimed"],
+            type: "bool",
+          },
+          {
+            name: "unixTimestampCompleted",
+            docs: ["The unix timestamp when the launch was completed."],
+            type: {
+              option: "i64",
+            },
+          },
+          {
+            name: "isPerformancePackageInitialized",
+            type: "bool",
+          },
+          {
+            name: "accumulatorActivationDelaySeconds",
+            docs: [
+              "Number of seconds after launch start before the funding accumulator",
+              "begins tracking.",
+            ],
+            type: "u32",
+          },
+        ],
+      },
+    },
+    {
+      name: "oldLaunch",
       type: {
         kind: "struct",
         fields: [
@@ -2808,6 +3443,10 @@ export const IDL: LaunchpadV7 = {
             name: "additionalTokensAmount",
             type: "u64",
           },
+          {
+            name: "accumulatorActivationDelaySeconds",
+            type: "u32",
+          },
         ],
       },
     },
@@ -2940,6 +3579,11 @@ export const IDL: LaunchpadV7 = {
           },
           index: false,
         },
+        {
+          name: "accumulatorActivationDelaySeconds",
+          type: "u32",
+          index: false,
+        },
       ],
     },
     {
@@ -3007,6 +3651,11 @@ export const IDL: LaunchpadV7 = {
         {
           name: "totalCommitted",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "committedAmountAccumulator",
+          type: "u128",
           index: false,
         },
       ],
@@ -3396,6 +4045,11 @@ export const IDL: LaunchpadV7 = {
       code: 6029,
       name: "InvalidDao",
       msg: "Invalid DAO",
+    },
+    {
+      code: 6030,
+      name: "InvalidAccumulatorActivationDelaySeconds",
+      msg: "Accumulator activation delay must be less than the launch duration",
     },
   ],
 };

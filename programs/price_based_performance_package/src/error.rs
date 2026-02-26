@@ -30,4 +30,8 @@ pub enum PriceBasedPerformancePackageError {
     InvalidTwapLength,
     #[msg("Invalid admin")]
     InvalidAdmin,
+    #[msg("Total token amount calculation would overflow")]
+    TotalTokenAmountOverflow,
+    #[msg("Recipient and performance package authority must be different keys")]
+    RecipientAuthorityMustDiffer,
 }

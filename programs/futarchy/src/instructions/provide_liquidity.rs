@@ -50,7 +50,7 @@ pub struct ProvideLiquidity<'info> {
     #[account(
         init_if_needed,
         payer = payer,
-        seeds = [b"amm_position", dao.key().as_ref(), params.position_authority.key().as_ref()],
+        seeds = [SEED_AMM_POSITION, dao.key().as_ref(), params.position_authority.key().as_ref()],
         bump,
         space = 8 + AmmPosition::INIT_SPACE,
     )]
@@ -119,6 +119,7 @@ impl ProvideLiquidity<'_> {
         } else {
             // equivalent to $0.1 if the quote is USDC, here for rounding
             require_gte!(quote_amount, MIN_QUOTE_LIQUIDITY);
+            require_gt!(max_base_amount, 0);
 
             let base_amount = max_base_amount;
 

@@ -61,6 +61,7 @@ pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 pub mod futarchy {
     use super::*;
 
+    #[access_control(ctx.accounts.validate())]
     pub fn initialize_dao(ctx: Context<InitializeDao>, params: InitializeDaoParams) -> Result<()> {
         InitializeDao::handle(ctx, params)
     }

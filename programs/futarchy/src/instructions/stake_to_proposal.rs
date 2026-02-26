@@ -28,7 +28,7 @@ pub struct StakeToProposal<'info> {
     #[account(
         init_if_needed,
         payer = payer,
-        seeds = [b"stake", proposal.key().as_ref(), staker.key().as_ref()],
+        seeds = [SEED_STAKE, proposal.key().as_ref(), staker.key().as_ref()],
         bump,
         space = 8 + StakeAccount::INIT_SPACE,
     )]

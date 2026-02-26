@@ -106,6 +106,7 @@ export default function suite() {
     assert.exists(storedLaunch.state.initialized);
     assert.isNull(storedLaunch.unixTimestampStarted);
     assert.isNull(storedLaunch.dao);
+    assert.equal(storedLaunch.accumulatorActivationDelaySeconds, 0);
   });
 
   it("fails when monthly spending limit members contains duplicates", async function () {
@@ -172,6 +173,39 @@ export default function suite() {
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "InvalidMonthlySpendingLimitMembers");
+    }
+  });
+
+  it("rejects accumulator activation delay >= seconds_for_launch", async function () {
+    const minRaise = new BN(1000_000000);
+    const secondsForLaunch = 60 * 60 * 24 * 7;
+    const monthlySpend = new BN(100_000000);
+    const recipientAddress = Keypair.generate().publicKey;
+    const premineAmount = new BN(500_000_000);
+
+    try {
+      await launchpadClient
+        .initializeLaunchIx({
+          tokenName: "META",
+          tokenSymbol: "META",
+          tokenUri: "https://example.com",
+          minimumRaiseAmount: minRaise,
+          secondsForLaunch: secondsForLaunch,
+          baseMint: META,
+          quoteMint: MAINNET_USDC,
+          monthlySpendingLimitAmount: monthlySpend,
+          monthlySpendingLimitMembers: [this.payer.publicKey],
+          performancePackageGrantee: recipientAddress,
+          performancePackageTokenAmount: premineAmount,
+          monthsUntilInsidersCanUnlock: 18,
+          teamAddress: PublicKey.default,
+          launchAuthority: launchAuthority.publicKey,
+          accumulatorActivationDelaySeconds: secondsForLaunch,
+        })
+        .rpc();
+      assert.fail("Expected initialize_launch to fail");
+    } catch (e) {
+      assert.include(e.message, "InvalidAccumulatorActivationDelaySeconds");
     }
   });
 

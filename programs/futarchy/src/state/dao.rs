@@ -1,6 +1,14 @@
 pub use super::*;
 
+pub const SEED_DAO: &[u8] = b"dao";
+
 pub const MAX_SPENDING_LIMIT_MEMBERS: usize = 10;
+
+pub const MIN_PROPOSAL_DURATION_TWAP_MULTIPLIER: u32 = 2;
+pub const MIN_PROPOSAL_DURATION_SECONDS: u32 = 60 * 60 * 24;
+pub const MAX_PASS_THRESHOLD_BPS: u16 = 1_000;
+pub const MAX_TEAM_SPONSORED_PASS_THRESHOLD_BPS: i16 = 1_000;
+pub const MIN_TEAM_SPONSORED_PASS_THRESHOLD_BPS: i16 = -1_000;
 
 #[account]
 #[derive(InitSpace)]
@@ -79,32 +87,50 @@ impl Dao {
     pub fn invariant(&self) -> Result<()> {
         require_gte!(
             self.seconds_per_proposal,
-            self.twap_start_delay_seconds * 2,
+            self.twap_start_delay_seconds * MIN_PROPOSAL_DURATION_TWAP_MULTIPLIER,
             FutarchyError::ProposalDurationTooShort
         );
 
         require_gte!(
             self.seconds_per_proposal,
-            60 * 60 * 24,
+            MIN_PROPOSAL_DURATION_SECONDS,
             FutarchyError::ProposalDurationTooShort
         );
 
         require_gte!(
-            1_000,
+            MAX_PASS_THRESHOLD_BPS,
             self.pass_threshold_bps,
             FutarchyError::PassThresholdTooHigh
         );
 
         require_gte!(
             self.team_sponsored_pass_threshold_bps,
-            -1_000,
+            MIN_TEAM_SPONSORED_PASS_THRESHOLD_BPS,
             FutarchyError::InvalidTeamSponsoredPassThreshold
         );
 
         require_gte!(
-            1_000,
+            MAX_TEAM_SPONSORED_PASS_THRESHOLD_BPS,
             self.team_sponsored_pass_threshold_bps,
             FutarchyError::InvalidTeamSponsoredPassThreshold
+        );
+
+        require_gt!(
+            self.min_base_futarchic_liquidity,
+            0,
+            FutarchyError::InsufficientLiquidity
+        );
+
+        require_gt!(
+            self.min_quote_futarchic_liquidity,
+            0,
+            FutarchyError::InsufficientLiquidity
+        );
+
+        require_gt!(
+            self.twap_max_observation_change_per_update,
+            0u128,
+            FutarchyError::InvalidMaxObservationChange
         );
 
         Ok(())

@@ -268,16 +268,16 @@ impl PoolState {
 
 #[derive(Default, Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, InitSpace)]
 pub struct TwapOracle {
-    /// Running sum of slots_per_last_update * last_observation.
+    /// Running sum of seconds_since_last_update * last_observation.
     ///
     /// Assuming latest observations are as big as possible (u64::MAX * 1e12),
-    /// we can store 18 million slots worth of observations, which turns out to
-    /// be ~85 days worth of slots.
+    /// we can store 18 million seconds worth of observations, which turns out to
+    /// be ~208 days.
     ///
     /// Assuming that latest observations are 100x smaller than they could theoretically
-    /// be, we can store 8500 days (23 years) worth of them. Even this is a very
+    /// be, we can store ~57 years worth of them. Even this is a very
     /// very conservative assumption - META/USDC prices should be between 1e9 and
-    /// 1e15, which would overflow after 1e15 years worth of slots.
+    /// 1e15, which would overflow after 1e15 years.
     ///
     /// So in the case of an overflow, the aggregator rolls back to 0. It's the
     /// client's responsibility to sanity check the assets or to handle an
@@ -400,13 +400,13 @@ impl Pool {
             let effective_last_updated_timestamp =
                 oracle.last_updated_timestamp.max(twap_start_timestamp);
 
-            let slot_difference: u128 = (current_timestamp - effective_last_updated_timestamp)
+            let time_difference: u128 = (current_timestamp - effective_last_updated_timestamp)
                 .try_into()
                 .unwrap();
 
             // if this saturates, the aggregator will wrap back to 0, so this value doesn't
             // really matter. we just can't panic.
-            let weighted_observation = new_observation.saturating_mul(slot_difference);
+            let weighted_observation = last_observation.saturating_mul(time_difference);
 
             oracle.aggregator.wrapping_add(weighted_observation)
         };
@@ -449,17 +449,23 @@ impl Pool {
     }
 
     /// Returns the time-weighted average price since market creation
-    pub fn get_twap(&self) -> Result<u128> {
+    pub fn get_twap(&self, current_timestamp: i64) -> Result<u128> {
         let start_timestamp =
             self.oracle.created_at_timestamp + self.oracle.start_delay_seconds as i64;
 
         require_gt!(self.oracle.last_updated_timestamp, start_timestamp);
-        let seconds_passed = (self.oracle.last_updated_timestamp - start_timestamp) as u128;
+
+        let seconds_passed = (current_timestamp - start_timestamp) as u128;
 
         require_neq!(seconds_passed, 0);
         require_neq!(self.oracle.aggregator, 0);
 
-        Ok(self.oracle.aggregator / seconds_passed)
+        // include the final interval that hasn't been accumulated yet
+        let final_interval = (current_timestamp - self.oracle.last_updated_timestamp) as u128;
+        let final_contribution = self.oracle.last_observation.saturating_mul(final_interval);
+        let total_aggregator = self.oracle.aggregator.wrapping_add(final_contribution);
+
+        Ok(total_aggregator / seconds_passed)
     }
 }
 
@@ -668,6 +674,15 @@ pub fn arbitrage_after_spot_swap(
         }
     }
 
+    // No profitable arbitrage found — skip the feeless swaps to save compute
+    if best_input_amount == 0 {
+        return Ok(ArbitrageResult {
+            spot_profit: 0,
+            pass_profit: 0,
+            fail_profit: 0,
+        });
+    }
+
     let final_spot_output = spot
         .feeless_swap(best_input_amount, spot_direction)
         .unwrap();
@@ -787,6 +802,15 @@ pub fn arbitrage_after_conditional_swap(
         } else {
             unreachable!()
         }
+    }
+
+    // No profitable arbitrage found — skip the feeless swaps to save compute
+    if best_arb_input_amount == 0 {
+        return Ok(ArbitrageResult {
+            spot_profit: 0,
+            pass_profit: 0,
+            fail_profit: 0,
+        });
     }
 
     let final_pass_output = pass

@@ -17,7 +17,7 @@ pub mod metadao_admin {
 #[event_cpi]
 pub struct CollectFees<'info> {
     #[account(mut)]
-    pub dao: Account<'info, Dao>,
+    pub dao: Box<Account<'info, Dao>>,
     pub admin: Signer<'info>,
     #[account(mut, associated_token::mint = dao.base_mint, associated_token::authority = metadao_multisig_vault::ID)]
     pub base_token_account: Account<'info, TokenAccount>,
@@ -68,7 +68,7 @@ impl CollectFees<'_> {
         let dao_creator = dao.dao_creator;
         let nonce = dao.nonce.to_le_bytes();
         let signer_seeds = &[
-            b"dao".as_ref(),
+            SEED_DAO,
             dao_creator.as_ref(),
             nonce.as_ref(),
             &[dao.pda_bump],
