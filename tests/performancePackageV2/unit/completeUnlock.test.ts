@@ -94,9 +94,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Advance time by 500 seconds (halfway between cliff and end)
@@ -179,9 +179,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Advance time by 150 seconds (should hit second threshold)
@@ -254,9 +254,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     await ppClient
@@ -284,9 +284,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     await ppClient
@@ -346,9 +346,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     await ppClient
@@ -404,9 +404,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     await ppClient
@@ -472,9 +472,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     await ppClient
@@ -521,9 +521,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     await ppClient
@@ -603,10 +603,10 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
         dao,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Record the start snapshot for later manipulation
@@ -647,10 +647,10 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
         dao,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Get the start snapshot value for second cycle
@@ -763,9 +763,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     await ppClient
@@ -791,9 +791,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Advance just a tiny bit (not enough to hit second threshold)
@@ -866,9 +866,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     await ppClient
@@ -900,9 +900,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
@@ -934,9 +934,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     await ppClient
@@ -1006,10 +1006,10 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
         dao,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Verify start snapshot was recorded
@@ -1099,10 +1099,10 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
         dao,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Advance time past min_duration
@@ -1187,10 +1187,10 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
         dao,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Advance time, but NOT past min_duration (only 10 seconds instead of 3600)
@@ -1311,9 +1311,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Try to complete unlock with an unauthorized signer
@@ -1416,9 +1416,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Try to complete unlock with wrong mint - should fail
@@ -1489,9 +1489,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Try to complete unlock with wrong mint governor - should fail

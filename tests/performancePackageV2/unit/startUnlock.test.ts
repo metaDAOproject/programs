@@ -24,7 +24,7 @@ export default function suite() {
     ppClient = this.performancePackageV2;
   });
 
-  it("successfully starts when called by authority", async function () {
+  it("fails when called by authority", async function () {
     const authority = Keypair.generate();
     const recipient = Keypair.generate();
 
@@ -45,19 +45,20 @@ export default function suite() {
     let ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
     assert.isDefined(ppAccount.status.locked);
 
-    // Call start_unlock as authority
+    // Call start_unlock as authority - should fail
+    const callbacks = expectError(
+      "Unauthorized",
+      "Should have failed because only recipient can start unlock",
+    );
+
     await ppClient
       .startUnlockIx({
         performancePackage,
         signer: authority.publicKey,
       })
       .signers([authority])
-      .rpc();
-
-    // Verify status is now Unlocking
-    ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
-    assert.isDefined(ppAccount.status.unlocking);
-    assert.equal(ppAccount.seqNum.toString(), "1");
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("successfully starts when called by recipient", async function () {
@@ -117,9 +118,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Verify status is now Unlocking
@@ -137,12 +138,12 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
       .postInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
       ])
-      .signers([authority])
+      .signers([recipient])
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -180,9 +181,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -218,9 +219,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Verify status is now Unlocking
@@ -286,10 +287,10 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
         dao,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Verify start snapshot was recorded
@@ -357,10 +358,10 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
         dao: wrongDao, // Wrong DAO!
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
