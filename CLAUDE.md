@@ -169,6 +169,9 @@ require!(account.status == Status::Active, MyError::InvalidStatus);
 require!(signer.key() == account.authority, MyError::Unauthorized);
 ```
 
+### Error Enums
+Always append new error variants to the **end** of `#[error_code]` enums. Anchor assigns error codes based on variant position (index), so inserting in the middle shifts all subsequent codes and breaks indexing/client-side error matching for deployed programs.
+
 ### After Editing Program Code
 **Always run `./rebuild.sh` after modifying any Rust code under `programs/`.** This rebuilds all programs, regenerates the SDK types, and lints — ensuring tests run against your latest changes.
 
