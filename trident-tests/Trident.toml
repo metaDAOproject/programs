@@ -1,0 +1,61 @@
+[fuzz.metrics]
+enabled = true
+dashboard = false
+
+
+[[fuzz.programs]]
+address = "WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx"
+program = "../target/deploy/bid_wall.so"
+
+[[fuzz.programs]]
+address = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
+program = "../target/deploy/conditional_vault.so"
+
+# [[fuzz.programs]]
+# address = "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG"
+# program = "./programs/mainnet/meteora/damm_v2.so"
+
+[[fuzz.programs]]
+address = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
+program = "../target/deploy/futarchy.so"
+
+[[fuzz.programs]]
+address = "moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM"
+program = "../target/deploy/launchpad_v7.so"
+
+[[fuzz.programs]]
+address = "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
+program = "../target/deploy/price_based_performance_package.so"
+
+
+# ==============================
+# External Programs
+# ==============================
+
+[[fuzz.fork]]
+address = "BSTq9w3kZwNwpBXJEvTZz2G9ZTNyKBvoSeXMvwb4cNZr"
+cluster = "m"
+
+[[fuzz.fork]]
+address = "5DH2e3cJmFpyi6mk65EGFediunm4ui6BiKNUNrhWtD1b"
+cluster = "m"
+
+[[fuzz.fork]]
+address = "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
+cluster = "m"
+
+[[fuzz.fork]]
+address = "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG"
+cluster = "m"
+
+[[fuzz.fork]]
+address = "FaA6RM9enPh1tU9Y8LiGCq715JubLc49WGcYTdNvDfsc"
+cluster = "m"
+
+# ==============================
+# External Accounts
+# ==============================
+
+# [[fuzz.accounts]]
+# address = "FaA6RM9enPh1tU9Y8LiGCq715JubLc49WGcYTdNvDfsc"
+# filename = "./accounts/mainnet/meteora/damm-config.json"

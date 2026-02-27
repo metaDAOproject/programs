@@ -1,0 +1,13 @@
+{
+  "address": "5DH2e3cJmFpyi6mk65EGFediunm4ui6BiKNUNrhWtD1b",
+  "cluster": "mainnet-beta",
+  "account": {
+    "lamports": 2414901000133,
+    "data": [
+      ""
+    ],
+    "owner": "11111111111111111111111111111111",
+    "executable": false,
+    "rentEpoch": 18446744073709551615
+  }
+}

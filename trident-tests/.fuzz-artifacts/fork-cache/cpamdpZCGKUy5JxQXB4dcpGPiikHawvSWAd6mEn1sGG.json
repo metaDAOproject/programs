@@ -1,0 +1,13 @@
+{
+  "address": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
+  "cluster": "mainnet-beta",
+  "account": {
+    "lamports": 1151511,
+    "data": [
+      "AgAAAIzRPY+wyFuhSu/8pu7IeZ90WBbMZjY4MGAVjuDHRwQk"
+    ],
+    "owner": "BPFLoaderUpgradeab1e11111111111111111111111",
+    "executable": true,
+    "rentEpoch": 18446744073709551615
+  }
+}
