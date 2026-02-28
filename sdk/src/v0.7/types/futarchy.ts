@@ -1186,7 +1186,43 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "adminApproveExecuteMultisigProposal";
+      name: "adminApproveMultisigProposal";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "adminExecuteMultisigProposal";
       accounts: [
         {
           name: "dao";
@@ -1215,16 +1251,6 @@ export type Futarchy = {
         },
         {
           name: "squadsMultisigProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
           isMut: false;
           isSigner: false;
         },
@@ -4449,7 +4475,43 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
-      name: "adminApproveExecuteMultisigProposal",
+      name: "adminApproveMultisigProposal",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVaultTransaction",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "adminExecuteMultisigProposal",
       accounts: [
         {
           name: "dao",
@@ -4478,16 +4540,6 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisigProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
           isMut: false,
           isSigner: false,
         },
