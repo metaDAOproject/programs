@@ -14,6 +14,7 @@ pub struct InitializePerformancePackageArgs {
     pub min_unlock_timestamp: i64,
 }
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct InitializePerformancePackage<'info> {
     #[account(
@@ -81,7 +82,7 @@ impl InitializePerformancePackage<'_> {
         let clock = Clock::get()?;
         let pp = &ctx.accounts.performance_package;
 
-        emit!(PerformancePackageCreatedEvent {
+        emit_cpi!(PerformancePackageCreatedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

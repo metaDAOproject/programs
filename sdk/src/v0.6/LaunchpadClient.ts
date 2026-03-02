@@ -480,7 +480,7 @@ export class LaunchpadClient {
         // poolCreatorAuthority,
       })
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 800_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 850_000 }),
         ComputeBudgetProgram.requestHeapFrame({ bytes: 255 * 1024 }),
       ]);
   }

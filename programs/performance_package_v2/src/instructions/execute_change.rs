@@ -5,6 +5,7 @@ use crate::{
     PerformancePackageError, ProposerType,
 };
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct ExecuteChange<'info> {
     #[account(mut)]
@@ -92,7 +93,7 @@ impl ExecuteChange<'_> {
 
         let clock = Clock::get()?;
 
-        emit!(ChangeExecutedEvent {
+        emit_cpi!(ChangeExecutedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,
