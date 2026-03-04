@@ -108,7 +108,7 @@ impl Refund<'_> {
             effective_burn,
         )?;
 
-        // 3-4. Update base_burned counters
+        // 3-4. Update base_burned totals
         let refund_record = &mut ctx.accounts.refund_record;
         let liquidation = &mut ctx.accounts.liquidation;
 
@@ -145,7 +145,7 @@ impl Refund<'_> {
             quote_transfer,
         )?;
 
-        // 8-9. Update quote_refunded counters
+        // 8-9. Update quote_refunded totals
         refund_record.quote_refunded += quote_transfer;
         liquidation.total_quote_refunded += quote_transfer;
 

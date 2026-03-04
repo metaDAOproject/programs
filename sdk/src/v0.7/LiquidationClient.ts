@@ -210,6 +210,51 @@ export class LiquidationClient {
     });
   }
 
+  refundIx({
+    recipient,
+    liquidation,
+    baseMint,
+    recipientBaseAccount,
+    quoteMint,
+  }: {
+    recipient: PublicKey;
+    liquidation: PublicKey;
+    baseMint: PublicKey;
+    recipientBaseAccount: PublicKey;
+    quoteMint: PublicKey;
+  }) {
+    const refundRecord = this.getRefundRecordAddress({
+      liquidation,
+      recipient,
+    });
+
+    const liquidationQuoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
+      liquidation,
+      true,
+    );
+
+    const recipientQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      recipient,
+      true,
+    );
+
+    return this.liquidationProgram.methods.refund().accounts({
+      recipient,
+      liquidation,
+      refundRecord,
+      baseMint,
+      recipientBaseAccount,
+      liquidationQuoteVault,
+      recipientQuoteAccount,
+      quoteMint,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    });
+  }
+
   async getRefundRecord({
     liquidation,
     recipient,
