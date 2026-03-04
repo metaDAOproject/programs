@@ -179,6 +179,77 @@ export type Liquidation = {
       ];
       args: [];
     },
+    {
+      name: "refund";
+      accounts: [
+        {
+          name: "recipient";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "liquidation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "refundRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "recipientBaseAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "liquidationQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "recipientQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -769,6 +840,77 @@ export const IDL: Liquidation = {
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "refund",
+      accounts: [
+        {
+          name: "recipient",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "liquidation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "refundRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "recipientBaseAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "liquidationQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "recipientQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },

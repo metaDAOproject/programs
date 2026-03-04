@@ -48,4 +48,9 @@ pub mod liquidation {
     pub fn activate_liquidation(ctx: Context<ActivateLiquidation>) -> Result<()> {
         ActivateLiquidation::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn refund(ctx: Context<Refund>) -> Result<()> {
+        Refund::handle(ctx)
+    }
 }
