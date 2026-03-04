@@ -4,6 +4,7 @@ import initializeLiquidation from "./unit/initializeLiquidation.test.js";
 import setRefundRecord from "./unit/setRefundRecord.test.js";
 import activateLiquidation from "./unit/activateLiquidation.test.js";
 import refund from "./unit/refund.test.js";
+import withdrawRemainingQuote from "./unit/withdrawRemainingQuote.test.js";
 
 export default function suite() {
   before(async function () {
@@ -17,5 +18,5 @@ export default function suite() {
   describe("#set_refund_record", setRefundRecord);
   describe("#activate_liquidation", activateLiquidation);
   describe("#refund", refund);
-  describe("#withdraw_remaining_quote", function () {});
+  describe.only("#withdraw_remaining_quote", withdrawRemainingQuote);
 }
