@@ -6,7 +6,6 @@ import {
 } from "@solana/web3.js";
 import { LiquidationClient } from "@metadaoproject/futarchy/v0.7";
 import BN from "bn.js";
-import * as token from "@solana/spl-token";
 
 export async function setupLiquidation(ctx: Mocha.Context): Promise<{
   baseMint: PublicKey;
@@ -137,16 +136,10 @@ export async function setupActivatedLiquidation(
     totalQuoteRefundable.toNumber(),
   );
 
-  const authorityQuoteAccount = token.getAssociatedTokenAddressSync(
-    result.quoteMint,
-    result.liquidationAuthority.publicKey,
-  );
-
   await liquidationClient
     .activateLiquidationIx({
       liquidationAuthority: result.liquidationAuthority.publicKey,
       liquidation: result.liquidation,
-      liquidationAuthorityQuoteAccount: authorityQuoteAccount,
       quoteMint: result.quoteMint,
     })
     .signers([result.liquidationAuthority])

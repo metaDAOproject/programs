@@ -5,7 +5,6 @@ import { expectError } from "../../utils.js";
 import { setupLiquidation } from "../utils.js";
 import BN from "bn.js";
 import { ComputeBudgetProgram } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 export default function suite() {
   let liquidationClient: LiquidationClient;
@@ -298,16 +297,10 @@ export default function suite() {
       50_000_000,
     );
 
-    const authorityQuoteAccount = getAssociatedTokenAddressSync(
-      quoteMint,
-      liquidationAuthority.publicKey,
-    );
-
     await liquidationClient
       .activateLiquidationIx({
         liquidationAuthority: liquidationAuthority.publicKey,
         liquidation,
-        liquidationAuthorityQuoteAccount: authorityQuoteAccount,
         quoteMint,
       })
       .signers([liquidationAuthority])

@@ -191,7 +191,7 @@ export class LiquidationClient {
   }: {
     liquidationAuthority: PublicKey;
     liquidation: PublicKey;
-    liquidationAuthorityQuoteAccount: PublicKey;
+    liquidationAuthorityQuoteAccount?: PublicKey;
     quoteMint: PublicKey;
   }) {
     const liquidationQuoteVault = getAssociatedTokenAddressSync(
@@ -200,10 +200,15 @@ export class LiquidationClient {
       true,
     );
 
+    const resolvedLiquidationAuthorityQuoteAccount =
+      liquidationAuthorityQuoteAccount ??
+      getAssociatedTokenAddressSync(quoteMint, liquidationAuthority, true);
+
     return this.liquidationProgram.methods.activateLiquidation().accounts({
       liquidationAuthority,
       liquidation,
-      liquidationAuthorityQuoteAccount,
+      liquidationAuthorityQuoteAccount:
+        resolvedLiquidationAuthorityQuoteAccount,
       liquidationQuoteVault,
       quoteMint,
       tokenProgram: TOKEN_PROGRAM_ID,

@@ -18,5 +18,5 @@ export default function suite() {
   describe("#set_refund_record", setRefundRecord);
   describe("#activate_liquidation", activateLiquidation);
   describe("#refund", refund);
-  describe.only("#withdraw_remaining_quote", withdrawRemainingQuote);
+  describe("#withdraw_remaining_quote", withdrawRemainingQuote);
 }

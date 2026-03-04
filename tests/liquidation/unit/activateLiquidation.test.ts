@@ -14,7 +14,6 @@ export default function suite() {
   let recordAuthority: Keypair;
   let liquidationAuthority: Keypair;
   let liquidation: PublicKey;
-  let authorityQuoteAccount: PublicKey;
 
   before(async function () {
     liquidationClient = this.liquidation;
@@ -51,11 +50,6 @@ export default function suite() {
       this.payer,
       1_500_000_000, // 500 + 1000
     );
-
-    authorityQuoteAccount = token.getAssociatedTokenAddressSync(
-      quoteMint,
-      liquidationAuthority.publicKey,
-    );
   });
 
   it("successfully activates liquidation", async function () {
@@ -63,7 +57,6 @@ export default function suite() {
       .activateLiquidationIx({
         liquidationAuthority: liquidationAuthority.publicKey,
         liquidation,
-        liquidationAuthorityQuoteAccount: authorityQuoteAccount,
         quoteMint,
       })
       .signers([liquidationAuthority])
@@ -95,11 +88,6 @@ export default function suite() {
       1_500_000_000,
     );
 
-    const wrongAuthorityQuoteAccount = token.getAssociatedTokenAddressSync(
-      quoteMint,
-      wrongAuthority.publicKey,
-    );
-
     const callbacks = expectError(
       "InvalidAuthority",
       "Should have thrown InvalidAuthority error",
@@ -109,7 +97,6 @@ export default function suite() {
       .activateLiquidationIx({
         liquidationAuthority: wrongAuthority.publicKey,
         liquidation,
-        liquidationAuthorityQuoteAccount: wrongAuthorityQuoteAccount,
         quoteMint,
       })
       .signers([wrongAuthority])
@@ -122,7 +109,6 @@ export default function suite() {
       .activateLiquidationIx({
         liquidationAuthority: liquidationAuthority.publicKey,
         liquidation,
-        liquidationAuthorityQuoteAccount: authorityQuoteAccount,
         quoteMint,
       })
       .signers([liquidationAuthority])
@@ -138,7 +124,6 @@ export default function suite() {
       .activateLiquidationIx({
         liquidationAuthority: liquidationAuthority.publicKey,
         liquidation,
-        liquidationAuthorityQuoteAccount: authorityQuoteAccount,
         quoteMint,
       })
       .postInstructions([
@@ -165,11 +150,6 @@ export default function suite() {
       result.liquidationAuthority.publicKey,
     );
 
-    const zeroAuthorityQuoteAccount = token.getAssociatedTokenAddressSync(
-      result.quoteMint,
-      result.liquidationAuthority.publicKey,
-    );
-
     const callbacks = expectError(
       "NoBaseAssigned",
       "Should have thrown NoBaseAssigned error",
@@ -179,7 +159,6 @@ export default function suite() {
       .activateLiquidationIx({
         liquidationAuthority: result.liquidationAuthority.publicKey,
         liquidation: result.liquidation,
-        liquidationAuthorityQuoteAccount: zeroAuthorityQuoteAccount,
         quoteMint: result.quoteMint,
       })
       .signers([result.liquidationAuthority])
@@ -203,11 +182,6 @@ export default function suite() {
       result.liquidationAuthority.publicKey,
     );
 
-    const zeroAuthorityQuoteAccount = token.getAssociatedTokenAddressSync(
-      result.quoteMint,
-      result.liquidationAuthority.publicKey,
-    );
-
     const callbacks = expectError(
       "NothingToFund",
       "Should have thrown NothingToFund error",
@@ -217,7 +191,6 @@ export default function suite() {
       .activateLiquidationIx({
         liquidationAuthority: result.liquidationAuthority.publicKey,
         liquidation: result.liquidation,
-        liquidationAuthorityQuoteAccount: zeroAuthorityQuoteAccount,
         quoteMint: result.quoteMint,
       })
       .signers([result.liquidationAuthority])
@@ -248,7 +221,6 @@ export default function suite() {
         .activateLiquidationIx({
           liquidationAuthority: liquidationAuthority.publicKey,
           liquidation,
-          liquidationAuthorityQuoteAccount: authorityQuoteAccount,
           quoteMint,
         })
         .signers([liquidationAuthority])
