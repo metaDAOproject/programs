@@ -1,4 +1,5 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import BN from "bn.js";
 import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -148,6 +149,52 @@ export class LiquidationClient {
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       });
+  }
+
+  setRefundRecordIx({
+    baseAssigned,
+    quoteRefundable,
+    recordAuthority,
+    liquidation,
+    recipient,
+    payer = this.provider.publicKey,
+  }: {
+    baseAssigned: BN;
+    quoteRefundable: BN;
+    recordAuthority: PublicKey;
+    liquidation: PublicKey;
+    recipient: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const refundRecord = this.getRefundRecordAddress({
+      liquidation,
+      recipient,
+    });
+
+    return this.liquidationProgram.methods
+      .setRefundRecord({ baseAssigned, quoteRefundable })
+      .accounts({
+        payer,
+        recordAuthority,
+        liquidation,
+        recipient,
+        refundRecord,
+        systemProgram: SystemProgram.programId,
+      });
+  }
+
+  async getRefundRecord({
+    liquidation,
+    recipient,
+  }: {
+    liquidation: PublicKey;
+    recipient: PublicKey;
+  }): Promise<RefundRecordAccount | null> {
+    const refundRecord = this.getRefundRecordAddress({
+      liquidation,
+      recipient,
+    });
+    return this.fetchRefundRecord(refundRecord);
   }
 
   public getLiquidationAddress({
