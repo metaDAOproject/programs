@@ -24,7 +24,7 @@ pub struct SetRefundRecord<'info> {
 
     #[account(
         mut,
-        has_one = record_authority,
+        constraint = liquidation.record_authority == record_authority.key() @ LiquidationError::InvalidAuthority,
     )]
     pub liquidation: Account<'info, Liquidation>,
 

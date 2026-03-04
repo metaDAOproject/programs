@@ -20,4 +20,6 @@ pub enum LiquidationError {
     NothingToRefund,
     #[msg("Invalid allocation")]
     InvalidAllocation,
+    #[msg("Invalid authority")]
+    InvalidAuthority,
 }

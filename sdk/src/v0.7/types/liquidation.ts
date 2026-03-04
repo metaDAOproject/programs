@@ -545,6 +545,11 @@ export type Liquidation = {
       name: "InvalidAllocation";
       msg: "Invalid allocation";
     },
+    {
+      code: 6009;
+      name: "InvalidAuthority";
+      msg: "Invalid authority";
+    },
   ];
 };
 
@@ -1094,6 +1099,11 @@ export const IDL: Liquidation = {
       code: 6008,
       name: "InvalidAllocation",
       msg: "Invalid allocation",
+    },
+    {
+      code: 6009,
+      name: "InvalidAuthority",
+      msg: "Invalid authority",
     },
   ],
 };
