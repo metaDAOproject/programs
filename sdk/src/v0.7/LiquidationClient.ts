@@ -259,6 +259,38 @@ export class LiquidationClient {
     });
   }
 
+  withdrawRemainingQuoteIx({
+    liquidationAuthority,
+    liquidation,
+    liquidationAuthorityQuoteAccount,
+    quoteMint,
+  }: {
+    liquidationAuthority: PublicKey;
+    liquidation: PublicKey;
+    liquidationAuthorityQuoteAccount?: PublicKey;
+    quoteMint: PublicKey;
+  }) {
+    const liquidationQuoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
+      liquidation,
+      true,
+    );
+
+    const resolvedLiquidationAuthorityQuoteAccount =
+      liquidationAuthorityQuoteAccount ??
+      getAssociatedTokenAddressSync(quoteMint, liquidationAuthority, true);
+
+    return this.liquidationProgram.methods.withdrawRemainingQuote().accounts({
+      liquidationAuthority,
+      liquidation,
+      liquidationQuoteVault,
+      liquidationAuthorityQuoteAccount:
+        resolvedLiquidationAuthorityQuoteAccount,
+      quoteMint,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    });
+  }
+
   async getRefundRecord({
     liquidation,
     recipient,
