@@ -53,4 +53,9 @@ pub mod liquidation {
     pub fn refund(ctx: Context<Refund>) -> Result<()> {
         Refund::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn withdraw_remaining_quote(ctx: Context<WithdrawRemainingQuote>) -> Result<()> {
+        WithdrawRemainingQuote::handle(ctx)
+    }
 }
