@@ -20,6 +20,7 @@ import {
   FUTARCHY_PROGRAM_ID,
   BID_WALL_PROGRAM_ID,
   MINT_GOVERNOR_PROGRAM_ID,
+  LIQUIDATION_PROGRAM_ID,
 } from "../constants.js";
 
 export const getEventAuthorityAddr = (programId: PublicKey) => {
@@ -327,6 +328,47 @@ export const getChangeRequestV2Addr = ({
       performancePackage.toBuffer(),
       proposer.toBuffer(),
       Buffer.from(new Uint8Array(new Uint32Array([pdaNonce]).buffer)),
+    ],
+    programId,
+  );
+};
+
+export const getLiquidationAddr = ({
+  programId = LIQUIDATION_PROGRAM_ID,
+  baseMint,
+  quoteMint,
+  createKey,
+}: {
+  programId?: PublicKey;
+  baseMint: PublicKey;
+  quoteMint: PublicKey;
+  createKey: PublicKey;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("liquidation"),
+      baseMint.toBuffer(),
+      quoteMint.toBuffer(),
+      createKey.toBuffer(),
+    ],
+    programId,
+  );
+};
+
+export const getRefundRecordAddr = ({
+  programId = LIQUIDATION_PROGRAM_ID,
+  liquidation,
+  recipient,
+}: {
+  programId?: PublicKey;
+  liquidation: PublicKey;
+  recipient: PublicKey;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("refund_record"),
+      liquidation.toBuffer(),
+      recipient.toBuffer(),
     ],
     programId,
   );

@@ -37,6 +37,12 @@ import {
 } from "./performance_package_v2.js";
 export { PerformancePackageV2Program, PerformancePackageV2IDL };
 
+import {
+  Liquidation as LiquidationProgram,
+  IDL as LiquidationIDL,
+} from "./liquidation.js";
+export { LiquidationProgram, LiquidationIDL };
+
 export { LowercaseKeys } from "./utils.js";
 
 import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
@@ -90,6 +96,10 @@ export type PerformancePackageV2ProposerType =
   IdlTypes<PerformancePackageV2Program>["ProposerType"];
 export type PerformancePackageV2ThresholdTranche =
   IdlTypes<PerformancePackageV2Program>["ThresholdTranche"];
+
+export type LiquidationAccount = IdlAccounts<LiquidationProgram>["liquidation"];
+export type RefundRecordAccount =
+  IdlAccounts<LiquidationProgram>["refundRecord"];
 
 export type BidWallInitializedEvent =
   IdlEvents<BidWallProgram>["BidWallInitializedEvent"];
