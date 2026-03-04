@@ -4,8 +4,8 @@ import { assert } from "chai";
 import { expectError } from "../../utils.js";
 import { setupLiquidation } from "../utils.js";
 import BN from "bn.js";
-import { LIQUIDATION_PROGRAM_ID } from "@metadaoproject/futarchy/v0.7";
 import { ComputeBudgetProgram } from "@solana/web3.js";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 export default function suite() {
   let liquidationClient: LiquidationClient;
@@ -276,20 +276,45 @@ export default function suite() {
   });
 
   it("throws error when liquidation is already activated", async function () {
-    // Directly flip is_refunding to true by modifying account data
-    const accountInfo = await this.banksClient.getAccount(liquidation);
-    const data = Buffer.from(accountInfo.data);
-    // is_refunding is at offset 220:
-    // 8 (discriminator) + 32*5 (pubkeys) + 8*5 (u64s) + 4 (u32) + 8 (u64) = 220
-    data[220] = 1;
-    this.context.setAccount(liquidation, {
-      data,
-      executable: false,
-      owner: LIQUIDATION_PROGRAM_ID,
-      lamports: accountInfo.lamports,
-    });
-
     const recipient = Keypair.generate();
+
+    // Create a record so activation has something to fund
+    await liquidationClient
+      .setRefundRecordIx({
+        baseAssigned: new BN(100_000_000),
+        quoteRefundable: new BN(50_000_000),
+        recordAuthority: recordAuthority.publicKey,
+        liquidation,
+        recipient: recipient.publicKey,
+      })
+      .signers([recordAuthority])
+      .rpc();
+
+    // Fund and activate the liquidation
+    await this.mintTo(
+      quoteMint,
+      liquidationAuthority.publicKey,
+      this.payer,
+      50_000_000,
+    );
+
+    const authorityQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      liquidationAuthority.publicKey,
+    );
+
+    await liquidationClient
+      .activateLiquidationIx({
+        liquidationAuthority: liquidationAuthority.publicKey,
+        liquidation,
+        liquidationAuthorityQuoteAccount: authorityQuoteAccount,
+        quoteMint,
+      })
+      .signers([liquidationAuthority])
+      .rpc();
+
+    // Now try to set a refund record — should fail
+    const recipient2 = Keypair.generate();
 
     const callbacks = expectError(
       "AlreadyActivated",
@@ -302,7 +327,7 @@ export default function suite() {
         quoteRefundable: new BN(50_000_000),
         recordAuthority: recordAuthority.publicKey,
         liquidation,
-        recipient: recipient.publicKey,
+        recipient: recipient2.publicKey,
       })
       .signers([recordAuthority])
       .rpc()

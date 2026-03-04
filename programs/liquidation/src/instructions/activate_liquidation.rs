@@ -48,15 +48,15 @@ impl ActivateLiquidation<'_> {
         );
 
         require_gt!(
-            self.liquidation.total_quote_refundable,
-            0,
-            LiquidationError::NothingToFund
-        );
-
-        require_gt!(
             self.liquidation.total_base_assigned,
             0,
             LiquidationError::NoBaseAssigned
+        );
+
+        require_gt!(
+            self.liquidation.total_quote_refundable,
+            0,
+            LiquidationError::NothingToFund
         );
 
         Ok(())
