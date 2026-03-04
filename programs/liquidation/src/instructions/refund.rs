@@ -91,11 +91,11 @@ impl Refund<'_> {
         let clock = Clock::get()?;
         let refund_record = &ctx.accounts.refund_record;
 
-        // 1. Compute effective burn
+        // Compute effective burn
         let remaining_burnable = refund_record.base_assigned - refund_record.base_burned;
         let effective_burn = remaining_burnable.min(ctx.accounts.recipient_base_account.amount);
 
-        // 2. Burn base tokens from recipient
+        // Burn base tokens from recipient
         token::burn(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -108,22 +108,22 @@ impl Refund<'_> {
             effective_burn,
         )?;
 
-        // 3-4. Update base_burned totals
+        // Update base_burned totals
         let refund_record = &mut ctx.accounts.refund_record;
         let liquidation = &mut ctx.accounts.liquidation;
 
         refund_record.base_burned += effective_burn;
         liquidation.total_base_burned += effective_burn;
 
-        // 5. Compute quote owed
+        // Compute quote owed
         let quote_owed = (refund_record.quote_refundable as u128
             * refund_record.base_burned as u128
             / refund_record.base_assigned as u128) as u64;
 
-        // 6. Compute transfer amount
+        // Compute transfer amount
         let quote_transfer = quote_owed - refund_record.quote_refunded;
 
-        // 7. Transfer quote tokens from vault to recipient (PDA-signed)
+        // Transfer quote tokens from vault to recipient (PDA-signed)
         let signer_seeds: &[&[&[u8]]] = &[&[
             SEED_LIQUIDATION,
             liquidation.base_mint.as_ref(),
@@ -145,11 +145,11 @@ impl Refund<'_> {
             quote_transfer,
         )?;
 
-        // 8-9. Update quote_refunded totals
+        // Update quote_refunded totals
         refund_record.quote_refunded += quote_transfer;
         liquidation.total_quote_refunded += quote_transfer;
 
-        // 10. Emit event
+        // Emit event
         liquidation.seq_num += 1;
 
         emit_cpi!(RefundEvent {
