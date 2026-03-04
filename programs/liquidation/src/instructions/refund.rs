@@ -16,7 +16,11 @@ pub struct Refund<'info> {
     #[account(mut)]
     pub recipient: Signer<'info>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        has_one = base_mint @ LiquidationError::InvalidMint,
+        has_one = quote_mint @ LiquidationError::InvalidMint,
+    )]
     pub liquidation: Account<'info, Liquidation>,
 
     #[account(
@@ -25,12 +29,6 @@ pub struct Refund<'info> {
         has_one = recipient @ LiquidationError::InvalidAuthority,
     )]
     pub refund_record: Account<'info, RefundRecord>,
-
-    #[account(
-        mut,
-        constraint = base_mint.key() == liquidation.base_mint @ LiquidationError::InvalidMint,
-    )]
-    pub base_mint: Account<'info, Mint>,
 
     #[account(
         mut,
@@ -54,9 +52,8 @@ pub struct Refund<'info> {
     )]
     pub recipient_quote_account: Account<'info, TokenAccount>,
 
-    #[account(
-        constraint = quote_mint.key() == liquidation.quote_mint @ LiquidationError::InvalidMint,
-    )]
+    #[account(mut)]
+    pub base_mint: Account<'info, Mint>,
     pub quote_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,

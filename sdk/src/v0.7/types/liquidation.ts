@@ -198,11 +198,6 @@ export type Liquidation = {
           isSigner: false;
         },
         {
-          name: "baseMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "recipientBaseAccount";
           isMut: true;
           isSigner: false;
@@ -214,6 +209,11 @@ export type Liquidation = {
         },
         {
           name: "recipientQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
           isMut: true;
           isSigner: false;
         },
@@ -921,11 +921,6 @@ export const IDL: Liquidation = {
           isSigner: false,
         },
         {
-          name: "baseMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "recipientBaseAccount",
           isMut: true,
           isSigner: false,
@@ -937,6 +932,11 @@ export const IDL: Liquidation = {
         },
         {
           name: "recipientQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
           isMut: true,
           isSigner: false,
         },

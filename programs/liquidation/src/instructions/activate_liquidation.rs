@@ -15,6 +15,7 @@ pub struct ActivateLiquidation<'info> {
     #[account(
         mut,
         has_one = liquidation_authority @ LiquidationError::InvalidAuthority,
+        has_one = quote_mint @ LiquidationError::InvalidMint,
     )]
     pub liquidation: Account<'info, Liquidation>,
 
@@ -32,9 +33,6 @@ pub struct ActivateLiquidation<'info> {
     )]
     pub liquidation_quote_vault: Account<'info, TokenAccount>,
 
-    #[account(
-        constraint = quote_mint.key() == liquidation.quote_mint @ LiquidationError::InvalidMint,
-    )]
     pub quote_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
