@@ -1,5 +1,6 @@
 import { LiquidationClient } from "@metadaoproject/futarchy/v0.7";
 import { BankrunProvider } from "anchor-bankrun";
+import initializeLiquidation from "./unit/initializeLiquidation.test.js";
 
 export default function suite() {
   before(async function () {
@@ -9,7 +10,7 @@ export default function suite() {
     });
   });
 
-  describe("#initialize_liquidation", function () {});
+  describe.only("#initialize_liquidation", initializeLiquidation);
   describe("#set_refund_record", function () {});
   describe("#activate_liquidation", function () {});
   describe("#refund", function () {});
