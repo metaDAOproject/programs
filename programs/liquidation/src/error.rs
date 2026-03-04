@@ -22,4 +22,6 @@ pub enum LiquidationError {
     InvalidAllocation,
     #[msg("Invalid authority")]
     InvalidAuthority,
+    #[msg("Invalid mint")]
+    InvalidMint,
 }

@@ -133,6 +133,52 @@ export type Liquidation = {
         },
       ];
     },
+    {
+      name: "activateLiquidation";
+      accounts: [
+        {
+          name: "liquidationAuthority";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "liquidation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "liquidationAuthorityQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "liquidationQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -550,6 +596,11 @@ export type Liquidation = {
       name: "InvalidAuthority";
       msg: "Invalid authority";
     },
+    {
+      code: 6010;
+      name: "InvalidMint";
+      msg: "Invalid mint";
+    },
   ];
 };
 
@@ -687,6 +738,52 @@ export const IDL: Liquidation = {
           },
         },
       ],
+    },
+    {
+      name: "activateLiquidation",
+      accounts: [
+        {
+          name: "liquidationAuthority",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "liquidation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "liquidationAuthorityQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "liquidationQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [
@@ -1104,6 +1201,11 @@ export const IDL: Liquidation = {
       code: 6009,
       name: "InvalidAuthority",
       msg: "Invalid authority",
+    },
+    {
+      code: 6010,
+      name: "InvalidMint",
+      msg: "Invalid mint",
     },
   ],
 };
