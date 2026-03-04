@@ -27,4 +27,12 @@ declare_id!("LiQnowFbFQdYyZhF4pUbpsrZCjxRTQ1upKJxZ2VXjde");
 #[program]
 pub mod liquidation {
     use super::*;
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_liquidation(
+        ctx: Context<InitializeLiquidation>,
+        args: InitializeLiquidationArgs,
+    ) -> Result<()> {
+        InitializeLiquidation::handle(ctx, args)
+    }
 }

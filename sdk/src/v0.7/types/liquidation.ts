@@ -1,7 +1,86 @@
 export type Liquidation = {
   version: "0.1.0";
   name: "liquidation";
-  instructions: [];
+  instructions: [
+    {
+      name: "initializeLiquidation";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "createKey";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "recordAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "liquidationAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "liquidation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "liquidationQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeLiquidationArgs";
+          };
+        },
+      ];
+    },
+  ];
   accounts: [
     {
       name: "liquidation";
@@ -152,6 +231,18 @@ export type Liquidation = {
           {
             name: "liquidationSeqNum";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeLiquidationArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "durationSeconds";
+            type: "u32";
           },
         ];
       };
@@ -391,7 +482,86 @@ export type Liquidation = {
 export const IDL: Liquidation = {
   version: "0.1.0",
   name: "liquidation",
-  instructions: [],
+  instructions: [
+    {
+      name: "initializeLiquidation",
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "createKey",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "recordAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "liquidationAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "liquidation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "liquidationQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeLiquidationArgs",
+          },
+        },
+      ],
+    },
+  ],
   accounts: [
     {
       name: "liquidation",
@@ -542,6 +712,18 @@ export const IDL: Liquidation = {
           {
             name: "liquidationSeqNum",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeLiquidationArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "durationSeconds",
+            type: "u32",
           },
         ],
       },
