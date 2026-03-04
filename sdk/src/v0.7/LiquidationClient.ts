@@ -1,5 +1,10 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { AccountInfo, PublicKey } from "@solana/web3.js";
+import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { LIQUIDATION_PROGRAM_ID } from "../v0.7/constants.js";
 import {
   LiquidationProgram,
@@ -80,6 +85,69 @@ export class LiquidationClient {
       "refundRecord",
       accountInfo.data,
     );
+  }
+
+  async getLiquidation({
+    baseMint,
+    quoteMint,
+    createKey,
+  }: {
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    createKey: PublicKey;
+  }): Promise<LiquidationAccount | null> {
+    const liquidation = this.getLiquidationAddress({
+      baseMint,
+      quoteMint,
+      createKey,
+    });
+    return this.fetchLiquidation(liquidation);
+  }
+
+  initializeLiquidationIx({
+    durationSeconds,
+    createKey,
+    recordAuthority,
+    liquidationAuthority,
+    baseMint,
+    quoteMint,
+    payer = this.provider.publicKey,
+  }: {
+    durationSeconds: number;
+    createKey: PublicKey;
+    recordAuthority: PublicKey;
+    liquidationAuthority: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const liquidation = this.getLiquidationAddress({
+      baseMint,
+      quoteMint,
+      createKey,
+    });
+
+    const liquidationQuoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
+      liquidation,
+      true,
+    );
+
+    return this.liquidationProgram.methods
+      .initializeLiquidation({ durationSeconds })
+      .accounts({
+        payer,
+        createKey,
+        recordAuthority,
+        liquidationAuthority,
+        baseMint,
+        quoteMint,
+        liquidation,
+        liquidationQuoteVault,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      });
   }
 
   public getLiquidationAddress({
