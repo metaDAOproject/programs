@@ -148,6 +148,9 @@ pub recipient_ata: Account<'info, TokenAccount>,
 pub funder_token_account: Account<'info, TokenAccount>,
 ```
 
+### Events
+Always use CPI events (`#[event_cpi]` on accounts structs, `emit_cpi!` for emission) rather than regular `emit!`.
+
 ### Require Macros
 When writing validation checks, prefer specific require macros over generic `require!`:
 1. `require_keys_eq!` - when comparing two `Pubkey` values
