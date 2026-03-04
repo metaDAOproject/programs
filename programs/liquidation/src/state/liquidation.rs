@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+pub const SEED_LIQUIDATION: &[u8] = b"liquidation";
+
 #[account]
 #[derive(InitSpace)]
 pub struct Liquidation {

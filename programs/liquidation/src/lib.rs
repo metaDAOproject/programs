@@ -35,4 +35,12 @@ pub mod liquidation {
     ) -> Result<()> {
         InitializeLiquidation::handle(ctx, args)
     }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn set_refund_record(
+        ctx: Context<SetRefundRecord>,
+        args: SetRefundRecordArgs,
+    ) -> Result<()> {
+        SetRefundRecord::handle(ctx, args)
+    }
 }

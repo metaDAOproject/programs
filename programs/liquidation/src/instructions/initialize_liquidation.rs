@@ -7,7 +7,7 @@ use anchor_spl::{
 use crate::{
     error::LiquidationError,
     events::{CommonFields, LiquidationCreatedEvent},
-    state::Liquidation,
+    state::{Liquidation, SEED_LIQUIDATION},
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -35,7 +35,7 @@ pub struct InitializeLiquidation<'info> {
         init,
         payer = payer,
         space = 8 + Liquidation::INIT_SPACE,
-        seeds = [b"liquidation", base_mint.key().as_ref(), quote_mint.key().as_ref(), create_key.key().as_ref()],
+        seeds = [SEED_LIQUIDATION, base_mint.key().as_ref(), quote_mint.key().as_ref(), create_key.key().as_ref()],
         bump
     )]
     pub liquidation: Account<'info, Liquidation>,
@@ -55,6 +55,7 @@ pub struct InitializeLiquidation<'info> {
 
 impl InitializeLiquidation<'_> {
     pub fn validate(&self, args: &InitializeLiquidationArgs) -> Result<()> {
+        // Refund window must have a nonzero duration
         require_gt!(args.duration_seconds, 0, LiquidationError::InvalidDuration);
         Ok(())
     }

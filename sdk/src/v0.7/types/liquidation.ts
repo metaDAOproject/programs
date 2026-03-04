@@ -80,6 +80,59 @@ export type Liquidation = {
         },
       ];
     },
+    {
+      name: "setRefundRecord";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "recordAuthority";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "liquidation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "recipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "refundRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "SetRefundRecordArgs";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -243,6 +296,22 @@ export type Liquidation = {
           {
             name: "durationSeconds";
             type: "u32";
+          },
+        ];
+      };
+    },
+    {
+      name: "SetRefundRecordArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "baseAssigned";
+            type: "u64";
+          },
+          {
+            name: "quoteRefundable";
+            type: "u64";
           },
         ];
       };
@@ -561,6 +630,59 @@ export const IDL: Liquidation = {
         },
       ],
     },
+    {
+      name: "setRefundRecord",
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "recordAuthority",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "liquidation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "recipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "refundRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "SetRefundRecordArgs",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -724,6 +846,22 @@ export const IDL: Liquidation = {
           {
             name: "durationSeconds",
             type: "u32",
+          },
+        ],
+      },
+    },
+    {
+      name: "SetRefundRecordArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "baseAssigned",
+            type: "u64",
+          },
+          {
+            name: "quoteRefundable",
+            type: "u64",
           },
         ],
       },

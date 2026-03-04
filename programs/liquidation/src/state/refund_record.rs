@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+pub const SEED_REFUND_RECORD: &[u8] = b"refund_record";
+
 #[account]
 #[derive(InitSpace)]
 pub struct RefundRecord {
