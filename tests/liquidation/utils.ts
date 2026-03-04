@@ -1,6 +1,12 @@
-import { PublicKey, Keypair, ComputeBudgetProgram } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  ComputeBudgetProgram,
+  SystemProgram,
+} from "@solana/web3.js";
 import { LiquidationClient } from "@metadaoproject/futarchy/v0.7";
 import BN from "bn.js";
+import * as token from "@solana/spl-token";
 
 export async function setupLiquidation(ctx: Mocha.Context): Promise<{
   baseMint: PublicKey;
@@ -89,6 +95,62 @@ export async function setupLiquidationWithRefundRecords(
 
     await builder.signers([result.recordAuthority]).rpc();
   }
+
+  return result;
+}
+
+export async function setupActivatedLiquidation(
+  ctx: Mocha.Context,
+  records: RefundRecordSetup[],
+  opts?: { durationSeconds?: number },
+): Promise<{
+  baseMint: PublicKey;
+  quoteMint: PublicKey;
+  baseMintAuthority: Keypair;
+  createKey: Keypair;
+  recordAuthority: Keypair;
+  liquidationAuthority: Keypair;
+  liquidation: PublicKey;
+}> {
+  const result = await setupLiquidationWithRefundRecords(ctx, records, opts);
+  const liquidationClient = ctx.liquidation as LiquidationClient;
+
+  // Fund recipients with SOL for rent (needed for init_if_needed quote ATA)
+  for (const record of records) {
+    ctx.context.setAccount(record.recipient.publicKey, {
+      data: Buffer.alloc(0),
+      executable: false,
+      owner: SystemProgram.programId,
+      lamports: 1_000_000_000,
+    });
+  }
+
+  const totalQuoteRefundable = records.reduce(
+    (sum, r) => sum.add(r.quoteRefundable),
+    new BN(0),
+  );
+
+  await ctx.mintTo(
+    result.quoteMint,
+    result.liquidationAuthority.publicKey,
+    ctx.payer,
+    totalQuoteRefundable.toNumber(),
+  );
+
+  const authorityQuoteAccount = token.getAssociatedTokenAddressSync(
+    result.quoteMint,
+    result.liquidationAuthority.publicKey,
+  );
+
+  await liquidationClient
+    .activateLiquidationIx({
+      liquidationAuthority: result.liquidationAuthority.publicKey,
+      liquidation: result.liquidation,
+      liquidationAuthorityQuoteAccount: authorityQuoteAccount,
+      quoteMint: result.quoteMint,
+    })
+    .signers([result.liquidationAuthority])
+    .rpc();
 
   return result;
 }

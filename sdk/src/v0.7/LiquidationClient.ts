@@ -220,13 +220,17 @@ export class LiquidationClient {
     recipient: PublicKey;
     liquidation: PublicKey;
     baseMint: PublicKey;
-    recipientBaseAccount: PublicKey;
+    recipientBaseAccount?: PublicKey;
     quoteMint: PublicKey;
   }) {
     const refundRecord = this.getRefundRecordAddress({
       liquidation,
       recipient,
     });
+
+    const resolvedRecipientBaseAccount =
+      recipientBaseAccount ??
+      getAssociatedTokenAddressSync(baseMint, recipient, true);
 
     const liquidationQuoteVault = getAssociatedTokenAddressSync(
       quoteMint,
@@ -245,7 +249,7 @@ export class LiquidationClient {
       liquidation,
       refundRecord,
       baseMint,
-      recipientBaseAccount,
+      recipientBaseAccount: resolvedRecipientBaseAccount,
       liquidationQuoteVault,
       recipientQuoteAccount,
       quoteMint,
