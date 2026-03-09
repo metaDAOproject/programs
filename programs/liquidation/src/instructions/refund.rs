@@ -86,7 +86,7 @@ impl Refund<'_> {
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let clock = Clock::get()?;
-        let refund_record = &ctx.accounts.refund_record;
+        let refund_record = &mut ctx.accounts.refund_record;
 
         // Compute effective burn
         let remaining_burnable = refund_record.base_assigned - refund_record.base_burned;
@@ -106,7 +106,6 @@ impl Refund<'_> {
         )?;
 
         // Update base_burned totals
-        let refund_record = &mut ctx.accounts.refund_record;
         let liquidation = &mut ctx.accounts.liquidation;
 
         refund_record.base_burned += effective_burn;
@@ -152,6 +151,7 @@ impl Refund<'_> {
         emit_cpi!(RefundEvent {
             common: CommonFields::new(&clock, liquidation.seq_num),
             liquidation: liquidation.key(),
+            refund_record: refund_record.key(),
             recipient: ctx.accounts.recipient.key(),
             base_burned: effective_burn,
             quote_refunded: quote_transfer,

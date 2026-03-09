@@ -40,6 +40,7 @@ pub struct LiquidationActivatedEvent {
 pub struct RefundRecordSetEvent {
     pub common: CommonFields,
     pub liquidation: Pubkey,
+    pub refund_record: Pubkey,
     pub recipient: Pubkey,
     pub base_assigned: u64,
     pub quote_refundable: u64,
@@ -49,6 +50,7 @@ pub struct RefundRecordSetEvent {
 pub struct RefundEvent {
     pub common: CommonFields,
     pub liquidation: Pubkey,
+    pub refund_record: Pubkey,
     pub recipient: Pubkey,
     pub base_burned: u64,
     pub quote_refunded: u64,

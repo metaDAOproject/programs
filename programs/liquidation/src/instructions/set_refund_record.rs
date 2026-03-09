@@ -103,6 +103,7 @@ impl SetRefundRecord<'_> {
         emit_cpi!(RefundRecordSetEvent {
             common: CommonFields::new(&clock, liquidation.seq_num),
             liquidation: liquidation.key(),
+            refund_record: ctx.accounts.refund_record.key(),
             recipient: ctx.accounts.recipient.key(),
             base_assigned: args.base_assigned,
             quote_refundable: args.quote_refundable,

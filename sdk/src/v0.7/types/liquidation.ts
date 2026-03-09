@@ -566,6 +566,11 @@ export type Liquidation = {
           index: false;
         },
         {
+          name: "refundRecord";
+          type: "publicKey";
+          index: false;
+        },
+        {
           name: "recipient";
           type: "publicKey";
           index: false;
@@ -594,6 +599,11 @@ export type Liquidation = {
         },
         {
           name: "liquidation";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "refundRecord";
           type: "publicKey";
           index: false;
         },
@@ -1289,6 +1299,11 @@ export const IDL: Liquidation = {
           index: false,
         },
         {
+          name: "refundRecord",
+          type: "publicKey",
+          index: false,
+        },
+        {
           name: "recipient",
           type: "publicKey",
           index: false,
@@ -1317,6 +1332,11 @@ export const IDL: Liquidation = {
         },
         {
           name: "liquidation",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "refundRecord",
           type: "publicKey",
           index: false,
         },
