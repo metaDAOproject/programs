@@ -88,6 +88,7 @@ impl InitializeLiquidation<'_> {
             base_mint: ctx.accounts.base_mint.key(),
             quote_mint: ctx.accounts.quote_mint.key(),
             duration_seconds: args.duration_seconds,
+            pda_bump: ctx.bumps.liquidation,
         });
 
         Ok(())

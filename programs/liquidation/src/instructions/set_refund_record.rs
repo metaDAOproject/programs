@@ -107,6 +107,7 @@ impl SetRefundRecord<'_> {
             recipient: ctx.accounts.recipient.key(),
             base_assigned: args.base_assigned,
             quote_refundable: args.quote_refundable,
+            pda_bump: ctx.bumps.refund_record,
         });
 
         Ok(())

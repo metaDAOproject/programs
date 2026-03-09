@@ -521,6 +521,11 @@ export type Liquidation = {
           type: "u32";
           index: false;
         },
+        {
+          name: "pdaBump";
+          type: "u8";
+          index: false;
+        },
       ];
     },
     {
@@ -583,6 +588,11 @@ export type Liquidation = {
         {
           name: "quoteRefundable";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "pdaBump";
+          type: "u8";
           index: false;
         },
       ];
@@ -1254,6 +1264,11 @@ export const IDL: Liquidation = {
           type: "u32",
           index: false,
         },
+        {
+          name: "pdaBump",
+          type: "u8",
+          index: false,
+        },
       ],
     },
     {
@@ -1316,6 +1331,11 @@ export const IDL: Liquidation = {
         {
           name: "quoteRefundable",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "pdaBump",
+          type: "u8",
           index: false,
         },
       ],

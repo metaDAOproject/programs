@@ -26,6 +26,7 @@ pub struct LiquidationCreatedEvent {
     pub base_mint: Pubkey,
     pub quote_mint: Pubkey,
     pub duration_seconds: u32,
+    pub pda_bump: u8,
 }
 
 #[event]
@@ -44,6 +45,7 @@ pub struct RefundRecordSetEvent {
     pub recipient: Pubkey,
     pub base_assigned: u64,
     pub quote_refundable: u64,
+    pub pda_bump: u8,
 }
 
 #[event]
