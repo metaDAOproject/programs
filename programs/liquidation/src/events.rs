@@ -45,6 +45,8 @@ pub struct RefundRecordSetEvent {
     pub recipient: Pubkey,
     pub base_assigned: u64,
     pub quote_refundable: u64,
+    pub liquidation_total_base_assigned: u64,
+    pub liquidation_total_quote_refundable: u64,
     pub pda_bump: u8,
 }
 

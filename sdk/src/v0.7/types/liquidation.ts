@@ -591,6 +591,16 @@ export type Liquidation = {
           index: false;
         },
         {
+          name: "liquidationTotalBaseAssigned";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "liquidationTotalQuoteRefundable";
+          type: "u64";
+          index: false;
+        },
+        {
           name: "pdaBump";
           type: "u8";
           index: false;
@@ -1330,6 +1340,16 @@ export const IDL: Liquidation = {
         },
         {
           name: "quoteRefundable",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "liquidationTotalBaseAssigned",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "liquidationTotalQuoteRefundable",
           type: "u64",
           index: false,
         },
