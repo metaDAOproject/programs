@@ -497,6 +497,11 @@ export type Liquidation = {
           index: false;
         },
         {
+          name: "createKey";
+          type: "publicKey";
+          index: false;
+        },
+        {
           name: "recordAuthority";
           type: "publicKey";
           index: false;
@@ -1246,6 +1251,11 @@ export const IDL: Liquidation = {
         },
         {
           name: "liquidation",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "createKey",
           type: "publicKey",
           index: false,
         },

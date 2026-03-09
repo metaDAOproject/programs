@@ -83,6 +83,7 @@ impl InitializeLiquidation<'_> {
         emit_cpi!(LiquidationCreatedEvent {
             common: CommonFields::new(&clock, ctx.accounts.liquidation.seq_num),
             liquidation: ctx.accounts.liquidation.key(),
+            create_key: ctx.accounts.create_key.key(),
             record_authority: ctx.accounts.record_authority.key(),
             liquidation_authority: ctx.accounts.liquidation_authority.key(),
             base_mint: ctx.accounts.base_mint.key(),

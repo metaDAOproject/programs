@@ -21,6 +21,7 @@ impl CommonFields {
 pub struct LiquidationCreatedEvent {
     pub common: CommonFields,
     pub liquidation: Pubkey,
+    pub create_key: Pubkey,
     pub record_authority: Pubkey,
     pub liquidation_authority: Pubkey,
     pub base_mint: Pubkey,
