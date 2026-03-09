@@ -126,13 +126,6 @@ impl InitializePerformancePackage<'_> {
 
         let clock = Clock::get()?;
 
-        // Validate that unlock timestamp is in the future
-        require_gt!(
-            min_unlock_timestamp,
-            clock.unix_timestamp,
-            PriceBasedPerformancePackageError::UnlockTimestampInThePast
-        );
-
         let total_token_amount = tranches.iter().try_fold(0u64, |acc, tranche| {
             acc.checked_add(tranche.token_amount).ok_or(error!(
                 PriceBasedPerformancePackageError::TotalTokenAmountOverflow
