@@ -20,6 +20,8 @@ pub struct Refund<'info> {
         mut,
         has_one = base_mint @ LiquidationError::InvalidMint,
         has_one = quote_mint @ LiquidationError::InvalidMint,
+        seeds = [SEED_LIQUIDATION, base_mint.key().as_ref(), quote_mint.key().as_ref(), liquidation.create_key.as_ref()],
+        bump = liquidation.pda_bump,
     )]
     pub liquidation: Account<'info, Liquidation>,
 

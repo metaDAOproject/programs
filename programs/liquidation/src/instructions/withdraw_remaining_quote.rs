@@ -16,6 +16,8 @@ pub struct WithdrawRemainingQuote<'info> {
         mut,
         has_one = liquidation_authority @ LiquidationError::InvalidAuthority,
         has_one = quote_mint @ LiquidationError::InvalidMint,
+        seeds = [SEED_LIQUIDATION, liquidation.base_mint.as_ref(), quote_mint.key().as_ref(), liquidation.create_key.as_ref()],
+        bump = liquidation.pda_bump,
     )]
     pub liquidation: Account<'info, Liquidation>,
 
