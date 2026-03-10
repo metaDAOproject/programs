@@ -8,3 +8,4 @@ export * from "./LaunchpadClient.js";
 export * from "./PriceBasedPerformancePackageClient.js";
 export * from "./MintGovernorClient.js";
 export * from "./PerformancePackageV2Client.js";
+export * from "./LiquidationClient.js";
