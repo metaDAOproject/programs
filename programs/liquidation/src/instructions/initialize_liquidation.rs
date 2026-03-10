@@ -41,7 +41,7 @@ pub struct InitializeLiquidation<'info> {
     pub liquidation: Account<'info, Liquidation>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         associated_token::mint = quote_mint,
         associated_token::authority = liquidation,
@@ -55,6 +55,11 @@ pub struct InitializeLiquidation<'info> {
 
 impl InitializeLiquidation<'_> {
     pub fn validate(&self, args: &InitializeLiquidationArgs) -> Result<()> {
+        require_keys_neq!(
+            self.base_mint.key(),
+            self.quote_mint.key(),
+            LiquidationError::InvalidMint
+        );
         // Refund window must have a nonzero duration
         require_gt!(args.duration_seconds, 0, LiquidationError::InvalidDuration);
         Ok(())

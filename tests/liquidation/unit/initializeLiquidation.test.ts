@@ -64,6 +64,29 @@ export default function suite() {
     assert.equal(vaultBalance.toString(), "0");
   });
 
+  it("throws error when base_mint and quote_mint are the same", async function () {
+    const { baseMint, createKey, recordAuthority, liquidationAuthority } =
+      await setupLiquidation(this);
+
+    const callbacks = expectError(
+      "InvalidMint",
+      "Should have thrown InvalidMint error",
+    );
+
+    await liquidationClient
+      .initializeLiquidationIx({
+        durationSeconds: 86400,
+        createKey: createKey.publicKey,
+        recordAuthority: recordAuthority.publicKey,
+        liquidationAuthority: liquidationAuthority.publicKey,
+        baseMint,
+        quoteMint: baseMint,
+      })
+      .signers([createKey])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   it("throws error when duration_seconds is zero", async function () {
     const {
       baseMint,
