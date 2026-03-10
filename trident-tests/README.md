@@ -59,3 +59,8 @@ The invariants focus on whether each instruction preserves the expected launch s
 Exercises the full performance package flow: `initialize_performance_package`, `start_unlock`, `complete_unlock`, authority changes, and proposal/execution of package updates. The suite is focused on the package state machine around oracle-driven unlocking as well as the authority and recipient control paths that can mutate package configuration.
 
 The invariants focus on ensuring unlock only progresses when time and oracle conditions are satisfied, token release goes to the configured recipient path, administrative changes respect the expected authority/recipient permissions, and state transitions remain coherent as the package moves from locked to unlocking to completed or through approved configuration changes.
+
+### fuzz_mint_governor - Mint Authorization And Limits
+Exercises a simplified `mint_governor` flow centered on adding, updating, removing, and using a single mint authority. The suite is focused on two things only: unauthorized access should fail, and minting should respect the configured `max_total` limit for the authorized minter.
+
+The invariants focus on keeping the tracked governor configuration stable after initialization and ensuring the tracked mint-authority PDA either does not exist when removed or matches the expected authorized minter, configured mint cap, and cumulative minted amount when active.

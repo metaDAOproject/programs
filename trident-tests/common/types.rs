@@ -14051,6 +14051,1007 @@ pub mod bid_wall {
     }
 }
 
+// ----------------------------------------------------------------------------
+// Program: mint_governor
+// ----------------------------------------------------------------------------
+pub mod mint_governor {
+    use super::*;
+
+    /// Returns the program ID for mint_governor
+    pub fn program_id() -> Pubkey {
+        pubkey!("gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH")
+    }
+
+    fn ix_data<T: BorshSerialize>(discriminator: [u8; 8], data: &T) -> Vec<u8> {
+        let mut out = discriminator.to_vec();
+        out.extend_from_slice(&borsh::to_vec(data).expect("instruction data should serialize"));
+        out
+    }
+
+    fn ix_data_no_args(discriminator: [u8; 8]) -> Vec<u8> {
+        discriminator.to_vec()
+    }
+
+    pub struct InitializeMintGovernorInstruction {
+        pub accounts: InitializeMintGovernorInstructionAccountMetas,
+        pub data: InitializeMintGovernorInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    pub struct InitializeMintGovernorInstructionAccountMetas {
+        pub mint: AccountMeta,
+        pub mintGovernor: AccountMeta,
+        pub createKey: AccountMeta,
+        pub admin: AccountMeta,
+        pub payer: AccountMeta,
+        pub systemProgram: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct InitializeMintGovernorInstructionAccounts {
+        pub mint: Pubkey,
+        pub mintGovernor: Pubkey,
+        pub createKey: Pubkey,
+        pub admin: Pubkey,
+        pub payer: Pubkey,
+        pub systemProgram: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl InitializeMintGovernorInstructionAccounts {
+        pub fn new(
+            mint: Pubkey,
+            mintGovernor: Pubkey,
+            createKey: Pubkey,
+            admin: Pubkey,
+            payer: Pubkey,
+            systemProgram: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                mint,
+                mintGovernor,
+                createKey,
+                admin,
+                payer,
+                systemProgram,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, Default)]
+    pub struct InitializeMintGovernorInstructionData {}
+
+    impl InitializeMintGovernorInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    impl InitializeMintGovernorInstruction {
+        fn discriminator() -> [u8; 8] {
+            [198, 71, 122, 52, 99, 36, 35, 197]
+        }
+
+        pub fn data(data: InitializeMintGovernorInstructionData) -> Self {
+            Self {
+                accounts: InitializeMintGovernorInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: InitializeMintGovernorInstructionAccounts) -> Self {
+            self.accounts.mint = AccountMeta::new_readonly(accounts.mint, false);
+            self.accounts.mintGovernor = AccountMeta::new(accounts.mintGovernor, false);
+            self.accounts.createKey = AccountMeta::new_readonly(accounts.createKey, true);
+            self.accounts.admin = AccountMeta::new_readonly(accounts.admin, false);
+            self.accounts.payer = AccountMeta::new(accounts.payer, true);
+            self.accounts.systemProgram = AccountMeta::new_readonly(accounts.systemProgram, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = vec![
+                self.accounts.mint.clone(),
+                self.accounts.mintGovernor.clone(),
+                self.accounts.createKey.clone(),
+                self.accounts.admin.clone(),
+                self.accounts.payer.clone(),
+                self.accounts.systemProgram.clone(),
+                self.accounts.eventAuthority.clone(),
+                self.accounts.program.clone(),
+            ];
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            Instruction {
+                program_id: program_id(),
+                accounts: self.to_account_metas(),
+                data: ix_data_no_args(Self::discriminator()),
+            }
+        }
+    }
+
+    pub struct TransferAuthorityToGovernorInstruction {
+        pub accounts: TransferAuthorityToGovernorInstructionAccountMetas,
+        pub data: TransferAuthorityToGovernorInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    pub struct TransferAuthorityToGovernorInstructionAccountMetas {
+        pub mintGovernor: AccountMeta,
+        pub mint: AccountMeta,
+        pub currentAuthority: AccountMeta,
+        pub tokenProgram: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct TransferAuthorityToGovernorInstructionAccounts {
+        pub mintGovernor: Pubkey,
+        pub mint: Pubkey,
+        pub currentAuthority: Pubkey,
+        pub tokenProgram: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl TransferAuthorityToGovernorInstructionAccounts {
+        pub fn new(
+            mintGovernor: Pubkey,
+            mint: Pubkey,
+            currentAuthority: Pubkey,
+            tokenProgram: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                mintGovernor,
+                mint,
+                currentAuthority,
+                tokenProgram,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, Default)]
+    pub struct TransferAuthorityToGovernorInstructionData {}
+
+    impl TransferAuthorityToGovernorInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    impl TransferAuthorityToGovernorInstruction {
+        fn discriminator() -> [u8; 8] {
+            [14, 48, 149, 50, 10, 197, 115, 141]
+        }
+
+        pub fn data(data: TransferAuthorityToGovernorInstructionData) -> Self {
+            Self {
+                accounts: TransferAuthorityToGovernorInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(
+            mut self,
+            accounts: TransferAuthorityToGovernorInstructionAccounts,
+        ) -> Self {
+            self.accounts.mintGovernor = AccountMeta::new(accounts.mintGovernor, false);
+            self.accounts.mint = AccountMeta::new(accounts.mint, false);
+            self.accounts.currentAuthority =
+                AccountMeta::new_readonly(accounts.currentAuthority, true);
+            self.accounts.tokenProgram = AccountMeta::new_readonly(accounts.tokenProgram, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = vec![
+                self.accounts.mintGovernor.clone(),
+                self.accounts.mint.clone(),
+                self.accounts.currentAuthority.clone(),
+                self.accounts.tokenProgram.clone(),
+                self.accounts.eventAuthority.clone(),
+                self.accounts.program.clone(),
+            ];
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            Instruction {
+                program_id: program_id(),
+                accounts: self.to_account_metas(),
+                data: ix_data_no_args(Self::discriminator()),
+            }
+        }
+    }
+
+    pub struct AddMintAuthorityInstruction {
+        pub accounts: AddMintAuthorityInstructionAccountMetas,
+        pub data: AddMintAuthorityInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    pub struct AddMintAuthorityInstructionAccountMetas {
+        pub mintGovernor: AccountMeta,
+        pub mintAuthority: AccountMeta,
+        pub admin: AccountMeta,
+        pub authorizedMinter: AccountMeta,
+        pub payer: AccountMeta,
+        pub systemProgram: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct AddMintAuthorityInstructionAccounts {
+        pub mintGovernor: Pubkey,
+        pub mintAuthority: Pubkey,
+        pub admin: Pubkey,
+        pub authorizedMinter: Pubkey,
+        pub payer: Pubkey,
+        pub systemProgram: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl AddMintAuthorityInstructionAccounts {
+        pub fn new(
+            mintGovernor: Pubkey,
+            mintAuthority: Pubkey,
+            admin: Pubkey,
+            authorizedMinter: Pubkey,
+            payer: Pubkey,
+            systemProgram: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                mintGovernor,
+                mintAuthority,
+                admin,
+                authorizedMinter,
+                payer,
+                systemProgram,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct AddMintAuthorityInstructionData {
+        pub args: AddMintAuthorityArgs,
+    }
+
+    impl AddMintAuthorityInstructionData {
+        pub fn new(args: AddMintAuthorityArgs) -> Self {
+            Self { args }
+        }
+    }
+
+    impl AddMintAuthorityInstruction {
+        fn discriminator() -> [u8; 8] {
+            [41, 254, 251, 123, 155, 68, 213, 8]
+        }
+
+        pub fn data(data: AddMintAuthorityInstructionData) -> Self {
+            Self {
+                accounts: AddMintAuthorityInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: AddMintAuthorityInstructionAccounts) -> Self {
+            self.accounts.mintGovernor = AccountMeta::new(accounts.mintGovernor, false);
+            self.accounts.mintAuthority = AccountMeta::new(accounts.mintAuthority, false);
+            self.accounts.admin = AccountMeta::new_readonly(accounts.admin, true);
+            self.accounts.authorizedMinter =
+                AccountMeta::new_readonly(accounts.authorizedMinter, false);
+            self.accounts.payer = AccountMeta::new(accounts.payer, true);
+            self.accounts.systemProgram = AccountMeta::new_readonly(accounts.systemProgram, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = vec![
+                self.accounts.mintGovernor.clone(),
+                self.accounts.mintAuthority.clone(),
+                self.accounts.admin.clone(),
+                self.accounts.authorizedMinter.clone(),
+                self.accounts.payer.clone(),
+                self.accounts.systemProgram.clone(),
+                self.accounts.eventAuthority.clone(),
+                self.accounts.program.clone(),
+            ];
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            Instruction {
+                program_id: program_id(),
+                accounts: self.to_account_metas(),
+                data: ix_data(Self::discriminator(), &self.data),
+            }
+        }
+    }
+
+    pub struct MintTokensInstruction {
+        pub accounts: MintTokensInstructionAccountMetas,
+        pub data: MintTokensInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    pub struct MintTokensInstructionAccountMetas {
+        pub mintGovernor: AccountMeta,
+        pub mintAuthority: AccountMeta,
+        pub mint: AccountMeta,
+        pub destinationAta: AccountMeta,
+        pub authorizedMinter: AccountMeta,
+        pub tokenProgram: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct MintTokensInstructionAccounts {
+        pub mintGovernor: Pubkey,
+        pub mintAuthority: Pubkey,
+        pub mint: Pubkey,
+        pub destinationAta: Pubkey,
+        pub authorizedMinter: Pubkey,
+        pub tokenProgram: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl MintTokensInstructionAccounts {
+        pub fn new(
+            mintGovernor: Pubkey,
+            mintAuthority: Pubkey,
+            mint: Pubkey,
+            destinationAta: Pubkey,
+            authorizedMinter: Pubkey,
+            tokenProgram: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                mintGovernor,
+                mintAuthority,
+                mint,
+                destinationAta,
+                authorizedMinter,
+                tokenProgram,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct MintTokensInstructionData {
+        pub args: MintTokensArgs,
+    }
+
+    impl MintTokensInstructionData {
+        pub fn new(args: MintTokensArgs) -> Self {
+            Self { args }
+        }
+    }
+
+    impl MintTokensInstruction {
+        fn discriminator() -> [u8; 8] {
+            [59, 132, 24, 246, 122, 39, 8, 243]
+        }
+
+        pub fn data(data: MintTokensInstructionData) -> Self {
+            Self {
+                accounts: MintTokensInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: MintTokensInstructionAccounts) -> Self {
+            self.accounts.mintGovernor = AccountMeta::new(accounts.mintGovernor, false);
+            self.accounts.mintAuthority = AccountMeta::new(accounts.mintAuthority, false);
+            self.accounts.mint = AccountMeta::new(accounts.mint, false);
+            self.accounts.destinationAta = AccountMeta::new(accounts.destinationAta, false);
+            self.accounts.authorizedMinter =
+                AccountMeta::new_readonly(accounts.authorizedMinter, true);
+            self.accounts.tokenProgram = AccountMeta::new_readonly(accounts.tokenProgram, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = vec![
+                self.accounts.mintGovernor.clone(),
+                self.accounts.mintAuthority.clone(),
+                self.accounts.mint.clone(),
+                self.accounts.destinationAta.clone(),
+                self.accounts.authorizedMinter.clone(),
+                self.accounts.tokenProgram.clone(),
+                self.accounts.eventAuthority.clone(),
+                self.accounts.program.clone(),
+            ];
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            Instruction {
+                program_id: program_id(),
+                accounts: self.to_account_metas(),
+                data: ix_data(Self::discriminator(), &self.data),
+            }
+        }
+    }
+
+    pub struct UpdateMintAuthorityInstruction {
+        pub accounts: UpdateMintAuthorityInstructionAccountMetas,
+        pub data: UpdateMintAuthorityInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    pub struct UpdateMintAuthorityInstructionAccountMetas {
+        pub mintGovernor: AccountMeta,
+        pub mintAuthority: AccountMeta,
+        pub admin: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct UpdateMintAuthorityInstructionAccounts {
+        pub mintGovernor: Pubkey,
+        pub mintAuthority: Pubkey,
+        pub admin: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl UpdateMintAuthorityInstructionAccounts {
+        pub fn new(
+            mintGovernor: Pubkey,
+            mintAuthority: Pubkey,
+            admin: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                mintGovernor,
+                mintAuthority,
+                admin,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct UpdateMintAuthorityInstructionData {
+        pub args: UpdateMintAuthorityArgs,
+    }
+
+    impl UpdateMintAuthorityInstructionData {
+        pub fn new(args: UpdateMintAuthorityArgs) -> Self {
+            Self { args }
+        }
+    }
+
+    impl UpdateMintAuthorityInstruction {
+        fn discriminator() -> [u8; 8] {
+            [103, 51, 57, 197, 223, 22, 44, 142]
+        }
+
+        pub fn data(data: UpdateMintAuthorityInstructionData) -> Self {
+            Self {
+                accounts: UpdateMintAuthorityInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: UpdateMintAuthorityInstructionAccounts) -> Self {
+            self.accounts.mintGovernor = AccountMeta::new(accounts.mintGovernor, false);
+            self.accounts.mintAuthority = AccountMeta::new(accounts.mintAuthority, false);
+            self.accounts.admin = AccountMeta::new_readonly(accounts.admin, true);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = vec![
+                self.accounts.mintGovernor.clone(),
+                self.accounts.mintAuthority.clone(),
+                self.accounts.admin.clone(),
+                self.accounts.eventAuthority.clone(),
+                self.accounts.program.clone(),
+            ];
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            Instruction {
+                program_id: program_id(),
+                accounts: self.to_account_metas(),
+                data: ix_data(Self::discriminator(), &self.data),
+            }
+        }
+    }
+
+    pub struct RemoveMintAuthorityInstruction {
+        pub accounts: RemoveMintAuthorityInstructionAccountMetas,
+        pub data: RemoveMintAuthorityInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    pub struct RemoveMintAuthorityInstructionAccountMetas {
+        pub mintGovernor: AccountMeta,
+        pub mintAuthority: AccountMeta,
+        pub admin: AccountMeta,
+        pub rentDestination: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct RemoveMintAuthorityInstructionAccounts {
+        pub mintGovernor: Pubkey,
+        pub mintAuthority: Pubkey,
+        pub admin: Pubkey,
+        pub rentDestination: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl RemoveMintAuthorityInstructionAccounts {
+        pub fn new(
+            mintGovernor: Pubkey,
+            mintAuthority: Pubkey,
+            admin: Pubkey,
+            rentDestination: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                mintGovernor,
+                mintAuthority,
+                admin,
+                rentDestination,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, Default)]
+    pub struct RemoveMintAuthorityInstructionData {}
+
+    impl RemoveMintAuthorityInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    impl RemoveMintAuthorityInstruction {
+        fn discriminator() -> [u8; 8] {
+            [33, 207, 52, 111, 106, 97, 9, 63]
+        }
+
+        pub fn data(data: RemoveMintAuthorityInstructionData) -> Self {
+            Self {
+                accounts: RemoveMintAuthorityInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: RemoveMintAuthorityInstructionAccounts) -> Self {
+            self.accounts.mintGovernor = AccountMeta::new(accounts.mintGovernor, false);
+            self.accounts.mintAuthority = AccountMeta::new(accounts.mintAuthority, false);
+            self.accounts.admin = AccountMeta::new_readonly(accounts.admin, true);
+            self.accounts.rentDestination = AccountMeta::new(accounts.rentDestination, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = vec![
+                self.accounts.mintGovernor.clone(),
+                self.accounts.mintAuthority.clone(),
+                self.accounts.admin.clone(),
+                self.accounts.rentDestination.clone(),
+                self.accounts.eventAuthority.clone(),
+                self.accounts.program.clone(),
+            ];
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            Instruction {
+                program_id: program_id(),
+                accounts: self.to_account_metas(),
+                data: ix_data_no_args(Self::discriminator()),
+            }
+        }
+    }
+
+    pub struct UpdateMintGovernorAdminInstruction {
+        pub accounts: UpdateMintGovernorAdminInstructionAccountMetas,
+        pub data: UpdateMintGovernorAdminInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    pub struct UpdateMintGovernorAdminInstructionAccountMetas {
+        pub mintGovernor: AccountMeta,
+        pub admin: AccountMeta,
+        pub newAdmin: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct UpdateMintGovernorAdminInstructionAccounts {
+        pub mintGovernor: Pubkey,
+        pub admin: Pubkey,
+        pub newAdmin: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl UpdateMintGovernorAdminInstructionAccounts {
+        pub fn new(
+            mintGovernor: Pubkey,
+            admin: Pubkey,
+            newAdmin: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                mintGovernor,
+                admin,
+                newAdmin,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, Default)]
+    pub struct UpdateMintGovernorAdminInstructionData {}
+
+    impl UpdateMintGovernorAdminInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    impl UpdateMintGovernorAdminInstruction {
+        fn discriminator() -> [u8; 8] {
+            [13, 24, 126, 16, 56, 4, 123, 179]
+        }
+
+        pub fn data(data: UpdateMintGovernorAdminInstructionData) -> Self {
+            Self {
+                accounts: UpdateMintGovernorAdminInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: UpdateMintGovernorAdminInstructionAccounts) -> Self {
+            self.accounts.mintGovernor = AccountMeta::new(accounts.mintGovernor, false);
+            self.accounts.admin = AccountMeta::new_readonly(accounts.admin, true);
+            self.accounts.newAdmin = AccountMeta::new_readonly(accounts.newAdmin, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = vec![
+                self.accounts.mintGovernor.clone(),
+                self.accounts.admin.clone(),
+                self.accounts.newAdmin.clone(),
+                self.accounts.eventAuthority.clone(),
+                self.accounts.program.clone(),
+            ];
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            Instruction {
+                program_id: program_id(),
+                accounts: self.to_account_metas(),
+                data: ix_data_no_args(Self::discriminator()),
+            }
+        }
+    }
+
+    pub struct ReclaimAuthorityInstruction {
+        pub accounts: ReclaimAuthorityInstructionAccountMetas,
+        pub data: ReclaimAuthorityInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    pub struct ReclaimAuthorityInstructionAccountMetas {
+        pub mintGovernor: AccountMeta,
+        pub mint: AccountMeta,
+        pub admin: AccountMeta,
+        pub newAuthority: AccountMeta,
+        pub tokenProgram: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct ReclaimAuthorityInstructionAccounts {
+        pub mintGovernor: Pubkey,
+        pub mint: Pubkey,
+        pub admin: Pubkey,
+        pub newAuthority: Pubkey,
+        pub tokenProgram: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl ReclaimAuthorityInstructionAccounts {
+        pub fn new(
+            mintGovernor: Pubkey,
+            mint: Pubkey,
+            admin: Pubkey,
+            newAuthority: Pubkey,
+            tokenProgram: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                mintGovernor,
+                mint,
+                admin,
+                newAuthority,
+                tokenProgram,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, Default)]
+    pub struct ReclaimAuthorityInstructionData {}
+
+    impl ReclaimAuthorityInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    impl ReclaimAuthorityInstruction {
+        fn discriminator() -> [u8; 8] {
+            [156, 147, 67, 113, 251, 229, 162, 166]
+        }
+
+        pub fn data(data: ReclaimAuthorityInstructionData) -> Self {
+            Self {
+                accounts: ReclaimAuthorityInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: ReclaimAuthorityInstructionAccounts) -> Self {
+            self.accounts.mintGovernor = AccountMeta::new(accounts.mintGovernor, false);
+            self.accounts.mint = AccountMeta::new(accounts.mint, false);
+            self.accounts.admin = AccountMeta::new_readonly(accounts.admin, true);
+            self.accounts.newAuthority = AccountMeta::new_readonly(accounts.newAuthority, false);
+            self.accounts.tokenProgram = AccountMeta::new_readonly(accounts.tokenProgram, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = vec![
+                self.accounts.mintGovernor.clone(),
+                self.accounts.mint.clone(),
+                self.accounts.admin.clone(),
+                self.accounts.newAuthority.clone(),
+                self.accounts.tokenProgram.clone(),
+                self.accounts.eventAuthority.clone(),
+                self.accounts.program.clone(),
+            ];
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            Instruction {
+                program_id: program_id(),
+                accounts: self.to_account_metas(),
+                data: ix_data_no_args(Self::discriminator()),
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct MintAuthority {
+        pub mintGovernor: Pubkey,
+        pub authorizedMinter: Pubkey,
+        pub maxTotal: Option<u64>,
+        pub totalMinted: u64,
+        pub bump: u8,
+    }
+
+    impl MintAuthority {
+        pub fn new(
+            mintGovernor: Pubkey,
+            authorizedMinter: Pubkey,
+            maxTotal: Option<u64>,
+            totalMinted: u64,
+            bump: u8,
+        ) -> Self {
+            Self {
+                mintGovernor,
+                authorizedMinter,
+                maxTotal,
+                totalMinted,
+                bump,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct MintGovernor {
+        pub mint: Pubkey,
+        pub admin: Pubkey,
+        pub createKey: Pubkey,
+        pub seqNum: u64,
+        pub bump: u8,
+    }
+
+    impl MintGovernor {
+        pub fn new(mint: Pubkey, admin: Pubkey, createKey: Pubkey, seqNum: u64, bump: u8) -> Self {
+            Self {
+                mint,
+                admin,
+                createKey,
+                seqNum,
+                bump,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct AddMintAuthorityArgs {
+        pub maxTotal: Option<u64>,
+    }
+
+    impl AddMintAuthorityArgs {
+        pub fn new(maxTotal: Option<u64>) -> Self {
+            Self { maxTotal }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct MintTokensArgs {
+        pub amount: u64,
+    }
+
+    impl MintTokensArgs {
+        pub fn new(amount: u64) -> Self {
+            Self { amount }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct UpdateMintAuthorityArgs {
+        pub maxTotal: Option<u64>,
+    }
+
+    impl UpdateMintAuthorityArgs {
+        pub fn new(maxTotal: Option<u64>) -> Self {
+            Self { maxTotal }
+        }
+    }
+
+    impl AccountDiscriminator for MintAuthority {
+        fn discriminator() -> &'static [u8] {
+            &[0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8]
+        }
+    }
+
+    impl AccountDiscriminator for MintGovernor {
+        fn discriminator() -> &'static [u8] {
+            &[0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8]
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[repr(u32)]
+    pub enum MintgovernorError {
+        UnauthorizedAdmin = 6000,
+        UnauthorizedMinter = 6001,
+        MintMismatch = 6002,
+        MintLimitExceeded = 6003,
+    }
+
+    impl MintgovernorError {
+        pub fn code(&self) -> u32 {
+            *self as u32
+        }
+
+        pub fn msg(&self) -> &'static str {
+            match self {
+                Self::UnauthorizedAdmin => "Unauthorized: signer is not the admin",
+                Self::UnauthorizedMinter => "Unauthorized: signer is not the authorized minter",
+                Self::MintMismatch => {
+                    "Mint mismatch: mint_governor.mint does not match provided mint"
+                }
+                Self::MintLimitExceeded => "Mint limit exceeded: would exceed max_total",
+            }
+        }
+
+        pub fn from_code(code: u32) -> Option<Self> {
+            match code {
+                6000 => Some(Self::UnauthorizedAdmin),
+                6001 => Some(Self::UnauthorizedMinter),
+                6002 => Some(Self::MintMismatch),
+                6003 => Some(Self::MintLimitExceeded),
+                _ => None,
+            }
+        }
+    }
+}
+
 // ============================================================================
 // END OF GENERATED FILE
 // ============================================================================

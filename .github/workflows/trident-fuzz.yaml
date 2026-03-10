@@ -65,6 +65,8 @@ jobs:
             target: "fuzz_launchpad"
           - name: "fuzz_pbpp"
             target: "fuzz_pbpp"
+          - name: "fuzz_mint_governor"
+            target: "fuzz_mint_governor"
 
     steps:
       - uses: actions/checkout@v4

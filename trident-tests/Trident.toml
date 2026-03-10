@@ -11,10 +11,6 @@ program = "../target/deploy/bid_wall.so"
 address = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 program = "../target/deploy/conditional_vault.so"
 
-# [[fuzz.programs]]
-# address = "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG"
-# program = "./programs/mainnet/meteora/damm_v2.so"
-
 [[fuzz.programs]]
 address = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
 program = "../target/deploy/futarchy.so"
@@ -26,6 +22,10 @@ program = "../target/deploy/launchpad_v7.so"
 [[fuzz.programs]]
 address = "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
 program = "../target/deploy/price_based_performance_package.so"
+
+[[fuzz.programs]]
+address = "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH"
+program = "../target/deploy/mint_governor.so"
 
 
 # ==============================
@@ -52,10 +52,3 @@ cluster = "m"
 address = "FaA6RM9enPh1tU9Y8LiGCq715JubLc49WGcYTdNvDfsc"
 cluster = "m"
 
-# ==============================
-# External Accounts
-# ==============================
-
-# [[fuzz.accounts]]
-# address = "FaA6RM9enPh1tU9Y8LiGCq715JubLc49WGcYTdNvDfsc"
-# filename = "./accounts/mainnet/meteora/damm-config.json"

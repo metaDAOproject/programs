@@ -43,3 +43,7 @@ path = "fuzz_launchpad/test_fuzz.rs"
 [[bin]]
 name = "fuzz_pbpp"
 path = "fuzz_pbpp/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_mint_governor"
+path = "fuzz_mint_governor/test_fuzz.rs"
