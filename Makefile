@@ -16,6 +16,12 @@ build-v07-launchpad:
 build-conditional-vault:
 	cargo build-sbf --manifest-path programs/conditional_vault/Cargo.toml --arch v2
 
+build-mint-governor:
+	cargo build-sbf --manifest-path programs/mint_governor/Cargo.toml --arch v2
+
+build-performance-package-v2:
+	cargo build-sbf --manifest-path programs/performance_package_v2/Cargo.toml --arch v2
+
 # Build all programs
-build-all: build-bid-wall build-futarchy build-price-based-performance-package build-v07-launchpad build-conditional-vault
+build-all: build-bid-wall build-futarchy build-price-based-performance-package build-v07-launchpad build-conditional-vault build-mint-governor build-performance-package-v2
 
