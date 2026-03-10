@@ -72,9 +72,9 @@ impl Refund<'_> {
             LiquidationError::RefundingNotEnabled
         );
 
-        require!(
-            clock.unix_timestamp
-                <= self.liquidation.started_at + self.liquidation.duration_seconds as i64,
+        require_gte!(
+            self.liquidation.started_at + self.liquidation.duration_seconds as i64,
+            clock.unix_timestamp,
             LiquidationError::RefundWindowExpired
         );
 

@@ -49,9 +49,9 @@ impl WithdrawRemainingQuote<'_> {
             LiquidationError::RefundingNotEnabled
         );
 
-        require!(
-            clock.unix_timestamp
-                > self.liquidation.started_at + self.liquidation.duration_seconds as i64,
+        require_gt!(
+            clock.unix_timestamp,
+            self.liquidation.started_at + self.liquidation.duration_seconds as i64,
             LiquidationError::RefundWindowNotExpired
         );
 

@@ -55,11 +55,13 @@ pub struct InitializeLiquidation<'info> {
 
 impl InitializeLiquidation<'_> {
     pub fn validate(&self, args: &InitializeLiquidationArgs) -> Result<()> {
+        // Mints must be different
         require_keys_neq!(
             self.base_mint.key(),
             self.quote_mint.key(),
             LiquidationError::InvalidMint
         );
+
         // Refund window must have a nonzero duration
         require_gt!(args.duration_seconds, 0, LiquidationError::InvalidDuration);
         Ok(())
