@@ -292,3 +292,4 @@ External programs required for tests. These are pre-compiled `.so` files in `tes
 | conditional_vault | v0.4 | `VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg` |
 | price_based_performance_package | v0.6.0 | `pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS` |
 | mint_governor | v0.7.0 | `gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH` |
+| liquidation | v0.1.0 | `LiQnowFbFQdYyZhF4pUbpsrZCjxRTQ1upKJxZ2VXjde` |
