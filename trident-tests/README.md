@@ -1,78 +1,61 @@
 # Fuzzing Tests
 
 
-In case you receive an error like "Access violation in stack frame 5 at address 0x200005eb0 of size 8". Use this quide in order to fix it.
+## How to run the tests:
 
-- Install trident-cli -- `cargo install trident-cli --version 0.13.0-rc.1`
 
-- Make sure that `trident-test/cargo.toml` has
+### 1. Install trident-cli
 
-```rust
-[dependencies.trident-fuzz]
-version = "0.13.0-rc.1"
-features = ["token"]
+```bash
+cargo install trident-cli --version 0.13.0-rc.2
 ```
 
-- Leave the anchor lang dependency as it is.
+### 2. Build the programs
 
-- In order to compile use `cargo build-sbf --manifest-path programs/futarchy/Cargo.toml --arch v2` (or similar for other programs) -- with solana-cli version 3.1.9.
+```bash
+# execute from project root
+make build-all
+```
 
-- Make sure that the Trident.toml points to the correct location to load the program from.
+> [!WARNING]
+> Make sure the Solana-CLI version is 3.1.9.
 
-- If above done, call `trident fuzz run fuzz_0`
+### 3. Run the tests
+
+```bash
+trident fuzz run fuzz_0
+# or another fuzz test by name
+```
+
 
 ## Fuzz Test Suites
 
 ### fuzz_0 - Liquidity Operations
-Focuses on `provide_liquidity` and `withdraw_liquidity` instructions with simple invariants:
-- Users cannot withdraw more tokens than they deposited (prevents theft)
-- Token balances and reserves maintain consistency
-- Position liquidity accounting is correct
+Exercises randomized `provide_liquidity` and `withdraw_liquidity` flows for multiple users after the pool is seeded with initial liquidity. The suite is mainly looking for accounting bugs in LP minting/burning, reserve updates, and per-user position tracking.
+
+The invariants focus on ensuring deposits move assets from users into the pool, withdrawals move assets back out in the correct direction, LP position liquidity only changes consistently with the action taken, and no user can withdraw materially more than they have contributed apart from tiny rounding dust.
 
 ### fuzz_1 - Spot Trading
-Focuses on `spot_swap` instructions with simple invariants:
-- Buy swaps: trader base balance increases, quote balance decreases; pool base reserves decrease, quote reserves increase
-- Sell swaps: trader base balance decreases, quote balance increases; pool base reserves increase, quote reserves decrease
-- Reserve accounting matches DAO vault balances
-- Pool maintains consistency (empty pool has zero reserves)
+Exercises repeated `spot_swap` buy and sell operations against a seeded spot pool. It is focused on catching incorrect reserve updates, fee accounting mistakes, and trader balance changes that move opposite to the intended swap direction.
+
+The invariants focus on swap-direction sanity for both the trader and the pool, plus end-of-iteration checks that on-chain spot reserves and protocol fee balances still reconcile with the DAO vault balances and that an empty pool cannot report non-zero reserves.
 
 ### fuzz_2 - Conditional Trading (Simple Principle)
-For conditional trading we avoid re-implementing AMM math in the fuzz test.
-Instead, we check conservation-style invariants and token parity:
+Sets up an active futarchy proposal with conditional vaults and then fuzzes `conditional_swap` operations across the pass and fail markets. Instead of re-implementing the AMM pricing logic off-chain, this suite is aimed at detecting leaks, broken split/merge behavior, and incorrect conditional reserve movement through conservation-style checks.
 
-- Underlying token conservation:
-  - Total `base` across tracked holders + base conditional vault underlying account stays constant.
-  - Total `quote` across tracked holders + quote conditional vault underlying account stays constant.
-- Conditional token parity:
-  - Total pass-base equals total fail-base (over tracked owners).
-  - Total pass-quote equals total fail-quote (over tracked owners).
-- Per-swap direction sanity:
-  - Trader input token does not increase.
-  - Trader output token does not decrease.
-  - Market pool reserve direction matches swap type (buy/sell).
-
-This catches leaks/mint-burn inconsistencies while staying independent from internal pricing/arbitrage math.
+The invariants focus on total underlying token conservation across tracked holders and vaults, pass/fail token parity for both base and quote legs, and simple trade-direction checks that the trader spends the input asset, receives the output asset, and moves the selected conditional pool reserves in the expected direction.
 
 ### fuzz_3 - Mixed Spot + Conditional Trading (Proposal Active)
-This suite keeps DAO in `PoolState::Futarchy` (proposal launched and active) and fuzzes both:
-- `spot_swap` flows for Alice/Bob
-- `conditional_swap` (pass/fail, buy/sell) flows for Alice/Bob
+Keeps the DAO in active `PoolState::Futarchy` and mixes `spot_swap` and `conditional_swap` flows in the same run. This is the most integration-heavy futarchy suite: it is designed to catch accounting mismatches between the spot pool, conditional pools, and vault balances while both trading modes interact during an active proposal.
 
-Invariant idea for this mixed suite:
+The invariants focus on conservation of the underlying assets, pass/fail conditional token parity, directional sanity for both spot and conditional swaps, and aggregated vault-to-reserve alignment while the AMM is in futarchy mode. At the end of each run it also finalizes the proposal and checks that the system cleanly transitions back to spot mode with reserves and vault balances still aligned.
 
-- Global conservation (no hidden mint/burn):
-  - Total tracked `base` underlying remains constant.
-  - Total tracked `quote` underlying remains constant.
-- Conditional parity:
-  - Total pass-base equals total fail-base (over tracked owners).
-  - Total pass-quote equals total fail-quote (over tracked owners).
-- Conditional trade sanity:
-  - Trader input token should not increase.
-  - Trader output token should not decrease.
-  - Selected conditional market reserves move in the expected direction.
-- Spot trade sanity (while AMM is Futarchy):
-  - Spot buy: trader base should not decrease, trader quote should not increase.
-  - Spot sell: trader base should not increase, trader quote should not decrease.
+### fuzz_launchpad - Launch Lifecycle
+Exercises the main `launchpad` lifecycle with mostly-valid but occasionally-invalid actions across `initialize_launch`, `start_launch`, `fund`, `close_launch`, `set_funding_record_approval`, `complete_launch`, `refund`, `claim`, and the post-completion paths for additional token allocation and performance package initialization. The suite is focused on state machine safety, custody of deposited funds, and making sure launch progression cannot be bypassed by malformed account combinations or bad signers.
 
-Why this approach: we validate accounting and directional behavior without copying the full
-on-chain pricing/arbitrage math into the fuzz test.
+The invariants focus on whether each instruction preserves the expected launch state transitions, whether funding records and approval amounts stay consistent with committed funds, whether successful completion/refund/claim paths pay out from the right vaults to the right parties, and whether optional post-launch distribution steps remain tied to the finalized launch state.
+
+### fuzz_pbpp - Price Based Performance Package
+Exercises the full performance package flow: `initialize_performance_package`, `start_unlock`, `complete_unlock`, authority changes, and proposal/execution of package updates. The suite is focused on the package state machine around oracle-driven unlocking as well as the authority and recipient control paths that can mutate package configuration.
+
+The invariants focus on ensuring unlock only progresses when time and oracle conditions are satisfied, token release goes to the configured recipient path, administrative changes respect the expected authority/recipient permissions, and state transitions remain coherent as the package moves from locked to unlocking to completed or through approved configuration changes.
