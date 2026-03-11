@@ -91,6 +91,13 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
             self.squads_multisig.stale_transaction_index
         );
 
+        // Ensure the vault transaction was created by the permissionless account
+        require_keys_eq!(
+            self.squads_vault_transaction.creator,
+            permissionless_account::id(),
+            FutarchyError::InvalidTransaction
+        );
+
         // Validate the proposal references the vault transaction
         require_eq!(
             self.squads_proposal.transaction_index,
