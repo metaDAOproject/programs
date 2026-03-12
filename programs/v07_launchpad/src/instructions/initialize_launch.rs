@@ -176,7 +176,7 @@ impl InitializeLaunch<'_> {
 
         require_gte!(
             args.months_until_insiders_can_unlock,
-            18,
+            12,
             LaunchpadError::InvalidPerformancePackageMinUnlockTime
         );
 
