@@ -4,7 +4,12 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
 } from "@metadaoproject/futarchy/v0.7";
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";
 
@@ -64,26 +69,22 @@ export const launch = async () => {
   const [launch] = getLaunchAddr(undefined, TOKEN);
   const [launchSigner] = getLaunchSignerAddr(undefined, launch);
 
-  const tx = new Transaction().add(
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: payer.publicKey,
-      newAccountPubkey: TOKEN,
-      basePubkey: payer.publicKey,
-      seed: TOKEN_SEED,
-      lamports: lamports,
-      space: token.MINT_SIZE,
-      programId: token.TOKEN_PROGRAM_ID,
-    }),
-    token.createInitializeMint2Instruction(TOKEN, 6, launchSigner, null),
-  );
-  tx.recentBlockhash = (
-    await provider.connection.getLatestBlockhash()
-  ).blockhash;
-  tx.feePayer = payer.publicKey;
-  tx.sign(payer);
+  const createTokenAccountIx = SystemProgram.createAccountWithSeed({
+    fromPubkey: payer.publicKey,
+    newAccountPubkey: TOKEN,
+    basePubkey: payer.publicKey,
+    seed: TOKEN_SEED,
+    lamports: lamports,
+    space: token.MINT_SIZE,
+    programId: token.TOKEN_PROGRAM_ID,
+  });
 
-  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
-  await provider.connection.confirmTransaction(txHash, "confirmed");
+  const initializeMintIx = token.createInitializeMint2Instruction(
+    TOKEN,
+    6,
+    launchSigner,
+    null,
+  );
 
   const launchIx = await launchpad
     .initializeLaunchIx({
@@ -107,9 +108,51 @@ export const launch = async () => {
       additionalTokensRecipient: ADDITIONAL_CARVEOUT_RECIPIENT,
       launchAuthority: LAUNCH_AUTHORITY,
     })
-    .rpc();
+    .instruction();
 
-  console.log("Launch initialized, P2P for you and for me!", launchIx);
+  const tx = new Transaction().add(
+    createTokenAccountIx,
+    initializeMintIx,
+    launchIx,
+  );
+  const { blockhash } = await provider.connection.getLatestBlockhash();
+  tx.recentBlockhash = blockhash;
+  tx.feePayer = payer.publicKey;
+  tx.sign(payer);
+  const simulation = await provider.connection.simulateTransaction(tx);
+
+  if (simulation.value.err) {
+    console.error("Transaction simulation failed:", simulation.value.err);
+    throw new Error(
+      `Simulation failed: ${JSON.stringify(simulation.value.err)}`,
+    );
+  }
+
+  const computeUnitsUsed = simulation.value.unitsConsumed || 200_000;
+  // Add 20% buffer to the compute units
+  const computeUnitsWithBuffer = Math.floor(computeUnitsUsed * 1.2);
+
+  console.log(`Simulated compute units: ${computeUnitsUsed}`);
+  console.log(`Setting compute unit limit: ${computeUnitsWithBuffer}`);
+
+  // Rebuild transaction with compute budget
+  const finalTx = new Transaction().add(
+    ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnitsWithBuffer }),
+    createTokenAccountIx,
+    initializeMintIx,
+    launchIx,
+  );
+
+  finalTx.recentBlockhash = blockhash;
+  finalTx.feePayer = payer.publicKey;
+  finalTx.sign(payer);
+
+  const txHash = await provider.connection.sendRawTransaction(
+    finalTx.serialize(),
+  );
+  await provider.connection.confirmTransaction(txHash, "confirmed");
+
+  console.log("Launch initialized, P2P for you and for me!", txHash);
 };
 
 launch().catch(console.error);
