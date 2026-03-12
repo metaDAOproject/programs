@@ -39,7 +39,90 @@ export default function suite() {
     });
   });
 
-  it("should approve a squads proposal with a config transaction that belongs to the DAO's multisig", async function () {
+  it("should approve a squads proposal", async function () {
+    const daoAccount = await this.futarchy.getDao(dao);
+
+    const vaultTransactionCreateIx =
+      multisig.instructions.vaultTransactionCreate({
+        multisigPda: daoAccount.squadsMultisig,
+        transactionIndex: 1n,
+        creator: PERMISSIONLESS_ACCOUNT.publicKey,
+        rentPayer: this.payer.publicKey,
+        vaultIndex: 0,
+        transactionMessage: new TransactionMessage({
+          payerKey: this.payer.publicKey,
+          recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+          instructions: [createMemoInstruction("hello world")],
+        }),
+        ephemeralSigners: 0,
+      });
+
+    const proposalCreateIx = multisig.instructions.proposalCreate({
+      multisigPda: daoAccount.squadsMultisig,
+      transactionIndex: 1n,
+      creator: PERMISSIONLESS_ACCOUNT.publicKey,
+      rentPayer: this.payer.publicKey,
+    });
+
+    const squadsCreateTx = new Transaction().add(
+      vaultTransactionCreateIx,
+      proposalCreateIx,
+    );
+    squadsCreateTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    squadsCreateTx.feePayer = this.payer.publicKey;
+    squadsCreateTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+
+    await this.banksClient.processTransaction(squadsCreateTx);
+
+    const [vaultTransactionPda] = multisig.getTransactionPda({
+      multisigPda: daoAccount.squadsMultisig,
+      index: 1n,
+    });
+
+    const [squadsProposalPda] = multisig.getProposalPda({
+      multisigPda: daoAccount.squadsMultisig,
+      transactionIndex: 1n,
+    });
+
+    let squadsProposal = await multisig.accounts.Proposal.fromAccountAddress(
+      this.squadsConnection,
+      squadsProposalPda,
+    );
+
+    assert.equal(squadsProposal.transactionIndex, 1);
+    assert.equal(squadsProposal.approved.length, 0);
+    assert.isTrue(
+      multisig.generated.isProposalStatusActive(squadsProposal.status),
+    );
+
+    await this.futarchy.autocrat.methods
+      .adminApproveMultisigProposal()
+      .accounts({
+        dao: dao,
+        squadsMultisig: daoAccount.squadsMultisig,
+        squadsMultisigProposal: squadsProposalPda,
+        squadsMultisigVaultTransaction: vaultTransactionPda,
+        admin: this.payer.publicKey,
+        squadsMultisigProgram: multisig.PROGRAM_ID,
+      })
+      .signers([this.payer])
+      .rpc();
+
+    squadsProposal = await multisig.accounts.Proposal.fromAccountAddress(
+      this.squadsConnection,
+      squadsProposalPda,
+    );
+
+    assert.equal(squadsProposal.transactionIndex, 1);
+    assert.equal(squadsProposal.approved[0].toBase58(), dao.toBase58());
+    assert.isTrue(
+      multisig.generated.isProposalStatusApproved(squadsProposal.status),
+    );
+  });
+
+  it("should fail to approve an invalidated proposal", async function () {
     const daoAccount = await this.futarchy.getDao(dao);
 
     // Create a vault transaction that will be invalidated by the config transaction
@@ -102,7 +185,7 @@ export default function suite() {
       },
     );
 
-    // Create the squads proposal first
+    // Create the squads proposals
     const squadsTransactionsCreateTx = new Transaction().add(
       vaultTransactionToInvalidateCreateIx,
       vaultProposalToInvalidateCreateIx,
@@ -145,20 +228,22 @@ export default function suite() {
         programId: multisig.PROGRAM_ID,
       });
 
-    let squadsConfigProposal =
-      await multisig.accounts.Proposal.fromAccountAddress(
-        this.squadsConnection,
-        squadsConfigProposalPda,
-      );
-
-    assert.equal(squadsConfigProposal.transactionIndex, 2); // We're looking at the correct proposal
-    assert.equal(squadsConfigProposal.approved.length, 0); // Should have zero approvals
-    assert.isTrue(
-      multisig.generated.isProposalStatusActive(squadsConfigProposal.status),
-    );
+    // Approve and execute the config transaction using the new split instructions
+    await this.futarchy.autocrat.methods
+      .adminApproveMultisigProposal()
+      .accounts({
+        dao: dao,
+        squadsMultisig: daoAccount.squadsMultisig,
+        squadsMultisigProposal: squadsConfigProposalPda,
+        squadsMultisigVaultTransaction: vaultConfigTransactionPda,
+        admin: this.payer.publicKey,
+        squadsMultisigProgram: multisig.PROGRAM_ID,
+      })
+      .signers([this.payer])
+      .rpc();
 
     await this.futarchy.autocrat.methods
-      .adminApproveExecuteMultisigProposal()
+      .adminExecuteMultisigProposal()
       .accounts({
         dao: dao,
         squadsMultisig: daoAccount.squadsMultisig,
@@ -172,64 +257,30 @@ export default function suite() {
           meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta,
         ),
       )
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+      ])
       .signers([this.payer])
       .rpc();
 
-    squadsConfigProposal = await multisig.accounts.Proposal.fromAccountAddress(
-      this.squadsConnection,
-      squadsConfigProposalPda,
-    );
-
-    assert.equal(squadsConfigProposal.transactionIndex, 2); // We're looking at the correct proposal
-    assert.equal(squadsConfigProposal.approved[0].toBase58(), dao.toBase58()); // Should have DAO approval
-    assert.isTrue(
-      multisig.generated.isProposalStatusExecuted(squadsConfigProposal.status),
-    );
-
-    // Confirm that vault transactions before the config transaction are invalidated
-    const squadsMultisig = await multisig.accounts.Multisig.fromAccountAddress(
-      this.squadsConnection,
-      daoAccount.squadsMultisig,
-    );
-    assert.equal(squadsMultisig.staleTransactionIndex, 2);
-
-    // Attempt to execute the invalidated vault transaction
-    // We could run a regular futarchy market as well here, but we can also just shortcut it using the admin function
-    const [vaultInvalidatedTransactionPda] = multisig.getTransactionPda({
-      multisigPda: daoAccount.squadsMultisig,
-      index: configTransactionIndex,
-    });
-
+    // Now try to approve the invalidated proposal (index 1)
     const [squadsInvalidatedProposalPda] = multisig.getProposalPda({
       multisigPda: daoAccount.squadsMultisig,
-      transactionIndex: configTransactionIndex,
+      transactionIndex: 1n,
     });
 
-    const invalidatedTransactionAccount =
-      await multisig.accounts.VaultTransaction.fromAccountAddress(
-        this.squadsConnection,
-        vaultInvalidatedTransactionPda,
-      );
-
-    const { accountMetas: invalidatedTransactionAccountMetas } =
-      await multisig.utils.accountsForTransactionExecute({
-        connection: this.squadsConnection,
-        message: configTransactionAccount.message,
-        ephemeralSignerBumps: [
-          ...configTransactionAccount.ephemeralSignerBumps,
-        ],
-        vaultPda: daoAccount.squadsMultisigVault,
-        transactionPda: vaultInvalidatedTransactionPda,
-        programId: multisig.PROGRAM_ID,
-      });
+    const [vaultInvalidatedTransactionPda] = multisig.getTransactionPda({
+      multisigPda: daoAccount.squadsMultisig,
+      index: 1n,
+    });
 
     const callbacks = expectError(
-      "InvalidProposalStatus",
-      "The proposal should not be executed because it should have been invalidated",
+      "StaleProposal",
+      "The proposal should not be approved because it should have been invalidated",
     );
 
     await this.futarchy.autocrat.methods
-      .adminApproveExecuteMultisigProposal()
+      .adminApproveMultisigProposal()
       .accounts({
         dao: dao,
         squadsMultisig: daoAccount.squadsMultisig,
@@ -238,13 +289,8 @@ export default function suite() {
         admin: this.payer.publicKey,
         squadsMultisigProgram: multisig.PROGRAM_ID,
       })
-      .remainingAccounts(
-        invalidatedTransactionAccountMetas.map((meta) =>
-          meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta,
-        ),
-      )
       .preInstructions([
-        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
       ])
       .signers([this.payer])
       .rpc()
@@ -335,7 +381,7 @@ export default function suite() {
     );
 
     await this.futarchy.autocrat.methods
-      .adminApproveExecuteMultisigProposal()
+      .adminApproveMultisigProposal()
       .accounts({
         dao: dao,
         squadsMultisig: daoAccount.squadsMultisig,

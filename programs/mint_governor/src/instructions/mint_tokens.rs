@@ -11,6 +11,7 @@ pub struct MintTokensArgs {
     pub amount: u64,
 }
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct MintTokens<'info> {
     #[account(mut)]
@@ -93,7 +94,7 @@ impl MintTokens<'_> {
         // Reload mint to get post-mint supply
         ctx.accounts.mint.reload()?;
 
-        emit!(TokensMintedEvent {
+        emit_cpi!(TokensMintedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

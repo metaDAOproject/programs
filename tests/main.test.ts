@@ -6,6 +6,7 @@ import priceBasedPerformancePackage from "./priceBasedPerformancePackage/main.te
 import bidWall from "./bidWall/main.test.js";
 import mintGovernor from "./mintGovernor/main.test.js";
 import performancePackageV2 from "./performancePackageV2/main.test.js";
+import liquidation from "./liquidation/main.test.js";
 
 import {
   BanksClient,
@@ -37,6 +38,7 @@ import {
   MAINNET_METEORA_CONFIG,
   BidWallClient,
   MintGovernorClient,
+  LiquidationClient,
 } from "@metadaoproject/futarchy/v0.7";
 import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/futarchy/v0.6";
 
@@ -93,6 +95,7 @@ export interface TestContext {
   priceBasedPerformancePackage: PriceBasedPerformancePackageClient;
   bidWall: BidWallClient;
   mintGovernor: MintGovernorClient;
+  liquidation: LiquidationClient;
   payer: Keypair;
   squadsConnection: Connection;
   createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
@@ -262,6 +265,9 @@ before(async function () {
       provider: provider as any,
     });
   this.bidWall = BidWallClient.createClient({
+    provider: provider as any,
+  });
+  this.liquidation = LiquidationClient.createClient({
     provider: provider as any,
   });
   this.provider = provider;
@@ -743,6 +749,7 @@ describe("futarchy", futarchy);
 describe("bid_wall", bidWall);
 describe("mint_governor", mintGovernor);
 describe("performance_package_v2", performancePackageV2);
+describe("liquidation", liquidation);
 describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);

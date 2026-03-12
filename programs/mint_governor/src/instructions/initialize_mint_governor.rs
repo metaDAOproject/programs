@@ -3,6 +3,7 @@ use anchor_spl::token::Mint;
 
 use crate::{CommonFields, MintGovernor, MintGovernorInitializedEvent, MINT_GOVERNOR_SEED};
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct InitializeMintGovernor<'info> {
     pub mint: Account<'info, Mint>,
@@ -44,7 +45,7 @@ impl InitializeMintGovernor<'_> {
         let clock = Clock::get()?;
         let mint_governor = &ctx.accounts.mint_governor;
 
-        emit!(MintGovernorInitializedEvent {
+        emit_cpi!(MintGovernorInitializedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

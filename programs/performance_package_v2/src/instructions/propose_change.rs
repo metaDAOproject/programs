@@ -13,6 +13,7 @@ pub struct ProposeChangeArgs {
     pub new_reward_function: Option<RewardFunction>,
 }
 
+#[event_cpi]
 #[derive(Accounts)]
 #[instruction(args: ProposeChangeArgs)]
 pub struct ProposeChange<'info> {
@@ -102,7 +103,7 @@ impl ProposeChange<'_> {
         // Increment seq_num for event tracking
         pp.seq_num += 1;
 
-        emit!(ChangeProposedEvent {
+        emit_cpi!(ChangeProposedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

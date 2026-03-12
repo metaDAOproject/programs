@@ -16,7 +16,8 @@ import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 
 import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
 import finalizeOptimisticProposal from "./unit/finalizeOptimisticProposal.test.js";
-import adminApproveProposal from "./unit/adminApproveExecuteMultisigProposal.test.js";
+import adminApproveMultisigProposal from "./unit/adminApproveMultisigProposal.test.js";
+import adminExecuteMultisigProposal from "./unit/adminExecuteMultisigProposal.test.js";
 import adminCancelProposal from "./unit/adminCancelProposal.test.js";
 import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
 
@@ -68,7 +69,8 @@ export default function suite() {
     initiateVaultSpendOptimisticProposal,
   );
   describe("#finalize_optimistic_proposal", finalizeOptimisticProposal);
-  describe("#admin_approve_proposal", adminApproveProposal);
+  describe("#admin_approve_multisig_proposal", adminApproveMultisigProposal);
+  describe("#admin_execute_multisig_proposal", adminExecuteMultisigProposal);
   describe("#admin_cancel_proposal", adminCancelProposal);
   describe("#admin_remove_proposal", adminRemoveProposal);
   // describe("full proposal", fullProposal);
