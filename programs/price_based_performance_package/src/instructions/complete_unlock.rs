@@ -125,7 +125,8 @@ impl CompleteUnlock<'_> {
         );
 
         // Calculate TWAP: (current_aggregator - start_aggregator) / time_passed
-        let aggregator_change = current_aggregator.saturating_sub(start_aggregator);
+        // wrapping_sub ensures we get the correct difference in case of aggregator wrapping
+        let aggregator_change = current_aggregator.wrapping_sub(start_aggregator);
         let twap_price = aggregator_change / time_passed as u128;
 
         let mut tokens_to_unlock = 0;
