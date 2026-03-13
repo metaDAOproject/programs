@@ -79,7 +79,7 @@ fn read_futarchy_aggregator(
         .saturating_sub(oracle.last_updated_timestamp) as u128;
     let effective_aggregator = oracle
         .aggregator
-        .wrapping_add(oracle.last_observation.saturating_mul(time_since_update));
+        .wrapping_add(oracle.last_observation.wrapping_mul(time_since_update));
 
     Ok((effective_aggregator, clock.unix_timestamp))
 }
