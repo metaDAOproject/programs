@@ -1180,8 +1180,10 @@ export class FutarchyClient {
       BigInt(amount.toString()),
     );
 
+    // Use the vault as the payerKey so it deduplicates with the transfer authority,
+    // producing a clean message with exactly 1 signer (the vault).
     const transactionMessage = new TransactionMessage({
-      payerKey: payer,
+      payerKey: squadsMultisigVault,
       recentBlockhash: "",
       instructions: [transferIx],
     });

@@ -464,8 +464,9 @@ export default function suite() {
       transactionIndex: bigint,
       isDraft: boolean = false,
     ) {
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
       const transactionMessage = new TransactionMessage({
-        payerKey: ctx.payer.publicKey,
+        payerKey: vault,
         recentBlockhash: (await ctx.banksClient.getLatestBlockhash())[0],
         instructions,
       });
@@ -782,6 +783,467 @@ export default function suite() {
       const callbacks = expectError(
         "InvalidSquadsProposalStatus",
         "Squads proposal is in Draft status",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when vault transaction has wrong vault_index", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      const vtAccount =
+        await squads.accounts.VaultTransaction.fromAccountAddress(
+          this.squadsConnection,
+          squadsVaultTransaction,
+        );
+
+      const modifiedVt = squads.accounts.VaultTransaction.fromArgs({
+        ...vtAccount,
+        vaultIndex: 1,
+      });
+      const [serialized] = modifiedVt.serialize();
+
+      const vtBanksAccount = await this.banksClient.getAccount(
+        squadsVaultTransaction,
+      );
+      vtBanksAccount.data = serialized;
+      this.context.setAccount(squadsVaultTransaction, vtBanksAccount);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "VT has wrong vault_index",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when vault transaction has ephemeral signers", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      const vtAccount =
+        await squads.accounts.VaultTransaction.fromAccountAddress(
+          this.squadsConnection,
+          squadsVaultTransaction,
+        );
+
+      const modifiedVt = squads.accounts.VaultTransaction.fromArgs({
+        ...vtAccount,
+        ephemeralSignerBumps: Uint8Array.from([255]),
+      });
+      const [serialized] = modifiedVt.serialize();
+
+      const vtBanksAccount = await this.banksClient.getAccount(
+        squadsVaultTransaction,
+      );
+      vtBanksAccount.data = serialized;
+      this.context.setAccount(squadsVaultTransaction, vtBanksAccount);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "VT has ephemeral signers",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when message has wrong num_signers", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      const vtAccount =
+        await squads.accounts.VaultTransaction.fromAccountAddress(
+          this.squadsConnection,
+          squadsVaultTransaction,
+        );
+
+      const modifiedVt = squads.accounts.VaultTransaction.fromArgs({
+        ...vtAccount,
+        message: {
+          ...vtAccount.message,
+          numSigners: 2,
+        },
+      });
+      const [serialized] = modifiedVt.serialize();
+
+      const vtBanksAccount = await this.banksClient.getAccount(
+        squadsVaultTransaction,
+      );
+      vtBanksAccount.data = serialized;
+      this.context.setAccount(squadsVaultTransaction, vtBanksAccount);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "Message has wrong num_signers",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when first signer is not the vault", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      const vtAccount =
+        await squads.accounts.VaultTransaction.fromAccountAddress(
+          this.squadsConnection,
+          squadsVaultTransaction,
+        );
+
+      const tamperedKeys = [...vtAccount.message.accountKeys];
+      tamperedKeys[0] = Keypair.generate().publicKey;
+
+      const modifiedVt = squads.accounts.VaultTransaction.fromArgs({
+        ...vtAccount,
+        message: {
+          ...vtAccount.message,
+          accountKeys: tamperedKeys,
+        },
+      });
+      const [serialized] = modifiedVt.serialize();
+
+      const vtBanksAccount = await this.banksClient.getAccount(
+        squadsVaultTransaction,
+      );
+      vtBanksAccount.data = serialized;
+      this.context.setAccount(squadsVaultTransaction, vtBanksAccount);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "First signer is not the vault",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when message has wrong num_writable_signers", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      const vtAccount =
+        await squads.accounts.VaultTransaction.fromAccountAddress(
+          this.squadsConnection,
+          squadsVaultTransaction,
+        );
+
+      const modifiedVt = squads.accounts.VaultTransaction.fromArgs({
+        ...vtAccount,
+        message: {
+          ...vtAccount.message,
+          numWritableSigners: 2,
+        },
+      });
+      const [serialized] = modifiedVt.serialize();
+
+      const vtBanksAccount = await this.banksClient.getAccount(
+        squadsVaultTransaction,
+      );
+      vtBanksAccount.data = serialized;
+      this.context.setAccount(squadsVaultTransaction, vtBanksAccount);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "Message has too many writable signers",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when message has wrong num_writable_non_signers", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      const vtAccount =
+        await squads.accounts.VaultTransaction.fromAccountAddress(
+          this.squadsConnection,
+          squadsVaultTransaction,
+        );
+
+      const modifiedVt = squads.accounts.VaultTransaction.fromArgs({
+        ...vtAccount,
+        message: {
+          ...vtAccount.message,
+          numWritableNonSigners: 1,
+        },
+      });
+      const [serialized] = modifiedVt.serialize();
+
+      const vtBanksAccount = await this.banksClient.getAccount(
+        squadsVaultTransaction,
+      );
+      vtBanksAccount.data = serialized;
+      this.context.setAccount(squadsVaultTransaction, vtBanksAccount);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "Message has wrong numWritableNonSigners",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when message has address table lookups", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      const vtAccount =
+        await squads.accounts.VaultTransaction.fromAccountAddress(
+          this.squadsConnection,
+          squadsVaultTransaction,
+        );
+
+      const modifiedVt = squads.accounts.VaultTransaction.fromArgs({
+        ...vtAccount,
+        message: {
+          ...vtAccount.message,
+          addressTableLookups: [
+            {
+              accountKey: Keypair.generate().publicKey,
+              writableIndexes: Uint8Array.from([0]),
+              readonlyIndexes: Uint8Array.from([1]),
+            },
+          ],
+        },
+      });
+      const [serialized] = modifiedVt.serialize();
+
+      const vtBanksAccount = await this.banksClient.getAccount(
+        squadsVaultTransaction,
+      );
+      vtBanksAccount.data = serialized;
+      this.context.setAccount(squadsVaultTransaction, vtBanksAccount);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "Message has address table lookups",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when squads proposal has approvals", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      const proposalAccount = await squads.accounts.Proposal.fromAccountAddress(
+        this.squadsConnection,
+        squadsProposal,
+      );
+
+      const modifiedProposal = squads.accounts.Proposal.fromArgs({
+        ...proposalAccount,
+        approved: [Keypair.generate().publicKey],
+      });
+      const [serialized] = modifiedProposal.serialize();
+
+      const proposalBanksAccount =
+        await this.banksClient.getAccount(squadsProposal);
+      proposalBanksAccount.data = serialized;
+      this.context.setAccount(squadsProposal, proposalBanksAccount);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "Proposal has approvals",
+      );
+
+      await callInitiateRaw(
+        this,
+        dao,
+        new BN(1000),
+        this.payer.publicKey,
+        squadsProposal,
+        squadsVaultTransaction,
+      )
+        .then((b: any) => b.signers([this.payer]).rpc())
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("fails when squads proposal has rejections", async function () {
+      const multisigPda = squads.getMultisigPda({ createKey: dao })[0];
+      const vault = squads.getVaultPda({ multisigPda, index: 0 })[0];
+
+      const transferIx = createTransferInstruction(
+        getAssociatedTokenAddressSync(MAINNET_USDC, vault, true),
+        getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+        vault,
+        1000n,
+      );
+
+      const { squadsProposal, squadsVaultTransaction } =
+        await createSquadsVtAndProposal(this, multisigPda, [transferIx], 1n);
+
+      const proposalAccount = await squads.accounts.Proposal.fromAccountAddress(
+        this.squadsConnection,
+        squadsProposal,
+      );
+
+      const modifiedProposal = squads.accounts.Proposal.fromArgs({
+        ...proposalAccount,
+        rejected: [Keypair.generate().publicKey],
+      });
+      const [serialized] = modifiedProposal.serialize();
+
+      const proposalBanksAccount =
+        await this.banksClient.getAccount(squadsProposal);
+      proposalBanksAccount.data = serialized;
+      this.context.setAccount(squadsProposal, proposalBanksAccount);
+
+      const callbacks = expectError(
+        "InvalidTransaction",
+        "Proposal has rejections",
       );
 
       await callInitiateRaw(

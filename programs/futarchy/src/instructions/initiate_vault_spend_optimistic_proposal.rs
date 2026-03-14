@@ -85,6 +85,20 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
             FutarchyError::InvalidSquadsProposalStatus
         );
 
+        // Proposal must be fresh: no votes recorded yet
+        require!(
+            self.squads_proposal.approved.is_empty(),
+            FutarchyError::InvalidTransaction
+        );
+        require!(
+            self.squads_proposal.rejected.is_empty(),
+            FutarchyError::InvalidTransaction
+        );
+        require!(
+            self.squads_proposal.cancelled.is_empty(),
+            FutarchyError::InvalidTransaction
+        );
+
         // Ensure the squads proposal is not invalidated by a previous config transaction
         require_gt!(
             self.squads_proposal.transaction_index,
@@ -105,8 +119,57 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
             FutarchyError::InvalidTransaction
         );
 
+        // Must target vault index 0
+        require_eq!(
+            self.squads_vault_transaction.vault_index,
+            0,
+            FutarchyError::InvalidTransaction
+        );
+
+        // No ephemeral signers for SPL transfer
+        require!(
+            self.squads_vault_transaction
+                .ephemeral_signer_bumps
+                .is_empty(),
+            FutarchyError::InvalidTransaction
+        );
+
         // Validate the vault transaction message contains exactly the expected SPL transfer
         let message = &self.squads_vault_transaction.message;
+
+        // Exactly 1 signer (the vault, which is both the payer and the SPL Transfer authority)
+        require_eq!(message.num_signers, 1_u8, FutarchyError::InvalidTransaction);
+
+        // First account key (sole signer) must be the vault
+        let first_signer = message
+            .account_keys
+            .first()
+            .ok_or(error!(FutarchyError::InvalidTransaction))?;
+        require_keys_eq!(
+            *first_signer,
+            self.squads_multisig_vault.key(),
+            FutarchyError::InvalidTransaction
+        );
+
+        // Vault is a writable signer (TransactionMessage always marks the payerKey as writable)
+        require_eq!(
+            message.num_writable_signers,
+            1_u8,
+            FutarchyError::InvalidTransaction
+        );
+
+        // Source + destination are writable non-signers
+        require_eq!(
+            message.num_writable_non_signers,
+            2_u8,
+            FutarchyError::InvalidTransaction
+        );
+
+        // No address table lookups
+        require!(
+            message.address_table_lookups.is_empty(),
+            FutarchyError::InvalidTransaction
+        );
 
         // Must have exactly 1 instruction
         require!(
