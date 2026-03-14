@@ -386,5 +386,5 @@ impl FuzzTest {
 }
 
 fn main() {
-    FuzzTest::fuzz(100, 10);
+    FuzzTest::fuzz(10000, 1000);
 }
