@@ -45,5 +45,9 @@ name = "fuzz_pbpp"
 path = "fuzz_pbpp/test_fuzz.rs"
 
 [[bin]]
+name = "fuzz_ppv2"
+path = "fuzz_ppv2/test_fuzz.rs"
+
+[[bin]]
 name = "fuzz_mint_governor"
 path = "fuzz_mint_governor/test_fuzz.rs"

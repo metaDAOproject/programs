@@ -27,6 +27,10 @@ program = "../target/deploy/price_based_performance_package.so"
 address = "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH"
 program = "../target/deploy/mint_governor.so"
 
+[[fuzz.programs]]
+address = "pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz"
+program = "../target/deploy/performance_package_v2.so"
+
 
 # ==============================
 # External Programs

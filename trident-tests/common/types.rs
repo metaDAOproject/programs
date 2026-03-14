@@ -14052,6 +14052,1162 @@ pub mod bid_wall {
 }
 
 // ----------------------------------------------------------------------------
+// Program: performance_package_v_2
+// ----------------------------------------------------------------------------
+pub mod performance_package_v_2 {
+    use super::*;
+
+    /// Returns the program ID for performance_package_v2
+    pub fn program_id() -> Pubkey {
+        pubkey!("pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz")
+    }
+
+    // ------------------------------------------------------------------------
+    // Instructions
+    // ------------------------------------------------------------------------
+
+    /// Main instruction struct for InitializePerformancePackage
+    pub struct InitializePerformancePackageInstruction {
+        pub accounts: InitializePerformancePackageInstructionAccountMetas,
+        pub data: InitializePerformancePackageInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    /// Account metadata for InitializePerformancePackage instruction
+    #[derive(Debug, Clone, Default)]
+    pub struct InitializePerformancePackageInstructionAccountMetas {
+        pub performancePackage: AccountMeta,
+        pub mint: AccountMeta,
+        pub mintGovernor: AccountMeta,
+        pub mintAuthority: AccountMeta,
+        pub createKey: AccountMeta,
+        pub authority: AccountMeta,
+        pub recipient: AccountMeta,
+        pub payer: AccountMeta,
+        pub systemProgram: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    /// Account pubkeys for InitializePerformancePackage instruction
+    #[derive(Debug, Clone)]
+    pub struct InitializePerformancePackageInstructionAccounts {
+        pub performancePackage: Pubkey,
+        pub mint: Pubkey,
+        pub mintGovernor: Pubkey,
+        pub mintAuthority: Pubkey,
+        pub createKey: Pubkey,
+        pub authority: Pubkey,
+        pub recipient: Pubkey,
+        pub payer: Pubkey,
+        pub systemProgram: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl InitializePerformancePackageInstructionAccounts {
+        pub fn new(
+            performancePackage: Pubkey,
+            mint: Pubkey,
+            mintGovernor: Pubkey,
+            mintAuthority: Pubkey,
+            createKey: Pubkey,
+            authority: Pubkey,
+            recipient: Pubkey,
+            payer: Pubkey,
+            systemProgram: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                performancePackage,
+                mint,
+                mintGovernor,
+                mintAuthority,
+                createKey,
+                authority,
+                recipient,
+                payer,
+                systemProgram,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    /// Instruction data for InitializePerformancePackage
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct InitializePerformancePackageInstructionData {
+        pub args: InitializePerformancePackageArgs,
+    }
+
+    impl InitializePerformancePackageInstructionData {
+        pub fn new(args: InitializePerformancePackageArgs) -> Self {
+            Self { args }
+        }
+    }
+
+    /// Implementation for InitializePerformancePackageInstruction
+    impl InitializePerformancePackageInstruction {
+        fn discriminator() -> [u8; 8] {
+            [3u8, 171u8, 56u8, 55u8, 135u8, 100u8, 163u8, 186u8]
+        }
+
+        pub fn data(data: InitializePerformancePackageInstructionData) -> Self {
+            Self {
+                accounts: InitializePerformancePackageInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(
+            mut self,
+            accounts: InitializePerformancePackageInstructionAccounts,
+        ) -> Self {
+            self.accounts.performancePackage = AccountMeta::new(accounts.performancePackage, false);
+            self.accounts.mint = AccountMeta::new_readonly(accounts.mint, false);
+            self.accounts.mintGovernor = AccountMeta::new_readonly(accounts.mintGovernor, false);
+            self.accounts.mintAuthority = AccountMeta::new_readonly(accounts.mintAuthority, false);
+            self.accounts.createKey = AccountMeta::new_readonly(accounts.createKey, true);
+            self.accounts.authority = AccountMeta::new_readonly(accounts.authority, false);
+            self.accounts.recipient = AccountMeta::new_readonly(accounts.recipient, false);
+            self.accounts.payer = AccountMeta::new(accounts.payer, true);
+            self.accounts.systemProgram = AccountMeta::new_readonly(accounts.systemProgram, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        pub fn remaining_accounts(mut self, accounts: Vec<AccountMeta>) -> Self {
+            self.remaining_accounts = accounts;
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = Vec::new();
+            metas.push(self.accounts.performancePackage.clone());
+            metas.push(self.accounts.mint.clone());
+            metas.push(self.accounts.mintGovernor.clone());
+            metas.push(self.accounts.mintAuthority.clone());
+            metas.push(self.accounts.createKey.clone());
+            metas.push(self.accounts.authority.clone());
+            metas.push(self.accounts.recipient.clone());
+            metas.push(self.accounts.payer.clone());
+            metas.push(self.accounts.systemProgram.clone());
+            metas.push(self.accounts.eventAuthority.clone());
+            metas.push(self.accounts.program.clone());
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            let mut buffer: Vec<u8> = Vec::new();
+            buffer.extend_from_slice(&Self::discriminator());
+            self.data.serialize(&mut buffer).unwrap();
+            Instruction::new_with_bytes(program_id(), &buffer, self.to_account_metas())
+        }
+    }
+
+    /// Main instruction struct for StartUnlock
+    pub struct StartUnlockInstruction {
+        pub accounts: StartUnlockInstructionAccountMetas,
+        pub data: StartUnlockInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    /// Account metadata for StartUnlock instruction
+    #[derive(Debug, Clone, Default)]
+    pub struct StartUnlockInstructionAccountMetas {
+        pub performancePackage: AccountMeta,
+        pub signer: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    /// Account pubkeys for StartUnlock instruction
+    #[derive(Debug, Clone)]
+    pub struct StartUnlockInstructionAccounts {
+        pub performancePackage: Pubkey,
+        pub signer: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl StartUnlockInstructionAccounts {
+        pub fn new(
+            performancePackage: Pubkey,
+            signer: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                performancePackage,
+                signer,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    /// Instruction data for StartUnlock
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct StartUnlockInstructionData {}
+
+    impl StartUnlockInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    /// Implementation for StartUnlockInstruction
+    impl StartUnlockInstruction {
+        fn discriminator() -> [u8; 8] {
+            [53u8, 202u8, 212u8, 31u8, 76u8, 178u8, 31u8, 123u8]
+        }
+
+        pub fn data(data: StartUnlockInstructionData) -> Self {
+            Self {
+                accounts: StartUnlockInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: StartUnlockInstructionAccounts) -> Self {
+            self.accounts.performancePackage = AccountMeta::new(accounts.performancePackage, false);
+            self.accounts.signer = AccountMeta::new_readonly(accounts.signer, true);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        pub fn remaining_accounts(mut self, accounts: Vec<AccountMeta>) -> Self {
+            self.remaining_accounts = accounts;
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = Vec::new();
+            metas.push(self.accounts.performancePackage.clone());
+            metas.push(self.accounts.signer.clone());
+            metas.push(self.accounts.eventAuthority.clone());
+            metas.push(self.accounts.program.clone());
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            let mut buffer: Vec<u8> = Vec::new();
+            buffer.extend_from_slice(&Self::discriminator());
+            self.data.serialize(&mut buffer).unwrap();
+            Instruction::new_with_bytes(program_id(), &buffer, self.to_account_metas())
+        }
+    }
+
+    /// Main instruction struct for CompleteUnlock
+    pub struct CompleteUnlockInstruction {
+        pub accounts: CompleteUnlockInstructionAccountMetas,
+        pub data: CompleteUnlockInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    /// Account metadata for CompleteUnlock instruction
+    #[derive(Debug, Clone, Default)]
+    pub struct CompleteUnlockInstructionAccountMetas {
+        pub performancePackage: AccountMeta,
+        pub mintGovernor: AccountMeta,
+        pub mintAuthority: AccountMeta,
+        pub mint: AccountMeta,
+        pub recipientAta: AccountMeta,
+        pub signer: AccountMeta,
+        pub tokenProgram: AccountMeta,
+        pub associatedTokenProgram: AccountMeta,
+        pub mintGovernorProgram: AccountMeta,
+        pub mintGovernorEventAuthority: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    /// Account pubkeys for CompleteUnlock instruction
+    #[derive(Debug, Clone)]
+    pub struct CompleteUnlockInstructionAccounts {
+        pub performancePackage: Pubkey,
+        pub mintGovernor: Pubkey,
+        pub mintAuthority: Pubkey,
+        pub mint: Pubkey,
+        pub recipientAta: Pubkey,
+        pub signer: Pubkey,
+        pub tokenProgram: Pubkey,
+        pub associatedTokenProgram: Pubkey,
+        pub mintGovernorProgram: Pubkey,
+        pub mintGovernorEventAuthority: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl CompleteUnlockInstructionAccounts {
+        pub fn new(
+            performancePackage: Pubkey,
+            mintGovernor: Pubkey,
+            mintAuthority: Pubkey,
+            mint: Pubkey,
+            recipientAta: Pubkey,
+            signer: Pubkey,
+            tokenProgram: Pubkey,
+            associatedTokenProgram: Pubkey,
+            mintGovernorProgram: Pubkey,
+            mintGovernorEventAuthority: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                performancePackage,
+                mintGovernor,
+                mintAuthority,
+                mint,
+                recipientAta,
+                signer,
+                tokenProgram,
+                associatedTokenProgram,
+                mintGovernorProgram,
+                mintGovernorEventAuthority,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    /// Instruction data for CompleteUnlock
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct CompleteUnlockInstructionData {}
+
+    impl CompleteUnlockInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    /// Implementation for CompleteUnlockInstruction
+    impl CompleteUnlockInstruction {
+        fn discriminator() -> [u8; 8] {
+            [22u8, 203u8, 15u8, 189u8, 239u8, 125u8, 25u8, 132u8]
+        }
+
+        pub fn data(data: CompleteUnlockInstructionData) -> Self {
+            Self {
+                accounts: CompleteUnlockInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: CompleteUnlockInstructionAccounts) -> Self {
+            self.accounts.performancePackage = AccountMeta::new(accounts.performancePackage, false);
+            self.accounts.mintGovernor = AccountMeta::new(accounts.mintGovernor, false);
+            self.accounts.mintAuthority = AccountMeta::new(accounts.mintAuthority, false);
+            self.accounts.mint = AccountMeta::new(accounts.mint, false);
+            self.accounts.recipientAta = AccountMeta::new(accounts.recipientAta, false);
+            self.accounts.signer = AccountMeta::new_readonly(accounts.signer, true);
+            self.accounts.tokenProgram = AccountMeta::new_readonly(accounts.tokenProgram, false);
+            self.accounts.associatedTokenProgram =
+                AccountMeta::new_readonly(accounts.associatedTokenProgram, false);
+            self.accounts.mintGovernorProgram =
+                AccountMeta::new_readonly(accounts.mintGovernorProgram, false);
+            self.accounts.mintGovernorEventAuthority =
+                AccountMeta::new_readonly(accounts.mintGovernorEventAuthority, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        pub fn remaining_accounts(mut self, accounts: Vec<AccountMeta>) -> Self {
+            self.remaining_accounts = accounts;
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = Vec::new();
+            metas.push(self.accounts.performancePackage.clone());
+            metas.push(self.accounts.mintGovernor.clone());
+            metas.push(self.accounts.mintAuthority.clone());
+            metas.push(self.accounts.mint.clone());
+            metas.push(self.accounts.recipientAta.clone());
+            metas.push(self.accounts.signer.clone());
+            metas.push(self.accounts.tokenProgram.clone());
+            metas.push(self.accounts.associatedTokenProgram.clone());
+            metas.push(self.accounts.mintGovernorProgram.clone());
+            metas.push(self.accounts.mintGovernorEventAuthority.clone());
+            metas.push(self.accounts.eventAuthority.clone());
+            metas.push(self.accounts.program.clone());
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            let mut buffer: Vec<u8> = Vec::new();
+            buffer.extend_from_slice(&Self::discriminator());
+            self.data.serialize(&mut buffer).unwrap();
+            Instruction::new_with_bytes(program_id(), &buffer, self.to_account_metas())
+        }
+    }
+
+    /// Main instruction struct for ChangeAuthority
+    pub struct ChangeAuthorityInstruction {
+        pub accounts: ChangeAuthorityInstructionAccountMetas,
+        pub data: ChangeAuthorityInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    /// Account metadata for ChangeAuthority instruction
+    #[derive(Debug, Clone, Default)]
+    pub struct ChangeAuthorityInstructionAccountMetas {
+        pub performancePackage: AccountMeta,
+        pub authority: AccountMeta,
+        pub newAuthority: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    /// Account pubkeys for ChangeAuthority instruction
+    #[derive(Debug, Clone)]
+    pub struct ChangeAuthorityInstructionAccounts {
+        pub performancePackage: Pubkey,
+        pub authority: Pubkey,
+        pub newAuthority: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl ChangeAuthorityInstructionAccounts {
+        pub fn new(
+            performancePackage: Pubkey,
+            authority: Pubkey,
+            newAuthority: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                performancePackage,
+                authority,
+                newAuthority,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    /// Instruction data for ChangeAuthority
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct ChangeAuthorityInstructionData {}
+
+    impl ChangeAuthorityInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    /// Implementation for ChangeAuthorityInstruction
+    impl ChangeAuthorityInstruction {
+        fn discriminator() -> [u8; 8] {
+            [50u8, 106u8, 66u8, 104u8, 99u8, 118u8, 145u8, 88u8]
+        }
+
+        pub fn data(data: ChangeAuthorityInstructionData) -> Self {
+            Self {
+                accounts: ChangeAuthorityInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: ChangeAuthorityInstructionAccounts) -> Self {
+            self.accounts.performancePackage = AccountMeta::new(accounts.performancePackage, false);
+            self.accounts.authority = AccountMeta::new_readonly(accounts.authority, true);
+            self.accounts.newAuthority = AccountMeta::new_readonly(accounts.newAuthority, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        pub fn remaining_accounts(mut self, accounts: Vec<AccountMeta>) -> Self {
+            self.remaining_accounts = accounts;
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = Vec::new();
+            metas.push(self.accounts.performancePackage.clone());
+            metas.push(self.accounts.authority.clone());
+            metas.push(self.accounts.newAuthority.clone());
+            metas.push(self.accounts.eventAuthority.clone());
+            metas.push(self.accounts.program.clone());
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            let mut buffer: Vec<u8> = Vec::new();
+            buffer.extend_from_slice(&Self::discriminator());
+            self.data.serialize(&mut buffer).unwrap();
+            Instruction::new_with_bytes(program_id(), &buffer, self.to_account_metas())
+        }
+    }
+
+    /// Main instruction struct for ProposeChange
+    pub struct ProposeChangeInstruction {
+        pub accounts: ProposeChangeInstructionAccountMetas,
+        pub data: ProposeChangeInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    /// Account metadata for ProposeChange instruction
+    #[derive(Debug, Clone, Default)]
+    pub struct ProposeChangeInstructionAccountMetas {
+        pub performancePackage: AccountMeta,
+        pub changeRequest: AccountMeta,
+        pub proposer: AccountMeta,
+        pub payer: AccountMeta,
+        pub systemProgram: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    /// Account pubkeys for ProposeChange instruction
+    #[derive(Debug, Clone)]
+    pub struct ProposeChangeInstructionAccounts {
+        pub performancePackage: Pubkey,
+        pub changeRequest: Pubkey,
+        pub proposer: Pubkey,
+        pub payer: Pubkey,
+        pub systemProgram: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl ProposeChangeInstructionAccounts {
+        pub fn new(
+            performancePackage: Pubkey,
+            changeRequest: Pubkey,
+            proposer: Pubkey,
+            payer: Pubkey,
+            systemProgram: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                performancePackage,
+                changeRequest,
+                proposer,
+                payer,
+                systemProgram,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    /// Instruction data for ProposeChange
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct ProposeChangeInstructionData {
+        pub args: ProposeChangeArgs,
+    }
+
+    impl ProposeChangeInstructionData {
+        pub fn new(args: ProposeChangeArgs) -> Self {
+            Self { args }
+        }
+    }
+
+    /// Implementation for ProposeChangeInstruction
+    impl ProposeChangeInstruction {
+        fn discriminator() -> [u8; 8] {
+            [167u8, 211u8, 18u8, 222u8, 93u8, 215u8, 74u8, 159u8]
+        }
+
+        pub fn data(data: ProposeChangeInstructionData) -> Self {
+            Self {
+                accounts: ProposeChangeInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: ProposeChangeInstructionAccounts) -> Self {
+            self.accounts.performancePackage = AccountMeta::new(accounts.performancePackage, false);
+            self.accounts.changeRequest = AccountMeta::new(accounts.changeRequest, false);
+            self.accounts.proposer = AccountMeta::new_readonly(accounts.proposer, true);
+            self.accounts.payer = AccountMeta::new(accounts.payer, true);
+            self.accounts.systemProgram = AccountMeta::new_readonly(accounts.systemProgram, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        pub fn remaining_accounts(mut self, accounts: Vec<AccountMeta>) -> Self {
+            self.remaining_accounts = accounts;
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = Vec::new();
+            metas.push(self.accounts.performancePackage.clone());
+            metas.push(self.accounts.changeRequest.clone());
+            metas.push(self.accounts.proposer.clone());
+            metas.push(self.accounts.payer.clone());
+            metas.push(self.accounts.systemProgram.clone());
+            metas.push(self.accounts.eventAuthority.clone());
+            metas.push(self.accounts.program.clone());
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            let mut buffer: Vec<u8> = Vec::new();
+            buffer.extend_from_slice(&Self::discriminator());
+            self.data.serialize(&mut buffer).unwrap();
+            Instruction::new_with_bytes(program_id(), &buffer, self.to_account_metas())
+        }
+    }
+
+    /// Main instruction struct for ExecuteChange
+    pub struct ExecuteChangeInstruction {
+        pub accounts: ExecuteChangeInstructionAccountMetas,
+        pub data: ExecuteChangeInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    /// Account metadata for ExecuteChange instruction
+    #[derive(Debug, Clone, Default)]
+    pub struct ExecuteChangeInstructionAccountMetas {
+        pub performancePackage: AccountMeta,
+        pub changeRequest: AccountMeta,
+        pub executor: AccountMeta,
+        pub rentDestination: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    /// Account pubkeys for ExecuteChange instruction
+    #[derive(Debug, Clone)]
+    pub struct ExecuteChangeInstructionAccounts {
+        pub performancePackage: Pubkey,
+        pub changeRequest: Pubkey,
+        pub executor: Pubkey,
+        pub rentDestination: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl ExecuteChangeInstructionAccounts {
+        pub fn new(
+            performancePackage: Pubkey,
+            changeRequest: Pubkey,
+            executor: Pubkey,
+            rentDestination: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                performancePackage,
+                changeRequest,
+                executor,
+                rentDestination,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    /// Instruction data for ExecuteChange
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct ExecuteChangeInstructionData {}
+
+    impl ExecuteChangeInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    /// Implementation for ExecuteChangeInstruction
+    impl ExecuteChangeInstruction {
+        fn discriminator() -> [u8; 8] {
+            [104u8, 53u8, 136u8, 238u8, 82u8, 222u8, 200u8, 42u8]
+        }
+
+        pub fn data(data: ExecuteChangeInstructionData) -> Self {
+            Self {
+                accounts: ExecuteChangeInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: ExecuteChangeInstructionAccounts) -> Self {
+            self.accounts.performancePackage = AccountMeta::new(accounts.performancePackage, false);
+            self.accounts.changeRequest = AccountMeta::new(accounts.changeRequest, false);
+            self.accounts.executor = AccountMeta::new_readonly(accounts.executor, true);
+            self.accounts.rentDestination = AccountMeta::new(accounts.rentDestination, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        pub fn remaining_accounts(mut self, accounts: Vec<AccountMeta>) -> Self {
+            self.remaining_accounts = accounts;
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = Vec::new();
+            metas.push(self.accounts.performancePackage.clone());
+            metas.push(self.accounts.changeRequest.clone());
+            metas.push(self.accounts.executor.clone());
+            metas.push(self.accounts.rentDestination.clone());
+            metas.push(self.accounts.eventAuthority.clone());
+            metas.push(self.accounts.program.clone());
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            let mut buffer: Vec<u8> = Vec::new();
+            buffer.extend_from_slice(&Self::discriminator());
+            self.data.serialize(&mut buffer).unwrap();
+            Instruction::new_with_bytes(program_id(), &buffer, self.to_account_metas())
+        }
+    }
+
+    /// Main instruction struct for ClosePerformancePackage
+    pub struct ClosePerformancePackageInstruction {
+        pub accounts: ClosePerformancePackageInstructionAccountMetas,
+        pub data: ClosePerformancePackageInstructionData,
+        pub remaining_accounts: Vec<AccountMeta>,
+    }
+
+    /// Account metadata for ClosePerformancePackage instruction
+    #[derive(Debug, Clone, Default)]
+    pub struct ClosePerformancePackageInstructionAccountMetas {
+        pub performancePackage: AccountMeta,
+        pub admin: AccountMeta,
+        pub rentDestination: AccountMeta,
+        pub eventAuthority: AccountMeta,
+        pub program: AccountMeta,
+    }
+
+    /// Account pubkeys for ClosePerformancePackage instruction
+    #[derive(Debug, Clone)]
+    pub struct ClosePerformancePackageInstructionAccounts {
+        pub performancePackage: Pubkey,
+        pub admin: Pubkey,
+        pub rentDestination: Pubkey,
+        pub eventAuthority: Pubkey,
+        pub program: Pubkey,
+    }
+
+    impl ClosePerformancePackageInstructionAccounts {
+        pub fn new(
+            performancePackage: Pubkey,
+            admin: Pubkey,
+            rentDestination: Pubkey,
+            eventAuthority: Pubkey,
+            program: Pubkey,
+        ) -> Self {
+            Self {
+                performancePackage,
+                admin,
+                rentDestination,
+                eventAuthority,
+                program,
+            }
+        }
+    }
+
+    /// Instruction data for ClosePerformancePackage
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone)]
+    pub struct ClosePerformancePackageInstructionData {}
+
+    impl ClosePerformancePackageInstructionData {
+        pub fn new() -> Self {
+            Self {}
+        }
+    }
+
+    /// Implementation for ClosePerformancePackageInstruction
+    impl ClosePerformancePackageInstruction {
+        fn discriminator() -> [u8; 8] {
+            [166u8, 35u8, 29u8, 1u8, 172u8, 39u8, 254u8, 135u8]
+        }
+
+        pub fn data(data: ClosePerformancePackageInstructionData) -> Self {
+            Self {
+                accounts: ClosePerformancePackageInstructionAccountMetas::default(),
+                data,
+                remaining_accounts: Vec::new(),
+            }
+        }
+
+        pub fn accounts(mut self, accounts: ClosePerformancePackageInstructionAccounts) -> Self {
+            self.accounts.performancePackage = AccountMeta::new(accounts.performancePackage, false);
+            self.accounts.admin = AccountMeta::new_readonly(accounts.admin, true);
+            self.accounts.rentDestination = AccountMeta::new(accounts.rentDestination, false);
+            self.accounts.eventAuthority =
+                AccountMeta::new_readonly(accounts.eventAuthority, false);
+            self.accounts.program = AccountMeta::new_readonly(accounts.program, false);
+            self
+        }
+
+        pub fn remaining_accounts(mut self, accounts: Vec<AccountMeta>) -> Self {
+            self.remaining_accounts = accounts;
+            self
+        }
+
+        fn to_account_metas(&self) -> Vec<AccountMeta> {
+            let mut metas = Vec::new();
+            metas.push(self.accounts.performancePackage.clone());
+            metas.push(self.accounts.admin.clone());
+            metas.push(self.accounts.rentDestination.clone());
+            metas.push(self.accounts.eventAuthority.clone());
+            metas.push(self.accounts.program.clone());
+            metas.extend(self.remaining_accounts.clone());
+            metas
+        }
+
+        pub fn instruction(&self) -> Instruction {
+            let mut buffer: Vec<u8> = Vec::new();
+            buffer.extend_from_slice(&Self::discriminator());
+            self.data.serialize(&mut buffer).unwrap();
+            Instruction::new_with_bytes(program_id(), &buffer, self.to_account_metas())
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Data Accounts (with discriminators)
+    // ------------------------------------------------------------------------
+
+    impl AccountDiscriminator for ChangeRequest {
+        fn discriminator() -> &'static [u8] {
+            &[0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8]
+        }
+    }
+
+    impl AccountDiscriminator for PerformancePackage {
+        fn discriminator() -> &'static [u8] {
+            &[0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8]
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Errors
+    // ------------------------------------------------------------------------
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[repr(u32)]
+    pub enum Performancepackagev2Error {
+        Unauthorized = 6000,
+        InvalidExecutor = 6001,
+        InvalidAuthority = 6002,
+        InvalidAdmin = 6003,
+        InvalidMintGovernor = 6004,
+        InvalidMintAuthority = 6005,
+        NotLocked = 6006,
+        NotUnlocking = 6007,
+        OracleMissingAccount = 6008,
+        OracleInvalidAccount = 6009,
+        OracleParseError = 6010,
+        OracleInvalidState = 6011,
+        OracleMinDurationNotReached = 6012,
+        UnlockTimestampNotReached = 6013,
+        RewardCalculationOverflow = 6014,
+        InvalidTranches = 6015,
+        InvalidVestingSchedule = 6016,
+        ChangeRequestNotFound = 6017,
+        NoChangesProposed = 6018,
+        MinDurationTooLarge = 6019,
+    }
+
+    impl Performancepackagev2Error {
+        pub fn code(&self) -> u32 {
+            *self as u32
+        }
+
+        pub fn msg(&self) -> &'static str {
+            match self {
+                Self::Unauthorized => "Signer is neither authority nor recipient",
+                Self::InvalidExecutor => "Executor is not the opposite party from proposer",
+                Self::InvalidAuthority => "Signer is not the current authority",
+                Self::InvalidAdmin => "Signer is not the admin",
+                Self::InvalidMintGovernor => "Mint governor does not match the provided mint",
+                Self::InvalidMintAuthority => {
+                    "Mint authority does not match expected configuration"
+                }
+                Self::NotLocked => "Expected Locked status",
+                Self::NotUnlocking => "Expected Unlocking status",
+                Self::OracleMissingAccount => "Expected remaining_accounts not provided",
+                Self::OracleInvalidAccount => "Account pubkey doesn't match expected",
+                Self::OracleParseError => "Failed to parse account data",
+                Self::OracleInvalidState => "Oracle state invalid",
+                Self::OracleMinDurationNotReached => "Minimum duration hasn't passed yet",
+                Self::UnlockTimestampNotReached => "Minimum unlock timestamp not yet reached",
+                Self::RewardCalculationOverflow => "Math overflow in reward function",
+                Self::InvalidTranches => "Tranches should be sorted and non-empty",
+                Self::InvalidVestingSchedule => "Invalid vesting schedule configuration",
+                Self::ChangeRequestNotFound => "Missing proposal for execute",
+                Self::NoChangesProposed => "All optional change fields are None",
+                Self::MinDurationTooLarge => "min_duration exceeds maximum allowed (365 days)",
+            }
+        }
+
+        pub fn from_code(code: u32) -> Option<Self> {
+            match code {
+                6000 => Some(Self::Unauthorized),
+                6001 => Some(Self::InvalidExecutor),
+                6002 => Some(Self::InvalidAuthority),
+                6003 => Some(Self::InvalidAdmin),
+                6004 => Some(Self::InvalidMintGovernor),
+                6005 => Some(Self::InvalidMintAuthority),
+                6006 => Some(Self::NotLocked),
+                6007 => Some(Self::NotUnlocking),
+                6008 => Some(Self::OracleMissingAccount),
+                6009 => Some(Self::OracleInvalidAccount),
+                6010 => Some(Self::OracleParseError),
+                6011 => Some(Self::OracleInvalidState),
+                6012 => Some(Self::OracleMinDurationNotReached),
+                6013 => Some(Self::UnlockTimestampNotReached),
+                6014 => Some(Self::RewardCalculationOverflow),
+                6015 => Some(Self::InvalidTranches),
+                6016 => Some(Self::InvalidVestingSchedule),
+                6017 => Some(Self::ChangeRequestNotFound),
+                6018 => Some(Self::NoChangesProposed),
+                6019 => Some(Self::MinDurationTooLarge),
+                _ => None,
+            }
+        }
+    }
+
+    impl std::fmt::Display for Performancepackagev2Error {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}: {}", self.code(), self.msg())
+        }
+    }
+
+    impl std::error::Error for Performancepackagev2Error {}
+
+    // ------------------------------------------------------------------------
+    // Custom Types
+    // ------------------------------------------------------------------------
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct CommonFields {
+        pub slot: u64,
+        pub unixTimestamp: i64,
+        pub performancePackageSeqNum: u64,
+    }
+
+    impl CommonFields {
+        pub fn new(slot: u64, unixTimestamp: i64, performancePackageSeqNum: u64) -> Self {
+            Self {
+                slot,
+                unixTimestamp,
+                performancePackageSeqNum,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct InitializePerformancePackageArgs {
+        pub oracleReader: OracleReader,
+        pub rewardFunction: RewardFunction,
+        pub minUnlockTimestamp: i64,
+    }
+
+    impl InitializePerformancePackageArgs {
+        pub fn new(
+            oracleReader: OracleReader,
+            rewardFunction: RewardFunction,
+            minUnlockTimestamp: i64,
+        ) -> Self {
+            Self {
+                oracleReader,
+                rewardFunction,
+                minUnlockTimestamp,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct ProposeChangeArgs {
+        pub pdaNonce: u32,
+        pub newRecipient: Option<Pubkey>,
+        pub newOracleReader: Option<OracleReader>,
+        pub newRewardFunction: Option<RewardFunction>,
+    }
+
+    impl ProposeChangeArgs {
+        pub fn new(
+            pdaNonce: u32,
+            newRecipient: Option<Pubkey>,
+            newOracleReader: Option<OracleReader>,
+            newRewardFunction: Option<RewardFunction>,
+        ) -> Self {
+            Self {
+                pdaNonce,
+                newRecipient,
+                newOracleReader,
+                newRewardFunction,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct ThresholdTranche {
+        pub threshold: u128,
+        pub cumulativeAmount: u64,
+    }
+
+    impl ThresholdTranche {
+        pub fn new(threshold: u128, cumulativeAmount: u64) -> Self {
+            Self {
+                threshold,
+                cumulativeAmount,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub enum ProposerType {
+        Authority,
+        Recipient,
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub enum PackageStatus {
+        Locked,
+        Unlocking,
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub enum OracleReader {
+        Time,
+        FutarchyTwap {
+            amm: Pubkey,
+            minDuration: u32,
+            startValue: u128,
+            startTime: i64,
+            endValue: u128,
+            endTime: i64,
+        },
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub enum RewardFunction {
+        CliffLinear {
+            startValue: u128,
+            cliffValue: u128,
+            endValue: u128,
+            cliffAmount: u64,
+            totalAmount: u64,
+        },
+        Threshold {
+            tranches: Vec<ThresholdTranche>,
+        },
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct ChangeRequest {
+        pub performancePackage: Pubkey,
+        pub proposerType: ProposerType,
+        pub proposedAt: i64,
+        pub pdaNonce: u32,
+        pub bump: u8,
+        pub newRecipient: Option<Pubkey>,
+        pub newOracleReader: Option<OracleReader>,
+        pub newRewardFunction: Option<RewardFunction>,
+    }
+
+    impl ChangeRequest {
+        pub fn new(
+            performancePackage: Pubkey,
+            proposerType: ProposerType,
+            proposedAt: i64,
+            pdaNonce: u32,
+            bump: u8,
+            newRecipient: Option<Pubkey>,
+            newOracleReader: Option<OracleReader>,
+            newRewardFunction: Option<RewardFunction>,
+        ) -> Self {
+            Self {
+                performancePackage,
+                proposerType,
+                proposedAt,
+                pdaNonce,
+                bump,
+                newRecipient,
+                newOracleReader,
+                newRewardFunction,
+            }
+        }
+    }
+
+    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
+    pub struct PerformancePackage {
+        pub mint: Pubkey,
+        pub mintGovernor: Pubkey,
+        pub mintAuthority: Pubkey,
+        pub authority: Pubkey,
+        pub recipient: Pubkey,
+        pub oracleReader: OracleReader,
+        pub rewardFunction: RewardFunction,
+        pub status: PackageStatus,
+        pub minUnlockTimestamp: i64,
+        pub totalRewardsPaidOut: u64,
+        pub seqNum: u64,
+        pub createKey: Pubkey,
+        pub bump: u8,
+    }
+
+    impl PerformancePackage {
+        pub fn new(
+            mint: Pubkey,
+            mintGovernor: Pubkey,
+            mintAuthority: Pubkey,
+            authority: Pubkey,
+            recipient: Pubkey,
+            oracleReader: OracleReader,
+            rewardFunction: RewardFunction,
+            status: PackageStatus,
+            minUnlockTimestamp: i64,
+            totalRewardsPaidOut: u64,
+            seqNum: u64,
+            createKey: Pubkey,
+            bump: u8,
+        ) -> Self {
+            Self {
+                mint,
+                mintGovernor,
+                mintAuthority,
+                authority,
+                recipient,
+                oracleReader,
+                rewardFunction,
+                status,
+                minUnlockTimestamp,
+                totalRewardsPaidOut,
+                seqNum,
+                createKey,
+                bump,
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
 // Program: mint_governor
 // ----------------------------------------------------------------------------
 pub mod mint_governor {

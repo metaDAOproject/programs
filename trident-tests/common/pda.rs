@@ -3,6 +3,8 @@ use super::types::bid_wall;
 use super::types::conditional_vault;
 use super::types::futarchy;
 use super::types::launchpad_v_7;
+use super::types::mint_governor;
+use super::types::performance_package_v_2;
 use super::types::price_based_performance_package;
 
 use trident_fuzz::fuzzing::*;
@@ -41,6 +43,60 @@ pub fn get_change_request_pda(
                 pda_nonce.to_le_bytes().as_ref(),
             ],
             &price_based_performance_package::program_id(),
+        )
+        .0
+}
+
+pub fn get_performance_package_pda_v2(trident: &mut Trident, create_key: Pubkey) -> Pubkey {
+    trident
+        .find_program_address(
+            &[PERFORMANCE_PACKAGE_SEED_PREFIX, create_key.as_ref()],
+            &performance_package_v_2::program_id(),
+        )
+        .0
+}
+
+pub fn get_change_request_pda_v2(
+    trident: &mut Trident,
+    performance_package: Pubkey,
+    proposer: Pubkey,
+    pda_nonce: u32,
+) -> Pubkey {
+    trident
+        .find_program_address(
+            &[
+                CHANGE_REQUEST_SEED_PREFIX,
+                performance_package.as_ref(),
+                proposer.as_ref(),
+                pda_nonce.to_le_bytes().as_ref(),
+            ],
+            &performance_package_v_2::program_id(),
+        )
+        .0
+}
+
+pub fn get_mint_governor_pda(trident: &mut Trident, mint: Pubkey, create_key: Pubkey) -> Pubkey {
+    trident
+        .find_program_address(
+            &[b"mint_governor", mint.as_ref(), create_key.as_ref()],
+            &mint_governor::program_id(),
+        )
+        .0
+}
+
+pub fn get_mint_authority_pda(
+    trident: &mut Trident,
+    mint_governor: Pubkey,
+    authorized_minter: Pubkey,
+) -> Pubkey {
+    trident
+        .find_program_address(
+            &[
+                b"mint_authority",
+                mint_governor.as_ref(),
+                authorized_minter.as_ref(),
+            ],
+            &mint_governor::program_id(),
         )
         .0
 }
