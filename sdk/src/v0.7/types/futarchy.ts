@@ -993,16 +993,6 @@ export type Futarchy = {
           isMut: false;
           isSigner: false;
         },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
       ];
       args: [];
     },
@@ -4279,16 +4269,6 @@ export const IDL: Futarchy = {
         },
         {
           name: "vaultTransaction",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
           isMut: false,
           isSigner: false,
         },
