@@ -301,6 +301,388 @@ export default function suite() {
     assert.equal(daoAccount.teamSponsoredPassThresholdBps, -300);
   });
 
+  it("sends all USDC to treasury when hasBidWall is false even with excess funding", async function () {
+    const fundAmount = new BN(2000_000000); // 2000 USDC
+    await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
+
+    await this.advanceBySeconds(60 * 60 * 24 * 11);
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        approvedAmount: fundAmount,
+        launch,
+        funder: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    const completeLaunchTx = await launchpadClient
+      .completeLaunchIx({
+        launch,
+        quoteMint: MAINNET_USDC,
+        baseMint: META,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this,
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer, launchAuthority]);
+
+    await this.banksClient.processTransaction(tx);
+
+    const launchAccount = await launchpadClient.fetchLaunch(launch);
+    const treasuryUSDCBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      launchAccount.daoVault,
+    );
+
+    assert.exists(launchAccount.state.complete);
+    // usdc_to_dao = 2000 * 0.8 = 1600, all goes to treasury
+    assert.equal(
+      treasuryUSDCBalance.toString(),
+      new BN(1600_000000).toString(),
+    );
+
+    const bidWallAddr = launchpadClient.bidWall.getBidWallAddress({
+      baseMint: META,
+      creator: launchSigner,
+      nonce: new BN(0),
+    });
+    try {
+      const bidWallAccount =
+        await launchpadClient.bidWall.fetchBidWall(bidWallAddr);
+      assert.isNull(bidWallAccount);
+    } catch (e) {
+      // bankrun throws when account doesn't exist — this confirms bid wall was not created
+    }
+  });
+
+  it("initializes bid wall when hasBidWall is true and funding exceeds 1.25x minimum raise", async function () {
+    const result = await initializeMintWithSeeds(
+      this.banksClient,
+      this.launchpad_v7,
+      this.payer,
+    );
+
+    META = result.tokenMint;
+    launch = result.launch;
+    launchSigner = result.launchSigner;
+
+    await launchpadClient
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: secondsForLaunch,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: monthlySpend,
+        monthlySpendingLimitMembers: [this.payer.publicKey],
+        performancePackageGrantee: recipientAddress,
+        performancePackageTokenAmount: premineAmount,
+        monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
+        launchAuthority: launchAuthority.publicKey,
+        hasBidWall: true,
+      })
+      .rpc();
+
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
+    await this.createTokenAccount(META, this.payer.publicKey);
+
+    const fundAmount = new BN(2000_000000); // 2000 USDC
+    await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
+
+    await this.advanceBySeconds(60 * 60 * 24 * 11);
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        approvedAmount: fundAmount,
+        launch,
+        funder: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    const completeLaunchTx = await launchpadClient
+      .completeLaunchIx({
+        launch,
+        quoteMint: MAINNET_USDC,
+        baseMint: META,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this,
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer, launchAuthority]);
+
+    await this.banksClient.processTransaction(tx);
+
+    const launchAccount = await launchpadClient.fetchLaunch(launch);
+    const treasuryUSDCBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      launchAccount.daoVault,
+    );
+
+    assert.exists(launchAccount.state.complete);
+    // usdc_to_dao = 2000 * 0.8 = 1600, treasury = min(1600, 1000) = 1000
+    assert.equal(
+      treasuryUSDCBalance.toString(),
+      new BN(1000_000000).toString(),
+    );
+
+    const bidWallAddr = launchpadClient.bidWall.getBidWallAddress({
+      baseMint: META,
+      creator: launchSigner,
+      nonce: new BN(0),
+    });
+    const bidWallAccount =
+      await launchpadClient.bidWall.fetchBidWall(bidWallAddr);
+    assert.isNotNull(bidWallAccount);
+  });
+
+  it("does not initialize bid wall when hasBidWall is true but funding equals minimum raise", async function () {
+    const result = await initializeMintWithSeeds(
+      this.banksClient,
+      this.launchpad_v7,
+      this.payer,
+    );
+
+    META = result.tokenMint;
+    launch = result.launch;
+    launchSigner = result.launchSigner;
+
+    await launchpadClient
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: secondsForLaunch,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: monthlySpend,
+        monthlySpendingLimitMembers: [this.payer.publicKey],
+        performancePackageGrantee: recipientAddress,
+        performancePackageTokenAmount: premineAmount,
+        monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
+        launchAuthority: launchAuthority.publicKey,
+        hasBidWall: true,
+      })
+      .rpc();
+
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
+    await this.createTokenAccount(META, this.payer.publicKey);
+
+    // Fund with exactly minimum raise
+    await launchpadClient.fundIx({ launch, amount: minRaise }).rpc();
+
+    await this.advanceBySeconds(60 * 60 * 24 * 11);
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        approvedAmount: minRaise,
+        launch,
+        funder: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    const completeLaunchTx = await launchpadClient
+      .completeLaunchIx({
+        launch,
+        quoteMint: MAINNET_USDC,
+        baseMint: META,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this,
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer, launchAuthority]);
+
+    await this.banksClient.processTransaction(tx);
+
+    const launchAccount = await launchpadClient.fetchLaunch(launch);
+    const treasuryUSDCBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      launchAccount.daoVault,
+    );
+
+    assert.exists(launchAccount.state.complete);
+    // usdc_to_dao = 1000 * 0.8 = 800, treasury = min(800, 1000) = 800, bid wall = 0
+    assert.equal(treasuryUSDCBalance.toString(), new BN(800_000000).toString());
+
+    const bidWallAddr = launchpadClient.bidWall.getBidWallAddress({
+      baseMint: META,
+      creator: launchSigner,
+      nonce: new BN(0),
+    });
+    try {
+      const bidWallAccount =
+        await launchpadClient.bidWall.fetchBidWall(bidWallAddr);
+      assert.isNull(bidWallAccount);
+    } catch (e) {
+      // bankrun throws when account doesn't exist — this confirms bid wall was not created
+    }
+  });
+
+  it("does not initialize bid wall when hasBidWall is true and funding is exactly 1.25x minimum raise", async function () {
+    const result = await initializeMintWithSeeds(
+      this.banksClient,
+      this.launchpad_v7,
+      this.payer,
+    );
+
+    META = result.tokenMint;
+    launch = result.launch;
+    launchSigner = result.launchSigner;
+
+    await launchpadClient
+      .initializeLaunchIx({
+        tokenName: "META",
+        tokenSymbol: "META",
+        tokenUri: "https://example.com",
+        minimumRaiseAmount: minRaise,
+        secondsForLaunch: secondsForLaunch,
+        baseMint: META,
+        quoteMint: MAINNET_USDC,
+        monthlySpendingLimitAmount: monthlySpend,
+        monthlySpendingLimitMembers: [this.payer.publicKey],
+        performancePackageGrantee: recipientAddress,
+        performancePackageTokenAmount: premineAmount,
+        monthsUntilInsidersCanUnlock: 18,
+        teamAddress: PublicKey.default,
+        launchAuthority: launchAuthority.publicKey,
+        hasBidWall: true,
+      })
+      .rpc();
+
+    await launchpadClient
+      .startLaunchIx({ launch, launchAuthority: launchAuthority.publicKey })
+      .signers([launchAuthority])
+      .rpc();
+    await this.createTokenAccount(META, this.payer.publicKey);
+
+    // Fund with exactly 1.25x minimum raise (boundary case)
+    const fundAmount = new BN(1250_000000); // 1250 USDC
+    await launchpadClient.fundIx({ launch, amount: fundAmount }).rpc();
+
+    await this.advanceBySeconds(60 * 60 * 24 * 11);
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        approvedAmount: fundAmount,
+        launch,
+        funder: this.payer.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    const completeLaunchTx = await launchpadClient
+      .completeLaunchIx({
+        launch,
+        quoteMint: MAINNET_USDC,
+        baseMint: META,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .transaction();
+
+    const completeLaunchLut = await createLookupTableForTransaction(
+      completeLaunchTx,
+      this,
+    );
+
+    const completeLaunchMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: completeLaunchTx.instructions,
+    }).compileToV0Message([completeLaunchLut]);
+
+    const tx = new VersionedTransaction(completeLaunchMessage);
+    tx.sign([this.payer, launchAuthority]);
+
+    await this.banksClient.processTransaction(tx);
+
+    const launchAccount = await launchpadClient.fetchLaunch(launch);
+    const treasuryUSDCBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      launchAccount.daoVault,
+    );
+
+    assert.exists(launchAccount.state.complete);
+    // usdc_to_dao = 1250 * 0.8 = 1000, treasury = min(1000, 1000) = 1000, bid wall = 0
+    assert.equal(
+      treasuryUSDCBalance.toString(),
+      new BN(1000_000000).toString(),
+    );
+
+    const bidWallAddr = launchpadClient.bidWall.getBidWallAddress({
+      baseMint: META,
+      creator: launchSigner,
+      nonce: new BN(0),
+    });
+    try {
+      const bidWallAccount =
+        await launchpadClient.bidWall.fetchBidWall(bidWallAddr);
+      assert.isNull(bidWallAccount);
+    } catch (e) {
+      // bankrun throws when account doesn't exist — this confirms bid wall was not created
+    }
+  });
+
   it("fails when launch is in refunding state", async function () {
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 11);

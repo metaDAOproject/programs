@@ -77,7 +77,7 @@ export default function suite() {
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
-        hasBidWall: false,
+        hasBidWall: true,
       })
       .rpc();
 
@@ -108,6 +108,7 @@ export default function suite() {
     assert.isNull(storedLaunch.unixTimestampStarted);
     assert.isNull(storedLaunch.dao);
     assert.equal(storedLaunch.accumulatorActivationDelaySeconds, 0);
+    assert.isTrue(storedLaunch.hasBidWall);
   });
 
   it("fails when monthly spending limit members contains duplicates", async function () {
