@@ -43,6 +43,14 @@ impl<'info> ExecuteChange<'info> {
             return Err(PriceBasedPerformancePackageError::UnauthorizedChangeRequest.into());
         }
 
+        if let ChangeType::Recipient { new_recipient } = &self.change_request.change_type {
+            require_keys_neq!(
+                *new_recipient,
+                self.performance_package.performance_package_authority,
+                PriceBasedPerformancePackageError::RecipientAuthorityMustDiffer
+            );
+        }
+
         Ok(())
     }
 

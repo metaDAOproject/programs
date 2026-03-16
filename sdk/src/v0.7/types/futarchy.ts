@@ -1186,7 +1186,43 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "adminApproveExecuteMultisigProposal";
+      name: "adminApproveMultisigProposal";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "adminExecuteMultisigProposal";
       accounts: [
         {
           name: "dao";
@@ -1215,16 +1251,6 @@ export type Futarchy = {
         },
         {
           name: "squadsMultisigProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
           isMut: false;
           isSigner: false;
         },
@@ -3146,7 +3172,7 @@ export type Futarchy = {
     {
       code: 6014;
       name: "InvalidSquadsProposalStatus";
-      msg: "Squads proposal must be in Draft status";
+      msg: "Squads proposal must be in Active status";
     },
     {
       code: 6015;
@@ -3252,6 +3278,11 @@ export type Futarchy = {
       code: 6035;
       name: "InvalidTransactionMessage";
       msg: "Failed to compile transaction message for Squads vault transaction";
+    },
+    {
+      code: 6036;
+      name: "InvalidMint";
+      msg: "Base mint and quote mint must be different";
     },
   ];
 };
@@ -4444,7 +4475,43 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
-      name: "adminApproveExecuteMultisigProposal",
+      name: "adminApproveMultisigProposal",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVaultTransaction",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "adminExecuteMultisigProposal",
       accounts: [
         {
           name: "dao",
@@ -4473,16 +4540,6 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisigProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -6404,7 +6461,7 @@ export const IDL: Futarchy = {
     {
       code: 6014,
       name: "InvalidSquadsProposalStatus",
-      msg: "Squads proposal must be in Draft status",
+      msg: "Squads proposal must be in Active status",
     },
     {
       code: 6015,
@@ -6510,6 +6567,11 @@ export const IDL: Futarchy = {
       code: 6035,
       name: "InvalidTransactionMessage",
       msg: "Failed to compile transaction message for Squads vault transaction",
+    },
+    {
+      code: 6036,
+      name: "InvalidMint",
+      msg: "Base mint and quote mint must be different",
     },
   ],
 };

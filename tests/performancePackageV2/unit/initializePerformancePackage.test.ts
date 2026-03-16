@@ -703,6 +703,95 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
+  it("fails with excessive min_duration", async function () {
+    const dao = await setupDaoForTwapTests(this);
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    // 365 days + 1 second - exceeds maximum
+    const minDuration = 365 * 24 * 60 * 60 + 1;
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+    const rewardFunction = createCliffLinearReward();
+
+    const callbacks = expectError(
+      "MinDurationTooLarge",
+      "Should have failed because min_duration exceeds maximum allowed",
+    );
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: this.payer.publicKey,
+        recipient: this.payer.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("succeeds with max allowed min_duration", async function () {
+    const dao = await setupDaoForTwapTests(this);
+
+    const createKey = Keypair.generate();
+    const [performancePackage] = getPerformancePackageV2Addr({
+      createKey: createKey.publicKey,
+    });
+
+    const { mint, mintGovernor, mintAuthority } =
+      await setupMintGovernorWithAuthority(
+        this.banksClient,
+        mintGovernorClient,
+        this.payer,
+        performancePackage,
+      );
+
+    // Exactly 365 days - should succeed
+    const minDuration = 365 * 24 * 60 * 60;
+    const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+    const rewardFunction = createCliffLinearReward();
+
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: this.payer.publicKey,
+        recipient: this.payer.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader,
+        rewardFunction,
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    const ppAccount =
+      await ppClient.fetchPerformancePackage(performancePackage);
+
+    assert.isNotNull(ppAccount);
+    assert.isDefined(ppAccount.oracleReader.futarchyTwap);
+    assert.equal(ppAccount.oracleReader.futarchyTwap.minDuration, minDuration);
+  });
+
   it("fails with invalid CliffLinear config - start_value > cliff_value", async function () {
     const createKey = Keypair.generate();
     const [performancePackage] = getPerformancePackageV2Addr({

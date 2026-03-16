@@ -971,6 +971,11 @@ export type PriceBasedPerformancePackage = {
       name: "TotalTokenAmountOverflow";
       msg: "Total token amount calculation would overflow";
     },
+    {
+      code: 6015;
+      name: "RecipientAuthorityMustDiffer";
+      msg: "Recipient and performance package authority must be different keys";
+    },
   ];
 };
 
@@ -1946,6 +1951,11 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6014,
       name: "TotalTokenAmountOverflow",
       msg: "Total token amount calculation would overflow",
+    },
+    {
+      code: 6015,
+      name: "RecipientAuthorityMustDiffer",
+      msg: "Recipient and performance package authority must be different keys",
     },
   ],
 };

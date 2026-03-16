@@ -13,6 +13,7 @@ import {
 import {
   getPerformancePackageV2Addr,
   getChangeRequestV2Addr,
+  getEventAuthorityAddr,
 } from "./utils/pda.js";
 import {
   PerformancePackageV2 as PerformancePackageV2Program,
@@ -193,6 +194,10 @@ export class PerformancePackageV2Client {
   }) {
     const recipientAta = getAssociatedTokenAddressSync(mint, recipient, true);
 
+    const [mintGovernorEventAuthority] = getEventAuthorityAddr(
+      MINT_GOVERNOR_PROGRAM_ID,
+    );
+
     const builder = this.program.methods.completeUnlock().accounts({
       performancePackage,
       mintGovernor,
@@ -203,6 +208,7 @@ export class PerformancePackageV2Client {
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       mintGovernorProgram: MINT_GOVERNOR_PROGRAM_ID,
+      mintGovernorEventAuthority,
     });
 
     if (dao) {

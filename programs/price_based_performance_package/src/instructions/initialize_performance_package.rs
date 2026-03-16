@@ -56,6 +56,16 @@ pub struct InitializePerformancePackage<'info> {
 }
 
 impl InitializePerformancePackage<'_> {
+    pub fn validate(&self, params: &InitializePerformancePackageParams) -> Result<()> {
+        require_keys_neq!(
+            params.grantee,
+            params.performance_package_authority,
+            PriceBasedPerformancePackageError::RecipientAuthorityMustDiffer
+        );
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, params: InitializePerformancePackageParams) -> Result<()> {
         let Self {
             performance_package,

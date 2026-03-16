@@ -30,6 +30,7 @@ pub struct InitializeLaunchArgs {
     pub months_until_insiders_can_unlock: u8,
     pub team_address: Pubkey,
     pub additional_tokens_amount: u64,
+    pub accumulator_activation_delay_seconds: u32,
 }
 
 #[event_cpi]
@@ -125,6 +126,12 @@ impl InitializeLaunch<'_> {
             LaunchpadError::InvalidSecondsForLaunch
         );
 
+        require_gt!(
+            args.seconds_for_launch,
+            args.accumulator_activation_delay_seconds,
+            LaunchpadError::InvalidAccumulatorActivationDelaySeconds
+        );
+
         require!(
             self.base_mint.freeze_authority.is_none(),
             LaunchpadError::FreezeAuthoritySet
@@ -169,7 +176,7 @@ impl InitializeLaunch<'_> {
 
         require_gte!(
             args.months_until_insiders_can_unlock,
-            18,
+            12,
             LaunchpadError::InvalidPerformancePackageMinUnlockTime
         );
 
@@ -239,6 +246,7 @@ impl InitializeLaunch<'_> {
             additional_tokens_claimed: false,
             unix_timestamp_completed: None,
             is_performance_package_initialized: false,
+            accumulator_activation_delay_seconds: args.accumulator_activation_delay_seconds,
         });
 
         let clock = Clock::get()?;
@@ -266,6 +274,7 @@ impl InitializeLaunch<'_> {
                 .additional_tokens_recipient
                 .as_ref()
                 .map(|a| a.key()),
+            accumulator_activation_delay_seconds: args.accumulator_activation_delay_seconds,
         });
 
         let launch_key = ctx.accounts.launch.key();

@@ -115,16 +115,19 @@ impl FinalizeProposal<'_> {
         ];
         let proposal_signer = &[&proposal_seeds[..]];
 
-        let calculate_twap = |amm: &Pool| -> Result<u128> {
-            let seconds_passed = amm.oracle.last_updated_timestamp - proposal.timestamp_enqueued;
+        let clock = Clock::get()?;
 
-            require_gte!(
-                seconds_passed,
-                proposal.duration_in_seconds as i64,
+        let calculate_twap = |amm: &Pool| -> Result<u128> {
+            let twap_start_timestamp =
+                amm.oracle.created_at_timestamp + amm.oracle.start_delay_seconds as i64;
+
+            require_gt!(
+                amm.oracle.last_updated_timestamp,
+                twap_start_timestamp,
                 FutarchyError::MarketsTooYoung
             );
 
-            amm.get_twap()
+            amm.get_twap(clock.unix_timestamp)
         };
 
         let PoolState::Futarchy {
@@ -268,8 +271,6 @@ impl FinalizeProposal<'_> {
         dao.amm.state = PoolState::Spot { spot };
 
         dao.seq_num += 1;
-
-        let clock = Clock::get()?;
 
         emit_cpi!(FinalizeProposalEvent {
             common: CommonFields::new(&clock, dao.seq_num),

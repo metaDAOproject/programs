@@ -59,6 +59,7 @@ pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 pub mod futarchy {
     use super::*;
 
+    #[access_control(ctx.accounts.validate())]
     pub fn initialize_dao(ctx: Context<InitializeDao>, params: InitializeDaoParams) -> Result<()> {
         InitializeDao::handle(ctx, params)
     }
@@ -150,10 +151,17 @@ pub mod futarchy {
     }
 
     #[access_control(ctx.accounts.validate())]
-    pub fn admin_approve_execute_multisig_proposal<'c: 'info, 'info>(
-        ctx: Context<'_, '_, 'c, 'info, AdminApproveExecuteMultisigProposal<'info>>,
+    pub fn admin_approve_multisig_proposal(
+        ctx: Context<AdminApproveMultisigProposal>,
     ) -> Result<()> {
-        AdminApproveExecuteMultisigProposal::handle(ctx)
+        AdminApproveMultisigProposal::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn admin_execute_multisig_proposal<'c: 'info, 'info>(
+        ctx: Context<'_, '_, 'c, 'info, AdminExecuteMultisigProposal<'info>>,
+    ) -> Result<()> {
+        AdminExecuteMultisigProposal::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate())]

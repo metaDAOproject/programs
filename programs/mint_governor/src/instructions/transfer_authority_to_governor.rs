@@ -4,6 +4,7 @@ use anchor_spl::token::{self, Mint, SetAuthority, Token};
 
 use crate::{CommonFields, MintAuthorityTransferredEvent, MintGovernor, MintGovernorError};
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct TransferAuthorityToGovernor<'info> {
     #[account(mut)]
@@ -47,7 +48,7 @@ impl TransferAuthorityToGovernor<'_> {
         // Emit event
         let clock = Clock::get()?;
 
-        emit!(MintAuthorityTransferredEvent {
+        emit_cpi!(MintAuthorityTransferredEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

@@ -1,0 +1,22 @@
+[package]
+name = "liquidation"
+version = "0.1.0"
+description = "Manages the orderly liquidation of a project's treasury back to token holders."
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "liquidation"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+production = []
+
+[dependencies]
+anchor-lang = { version = "0.29.0", features = ["event-cpi", "init-if-needed"] }
+anchor-spl = "0.29.0"
+solana-security-txt = "1.1.1"

@@ -10,6 +10,7 @@ pub struct AddMintAuthorityArgs {
     pub max_total: Option<u64>,
 }
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct AddMintAuthority<'info> {
     #[account(mut)]
@@ -57,7 +58,7 @@ impl AddMintAuthority<'_> {
 
         let clock = Clock::get()?;
 
-        emit!(MintAuthorityAddedEvent {
+        emit_cpi!(MintAuthorityAddedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

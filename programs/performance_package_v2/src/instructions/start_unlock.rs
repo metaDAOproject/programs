@@ -5,6 +5,7 @@ use crate::{
     PERFORMANCE_PACKAGE_SEED,
 };
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct StartUnlock<'info> {
     #[account(
@@ -21,9 +22,10 @@ impl StartUnlock<'_> {
     pub fn validate(&self) -> Result<()> {
         let pp = &self.performance_package;
 
-        // Signer must be authority or recipient
-        require!(
-            self.signer.key() == pp.authority || self.signer.key() == pp.recipient,
+        // Only the recipient can start an unlock
+        require_keys_eq!(
+            self.signer.key(),
+            pp.recipient,
             PerformancePackageError::Unauthorized
         );
 
@@ -58,7 +60,7 @@ impl StartUnlock<'_> {
 
         let clock = Clock::get()?;
 
-        emit!(UnlockStartedEvent {
+        emit_cpi!(UnlockStartedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

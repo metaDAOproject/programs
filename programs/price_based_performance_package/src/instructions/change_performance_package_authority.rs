@@ -20,6 +20,16 @@ pub struct ChangePerformancePackageAuthority<'info> {
 }
 
 impl<'info> ChangePerformancePackageAuthority<'info> {
+    pub fn validate(&self, params: &ChangePerformancePackageAuthorityParams) -> Result<()> {
+        require_keys_neq!(
+            params.new_performance_package_authority,
+            self.performance_package.recipient,
+            PriceBasedPerformancePackageError::RecipientAuthorityMustDiffer
+        );
+
+        Ok(())
+    }
+
     pub fn handle(
         ctx: Context<Self>,
         params: ChangePerformancePackageAuthorityParams,

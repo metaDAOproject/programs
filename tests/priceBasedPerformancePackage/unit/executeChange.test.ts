@@ -306,6 +306,47 @@ export default function () {
       .rpc();
   });
 
+  it("should fail if new recipient equals current authority", async function () {
+    const pdaNonce = Math.floor(Math.random() * 1000000);
+
+    // Recipient proposes changing recipient to authority's key (this.payer.publicKey)
+    await this.priceBasedPerformancePackage
+      .proposeChangeIx({
+        params: {
+          changeType: {
+            recipient: { newRecipient: this.payer.publicKey },
+          },
+          pdaNonce,
+        },
+        performancePackage,
+        proposer: recipient.publicKey,
+      })
+      .signers([recipient])
+      .rpc();
+
+    const changeRequestAddr =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        recipient.publicKey,
+        pdaNonce,
+      );
+
+    const callbacks = expectError(
+      "RecipientAuthorityMustDiffer",
+      "Recipient and performance package authority must be different keys",
+    );
+
+    // Authority executes - should fail because new recipient == authority
+    await this.priceBasedPerformancePackage
+      .executeChangeIx({
+        performancePackage,
+        changeRequest: changeRequestAddr,
+        executor: this.payer.publicKey,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   it("should fail if wrong vault tries to execute", async function () {
     // Recipient proposes change (correct pattern)
     const pdaNonce = Math.floor(Math.random() * 1000000);

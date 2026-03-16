@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{CommonFields, MintGovernor, MintGovernorAdminUpdatedEvent, MintGovernorError};
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct UpdateMintGovernorAdmin<'info> {
     #[account(mut)]
@@ -27,7 +28,7 @@ impl UpdateMintGovernorAdmin<'_> {
 
         let clock = Clock::get()?;
 
-        emit!(MintGovernorAdminUpdatedEvent {
+        emit_cpi!(MintGovernorAdminUpdatedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

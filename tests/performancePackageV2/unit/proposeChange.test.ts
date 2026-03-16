@@ -9,6 +9,8 @@ import {
   setupPerformancePackageV2,
   createCliffLinearReward,
   createThresholdReward,
+  createFutarchyTwapOracle,
+  setupDaoForTwapTests,
 } from "../utils.js";
 import { expectError } from "../../utils.js";
 
@@ -428,6 +430,49 @@ export default function suite() {
         payer: this.payer.publicKey,
         pdaNonce,
         // All optional fields are null (default)
+      })
+      .signers([authority])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("fails when proposing oracle change with excessive min_duration", async function () {
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+
+    const { performancePackage } = await setupPerformancePackageV2(
+      this.banksClient,
+      mintGovernorClient,
+      ppClient,
+      this.payer,
+      {
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        rewardFunction: createCliffLinearReward(),
+        minUnlockTimestamp: new BN(0),
+      },
+    );
+
+    const dao = await setupDaoForTwapTests(this);
+
+    // 365 days + 1 second - exceeds maximum
+    const minDuration = 365 * 24 * 60 * 60 + 1;
+    const newOracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
+
+    const pdaNonce = 1;
+
+    const callbacks = expectError(
+      "MinDurationTooLarge",
+      "Should have failed because proposed oracle min_duration exceeds maximum allowed",
+    );
+
+    await ppClient
+      .proposeChangeIx({
+        performancePackage,
+        proposer: authority.publicKey,
+        payer: this.payer.publicKey,
+        pdaNonce,
+        newOracleReader,
       })
       .signers([authority])
       .rpc()

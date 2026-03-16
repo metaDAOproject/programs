@@ -15,6 +15,7 @@ use crate::{
     PERFORMANCE_PACKAGE_SEED,
 };
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct CompleteUnlock<'info> {
     #[account(
@@ -56,6 +57,9 @@ pub struct CompleteUnlock<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
 
     pub mint_governor_program: Program<'info, MintGovernorProgram>,
+
+    /// CHECK: checked by mint_governor program
+    pub mint_governor_event_authority: UncheckedAccount<'info>,
 }
 
 impl CompleteUnlock<'_> {
@@ -120,6 +124,8 @@ impl CompleteUnlock<'_> {
                     destination_ata: ctx.accounts.recipient_ata.to_account_info(),
                     authorized_minter: ctx.accounts.performance_package.to_account_info(),
                     token_program: ctx.accounts.token_program.to_account_info(),
+                    event_authority: ctx.accounts.mint_governor_event_authority.to_account_info(),
+                    program: ctx.accounts.mint_governor_program.to_account_info(),
                 },
                 signer_seeds,
             );
@@ -151,7 +157,7 @@ impl CompleteUnlock<'_> {
 
         let clock = Clock::get()?;
 
-        emit!(UnlockCompletedEvent {
+        emit_cpi!(UnlockCompletedEvent {
             common: CommonFields {
                 slot: clock.slot,
                 unix_timestamp: clock.unix_timestamp,

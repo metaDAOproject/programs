@@ -24,7 +24,7 @@ export default function suite() {
     ppClient = this.performancePackageV2;
   });
 
-  it("successfully starts when called by authority", async function () {
+  it("fails when called by authority", async function () {
     const authority = Keypair.generate();
     const recipient = Keypair.generate();
 
@@ -45,19 +45,20 @@ export default function suite() {
     let ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
     assert.isDefined(ppAccount.status.locked);
 
-    // Call start_unlock as authority
+    // Call start_unlock as authority - should fail
+    const callbacks = expectError(
+      "Unauthorized",
+      "Should have failed because only recipient can start unlock",
+    );
+
     await ppClient
       .startUnlockIx({
         performancePackage,
         signer: authority.publicKey,
       })
       .signers([authority])
-      .rpc();
-
-    // Verify status is now Unlocking
-    ppAccount = await ppClient.fetchPerformancePackage(performancePackage);
-    assert.isDefined(ppAccount.status.unlocking);
-    assert.equal(ppAccount.seqNum.toString(), "1");
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("successfully starts when called by recipient", async function () {
@@ -117,9 +118,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Verify status is now Unlocking
@@ -137,12 +138,12 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
       .postInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
       ])
-      .signers([authority])
+      .signers([recipient])
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -180,9 +181,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -218,9 +219,9 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Verify status is now Unlocking
@@ -278,12 +279,6 @@ export default function suite() {
     );
     assert.equal(ppAccount.oracleReader.futarchyTwap.startTime.toString(), "0");
 
-    // Advance time so the effective aggregator will be non-zero
-    // The effective_aggregator = aggregator + last_observation * time_since_update
-    // After DAO init, aggregator is 0 but last_observation = twapInitialObservation
-    // We need time_since_update > 0 for effective_aggregator to be non-zero
-    await this.advanceBySeconds(10);
-
     // Get current time before starting unlock
     const currentClock = await this.banksClient.getClock();
     const currentTimestamp = Number(currentClock.unixTimestamp);
@@ -292,10 +287,10 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
         dao,
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Verify start snapshot was recorded
@@ -304,11 +299,7 @@ export default function suite() {
     assert.isDefined(ppAccount.oracleReader.futarchyTwap);
 
     const futarchyTwap = ppAccount.oracleReader.futarchyTwap;
-    // start_value should be non-zero (the aggregator value from the DAO)
-    assert.notEqual(futarchyTwap.startValue.toString(), "0");
-    // start_time should be close to current timestamp
-    const startTime = Number(futarchyTwap.startTime.toString());
-    assert.isAtLeast(startTime, currentTimestamp);
+    assert.equal(Number(futarchyTwap.startTime.toString()), currentTimestamp);
     // end values should still be 0 (not recorded yet)
     assert.equal(futarchyTwap.endValue.toString(), "0");
     assert.equal(futarchyTwap.endTime.toString(), "0");
@@ -367,10 +358,10 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
         dao: wrongDao, // Wrong DAO!
       })
-      .signers([authority])
+      .signers([recipient])
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });

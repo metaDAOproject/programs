@@ -121,4 +121,12 @@ pub mod launchpad_v7 {
     ) -> Result<()> {
         InitializePerformancePackage::handle(ctx)
     }
+
+    pub fn resize_funding_record(ctx: Context<ResizeFundingRecord>) -> Result<()> {
+        ResizeFundingRecord::handle(ctx)
+    }
+
+    pub fn resize_launch(ctx: Context<ResizeLaunch>) -> Result<()> {
+        ResizeLaunch::handle(ctx)
+    }
 }

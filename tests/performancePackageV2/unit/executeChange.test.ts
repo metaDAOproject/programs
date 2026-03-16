@@ -578,12 +578,12 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
       .postInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
       ])
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Verify status is Unlocking
@@ -653,12 +653,12 @@ export default function suite() {
     await ppClient
       .startUnlockIx({
         performancePackage,
-        signer: authority.publicKey,
+        signer: recipient.publicKey,
       })
       .postInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
       ])
-      .signers([authority])
+      .signers([recipient])
       .rpc();
 
     // Verify status is Unlocking
