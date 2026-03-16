@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     ChangeExecutedEvent, ChangeRequest, CommonFields, PackageStatus, PerformancePackage,
-    PerformancePackageError, ProposerType,
+    PerformancePackageError,
 };
 
 #[event_cpi]
@@ -38,40 +38,22 @@ impl ExecuteChange<'_> {
             PerformancePackageError::StaleChangeRequest
         );
 
-        // Reject CRs where the proposer is no longer the relevant party
-        match cr.proposer_type {
-            ProposerType::Authority => {
-                require_keys_eq!(
-                    cr.proposer,
-                    pp.authority,
-                    PerformancePackageError::StaleChangeRequest
-                );
-            }
-            ProposerType::Recipient => {
-                require_keys_eq!(
-                    cr.proposer,
-                    pp.recipient,
-                    PerformancePackageError::StaleChangeRequest
-                );
-            }
-        }
-
-        // Executor must be the opposite party from the proposer
-        match cr.proposer_type {
-            ProposerType::Authority => {
-                require_keys_eq!(
-                    executor,
-                    pp.recipient,
-                    PerformancePackageError::InvalidExecutor
-                );
-            }
-            ProposerType::Recipient => {
-                require_keys_eq!(
-                    executor,
-                    pp.authority,
-                    PerformancePackageError::InvalidExecutor
-                );
-            }
+        // Proposer must still be the current authority or recipient,
+        // and executor must be the opposite party.
+        if cr.proposer == pp.authority {
+            require_keys_eq!(
+                executor,
+                pp.recipient,
+                PerformancePackageError::InvalidExecutor
+            );
+        } else if cr.proposer == pp.recipient {
+            require_keys_eq!(
+                executor,
+                pp.authority,
+                PerformancePackageError::InvalidExecutor
+            );
+        } else {
+            return Err(PerformancePackageError::StaleChangeRequest.into());
         }
 
         // Config changes (oracle/reward function) can only happen when Locked

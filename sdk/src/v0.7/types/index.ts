@@ -92,8 +92,6 @@ export type PerformancePackageV2RewardFunction =
   IdlTypes<PerformancePackageV2Program>["RewardFunction"];
 export type PerformancePackageV2PackageStatus =
   IdlTypes<PerformancePackageV2Program>["PackageStatus"];
-export type PerformancePackageV2ProposerType =
-  IdlTypes<PerformancePackageV2Program>["ProposerType"];
 export type PerformancePackageV2ThresholdTranche =
   IdlTypes<PerformancePackageV2Program>["ThresholdTranche"];
 

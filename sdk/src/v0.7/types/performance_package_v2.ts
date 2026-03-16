@@ -341,13 +341,6 @@ export type PerformancePackageV2 = {
             type: "publicKey";
           },
           {
-            name: "proposerType";
-            docs: ["Who proposed this change"];
-            type: {
-              defined: "ProposerType";
-            };
-          },
-          {
             name: "proposer";
             docs: ["The proposer's pubkey at proposal time"];
             type: "publicKey";
@@ -592,21 +585,6 @@ export type PerformancePackageV2 = {
               "Total tokens at this tranche (cumulative, not incremental)",
             ];
             type: "u64";
-          },
-        ];
-      };
-    },
-    {
-      name: "ProposerType";
-      docs: ["Who proposed the change."];
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Authority";
-          },
-          {
-            name: "Recipient";
           },
         ];
       };
@@ -884,10 +862,8 @@ export type PerformancePackageV2 = {
           index: false;
         },
         {
-          name: "proposerType";
-          type: {
-            defined: "ProposerType";
-          };
+          name: "proposer";
+          type: "publicKey";
           index: false;
         },
         {
@@ -1444,13 +1420,6 @@ export const IDL: PerformancePackageV2 = {
             type: "publicKey",
           },
           {
-            name: "proposerType",
-            docs: ["Who proposed this change"],
-            type: {
-              defined: "ProposerType",
-            },
-          },
-          {
             name: "proposer",
             docs: ["The proposer's pubkey at proposal time"],
             type: "publicKey",
@@ -1695,21 +1664,6 @@ export const IDL: PerformancePackageV2 = {
               "Total tokens at this tranche (cumulative, not incremental)",
             ],
             type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "ProposerType",
-      docs: ["Who proposed the change."],
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Authority",
-          },
-          {
-            name: "Recipient",
           },
         ],
       },
@@ -1987,10 +1941,8 @@ export const IDL: PerformancePackageV2 = {
           index: false,
         },
         {
-          name: "proposerType",
-          type: {
-            defined: "ProposerType",
-          },
+          name: "proposer",
+          type: "publicKey",
           index: false,
         },
         {

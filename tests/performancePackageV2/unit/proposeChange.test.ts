@@ -67,7 +67,10 @@ export default function suite() {
       changeRequestAccount.performancePackage.toBase58(),
       performancePackage.toBase58(),
     );
-    assert.isDefined(changeRequestAccount.proposerType.authority);
+    assert.equal(
+      changeRequestAccount.proposer.toBase58(),
+      authority.publicKey.toBase58(),
+    );
     assert.equal(changeRequestAccount.pdaNonce, pdaNonce);
     assert.equal(
       changeRequestAccount.newRecipient.toBase58(),
@@ -122,7 +125,10 @@ export default function suite() {
     const changeRequestAccount =
       await ppClient.fetchChangeRequest(changeRequest);
     assert.isNotNull(changeRequestAccount);
-    assert.isDefined(changeRequestAccount.proposerType.recipient);
+    assert.equal(
+      changeRequestAccount.proposer.toBase58(),
+      recipient.publicKey.toBase58(),
+    );
   });
 
   it("successfully proposes recipient change", async function () {
