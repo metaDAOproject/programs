@@ -863,6 +863,91 @@ export default function suite() {
     assert.isDefined(ppAccount.rewardFunction.threshold);
   });
 
+  it("fails with stale CR after PP is closed and recreated", async function () {
+    const authority = Keypair.generate();
+    const recipient = Keypair.generate();
+    const newRecipient = Keypair.generate();
+
+    const { performancePackage, createKey, mint, mintGovernor, mintAuthority } =
+      await setupPerformancePackageV2(
+        this.banksClient,
+        mintGovernorClient,
+        ppClient,
+        this.payer,
+        {
+          authority: authority.publicKey,
+          recipient: recipient.publicKey,
+          rewardFunction: createCliffLinearReward(),
+          minUnlockTimestamp: new BN(0),
+        },
+      );
+
+    // Authority proposes a recipient change
+    const pdaNonce = 1;
+    const [changeRequest] = ppClient.getChangeRequestAddr(
+      performancePackage,
+      authority.publicKey,
+      pdaNonce,
+    );
+
+    await ppClient
+      .proposeChangeIx({
+        performancePackage,
+        proposer: authority.publicKey,
+        payer: this.payer.publicKey,
+        pdaNonce,
+        newRecipient: newRecipient.publicKey,
+      })
+      .signers([authority])
+      .rpc();
+
+    // Close the PP
+    await ppClient
+      .closePerformancePackageIx({
+        performancePackage,
+        admin: this.payer.publicKey,
+        rentDestination: this.payer.publicKey,
+      })
+      .rpc();
+
+    // Advance time so recreated PP gets a different created_at_timestamp
+    await this.advanceBySeconds(2);
+
+    // Recreate PP at same address (same createKey → same PDA)
+    await ppClient
+      .initializePerformancePackageIx({
+        createKey: createKey.publicKey,
+        mint,
+        mintGovernor,
+        mintAuthority,
+        authority: authority.publicKey,
+        recipient: recipient.publicKey,
+        payer: this.payer.publicKey,
+        oracleReader: { time: {} },
+        rewardFunction: createCliffLinearReward(),
+        minUnlockTimestamp: new BN(0),
+      })
+      .signers([createKey])
+      .rpc();
+
+    // Attempt to execute the old CR — should fail due to timestamp mismatch
+    const callbacks = expectError(
+      "StaleChangeRequest",
+      "Should have failed because CR was created for previous PP incarnation",
+    );
+
+    await ppClient
+      .executeChangeIx({
+        performancePackage,
+        changeRequest,
+        executor: recipient.publicKey,
+        rentDestination: this.payer.publicKey,
+      })
+      .signers([recipient])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   it("fails when reward function change attempted while Unlocking", async function () {
     const authority = Keypair.generate();
     const recipient = Keypair.generate();
