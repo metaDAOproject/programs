@@ -74,6 +74,14 @@ fn read_futarchy_aggregator(
         clock.unix_timestamp >= twap_start_timestamp,
         PerformancePackageError::OracleInvalidState
     );
+    // Ensure at least one update_twap has occurred after the start delay.
+    // Without this, the aggregator is still zero and the effective_aggregator
+    // projection below would include phantom accumulation over the start delay
+    // period (time_since_update measured from creation, not from first real update).
+    require!(
+        oracle.last_updated_timestamp >= twap_start_timestamp,
+        PerformancePackageError::OracleInvalidState
+    );
     let time_since_update = clock
         .unix_timestamp
         .saturating_sub(oracle.last_updated_timestamp) as u128;
