@@ -77,6 +77,7 @@ export default function suite() {
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
+        hasBidWall: false,
       })
       .rpc();
 
@@ -136,6 +137,7 @@ export default function suite() {
           monthsUntilInsidersCanUnlock: 18,
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority.publicKey,
+          hasBidWall: false,
         })
         .rpc();
       assert.fail("Should have thrown error");
@@ -168,6 +170,7 @@ export default function suite() {
           monthsUntilInsidersCanUnlock: 18,
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority.publicKey,
+          hasBidWall: false,
         })
         .rpc();
       assert.fail("Should have thrown error");
@@ -201,6 +204,7 @@ export default function suite() {
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority.publicKey,
           accumulatorActivationDelaySeconds: secondsForLaunch,
+          hasBidWall: false,
         })
         .rpc();
       assert.fail("Expected initialize_launch to fail");
@@ -272,6 +276,7 @@ export default function suite() {
           monthsUntilInsidersCanUnlock: 18,
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority.publicKey,
+          hasBidWall: false,
         })
         .accounts({
           launch,

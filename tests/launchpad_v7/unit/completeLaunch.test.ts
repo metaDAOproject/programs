@@ -70,6 +70,7 @@ export default function suite() {
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
+        hasBidWall: false,
       })
       .rpc();
 
@@ -210,6 +211,7 @@ export default function suite() {
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
+        hasBidWall: false,
       })
       .rpc();
 

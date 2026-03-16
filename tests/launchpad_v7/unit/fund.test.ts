@@ -85,6 +85,7 @@ export default function suite() {
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
+        hasBidWall: false,
       })
       .rpc();
   });
@@ -309,6 +310,7 @@ export default function suite() {
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
         accumulatorActivationDelaySeconds: 120, // 2 minutes
+        hasBidWall: false,
       })
       .rpc();
 
@@ -374,6 +376,7 @@ export default function suite() {
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
         accumulatorActivationDelaySeconds: 60, // 1 minute
+        hasBidWall: false,
       })
       .rpc();
 

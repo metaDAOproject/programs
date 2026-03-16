@@ -66,7 +66,8 @@ impl ResizeLaunch<'_> {
             additional_tokens_claimed: old_data.additional_tokens_claimed,
             unix_timestamp_completed: old_data.unix_timestamp_completed,
             is_performance_package_initialized: old_data.is_performance_package_initialized,
-            accumulator_activation_delay_seconds: 0,
+            accumulator_activation_delay_seconds: old_data.accumulator_activation_delay_seconds,
+            has_bid_wall: false,
         };
 
         launch.realloc(AFTER_REALLOC_SIZE, true)?;
