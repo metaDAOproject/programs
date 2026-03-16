@@ -1057,7 +1057,7 @@ export type Futarchy = {
         },
         {
           name: "squadsMultisigVault";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -4346,7 +4346,7 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisigVault",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {

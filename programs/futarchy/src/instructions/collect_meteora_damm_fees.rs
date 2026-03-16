@@ -42,7 +42,7 @@ pub struct CollectMeteoraDammFees<'info> {
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
     /// CHECK: signer for the squads transaction, checked by squads program
-    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
+    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig_vault: UncheckedAccount<'info>,
     /// CHECK: squads transaction, initialized by squads multisig program, checked by squads multisig program
     #[account(mut)]
@@ -411,9 +411,8 @@ fn compile_transaction_message(
     // Track account metadata: (is_signer, is_writable)
     let mut key_meta_map: BTreeMap<Pubkey, (bool, bool)> = BTreeMap::new();
 
-    // Add vault as a signer (it will sign the vault transaction)
-    // Writability is determined by whether it appears as writable in instruction accounts
-    key_meta_map.insert(*vault_key, (true, false));
+    // Add vault as a writable signer (matches Squads SDK payer semantics)
+    key_meta_map.insert(*vault_key, (true, true));
 
     // Collect all accounts from instructions, merging their flags with OR
     for ix in instructions {
@@ -435,14 +434,14 @@ fn compile_transaction_message(
 
     for (pubkey, (is_signer, is_writable)) in &key_meta_map {
         if *is_signer && *is_writable {
-            writable_signers.push(*pubkey);
-        } else if *is_signer {
-            // Vault key should be first among readonly signers
+            // Vault key should be first among writable signers (matches Squads SDK)
             if *pubkey == *vault_key {
-                readonly_signers.insert(0, *pubkey);
+                writable_signers.insert(0, *pubkey);
             } else {
-                readonly_signers.push(*pubkey);
+                writable_signers.push(*pubkey);
             }
+        } else if *is_signer {
+            readonly_signers.push(*pubkey);
         } else if *is_writable {
             writable_non_signers.push(*pubkey);
         } else {
