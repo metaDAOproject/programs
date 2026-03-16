@@ -422,6 +422,8 @@ pub struct PerformancePackage {
     pub status: PackageStatus,
     /// Can't start unlock before this time
     pub min_unlock_timestamp: i64,
+    /// Timestamp when this PP was created; used to invalidate stale ChangeRequests
+    pub created_at_timestamp: i64,
 
     /// Cumulative tokens minted to the recipient
     pub total_rewards_paid_out: u64,

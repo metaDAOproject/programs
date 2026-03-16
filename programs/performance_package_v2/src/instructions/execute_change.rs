@@ -31,6 +31,31 @@ impl ExecuteChange<'_> {
         let cr = &self.change_request;
         let executor = self.executor.key();
 
+        // Reject CRs from a prior PP incarnation (close/recreate)
+        require_eq!(
+            cr.pp_created_at_timestamp,
+            pp.created_at_timestamp,
+            PerformancePackageError::StaleChangeRequest
+        );
+
+        // Reject CRs where the proposer is no longer the relevant party
+        match cr.proposer_type {
+            ProposerType::Authority => {
+                require_keys_eq!(
+                    cr.proposer,
+                    pp.authority,
+                    PerformancePackageError::StaleChangeRequest
+                );
+            }
+            ProposerType::Recipient => {
+                require_keys_eq!(
+                    cr.proposer,
+                    pp.recipient,
+                    PerformancePackageError::StaleChangeRequest
+                );
+            }
+        }
+
         // Executor must be the opposite party from the proposer
         match cr.proposer_type {
             ProposerType::Authority => {

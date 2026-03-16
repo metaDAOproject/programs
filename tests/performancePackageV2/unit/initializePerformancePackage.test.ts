@@ -94,6 +94,7 @@ export default function suite() {
     assert.isDefined(ppAccount.oracleReader.time);
     assert.isDefined(ppAccount.rewardFunction.cliffLinear);
     assert.isDefined(ppAccount.status.locked);
+    assert.isTrue(ppAccount.createdAtTimestamp.toNumber() > 0);
 
     // Verify CliffLinear properties match what we defined
     const cliffLinear = ppAccount.rewardFunction.cliffLinear;

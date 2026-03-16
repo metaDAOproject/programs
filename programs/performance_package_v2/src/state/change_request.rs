@@ -18,6 +18,10 @@ pub struct ChangeRequest {
     pub performance_package: Pubkey,
     /// Who proposed this change
     pub proposer_type: ProposerType,
+    /// The proposer's pubkey at proposal time
+    pub proposer: Pubkey,
+    /// PP's created_at_timestamp at proposal time; used to detect stale CRs after close/recreate
+    pub pp_created_at_timestamp: i64,
     /// When the change was proposed
     pub proposed_at: i64,
     /// For unique PDA derivation (allows multiple concurrent proposals)

@@ -348,6 +348,18 @@ export type PerformancePackageV2 = {
             };
           },
           {
+            name: "proposer";
+            docs: ["The proposer's pubkey at proposal time"];
+            type: "publicKey";
+          },
+          {
+            name: "ppCreatedAtTimestamp";
+            docs: [
+              "PP's created_at_timestamp at proposal time; used to detect stale CRs after close/recreate",
+            ];
+            type: "i64";
+          },
+          {
             name: "proposedAt";
             docs: ["When the change was proposed"];
             type: "i64";
@@ -450,6 +462,13 @@ export type PerformancePackageV2 = {
           {
             name: "minUnlockTimestamp";
             docs: ["Can't start unlock before this time"];
+            type: "i64";
+          },
+          {
+            name: "createdAtTimestamp";
+            docs: [
+              "Timestamp when this PP was created; used to invalidate stale ChangeRequests",
+            ];
             type: "i64";
           },
           {
@@ -1074,6 +1093,11 @@ export type PerformancePackageV2 = {
       name: "MinDurationTooLarge";
       msg: "min_duration exceeds maximum allowed (365 days)";
     },
+    {
+      code: 6020;
+      name: "StaleChangeRequest";
+      msg: "Change request is stale: PP was recreated or the proposing party has changed";
+    },
   ];
 };
 
@@ -1427,6 +1451,18 @@ export const IDL: PerformancePackageV2 = {
             },
           },
           {
+            name: "proposer",
+            docs: ["The proposer's pubkey at proposal time"],
+            type: "publicKey",
+          },
+          {
+            name: "ppCreatedAtTimestamp",
+            docs: [
+              "PP's created_at_timestamp at proposal time; used to detect stale CRs after close/recreate",
+            ],
+            type: "i64",
+          },
+          {
             name: "proposedAt",
             docs: ["When the change was proposed"],
             type: "i64",
@@ -1529,6 +1565,13 @@ export const IDL: PerformancePackageV2 = {
           {
             name: "minUnlockTimestamp",
             docs: ["Can't start unlock before this time"],
+            type: "i64",
+          },
+          {
+            name: "createdAtTimestamp",
+            docs: [
+              "Timestamp when this PP was created; used to invalidate stale ChangeRequests",
+            ],
             type: "i64",
           },
           {
@@ -2152,6 +2195,11 @@ export const IDL: PerformancePackageV2 = {
       code: 6019,
       name: "MinDurationTooLarge",
       msg: "min_duration exceeds maximum allowed (365 days)",
+    },
+    {
+      code: 6020,
+      name: "StaleChangeRequest",
+      msg: "Change request is stale: PP was recreated or the proposing party has changed",
     },
   ],
 };

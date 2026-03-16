@@ -92,6 +92,8 @@ impl ProposeChange<'_> {
         ctx.accounts.change_request.set_inner(ChangeRequest {
             performance_package: pp.key(),
             proposer_type,
+            proposer: proposer_key,
+            pp_created_at_timestamp: pp.created_at_timestamp,
             proposed_at: clock.unix_timestamp,
             pda_nonce: args.pda_nonce,
             bump: ctx.bumps.change_request,
