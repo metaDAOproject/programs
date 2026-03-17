@@ -29,7 +29,6 @@ pub struct Claim<'info> {
     /// CHECK: just a signer
     pub launch_signer: UncheckedAccount<'info>,
 
-    #[account(mut)]
     pub base_mint: Account<'info, Mint>,
 
     #[account(mut)]

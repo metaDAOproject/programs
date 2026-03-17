@@ -20,7 +20,6 @@ pub struct SellTokens<'info> {
     #[account(mut, has_one = base_mint)]
     pub bid_wall: Account<'info, BidWall>,
 
-    #[account(mut)]
     pub user: Signer<'info>,
 
     #[account(mut, associated_token::mint = base_mint, associated_token::authority = user)]

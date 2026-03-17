@@ -547,7 +547,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "baseMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -619,7 +619,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "launchSigner";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -629,7 +629,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "baseMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -685,7 +685,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "launchSigner";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -2560,7 +2560,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "baseMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2632,7 +2632,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "launchSigner",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2642,7 +2642,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "baseMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2698,7 +2698,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "launchSigner",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {

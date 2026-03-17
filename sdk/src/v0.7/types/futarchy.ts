@@ -1357,7 +1357,7 @@ export type Futarchy = {
         },
         {
           name: "admin";
-          isMut: true;
+          isMut: false;
           isSigner: true;
         },
         {
@@ -4626,7 +4626,7 @@ export const IDL: Futarchy = {
         },
         {
           name: "admin",
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {

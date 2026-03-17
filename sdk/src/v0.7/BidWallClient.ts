@@ -213,14 +213,12 @@ export class BidWallClient {
     baseMint,
     feeRecipient = METADAO_MULTISIG_VAULT,
     quoteMint = MAINNET_USDC,
-    payer = this.provider.publicKey,
   }: {
     bidWall: PublicKey;
     authority: PublicKey;
     baseMint: PublicKey;
     feeRecipient: PublicKey;
     quoteMint: PublicKey;
-    payer: PublicKey;
   }) {
     const bidWallQuoteTokenAccount = getAssociatedTokenAddressSync(
       quoteMint,
@@ -240,7 +238,6 @@ export class BidWallClient {
 
     return this.bidWallProgram.methods.closeBidWall().accounts({
       bidWall,
-      payer,
       authority,
       feeRecipient,
       bidWallQuoteTokenAccount,

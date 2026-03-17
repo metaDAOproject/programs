@@ -507,7 +507,7 @@ export type Launchpad = {
         },
         {
           name: "baseMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -1914,7 +1914,7 @@ export const IDL: Launchpad = {
         },
         {
           name: "baseMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
