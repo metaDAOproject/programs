@@ -135,11 +135,6 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "launchSigner";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "launchQuoteVault";
           isMut: true;
           isSigner: false;
@@ -480,11 +475,6 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -537,11 +527,6 @@ export type Launchpad = {
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -614,11 +599,6 @@ export type Launchpad = {
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -1562,11 +1542,6 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "launchSigner",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "launchQuoteVault",
           isMut: true,
           isSigner: false,
@@ -1907,11 +1882,6 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -1964,11 +1934,6 @@ export const IDL: Launchpad = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
@@ -2041,11 +2006,6 @@ export const IDL: Launchpad = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },

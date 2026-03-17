@@ -46,7 +46,6 @@ pub struct Claim<'info> {
     pub funder_token_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
 }
 
 impl Claim<'_> {

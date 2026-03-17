@@ -215,11 +215,6 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -269,11 +264,6 @@ export type BidWall = {
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -948,11 +938,6 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -1002,11 +987,6 @@ export const IDL: BidWall = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },

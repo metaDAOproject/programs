@@ -149,11 +149,6 @@ export type PerformancePackageV2 = {
           isSigner: false;
         },
         {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "mintGovernorProgram";
           isMut: false;
           isSigner: false;
@@ -1224,11 +1219,6 @@ export const IDL: PerformancePackageV2 = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },

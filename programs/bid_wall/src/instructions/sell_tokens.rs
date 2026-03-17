@@ -46,7 +46,6 @@ pub struct SellTokens<'info> {
     pub quote_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
 }
 
 // User sells tokens into the bid wall at the initial NAV per token, adjusted for treasury balance changes.

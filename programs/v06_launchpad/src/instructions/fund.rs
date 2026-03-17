@@ -10,7 +10,6 @@ use crate::state::{FundingRecord, Launch, LaunchState};
 pub struct Fund<'info> {
     #[account(
         mut,
-        has_one = launch_signer,
         has_one = launch_quote_vault,
     )]
     pub launch: Account<'info, Launch>,
@@ -23,9 +22,6 @@ pub struct Fund<'info> {
         bump
     )]
     pub funding_record: Account<'info, FundingRecord>,
-
-    /// CHECK: just a signer
-    pub launch_signer: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub launch_quote_vault: Account<'info, TokenAccount>,

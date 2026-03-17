@@ -37,7 +37,6 @@ pub struct Refund<'info> {
     pub funder_quote_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
 }
 
 impl Refund<'_> {

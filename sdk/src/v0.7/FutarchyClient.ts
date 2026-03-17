@@ -56,7 +56,6 @@ import {
   getAssociatedTokenAddressSync,
   unpackMint,
   TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { sha256 } from "@noble/hashes/sha256";
 import { Dao, Proposal } from "./types/index.js";
@@ -907,7 +906,6 @@ export class FutarchyClient {
         staker,
         payer,
         tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
       .preInstructions([
@@ -953,7 +951,6 @@ export class FutarchyClient {
       stakeAccount,
       staker,
       tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     });
   }
 

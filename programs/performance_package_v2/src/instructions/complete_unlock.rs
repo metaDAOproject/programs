@@ -1,8 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{Mint, Token, TokenAccount},
-};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use mint_governor::{
     cpi::{accounts::MintTokens, mint_tokens},
     program::MintGovernor as MintGovernorProgram,
@@ -53,8 +50,6 @@ pub struct CompleteUnlock<'info> {
     pub signer: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
-
-    pub associated_token_program: Program<'info, AssociatedToken>,
 
     pub mint_governor_program: Program<'info, MintGovernorProgram>,
 

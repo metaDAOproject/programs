@@ -173,7 +173,6 @@ export class BidWallClient {
         daoTreasury,
         daoTreasuryQuoteTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
       });
   }
 
@@ -205,7 +204,6 @@ export class BidWallClient {
       feeRecipientQuoteTokenAccount,
       quoteMint,
       tokenProgram: TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
     });
   }
 

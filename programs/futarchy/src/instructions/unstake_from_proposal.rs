@@ -33,7 +33,6 @@ pub struct UnstakeFromProposal<'info> {
     pub stake_account: Box<Account<'info, StakeAccount>>,
     pub staker: Signer<'info>,
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl UnstakeFromProposal<'_> {
@@ -61,7 +60,6 @@ impl UnstakeFromProposal<'_> {
             stake_account,
             staker,
             token_program,
-            associated_token_program: _,
             event_authority: _,
             program: _,
         } = ctx.accounts;
