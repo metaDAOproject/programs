@@ -471,6 +471,16 @@ export default function suite() {
     const bidWallAccount =
       await launchpadClient.bidWall.fetchBidWall(bidWallAddr);
     assert.isNotNull(bidWallAccount);
+    // bid_wall_amount = usdc_to_dao - treasury = 1600 - 1000 = 600
+    assert.equal(
+      bidWallAccount.quoteAmount.toString(),
+      new BN(600_000000).toString(),
+    );
+    const bidWallQuoteBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      bidWallAddr,
+    );
+    assert.equal(bidWallQuoteBalance.toString(), new BN(600_000000).toString());
   });
 
   it("does not initialize bid wall when hasBidWall is true but funding equals minimum raise", async function () {
