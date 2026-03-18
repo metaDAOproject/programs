@@ -40,6 +40,7 @@ pub struct LaunchInitializedEvent {
     pub additional_tokens_amount: u64,
     pub additional_tokens_recipient: Option<Pubkey>,
     pub accumulator_activation_delay_seconds: u32,
+    pub has_bid_wall: bool,
 }
 
 #[event]

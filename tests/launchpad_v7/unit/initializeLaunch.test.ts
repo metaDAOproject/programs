@@ -77,6 +77,7 @@ export default function suite() {
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
+        hasBidWall: true,
       })
       .rpc();
 
@@ -107,6 +108,7 @@ export default function suite() {
     assert.isNull(storedLaunch.unixTimestampStarted);
     assert.isNull(storedLaunch.dao);
     assert.equal(storedLaunch.accumulatorActivationDelaySeconds, 0);
+    assert.isTrue(storedLaunch.hasBidWall);
   });
 
   it("fails when monthly spending limit members contains duplicates", async function () {
@@ -136,6 +138,7 @@ export default function suite() {
           monthsUntilInsidersCanUnlock: 18,
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority.publicKey,
+          hasBidWall: false,
         })
         .rpc();
       assert.fail("Should have thrown error");
@@ -168,6 +171,7 @@ export default function suite() {
           monthsUntilInsidersCanUnlock: 18,
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority.publicKey,
+          hasBidWall: false,
         })
         .rpc();
       assert.fail("Should have thrown error");
@@ -201,6 +205,7 @@ export default function suite() {
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority.publicKey,
           accumulatorActivationDelaySeconds: secondsForLaunch,
+          hasBidWall: false,
         })
         .rpc();
       assert.fail("Expected initialize_launch to fail");
@@ -272,6 +277,7 @@ export default function suite() {
           monthsUntilInsidersCanUnlock: 18,
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority.publicKey,
+          hasBidWall: false,
         })
         .accounts({
           launch,

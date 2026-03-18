@@ -153,6 +153,7 @@ export class LaunchpadClient {
     additionalTokensRecipient,
     additionalTokensAmount,
     accumulatorActivationDelaySeconds = 0,
+    hasBidWall = false,
   }: {
     tokenName: string;
     tokenSymbol: string;
@@ -172,6 +173,7 @@ export class LaunchpadClient {
     additionalTokensRecipient?: PublicKey;
     additionalTokensAmount?: BN;
     accumulatorActivationDelaySeconds?: number;
+    hasBidWall: boolean;
   }) {
     const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
     const [launchSigner] = getLaunchSignerAddr(
@@ -206,6 +208,7 @@ export class LaunchpadClient {
         teamAddress,
         additionalTokensAmount: additionalTokensAmount ?? new BN(0),
         accumulatorActivationDelaySeconds,
+        hasBidWall,
       })
       .accounts({
         launch,
