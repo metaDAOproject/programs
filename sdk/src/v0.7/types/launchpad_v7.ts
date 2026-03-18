@@ -1124,6 +1124,7 @@ export type LaunchpadV7 = {
           },
           {
             name: "isPerformancePackageInitialized";
+            docs: ["Whether the performance package has been initialized."];
             type: "bool";
           },
           {
@@ -3173,6 +3174,7 @@ export const IDL: LaunchpadV7 = {
           },
           {
             name: "isPerformancePackageInitialized",
+            docs: ["Whether the performance package has been initialized."],
             type: "bool",
           },
           {
