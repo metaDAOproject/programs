@@ -7,3 +7,5 @@ node_modules
 test-ledger
 scripts/*.js
 .env
+# Test ledger accounts - used when dumping accounts from mainnet to localnet
+test-ledger-accounts
