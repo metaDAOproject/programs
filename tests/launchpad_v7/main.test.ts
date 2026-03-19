@@ -66,6 +66,7 @@ export default function suite() {
           monthsUntilInsidersCanUnlock: 24, // 2 years
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority,
+          hasBidWall: false,
         })
         .rpc();
     };

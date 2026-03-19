@@ -1109,6 +1109,7 @@ export type LaunchpadV7 = {
           },
           {
             name: "isPerformancePackageInitialized";
+            docs: ["Whether the performance package has been initialized."];
             type: "bool";
           },
           {
@@ -1118,6 +1119,11 @@ export type LaunchpadV7 = {
               "begins tracking.",
             ];
             type: "u32";
+          },
+          {
+            name: "hasBidWall";
+            docs: ["Whether the launch has a bid wall."];
+            type: "bool";
           },
         ];
       };
@@ -1317,8 +1323,15 @@ export type LaunchpadV7 = {
           },
           {
             name: "isPerformancePackageInitialized";
-            docs: ["Whether the performance package has been initialized."];
             type: "bool";
+          },
+          {
+            name: "accumulatorActivationDelaySeconds";
+            docs: [
+              "Number of seconds after launch start before the funding accumulator",
+              "begins tracking.",
+            ];
+            type: "u32";
           },
         ];
       };
@@ -1403,6 +1416,10 @@ export type LaunchpadV7 = {
           {
             name: "accumulatorActivationDelaySeconds";
             type: "u32";
+          },
+          {
+            name: "hasBidWall";
+            type: "bool";
           },
         ];
       };
@@ -1539,6 +1556,11 @@ export type LaunchpadV7 = {
         {
           name: "accumulatorActivationDelaySeconds";
           type: "u32";
+          index: false;
+        },
+        {
+          name: "hasBidWall";
+          type: "bool";
           index: false;
         },
       ];
@@ -3122,6 +3144,7 @@ export const IDL: LaunchpadV7 = {
           },
           {
             name: "isPerformancePackageInitialized",
+            docs: ["Whether the performance package has been initialized."],
             type: "bool",
           },
           {
@@ -3131,6 +3154,11 @@ export const IDL: LaunchpadV7 = {
               "begins tracking.",
             ],
             type: "u32",
+          },
+          {
+            name: "hasBidWall",
+            docs: ["Whether the launch has a bid wall."],
+            type: "bool",
           },
         ],
       },
@@ -3330,8 +3358,15 @@ export const IDL: LaunchpadV7 = {
           },
           {
             name: "isPerformancePackageInitialized",
-            docs: ["Whether the performance package has been initialized."],
             type: "bool",
+          },
+          {
+            name: "accumulatorActivationDelaySeconds",
+            docs: [
+              "Number of seconds after launch start before the funding accumulator",
+              "begins tracking.",
+            ],
+            type: "u32",
           },
         ],
       },
@@ -3416,6 +3451,10 @@ export const IDL: LaunchpadV7 = {
           {
             name: "accumulatorActivationDelaySeconds",
             type: "u32",
+          },
+          {
+            name: "hasBidWall",
+            type: "bool",
           },
         ],
       },
@@ -3552,6 +3591,11 @@ export const IDL: LaunchpadV7 = {
         {
           name: "accumulatorActivationDelaySeconds",
           type: "u32",
+          index: false,
+        },
+        {
+          name: "hasBidWall",
+          type: "bool",
           index: false,
         },
       ],
