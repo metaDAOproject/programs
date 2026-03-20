@@ -272,7 +272,7 @@ pub struct TwapOracle {
     ///
     /// Assuming latest observations are as big as possible (u64::MAX * 1e12),
     /// we can store 18 million seconds worth of observations, which turns out to
-    /// be ~208 days.
+    /// be ~213 days.
     ///
     /// Assuming that latest observations are 100x smaller than they could theoretically
     /// be, we can store ~57 years worth of them. Even this is a very
