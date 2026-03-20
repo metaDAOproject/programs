@@ -70,16 +70,18 @@ fn read_futarchy_aggregator(
     // produce an artificially low effective aggregator, distorting the TWAP.
     let clock = Clock::get()?;
     let twap_start_timestamp = oracle.created_at_timestamp + oracle.start_delay_seconds as i64;
-    require!(
-        clock.unix_timestamp >= twap_start_timestamp,
+    require_gte!(
+        clock.unix_timestamp,
+        twap_start_timestamp,
         PerformancePackageError::OracleInvalidState
     );
     // Ensure at least one update_twap has occurred after the start delay.
     // Without this, the aggregator is still zero and the effective_aggregator
     // projection below would include phantom accumulation over the start delay
     // period (time_since_update measured from creation, not from first real update).
-    require!(
-        oracle.last_updated_timestamp >= twap_start_timestamp,
+    require_gte!(
+        oracle.last_updated_timestamp,
+        twap_start_timestamp,
         PerformancePackageError::OracleInvalidState
     );
     let time_since_update = clock
@@ -102,8 +104,9 @@ impl OracleReader {
             }
             &OracleReader::FutarchyTwap { min_duration, .. } => {
                 // min_duration must be > 0 to avoid division by zero in TWAP calculation
-                require!(
-                    min_duration > 0,
+                require_gt!(
+                    min_duration,
+                    0,
                     PerformancePackageError::InvalidVestingSchedule
                 );
                 require_gte!(
@@ -212,7 +215,7 @@ impl OracleReader {
                 let time_delta = end_time - start_time;
 
                 // Ensure time_delta > 0 to avoid division by zero
-                require!(time_delta > 0, PerformancePackageError::OracleInvalidState);
+                require_gt!(time_delta, 0, PerformancePackageError::OracleInvalidState);
 
                 // Calculate TWAP: (end_value - start_value) / time_delta
                 // Note: end_value should always be >= start_value since aggregator is cumulative
@@ -259,15 +262,17 @@ impl RewardFunction {
                 cliff_amount,
                 total_amount,
             } => {
-                // cliff_value <= end_value
-                require!(
-                    cliff_value <= end_value,
+                // end_value must be greater than or equal to cliff_value
+                require_gte!(
+                    end_value,
+                    cliff_value,
                     PerformancePackageError::InvalidVestingSchedule
                 );
 
-                // cliff_amount <= total_amount
-                require!(
-                    cliff_amount <= total_amount,
+                // total_amount must be greater than or equal to cliff_amount
+                require_gte!(
+                    total_amount,
+                    cliff_amount,
                     PerformancePackageError::InvalidVestingSchedule
                 );
             }
@@ -283,12 +288,14 @@ impl RewardFunction {
                 for window in tranches.windows(2) {
                     let prev = &window[0];
                     let curr = &window[1];
-                    require!(
-                        prev.threshold < curr.threshold,
+                    require_gt!(
+                        curr.threshold,
+                        prev.threshold,
                         PerformancePackageError::InvalidTranches
                     );
-                    require!(
-                        prev.cumulative_amount <= curr.cumulative_amount,
+                    require_gte!(
+                        curr.cumulative_amount,
+                        prev.cumulative_amount,
                         PerformancePackageError::InvalidTranches
                     );
                 }
