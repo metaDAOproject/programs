@@ -254,15 +254,14 @@ impl RewardFunction {
     pub fn validate(&self) -> Result<()> {
         match self {
             RewardFunction::CliffLinear {
-                start_value,
                 cliff_value,
                 end_value,
                 cliff_amount,
                 total_amount,
             } => {
-                // start_value <= cliff_value <= end_value
+                // cliff_value <= end_value
                 require!(
-                    start_value <= cliff_value && cliff_value <= end_value,
+                    cliff_value <= end_value,
                     PerformancePackageError::InvalidVestingSchedule
                 );
 
@@ -303,17 +302,11 @@ impl RewardFunction {
     pub fn calculate(&self, value: u128) -> Result<u64> {
         match self {
             &RewardFunction::CliffLinear {
-                start_value,
                 cliff_value,
                 end_value,
                 cliff_amount,
                 total_amount,
             } => {
-                // Before start: 0 rewards
-                if value < start_value {
-                    return Ok(0);
-                }
-
                 // Before cliff: 0 rewards
                 if value < cliff_value {
                     return Ok(0);
@@ -377,9 +370,8 @@ pub struct ThresholdTranche {
 pub enum RewardFunction {
     /// Cliff + Linear: cliff_amount at cliff_value, then linear accrual to total_amount at end_value
     /// Works with any oracle value (e.g., time, price, or other metrics)
-    /// For no-cliff behavior, set cliff_value = start_value and cliff_amount = 0
+    /// For no-cliff behavior, set cliff_amount = 0
     CliffLinear {
-        start_value: u128,
         cliff_value: u128,
         end_value: u128,
         cliff_amount: u64,

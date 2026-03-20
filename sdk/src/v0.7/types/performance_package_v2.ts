@@ -662,10 +662,6 @@ export type PerformancePackageV2 = {
             name: "CliffLinear";
             fields: [
               {
-                name: "startValue";
-                type: "u128";
-              },
-              {
                 name: "cliffValue";
                 type: "u128";
               },
@@ -1735,10 +1731,6 @@ export const IDL: PerformancePackageV2 = {
           {
             name: "CliffLinear",
             fields: [
-              {
-                name: "startValue",
-                type: "u128",
-              },
               {
                 name: "cliffValue",
                 type: "u128",

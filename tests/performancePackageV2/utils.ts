@@ -209,13 +209,11 @@ export async function setupPerformancePackageV2(
  * Helper to create a CliffLinear reward function
  */
 export function createCliffLinearReward({
-  startValue = new BN(0),
   cliffValue = new BN(100),
   endValue = new BN(1000),
   cliffAmount = new BN(100_000_000), // 100 tokens with 6 decimals
   totalAmount = new BN(1_000_000_000), // 1000 tokens with 6 decimals
 }: {
-  startValue?: BN;
   cliffValue?: BN;
   endValue?: BN;
   cliffAmount?: BN;
@@ -223,7 +221,6 @@ export function createCliffLinearReward({
 } = {}): PerformancePackageV2RewardFunction {
   return {
     cliffLinear: {
-      startValue,
       cliffValue,
       endValue,
       cliffAmount,

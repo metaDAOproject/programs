@@ -43,7 +43,6 @@ export default function suite() {
 
     const minUnlockTimestamp = new BN(1000);
     const rewardFunction = createCliffLinearReward({
-      startValue: new BN(0),
       cliffValue: new BN(100),
       endValue: new BN(1000),
       cliffAmount: new BN(100_000_000),
@@ -98,7 +97,6 @@ export default function suite() {
 
     // Verify CliffLinear properties match what we defined
     const cliffLinear = ppAccount.rewardFunction.cliffLinear;
-    assert.equal(cliffLinear.startValue.toString(), "0");
     assert.equal(cliffLinear.cliffValue.toString(), "100");
     assert.equal(cliffLinear.endValue.toString(), "1000");
     assert.equal(cliffLinear.cliffAmount.toString(), "100000000");
@@ -251,7 +249,6 @@ export default function suite() {
     const minDuration = 60; // 60 seconds
     const oracleReader = createFutarchyTwapOracle({ amm: dao, minDuration });
     const rewardFunction = createCliffLinearReward({
-      startValue: new BN(0),
       cliffValue: new BN(100), // TWAP value threshold
       endValue: new BN(1000),
       cliffAmount: new BN(100_000_000), // 100 tokens
@@ -628,7 +625,6 @@ export default function suite() {
 
     // cliff_value (1000) > end_value (500) - invalid
     const rewardFunction = createCliffLinearReward({
-      startValue: new BN(0),
       cliffValue: new BN(1000),
       endValue: new BN(500), // Less than cliff!
       cliffAmount: new BN(100_000_000),
@@ -674,7 +670,6 @@ export default function suite() {
 
     // cliff_amount (2000) > total_amount (1000) - invalid
     const rewardFunction = createCliffLinearReward({
-      startValue: new BN(0),
       cliffValue: new BN(100),
       endValue: new BN(1000),
       cliffAmount: new BN(2_000_000_000), // More than total!
@@ -791,51 +786,5 @@ export default function suite() {
     assert.isNotNull(ppAccount);
     assert.isDefined(ppAccount.oracleReader.futarchyTwap);
     assert.equal(ppAccount.oracleReader.futarchyTwap.minDuration, minDuration);
-  });
-
-  it("fails with invalid CliffLinear config - start_value > cliff_value", async function () {
-    const createKey = Keypair.generate();
-    const [performancePackage] = getPerformancePackageV2Addr({
-      createKey: createKey.publicKey,
-    });
-
-    const { mint, mintGovernor, mintAuthority } =
-      await setupMintGovernorWithAuthority(
-        this.banksClient,
-        mintGovernorClient,
-        this.payer,
-        performancePackage,
-      );
-
-    // start_value (500) > cliff_value (100) - invalid
-    const rewardFunction = createCliffLinearReward({
-      startValue: new BN(500), // Greater than cliff!
-      cliffValue: new BN(100),
-      endValue: new BN(1000),
-      cliffAmount: new BN(100_000_000),
-      totalAmount: new BN(1_000_000_000),
-    });
-
-    const callbacks = expectError(
-      "InvalidVestingSchedule",
-      "Should have failed because start_value > cliff_value",
-    );
-
-    await ppClient
-      .initializePerformancePackageIx({
-        createKey: createKey.publicKey,
-        mint,
-        mintGovernor,
-        mintAuthority,
-        authority: this.payer.publicKey,
-        recipient: this.payer.publicKey,
-        payer: this.payer.publicKey,
-        oracleReader: { time: {} },
-        rewardFunction,
-        minUnlockTimestamp: new BN(0),
-      })
-      .signers([createKey])
-      .rpc()
-      .then(callbacks[0], callbacks[1]);
   });
 }
