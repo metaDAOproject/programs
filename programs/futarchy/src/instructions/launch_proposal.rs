@@ -157,6 +157,8 @@ impl LaunchProposal<'_> {
         // Update proposal state to Pending and set timestamp enqueued
         proposal.state = ProposalState::Pending;
         proposal.timestamp_enqueued = clock.unix_timestamp;
+        // Additionally, set the duration once more in case it was updated since the proposal was created
+        proposal.duration_in_seconds = dao.seconds_per_proposal;
 
         dao.seq_num += 1;
 

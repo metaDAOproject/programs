@@ -185,7 +185,7 @@ export default function () {
     assert.equal(authorityBalance.toString(), "700000"); // 1000000 - 100000 - 200000
   });
 
-  it("should fail if unlock timestamp is in the past", async function () {
+  it("should succeed even if unlock timestamp is in the past", async function () {
     const pastCreateKey = Keypair.generate();
 
     // Fund the pastCreateKey with SOL
@@ -223,25 +223,33 @@ export default function () {
       tokenRecipient: recipient.publicKey,
     };
 
-    try {
-      const tx = await this.priceBasedPerformancePackage
-        .initializePerformancePackageIx({
-          params,
-          createKey: pastCreateKey.publicKey,
-          tokenMint,
-          grantor: tokenAuthority.publicKey,
-        })
-        .transaction();
+    const tx = await this.priceBasedPerformancePackage
+      .initializePerformancePackageIx({
+        params,
+        createKey: pastCreateKey.publicKey,
+        tokenMint,
+        grantorTokenAccount: tokenAccount,
+        grantor: tokenAuthority.publicKey,
+      })
+      .transaction();
 
-      tx.recentBlockhash = (
-        await this.context.banksClient.getLatestBlockhash()
-      )[0];
-      tx.sign(pastCreateKey, this.payer, tokenAuthority);
-      await this.banksClient.processTransaction(tx);
-      assert.fail("Expected transaction to fail");
-    } catch (error) {
-      assert.include(error.message.toLowerCase(), "0x1771");
-    }
+    tx.recentBlockhash = (
+      await this.context.banksClient.getLatestBlockhash()
+    )[0];
+    tx.sign(pastCreateKey, this.payer, tokenAuthority);
+    await this.banksClient.processTransaction(tx);
+
+    // Verify the performance package was created successfully
+    const ppAddr = getPerformancePackageAddr({
+      createKey: pastCreateKey.publicKey,
+    })[0];
+    const storedPerformancePackage =
+      await this.priceBasedPerformancePackage.getPerformancePackage(ppAddr);
+    assert.equal(
+      storedPerformancePackage.minUnlockTimestamp.toString(),
+      params.minUnlockTimestamp.toString(),
+    );
+    assert.exists(storedPerformancePackage.state.locked);
   });
 
   it("should fail if recipient equals authority", async function () {

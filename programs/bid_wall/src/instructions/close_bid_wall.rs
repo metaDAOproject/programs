@@ -19,9 +19,6 @@ pub struct CloseBidWall<'info> {
     )]
     pub bid_wall: Account<'info, BidWall>,
 
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
     /// CHECK: used for constraints
     #[account(mut, address = bid_wall.authority)]
     pub authority: UncheckedAccount<'info>,

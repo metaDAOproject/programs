@@ -37,7 +37,6 @@ pub struct StakeToProposal<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 
@@ -71,7 +70,6 @@ impl StakeToProposal<'_> {
             staker,
             payer: _,
             token_program,
-            associated_token_program: _,
             system_program: _,
             event_authority: _,
             program: _,

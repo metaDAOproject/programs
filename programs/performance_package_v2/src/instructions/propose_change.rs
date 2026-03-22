@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     ChangeProposedEvent, ChangeRequest, CommonFields, OracleReader, PerformancePackage,
-    PerformancePackageError, ProposerType, RewardFunction, CHANGE_REQUEST_SEED,
+    PerformancePackageError, RewardFunction, CHANGE_REQUEST_SEED,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -77,21 +77,13 @@ impl ProposeChange<'_> {
         let pp = &mut ctx.accounts.performance_package;
         let proposer_key = ctx.accounts.proposer.key();
 
-        // Determine proposer type
-        // Authority could theoretically change during change proposal,
-        // so we need this ProposerType to know who needs to sign the change request.
-        let proposer_type = if proposer_key == pp.authority {
-            ProposerType::Authority
-        } else {
-            ProposerType::Recipient
-        };
-
         let clock = Clock::get()?;
 
         // Initialize the change request
         ctx.accounts.change_request.set_inner(ChangeRequest {
             performance_package: pp.key(),
-            proposer_type,
+            proposer: proposer_key,
+            pp_created_at_timestamp: pp.created_at_timestamp,
             proposed_at: clock.unix_timestamp,
             pda_nonce: args.pda_nonce,
             bump: ctx.bumps.change_request,
@@ -111,7 +103,7 @@ impl ProposeChange<'_> {
             },
             performance_package: pp.key(),
             change_request: ctx.accounts.change_request.key(),
-            proposer_type,
+            proposer: proposer_key,
             pda_nonce: args.pda_nonce,
             new_recipient: args.new_recipient,
             new_oracle_reader: args.new_oracle_reader,

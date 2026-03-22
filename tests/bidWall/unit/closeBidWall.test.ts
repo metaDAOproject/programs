@@ -182,7 +182,6 @@ export default function suite() {
         daoTreasury: daoTreasury,
         baseMint: META,
         quoteMint: MAINNET_USDC,
-        payer: this.payer.publicKey,
       })
       .rpc();
 
@@ -230,7 +229,6 @@ export default function suite() {
         baseMint: META,
         feeRecipient: feeRecipient,
         quoteMint: MAINNET_USDC,
-        payer: this.payer.publicKey,
       })
       .rpc();
 
@@ -296,7 +294,6 @@ export default function suite() {
         baseMint: META,
         feeRecipient: feeRecipient,
         quoteMint: MAINNET_USDC,
-        payer: this.payer.publicKey,
       })
       .rpc();
 
@@ -362,7 +359,6 @@ export default function suite() {
         baseMint: META,
         feeRecipient: feeRecipient,
         quoteMint: MAINNET_USDC,
-        payer: this.payer.publicKey,
       })
       .rpc();
 
@@ -404,7 +400,6 @@ export default function suite() {
           baseMint: META,
           feeRecipient: feeRecipient,
           quoteMint: MAINNET_USDC,
-          payer: this.payer.publicKey,
         })
         .rpc();
       assert.fail("Should have thrown error");
@@ -428,7 +423,6 @@ export default function suite() {
           baseMint: META,
           feeRecipient: wrongFeeRecipient,
           quoteMint: MAINNET_USDC,
-          payer: this.payer.publicKey,
         })
         .rpc();
       assert.fail("Should have thrown error");

@@ -267,7 +267,6 @@ export class LaunchpadClient {
       fundingRecord,
       funder,
       funderQuoteAccount,
-      launchSigner,
     });
   }
 

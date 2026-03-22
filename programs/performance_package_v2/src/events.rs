@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{OracleReader, ProposerType, RewardFunction};
+use crate::{OracleReader, RewardFunction};
 
 /// Common fields included in all events for consistent metadata.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -58,7 +58,7 @@ pub struct ChangeProposedEvent {
     pub common: CommonFields,
     pub performance_package: Pubkey,
     pub change_request: Pubkey,
-    pub proposer_type: ProposerType,
+    pub proposer: Pubkey,
     pub pda_nonce: u32,
     pub new_recipient: Option<Pubkey>,
     pub new_oracle_reader: Option<OracleReader>,

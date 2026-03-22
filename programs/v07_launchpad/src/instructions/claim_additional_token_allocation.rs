@@ -21,7 +21,6 @@ pub struct ClaimAdditionalTokenAllocation<'info> {
     pub payer: Signer<'info>,
 
     /// CHECK: just a signer
-    #[account(mut)]
     pub launch_signer: UncheckedAccount<'info>,
 
     #[account(
@@ -31,7 +30,7 @@ pub struct ClaimAdditionalTokenAllocation<'info> {
     )]
     pub launch_base_vault: Account<'info, TokenAccount>,
 
-    #[account(mut, address = launch.base_mint)]
+    #[account(address = launch.base_mint)]
     pub base_mint: Account<'info, Mint>,
 
     /// CHECK: The recipient of the additional tokens, used for constraints, explicitly checked in validate
