@@ -950,6 +950,7 @@ export class FutarchyClient {
       ),
       stakeAccount,
       staker,
+      baseMint,
       tokenProgram: TOKEN_PROGRAM_ID,
     });
   }

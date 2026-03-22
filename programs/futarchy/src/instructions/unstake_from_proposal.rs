@@ -9,19 +9,26 @@ pub struct UnstakeFromProposalParams {
 #[instruction(args: UnstakeFromProposalParams)]
 #[event_cpi]
 pub struct UnstakeFromProposal<'info> {
-    #[account(mut)]
-    pub proposal: Box<Account<'info, Proposal>>,
-    #[account(mut)]
-    pub dao: Box<Account<'info, Dao>>,
     #[account(
         mut,
-        associated_token::mint = dao.base_mint,
+        has_one = dao,
+    )]
+    pub proposal: Box<Account<'info, Proposal>>,
+    #[account(
+        mut,
+        has_one = base_mint,
+    )]
+    pub dao: Box<Account<'info, Dao>>,
+    #[account(
+        init_if_needed,
+        payer = staker,
+        associated_token::mint = base_mint,
         associated_token::authority = staker,
     )]
     pub staker_base_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        associated_token::mint = dao.base_mint,
+        associated_token::mint = base_mint,
         associated_token::authority = proposal,
     )]
     pub proposal_base_account: Box<Account<'info, TokenAccount>>,
@@ -31,8 +38,13 @@ pub struct UnstakeFromProposal<'info> {
         bump = stake_account.bump,
     )]
     pub stake_account: Box<Account<'info, StakeAccount>>,
+    #[account(address = dao.base_mint)]
+    pub base_mint: Account<'info, Mint>,
+    #[account(mut)]
     pub staker: Signer<'info>,
     pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl UnstakeFromProposal<'_> {
@@ -62,6 +74,9 @@ impl UnstakeFromProposal<'_> {
             token_program,
             event_authority: _,
             program: _,
+            system_program: _,
+            associated_token_program: _,
+            base_mint: _,
         } = ctx.accounts;
 
         let UnstakeFromProposalParams { amount } = params;

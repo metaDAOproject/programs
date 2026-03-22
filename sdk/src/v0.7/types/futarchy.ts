@@ -268,12 +268,27 @@ export type Futarchy = {
           isSigner: false;
         },
         {
-          name: "staker";
+          name: "baseMint";
           isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "staker";
+          isMut: true;
           isSigner: true;
         },
         {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -3537,12 +3552,27 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
-          name: "staker",
+          name: "baseMint",
           isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "staker",
+          isMut: true,
           isSigner: true,
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
