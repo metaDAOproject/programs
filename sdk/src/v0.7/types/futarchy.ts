@@ -215,11 +215,6 @@ export type Futarchy = {
           isSigner: false;
         },
         {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
@@ -273,12 +268,22 @@ export type Futarchy = {
           isSigner: false;
         },
         {
-          name: "staker";
+          name: "baseMint";
           isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "staker";
+          isMut: true;
           isSigner: true;
         },
         {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -1014,16 +1019,6 @@ export type Futarchy = {
           isMut: false;
           isSigner: false;
         },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
       ];
       args: [];
     },
@@ -1078,7 +1073,7 @@ export type Futarchy = {
         },
         {
           name: "squadsMultisigVault";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -1517,7 +1512,7 @@ export type Futarchy = {
         },
         {
           name: "admin";
-          isMut: true;
+          isMut: false;
           isSigner: true;
         },
         {
@@ -2350,7 +2345,7 @@ export type Futarchy = {
               "",
               "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
               "we can store 18 million seconds worth of observations, which turns out to",
-              "be ~208 days.",
+              "be ~213 days.",
               "",
               "Assuming that latest observations are 100x smaller than they could theoretically",
               "be, we can store ~57 years worth of them. Even this is a very",
@@ -3956,11 +3951,6 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "systemProgram",
           isMut: false,
           isSigner: false,
@@ -4014,12 +4004,22 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
-          name: "staker",
+          name: "baseMint",
           isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "staker",
+          isMut: true,
           isSigner: true,
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
@@ -4755,16 +4755,6 @@ export const IDL: Futarchy = {
           isMut: false,
           isSigner: false,
         },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
       ],
       args: [],
     },
@@ -4819,7 +4809,7 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisigVault",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -5258,7 +5248,7 @@ export const IDL: Futarchy = {
         },
         {
           name: "admin",
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -6091,7 +6081,7 @@ export const IDL: Futarchy = {
               "",
               "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
               "we can store 18 million seconds worth of observations, which turns out to",
-              "be ~208 days.",
+              "be ~213 days.",
               "",
               "Assuming that latest observations are 100x smaller than they could theoretically",
               "be, we can store ~57 years worth of them. Even this is a very",

@@ -141,11 +141,6 @@ export type LaunchpadV7 = {
           isSigner: false;
         },
         {
-          name: "launchSigner";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "launchQuoteVault";
           isMut: true;
           isSigner: false;
@@ -520,11 +515,6 @@ export type LaunchpadV7 = {
           isSigner: false;
         },
         {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -557,7 +547,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "baseMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -577,11 +567,6 @@ export type LaunchpadV7 = {
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -634,7 +619,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "launchSigner";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -644,7 +629,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "baseMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -700,7 +685,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "launchSigner";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -2191,11 +2176,6 @@ export const IDL: LaunchpadV7 = {
           isSigner: false,
         },
         {
-          name: "launchSigner",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "launchQuoteVault",
           isMut: true,
           isSigner: false,
@@ -2570,11 +2550,6 @@ export const IDL: LaunchpadV7 = {
           isSigner: false,
         },
         {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -2607,7 +2582,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "baseMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2627,11 +2602,6 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
@@ -2684,7 +2654,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "launchSigner",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2694,7 +2664,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "baseMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2750,7 +2720,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "launchSigner",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {

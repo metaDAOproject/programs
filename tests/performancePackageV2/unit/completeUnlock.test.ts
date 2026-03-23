@@ -66,7 +66,6 @@ export default function suite() {
     // Setup reward function where cliff is at current time (immediately earns cliff_amount)
     // and end is far in future
     const rewardFunction = createCliffLinearReward({
-      startValue: new BN(0),
       cliffValue: new BN(currentTimestamp), // Cliff at current time
       endValue: new BN(currentTimestamp + 1000), // End 1000 seconds from now
       cliffAmount: new BN(100_000_000), // 100 tokens
@@ -440,7 +439,6 @@ export default function suite() {
     // Setup CliffLinear with a time range that spans past and future
     // cliff at current time, end 1000 seconds in the future
     const rewardFunction = createCliffLinearReward({
-      startValue: new BN(0),
       cliffValue: new BN(currentTimestamp), // Cliff at current time
       endValue: new BN(currentTimestamp + 1000), // End 1000 seconds from now
       cliffAmount: new BN(100_000_000), // 100 tokens at cliff
@@ -574,7 +572,6 @@ export default function suite() {
     // The DAO's twapInitialObservation is ~1000 (from setupDaoForTwapTests)
     // TWAP of 1000 is 50% into the 500-1500 range → earns ~300 tokens
     const rewardFunction = createCliffLinearReward({
-      startValue: new BN(0),
       cliffValue: new BN(500), // Cliff at TWAP = 500
       endValue: new BN(1500), // End at TWAP = 1500
       cliffAmount: new BN(100_000_000), // 100 tokens at cliff

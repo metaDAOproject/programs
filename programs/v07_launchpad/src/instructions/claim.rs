@@ -19,6 +19,7 @@ pub struct Claim<'info> {
 
     #[account(
         mut,
+        has_one = launch,
         has_one = funder,
         seeds = [b"funding_record", launch.key().as_ref(), funder.key().as_ref()],
         bump = funding_record.pda_bump
@@ -28,7 +29,6 @@ pub struct Claim<'info> {
     /// CHECK: just a signer
     pub launch_signer: UncheckedAccount<'info>,
 
-    #[account(mut)]
     pub base_mint: Account<'info, Mint>,
 
     #[account(mut)]
@@ -45,7 +45,6 @@ pub struct Claim<'info> {
     pub funder_token_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
 }
 
 impl Claim<'_> {

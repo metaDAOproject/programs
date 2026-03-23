@@ -99,11 +99,6 @@ export type BidWall = {
           isSigner: false;
         },
         {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
           name: "authority";
           isMut: true;
           isSigner: false;
@@ -171,7 +166,7 @@ export type BidWall = {
         },
         {
           name: "user";
-          isMut: true;
+          isMut: false;
           isSigner: true;
         },
         {
@@ -211,11 +206,6 @@ export type BidWall = {
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -269,11 +259,6 @@ export type BidWall = {
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -832,11 +817,6 @@ export const IDL: BidWall = {
           isSigner: false,
         },
         {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
           name: "authority",
           isMut: true,
           isSigner: false,
@@ -904,7 +884,7 @@ export const IDL: BidWall = {
         },
         {
           name: "user",
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -944,11 +924,6 @@ export const IDL: BidWall = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1002,11 +977,6 @@ export const IDL: BidWall = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },

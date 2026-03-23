@@ -272,7 +272,7 @@ pub struct TwapOracle {
     ///
     /// Assuming latest observations are as big as possible (u64::MAX * 1e12),
     /// we can store 18 million seconds worth of observations, which turns out to
-    /// be ~208 days.
+    /// be ~213 days.
     ///
     /// Assuming that latest observations are 100x smaller than they could theoretically
     /// be, we can store ~57 years worth of them. Even this is a very
@@ -404,9 +404,9 @@ impl Pool {
                 .try_into()
                 .unwrap();
 
-            // if this saturates, the aggregator will wrap back to 0, so this value doesn't
-            // really matter. we just can't panic.
-            let weighted_observation = last_observation.saturating_mul(time_difference);
+            // wrapping_mul ensures we don't panic in case of overflow
+            // Theoretically, wrapping can occur, but it's astronomically unlikely
+            let weighted_observation = last_observation.wrapping_mul(time_difference);
 
             oracle.aggregator.wrapping_add(weighted_observation)
         };
@@ -462,7 +462,9 @@ impl Pool {
 
         // include the final interval that hasn't been accumulated yet
         let final_interval = (current_timestamp - self.oracle.last_updated_timestamp) as u128;
-        let final_contribution = self.oracle.last_observation.saturating_mul(final_interval);
+        // wrapping_mul ensures we don't panic in case of overflow
+        // Theoretically, wrapping can occur, but it's astronomically unlikely
+        let final_contribution = self.oracle.last_observation.wrapping_mul(final_interval);
         let total_aggregator = self.oracle.aggregator.wrapping_add(final_contribution);
 
         Ok(total_aggregator / seconds_passed)

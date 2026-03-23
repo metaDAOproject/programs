@@ -17,6 +17,7 @@ pub struct Refund<'info> {
 
     #[account(
         mut,
+        has_one = launch,
         has_one = funder,
         seeds = [b"funding_record", launch.key().as_ref(), funder.key().as_ref()],
         bump = funding_record.pda_bump
@@ -36,7 +37,6 @@ pub struct Refund<'info> {
     pub funder_quote_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
 }
 
 impl Refund<'_> {

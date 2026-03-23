@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     ChangeExecutedEvent, ChangeRequest, CommonFields, PackageStatus, PerformancePackage,
-    PerformancePackageError, ProposerType,
+    PerformancePackageError,
 };
 
 #[event_cpi]
@@ -31,22 +31,29 @@ impl ExecuteChange<'_> {
         let cr = &self.change_request;
         let executor = self.executor.key();
 
-        // Executor must be the opposite party from the proposer
-        match cr.proposer_type {
-            ProposerType::Authority => {
-                require_keys_eq!(
-                    executor,
-                    pp.recipient,
-                    PerformancePackageError::InvalidExecutor
-                );
-            }
-            ProposerType::Recipient => {
-                require_keys_eq!(
-                    executor,
-                    pp.authority,
-                    PerformancePackageError::InvalidExecutor
-                );
-            }
+        // Reject CRs from a prior PP incarnation (close/recreate)
+        require_eq!(
+            cr.pp_created_at_timestamp,
+            pp.created_at_timestamp,
+            PerformancePackageError::StaleChangeRequest
+        );
+
+        // Proposer must still be the current authority or recipient,
+        // and executor must be the opposite party.
+        if cr.proposer == pp.authority {
+            require_keys_eq!(
+                executor,
+                pp.recipient,
+                PerformancePackageError::InvalidExecutor
+            );
+        } else if cr.proposer == pp.recipient {
+            require_keys_eq!(
+                executor,
+                pp.authority,
+                PerformancePackageError::InvalidExecutor
+            );
+        } else {
+            return Err(PerformancePackageError::StaleChangeRequest.into());
         }
 
         // Config changes (oracle/reward function) can only happen when Locked

@@ -4,7 +4,6 @@ use anchor_lang::Discriminator;
 use squads_multisig_program::program::SquadsMultisigProgram;
 
 #[derive(Accounts)]
-#[event_cpi]
 pub struct ExecuteSpendingLimitChange<'info> {
     #[account(
         mut, has_one = dao, has_one = squads_proposal,
@@ -44,8 +43,6 @@ impl<'info, 'c: 'info> ExecuteSpendingLimitChange<'info> {
             squads_multisig,
             squads_multisig_program,
             vault_transaction,
-            event_authority: _,
-            program: _,
         } = ctx.accounts;
 
         let message = &vault_transaction.message;
