@@ -11,6 +11,9 @@ export const AMM_PROGRAM_ID = new PublicKey(
 export const CONDITIONAL_VAULT_v0_4_PROGRAM_ID = new PublicKey(
   "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg",
 );
+export const LAUNCHPAD_V0_6_PROGRAM_ID = new PublicKey(
+  "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV",
+);
 export const LAUNCHPAD_V0_7_PROGRAM_ID = new PublicKey(
   "moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM",
 );
@@ -115,6 +118,10 @@ export const SQUADS_PROGRAM_CONFIG_TREASURY = new PublicKey(
 
 export const SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET = new PublicKey(
   "HM5y4mz3Bt9JY9mr1hkyhnvqxSH4H2u2451j7Hc2dtvK",
+);
+
+export const LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG = new PublicKey(
+  "Asv1KQqeop9e4FFvTzEBZhwtTjuWHXPq5thUGtQrzzA3",
 );
 
 export const LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG = new PublicKey(
