@@ -20,16 +20,16 @@ export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
 export const PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID = new PublicKey(
   "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS",
 );
-export const BID_WALL_V0_1_PROGRAM_ID = new PublicKey(
+export const BID_WALL_V0_7_PROGRAM_ID = new PublicKey(
   "WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx",
 );
-export const MINT_GOVERNOR_V0_1_PROGRAM_ID = new PublicKey(
+export const MINT_GOVERNOR_V0_7_PROGRAM_ID = new PublicKey(
   "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH",
 );
 export const PERFORMANCE_PACKAGE_V2_PROGRAM_ID = new PublicKey(
   "pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz",
 );
-export const LIQUIDATION_V0_1_PROGRAM_ID = new PublicKey(
+export const LIQUIDATION_V0_7_PROGRAM_ID = new PublicKey(
   "LiQnowFbFQdYyZhF4pUbpsrZCjxRTQ1upKJxZ2VXjde",
 );
 
