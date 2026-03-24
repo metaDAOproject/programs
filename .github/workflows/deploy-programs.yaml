@@ -16,6 +16,8 @@ on:
           - launchpad_v7
           - bid_wall
           - liquidation
+          - mint_governor
+          - performance_package_v2
       priority-fee:
         description: "Priority fee in microlamports"
         required: true
@@ -143,6 +145,44 @@ jobs:
     with:
       program: "bid_wall"
       override-program-id: "WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
+
+  mint-governor:
+    if: inputs.program == 'mint_governor' || inputs.program == 'all'
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      program: "mint_governor"
+      override-program-id: "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
+
+  performance-package-v2:
+    if: inputs.program == 'performance_package_v2' || inputs.program == 'all'
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      program: "performance_package_v2"
+      override-program-id: "pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz"
       network: "mainnet"
       deploy: true
       upload_idl: true
