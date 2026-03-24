@@ -8,7 +8,6 @@ on:
         required: true
         type: choice
         options:
-          - all
           - conditional_vault_v4
           - futarchy_v6
           - launchpad_v6
@@ -26,7 +25,7 @@ on:
 
 jobs:
   conditional-vault-v4:
-    if: inputs.program == 'conditional_vault_v4' || inputs.program == 'all'
+    if: inputs.program == 'conditional_vault_v4'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "conditional_vault"
@@ -45,7 +44,7 @@ jobs:
       MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   liquidation:
-    if: inputs.program == 'liquidation' || inputs.program == 'all'
+    if: inputs.program == 'liquidation'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "liquidation"
@@ -64,7 +63,7 @@ jobs:
       MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   futarchy-v6:
-    if: inputs.program == 'futarchy_v6' || inputs.program == 'all'
+    if: inputs.program == 'futarchy_v6'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "futarchy"
@@ -83,7 +82,7 @@ jobs:
       MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   launchpad-v6:
-    if: inputs.program == 'launchpad_v6' || inputs.program == 'all'
+    if: inputs.program == 'launchpad_v6'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "launchpad"
@@ -102,7 +101,7 @@ jobs:
       MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   price-based-performance-package-v6:
-    if: inputs.program == 'price_based_performance_package_v6' || inputs.program == 'all'
+    if: inputs.program == 'price_based_performance_package_v6'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "price_based_performance_package"
@@ -121,7 +120,7 @@ jobs:
       MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
   
   launchpad-v7:
-    if: inputs.program == 'launchpad_v7' || inputs.program == 'all'
+    if: inputs.program == 'launchpad_v7'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "launchpad_v7"
@@ -140,7 +139,7 @@ jobs:
       MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   bid-wall:
-    if: inputs.program == 'bid_wall' || inputs.program == 'all'
+    if: inputs.program == 'bid_wall'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "bid_wall"
@@ -159,7 +158,7 @@ jobs:
       MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   mint-governor:
-    if: inputs.program == 'mint_governor' || inputs.program == 'all'
+    if: inputs.program == 'mint_governor'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "mint_governor"
@@ -178,7 +177,7 @@ jobs:
       MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
 
   performance-package-v2:
-    if: inputs.program == 'performance_package_v2' || inputs.program == 'all'
+    if: inputs.program == 'performance_package_v2'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       program: "performance_package_v2"
