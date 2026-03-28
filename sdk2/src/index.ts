@@ -12,5 +12,6 @@ export * from "./price_based_performance_package/index.js";
 export * from "./utils.js";
 export * from "./constants.js";
 export * from "./pda.js";
+export * from "./priceMath.js";
 
 export { sha256 } from "@noble/hashes/sha256";
