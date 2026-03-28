@@ -5,7 +5,7 @@ import {
   MintGovernorClient,
   PerformancePackageV2Client,
   getPerformancePackageV2Addr,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/futarchy-v2";
 import {
   setupMintGovernorWithAuthority,
   createCliffLinearReward,

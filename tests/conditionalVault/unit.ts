@@ -27,13 +27,13 @@ import {
   IDL as ConditionalVaultIDL,
 } from "../../target/types/conditional_vault";
 import {
-  CONDITIONAL_VAULT_PROGRAM_ID,
+  CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
   ConditionalVaultClient,
   getConditionalTokenMintAddr,
   getQuestionAddr,
   getVaultAddr,
   sha256,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/futarchy-v2";
 
 export type VaultProgram = anchor.Program<ConditionalVault>;
 export type PublicKey = anchor.web3.PublicKey;
@@ -97,7 +97,7 @@ describe("conditional_vault", async function () {
 
     vaultProgram = new Program<ConditionalVault>(
       ConditionalVaultIDL,
-      CONDITIONAL_VAULT_PROGRAM_ID,
+      CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
       provider,
     );
 

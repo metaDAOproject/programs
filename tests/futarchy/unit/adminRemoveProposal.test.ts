@@ -1,7 +1,4 @@
-import {
-  PERMISSIONLESS_ACCOUNT,
-  PriceMath,
-} from "@metadaoproject/futarchy/v0.6";
+import { PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/futarchy-v2";
 import {
   ComputeBudgetProgram,
   Keypair,

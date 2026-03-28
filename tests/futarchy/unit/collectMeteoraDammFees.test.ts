@@ -10,10 +10,10 @@ import {
   DAMM_V2_PROGRAM_ID,
   FutarchyClient,
   LaunchpadClient,
-  MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/futarchy-v2";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../../launchpad_v7/utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
@@ -169,7 +169,7 @@ export default function suite() {
     const [pool] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("pool"),
-        MAINNET_METEORA_CONFIG.toBuffer(),
+        LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG.toBuffer(),
         sortedMint1,
         sortedMint2,
       ],
@@ -303,7 +303,7 @@ export default function suite() {
         quoteMint: MAINNET_USDC,
         transactionIndex:
           BigInt(squadsMultisigAccount.transactionIndex.toString()) + 1n,
-        meteoraConfig: MAINNET_METEORA_CONFIG,
+        meteoraConfig: LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
         admin: this.payer.publicKey,
       })
       .preInstructions([

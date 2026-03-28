@@ -3,7 +3,7 @@ import {
   PriceMath,
   getDaoAddr,
   getProposalAddrV2,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/futarchy-v2";
 import {
   ComputeBudgetProgram,
   Keypair,

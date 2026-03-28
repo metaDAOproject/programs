@@ -1,5 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
-import { LAUNCHPAD_V0_6_PROGRAM_ID } from "../../constants.js";
+import {
+  LAUNCHPAD_V0_6_PROGRAM_ID,
+  RAYDIUM_CP_SWAP_PROGRAM_ID,
+  DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
+} from "../../constants.js";
 
 export function getLaunchAddr(
   programId: PublicKey = LAUNCHPAD_V0_6_PROGRAM_ID,
@@ -28,6 +32,29 @@ export const getFundingRecordAddr = (
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("funding_record"), launch.toBuffer(), funder.toBuffer()],
+    programId,
+  );
+};
+
+export const getLiquidityPoolAddr = (
+  programId: PublicKey = LAUNCHPAD_V0_6_PROGRAM_ID,
+  dao: PublicKey,
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("pool_state"), dao.toBuffer()],
+    programId,
+  );
+};
+
+export const getRaydiumCpmmLpMintAddr = (
+  poolState: PublicKey,
+  isDevnet: boolean,
+): [PublicKey, number] => {
+  const programId = isDevnet
+    ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
+    : RAYDIUM_CP_SWAP_PROGRAM_ID;
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("pool_lp_mint"), poolState.toBuffer()],
     programId,
   );
 };

@@ -4,7 +4,7 @@ import { assert } from "chai";
 import {
   MintGovernorClient,
   PerformancePackageV2Client,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/futarchy-v2";
 import {
   setupPerformancePackageV2,
   createCliffLinearReward,

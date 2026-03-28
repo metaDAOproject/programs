@@ -13,7 +13,7 @@ import {
   MAINNET_USDC,
   getBidWallAddr,
   METADAO_MULTISIG_VAULT,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/futarchy-v2";
 import { BN } from "bn.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,

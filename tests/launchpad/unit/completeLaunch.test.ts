@@ -6,15 +6,15 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  getLiquidityPoolAddr,
-  getRaydiumCpmmLpMintAddr,
-} from "@metadaoproject/futarchy/v0.5";
-import {
   FutarchyClient,
   getMetadataAddr,
-  LaunchpadClient,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/futarchy-v2";
+import {
+  getLiquidityPoolAddr,
+  getRaydiumCpmmLpMintAddr,
+  LaunchpadClient,
+} from "@metadaoproject/futarchy-v2/launchpad/v0.6";
 import { BN } from "bn.js";
 import { deserializeMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import {

@@ -10,10 +10,10 @@ import claimAdditionalTokenAllocation from "./unit/claimAdditionalTokenAllocatio
 import initializePerformancePackage from "./unit/initializePerformancePackage.test.js";
 import { PublicKey } from "@solana/web3.js";
 import {
-  LAUNCHPAD_PROGRAM_ID,
-  MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_7_PROGRAM_ID,
+  LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/futarchy-v2";
 import BN from "bn.js";
 
 // TODO add a many-outcome integration test
@@ -30,7 +30,7 @@ export default function suite() {
 
     const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
       [Buffer.from("damm_pool_creator_authority")],
-      LAUNCHPAD_PROGRAM_ID,
+      LAUNCHPAD_V0_7_PROGRAM_ID,
     );
 
     dynamicConfig.data.set(
@@ -39,7 +39,10 @@ export default function suite() {
     );
     dynamicConfig.data.set([1], configTypeOffset);
 
-    this.context.setAccount(MAINNET_METEORA_CONFIG, dynamicConfig);
+    this.context.setAccount(
+      LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
+      dynamicConfig,
+    );
 
     this.setupBasicLaunch = async ({
       baseMint,

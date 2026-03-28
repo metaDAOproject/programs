@@ -1,4 +1,4 @@
-import { LiquidationClient } from "@metadaoproject/futarchy/v0.7";
+import { LiquidationClient } from "@metadaoproject/futarchy-v2";
 import { Keypair } from "@solana/web3.js";
 import { assert } from "chai";
 import * as token from "@solana/spl-token";

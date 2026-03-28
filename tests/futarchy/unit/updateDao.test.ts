@@ -14,8 +14,8 @@ import {
   getDaoAddr,
   PriceMath,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.7";
-import { sha256 } from "@metadaoproject/futarchy";
+  sha256,
+} from "@metadaoproject/futarchy-v2";
 import BN from "bn.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);

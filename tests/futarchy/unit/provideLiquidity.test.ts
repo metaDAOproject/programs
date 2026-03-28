@@ -1,7 +1,7 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
-import { FUTARCHY_PROGRAM_ID } from "@metadaoproject/futarchy/v0.7";
+import { FUTARCHY_V0_6_PROGRAM_ID } from "@metadaoproject/futarchy-v2";
 import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
@@ -32,7 +32,7 @@ export default function suite() {
         dao.toBuffer(),
         this.payer.publicKey.toBuffer(),
       ],
-      FUTARCHY_PROGRAM_ID,
+      FUTARCHY_V0_6_PROGRAM_ID,
     );
 
     // Fetch position before
@@ -83,7 +83,7 @@ export default function suite() {
         dao.toBuffer(),
         this.payer.publicKey.toBuffer(),
       ],
-      FUTARCHY_PROGRAM_ID,
+      FUTARCHY_V0_6_PROGRAM_ID,
     );
 
     // Fetch position before attack
@@ -132,7 +132,7 @@ export default function suite() {
         dao.toBuffer(),
         this.payer.publicKey.toBuffer(),
       ],
-      FUTARCHY_PROGRAM_ID,
+      FUTARCHY_V0_6_PROGRAM_ID,
     );
 
     // Attacker calls provideLiquidityIx attempting hijack
@@ -167,7 +167,7 @@ export default function suite() {
     // Derive event authority
     const [eventAuthority] = PublicKey.findProgramAddressSync(
       [Buffer.from("__event_authority")],
-      FUTARCHY_PROGRAM_ID,
+      FUTARCHY_V0_6_PROGRAM_ID,
     );
 
     // Victim withdraws all liquidity
@@ -195,7 +195,7 @@ export default function suite() {
         ammPosition: ammPositionPda,
         tokenProgram: TOKEN_PROGRAM_ID,
         eventAuthority,
-        program: FUTARCHY_PROGRAM_ID,
+        program: FUTARCHY_V0_6_PROGRAM_ID,
       })
       .rpc();
 

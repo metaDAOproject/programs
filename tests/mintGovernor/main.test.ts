@@ -6,7 +6,7 @@ import removeMintAuthority from "./unit/removeMintAuthority.test.js";
 import mintTokens from "./unit/mintTokens.test.js";
 import updateMintGovernorAdmin from "./unit/updateMintGovernorAdmin.test.js";
 import reclaimAuthority from "./unit/reclaimAuthority.test.js";
-import { MintGovernorClient } from "@metadaoproject/futarchy/v0.7";
+import { MintGovernorClient } from "@metadaoproject/futarchy-v2";
 import { BankrunProvider } from "anchor-bankrun";
 
 export default function suite() {

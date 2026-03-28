@@ -2,7 +2,9 @@ import {
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
   SQUADS_PROGRAM_ID,
-} from "@metadaoproject/futarchy/v0.7";
+  getDaoAddr,
+  MAINNET_USDC,
+} from "@metadaoproject/futarchy-v2";
 import {
   ComputeBudgetProgram,
   Keypair,
@@ -14,7 +16,6 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import { expectError } from "../../utils.js";
-import { getDaoAddr, MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   createTransferInstruction,

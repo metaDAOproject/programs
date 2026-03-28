@@ -2,7 +2,7 @@ import {
   ConditionalVaultClient,
   FutarchyClient,
   InstructionUtils,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/futarchy-v2";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";

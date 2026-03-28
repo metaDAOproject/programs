@@ -1,4 +1,7 @@
-import { getDaoAddr } from "@metadaoproject/futarchy/v0.5";
+import {
+  getDaoAddr,
+  PERMISSIONLESS_ACCOUNT,
+} from "@metadaoproject/futarchy-v2";
 import {
   ComputeBudgetProgram,
   SystemProgram,
@@ -7,7 +10,6 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
 import { ONE_MINUTE_IN_SLOTS } from "../../utils.js";
 
 export default function suite() {
