@@ -82,6 +82,7 @@ export default function suite() {
         performancePackageTokenAmount: new BN(10), // Effectively no premine
         monthsUntilInsidersCanUnlock: 24, // 2 years
         teamAddress: PublicKey.default,
+        hasBidWall: true,
       })
       .rpc();
 
@@ -136,7 +137,6 @@ export default function suite() {
     dao = launchAccount.dao;
     daoTreasury = launchAccount.daoVault;
 
-    let ammBaseVaultReserves = new BN(await this.getTokenBalance(META, dao));
     let ammQuoteVaultReserves = new BN(
       await this.getTokenBalance(MAINNET_USDC, dao),
     );

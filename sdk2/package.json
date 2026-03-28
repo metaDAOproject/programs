@@ -25,6 +25,7 @@
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "build": "tsc",
+    "build-local": "rm -rf ./dist && ./sync-types.sh && yarn tsc",
     "prepublishOnly": "yarn lint:fix && yarn build"
   },
   "dependencies": {

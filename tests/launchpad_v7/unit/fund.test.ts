@@ -6,7 +6,6 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  FutarchyClient,
   getFundingRecordAddr,
   LaunchpadClient,
   MAINNET_USDC,
@@ -17,15 +16,11 @@ import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {
-  let autocratClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
-  let baseVault: PublicKey;
   let quoteVault: PublicKey;
-  let funderBaseAccount: PublicKey;
-  let funderQuoteAccount: PublicKey;
   let launchAuthority: Signer;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
@@ -33,10 +28,7 @@ export default function suite() {
   const monthlySpend = new BN(100_000000);
   const recipientAddress = Keypair.generate().publicKey;
   const premineAmount = new BN(500_000_000);
-  const unlockThreshold = new BN(2000_000000);
-
   before(async function () {
-    autocratClient = this.futarchy;
     launchpadClient = this.launchpad_v7;
   });
 
@@ -52,19 +44,10 @@ export default function suite() {
     launchSigner = result.launchSigner;
     launchAuthority = new Keypair();
 
-    baseVault = getAssociatedTokenAddressSync(META, launchSigner, true);
     quoteVault = getAssociatedTokenAddressSync(
       MAINNET_USDC,
       launchSigner,
       true,
-    );
-    funderBaseAccount = getAssociatedTokenAddressSync(
-      META,
-      this.payer.publicKey,
-    );
-    funderQuoteAccount = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
-      this.payer.publicKey,
     );
 
     // TODO: put this in main test
