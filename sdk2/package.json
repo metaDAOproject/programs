@@ -19,7 +19,10 @@
     "./autocrat/v0.5": "./dist/autocrat/v0.5/index.js",
     "./amm/v0.5": "./dist/amm/v0.5/index.js",
     "./launchpad/v0.5": "./dist/launchpad/v0.5/index.js",
-    "./shared_liquidity_manager/v0.5": "./dist/shared_liquidity_manager/v0.5/index.js"
+    "./shared_liquidity_manager/v0.5": "./dist/shared_liquidity_manager/v0.5/index.js",
+    "./autocrat/v0.4": "./dist/autocrat/v0.4/index.js",
+    "./amm/v0.4": "./dist/amm/v0.4/index.js",
+    "./launchpad/v0.4": "./dist/launchpad/v0.4/index.js"
   },
   "license": "BSL-1.0",
   "files": [
