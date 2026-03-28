@@ -5,6 +5,18 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./bid_wall/v0.7": "./dist/bid_wall/v0.7/index.js",
+    "./conditional_vault/v0.4": "./dist/conditional_vault/v0.4/index.js",
+    "./futarchy/v0.6": "./dist/futarchy/v0.6/index.js",
+    "./launchpad/v0.6": "./dist/launchpad/v0.6/index.js",
+    "./launchpad/v0.7": "./dist/launchpad/v0.7/index.js",
+    "./liquidation/v0.7": "./dist/liquidation/v0.7/index.js",
+    "./mint_governor/v0.7": "./dist/mint_governor/v0.7/index.js",
+    "./performance_package_v2/v0.7": "./dist/performance_package_v2/v0.7/index.js",
+    "./price_based_performance_package/v0.6": "./dist/price_based_performance_package/v0.6/index.js"
+  },
   "license": "BSL-1.0",
   "files": [
     "/dist"
