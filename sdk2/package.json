@@ -15,7 +15,11 @@
     "./liquidation/v0.7": "./dist/liquidation/v0.7/index.js",
     "./mint_governor/v0.7": "./dist/mint_governor/v0.7/index.js",
     "./performance_package_v2/v0.7": "./dist/performance_package_v2/v0.7/index.js",
-    "./price_based_performance_package/v0.6": "./dist/price_based_performance_package/v0.6/index.js"
+    "./price_based_performance_package/v0.6": "./dist/price_based_performance_package/v0.6/index.js",
+    "./autocrat/v0.5": "./dist/autocrat/v0.5/index.js",
+    "./amm/v0.5": "./dist/amm/v0.5/index.js",
+    "./launchpad/v0.5": "./dist/launchpad/v0.5/index.js",
+    "./shared_liquidity_manager/v0.5": "./dist/shared_liquidity_manager/v0.5/index.js"
   },
   "license": "BSL-1.0",
   "files": [

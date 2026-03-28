@@ -2,6 +2,13 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { BN } from "bn.js";
 
+export const AUTOCRAT_V0_5_PROGRAM_ID = new PublicKey(
+  "auToUr3CQza3D4qreT6Std2MTomfzvrEeCC5qh7ivW5",
+);
+export const LAUNCHPAD_V0_5_PROGRAM_ID = new PublicKey(
+  "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA",
+);
+
 export const FUTARCHY_V0_6_PROGRAM_ID = new PublicKey(
   "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq",
 );
