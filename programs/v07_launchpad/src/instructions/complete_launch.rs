@@ -17,8 +17,9 @@ use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCloseEvent, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::{
-    fee_recipient, PRICE_SCALE, PROPOSAL_MIN_STAKE_TOKENS, TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED,
-    TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS, TOKEN_SCALE,
+    metadao_multisig_vault, PRICE_SCALE, PROPOSAL_MIN_STAKE_TOKENS,
+    TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
+    TOKEN_SCALE,
 };
 use anchor_spl::metadata::{
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
@@ -213,7 +214,7 @@ pub struct CompleteLaunch<'info> {
     pub bid_wall_quote_token_account: UncheckedAccount<'info>,
 
     /// CHECK: The fee recipient of bid wall fees, a fixed address
-    #[account(address = fee_recipient::id())]
+    #[account(address = metadao_multisig_vault::id())]
     pub fee_recipient: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,

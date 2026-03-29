@@ -125,3 +125,11 @@ pub struct LaunchPerformancePackageInitializedEvent {
     pub launch: Pubkey,
     pub performance_package: Pubkey,
 }
+
+#[event]
+pub struct LaunchExtendedEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub old_seconds_for_launch: u32,
+    pub new_seconds_for_launch: u32,
+}
