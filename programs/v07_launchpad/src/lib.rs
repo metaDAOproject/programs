@@ -58,6 +58,13 @@ pub mod fee_recipient {
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
+pub mod metadao_multisig_vault {
+    use anchor_lang::prelude::declare_id;
+
+    // MetaDAO operations multisig vault
+    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+}
+
 #[program]
 pub mod launchpad_v7 {
     use super::*;
@@ -128,5 +135,10 @@ pub mod launchpad_v7 {
 
     pub fn resize_launch(ctx: Context<ResizeLaunch>) -> Result<()> {
         ResizeLaunch::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn extend_launch(ctx: Context<ExtendLaunch>, args: ExtendLaunchArgs) -> Result<()> {
+        ExtendLaunch::handle(ctx, args)
     }
 }
