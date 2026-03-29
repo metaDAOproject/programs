@@ -24,11 +24,7 @@ pub struct ExtendLaunch<'info> {
 impl ExtendLaunch<'_> {
     pub fn validate(&self, args: &ExtendLaunchArgs) -> Result<()> {
         #[cfg(feature = "production")]
-        require_keys_eq!(
-            self.admin.key(),
-            metadao_multisig_vault::ID,
-            LaunchpadError::InvalidLaunchState
-        );
+        require_keys_eq!(self.admin.key(), metadao_multisig_vault::ID);
 
         require!(
             self.launch.state == LaunchState::Live,
