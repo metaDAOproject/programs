@@ -50,14 +50,6 @@ pub mod usdc_mint {
     declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 }
 
-// TODO - Pileks: Set this to the correct fee recipient address
-pub mod fee_recipient {
-    use anchor_lang::prelude::declare_id;
-
-    // MetaDAO multisig vault
-    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
-}
-
 pub mod metadao_multisig_vault {
     use anchor_lang::prelude::declare_id;
 
