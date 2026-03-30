@@ -150,11 +150,12 @@ pub mod futarchy {
         CollectMeteoraDammFees::handle(ctx)
     }
 
-    #[access_control(ctx.accounts.validate())]
+    #[access_control(ctx.accounts.validate(&args))]
     pub fn admin_approve_multisig_proposal(
         ctx: Context<AdminApproveMultisigProposal>,
+        args: AdminApproveMultisigProposalArgs,
     ) -> Result<()> {
-        AdminApproveMultisigProposal::handle(ctx)
+        AdminApproveMultisigProposal::handle(ctx, args)
     }
 
     #[access_control(ctx.accounts.validate())]

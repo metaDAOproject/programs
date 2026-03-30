@@ -7,7 +7,13 @@ mod admin {
     declare_id!("CWGawadYU8CzRVBecnJymNw97H7E3ndDinV5sMzesgY2");
 }
 
+#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
+pub struct AdminApproveMultisigProposalArgs {
+    pub transaction_index: u64,
+}
+
 #[derive(Accounts)]
+#[instruction(args: AdminApproveMultisigProposalArgs)]
 pub struct AdminApproveMultisigProposal<'info> {
     #[account(mut, has_one = squads_multisig)]
     pub dao: Account<'info, Dao>,
@@ -32,7 +38,7 @@ pub struct AdminApproveMultisigProposal<'info> {
             squads_multisig_program::SEED_PREFIX,
             squads_multisig.key().as_ref(),
             squads_multisig_program::SEED_TRANSACTION,
-            squads_multisig_vault_transaction.index.to_le_bytes().as_ref(),
+            args.transaction_index.to_le_bytes().as_ref(),
             squads_multisig_program::SEED_PROPOSAL,
         ],
         bump,
@@ -40,25 +46,12 @@ pub struct AdminApproveMultisigProposal<'info> {
     )]
     pub squads_multisig_proposal: Account<'info, squads_multisig_program::Proposal>,
 
-    #[account(
-        seeds = [
-            squads_multisig_program::SEED_PREFIX,
-            squads_multisig.key().as_ref(),
-            squads_multisig_program::SEED_TRANSACTION,
-            squads_multisig_vault_transaction.index.to_le_bytes().as_ref(),
-        ],
-        bump,
-        seeds::program = squads_multisig_program
-    )]
-    pub squads_multisig_vault_transaction:
-        Account<'info, squads_multisig_program::VaultTransaction>,
-
     pub squads_multisig_program:
         Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
 }
 
 impl AdminApproveMultisigProposal<'_> {
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self, _args: &AdminApproveMultisigProposalArgs) -> Result<()> {
         #[cfg(feature = "production")]
         require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
 
@@ -69,13 +62,12 @@ impl AdminApproveMultisigProposal<'_> {
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>) -> Result<()> {
+    pub fn handle(ctx: Context<Self>, _args: AdminApproveMultisigProposalArgs) -> Result<()> {
         let Self {
             dao,
             admin: _,
             squads_multisig,
             squads_multisig_proposal,
-            squads_multisig_vault_transaction: _,
             squads_multisig_program,
         } = ctx.accounts;
 
