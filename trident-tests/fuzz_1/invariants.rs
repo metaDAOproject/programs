@@ -1,6 +1,7 @@
 use crate::common::types::futarchy;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::*;
+use trident_fuzz::invariant_eq;
 
 impl FuzzTest {
     /// Checks invariants after a successful spot_swap operation
@@ -21,19 +22,19 @@ impl FuzzTest {
             futarchy::SwapType::Buy => {
                 // Buying base with quote: base increases, quote decreases
                 // Pool: base decreases, quote increases
-                assert!(
+                invariant!(
                     base_after >= base_before,
                     "Buy swap: trader base balance should increase or stay same"
                 );
-                assert!(
+                invariant!(
                     quote_after <= quote_before,
                     "Buy swap: trader quote balance should decrease"
                 );
-                assert!(
+                invariant!(
                     base_reserve_after <= base_reserve_before,
                     "Buy swap: pool base reserves should decrease"
                 );
-                assert!(
+                invariant!(
                     quote_reserve_after >= quote_reserve_before,
                     "Buy swap: pool quote reserves should increase"
                 );
@@ -41,19 +42,19 @@ impl FuzzTest {
             futarchy::SwapType::Sell => {
                 // Selling base for quote: base decreases, quote increases
                 // Pool: base increases, quote decreases
-                assert!(
+                invariant!(
                     base_after <= base_before,
                     "Sell swap: trader base balance should decrease"
                 );
-                assert!(
+                invariant!(
                     quote_after >= quote_before,
                     "Sell swap: trader quote balance should increase or stay same"
                 );
-                assert!(
+                invariant!(
                     base_reserve_after >= base_reserve_before,
                     "Sell swap: pool base reserves should increase"
                 );
-                assert!(
+                invariant!(
                     quote_reserve_after <= quote_reserve_before,
                     "Sell swap: pool quote reserves should decrease"
                 );
@@ -62,14 +63,14 @@ impl FuzzTest {
     }
 
     /// Global invariants checked at the end of each iteration
-    pub fn assert_global_invariants(&mut self) {
+    pub fn invariant_global_invariants(&mut self) {
         let (base_reserves, quote_reserves, total_liquidity, base_fees, quote_fees) =
             self.get_spot_reserves();
         let dao_base_balance = self.get_token_balance(self.base_meta, self.dao);
         let dao_quote_balance = self.get_token_balance(self.quote_usdc, self.dao);
 
         // DAO vault balance = reserves + accumulated protocol fees
-        assert_eq!(
+        invariant_eq!(
             base_reserves + base_fees,
             dao_base_balance,
             "Base reserves + fees should match DAO vault balance. Reserves: {}, Fees: {}, Vault: {}",
@@ -77,7 +78,7 @@ impl FuzzTest {
             base_fees,
             dao_base_balance
         );
-        assert_eq!(
+        invariant_eq!(
             quote_reserves + quote_fees,
             dao_quote_balance,
             "Quote reserves + fees should match DAO vault balance. Reserves: {}, Fees: {}, Vault: {}",
@@ -88,12 +89,14 @@ impl FuzzTest {
 
         // Empty pool consistency check
         if total_liquidity == 0 {
-            assert_eq!(
-                base_reserves, 0,
+            invariant_eq!(
+                base_reserves,
+                0,
                 "If total liquidity is 0, base reserves should be 0"
             );
-            assert_eq!(
-                quote_reserves, 0,
+            invariant_eq!(
+                quote_reserves,
+                0,
                 "If total liquidity is 0, quote reserves should be 0"
             );
         }

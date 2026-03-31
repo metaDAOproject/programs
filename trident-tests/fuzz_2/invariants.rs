@@ -1,6 +1,7 @@
 use crate::common::types::futarchy;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::*;
+use trident_fuzz::invariant_eq;
 
 impl FuzzTest {
     pub fn capture_balance_tracking_snapshot(&mut self) {
@@ -91,32 +92,32 @@ impl FuzzTest {
         let output_after = self.get_token_balance(output_mint, trader);
         let market_pool_after = self.get_market_pool(&market);
 
-        assert!(
+        invariant!(
             input_after <= input_before,
             "Trader input token balance must not increase after swap"
         );
-        assert!(
+        invariant!(
             output_after >= output_before,
             "Trader output token balance must not decrease after swap"
         );
 
         match swap_type {
             futarchy::SwapType::Buy => {
-                assert!(
+                invariant!(
                     market_pool_after.quoteReserves >= market_pool_before.quoteReserves,
                     "Buy in conditional market should increase quote reserves"
                 );
-                assert!(
+                invariant!(
                     market_pool_after.baseReserves <= market_pool_before.baseReserves,
                     "Buy in conditional market should decrease base reserves"
                 );
             }
             futarchy::SwapType::Sell => {
-                assert!(
+                invariant!(
                     market_pool_after.baseReserves >= market_pool_before.baseReserves,
                     "Sell in conditional market should increase base reserves"
                 );
-                assert!(
+                invariant!(
                     market_pool_after.quoteReserves <= market_pool_before.quoteReserves,
                     "Sell in conditional market should decrease quote reserves"
                 );
@@ -124,16 +125,16 @@ impl FuzzTest {
         }
     }
 
-    pub fn assert_global_invariants(&mut self) {
+    pub fn invariant_global_invariants(&mut self) {
         let (pass_base_mint, pass_quote_mint, fail_base_mint, fail_quote_mint) =
             self.get_conditional_mints();
 
-        assert_eq!(
+        invariant_eq!(
             self.current_total_base_underlying(),
             self.tracking.base_underlying_total,
             "Base underlying total should be conserved across known holders"
         );
-        assert_eq!(
+        invariant_eq!(
             self.current_total_quote_underlying(),
             self.tracking.quote_underlying_total,
             "Quote underlying total should be conserved across known holders"
@@ -141,15 +142,17 @@ impl FuzzTest {
 
         let (pass_base_total, fail_base_total) =
             self.current_total_conditional_pair_for_owner_set(pass_base_mint, fail_base_mint);
-        assert_eq!(
-            pass_base_total, fail_base_total,
+        invariant_eq!(
+            pass_base_total,
+            fail_base_total,
             "Pass/fail base conditional totals should remain equal over tracked owners"
         );
 
         let (pass_quote_total, fail_quote_total) =
             self.current_total_conditional_pair_for_owner_set(pass_quote_mint, fail_quote_mint);
-        assert_eq!(
-            pass_quote_total, fail_quote_total,
+        invariant_eq!(
+            pass_quote_total,
+            fail_quote_total,
             "Pass/fail quote conditional totals should remain equal over tracked owners"
         );
     }

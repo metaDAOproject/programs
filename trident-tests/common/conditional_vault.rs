@@ -36,7 +36,7 @@ pub fn initialize_question(
 
     let res = trident.process_transaction(&[init_question], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 
     question
 }
@@ -87,7 +87,7 @@ pub fn initialize_conditional_vault(
 
     let res = trident.process_transaction(&[init_cond_vault], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 
     vault
 }
@@ -144,7 +144,7 @@ pub fn split_tokens(
 
     let res = trident.process_transaction(&[split_ix], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 }
 
 pub fn merge_tokens(
@@ -198,5 +198,5 @@ pub fn merge_tokens(
 
     let res = trident.process_transaction(&[merge_ix], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 }

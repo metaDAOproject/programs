@@ -4,8 +4,8 @@ use super::types::futarchy::StakeToProposalInstructionAccounts;
 use super::types::futarchy::StakeToProposalInstructionData;
 use super::types::*;
 
+use trident_fuzz::fuzzing::prelude::TridentTransactionResult;
 use trident_fuzz::fuzzing::*;
-use trident_fuzz::trident::transaction_result::TransactionResult;
 
 use super::constants::*;
 use super::types::futarchy::InitializeDaoParams;
@@ -65,7 +65,7 @@ pub fn initialize_dao(
 
     let res = trident.process_transaction(&[init_dao], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 
     (dao, squads_multisig)
 }
@@ -108,7 +108,7 @@ pub fn initialize_proposal(
 
     let res = trident.process_transaction(&[init_prop], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 
     proposal
 }
@@ -155,7 +155,7 @@ pub fn stake_to_proposal(
 
     let res = trident.process_transaction(&[stake_to_proposal_ix], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -222,7 +222,7 @@ pub fn launch_proposal(
 
     let res = trident.process_transaction(&[launch_ix], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 }
 
 pub fn spot_swap(
@@ -231,7 +231,7 @@ pub fn spot_swap(
     user: Pubkey,
     params: futarchy::SpotSwapParams,
     message: Option<&str>,
-) -> TransactionResult {
+) -> TridentTransactionResult {
     let dao_data = trident
         .get_account_with_type::<futarchy::Dao>(&dao, None)
         .expect("Dao not found");
@@ -273,7 +273,7 @@ pub fn add_liqidity(
     liquidity_provider: Pubkey,
     params: futarchy::ProvideLiquidityParams,
     message: Option<&str>,
-) -> TransactionResult {
+) -> TridentTransactionResult {
     let dao_data = trident
         .get_account_with_type::<futarchy::Dao>(&dao, None)
         .expect("Dao not found");
@@ -328,7 +328,7 @@ pub fn withdraw_liquidity(
     liquidity_provider: Pubkey,
     params: futarchy::WithdrawLiquidityParams,
     message: Option<&str>,
-) -> TransactionResult {
+) -> TridentTransactionResult {
     let dao_data = trident
         .get_account_with_type::<futarchy::Dao>(&dao, None)
         .expect("Dao not found");
@@ -395,7 +395,7 @@ pub fn conditional_swap(
     quote_vault: Pubkey,
     params: futarchy::ConditionalSwapParams,
     message: Option<&str>,
-) -> TransactionResult {
+) -> TridentTransactionResult {
     let dao_data = trident
         .get_account_with_type::<futarchy::Dao>(&dao, None)
         .expect("Dao not found");
@@ -488,7 +488,7 @@ pub fn finalize_proposal(
     base_vault: Pubkey,
     quote_vault: Pubkey,
     message: Option<&str>,
-) -> TransactionResult {
+) -> TridentTransactionResult {
     let dao_data = trident
         .get_account_with_type::<futarchy::Dao>(&dao, None)
         .expect("Dao not found");

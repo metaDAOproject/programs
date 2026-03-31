@@ -10,6 +10,9 @@ use crate::common::types::price_based_performance_package::{self};
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::Pubkey;
 
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
+
 impl FuzzTest {
     pub fn verify_initialize_performance_package_invariants(
         &mut self,
@@ -35,38 +38,41 @@ impl FuzzTest {
             .expect("Launch account must exist after InitializePerformancePackage");
 
         // Invariant 1: Precondition checks.
-        assert!(
+        invariant!(
             matches!(pre_launch.state, LaunchState::Complete),
             "pre-state must be Complete if InitializePerformancePackage succeeded"
         );
-        assert!(
+        invariant!(
             !pre_launch.isPerformancePackageInitialized,
             "isPerformancePackageInitialized must be false if InitializePerformancePackage succeeded"
         );
-        assert_eq!(
+        invariant_eq!(
             pre_launch.dao,
             Some(dao),
             "launch.dao must equal dao if tx succeeded"
         );
-        assert_eq!(
-            pre_launch.launchSigner, launch_signer,
+        invariant_eq!(
+            pre_launch.launchSigner,
+            launch_signer,
             "launch_signer must match Launch.launchSigner"
         );
-        assert_eq!(
-            pre_launch.launchBaseVault, launch_base_vault,
+        invariant_eq!(
+            pre_launch.launchBaseVault,
+            launch_base_vault,
             "launch_base_vault must match Launch.launchBaseVault"
         );
-        assert_eq!(
-            pre_launch.baseMint, base_mint,
+        invariant_eq!(
+            pre_launch.baseMint,
+            base_mint,
             "base_mint must match Launch.baseMint"
         );
 
         // Invariant 2: Launch mutations must be correct.
-        assert!(
+        invariant!(
             post_launch.isPerformancePackageInitialized,
             "isPerformancePackageInitialized must flip true"
         );
-        assert_eq!(
+        invariant_eq!(
             post_launch.seqNum,
             pre_launch
                 .seqNum
@@ -85,59 +91,70 @@ impl FuzzTest {
             &[PERFORMANCE_PACKAGE_SEED_PREFIX, launch_signer.as_ref()],
             &price_based_performance_package::program_id(),
         );
-        assert_eq!(
-            performance_package, expected_pp_pda,
+        invariant_eq!(
+            performance_package,
+            expected_pp_pda,
             "PerformancePackage PDA must match seeds (performance_package, launch_signer)"
         );
-        assert_eq!(
-            post_pp.createKey, launch_signer,
+        invariant_eq!(
+            post_pp.createKey,
+            launch_signer,
             "PerformancePackage.createKey must equal launch_signer"
         );
-        assert_eq!(
-            post_pp.pdaBump, expected_pp_bump,
+        invariant_eq!(
+            post_pp.pdaBump,
+            expected_pp_bump,
             "PerformancePackage.pdaBump must match PDA bump"
         );
 
         // Invariant 4: PerformancePackage static fields must match expected values.
-        assert_eq!(
-            post_pp.tokenMint, base_mint,
+        invariant_eq!(
+            post_pp.tokenMint,
+            base_mint,
             "PerformancePackage.tokenMint must equal base_mint"
         );
-        assert_eq!(
-            post_pp.recipient, pre_launch.performancePackageGrantee,
+        invariant_eq!(
+            post_pp.recipient,
+            pre_launch.performancePackageGrantee,
             "PerformancePackage.recipient must equal performance_package_grantee"
         );
-        assert_eq!(
-            post_pp.performancePackageAuthority, squads_multisig_vault,
+        invariant_eq!(
+            post_pp.performancePackageAuthority,
+            squads_multisig_vault,
             "PerformancePackage.performancePackageAuthority must equal squads_multisig_vault"
         );
-        assert_eq!(
-            post_pp.oracleConfig.oracleAccount, dao,
+        invariant_eq!(
+            post_pp.oracleConfig.oracleAccount,
+            dao,
             "PerformancePackage.oracleAccount must be dao"
         );
-        assert_eq!(
-            post_pp.oracleConfig.byteOffset, 9,
+        invariant_eq!(
+            post_pp.oracleConfig.byteOffset,
+            9,
             "PerformancePackage.oracle byteOffset must be 8 + 1"
         );
-        assert_eq!(
-            post_pp.twapLengthSeconds, THREE_MONTHS_SECONDS,
+        invariant_eq!(
+            post_pp.twapLengthSeconds,
+            THREE_MONTHS_SECONDS,
             "twapLengthSeconds must be 3 months"
         );
-        assert!(
+        invariant!(
             matches!(post_pp.state, PerformancePackageState::Locked),
             "PerformancePackage must start Locked"
         );
-        assert_eq!(
-            post_pp.seqNum, 0,
+        invariant_eq!(
+            post_pp.seqNum,
+            0,
             "PerformancePackage.seqNum must start at 0"
         );
-        assert_eq!(
-            post_pp.alreadyUnlockedAmount, 0,
+        invariant_eq!(
+            post_pp.alreadyUnlockedAmount,
+            0,
             "alreadyUnlockedAmount must start at 0"
         );
 
         // Invariant 5: Tranches must match expected structure (5 tranches, thresholds 2x..32x).
-        assert_eq!(post_pp.tranches.len(), 5, "must have exactly 5 tranches");
+        invariant_eq!(post_pp.tranches.len(), 5, "must have exactly 5 tranches");
         let tranche_amount = pre_launch.performancePackageTokenAmount / 5;
         let expected_total = tranche_amount * 5;
         let launch_price_1e12: u128 = ((pre_launch.totalApprovedAmount as u128) * PRICE_SCALE)
@@ -152,18 +169,21 @@ impl FuzzTest {
         ];
 
         for (i, tranche) in post_pp.tranches.iter().enumerate() {
-            assert_eq!(
-                tranche.tokenAmount, tranche_amount,
+            invariant_eq!(
+                tranche.tokenAmount,
+                tranche_amount,
                 "tranche[{i}].tokenAmount must be performancePackageTokenAmount/5"
             );
-            assert_eq!(
-                tranche.priceThreshold, expected_thresholds[i],
+            invariant_eq!(
+                tranche.priceThreshold,
+                expected_thresholds[i],
                 "tranche[{i}].priceThreshold must match expected multiple"
             );
-            assert!(!tranche.isUnlocked, "tranche[{i}] must start locked");
+            invariant!(!tranche.isUnlocked, "tranche[{i}] must start locked");
         }
-        assert_eq!(
-            post_pp.totalTokenAmount, expected_total,
+        invariant_eq!(
+            post_pp.totalTokenAmount,
+            expected_total,
             "totalTokenAmount must equal sum(tranche token amounts)"
         );
 
@@ -173,8 +193,9 @@ impl FuzzTest {
         );
         let expected_min_unlock = completed
             .saturating_add(pre_launch.monthsUntilInsidersCanUnlock as i64 * 30 * 24 * 60 * 60);
-        assert_eq!(
-            post_pp.minUnlockTimestamp, expected_min_unlock,
+        invariant_eq!(
+            post_pp.minUnlockTimestamp,
+            expected_min_unlock,
             "minUnlockTimestamp must match expected"
         );
 
@@ -184,12 +205,14 @@ impl FuzzTest {
             &performance_package,
             &TOKEN_PROGRAM_ID,
         );
-        assert_eq!(
-            performance_package_token_account, expected_pp_vault,
+        invariant_eq!(
+            performance_package_token_account,
+            expected_pp_vault,
             "performance_package_token_account must be ATA(base_mint, performance_package)"
         );
-        assert_eq!(
-            post_pp.performancePackageTokenVault, performance_package_token_account,
+        invariant_eq!(
+            post_pp.performancePackageTokenVault,
+            performance_package_token_account,
             "stored PerformancePackageTokenVault must match passed account"
         );
 
@@ -213,12 +236,14 @@ impl FuzzTest {
         let pp_vault_delta = post_pp_vault_amount
             .checked_sub(pre_pp_vault_amount)
             .expect("pp vault must not decrease");
-        assert_eq!(
-            base_vault_delta, expected_total,
+        invariant_eq!(
+            base_vault_delta,
+            expected_total,
             "launch_base_vault must decrease by expected_total"
         );
-        assert_eq!(
-            pp_vault_delta, expected_total,
+        invariant_eq!(
+            pp_vault_delta,
+            expected_total,
             "pp vault must increase by expected_total"
         );
     }

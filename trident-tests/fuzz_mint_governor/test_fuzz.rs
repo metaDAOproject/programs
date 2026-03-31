@@ -81,11 +81,11 @@ impl FuzzTest {
         self.expected_max_total = None;
         self.expected_total_minted = 0;
 
-        assert!(
+        invariant!(
             self.initialize_mint_governor(Some("Init: InitializeMintGovernor")),
             "mint governor initialization must succeed",
         );
-        assert!(
+        invariant!(
             self.transfer_authority_to_governor(
                 self.payer.pubkey(),
                 Some("Init: TransferAuthorityToGovernor"),
@@ -93,7 +93,7 @@ impl FuzzTest {
             "initial authority transfer must succeed",
         );
 
-        self.assert_global_invariants();
+        self.invariant_global_invariants();
     }
 
     #[flow]
@@ -108,7 +108,7 @@ impl FuzzTest {
 
     #[end]
     fn end(&mut self) {
-        self.assert_global_invariants();
+        self.invariant_global_invariants();
     }
 }
 

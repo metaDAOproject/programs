@@ -224,7 +224,7 @@ impl FuzzTest {
             ),
             Some("Initial Spot Liquidity"),
         );
-        assert!(liq_res.is_success(), "Initial liquidity seed must succeed");
+        invariant!(liq_res.is_success(), "Initial liquidity seed must succeed");
 
         methods::futarchy::launch_proposal(
             &mut self.trident,
@@ -265,8 +265,8 @@ impl FuzzTest {
 
     #[end]
     fn end(&mut self) {
-        self.assert_global_invariants();
-        self.finalize_proposal_and_assert_spot_alignment();
+        self.invariant_global_invariants();
+        self.finalize_proposal_and_invariant_spot_alignment();
     }
 }
 

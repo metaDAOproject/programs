@@ -100,8 +100,7 @@ impl FuzzTest {
             self.recipient_ata,
             amount,
             Some(message),
-        )
-        {
+        ) {
             self.expected_total_minted = self.expected_total_minted.saturating_add(amount);
         }
     }

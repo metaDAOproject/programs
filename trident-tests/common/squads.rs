@@ -34,7 +34,7 @@ pub fn initialize_vault_transaction(
 
     let res = trident.process_transaction(&[vault_tx_create], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 }
 
 pub fn initialize_squads_proposal(
@@ -66,7 +66,7 @@ pub fn initialize_squads_proposal(
 
     let res = trident.process_transaction(&[create_proposal], message);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 
     squads_proposal
 }

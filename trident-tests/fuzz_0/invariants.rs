@@ -1,6 +1,7 @@
 use crate::constants::ROUNDING_TOLERANCE;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::*;
+use trident_fuzz::invariant_eq;
 
 impl FuzzTest {
     /// Checks invariants after a successful provide_liquidity operation
@@ -30,12 +31,12 @@ impl FuzzTest {
         tracking.quote_deposited = tracking.quote_deposited.saturating_add(quote_deposited);
 
         // Simple invariants: balances decrease, reserves increase, liquidity increases
-        assert!(base_after <= base_before);
-        assert!(quote_after <= quote_before);
-        assert!(base_reserve_after >= base_reserve_before);
-        assert!(quote_reserve_after >= quote_reserve_before);
-        assert!(total_liquidity_after >= total_liquidity_before);
-        assert!(position_liquidity_after >= position_liquidity_before);
+        invariant!(base_after <= base_before);
+        invariant!(quote_after <= quote_before);
+        invariant!(base_reserve_after >= base_reserve_before);
+        invariant!(quote_reserve_after >= quote_reserve_before);
+        invariant!(total_liquidity_after >= total_liquidity_before);
+        invariant!(position_liquidity_after >= position_liquidity_before);
     }
 
     /// Checks invariants after a successful withdraw_liquidity operation
@@ -91,30 +92,32 @@ impl FuzzTest {
         }
 
         // Simple invariants: balances increase, reserves decrease
-        assert!(base_after >= base_before);
-        assert!(quote_after >= quote_before);
-        assert!(base_reserve_after <= base_reserve_before);
-        assert!(quote_reserve_after <= quote_reserve_before);
+        invariant!(base_after >= base_before);
+        invariant!(quote_after >= quote_before);
+        invariant!(base_reserve_after <= base_reserve_before);
+        invariant!(quote_reserve_after <= quote_reserve_before);
     }
 
     /// Global invariants checked at the end of each iteration
-    pub fn assert_global_invariants(&mut self) {
+    pub fn invariant_global_invariants(&mut self) {
         let (base_reserves, quote_reserves, total_liquidity) = self.get_spot_reserves();
         let dao_base_balance = self.get_token_balance(self.base_meta, self.dao);
         let dao_quote_balance = self.get_token_balance(self.quote_usdc, self.dao);
 
         // Reserve accounting should match DAO vault balances
-        assert_eq!(base_reserves, dao_base_balance);
-        assert_eq!(quote_reserves, dao_quote_balance);
+        invariant_eq!(base_reserves, dao_base_balance);
+        invariant_eq!(quote_reserves, dao_quote_balance);
 
         // Empty pool consistency check
         if total_liquidity == 0 {
-            assert_eq!(
-                base_reserves, 0,
+            invariant_eq!(
+                base_reserves,
+                0,
                 "If total liquidity is 0, base reserves should be 0"
             );
-            assert_eq!(
-                quote_reserves, 0,
+            invariant_eq!(
+                quote_reserves,
+                0,
                 "If total liquidity is 0, quote reserves should be 0"
             );
         }

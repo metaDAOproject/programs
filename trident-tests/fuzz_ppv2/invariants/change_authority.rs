@@ -43,14 +43,8 @@ impl FuzzTest {
             post_pp.createKey, pre_pp.createKey,
             "createKey must not change"
         );
-        assert_eq!(
-            post_pp.bump, pre_pp.bump,
-            "bump must not change"
-        );
-        assert_eq!(
-            post_pp.mint, pre_pp.mint,
-            "mint must not change"
-        );
+        assert_eq!(post_pp.bump, pre_pp.bump, "bump must not change");
+        assert_eq!(post_pp.mint, pre_pp.mint, "mint must not change");
         assert_eq!(
             post_pp.mintGovernor, pre_pp.mintGovernor,
             "mintGovernor must not change"
@@ -71,10 +65,7 @@ impl FuzzTest {
             post_pp.rewardFunction, pre_pp.rewardFunction,
             "rewardFunction must not change"
         );
-        assert_eq!(
-            post_pp.status, pre_pp.status,
-            "status must not change"
-        );
+        assert_eq!(post_pp.status, pre_pp.status, "status must not change");
         assert_eq!(
             post_pp.minUnlockTimestamp, pre_pp.minUnlockTimestamp,
             "minUnlockTimestamp must not change"

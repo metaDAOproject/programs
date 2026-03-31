@@ -4,6 +4,8 @@ use crate::common::types::launchpad_v_7::Launch;
 use crate::common::types::launchpad_v_7::LaunchState;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::Pubkey;
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
 
 // Keep in sync with `programs/v07_launchpad/src/lib.rs`.
 const TOKEN_SCALE: u64 = 1_000_000;
@@ -33,7 +35,7 @@ impl FuzzTest {
             .expect("Launch account must exist after CompleteLaunch");
 
         // Invariant 1: Validate requires Closed pre-state if tx succeeded.
-        assert!(
+        invariant!(
             matches!(pre_launch.state, LaunchState::Closed),
             "pre-state must be Closed if CompleteLaunch succeeded"
         );
@@ -43,7 +45,7 @@ impl FuzzTest {
         if let Some(closed_at) = pre_launch.unixTimestampClosed {
             let two_days_after_close = closed_at.saturating_add(60 * 60 * 24 * 2);
             if two_days_after_close > timestamp_after_tx {
-                assert_eq!(
+                invariant_eq!(
                     launch_authority, pre_launch.launchAuthority,
                     "launch_authority must match Launch.launchAuthority during authority-only window"
                 );
@@ -52,11 +54,11 @@ impl FuzzTest {
 
         // Invariant 3: Early-return branch when totalApprovedAmount < minimumRaiseAmount.
         if pre_launch.totalApprovedAmount < pre_launch.minimumRaiseAmount {
-            assert!(
+            invariant!(
                 matches!(post_launch.state, LaunchState::Refunding),
                 "post-state must be Refunding when approvals < minimum_raise_amount"
             );
-            assert_eq!(
+            invariant_eq!(
                 post_launch.seqNum,
                 pre_launch
                     .seqNum
@@ -64,16 +66,19 @@ impl FuzzTest {
                     .expect("seqNum overflow should be impossible"),
                 "seqNum must increment by exactly 1"
             );
-            assert_eq!(
-                post_launch.dao, pre_launch.dao,
+            invariant_eq!(
+                post_launch.dao,
+                pre_launch.dao,
                 "dao must not be set in early-refund branch"
             );
-            assert_eq!(
-                post_launch.daoVault, pre_launch.daoVault,
+            invariant_eq!(
+                post_launch.daoVault,
+                pre_launch.daoVault,
                 "daoVault must not be set in early-refund branch"
             );
-            assert_eq!(
-                post_launch.unixTimestampCompleted, pre_launch.unixTimestampCompleted,
+            invariant_eq!(
+                post_launch.unixTimestampCompleted,
+                pre_launch.unixTimestampCompleted,
                 "unixTimestampCompleted must not be set in early-refund branch"
             );
 
@@ -89,28 +94,30 @@ impl FuzzTest {
                 .expect("launch_base_vault must exist")
                 .account
                 .amount;
-            assert_eq!(
-                post_launch_quote_amount, pre_launch_quote_amount,
+            invariant_eq!(
+                post_launch_quote_amount,
+                pre_launch_quote_amount,
                 "launch_quote_vault must not change in early-refund branch"
             );
-            assert_eq!(
-                post_launch_base_amount, pre_launch_base_amount,
+            invariant_eq!(
+                post_launch_base_amount,
+                pre_launch_base_amount,
                 "launch_base_vault must not change in early-refund branch"
             );
             return;
         }
 
         // Invariant 4: Success branch when totalApprovedAmount >= minimumRaiseAmount.
-        assert!(
+        invariant!(
             matches!(post_launch.state, LaunchState::Complete),
             "post-state must be Complete when approvals >= minimum_raise_amount"
         );
-        assert_eq!(
+        invariant_eq!(
             post_launch.dao,
             Some(dao),
             "dao must be set to the dao account"
         );
-        assert_eq!(
+        invariant_eq!(
             post_launch.daoVault,
             Some(squads_multisig_vault),
             "daoVault must be set to squads_multisig_vault"
@@ -118,15 +125,15 @@ impl FuzzTest {
         let completed_at = post_launch
             .unixTimestampCompleted
             .expect("unixTimestampCompleted must be Some after CompleteLaunch success path");
-        assert!(
+        invariant!(
             completed_at >= timestamp_before_tx,
             "unixTimestampCompleted must be >= timestamp_before_tx"
         );
-        assert!(
+        invariant!(
             completed_at <= timestamp_after_tx,
             "unixTimestampCompleted must be <= timestamp_after_tx"
         );
-        assert_eq!(
+        invariant_eq!(
             post_launch.seqNum,
             pre_launch
                 .seqNum
@@ -136,12 +143,14 @@ impl FuzzTest {
         );
 
         // Invariant 5: Launch totals must not change (only state/dao fields are updated here).
-        assert_eq!(
-            post_launch.totalCommittedAmount, pre_launch.totalCommittedAmount,
+        invariant_eq!(
+            post_launch.totalCommittedAmount,
+            pre_launch.totalCommittedAmount,
             "totalCommittedAmount must not change"
         );
-        assert_eq!(
-            post_launch.totalApprovedAmount, pre_launch.totalApprovedAmount,
+        invariant_eq!(
+            post_launch.totalApprovedAmount,
+            pre_launch.totalApprovedAmount,
             "totalApprovedAmount must not change"
         );
 
@@ -167,8 +176,9 @@ impl FuzzTest {
         let treasury_delta = post_treasury_quote_amount
             .checked_sub(pre_treasury_quote_amount)
             .expect("treasury quote must not decrease");
-        assert_eq!(
-            treasury_delta, usdc_to_dao_treasury,
+        invariant_eq!(
+            treasury_delta,
+            usdc_to_dao_treasury,
             "treasury_quote_account must increase by usdc_to_dao_treasury"
         );
 
@@ -183,8 +193,9 @@ impl FuzzTest {
             let bid_wall_delta = post_bid_wall_quote_amount
                 .checked_sub(pre_bid_wall_quote_amount)
                 .expect("bid wall quote must not decrease");
-            assert_eq!(
-                bid_wall_delta, usdc_to_bid_wall,
+            invariant_eq!(
+                bid_wall_delta,
+                usdc_to_bid_wall,
                 "bid_wall_quote_token_account must increase by usdc_to_bid_wall"
             );
         }
@@ -196,7 +207,7 @@ impl FuzzTest {
             .expect("launch_quote_vault must exist after CompleteLaunch")
             .account
             .amount;
-        assert!(
+        invariant!(
             post_launch_quote_amount >= refundable_usdc,
             "launch_quote_vault must have at least refundable_usdc remaining"
         );
@@ -211,15 +222,15 @@ impl FuzzTest {
         let min_base_required = TOKENS_TO_PARTICIPANTS
             .saturating_add(pre_launch.additionalTokensAmount)
             .saturating_add(pre_launch.performancePackageTokenAmount);
-        assert!(
+        invariant!(
             post_launch_base_amount >= min_base_required,
             "launch_base_vault must retain enough tokens for claim + additional + performance package"
         );
-        assert!(
+        invariant!(
             post_launch_quote_amount <= pre_launch_quote_amount,
             "launch_quote_vault should not increase during CompleteLaunch"
         );
-        assert!(
+        invariant!(
             post_launch_base_amount <= pre_launch_base_amount,
             "launch_base_vault should not increase during CompleteLaunch"
         );

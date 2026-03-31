@@ -14,7 +14,7 @@ pub fn initialize_mint(
 ) {
     let ix = trident.initialize_mint(&payer, &mint, decimals, &owner, freeze_authority);
     let res = trident.process_transaction(&ix, message);
-    assert!(res.is_success());
+    invariant!(res.is_success());
 }
 
 pub fn initialize_associated_token_account(
@@ -33,7 +33,7 @@ pub fn initialize_associated_token_account(
             let ix = trident.initialize_associated_token_account(&payer, &mint, &owner);
             let res = trident.process_transaction(&[ix], None);
 
-            assert!(res.is_success());
+            invariant!(res.is_success());
         }
     }
 
@@ -56,7 +56,7 @@ pub fn mint_to(
 
     let res = trident.process_transaction(&[mint], None);
 
-    assert!(res.is_success());
+    invariant!(res.is_success());
 }
 
 pub fn get_or_initialize_associated_token_account(
@@ -70,7 +70,7 @@ pub fn get_or_initialize_associated_token_account(
     if trident.get_token_account(ata).is_err() {
         let ix = trident.initialize_associated_token_account(&payer, &mint, &owner);
         let res = trident.process_transaction(&[ix], None);
-        assert!(res.is_success());
+        invariant!(res.is_success());
     }
 
     ata

@@ -7,6 +7,8 @@ use crate::common::types::launchpad_v_7::LaunchState;
 use crate::common::types::launchpad_v_7::{self};
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::Pubkey;
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
 
 impl FuzzTest {
     pub fn verify_fund_invariants(
@@ -34,24 +36,26 @@ impl FuzzTest {
             .expect("FundingRecord must exist after Fund");
 
         // Invariant 1: Basic success preconditions.
-        assert!(amount > 0, "amount must be > 0 if Fund succeeded");
-        assert!(
+        invariant!(amount > 0, "amount must be > 0 if Fund succeeded");
+        invariant!(
             matches!(pre_launch.state, LaunchState::Live),
             "pre-state must be Live if Fund succeeded"
         );
 
         // Invariant 2: `launch` has_one constraints must hold.
-        assert_eq!(
-            pre_launch.launchSigner, launch_signer,
+        invariant_eq!(
+            pre_launch.launchSigner,
+            launch_signer,
             "launch_signer must match Launch.launchSigner"
         );
-        assert_eq!(
-            pre_launch.launchQuoteVault, launch_quote_vault,
+        invariant_eq!(
+            pre_launch.launchQuoteVault,
+            launch_quote_vault,
             "launch_quote_vault must match Launch.launchQuoteVault"
         );
 
         // Invariant 3: Launch state must stay Live.
-        assert!(
+        invariant!(
             matches!(post_launch.state, LaunchState::Live),
             "state must remain Live after Fund"
         );
@@ -62,11 +66,11 @@ impl FuzzTest {
             .expect("unixTimestampStarted must be Some if Fund succeeded");
         let expiry = started.saturating_add(pre_launch.secondsForLaunch as i64);
         let timestamp_after_tx = self.trident.get_current_timestamp();
-        assert!(
+        invariant!(
             timestamp_before_tx <= expiry,
             "Fund must occur before expiry (timestamp_before_tx)"
         );
-        assert!(
+        invariant!(
             timestamp_after_tx <= expiry,
             "Fund must occur before expiry (timestamp_after_tx)"
         );
@@ -76,29 +80,33 @@ impl FuzzTest {
             &[FUNDING_RECORD_SEED_PREFIX, launch.as_ref(), funder.as_ref()],
             &launchpad_v_7::program_id(),
         );
-        assert_eq!(
-            funding_record, expected_fr_pda,
+        invariant_eq!(
+            funding_record,
+            expected_fr_pda,
             "FundingRecord PDA must match seeds (funding_record, launch, funder)"
         );
-        assert_eq!(
-            post_funding_record.pdaBump, expected_fr_bump,
+        invariant_eq!(
+            post_funding_record.pdaBump,
+            expected_fr_bump,
             "FundingRecord.pdaBump must match PDA derivation bump"
         );
 
         // Invariant 6: FundingRecord fields must be correct and update rules must hold.
-        assert_eq!(
-            post_funding_record.funder, funder,
+        invariant_eq!(
+            post_funding_record.funder,
+            funder,
             "FundingRecord.funder must equal funder"
         );
-        assert_eq!(
-            post_funding_record.launch, launch,
+        invariant_eq!(
+            post_funding_record.launch,
+            launch,
             "FundingRecord.launch must equal launch"
         );
 
         match pre_funding_record {
             Some(pre_fr) => {
                 // Existing record: committedAmount increases by amount.
-                assert_eq!(
+                invariant_eq!(
                     post_funding_record.committedAmount,
                     pre_fr
                         .committedAmount
@@ -107,35 +115,40 @@ impl FuzzTest {
                     "committedAmount must increase by amount"
                 );
                 // These flags should not flip during funding.
-                assert_eq!(
-                    post_funding_record.isTokensClaimed, pre_fr.isTokensClaimed,
+                invariant_eq!(
+                    post_funding_record.isTokensClaimed,
+                    pre_fr.isTokensClaimed,
                     "isTokensClaimed must not change during Fund"
                 );
-                assert_eq!(
-                    post_funding_record.isUsdcRefunded, pre_fr.isUsdcRefunded,
+                invariant_eq!(
+                    post_funding_record.isUsdcRefunded,
+                    pre_fr.isUsdcRefunded,
                     "isUsdcRefunded must not change during Fund"
                 );
-                assert_eq!(
-                    post_funding_record.approvedAmount, pre_fr.approvedAmount,
+                invariant_eq!(
+                    post_funding_record.approvedAmount,
+                    pre_fr.approvedAmount,
                     "approvedAmount must not change during Fund"
                 );
             }
             None => {
                 // New record: committedAmount == amount, flags false, approvedAmount == 0.
-                assert_eq!(
-                    post_funding_record.committedAmount, amount,
+                invariant_eq!(
+                    post_funding_record.committedAmount,
+                    amount,
                     "new FundingRecord.committedAmount must equal amount"
                 );
-                assert!(
+                invariant!(
                     !post_funding_record.isTokensClaimed,
                     "new FundingRecord.isTokensClaimed must be false"
                 );
-                assert!(
+                invariant!(
                     !post_funding_record.isUsdcRefunded,
                     "new FundingRecord.isUsdcRefunded must be false"
                 );
-                assert_eq!(
-                    post_funding_record.approvedAmount, 0,
+                invariant_eq!(
+                    post_funding_record.approvedAmount,
+                    0,
                     "new FundingRecord.approvedAmount must start at 0"
                 );
             }
@@ -162,11 +175,11 @@ impl FuzzTest {
             .checked_sub(post_funder_amount)
             .expect("funder amount must not increase during Fund");
 
-        assert_eq!(vault_delta, amount, "vault must increase by amount");
-        assert_eq!(funder_delta, amount, "funder must decrease by amount");
+        invariant_eq!(vault_delta, amount, "vault must increase by amount");
+        invariant_eq!(funder_delta, amount, "funder must decrease by amount");
 
         // Invariant 8: Launch accounting must reflect the funding.
-        assert_eq!(
+        invariant_eq!(
             post_launch.totalCommittedAmount,
             pre_launch
                 .totalCommittedAmount
@@ -174,7 +187,7 @@ impl FuzzTest {
                 .expect("totalCommittedAmount overflow should be impossible"),
             "Launch.totalCommittedAmount must increase by amount"
         );
-        assert_eq!(
+        invariant_eq!(
             post_launch.seqNum,
             pre_launch
                 .seqNum
@@ -184,101 +197,125 @@ impl FuzzTest {
         );
 
         // Invariant 9: Unrelated Launch fields must not change.
-        assert_eq!(
-            post_launch.minimumRaiseAmount, pre_launch.minimumRaiseAmount,
+        invariant_eq!(
+            post_launch.minimumRaiseAmount,
+            pre_launch.minimumRaiseAmount,
             "minimumRaiseAmount must not change"
         );
-        assert_eq!(
-            post_launch.monthlySpendingLimitAmount, pre_launch.monthlySpendingLimitAmount,
+        invariant_eq!(
+            post_launch.monthlySpendingLimitAmount,
+            pre_launch.monthlySpendingLimitAmount,
             "monthlySpendingLimitAmount must not change"
         );
-        assert_eq!(
-            post_launch.monthlySpendingLimitMembers, pre_launch.monthlySpendingLimitMembers,
+        invariant_eq!(
+            post_launch.monthlySpendingLimitMembers,
+            pre_launch.monthlySpendingLimitMembers,
             "monthlySpendingLimitMembers must not change"
         );
-        assert_eq!(
-            post_launch.launchAuthority, pre_launch.launchAuthority,
+        invariant_eq!(
+            post_launch.launchAuthority,
+            pre_launch.launchAuthority,
             "launchAuthority must not change"
         );
-        assert_eq!(
-            post_launch.launchSigner, pre_launch.launchSigner,
+        invariant_eq!(
+            post_launch.launchSigner,
+            pre_launch.launchSigner,
             "launchSigner must not change"
         );
-        assert_eq!(
-            post_launch.launchSignerPdaBump, pre_launch.launchSignerPdaBump,
+        invariant_eq!(
+            post_launch.launchSignerPdaBump,
+            pre_launch.launchSignerPdaBump,
             "launchSignerPdaBump must not change"
         );
-        assert_eq!(
-            post_launch.launchQuoteVault, pre_launch.launchQuoteVault,
+        invariant_eq!(
+            post_launch.launchQuoteVault,
+            pre_launch.launchQuoteVault,
             "launchQuoteVault must not change"
         );
-        assert_eq!(
-            post_launch.launchBaseVault, pre_launch.launchBaseVault,
+        invariant_eq!(
+            post_launch.launchBaseVault,
+            pre_launch.launchBaseVault,
             "launchBaseVault must not change"
         );
-        assert_eq!(
-            post_launch.baseMint, pre_launch.baseMint,
+        invariant_eq!(
+            post_launch.baseMint,
+            pre_launch.baseMint,
             "baseMint must not change"
         );
-        assert_eq!(
-            post_launch.quoteMint, pre_launch.quoteMint,
+        invariant_eq!(
+            post_launch.quoteMint,
+            pre_launch.quoteMint,
             "quoteMint must not change"
         );
-        assert_eq!(
-            post_launch.unixTimestampStarted, pre_launch.unixTimestampStarted,
+        invariant_eq!(
+            post_launch.unixTimestampStarted,
+            pre_launch.unixTimestampStarted,
             "unixTimestampStarted must not change"
         );
-        assert_eq!(
-            post_launch.unixTimestampClosed, pre_launch.unixTimestampClosed,
+        invariant_eq!(
+            post_launch.unixTimestampClosed,
+            pre_launch.unixTimestampClosed,
             "unixTimestampClosed must not change"
         );
-        assert_eq!(
-            post_launch.totalApprovedAmount, pre_launch.totalApprovedAmount,
+        invariant_eq!(
+            post_launch.totalApprovedAmount,
+            pre_launch.totalApprovedAmount,
             "totalApprovedAmount must not change"
         );
-        assert_eq!(
-            post_launch.secondsForLaunch, pre_launch.secondsForLaunch,
+        invariant_eq!(
+            post_launch.secondsForLaunch,
+            pre_launch.secondsForLaunch,
             "secondsForLaunch must not change"
         );
-        assert_eq!(post_launch.dao, pre_launch.dao, "dao must not change");
-        assert_eq!(
-            post_launch.daoVault, pre_launch.daoVault,
+        invariant_eq!(post_launch.dao, pre_launch.dao, "dao must not change");
+        invariant_eq!(
+            post_launch.daoVault,
+            pre_launch.daoVault,
             "daoVault must not change"
         );
-        assert_eq!(
-            post_launch.performancePackageGrantee, pre_launch.performancePackageGrantee,
+        invariant_eq!(
+            post_launch.performancePackageGrantee,
+            pre_launch.performancePackageGrantee,
             "performancePackageGrantee must not change"
         );
-        assert_eq!(
-            post_launch.performancePackageTokenAmount, pre_launch.performancePackageTokenAmount,
+        invariant_eq!(
+            post_launch.performancePackageTokenAmount,
+            pre_launch.performancePackageTokenAmount,
             "performancePackageTokenAmount must not change"
         );
-        assert_eq!(
-            post_launch.monthsUntilInsidersCanUnlock, pre_launch.monthsUntilInsidersCanUnlock,
+        invariant_eq!(
+            post_launch.monthsUntilInsidersCanUnlock,
+            pre_launch.monthsUntilInsidersCanUnlock,
             "monthsUntilInsidersCanUnlock must not change"
         );
-        assert_eq!(
-            post_launch.teamAddress, pre_launch.teamAddress,
+        invariant_eq!(
+            post_launch.teamAddress,
+            pre_launch.teamAddress,
             "teamAddress must not change"
         );
-        assert_eq!(
-            post_launch.additionalTokensAmount, pre_launch.additionalTokensAmount,
+        invariant_eq!(
+            post_launch.additionalTokensAmount,
+            pre_launch.additionalTokensAmount,
             "additionalTokensAmount must not change"
         );
-        assert_eq!(
-            post_launch.additionalTokensRecipient, pre_launch.additionalTokensRecipient,
+        invariant_eq!(
+            post_launch.additionalTokensRecipient,
+            pre_launch.additionalTokensRecipient,
             "additionalTokensRecipient must not change"
         );
-        assert_eq!(
-            post_launch.additionalTokensClaimed, pre_launch.additionalTokensClaimed,
+        invariant_eq!(
+            post_launch.additionalTokensClaimed,
+            pre_launch.additionalTokensClaimed,
             "additionalTokensClaimed must not change"
         );
-        assert_eq!(
-            post_launch.unixTimestampCompleted, pre_launch.unixTimestampCompleted,
+        invariant_eq!(
+            post_launch.unixTimestampCompleted,
+            pre_launch.unixTimestampCompleted,
             "unixTimestampCompleted must not change"
         );
-        assert_eq!(
-            post_launch.isPerformancePackageInitialized, pre_launch.isPerformancePackageInitialized,
+        invariant_eq!(
+            post_launch.isPerformancePackageInitialized,
+            pre_launch.isPerformancePackageInitialized,
             "isPerformancePackageInitialized must not change"
         );
     }

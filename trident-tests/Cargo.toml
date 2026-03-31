@@ -14,7 +14,7 @@ borsh = "1.5.3"
 squads-multisig = { git = "https://github.com/Squads-Protocol/v4", rev = "05f23726a094b6a5a0d97eaccf22af72373ac9c6" }
 
 [dependencies.trident-fuzz]
-version = "0.13.0-rc.2"
+version = "0.13.0-rc.3"
 features = ["token"]
 
 [lib]

@@ -33,7 +33,11 @@ impl FuzzTest {
         mint.pubkey()
     }
 
-    pub fn setup_recipient_token_account(&mut self, token_mint: Pubkey, recipient: Pubkey) -> Pubkey {
+    pub fn setup_recipient_token_account(
+        &mut self,
+        token_mint: Pubkey,
+        recipient: Pubkey,
+    ) -> Pubkey {
         initialize_associated_token_account(
             &mut self.trident,
             self.payer.pubkey(),
@@ -90,9 +94,8 @@ impl FuzzTest {
                 let cliff_value = start_value
                     .saturating_add(self.trident.random_from_range(0u64..=1_000_000) as u128);
                 let end_value = if mostly_valid {
-                    cliff_value.saturating_add(
-                        self.trident.random_from_range(0u64..=1_000_000) as u128,
-                    )
+                    cliff_value
+                        .saturating_add(self.trident.random_from_range(0u64..=1_000_000) as u128)
                 } else {
                     start_value.saturating_sub(1)
                 };
@@ -117,7 +120,9 @@ impl FuzzTest {
                 } else {
                     match self.trident.random_from_range(0u8..=2u8) {
                         0 => 0,
-                        1 => MAX_TRANCHES + 1 + self.trident.random_from_range(0u32..=5u32) as usize,
+                        1 => {
+                            MAX_TRANCHES + 1 + self.trident.random_from_range(0u32..=5u32) as usize
+                        }
                         _ => self.trident.random_from_range(1u32..=MAX_TRANCHES as u32) as usize,
                     }
                 };
@@ -148,10 +153,6 @@ impl FuzzTest {
             }
         };
 
-        InitializePerformancePackageArgs::new(
-            oracle_reader,
-            reward_function,
-            min_unlock_timestamp,
-        )
+        InitializePerformancePackageArgs::new(oracle_reader, reward_function, min_unlock_timestamp)
     }
 }

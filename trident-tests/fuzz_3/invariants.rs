@@ -2,6 +2,7 @@ use crate::common::types::futarchy;
 use crate::constants::FINALIZE_TIME_FORWARD_SECONDS;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::*;
+use trident_fuzz::invariant_eq;
 
 impl FuzzTest {
     pub fn capture_balance_tracking_snapshot(&mut self) {
@@ -92,32 +93,32 @@ impl FuzzTest {
         let output_after = self.get_token_balance(output_mint, trader);
         let market_pool_after = self.get_market_pool(&market);
 
-        assert!(
+        invariant!(
             input_after <= input_before,
             "Trader input token balance must not increase after swap"
         );
-        assert!(
+        invariant!(
             output_after >= output_before,
             "Trader output token balance must not decrease after swap"
         );
 
         match swap_type {
             futarchy::SwapType::Buy => {
-                assert!(
+                invariant!(
                     market_pool_after.quoteReserves >= market_pool_before.quoteReserves,
                     "Buy in conditional market should increase quote reserves"
                 );
-                assert!(
+                invariant!(
                     market_pool_after.baseReserves <= market_pool_before.baseReserves,
                     "Buy in conditional market should decrease base reserves"
                 );
             }
             futarchy::SwapType::Sell => {
-                assert!(
+                invariant!(
                     market_pool_after.baseReserves >= market_pool_before.baseReserves,
                     "Sell in conditional market should increase base reserves"
                 );
-                assert!(
+                invariant!(
                     market_pool_after.quoteReserves <= market_pool_before.quoteReserves,
                     "Sell in conditional market should decrease quote reserves"
                 );
@@ -137,21 +138,21 @@ impl FuzzTest {
 
         match swap_type {
             futarchy::SwapType::Buy => {
-                assert!(
+                invariant!(
                     base_after >= base_before,
                     "Spot buy: trader base balance should increase or stay same"
                 );
-                assert!(
+                invariant!(
                     quote_after <= quote_before,
                     "Spot buy: trader quote balance should decrease or stay same"
                 );
             }
             futarchy::SwapType::Sell => {
-                assert!(
+                invariant!(
                     base_after <= base_before,
                     "Spot sell: trader base balance should decrease or stay same"
                 );
-                assert!(
+                invariant!(
                     quote_after >= quote_before,
                     "Spot sell: trader quote balance should increase or stay same"
                 );
@@ -159,18 +160,18 @@ impl FuzzTest {
         }
     }
 
-    pub fn assert_global_invariants(&mut self) {
-        self.assert_futarchy_vault_alignment();
+    pub fn invariant_global_invariants(&mut self) {
+        self.invariant_futarchy_vault_alignment();
 
         let (pass_base_mint, pass_quote_mint, fail_base_mint, fail_quote_mint) =
             self.get_conditional_mints();
 
-        assert_eq!(
+        invariant_eq!(
             self.current_total_base_underlying(),
             self.tracking.base_underlying_total,
             "Base underlying total should be conserved across known holders"
         );
-        assert_eq!(
+        invariant_eq!(
             self.current_total_quote_underlying(),
             self.tracking.quote_underlying_total,
             "Quote underlying total should be conserved across known holders"
@@ -178,20 +179,22 @@ impl FuzzTest {
 
         let (pass_base_total, fail_base_total) =
             self.current_total_conditional_pair_for_owner_set(pass_base_mint, fail_base_mint);
-        assert_eq!(
-            pass_base_total, fail_base_total,
+        invariant_eq!(
+            pass_base_total,
+            fail_base_total,
             "Pass/fail base conditional totals should remain equal over tracked owners"
         );
 
         let (pass_quote_total, fail_quote_total) =
             self.current_total_conditional_pair_for_owner_set(pass_quote_mint, fail_quote_mint);
-        assert_eq!(
-            pass_quote_total, fail_quote_total,
+        invariant_eq!(
+            pass_quote_total,
+            fail_quote_total,
             "Pass/fail quote conditional totals should remain equal over tracked owners"
         );
     }
 
-    pub fn finalize_proposal_and_assert_spot_alignment(&mut self) {
+    pub fn finalize_proposal_and_invariant_spot_alignment(&mut self) {
         let proposal_data = self
             .trident
             .get_account_with_type::<futarchy::Proposal>(&self.proposal, None)
@@ -212,7 +215,7 @@ impl FuzzTest {
             self.quote_vault,
             Some("Finalize Proposal"),
         );
-        assert!(
+        invariant!(
             res.is_success(),
             "Finalize proposal must succeed,failed: {}",
             res.logs()
@@ -222,7 +225,7 @@ impl FuzzTest {
             .trident
             .get_account_with_type::<futarchy::Proposal>(&self.proposal, None)
             .expect("Proposal not found after finalize");
-        assert!(
+        invariant!(
             matches!(
                 proposal_data.state,
                 futarchy::ProposalState::Passed | futarchy::ProposalState::Failed
@@ -241,19 +244,19 @@ impl FuzzTest {
         let dao_spot_base_balance = self.get_token_balance(self.base_meta, self.dao);
         let dao_spot_quote_balance = self.get_token_balance(self.quote_usdc, self.dao);
 
-        assert_eq!(
+        invariant_eq!(
             spot.baseReserves as u128 + spot.baseProtocolFeeBalance as u128,
             dao_spot_base_balance as u128,
             "Post-finalize spot base vault must align with spot reserves+fees"
         );
-        assert_eq!(
+        invariant_eq!(
             spot.quoteReserves as u128 + spot.quoteProtocolFeeBalance as u128,
             dao_spot_quote_balance as u128,
             "Post-finalize spot quote vault must align with spot reserves+fees"
         );
     }
 
-    fn assert_futarchy_vault_alignment(&mut self) {
+    fn invariant_futarchy_vault_alignment(&mut self) {
         let (spot, pass, fail) = self.get_futarchy_pools();
 
         let (pass_base_mint, pass_quote_mint, fail_base_mint, fail_quote_mint) =
@@ -275,22 +278,22 @@ impl FuzzTest {
 
         // In Futarchy mode, spot underlying can move together with pass/fail legs through
         // split/merge mechanics, so we validate alignment on aggregated leg pairs.
-        assert_eq!(
+        invariant_eq!(
             spot_base_state + pass_base_state,
             dao_spot_base_balance + dao_pass_base_balance,
             "Vault/reserve mismatch for spot+pass base leg"
         );
-        assert_eq!(
+        invariant_eq!(
             spot_base_state + fail_base_state,
             dao_spot_base_balance + dao_fail_base_balance,
             "Vault/reserve mismatch for spot+fail base leg"
         );
-        assert_eq!(
+        invariant_eq!(
             spot_quote_state + pass_quote_state,
             dao_spot_quote_balance + dao_pass_quote_balance,
             "Vault/reserve mismatch for spot+pass quote leg"
         );
-        assert_eq!(
+        invariant_eq!(
             spot_quote_state + fail_quote_state,
             dao_spot_quote_balance + dao_fail_quote_balance,
             "Vault/reserve mismatch for spot+fail quote leg"

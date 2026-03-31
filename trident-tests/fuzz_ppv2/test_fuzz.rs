@@ -64,7 +64,8 @@ impl FuzzTest {
             get_performance_package_pda_v2(&mut self.trident, create_key.pubkey());
 
         let token_mint = self.setup_mint();
-        let mint_governor = get_mint_governor_pda(&mut self.trident, token_mint, create_key.pubkey());
+        let mint_governor =
+            get_mint_governor_pda(&mut self.trident, token_mint, create_key.pubkey());
         let mint_authority =
             get_mint_authority_pda(&mut self.trident, mint_governor, performance_package);
 
@@ -109,20 +110,19 @@ impl FuzzTest {
 
         let mint_governor_event_authority =
             get_event_authority_pda(&mut self.trident, mint_governor::program_id());
-        let init_mint_governor = InitializeMintGovernorInstruction::data(
-            InitializeMintGovernorInstructionData::new(),
-        )
-        .accounts(InitializeMintGovernorInstructionAccounts::new(
-            token_mint,
-            mint_governor,
-            create_key.pubkey(),
-            self.payer.pubkey(),
-            self.payer.pubkey(),
-            SOLANA_PROGRAM_ID,
-            mint_governor_event_authority,
-            mint_governor::program_id(),
-        ))
-        .instruction();
+        let init_mint_governor =
+            InitializeMintGovernorInstruction::data(InitializeMintGovernorInstructionData::new())
+                .accounts(InitializeMintGovernorInstructionAccounts::new(
+                    token_mint,
+                    mint_governor,
+                    create_key.pubkey(),
+                    self.payer.pubkey(),
+                    self.payer.pubkey(),
+                    SOLANA_PROGRAM_ID,
+                    mint_governor_event_authority,
+                    mint_governor::program_id(),
+                ))
+                .instruction();
         let transfer_authority_to_governor = TransferAuthorityToGovernorInstruction::data(
             TransferAuthorityToGovernorInstructionData::new(),
         )
@@ -159,10 +159,8 @@ impl FuzzTest {
         );
 
         let current_timestamp = self.trident.get_current_timestamp();
-        let initialize_args = self.random_initialize_performance_package_args(
-            current_timestamp,
-            oracle_account.pubkey(),
-        );
+        let initialize_args = self
+            .random_initialize_performance_package_args(current_timestamp, oracle_account.pubkey());
 
         self.initialize_performance_package(
             self.payer.pubkey(),
@@ -214,11 +212,7 @@ impl FuzzTest {
             }
         }
 
-        self.start_unlock(
-            signer,
-            performance_package,
-            Some("Flow1: StartUnlock"),
-        );
+        self.start_unlock(signer, performance_package, Some("Flow1: StartUnlock"));
     }
 
     #[flow]

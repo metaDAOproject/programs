@@ -9,6 +9,9 @@ use crate::common::types::price_based_performance_package::PerformancePackageSta
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::Pubkey;
 
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
+
 impl FuzzTest {
     pub fn verify_initialize_performance_package_invariants(
         &mut self,
@@ -34,59 +37,71 @@ impl FuzzTest {
             &[PERFORMANCE_PACKAGE_SEED_PREFIX, create_key.as_ref()],
             &price_based_performance_package::program_id(),
         );
-        assert_eq!(
-            performance_package, expected_pda,
+        invariant_eq!(
+            performance_package,
+            expected_pda,
             "PerformancePackage PDA must match seeds (performance_package, create_key)"
         );
-        assert_eq!(
-            pp.createKey, create_key,
+        invariant_eq!(
+            pp.createKey,
+            create_key,
             "Stored createKey must match the signer used to derive the PDA"
         );
-        assert_eq!(
-            pp.pdaBump, expected_bump,
+        invariant_eq!(
+            pp.pdaBump,
+            expected_bump,
             "Stored pdaBump must match PDA derivation bump"
         );
 
         // Invariant 2: all static fields persisted into `PerformancePackage` must match the
         // instruction inputs and the expected initial state.
-        assert_eq!(
-            pp.minUnlockTimestamp, args.minUnlockTimestamp,
+        invariant_eq!(
+            pp.minUnlockTimestamp,
+            args.minUnlockTimestamp,
             "Stored minUnlockTimestamp must match args"
         );
-        assert_eq!(
-            pp.twapLengthSeconds, args.twapLengthSeconds,
+        invariant_eq!(
+            pp.twapLengthSeconds,
+            args.twapLengthSeconds,
             "Stored twapLengthSeconds must match args"
         );
-        assert_eq!(
-            pp.oracleConfig.oracleAccount, args.oracleConfig.oracleAccount,
+        invariant_eq!(
+            pp.oracleConfig.oracleAccount,
+            args.oracleConfig.oracleAccount,
             "Stored oracleConfig.oracleAccount must match args"
         );
-        assert_eq!(
-            pp.oracleConfig.byteOffset, args.oracleConfig.byteOffset,
+        invariant_eq!(
+            pp.oracleConfig.byteOffset,
+            args.oracleConfig.byteOffset,
             "Stored oracleConfig.byteOffset must match args"
         );
-        assert_eq!(
-            pp.recipient, args.grantee,
+        invariant_eq!(
+            pp.recipient,
+            args.grantee,
             "Stored recipient must match args.grantee"
         );
-        assert_eq!(
-            pp.performancePackageAuthority, args.performancePackageAuthority,
+        invariant_eq!(
+            pp.performancePackageAuthority,
+            args.performancePackageAuthority,
             "Stored performancePackageAuthority must match args"
         );
-        assert_eq!(
-            pp.tokenMint, token_mint,
+        invariant_eq!(
+            pp.tokenMint,
+            token_mint,
             "Stored tokenMint must match the token_mint account"
         );
-        assert_eq!(
-            pp.performancePackageTokenVault, performance_package_token_vault,
+        invariant_eq!(
+            pp.performancePackageTokenVault,
+            performance_package_token_vault,
             "Stored performancePackageTokenVault must match the provided vault account"
         );
-        assert_eq!(
-            pp.alreadyUnlockedAmount, 0,
+        invariant_eq!(
+            pp.alreadyUnlockedAmount,
+            0,
             "alreadyUnlockedAmount must start at 0"
         );
-        assert_eq!(pp.seqNum, 0, "seqNum must start at 0 on initialization");
-        assert!(
+        invariant_eq!(pp.seqNum, 0, "seqNum must start at 0 on initialization");
+        invariant!(
             matches!(pp.state, PerformancePackageState::Locked),
             "PerformancePackage state must start as Locked"
         );
@@ -94,7 +109,7 @@ impl FuzzTest {
         // Invariant 3: tranches must be stored 1:1 with input tranches, and each stored tranche
         // must start as locked (`isUnlocked=false`). Also, totalTokenAmount must equal the
         // overflow-safe sum of tranche token amounts.
-        assert_eq!(
+        invariant_eq!(
             pp.tranches.len(),
             args.tranches.len(),
             "Stored tranche count must match args.tranches.len()"
@@ -102,29 +117,32 @@ impl FuzzTest {
 
         let mut expected_total_u128: u128 = 0;
         for (i, (stored, input)) in pp.tranches.iter().zip(args.tranches.iter()).enumerate() {
-            assert_eq!(
-                stored.priceThreshold, input.priceThreshold,
+            invariant_eq!(
+                stored.priceThreshold,
+                input.priceThreshold,
                 "Stored tranche[{i}].priceThreshold must match args"
             );
-            assert_eq!(
-                stored.tokenAmount, input.tokenAmount,
+            invariant_eq!(
+                stored.tokenAmount,
+                input.tokenAmount,
                 "Stored tranche[{i}].tokenAmount must match args"
             );
-            assert!(
+            invariant!(
                 !stored.isUnlocked,
                 "Stored tranche[{i}] must start locked (isUnlocked=false)"
             );
             expected_total_u128 = expected_total_u128.saturating_add(input.tokenAmount as u128);
         }
 
-        assert!(
+        invariant!(
             expected_total_u128 <= u64::MAX as u128,
             "Sum of tranche token amounts must fit in u64 (no overflow)"
         );
         let expected_total = expected_total_u128 as u64;
 
-        assert_eq!(
-            pp.totalTokenAmount, expected_total,
+        invariant_eq!(
+            pp.totalTokenAmount,
+            expected_total,
             "Stored totalTokenAmount must equal sum(args.tranches[*].tokenAmount)"
         );
 
@@ -135,8 +153,9 @@ impl FuzzTest {
             &performance_package,
             &TOKEN_PROGRAM_ID,
         );
-        assert_eq!(
-            performance_package_token_vault, expected_ata,
+        invariant_eq!(
+            performance_package_token_vault,
+            expected_ata,
             "performance_package_token_vault must be the ATA of the performance_package PDA"
         );
 
@@ -155,20 +174,24 @@ impl FuzzTest {
             .expect("Performance package vault must exist after initialization")
             .account;
 
-        assert_eq!(
-            final_grantor_acc.mint, token_mint,
+        invariant_eq!(
+            final_grantor_acc.mint,
+            token_mint,
             "Grantor token account mint must equal token_mint"
         );
-        assert_eq!(
-            final_grantor_acc.owner, grantor,
+        invariant_eq!(
+            final_grantor_acc.owner,
+            grantor,
             "Grantor token account owner must equal grantor"
         );
-        assert_eq!(
-            final_vault_acc.mint, token_mint,
+        invariant_eq!(
+            final_vault_acc.mint,
+            token_mint,
             "Vault mint must equal token_mint"
         );
-        assert_eq!(
-            final_vault_acc.owner, performance_package,
+        invariant_eq!(
+            final_vault_acc.owner,
+            performance_package,
             "Vault owner must be the performance_package PDA"
         );
 
@@ -180,18 +203,20 @@ impl FuzzTest {
             .checked_sub(initial_vault_token_amount)
             .expect("Vault token account amount must not decrease during initialization");
 
-        assert_eq!(
-            grantor_spent, expected_total,
+        invariant_eq!(
+            grantor_spent,
+            expected_total,
             "Grantor must spend exactly totalTokenAmount"
         );
-        assert_eq!(
-            vault_received, expected_total,
+        invariant_eq!(
+            vault_received,
+            expected_total,
             "Vault must receive exactly totalTokenAmount"
         );
 
         // Invariant 6: minUnlockTimestamp must remain strictly in the future relative to when the
         // instruction executed (it was required by the program).
-        assert!(
+        invariant!(
             pp.minUnlockTimestamp > timestamp_before_tx,
             "minUnlockTimestamp must be > current time at initialization"
         );

@@ -3,7 +3,10 @@ use crate::common::types::performance_package_v_2::PackageStatus;
 use crate::common::types::performance_package_v_2::PerformancePackage;
 use crate::common::types::performance_package_v_2::ProposerType;
 use crate::FuzzTest;
+
 use trident_fuzz::fuzzing::Pubkey;
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
 
 impl FuzzTest {
     pub fn verify_execute_change_invariants(
@@ -23,35 +26,38 @@ impl FuzzTest {
         // ChangeRequest.
         match pre_cr.proposerType {
             ProposerType::Recipient => {
-                assert_eq!(
-                    executor, pre_pp.authority,
+                invariant_eq!(
+                    executor,
+                    pre_pp.authority,
                     "If recipient proposed, authority must execute"
                 );
             }
             ProposerType::Authority => {
-                assert_eq!(
-                    executor, pre_pp.recipient,
+                invariant_eq!(
+                    executor,
+                    pre_pp.recipient,
                     "If authority proposed, recipient must execute"
                 );
             }
         }
 
         // Invariant 2: change_request must belong to the supplied performance_package.
-        assert_eq!(
-            pre_cr.performancePackage, performance_package,
+        invariant_eq!(
+            pre_cr.performancePackage,
+            performance_package,
             "ChangeRequest.performancePackage must match the executed performance_package"
         );
 
         // Invariant 3: oracle/reward changes can only execute from the Locked state.
         if pre_cr.newOracleReader.is_some() || pre_cr.newRewardFunction.is_some() {
-            assert!(
+            invariant!(
                 matches!(pre_pp.status, PackageStatus::Locked),
                 "Oracle/reward changes can only execute when the package was Locked"
             );
         }
 
         // Invariant 4: seqNum must increment by exactly 1.
-        assert_eq!(
+        invariant_eq!(
             post_pp.seqNum,
             pre_pp
                 .seqNum
@@ -63,76 +69,91 @@ impl FuzzTest {
         // Invariant 5: ExecuteChange must apply each optional field exactly when present, and
         // otherwise leave the field unchanged.
         if let Some(new_recipient) = pre_cr.newRecipient {
-            assert_eq!(
-                post_pp.recipient, new_recipient,
+            invariant_eq!(
+                post_pp.recipient,
+                new_recipient,
                 "ExecuteChange must update recipient to change_request.newRecipient"
             );
         } else {
-            assert_eq!(
-                post_pp.recipient, pre_pp.recipient,
+            invariant_eq!(
+                post_pp.recipient,
+                pre_pp.recipient,
                 "ExecuteChange must not change recipient when newRecipient is None"
             );
         }
 
         if let Some(ref new_oracle_reader) = pre_cr.newOracleReader {
-            assert_eq!(
-                &post_pp.oracleReader, new_oracle_reader,
+            invariant_eq!(
+                &post_pp.oracleReader,
+                new_oracle_reader,
                 "ExecuteChange must update oracleReader to change_request.newOracleReader"
             );
         } else {
-            assert_eq!(
-                post_pp.oracleReader, pre_pp.oracleReader,
+            invariant_eq!(
+                post_pp.oracleReader,
+                pre_pp.oracleReader,
                 "ExecuteChange must not change oracleReader when newOracleReader is None"
             );
         }
 
         if let Some(ref new_reward_function) = pre_cr.newRewardFunction {
-            assert_eq!(
-                &post_pp.rewardFunction, new_reward_function,
+            invariant_eq!(
+                &post_pp.rewardFunction,
+                new_reward_function,
                 "ExecuteChange must update rewardFunction to change_request.newRewardFunction"
             );
         } else {
-            assert_eq!(
-                post_pp.rewardFunction, pre_pp.rewardFunction,
+            invariant_eq!(
+                post_pp.rewardFunction,
+                pre_pp.rewardFunction,
                 "ExecuteChange must not change rewardFunction when newRewardFunction is None"
             );
         }
 
         // Invariant 6: ExecuteChange must not change unrelated fields.
-        assert_eq!(
-            post_pp.mint, pre_pp.mint,
+        invariant_eq!(
+            post_pp.mint,
+            pre_pp.mint,
             "ExecuteChange must not change mint"
         );
-        assert_eq!(
-            post_pp.mintGovernor, pre_pp.mintGovernor,
+        invariant_eq!(
+            post_pp.mintGovernor,
+            pre_pp.mintGovernor,
             "ExecuteChange must not change mintGovernor"
         );
-        assert_eq!(
-            post_pp.mintAuthority, pre_pp.mintAuthority,
+        invariant_eq!(
+            post_pp.mintAuthority,
+            pre_pp.mintAuthority,
             "ExecuteChange must not change mintAuthority"
         );
-        assert_eq!(
-            post_pp.authority, pre_pp.authority,
+        invariant_eq!(
+            post_pp.authority,
+            pre_pp.authority,
             "ExecuteChange must not change authority"
         );
-        assert_eq!(
-            post_pp.status, pre_pp.status,
+        invariant_eq!(
+            post_pp.status,
+            pre_pp.status,
             "ExecuteChange must not change status"
         );
-        assert_eq!(
-            post_pp.minUnlockTimestamp, pre_pp.minUnlockTimestamp,
+        invariant_eq!(
+            post_pp.minUnlockTimestamp,
+            pre_pp.minUnlockTimestamp,
             "ExecuteChange must not change minUnlockTimestamp"
         );
-        assert_eq!(
-            post_pp.totalRewardsPaidOut, pre_pp.totalRewardsPaidOut,
+        invariant_eq!(
+            post_pp.totalRewardsPaidOut,
+            pre_pp.totalRewardsPaidOut,
             "ExecuteChange must not change totalRewardsPaidOut"
         );
-        assert_eq!(
-            post_pp.createKey, pre_pp.createKey,
+        invariant_eq!(
+            post_pp.createKey,
+            pre_pp.createKey,
             "ExecuteChange must not change createKey"
         );
-        assert_eq!(
-            post_pp.bump, pre_pp.bump,
+        invariant_eq!(
+            post_pp.bump,
+            pre_pp.bump,
             "ExecuteChange must not change bump"
         );
 
@@ -140,7 +161,7 @@ impl FuzzTest {
         let cr_after = self
             .trident
             .get_account_with_type::<ChangeRequest>(&change_request, Some(8));
-        assert!(
+        invariant!(
             cr_after.is_none(),
             "ChangeRequest must be closed (not readable) after ExecuteChange"
         );

@@ -23,34 +23,35 @@ impl FuzzTest {
         args: InitializePerformancePackageArgs,
         message: Option<&str>,
     ) {
-        let event_authority = get_event_authority_pda(
-            &mut self.trident,
-            performance_package_v_2::program_id(),
-        );
+        let event_authority =
+            get_event_authority_pda(&mut self.trident, performance_package_v_2::program_id());
 
-        let init_performance_package = performance_package_v_2::InitializePerformancePackageInstruction::data(
-            performance_package_v_2::InitializePerformancePackageInstructionData::new(
-                args.clone(),
-            ),
-        )
-        .accounts(performance_package_v_2::InitializePerformancePackageInstructionAccounts::new(
-            performance_package,
-            token_mint,
-            mint_governor,
-            mint_authority,
-            create_key,
-            authority,
-            recipient,
-            payer,
-            SOLANA_PROGRAM_ID,
-            event_authority,
-            performance_package_v_2::program_id(),
-        ))
-        .instruction();
+        let init_performance_package =
+            performance_package_v_2::InitializePerformancePackageInstruction::data(
+                performance_package_v_2::InitializePerformancePackageInstructionData::new(
+                    args.clone(),
+                ),
+            )
+            .accounts(
+                performance_package_v_2::InitializePerformancePackageInstructionAccounts::new(
+                    performance_package,
+                    token_mint,
+                    mint_governor,
+                    mint_authority,
+                    create_key,
+                    authority,
+                    recipient,
+                    payer,
+                    SOLANA_PROGRAM_ID,
+                    event_authority,
+                    performance_package_v_2::program_id(),
+                ),
+            )
+            .instruction();
 
-        let res = self.trident
+        let res = self
+            .trident
             .process_transaction(&[init_performance_package], message);
-
 
         if !res.is_success() {
             return;
@@ -58,14 +59,14 @@ impl FuzzTest {
 
         // Verify invariants
         self.verify_initialize_performance_package_invariants(
-            performance_package, 
-            create_key, 
-            token_mint, 
-            mint_governor, 
-            mint_authority, 
-            authority, 
-            recipient, 
-            &args
+            performance_package,
+            create_key,
+            token_mint,
+            mint_governor,
+            mint_authority,
+            authority,
+            recipient,
+            &args,
         );
     }
 
@@ -81,21 +82,21 @@ impl FuzzTest {
             .get_account_with_type::<PerformancePackage>(&performance_package, Some(8))
             .expect("PerformancePackage must exist before ChangeAuthority");
 
-        let event_authority = get_event_authority_pda(
-            &mut self.trident,
-            performance_package_v_2::program_id(),
-        );
+        let event_authority =
+            get_event_authority_pda(&mut self.trident, performance_package_v_2::program_id());
 
         let change_authority = performance_package_v_2::ChangeAuthorityInstruction::data(
             performance_package_v_2::ChangeAuthorityInstructionData::new(),
         )
-        .accounts(performance_package_v_2::ChangeAuthorityInstructionAccounts::new(
-            performance_package,
-            current_authority,
-            new_authority,
-            event_authority,
-            performance_package_v_2::program_id(),
-        ))
+        .accounts(
+            performance_package_v_2::ChangeAuthorityInstructionAccounts::new(
+                performance_package,
+                current_authority,
+                new_authority,
+                event_authority,
+                performance_package_v_2::program_id(),
+            ),
+        )
         .instruction();
 
         let res = self
@@ -107,7 +108,12 @@ impl FuzzTest {
         }
 
         // Verify invariants
-        self.verify_change_authority_invariants(performance_package, current_authority, new_authority, &pre_pp);
+        self.verify_change_authority_invariants(
+            performance_package,
+            current_authority,
+            new_authority,
+            &pre_pp,
+        );
     }
 
     pub fn propose_change(
@@ -125,10 +131,8 @@ impl FuzzTest {
             .expect("PerformancePackage must exist before ProposeChange");
         let timestamp_before_tx = self.trident.get_current_timestamp();
 
-        let event_authority = get_event_authority_pda(
-            &mut self.trident,
-            performance_package_v_2::program_id(),
-        );
+        let event_authority =
+            get_event_authority_pda(&mut self.trident, performance_package_v_2::program_id());
 
         let propose_change = performance_package_v_2::ProposeChangeInstruction::data(
             performance_package_v_2::ProposeChangeInstructionData::new(args.clone()),
@@ -153,7 +157,14 @@ impl FuzzTest {
         }
 
         // Verify invariants
-        self.verify_propose_change_invariants(change_request, performance_package, proposer, &args, &pre_pp, timestamp_before_tx);
+        self.verify_propose_change_invariants(
+            change_request,
+            performance_package,
+            proposer,
+            &args,
+            &pre_pp,
+            timestamp_before_tx,
+        );
     }
 
     pub fn execute_change(
@@ -178,10 +189,8 @@ impl FuzzTest {
             return;
         }
         let pre_cr = pre_cr.unwrap();
-        let event_authority = get_event_authority_pda(
-            &mut self.trident,
-            performance_package_v_2::program_id(),
-        );
+        let event_authority =
+            get_event_authority_pda(&mut self.trident, performance_package_v_2::program_id());
 
         let execute_change = performance_package_v_2::ExecuteChangeInstruction::data(
             performance_package_v_2::ExecuteChangeInstructionData::new(),
@@ -205,7 +214,13 @@ impl FuzzTest {
         }
 
         // Verify invariants
-        self.verify_execute_change_invariants(change_request, performance_package, executor, &pre_pp, &pre_cr);
+        self.verify_execute_change_invariants(
+            change_request,
+            performance_package,
+            executor,
+            &pre_pp,
+            &pre_cr,
+        );
     }
 
     pub fn start_unlock(
@@ -219,10 +234,8 @@ impl FuzzTest {
             .get_account_with_type::<PerformancePackage>(&performance_package, Some(8))
             .expect("PerformancePackage must exist before StartUnlock");
         let timestamp_before_tx = self.trident.get_current_timestamp();
-        let event_authority = get_event_authority_pda(
-            &mut self.trident,
-            performance_package_v_2::program_id(),
-        );
+        let event_authority =
+            get_event_authority_pda(&mut self.trident, performance_package_v_2::program_id());
 
         let start_unlock = performance_package_v_2::StartUnlockInstruction::data(
             performance_package_v_2::StartUnlockInstructionData::new(),
@@ -244,7 +257,12 @@ impl FuzzTest {
         }
 
         // Verify invariants
-        self.verify_start_unlock_invariants(performance_package, recipient, &pre_pp, timestamp_before_tx);
+        self.verify_start_unlock_invariants(
+            performance_package,
+            recipient,
+            &pre_pp,
+            timestamp_before_tx,
+        );
     }
 
     pub fn complete_unlock(
@@ -294,7 +312,8 @@ impl FuzzTest {
         )
         .instruction();
 
-        let res = self.trident
+        let res = self
+            .trident
             .process_transaction(&[complete_unlock], message);
 
         if !res.is_success() {
@@ -302,7 +321,17 @@ impl FuzzTest {
         }
 
         // Verify invariants
-        self.verify_complete_unlock_invariants(performance_package, mint_governor, mint_authority, token_mint, recipient_token_account, signer, &pre_pp, pre_recipient_amount, timestamp_before_tx);
+        self.verify_complete_unlock_invariants(
+            performance_package,
+            mint_governor,
+            mint_authority,
+            token_mint,
+            recipient_token_account,
+            signer,
+            &pre_pp,
+            pre_recipient_amount,
+            timestamp_before_tx,
+        );
     }
 
     pub fn close_performance_package(
@@ -334,7 +363,8 @@ impl FuzzTest {
             )
             .instruction();
 
-        let res = self.trident
+        let res = self
+            .trident
             .process_transaction(&[close_performance_package], message);
 
         if !res.is_success() {

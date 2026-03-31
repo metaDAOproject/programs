@@ -1,11 +1,14 @@
 use crate::common::constants::CHANGE_REQUEST_SEED_PREFIX;
+use crate::common::types::performance_package_v_2;
 use crate::common::types::performance_package_v_2::ChangeRequest;
 use crate::common::types::performance_package_v_2::PerformancePackage;
 use crate::common::types::performance_package_v_2::ProposeChangeArgs;
 use crate::common::types::performance_package_v_2::ProposerType;
-use crate::common::types::performance_package_v_2;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::Pubkey;
+
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
 
 impl FuzzTest {
     pub fn verify_propose_change_invariants(
@@ -37,18 +40,20 @@ impl FuzzTest {
             ],
             &performance_package_v_2::program_id(),
         );
-        assert_eq!(
+        invariant_eq!(
             change_request, expected_pda,
             "ChangeRequest PDA must match seeds (change_request, performance_package, proposer, pda_nonce)"
         );
-        assert_eq!(
-            post_cr.bump, expected_bump,
+        invariant_eq!(
+            post_cr.bump,
+            expected_bump,
             "Stored bump must match PDA derivation bump"
         );
 
         // Invariant 2: change_request must point to the correct performance_package.
-        assert_eq!(
-            post_cr.performancePackage, performance_package,
+        invariant_eq!(
+            post_cr.performancePackage,
+            performance_package,
             "ChangeRequest.performancePackage must equal the provided performance_package"
         );
 
@@ -68,88 +73,104 @@ impl FuzzTest {
         }
 
         // Invariant 4: pdaNonce must be stored exactly as provided.
-        assert_eq!(
-            post_cr.pdaNonce, args.pdaNonce,
+        invariant_eq!(
+            post_cr.pdaNonce,
+            args.pdaNonce,
             "ChangeRequest.pdaNonce must equal args.pdaNonce"
         );
 
         // Invariant 5: all requested field updates must be stored exactly as proposed.
-        assert_eq!(
-            post_cr.newRecipient, args.newRecipient,
+        invariant_eq!(
+            post_cr.newRecipient,
+            args.newRecipient,
             "ChangeRequest.newRecipient must equal args.newRecipient"
         );
-        assert_eq!(
-            post_cr.newOracleReader, args.newOracleReader,
+        invariant_eq!(
+            post_cr.newOracleReader,
+            args.newOracleReader,
             "ChangeRequest.newOracleReader must equal args.newOracleReader"
         );
-        assert_eq!(
-            post_cr.newRewardFunction, args.newRewardFunction,
+        invariant_eq!(
+            post_cr.newRewardFunction,
+            args.newRewardFunction,
             "ChangeRequest.newRewardFunction must equal args.newRewardFunction"
         );
 
         // Invariant 6: proposedAt must be within [timestamp_before_tx, now].
         let timestamp_after_tx = self.trident.get_current_timestamp();
-        assert!(
+        invariant!(
             post_cr.proposedAt >= timestamp_before_tx,
             "proposedAt must be >= timestamp before tx"
         );
-        assert!(
+        invariant!(
             post_cr.proposedAt <= timestamp_after_tx,
             "proposedAt must be <= timestamp after tx"
         );
 
         // Invariant 7: ProposeChange must not mutate PerformancePackage state except seqNum.
-        assert_eq!(
-            post_pp.mint, pre_pp.mint,
+        invariant_eq!(
+            post_pp.mint,
+            pre_pp.mint,
             "PerformancePackage.mint must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.mintGovernor, pre_pp.mintGovernor,
+        invariant_eq!(
+            post_pp.mintGovernor,
+            pre_pp.mintGovernor,
             "PerformancePackage.mintGovernor must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.mintAuthority, pre_pp.mintAuthority,
+        invariant_eq!(
+            post_pp.mintAuthority,
+            pre_pp.mintAuthority,
             "PerformancePackage.mintAuthority must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.authority, pre_pp.authority,
+        invariant_eq!(
+            post_pp.authority,
+            pre_pp.authority,
             "PerformancePackage.authority must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.recipient, pre_pp.recipient,
+        invariant_eq!(
+            post_pp.recipient,
+            pre_pp.recipient,
             "PerformancePackage.recipient must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.oracleReader, pre_pp.oracleReader,
+        invariant_eq!(
+            post_pp.oracleReader,
+            pre_pp.oracleReader,
             "PerformancePackage.oracleReader must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.rewardFunction, pre_pp.rewardFunction,
+        invariant_eq!(
+            post_pp.rewardFunction,
+            pre_pp.rewardFunction,
             "PerformancePackage.rewardFunction must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.status, pre_pp.status,
+        invariant_eq!(
+            post_pp.status,
+            pre_pp.status,
             "PerformancePackage.status must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.minUnlockTimestamp, pre_pp.minUnlockTimestamp,
+        invariant_eq!(
+            post_pp.minUnlockTimestamp,
+            pre_pp.minUnlockTimestamp,
             "PerformancePackage.minUnlockTimestamp must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.totalRewardsPaidOut, pre_pp.totalRewardsPaidOut,
+        invariant_eq!(
+            post_pp.totalRewardsPaidOut,
+            pre_pp.totalRewardsPaidOut,
             "PerformancePackage.totalRewardsPaidOut must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.createKey, pre_pp.createKey,
+        invariant_eq!(
+            post_pp.createKey,
+            pre_pp.createKey,
             "PerformancePackage.createKey must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.bump, pre_pp.bump,
+        invariant_eq!(
+            post_pp.bump,
+            pre_pp.bump,
             "PerformancePackage.bump must not change on ProposeChange"
         );
 
         // Invariant 8: ProposeChange increments seqNum by exactly 1.
-        assert_eq!(
+        invariant_eq!(
             post_pp.seqNum,
             pre_pp
                 .seqNum

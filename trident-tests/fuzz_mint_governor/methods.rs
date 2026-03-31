@@ -1,6 +1,9 @@
 use trident_fuzz::fuzzing::Signer;
 use trident_fuzz::fuzzing::*;
 
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
+
 use crate::common::constants::SOLANA_PROGRAM_ID;
 use crate::common::constants::TOKEN_PROGRAM_ID;
 use crate::common::types::mint_governor;
@@ -62,10 +65,10 @@ impl FuzzTest {
         }
 
         let governor = self.read_governor();
-        assert_eq!(governor.mint, self.mint);
-        assert_eq!(governor.admin, self.payer.pubkey());
-        assert_eq!(governor.createKey, self.create_key.pubkey());
-        assert_eq!(governor.seqNum, 0);
+        invariant_eq!(governor.mint, self.mint);
+        invariant_eq!(governor.admin, self.payer.pubkey());
+        invariant_eq!(governor.createKey, self.create_key.pubkey());
+        invariant_eq!(governor.seqNum, 0);
         true
     }
 
@@ -87,7 +90,9 @@ impl FuzzTest {
         ))
         .instruction();
 
-        self.trident.process_transaction(&[ix], message).is_success()
+        self.trident
+            .process_transaction(&[ix], message)
+            .is_success()
     }
 
     pub fn add_mint_authority(
@@ -118,15 +123,15 @@ impl FuzzTest {
         let post_mint_authority = self.read_mint_authority(authorized_minter);
 
         if !res.is_success() {
-            assert_eq!(post_mint_authority, pre_mint_authority);
+            invariant_eq!(post_mint_authority, pre_mint_authority);
             return false;
         }
 
         let post_mint_authority = post_mint_authority.expect("mint authority must exist");
-        assert_eq!(post_mint_authority.mintGovernor, self.mint_governor);
-        assert_eq!(post_mint_authority.authorizedMinter, authorized_minter);
-        assert_eq!(post_mint_authority.maxTotal, max_total);
-        assert_eq!(post_mint_authority.totalMinted, 0);
+        invariant_eq!(post_mint_authority.mintGovernor, self.mint_governor);
+        invariant_eq!(post_mint_authority.authorizedMinter, authorized_minter);
+        invariant_eq!(post_mint_authority.maxTotal, max_total);
+        invariant_eq!(post_mint_authority.totalMinted, 0);
         true
     }
 
@@ -159,16 +164,16 @@ impl FuzzTest {
             .expect("mint authority should still exist");
 
         if !res.is_success() {
-            assert_eq!(post_mint_authority, pre_mint_authority);
+            invariant_eq!(post_mint_authority, pre_mint_authority);
             return false;
         }
 
-        assert_eq!(post_mint_authority.authorizedMinter, authorized_minter);
-        assert_eq!(
+        invariant_eq!(post_mint_authority.authorizedMinter, authorized_minter);
+        invariant_eq!(
             post_mint_authority.totalMinted,
             pre_mint_authority.totalMinted
         );
-        assert_eq!(post_mint_authority.maxTotal, max_total);
+        invariant_eq!(post_mint_authority.maxTotal, max_total);
         true
     }
 
@@ -198,11 +203,11 @@ impl FuzzTest {
         let post_mint_authority = self.read_mint_authority(authorized_minter);
 
         if !res.is_success() {
-            assert_eq!(post_mint_authority, Some(pre_mint_authority));
+            invariant_eq!(post_mint_authority, Some(pre_mint_authority));
             return false;
         }
 
-        assert!(post_mint_authority.is_none());
+        invariant!(post_mint_authority.is_none());
         true
     }
 
@@ -237,22 +242,22 @@ impl FuzzTest {
         let post_mint_authority = self.read_mint_authority(mint_authority_minter);
 
         if !res.is_success() {
-            assert_eq!(post_destination_amount, pre_destination_amount);
-            assert_eq!(post_mint_authority, pre_mint_authority);
+            invariant_eq!(post_destination_amount, pre_destination_amount);
+            invariant_eq!(post_mint_authority, pre_mint_authority);
             return false;
         }
 
         let pre_mint_authority = pre_mint_authority.expect("mint authority must exist");
         let post_mint_authority = post_mint_authority.expect("mint authority must exist");
 
-        assert_eq!(post_destination_amount, pre_destination_amount + amount);
-        assert_eq!(
+        invariant_eq!(post_destination_amount, pre_destination_amount + amount);
+        invariant_eq!(
             post_mint_authority.totalMinted,
             pre_mint_authority.totalMinted + amount
         );
 
         if let Some(max_total) = post_mint_authority.maxTotal {
-            assert!(post_mint_authority.totalMinted <= max_total);
+            invariant!(post_mint_authority.totalMinted <= max_total);
         }
 
         true

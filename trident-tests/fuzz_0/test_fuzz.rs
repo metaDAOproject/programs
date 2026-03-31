@@ -129,7 +129,7 @@ impl FuzzTest {
             Some("Initial Liquidity"),
         );
 
-        assert!(res.is_success(), "Initial liquidity seed must succeed");
+        invariant!(res.is_success(), "Initial liquidity seed must succeed");
     }
 
     /// Flow: Alice provides liquidity with random amounts
@@ -159,7 +159,7 @@ impl FuzzTest {
     /// Final check: validates all global invariants at the end of each iteration
     #[end]
     fn end(&mut self) {
-        self.assert_global_invariants();
+        self.invariant_global_invariants();
     }
 }
 

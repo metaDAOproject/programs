@@ -5,6 +5,8 @@ use crate::common::types::launchpad_v_7::Launch;
 use crate::common::types::launchpad_v_7::LaunchState;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::Pubkey;
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
 
 impl FuzzTest {
     pub fn verify_claim_additional_token_allocation_invariants(
@@ -25,35 +27,38 @@ impl FuzzTest {
             .expect("Launch account must exist after ClaimAdditionalTokenAllocation");
 
         // Invariant 1: Must be Complete, and additional tokens not previously claimed, if tx succeeded.
-        assert!(
+        invariant!(
             matches!(pre_launch.state, LaunchState::Complete),
             "pre-state must be Complete if ClaimAdditionalTokenAllocation succeeded"
         );
-        assert!(
+        invariant!(
             !pre_launch.additionalTokensClaimed,
             "pre additionalTokensClaimed must be false if ClaimAdditionalTokenAllocation succeeded"
         );
-        assert!(
+        invariant!(
             pre_launch.additionalTokensRecipient.is_some(),
             "additionalTokensRecipient must be Some if ClaimAdditionalTokenAllocation succeeded"
         );
-        assert_eq!(
+        invariant_eq!(
             pre_launch.additionalTokensRecipient.unwrap(),
             additional_tokens_recipient,
             "additional_tokens_recipient must match Launch.additionalTokensRecipient"
         );
 
         // Invariant 2: `launch` has_one constraints must hold.
-        assert_eq!(
-            pre_launch.launchSigner, launch_signer,
+        invariant_eq!(
+            pre_launch.launchSigner,
+            launch_signer,
             "launch_signer must match Launch.launchSigner"
         );
-        assert_eq!(
-            pre_launch.baseMint, base_mint,
+        invariant_eq!(
+            pre_launch.baseMint,
+            base_mint,
             "base_mint must match Launch.baseMint"
         );
-        assert_eq!(
-            pre_launch.launchBaseVault, base_vault,
+        invariant_eq!(
+            pre_launch.launchBaseVault,
+            base_vault,
             "base_vault must match Launch.launchBaseVault"
         );
 
@@ -63,7 +68,7 @@ impl FuzzTest {
             &additional_tokens_recipient,
             &TOKEN_PROGRAM_ID,
         );
-        assert_eq!(
+        invariant_eq!(
             additional_tokens_recipient_token_account, expected_ata,
             "additional_tokens_recipient_token_account must be ATA(base_mint, additional_tokens_recipient)"
         );
@@ -89,21 +94,23 @@ impl FuzzTest {
             .checked_sub(pre_recipient_amount)
             .expect("recipient amount must not decrease during ClaimAdditionalTokenAllocation");
 
-        assert_eq!(
-            vault_delta, pre_launch.additionalTokensAmount,
+        invariant_eq!(
+            vault_delta,
+            pre_launch.additionalTokensAmount,
             "base_vault must decrease by additionalTokensAmount"
         );
-        assert_eq!(
-            recipient_delta, pre_launch.additionalTokensAmount,
+        invariant_eq!(
+            recipient_delta,
+            pre_launch.additionalTokensAmount,
             "recipient must receive additionalTokensAmount"
         );
 
         // Invariant 5: Launch mutation must flip additionalTokensClaimed and increment seqNum by 1.
-        assert!(
+        invariant!(
             post_launch.additionalTokensClaimed,
             "additionalTokensClaimed must be true after ClaimAdditionalTokenAllocation"
         );
-        assert_eq!(
+        invariant_eq!(
             post_launch.seqNum,
             pre_launch
                 .seqNum
@@ -115,12 +122,14 @@ impl FuzzTest {
             (LaunchState::Complete, LaunchState::Complete) => {}
             _ => panic!("Launch.state must remain Complete"),
         }
-        assert_eq!(
-            post_launch.additionalTokensRecipient, pre_launch.additionalTokensRecipient,
+        invariant_eq!(
+            post_launch.additionalTokensRecipient,
+            pre_launch.additionalTokensRecipient,
             "additionalTokensRecipient must not change"
         );
-        assert_eq!(
-            post_launch.additionalTokensAmount, pre_launch.additionalTokensAmount,
+        invariant_eq!(
+            post_launch.additionalTokensAmount,
+            pre_launch.additionalTokensAmount,
             "additionalTokensAmount must not change"
         );
     }

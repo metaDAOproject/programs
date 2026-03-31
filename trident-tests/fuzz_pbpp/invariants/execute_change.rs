@@ -5,6 +5,9 @@ use crate::common::types::price_based_performance_package::ProposerType;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::Pubkey;
 
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
+
 impl FuzzTest {
     pub fn verify_execute_change_invariants(
         &mut self,
@@ -22,21 +25,23 @@ impl FuzzTest {
         // Invariant 1: executor must be the opposite party of the proposerType stored in ChangeRequest.
         match pre_cr.proposerType {
             ProposerType::Recipient => {
-                assert_eq!(
-                    executor, pre_pp.performancePackageAuthority,
+                invariant_eq!(
+                    executor,
+                    pre_pp.performancePackageAuthority,
                     "If recipient proposed, authority must execute"
                 );
             }
             ProposerType::Authority => {
-                assert_eq!(
-                    executor, pre_pp.recipient,
+                invariant_eq!(
+                    executor,
+                    pre_pp.recipient,
                     "If authority proposed, recipient must execute"
                 );
             }
         }
 
         // Invariant 2: seqNum must increment by exactly 1.
-        assert_eq!(
+        invariant_eq!(
             post_pp.seqNum,
             pre_pp
                 .seqNum
@@ -49,38 +54,45 @@ impl FuzzTest {
         // and no other changeable field may be modified (besides seqNum).
         match &pre_cr.changeType {
             ChangeType::Oracle { newOracleConfig } => {
-                assert_eq!(
-                    post_pp.oracleConfig.oracleAccount, newOracleConfig.oracleAccount,
+                invariant_eq!(
+                    post_pp.oracleConfig.oracleAccount,
+                    newOracleConfig.oracleAccount,
                     "ExecuteChange(Oracle) must update oracleConfig.oracleAccount"
                 );
-                assert_eq!(
-                    post_pp.oracleConfig.byteOffset, newOracleConfig.byteOffset,
+                invariant_eq!(
+                    post_pp.oracleConfig.byteOffset,
+                    newOracleConfig.byteOffset,
                     "ExecuteChange(Oracle) must update oracleConfig.byteOffset"
                 );
-                assert_eq!(
-                    post_pp.recipient, pre_pp.recipient,
+                invariant_eq!(
+                    post_pp.recipient,
+                    pre_pp.recipient,
                     "ExecuteChange(Oracle) must not change recipient"
                 );
             }
             ChangeType::Recipient { newRecipient } => {
-                assert_eq!(
-                    post_pp.recipient, *newRecipient,
+                invariant_eq!(
+                    post_pp.recipient,
+                    *newRecipient,
                     "ExecuteChange(Recipient) must update recipient"
                 );
-                assert_eq!(
-                    post_pp.oracleConfig.oracleAccount, pre_pp.oracleConfig.oracleAccount,
+                invariant_eq!(
+                    post_pp.oracleConfig.oracleAccount,
+                    pre_pp.oracleConfig.oracleAccount,
                     "ExecuteChange(Recipient) must not change oracleConfig.oracleAccount"
                 );
-                assert_eq!(
-                    post_pp.oracleConfig.byteOffset, pre_pp.oracleConfig.byteOffset,
+                invariant_eq!(
+                    post_pp.oracleConfig.byteOffset,
+                    pre_pp.oracleConfig.byteOffset,
                     "ExecuteChange(Recipient) must not change oracleConfig.byteOffset"
                 );
             }
         }
 
         // Invariant 4: performancePackageAuthority must not change on ExecuteChange.
-        assert_eq!(
-            post_pp.performancePackageAuthority, pre_pp.performancePackageAuthority,
+        invariant_eq!(
+            post_pp.performancePackageAuthority,
+            pre_pp.performancePackageAuthority,
             "ExecuteChange must not change performancePackageAuthority"
         );
 
@@ -89,7 +101,7 @@ impl FuzzTest {
         let cr_after = self
             .trident
             .get_account_with_type::<ChangeRequest>(&change_request, Some(8));
-        assert!(
+        invariant!(
             cr_after.is_none(),
             "ChangeRequest must be closed (not readable) after ExecuteChange"
         );

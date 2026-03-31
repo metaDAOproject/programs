@@ -8,6 +8,9 @@ use crate::common::types::price_based_performance_package::ProposerType;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::Pubkey;
 
+use trident_fuzz::invariant;
+use trident_fuzz::invariant_eq;
+
 impl FuzzTest {
     pub fn verify_propose_change_invariants(
         &mut self,
@@ -38,18 +41,20 @@ impl FuzzTest {
             ],
             &price_based_performance_package::program_id(),
         );
-        assert_eq!(
+        invariant_eq!(
             change_request, expected_pda,
             "ChangeRequest PDA must match seeds (change_request, performance_package, proposer, pda_nonce)"
         );
-        assert_eq!(
-            post_cr.pdaBump, expected_bump,
+        invariant_eq!(
+            post_cr.pdaBump,
+            expected_bump,
             "Stored pdaBump must match PDA derivation bump"
         );
 
         // Invariant 2: change_request must point to the correct performance_package.
-        assert_eq!(
-            post_cr.performancePackage, performance_package,
+        invariant_eq!(
+            post_cr.performancePackage,
+            performance_package,
             "ChangeRequest.performancePackage must equal the provided performance_package"
         );
 
@@ -69,8 +74,9 @@ impl FuzzTest {
         }
 
         // Invariant 4: pdaNonce must be stored exactly as provided.
-        assert_eq!(
-            post_cr.pdaNonce, args.pdaNonce,
+        invariant_eq!(
+            post_cr.pdaNonce,
+            args.pdaNonce,
             "ChangeRequest.pdaNonce must equal args.pdaNonce"
         );
 
@@ -81,12 +87,14 @@ impl FuzzTest {
                 ChangeType::Oracle { newOracleConfig: a },
                 ChangeType::Oracle { newOracleConfig: b },
             ) => {
-                assert_eq!(
-                    a.oracleAccount, b.oracleAccount,
+                invariant_eq!(
+                    a.oracleAccount,
+                    b.oracleAccount,
                     "Oracle change must store newOracleConfig.oracleAccount correctly"
                 );
-                assert_eq!(
-                    a.byteOffset, b.byteOffset,
+                invariant_eq!(
+                    a.byteOffset,
+                    b.byteOffset,
                     "Oracle change must store newOracleConfig.byteOffset correctly"
                 );
             }
@@ -94,43 +102,47 @@ impl FuzzTest {
                 ChangeType::Recipient { newRecipient: a },
                 ChangeType::Recipient { newRecipient: b },
             ) => {
-                assert_eq!(a, b, "Recipient change must store newRecipient correctly");
+                invariant_eq!(a, b, "Recipient change must store newRecipient correctly");
             }
             _ => panic!("ChangeRequest.changeType must match args.changeType variant"),
         }
 
         // Invariant 6: proposedAt must be within [timestamp_before_tx, now].
         let timestamp_after_tx = self.trident.get_current_timestamp();
-        assert!(
+        invariant!(
             post_cr.proposedAt >= timestamp_before_tx,
             "proposedAt must be >= timestamp before tx"
         );
-        assert!(
+        invariant!(
             post_cr.proposedAt <= timestamp_after_tx,
             "proposedAt must be <= timestamp after tx"
         );
 
         // Invariant 7: ProposeChange must not mutate the PerformancePackage state
         // (it only creates a ChangeRequest).
-        assert_eq!(
-            post_pp.recipient, pre_pp.recipient,
+        invariant_eq!(
+            post_pp.recipient,
+            pre_pp.recipient,
             "PerformancePackage.recipient must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.performancePackageAuthority, pre_pp.performancePackageAuthority,
+        invariant_eq!(
+            post_pp.performancePackageAuthority,
+            pre_pp.performancePackageAuthority,
             "PerformancePackage.performancePackageAuthority must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.oracleConfig.oracleAccount, pre_pp.oracleConfig.oracleAccount,
+        invariant_eq!(
+            post_pp.oracleConfig.oracleAccount,
+            pre_pp.oracleConfig.oracleAccount,
             "PerformancePackage.oracleConfig.oracleAccount must not change on ProposeChange"
         );
-        assert_eq!(
-            post_pp.oracleConfig.byteOffset, pre_pp.oracleConfig.byteOffset,
+        invariant_eq!(
+            post_pp.oracleConfig.byteOffset,
+            pre_pp.oracleConfig.byteOffset,
             "PerformancePackage.oracleConfig.byteOffset must not change on ProposeChange"
         );
 
         // Invariant 8: ProposeChange increments seqNum by exactly 1.
-        assert_eq!(
+        invariant_eq!(
             post_pp.seqNum,
             pre_pp
                 .seqNum
