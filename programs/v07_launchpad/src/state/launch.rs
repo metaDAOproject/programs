@@ -84,10 +84,13 @@ pub struct Launch {
     pub additional_tokens_claimed: bool,
     /// The unix timestamp when the launch was completed.
     pub unix_timestamp_completed: Option<i64>,
+    /// Whether the performance package has been initialized.
     pub is_performance_package_initialized: bool,
     /// Number of seconds after launch start before the funding accumulator
     /// begins tracking.
     pub accumulator_activation_delay_seconds: u32,
+    /// Whether the launch has a bid wall.
+    pub has_bid_wall: bool,
 }
 
 #[account]
@@ -152,6 +155,8 @@ pub struct OldLaunch {
     pub additional_tokens_claimed: bool,
     /// The unix timestamp when the launch was completed.
     pub unix_timestamp_completed: Option<i64>,
-    /// Whether the performance package has been initialized.
     pub is_performance_package_initialized: bool,
+    /// Number of seconds after launch start before the funding accumulator
+    /// begins tracking.
+    pub accumulator_activation_delay_seconds: u32,
 }

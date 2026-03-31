@@ -149,11 +149,6 @@ export type PerformancePackageV2 = {
           isSigner: false;
         },
         {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "mintGovernorProgram";
           isMut: false;
           isSigner: false;
@@ -341,11 +336,16 @@ export type PerformancePackageV2 = {
             type: "publicKey";
           },
           {
-            name: "proposerType";
-            docs: ["Who proposed this change"];
-            type: {
-              defined: "ProposerType";
-            };
+            name: "proposer";
+            docs: ["The proposer's pubkey at proposal time"];
+            type: "publicKey";
+          },
+          {
+            name: "ppCreatedAtTimestamp";
+            docs: [
+              "PP's created_at_timestamp at proposal time; used to detect stale CRs after close/recreate",
+            ];
+            type: "i64";
           },
           {
             name: "proposedAt";
@@ -450,6 +450,13 @@ export type PerformancePackageV2 = {
           {
             name: "minUnlockTimestamp";
             docs: ["Can't start unlock before this time"];
+            type: "i64";
+          },
+          {
+            name: "createdAtTimestamp";
+            docs: [
+              "Timestamp when this PP was created; used to invalidate stale ChangeRequests",
+            ];
             type: "i64";
           },
           {
@@ -578,21 +585,6 @@ export type PerformancePackageV2 = {
       };
     },
     {
-      name: "ProposerType";
-      docs: ["Who proposed the change."];
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Authority";
-          },
-          {
-            name: "Recipient";
-          },
-        ];
-      };
-    },
-    {
       name: "PackageStatus";
       docs: ["Lifecycle state for the performance package."];
       type: {
@@ -669,10 +661,6 @@ export type PerformancePackageV2 = {
           {
             name: "CliffLinear";
             fields: [
-              {
-                name: "startValue";
-                type: "u128";
-              },
               {
                 name: "cliffValue";
                 type: "u128";
@@ -865,10 +853,8 @@ export type PerformancePackageV2 = {
           index: false;
         },
         {
-          name: "proposerType";
-          type: {
-            defined: "ProposerType";
-          };
+          name: "proposer";
+          type: "publicKey";
           index: false;
         },
         {
@@ -1074,6 +1060,11 @@ export type PerformancePackageV2 = {
       name: "MinDurationTooLarge";
       msg: "min_duration exceeds maximum allowed (365 days)";
     },
+    {
+      code: 6020;
+      name: "StaleChangeRequest";
+      msg: "Change request is stale: PP was recreated or the proposing party has changed";
+    },
   ];
 };
 
@@ -1224,11 +1215,6 @@ export const IDL: PerformancePackageV2 = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1420,11 +1406,16 @@ export const IDL: PerformancePackageV2 = {
             type: "publicKey",
           },
           {
-            name: "proposerType",
-            docs: ["Who proposed this change"],
-            type: {
-              defined: "ProposerType",
-            },
+            name: "proposer",
+            docs: ["The proposer's pubkey at proposal time"],
+            type: "publicKey",
+          },
+          {
+            name: "ppCreatedAtTimestamp",
+            docs: [
+              "PP's created_at_timestamp at proposal time; used to detect stale CRs after close/recreate",
+            ],
+            type: "i64",
           },
           {
             name: "proposedAt",
@@ -1529,6 +1520,13 @@ export const IDL: PerformancePackageV2 = {
           {
             name: "minUnlockTimestamp",
             docs: ["Can't start unlock before this time"],
+            type: "i64",
+          },
+          {
+            name: "createdAtTimestamp",
+            docs: [
+              "Timestamp when this PP was created; used to invalidate stale ChangeRequests",
+            ],
             type: "i64",
           },
           {
@@ -1657,21 +1655,6 @@ export const IDL: PerformancePackageV2 = {
       },
     },
     {
-      name: "ProposerType",
-      docs: ["Who proposed the change."],
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Authority",
-          },
-          {
-            name: "Recipient",
-          },
-        ],
-      },
-    },
-    {
       name: "PackageStatus",
       docs: ["Lifecycle state for the performance package."],
       type: {
@@ -1748,10 +1731,6 @@ export const IDL: PerformancePackageV2 = {
           {
             name: "CliffLinear",
             fields: [
-              {
-                name: "startValue",
-                type: "u128",
-              },
               {
                 name: "cliffValue",
                 type: "u128",
@@ -1944,10 +1923,8 @@ export const IDL: PerformancePackageV2 = {
           index: false,
         },
         {
-          name: "proposerType",
-          type: {
-            defined: "ProposerType",
-          },
+          name: "proposer",
+          type: "publicKey",
           index: false,
         },
         {
@@ -2152,6 +2129,11 @@ export const IDL: PerformancePackageV2 = {
       code: 6019,
       name: "MinDurationTooLarge",
       msg: "min_duration exceeds maximum allowed (365 days)",
+    },
+    {
+      code: 6020,
+      name: "StaleChangeRequest",
+      msg: "Change request is stale: PP was recreated or the proposing party has changed",
     },
   ],
 };

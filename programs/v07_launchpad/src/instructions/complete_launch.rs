@@ -17,8 +17,9 @@ use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCloseEvent, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::{
-    fee_recipient, PRICE_SCALE, PROPOSAL_MIN_STAKE_TOKENS, TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED,
-    TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS, TOKEN_SCALE,
+    metadao_multisig_vault, PRICE_SCALE, PROPOSAL_MIN_STAKE_TOKENS,
+    TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED, TOKENS_TO_FUTARCHY_LIQUIDITY, TOKENS_TO_PARTICIPANTS,
+    TOKEN_SCALE,
 };
 use anchor_spl::metadata::{
     mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
@@ -213,7 +214,7 @@ pub struct CompleteLaunch<'info> {
     pub bid_wall_quote_token_account: UncheckedAccount<'info>,
 
     /// CHECK: The fee recipient of bid wall fees, a fixed address
-    #[account(address = fee_recipient::id())]
+    #[account(address = metadao_multisig_vault::id())]
     pub fee_recipient: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
@@ -314,14 +315,21 @@ impl CompleteLaunch<'_> {
         let usdc_to_lp = launch_total_approved_amount.saturating_div(5);
         let usdc_to_dao = launch_total_approved_amount.saturating_sub(usdc_to_lp);
 
-        // We then determine how much USDC to allocate to the DAO treasury, and how much to the DAO's bid wall
-        // In scenarios where the total approved amount is less than 1.25x the minimum raise amount:
-        // - we allocate the entire amount after LP allocation to the DAO treasury
-        // - we don't initialize the bid wall
-        // In all other scenarios, a bid wall is initialized with the remaining USDC after LP and DAO treasury allocation
-        // This is emergent behavior from the design of the launch, as 20% of the total approved amount is allocated to Futarchy AMM liquidity
-        let usdc_to_dao_treasury = usdc_to_dao.min(ctx.accounts.launch.minimum_raise_amount);
-        let usdc_to_bid_wall = usdc_to_dao.saturating_sub(usdc_to_dao_treasury);
+        // We only activate the bid wall if the launch has one configured.
+        // Otherwise, we allocate the entire amount after LP allocation to the DAO treasury.
+        let (usdc_to_dao_treasury, usdc_to_bid_wall) = if ctx.accounts.launch.has_bid_wall {
+            // We determine how much USDC to allocate to the DAO treasury, and how much to the DAO's bid wall
+            // In scenarios where the total approved amount is less than 1.25x the minimum raise amount:
+            // - we allocate the entire amount after LP allocation to the DAO treasury
+            // - we don't initialize the bid wall
+            // In all other scenarios, a bid wall is initialized with the remaining USDC after LP and DAO treasury allocation
+            // This is emergent behavior from the design of the launch, as 20% of the total approved amount is allocated to Futarchy AMM liquidity
+            let usdc_to_dao_treasury = usdc_to_dao.min(ctx.accounts.launch.minimum_raise_amount);
+            let usdc_to_bid_wall = usdc_to_dao.saturating_sub(usdc_to_dao_treasury);
+            (usdc_to_dao_treasury, usdc_to_bid_wall)
+        } else {
+            (usdc_to_dao, 0)
+        };
 
         ctx.accounts.initialize_dao(launch_signer, price_1e12)?;
 

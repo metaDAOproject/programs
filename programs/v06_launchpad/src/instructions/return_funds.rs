@@ -45,7 +45,6 @@ pub struct ReturnFunds<'info> {
     pub recipient_quote_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
 }
 
 impl ReturnFunds<'_> {

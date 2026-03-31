@@ -61,6 +61,8 @@ impl InitializePerformancePackage<'_> {
     }
 
     pub fn handle(ctx: Context<Self>, args: InitializePerformancePackageArgs) -> Result<()> {
+        let clock = Clock::get()?;
+
         ctx.accounts
             .performance_package
             .set_inner(PerformancePackage {
@@ -73,13 +75,12 @@ impl InitializePerformancePackage<'_> {
                 reward_function: args.reward_function,
                 status: PackageStatus::Locked,
                 min_unlock_timestamp: args.min_unlock_timestamp,
+                created_at_timestamp: clock.unix_timestamp,
                 total_rewards_paid_out: 0,
                 seq_num: 0,
                 create_key: ctx.accounts.create_key.key(),
                 bump: ctx.bumps.performance_package,
             });
-
-        let clock = Clock::get()?;
         let pp = &ctx.accounts.performance_package;
 
         emit_cpi!(PerformancePackageCreatedEvent {

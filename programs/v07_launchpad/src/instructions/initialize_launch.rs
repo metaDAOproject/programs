@@ -31,6 +31,7 @@ pub struct InitializeLaunchArgs {
     pub team_address: Pubkey,
     pub additional_tokens_amount: u64,
     pub accumulator_activation_delay_seconds: u32,
+    pub has_bid_wall: bool,
 }
 
 #[event_cpi]
@@ -176,7 +177,7 @@ impl InitializeLaunch<'_> {
 
         require_gte!(
             args.months_until_insiders_can_unlock,
-            18,
+            12,
             LaunchpadError::InvalidPerformancePackageMinUnlockTime
         );
 
@@ -247,6 +248,7 @@ impl InitializeLaunch<'_> {
             unix_timestamp_completed: None,
             is_performance_package_initialized: false,
             accumulator_activation_delay_seconds: args.accumulator_activation_delay_seconds,
+            has_bid_wall: args.has_bid_wall,
         });
 
         let clock = Clock::get()?;
@@ -275,6 +277,7 @@ impl InitializeLaunch<'_> {
                 .as_ref()
                 .map(|a| a.key()),
             accumulator_activation_delay_seconds: args.accumulator_activation_delay_seconds,
+            has_bid_wall: args.has_bid_wall,
         });
 
         let launch_key = ctx.accounts.launch.key();

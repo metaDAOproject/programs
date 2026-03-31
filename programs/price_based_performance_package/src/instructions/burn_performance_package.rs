@@ -11,7 +11,6 @@ pub mod admin {
 }
 
 #[derive(Accounts)]
-#[event_cpi]
 pub struct BurnPerformancePackage<'info> {
     #[account(
         mut,

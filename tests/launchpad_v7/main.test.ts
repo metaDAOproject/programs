@@ -8,6 +8,7 @@ import closeLaunch from "./unit/closeLaunch.test.js";
 import setFundingRecordApproval from "./unit/setFundingRecordApproval.test.js";
 import claimAdditionalTokenAllocation from "./unit/claimAdditionalTokenAllocation.test.js";
 import initializePerformancePackage from "./unit/initializePerformancePackage.test.js";
+import extendLaunch from "./unit/extendLaunch.test.js";
 import { PublicKey } from "@solana/web3.js";
 import {
   LAUNCHPAD_PROGRAM_ID,
@@ -66,6 +67,7 @@ export default function suite() {
           monthsUntilInsidersCanUnlock: 24, // 2 years
           teamAddress: PublicKey.default,
           launchAuthority: launchAuthority,
+          hasBidWall: false,
         })
         .rpc();
     };
@@ -84,4 +86,5 @@ export default function suite() {
     "#claim_additional_token_allocation_v7",
     claimAdditionalTokenAllocation,
   );
+  describe("#extend_launch_v7", extendLaunch);
 }

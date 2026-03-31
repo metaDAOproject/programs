@@ -71,6 +71,7 @@ export default function suite() {
         launchAuthority: launchAuthority.publicKey,
         additionalTokensAmount: additionalTokensAmount,
         additionalTokensRecipient: additionalTokensRecipient,
+        hasBidWall: false,
       })
       .rpc();
 
@@ -200,6 +201,7 @@ export default function suite() {
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
+        hasBidWall: false,
       })
       .rpc();
 

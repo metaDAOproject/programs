@@ -153,6 +153,7 @@ export class LaunchpadClient {
     additionalTokensRecipient,
     additionalTokensAmount,
     accumulatorActivationDelaySeconds = 0,
+    hasBidWall = false,
   }: {
     tokenName: string;
     tokenSymbol: string;
@@ -172,6 +173,7 @@ export class LaunchpadClient {
     additionalTokensRecipient?: PublicKey;
     additionalTokensAmount?: BN;
     accumulatorActivationDelaySeconds?: number;
+    hasBidWall: boolean;
   }) {
     const [launch] = getLaunchAddr(this.launchpad.programId, baseMint);
     const [launchSigner] = getLaunchSignerAddr(
@@ -206,6 +208,7 @@ export class LaunchpadClient {
         teamAddress,
         additionalTokensAmount: additionalTokensAmount ?? new BN(0),
         accumulatorActivationDelaySeconds,
+        hasBidWall,
       })
       .accounts({
         launch,
@@ -279,7 +282,6 @@ export class LaunchpadClient {
       fundingRecord,
       funder,
       funderQuoteAccount,
-      launchSigner,
     });
   }
 
@@ -710,6 +712,21 @@ export class LaunchpadClient {
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
+    });
+  }
+
+  extendLaunchIx({
+    launch,
+    durationSeconds,
+    admin = METADAO_MULTISIG_VAULT,
+  }: {
+    launch: PublicKey;
+    durationSeconds: number;
+    admin?: PublicKey;
+  }) {
+    return this.launchpad.methods.extendLaunch({ durationSeconds }).accounts({
+      launch,
+      admin,
     });
   }
 

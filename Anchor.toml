@@ -67,6 +67,9 @@ v07-audit-liquidity-position-authorities = "yarn run tsx scripts/v0.7/auditLiqui
 v07-fix-position-authorities = "yarn run tsx scripts/v0.7/fixPositionAuthorities.ts"
 v07-dump-launches-funding-records = "yarn run tsx scripts/v0.7/dumpLaunchesAndFundingRecords.ts"
 v07-resize-launches-funding-records = "yarn run tsx scripts/v0.7/resizeLaunchesAndFundingRecords.ts"
+v07-dump-launches = "yarn run tsx scripts/v0.7/dumpLaunches.ts"
+v07-resize-launches = "yarn run tsx scripts/v0.7/resizeLaunches.ts"
+v07-extend-launch = "yarn run tsx scripts/v0.7/extendLaunch.ts"
 
 [test]
 startup_wait = 5000
