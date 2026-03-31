@@ -146,7 +146,6 @@ pub fn stake_to_proposal(
                 staker,
                 payer,
                 TOKEN_PROGRAM_ID,
-                ASSOCIATED_TOKEN_PROGRAM_ID,
                 solana_sdk::system_program::ID,
                 event_authority,
                 futarchy::program_id(),
@@ -155,7 +154,12 @@ pub fn stake_to_proposal(
 
     let res = trident.process_transaction(&[stake_to_proposal_ix], message);
 
-    invariant!(res.is_success());
+    invariant!(
+        res.is_success(),
+        "Stake to proposal failed: {:#?},log: {}",
+        res.status(),
+        res.logs()
+    );
 }
 
 #[allow(clippy::too_many_arguments)]

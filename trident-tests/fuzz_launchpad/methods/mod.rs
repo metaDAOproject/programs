@@ -206,6 +206,7 @@ impl FuzzTest {
             team_address,
             additional_tokens_amount,
             accumulator_activation_delay_seconds,
+            false,
         )
     }
 
@@ -302,4 +303,28 @@ impl FuzzTest {
             .process_transaction(&[mint_to_funder_quote_account_ix], None);
         (funder.pubkey(), funder_quote_account)
     }
+
+    // pub fn get_or_initialize_associated_token_account(
+    //     &mut self,
+    //     payer: Pubkey,
+    //     mint: Pubkey,
+    //     owner: Pubkey,
+    // ) -> Pubkey {
+    //     let ata = self
+    //         .trident
+    //         .get_associated_token_address(&mint, &owner, &TOKEN_PROGRAM_ID);
+
+    //     let ata_acc = self.trident.get_token_account(ata);
+
+    //     if ata_acc.is_err() {
+    //         let ix = self
+    //             .trident
+    //             .initialize_associated_token_account(&payer, &mint, &owner);
+
+    //         let res = self.trident.process_transaction(&[ix], None);
+    //         invariant!(res.is_success());
+    //     }
+
+    //     ata
+    // }
 }

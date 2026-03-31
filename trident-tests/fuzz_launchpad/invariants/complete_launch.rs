@@ -157,8 +157,13 @@ impl FuzzTest {
         // Invariant 6: Expected USDC allocations must be computed from pre-state.
         let usdc_to_lp = pre_launch.totalApprovedAmount / 5;
         let usdc_to_dao = pre_launch.totalApprovedAmount - usdc_to_lp;
-        let usdc_to_dao_treasury = usdc_to_dao.min(pre_launch.minimumRaiseAmount);
-        let usdc_to_bid_wall = usdc_to_dao - usdc_to_dao_treasury;
+        let (usdc_to_dao_treasury, usdc_to_bid_wall) = if pre_launch.hasBidWall {
+            let treasury = usdc_to_dao.min(pre_launch.minimumRaiseAmount);
+            let bid_wall = usdc_to_dao - treasury;
+            (treasury, bid_wall)
+        } else {
+            (usdc_to_dao, 0)
+        };
         let refundable_usdc = pre_launch
             .totalCommittedAmount
             .checked_sub(pre_launch.totalApprovedAmount)
