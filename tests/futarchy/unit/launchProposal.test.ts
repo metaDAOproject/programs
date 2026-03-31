@@ -323,6 +323,73 @@ export default function suite() {
     );
   });
 
+  it("sets proposal duration_in_seconds to DAO's current seconds_per_proposal on launch", async function () {
+    const THREE_DAYS = 60 * 60 * 24 * 3; // 259200
+    const FIVE_DAYS = 60 * 60 * 24 * 5; // 432000
+
+    // Create DAO with secondsPerProposal = 3 days
+    const dao = await createDaoWithStakeThreshold(this, META, USDC, new BN(0));
+
+    // Add liquidity
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+
+    // Sponsor the proposal
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    // Verify proposal has the original duration (3 days)
+    const proposalBefore = await this.futarchy.getProposal(proposal);
+    assert.equal(proposalBefore.durationInSeconds, THREE_DAYS);
+
+    // Directly modify the DAO's secondsPerProposal to 5 days
+    const daoAccountInfo = await this.banksClient.getAccount(dao);
+    const coder = this.futarchy.autocrat.coder.accounts;
+    const daoData = coder.decode("dao", Buffer.from(daoAccountInfo.data));
+    daoData.secondsPerProposal = FIVE_DAYS;
+    const encodedData = await coder.encode("dao", daoData);
+    // Preserve original account size (may be larger due to InitSpace allocation)
+    const newData = new Uint8Array(daoAccountInfo.data.length);
+    newData.set(encodedData, 0);
+    daoAccountInfo.data = newData;
+    this.context.setAccount(dao, daoAccountInfo);
+
+    // Launch the proposal
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc();
+
+    // Verify proposal picked up the new DAO duration
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.equal(storedProposal.durationInSeconds, FIVE_DAYS);
+  });
+
   it("fails for non-team-sponsored with insufficient stake", async function () {
     const stakeThreshold = new BN(100 * 10 ** 6); // 100 tokens
     const dao = await createDaoWithStakeThreshold(

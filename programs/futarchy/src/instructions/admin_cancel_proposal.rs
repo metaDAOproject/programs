@@ -64,7 +64,6 @@ pub struct AdminCancelProposal<'info> {
     #[account(mut, address = base_vault.underlying_token_account)]
     pub base_vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
 
-    #[account(mut)]
     pub admin: Signer<'info>,
 }
 

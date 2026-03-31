@@ -141,11 +141,6 @@ export type LaunchpadV7 = {
           isSigner: false;
         },
         {
-          name: "launchSigner";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "launchQuoteVault";
           isMut: true;
           isSigner: false;
@@ -520,11 +515,6 @@ export type LaunchpadV7 = {
           isSigner: false;
         },
         {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -557,7 +547,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "baseMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -577,11 +567,6 @@ export type LaunchpadV7 = {
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -634,7 +619,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "launchSigner";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -644,7 +629,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "baseMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -700,7 +685,7 @@ export type LaunchpadV7 = {
         },
         {
           name: "launchSigner";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -822,6 +807,39 @@ export type LaunchpadV7 = {
         },
       ];
       args: [];
+    },
+    {
+      name: "extendLaunch";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "ExtendLaunchArgs";
+          };
+        },
+      ];
     },
   ];
   accounts: [
@@ -1374,6 +1392,18 @@ export type LaunchpadV7 = {
       };
     },
     {
+      name: "ExtendLaunchArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "durationSeconds";
+            type: "u32";
+          },
+        ];
+      };
+    },
+    {
       name: "InitializeLaunchArgs";
       type: {
         kind: "struct";
@@ -1888,6 +1918,33 @@ export type LaunchpadV7 = {
         },
       ];
     },
+    {
+      name: "LaunchExtendedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oldSecondsForLaunch";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "newSecondsForLaunch";
+          type: "u32";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -2045,6 +2102,11 @@ export type LaunchpadV7 = {
       name: "InvalidAccumulatorActivationDelaySeconds";
       msg: "Accumulator activation delay must be less than the launch duration";
     },
+    {
+      code: 6031;
+      name: "ExtendDurationExceedsMax";
+      msg: "The extend duration would exceed the maximum allowed launch duration";
+    },
   ];
 };
 
@@ -2188,11 +2250,6 @@ export const IDL: LaunchpadV7 = {
         {
           name: "fundingRecord",
           isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchSigner",
-          isMut: false,
           isSigner: false,
         },
         {
@@ -2570,11 +2627,6 @@ export const IDL: LaunchpadV7 = {
           isSigner: false,
         },
         {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -2607,7 +2659,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "baseMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2627,11 +2679,6 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
@@ -2684,7 +2731,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "launchSigner",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2694,7 +2741,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "baseMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2750,7 +2797,7 @@ export const IDL: LaunchpadV7 = {
         },
         {
           name: "launchSigner",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -2872,6 +2919,39 @@ export const IDL: LaunchpadV7 = {
         },
       ],
       args: [],
+    },
+    {
+      name: "extendLaunch",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "ExtendLaunchArgs",
+          },
+        },
+      ],
     },
   ],
   accounts: [
@@ -3424,6 +3504,18 @@ export const IDL: LaunchpadV7 = {
       },
     },
     {
+      name: "ExtendLaunchArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "durationSeconds",
+            type: "u32",
+          },
+        ],
+      },
+    },
+    {
       name: "InitializeLaunchArgs",
       type: {
         kind: "struct",
@@ -3938,6 +4030,33 @@ export const IDL: LaunchpadV7 = {
         },
       ],
     },
+    {
+      name: "LaunchExtendedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oldSecondsForLaunch",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "newSecondsForLaunch",
+          type: "u32",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -4094,6 +4213,11 @@ export const IDL: LaunchpadV7 = {
       code: 6030,
       name: "InvalidAccumulatorActivationDelaySeconds",
       msg: "Accumulator activation delay must be less than the launch duration",
+    },
+    {
+      code: 6031,
+      name: "ExtendDurationExceedsMax",
+      msg: "The extend duration would exceed the maximum allowed launch duration",
     },
   ],
 };

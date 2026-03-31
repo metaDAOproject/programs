@@ -282,7 +282,6 @@ export class LaunchpadClient {
       fundingRecord,
       funder,
       funderQuoteAccount,
-      launchSigner,
     });
   }
 
@@ -713,6 +712,21 @@ export class LaunchpadClient {
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
+    });
+  }
+
+  extendLaunchIx({
+    launch,
+    durationSeconds,
+    admin = METADAO_MULTISIG_VAULT,
+  }: {
+    launch: PublicKey;
+    durationSeconds: number;
+    admin?: PublicKey;
+  }) {
+    return this.launchpad.methods.extendLaunch({ durationSeconds }).accounts({
+      launch,
+      admin,
     });
   }
 

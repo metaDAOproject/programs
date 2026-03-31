@@ -26,7 +26,6 @@ pub struct InitializePerformancePackage<'info> {
     pub payer: Signer<'info>,
 
     /// CHECK: just a signer
-    #[account(mut)]
     pub launch_signer: UncheckedAccount<'info>,
 
     #[account(

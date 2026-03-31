@@ -42,4 +42,6 @@ pub enum PerformancePackageError {
     NoChangesProposed,
     #[msg("min_duration exceeds maximum allowed (365 days)")]
     MinDurationTooLarge,
+    #[msg("Change request is stale: PP was recreated or the proposing party has changed")]
+    StaleChangeRequest,
 }

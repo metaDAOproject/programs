@@ -34,7 +34,6 @@ pub struct CollectFees<'info> {
     pub quote_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
 }
 
 impl CollectFees<'_> {

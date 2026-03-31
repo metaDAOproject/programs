@@ -2,13 +2,6 @@ use anchor_lang::prelude::*;
 
 use super::{OracleReader, RewardFunction};
 
-/// Who proposed the change.
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
-pub enum ProposerType {
-    Authority,
-    Recipient,
-}
-
 /// Temporary account for two-party approval flow.
 /// Seeds: `["change_request", performance_package, proposer, pda_nonce.to_le_bytes()]`
 #[account]
@@ -16,8 +9,10 @@ pub enum ProposerType {
 pub struct ChangeRequest {
     /// The performance package this change applies to
     pub performance_package: Pubkey,
-    /// Who proposed this change
-    pub proposer_type: ProposerType,
+    /// The proposer's pubkey at proposal time
+    pub proposer: Pubkey,
+    /// PP's created_at_timestamp at proposal time; used to detect stale CRs after close/recreate
+    pub pp_created_at_timestamp: i64,
     /// When the change was proposed
     pub proposed_at: i64,
     /// For unique PDA derivation (allows multiple concurrent proposals)

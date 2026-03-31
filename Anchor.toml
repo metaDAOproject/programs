@@ -70,6 +70,7 @@ v07-resize-launches-funding-records = "yarn run tsx scripts/v0.7/resizeLaunchesA
 v07-dump-launches = "yarn run tsx scripts/v0.7/dumpLaunches.ts"
 v07-resize-launches = "yarn run tsx scripts/v0.7/resizeLaunches.ts"
 p2p-approve = "yarn run tsx scripts/v0.7/p2p/approveWithPreferentialAllocation.ts"
+v07-extend-launch = "yarn run tsx scripts/v0.7/extendLaunch.ts"
 
 [test]
 startup_wait = 5000
