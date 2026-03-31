@@ -1,7 +1,6 @@
 use crate::common::types::performance_package_v_2::ChangeRequest;
 use crate::common::types::performance_package_v_2::PackageStatus;
 use crate::common::types::performance_package_v_2::PerformancePackage;
-use crate::common::types::performance_package_v_2::ProposerType;
 use crate::FuzzTest;
 
 use trident_fuzz::fuzzing::Pubkey;
@@ -24,21 +23,20 @@ impl FuzzTest {
 
         // Invariant 1: executor must be the opposite party of the proposerType stored in
         // ChangeRequest.
-        match pre_cr.proposerType {
-            ProposerType::Recipient => {
-                invariant_eq!(
-                    executor,
-                    pre_pp.authority,
-                    "If recipient proposed, authority must execute"
-                );
-            }
-            ProposerType::Authority => {
-                invariant_eq!(
-                    executor,
-                    pre_pp.recipient,
-                    "If authority proposed, recipient must execute"
-                );
-            }
+        if pre_cr.proposer == pre_pp.authority {
+            invariant_eq!(
+                executor,
+                pre_pp.recipient,
+                "If authority proposed, recipient must execute"
+            );
+        } else if pre_cr.proposer == pre_pp.recipient {
+            invariant_eq!(
+                executor,
+                pre_pp.authority,
+                "If recipient proposed, authority must execute"
+            );
+        } else {
+            invariant!(false, "Invalid proposer");
         }
 
         // Invariant 2: change_request must belong to the supplied performance_package.

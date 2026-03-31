@@ -3,7 +3,6 @@ use crate::common::types::performance_package_v_2;
 use crate::common::types::performance_package_v_2::ChangeRequest;
 use crate::common::types::performance_package_v_2::PerformancePackage;
 use crate::common::types::performance_package_v_2::ProposeChangeArgs;
-use crate::common::types::performance_package_v_2::ProposerType;
 use crate::FuzzTest;
 use trident_fuzz::fuzzing::Pubkey;
 
@@ -56,21 +55,6 @@ impl FuzzTest {
             performance_package,
             "ChangeRequest.performancePackage must equal the provided performance_package"
         );
-
-        // Invariant 3: proposerType must reflect whether proposer is recipient or authority in the
-        // pre-state performance package.
-        let expected_proposer_type = if proposer == pre_pp.recipient {
-            ProposerType::Recipient
-        } else if proposer == pre_pp.authority {
-            ProposerType::Authority
-        } else {
-            panic!("proposer must be recipient or authority if tx succeeded");
-        };
-        match (&post_cr.proposerType, expected_proposer_type) {
-            (ProposerType::Recipient, ProposerType::Recipient)
-            | (ProposerType::Authority, ProposerType::Authority) => {}
-            _ => panic!("ChangeRequest.proposerType must match expected proposer type"),
-        }
 
         // Invariant 4: pdaNonce must be stored exactly as provided.
         invariant_eq!(

@@ -303,7 +303,6 @@ impl FuzzTest {
                 recipient_token_account,
                 signer,
                 TOKEN_PROGRAM_ID,
-                ASSOCIATED_TOKEN_PROGRAM_ID,
                 mint_governor::program_id(),
                 mint_governor_event_authority,
                 event_authority,

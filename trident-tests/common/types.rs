@@ -4708,6 +4708,8 @@ pub mod launchpad_v_7 {
         pub additionalTokensAmount: u64,
 
         pub accumulatorActivationDelaySeconds: u32,
+
+        pub hasBidWall: bool,
     }
 
     impl InitializeLaunchArgs {
@@ -4737,6 +4739,8 @@ pub mod launchpad_v_7 {
             additionalTokensAmount: u64,
 
             accumulatorActivationDelaySeconds: u32,
+
+            hasBidWall: bool,
         ) -> Self {
             Self {
                 minimumRaiseAmount,
@@ -4764,6 +4768,8 @@ pub mod launchpad_v_7 {
                 additionalTokensAmount,
 
                 accumulatorActivationDelaySeconds,
+
+                hasBidWall,
             }
         }
     }
@@ -5874,8 +5880,6 @@ pub mod futarchy {
 
         pub tokenProgram: Pubkey,
 
-        pub associatedTokenProgram: Pubkey,
-
         pub systemProgram: Pubkey,
 
         pub eventAuthority: Pubkey,
@@ -5901,8 +5905,6 @@ pub mod futarchy {
 
             tokenProgram: Pubkey,
 
-            associatedTokenProgram: Pubkey,
-
             systemProgram: Pubkey,
 
             eventAuthority: Pubkey,
@@ -5925,8 +5927,6 @@ pub mod futarchy {
                 payer,
 
                 tokenProgram,
-
-                associatedTokenProgram,
 
                 systemProgram,
 
@@ -5981,9 +5981,6 @@ pub mod futarchy {
 
             self.accounts.tokenProgram = AccountMeta::new_readonly(accounts.tokenProgram, false);
 
-            self.accounts.associatedTokenProgram =
-                AccountMeta::new_readonly(accounts.associatedTokenProgram, false);
-
             self.accounts.systemProgram = AccountMeta::new_readonly(accounts.systemProgram, false);
 
             self.accounts.eventAuthority =
@@ -6017,8 +6014,6 @@ pub mod futarchy {
             metas.push(self.accounts.payer.clone());
 
             metas.push(self.accounts.tokenProgram.clone());
-
-            metas.push(self.accounts.associatedTokenProgram.clone());
 
             metas.push(self.accounts.systemProgram.clone());
 
@@ -14341,7 +14336,6 @@ pub mod performance_package_v_2 {
         pub recipientAta: Pubkey,
         pub signer: Pubkey,
         pub tokenProgram: Pubkey,
-        pub associatedTokenProgram: Pubkey,
         pub mintGovernorProgram: Pubkey,
         pub mintGovernorEventAuthority: Pubkey,
         pub eventAuthority: Pubkey,
@@ -14357,7 +14351,6 @@ pub mod performance_package_v_2 {
             recipientAta: Pubkey,
             signer: Pubkey,
             tokenProgram: Pubkey,
-            associatedTokenProgram: Pubkey,
             mintGovernorProgram: Pubkey,
             mintGovernorEventAuthority: Pubkey,
             eventAuthority: Pubkey,
@@ -14371,7 +14364,6 @@ pub mod performance_package_v_2 {
                 recipientAta,
                 signer,
                 tokenProgram,
-                associatedTokenProgram,
                 mintGovernorProgram,
                 mintGovernorEventAuthority,
                 eventAuthority,
@@ -14412,8 +14404,6 @@ pub mod performance_package_v_2 {
             self.accounts.recipientAta = AccountMeta::new(accounts.recipientAta, false);
             self.accounts.signer = AccountMeta::new_readonly(accounts.signer, true);
             self.accounts.tokenProgram = AccountMeta::new_readonly(accounts.tokenProgram, false);
-            self.accounts.associatedTokenProgram =
-                AccountMeta::new_readonly(accounts.associatedTokenProgram, false);
             self.accounts.mintGovernorProgram =
                 AccountMeta::new_readonly(accounts.mintGovernorProgram, false);
             self.accounts.mintGovernorEventAuthority =
@@ -14438,7 +14428,6 @@ pub mod performance_package_v_2 {
             metas.push(self.accounts.recipientAta.clone());
             metas.push(self.accounts.signer.clone());
             metas.push(self.accounts.tokenProgram.clone());
-            metas.push(self.accounts.associatedTokenProgram.clone());
             metas.push(self.accounts.mintGovernorProgram.clone());
             metas.push(self.accounts.mintGovernorEventAuthority.clone());
             metas.push(self.accounts.eventAuthority.clone());
@@ -15081,12 +15070,6 @@ pub mod performance_package_v_2 {
     }
 
     #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
-    pub enum ProposerType {
-        Authority,
-        Recipient,
-    }
-
-    #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
     pub enum PackageStatus {
         Locked,
         Unlocking,
@@ -15122,7 +15105,8 @@ pub mod performance_package_v_2 {
     #[derive(Debug, BorshDeserialize, BorshSerialize, Clone, PartialEq)]
     pub struct ChangeRequest {
         pub performancePackage: Pubkey,
-        pub proposerType: ProposerType,
+        pub proposer: Pubkey,
+        pub ppCreatedAtTimestamp: i64,
         pub proposedAt: i64,
         pub pdaNonce: u32,
         pub bump: u8,
@@ -15134,7 +15118,8 @@ pub mod performance_package_v_2 {
     impl ChangeRequest {
         pub fn new(
             performancePackage: Pubkey,
-            proposerType: ProposerType,
+            proposer: Pubkey,
+            ppCreatedAtTimestamp: i64,
             proposedAt: i64,
             pdaNonce: u32,
             bump: u8,
@@ -15144,7 +15129,8 @@ pub mod performance_package_v_2 {
         ) -> Self {
             Self {
                 performancePackage,
-                proposerType,
+                proposer,
+                ppCreatedAtTimestamp,
                 proposedAt,
                 pdaNonce,
                 bump,
@@ -15166,6 +15152,7 @@ pub mod performance_package_v_2 {
         pub rewardFunction: RewardFunction,
         pub status: PackageStatus,
         pub minUnlockTimestamp: i64,
+        pub createdAtTimestamp: i64,
         pub totalRewardsPaidOut: u64,
         pub seqNum: u64,
         pub createKey: Pubkey,
@@ -15183,6 +15170,7 @@ pub mod performance_package_v_2 {
             rewardFunction: RewardFunction,
             status: PackageStatus,
             minUnlockTimestamp: i64,
+            createdAtTimestamp: i64,
             totalRewardsPaidOut: u64,
             seqNum: u64,
             createKey: Pubkey,
@@ -15198,6 +15186,7 @@ pub mod performance_package_v_2 {
                 rewardFunction,
                 status,
                 minUnlockTimestamp,
+                createdAtTimestamp,
                 totalRewardsPaidOut,
                 seqNum,
                 createKey,

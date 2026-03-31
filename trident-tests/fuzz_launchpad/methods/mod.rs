@@ -206,6 +206,7 @@ impl FuzzTest {
             team_address,
             additional_tokens_amount,
             accumulator_activation_delay_seconds,
+            false,
         )
     }
 
