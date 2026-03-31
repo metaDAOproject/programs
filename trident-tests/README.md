@@ -7,7 +7,7 @@
 ### 1. Install trident-cli
 
 ```bash
-cargo install trident-cli --version 0.13.0-rc.2
+cargo install trident-cli --version 0.13.0-rc.3
 ```
 
 ### 2. Build the programs
