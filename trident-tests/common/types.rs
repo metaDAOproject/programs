@@ -2032,8 +2032,6 @@ pub mod launchpad_v_7 {
 
         pub fundingRecord: AccountMeta,
 
-        pub launchSigner: AccountMeta,
-
         pub launchQuoteVault: AccountMeta,
 
         pub funder: AccountMeta,
@@ -2058,8 +2056,6 @@ pub mod launchpad_v_7 {
 
         pub fundingRecord: Pubkey,
 
-        pub launchSigner: Pubkey,
-
         pub launchQuoteVault: Pubkey,
 
         pub funder: Pubkey,
@@ -2083,8 +2079,6 @@ pub mod launchpad_v_7 {
 
             fundingRecord: Pubkey,
 
-            launchSigner: Pubkey,
-
             launchQuoteVault: Pubkey,
 
             funder: Pubkey,
@@ -2105,8 +2099,6 @@ pub mod launchpad_v_7 {
                 launch,
 
                 fundingRecord,
-
-                launchSigner,
 
                 launchQuoteVault,
 
@@ -2158,8 +2150,6 @@ pub mod launchpad_v_7 {
 
             self.accounts.fundingRecord = AccountMeta::new(accounts.fundingRecord, false);
 
-            self.accounts.launchSigner = AccountMeta::new_readonly(accounts.launchSigner, false);
-
             self.accounts.launchQuoteVault = AccountMeta::new(accounts.launchQuoteVault, false);
 
             self.accounts.funder = AccountMeta::new_readonly(accounts.funder, true);
@@ -2191,8 +2181,6 @@ pub mod launchpad_v_7 {
             metas.push(self.accounts.launch.clone());
 
             metas.push(self.accounts.fundingRecord.clone());
-
-            metas.push(self.accounts.launchSigner.clone());
 
             metas.push(self.accounts.launchQuoteVault.clone());
 
@@ -2805,8 +2793,6 @@ pub mod launchpad_v_7 {
 
         pub tokenProgram: AccountMeta,
 
-        pub systemProgram: AccountMeta,
-
         pub eventAuthority: AccountMeta,
 
         pub program: AccountMeta,
@@ -2829,8 +2815,6 @@ pub mod launchpad_v_7 {
 
         pub tokenProgram: Pubkey,
 
-        pub systemProgram: Pubkey,
-
         pub eventAuthority: Pubkey,
 
         pub program: Pubkey,
@@ -2852,8 +2836,6 @@ pub mod launchpad_v_7 {
 
             tokenProgram: Pubkey,
 
-            systemProgram: Pubkey,
-
             eventAuthority: Pubkey,
 
             program: Pubkey,
@@ -2872,8 +2854,6 @@ pub mod launchpad_v_7 {
                 funderQuoteAccount,
 
                 tokenProgram,
-
-                systemProgram,
 
                 eventAuthority,
 
@@ -2921,8 +2901,6 @@ pub mod launchpad_v_7 {
 
             self.accounts.tokenProgram = AccountMeta::new_readonly(accounts.tokenProgram, false);
 
-            self.accounts.systemProgram = AccountMeta::new_readonly(accounts.systemProgram, false);
-
             self.accounts.eventAuthority =
                 AccountMeta::new_readonly(accounts.eventAuthority, false);
 
@@ -2952,8 +2930,6 @@ pub mod launchpad_v_7 {
             metas.push(self.accounts.funderQuoteAccount.clone());
 
             metas.push(self.accounts.tokenProgram.clone());
-
-            metas.push(self.accounts.systemProgram.clone());
 
             metas.push(self.accounts.eventAuthority.clone());
 
@@ -3004,8 +2980,6 @@ pub mod launchpad_v_7 {
 
         pub tokenProgram: AccountMeta,
 
-        pub systemProgram: AccountMeta,
-
         pub eventAuthority: AccountMeta,
 
         pub program: AccountMeta,
@@ -3030,8 +3004,6 @@ pub mod launchpad_v_7 {
 
         pub tokenProgram: Pubkey,
 
-        pub systemProgram: Pubkey,
-
         pub eventAuthority: Pubkey,
 
         pub program: Pubkey,
@@ -3055,8 +3027,6 @@ pub mod launchpad_v_7 {
 
             tokenProgram: Pubkey,
 
-            systemProgram: Pubkey,
-
             eventAuthority: Pubkey,
 
             program: Pubkey,
@@ -3077,8 +3047,6 @@ pub mod launchpad_v_7 {
                 funderTokenAccount,
 
                 tokenProgram,
-
-                systemProgram,
 
                 eventAuthority,
 
@@ -3128,8 +3096,6 @@ pub mod launchpad_v_7 {
 
             self.accounts.tokenProgram = AccountMeta::new_readonly(accounts.tokenProgram, false);
 
-            self.accounts.systemProgram = AccountMeta::new_readonly(accounts.systemProgram, false);
-
             self.accounts.eventAuthority =
                 AccountMeta::new_readonly(accounts.eventAuthority, false);
 
@@ -3161,8 +3127,6 @@ pub mod launchpad_v_7 {
             metas.push(self.accounts.funderTokenAccount.clone());
 
             metas.push(self.accounts.tokenProgram.clone());
-
-            metas.push(self.accounts.systemProgram.clone());
 
             metas.push(self.accounts.eventAuthority.clone());
 
@@ -4966,6 +4930,8 @@ pub mod launchpad_v_7 {
         pub isPerformancePackageInitialized: bool,
 
         pub accumulatorActivationDelaySeconds: u32,
+
+        pub hasBidWall: bool,
     }
 
     impl Launch {
@@ -5029,6 +4995,8 @@ pub mod launchpad_v_7 {
             isPerformancePackageInitialized: bool,
 
             accumulatorActivationDelaySeconds: u32,
+
+            hasBidWall: bool,
         ) -> Self {
             Self {
                 pdaBump,
@@ -5090,6 +5058,8 @@ pub mod launchpad_v_7 {
                 isPerformancePackageInitialized,
 
                 accumulatorActivationDelaySeconds,
+
+                hasBidWall,
             }
         }
     }

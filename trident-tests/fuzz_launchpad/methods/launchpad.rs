@@ -146,7 +146,6 @@ impl FuzzTest {
                 .accounts(launchpad_v_7::FundInstructionAccounts::new(
                     launch,
                     funding_record,
-                    launch_signer,
                     launch_quote_vault,
                     funder,
                     payer,
@@ -159,6 +158,7 @@ impl FuzzTest {
                 .instruction();
 
         let res = self.trident.process_transaction(&[fund_launch], message);
+
         if !res.is_success() {
             return;
         }
@@ -351,7 +351,6 @@ impl FuzzTest {
                     funder,
                     funder_quote_account,
                     TOKEN_PROGRAM_ID,
-                    SOLANA_PROGRAM_ID,
                     event_authority,
                     launchpad_v_7::program_id(),
                 ))
@@ -426,7 +425,6 @@ impl FuzzTest {
                     funder,
                     funder_quote_account,
                     TOKEN_PROGRAM_ID,
-                    SOLANA_PROGRAM_ID,
                     event_authority,
                     launchpad_v_7::program_id(),
                 ))

@@ -259,6 +259,7 @@ impl FuzzTest {
             }
             _ => {
                 // In other states, avoid spamming meaningless failures (but rarely still try a Fund).
+                // here it should always fail
                 if self.trident.random_from_range(1u16..=1000u16) != 1 {
                     return;
                 }
