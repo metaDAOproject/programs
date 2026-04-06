@@ -64,4 +64,6 @@ pub enum LaunchpadError {
     InvalidDao,
     #[msg("Accumulator activation delay must be less than the launch duration")]
     InvalidAccumulatorActivationDelaySeconds,
+    #[msg("The extend duration would exceed the maximum allowed launch duration")]
+    ExtendDurationExceedsMax,
 }

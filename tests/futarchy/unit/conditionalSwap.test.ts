@@ -4,6 +4,10 @@ import {
   PublicKey,
   TransactionMessage,
 } from "@solana/web3.js";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import { expectError, setupBasicDao } from "../../utils.js";
 import { BN } from "bn.js";
 import { assert } from "chai";
@@ -59,7 +63,20 @@ export default function suite() {
         market: "pass",
         swapType: "buy",
         inputAmount: new BN(10 * 10 ** 6), // 1 USDC
+        minOutputAmount: new BN(0),
       })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          getAssociatedTokenAddressSync(
+            passBaseMint,
+            this.payer.publicKey,
+            true,
+          ),
+          this.payer.publicKey,
+          passBaseMint,
+        ),
+      ])
       .rpc();
 
     const postAmmState = (await this.futarchy.getDao(dao)).amm;
@@ -115,7 +132,20 @@ export default function suite() {
         market: "fail",
         swapType: "buy",
         inputAmount: new BN(10 * 10 ** 6), // 1 META
+        minOutputAmount: new BN(0),
       })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          getAssociatedTokenAddressSync(
+            failBaseMint,
+            this.payer.publicKey,
+            true,
+          ),
+          this.payer.publicKey,
+          failBaseMint,
+        ),
+      ])
       .rpc();
 
     const postFailQuoteBalance = await this.getTokenBalance(
@@ -144,6 +174,13 @@ export default function suite() {
         ],
       });
 
+    const { passBaseMint } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao,
+    );
+
     // Split some tokens to have conditional tokens to trade
     await this.conditionalVault
       .splitTokensIx(question, quoteVault, USDC, new BN(5 * 10 ** 6), 2)
@@ -164,7 +201,20 @@ export default function suite() {
         market: "pass",
         swapType: "buy",
         inputAmount: new BN(1000 * 10 ** 6), // 1000 USDC (more than we have)
+        minOutputAmount: new BN(0),
       })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          getAssociatedTokenAddressSync(
+            passBaseMint,
+            this.payer.publicKey,
+            true,
+          ),
+          this.payer.publicKey,
+          passBaseMint,
+        ),
+      ])
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -182,6 +232,13 @@ export default function suite() {
         ],
       });
 
+    const { passQuoteMint } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao,
+    );
+
     // Split some tokens to have conditional tokens to trade
     await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(5 * 10 ** 6), 2)
@@ -198,9 +255,6 @@ export default function suite() {
         inputAmount: new BN(100 * 10 ** 6),
       })
       .rpc();
-
-    // Ensure user has USDC token account for input (already created in beforeEach)
-    // await this.createTokenAccount(USDC, this.payer.publicKey);
 
     // Finalize the proposal first
     await this.futarchy
@@ -227,7 +281,20 @@ export default function suite() {
         market: "pass",
         swapType: "sell",
         inputAmount: new BN(1 * 10 ** 6),
+        minOutputAmount: new BN(0),
       })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          getAssociatedTokenAddressSync(
+            passQuoteMint,
+            this.payer.publicKey,
+            true,
+          ),
+          this.payer.publicKey,
+          passQuoteMint,
+        ),
+      ])
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -245,13 +312,17 @@ export default function suite() {
         ],
       });
 
+    const { passQuoteMint } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao,
+    );
+
     // Split some tokens to have conditional tokens to trade
     await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(5 * 10 ** 6), 2)
       .rpc();
-
-    // Ensure user has USDC token account for input (already created in beforeEach)
-    // await this.createTokenAccount(USDC, this.payer.publicKey);
 
     const callbacks = expectError(
       "SwapSlippageExceeded",
@@ -270,6 +341,18 @@ export default function suite() {
         inputAmount: new BN(1 * 10 ** 6), // 1 META
         minOutputAmount: new BN(1000 * 10 ** 6), // Expect 1000 USDC (unrealistic)
       })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          getAssociatedTokenAddressSync(
+            passQuoteMint,
+            this.payer.publicKey,
+            true,
+          ),
+          this.payer.publicKey,
+          passQuoteMint,
+        ),
+      ])
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });

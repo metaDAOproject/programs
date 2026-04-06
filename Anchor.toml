@@ -73,6 +73,7 @@ v07-dump-launches = "yarn run tsx scripts/v0.7/dumpLaunches.ts"
 v07-resize-launches = "yarn run tsx scripts/v0.7/resizeLaunches.ts"
 v07-dump-daos = "yarn run tsx scripts/v0.7/dumpDaos.ts"
 v07-resize-daos = "yarn run tsx scripts/v0.7/resizeDaos.ts"
+v07-extend-launch = "yarn run tsx scripts/v0.7/extendLaunch.ts"
 
 [test]
 startup_wait = 5000

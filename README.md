@@ -10,6 +10,8 @@ Programs for unruggable capital formation and market-driven governance.
 | ----------------- | ---- | -------------------------------------------- |
 | launchpad         | v0.7.0 | moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM |
 | bid_wall          | v0.7.0 | WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx |
+| mint_governor     | v0.7.0 | gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH |
+| performance_package_v2 | v0.7.0 | pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz |
 | liquidation       | v0.1.0 | LiQnowFbFQdYyZhF4pUbpsrZCjxRTQ1upKJxZ2VXjde |
 | futarchy          | v0.6.0 | FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq |
 | launchpad         | v0.6.0 | MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV |
