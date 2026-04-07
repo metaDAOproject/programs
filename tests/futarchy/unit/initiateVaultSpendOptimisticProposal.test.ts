@@ -187,12 +187,8 @@ export default function suite() {
       },
     );
 
-    const { question, quoteVault } = this.futarchy.getProposalPdas(
-      proposal,
-      META,
-      MAINNET_USDC,
-      dao,
-    );
+    const { question, quoteVault, passBaseMint } =
+      this.futarchy.getProposalPdas(proposal, META, MAINNET_USDC, dao);
 
     await this.conditionalVault
       .splitTokensIx(
@@ -216,6 +212,18 @@ export default function suite() {
         inputAmount: new BN(10_000 * 1_000_000),
         minOutputAmount: new BN(0),
       })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          getAssociatedTokenAddressSync(
+            passBaseMint,
+            this.payer.publicKey,
+            true,
+          ),
+          this.payer.publicKey,
+          passBaseMint,
+        ),
+      ])
       .rpc();
 
     // Crank TWAP to build up price history
@@ -235,6 +243,16 @@ export default function suite() {
         })
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+          createAssociatedTokenAccountIdempotentInstruction(
+            this.payer.publicKey,
+            getAssociatedTokenAddressSync(
+              passBaseMint,
+              this.payer.publicKey,
+              true,
+            ),
+            this.payer.publicKey,
+            passBaseMint,
+          ),
         ])
         .rpc();
     }

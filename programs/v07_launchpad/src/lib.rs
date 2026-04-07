@@ -50,11 +50,10 @@ pub mod usdc_mint {
     declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 }
 
-// TODO - Pileks: Set this to the correct fee recipient address
-pub mod fee_recipient {
+pub mod metadao_multisig_vault {
     use anchor_lang::prelude::declare_id;
 
-    // MetaDAO multisig vault
+    // MetaDAO operations multisig vault
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
@@ -128,5 +127,10 @@ pub mod launchpad_v7 {
 
     pub fn resize_launch(ctx: Context<ResizeLaunch>) -> Result<()> {
         ResizeLaunch::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn extend_launch(ctx: Context<ExtendLaunch>, args: ExtendLaunchArgs) -> Result<()> {
+        ExtendLaunch::handle(ctx, args)
     }
 }
