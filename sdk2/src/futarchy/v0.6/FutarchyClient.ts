@@ -567,15 +567,7 @@ export class FutarchyClient {
           this.vaultClient.vaultProgram.programId,
         )[0],
         question,
-      })
-      .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer,
-          getAssociatedTokenAddressSync(outputMint, trader, true),
-          trader,
-          outputMint,
-        ),
-      ]);
+      });
   }
 
   squadsProposalCreateTx({

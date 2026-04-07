@@ -705,6 +705,21 @@ export class LaunchpadClient {
     });
   }
 
+  extendLaunchIx({
+    launch,
+    durationSeconds,
+    admin = METADAO_MULTISIG_VAULT,
+  }: {
+    launch: PublicKey;
+    durationSeconds: number;
+    admin?: PublicKey;
+  }) {
+    return this.launchpad.methods.extendLaunch({ durationSeconds }).accounts({
+      launch,
+      admin,
+    });
+  }
+
   getLaunchAddress({ baseMint }: { baseMint: PublicKey }): PublicKey {
     return getLaunchAddr(this.launchpad.programId, baseMint)[0];
   }
