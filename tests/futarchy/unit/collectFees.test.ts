@@ -185,6 +185,13 @@ export default function suite() {
         ],
       });
 
+    const { failQuoteMint } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao,
+    );
+
     await this.conditionalVault
       .splitTokensIx(question, baseVault, META, new BN(5 * 10 ** 6), 2)
       .rpc();
@@ -204,6 +211,18 @@ export default function suite() {
         inputAmount: new BN(1),
         minOutputAmount: new BN(0),
       })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.payer.publicKey,
+          getAssociatedTokenAddressSync(
+            failQuoteMint,
+            this.payer.publicKey,
+            true,
+          ),
+          this.payer.publicKey,
+          failQuoteMint,
+        ),
+      ])
       .rpc();
 
     const callbacks = expectError(

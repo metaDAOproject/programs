@@ -8,6 +8,10 @@ import {
   Transaction,
   TransactionMessage,
 } from "@solana/web3.js";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import BN from "bn.js";
 import { expectError, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
@@ -246,12 +250,8 @@ export default function suite() {
   });
 
   it("fails proposals when Pass TWAP < Fail TWAP", async function () {
-    const { quoteVault, question } = this.futarchy.getProposalPdas(
-      proposal,
-      META,
-      USDC,
-      dao,
-    );
+    const { quoteVault, question, passBaseMint } =
+      this.futarchy.getProposalPdas(proposal, META, USDC, dao);
 
     await this.conditionalVault
       .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
@@ -271,6 +271,16 @@ export default function suite() {
         })
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+          createAssociatedTokenAccountIdempotentInstruction(
+            this.payer.publicKey,
+            getAssociatedTokenAddressSync(
+              passBaseMint,
+              this.payer.publicKey,
+              true,
+            ),
+            this.payer.publicKey,
+            passBaseMint,
+          ),
         ])
         .rpc();
 
