@@ -75,4 +75,9 @@ pub mod launchpad_v8 {
     ) -> Result<()> {
         InitializeLaunch::handle(ctx, args)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn start_launch(ctx: Context<StartLaunch>) -> Result<()> {
+        StartLaunch::handle(ctx)
+    }
 }
