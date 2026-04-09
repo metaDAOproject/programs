@@ -5,6 +5,7 @@ import {
   MAINNET_USDC,
 } from "@metadaoproject/futarchy-v2";
 import BN from "bn.js";
+import initializeLaunch from "./unit/initializeLaunch.test.js";
 
 export default function suite() {
   before(async function () {
@@ -63,4 +64,6 @@ export default function suite() {
         .rpc();
     };
   });
+
+  describe("#initialize_launch", initializeLaunch);
 }

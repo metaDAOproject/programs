@@ -50,14 +50,14 @@ pub struct InitializeLaunch<'info> {
         seeds = [b"launch", base_mint.key().as_ref()],
         bump
     )]
-    pub launch: Account<'info, Launch>,
+    pub launch: Box<Account<'info, Launch>>,
 
     #[account(
         mut,
         mint::decimals = 6,
         mint::authority = launch_signer,
     )]
-    pub base_mint: Account<'info, Mint>,
+    pub base_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: This is the token metadata
     #[account(
@@ -81,7 +81,7 @@ pub struct InitializeLaunch<'info> {
         associated_token::mint = quote_mint,
         associated_token::authority = launch_signer
     )]
-    pub quote_vault: Account<'info, TokenAccount>,
+    pub quote_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         init_if_needed,
@@ -89,7 +89,7 @@ pub struct InitializeLaunch<'info> {
         associated_token::mint = base_mint,
         associated_token::authority = launch_signer
     )]
-    pub base_vault: Account<'info, TokenAccount>,
+    pub base_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -98,7 +98,7 @@ pub struct InitializeLaunch<'info> {
     pub launch_authority: UncheckedAccount<'info>,
 
     #[account(mint::decimals = 6, address = usdc_mint::id())]
-    pub quote_mint: Account<'info, Mint>,
+    pub quote_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: Just the recipient of the additional tokens
     pub additional_tokens_recipient: Option<UncheckedAccount<'info>>,

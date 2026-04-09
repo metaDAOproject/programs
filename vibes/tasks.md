@@ -31,19 +31,11 @@
 
 > Reference: `launchpad_v8_spec.md` → "1. initialize_launch — CHANGED"
 
-- [NEXT] 2.3 Write `initializeLaunch` tests (tests #1–5)
-  - Test #1: "initializes a launch with valid parameters" — verify all Launch fields, MintGovernor setup, mint authority transfer, zero supply
-  - Test #2: "fails when monthly spending limit members contains duplicates"
-  - Test #3: "fails when monthly spending limit members is empty"
-  - Test #4: "rejects accumulator activation delay >= seconds_for_launch"
-  - Test #5: "fails when launch signer is faked"
-  - Verify: `anchor test --skip-build` (with `.only` on this suite)
-
 ### Phase 3: `start_launch` + `fund` + `close_launch`
 
 > Reference: `launchpad_v8_spec.md` → instructions 2, 3, 5
 
-- [ ] 3.1 Implement `start_launch` instruction (Rust)
+- [NEXT] 3.1 Implement `start_launch` instruction (Rust)
   - Create `src/instructions/start_launch.rs` — port from v7
   - Wire into `lib.rs` and `instructions/mod.rs`
   - Verify: `./rebuild.sh`
