@@ -7,6 +7,12 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
 } from "./pda.js";
+import {
+  LaunchpadProgram,
+  LaunchpadIDL,
+  Launch,
+  FundingRecord,
+} from "./types/index.js";
 
 import { FutarchyClient, getDaoAddr } from "../../futarchy/v0.6/index.js";
 import {
@@ -25,7 +31,7 @@ export type CreateLaunchpadClientParams = {
 };
 
 export class LaunchpadClient {
-  public launchpad: Program<any>;
+  public launchpad: Program<LaunchpadProgram>;
   public provider: AnchorProvider;
   public autocratClient: FutarchyClient;
   public performancePackageV2: PerformancePackageV2Client;
@@ -33,16 +39,8 @@ export class LaunchpadClient {
 
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
-    // IDL will be wired up after first build generates the types
-    this.launchpad = new Program(
-      {
-        version: "0.8.0",
-        name: "launchpad_v8",
-        instructions: [],
-        accounts: [],
-        events: [],
-        errors: [],
-      } as any,
+    this.launchpad = new Program<LaunchpadProgram>(
+      LaunchpadIDL as any,
       params.launchpadProgramId || LAUNCHPAD_V0_8_PROGRAM_ID,
       this.provider,
     );
@@ -69,23 +67,25 @@ export class LaunchpadClient {
     return this.launchpad.programId;
   }
 
-  async getLaunch(launch: PublicKey): Promise<any> {
+  async getLaunch(launch: PublicKey): Promise<Launch> {
     return await this.launchpad.account.launch.fetch(launch);
   }
 
-  async fetchLaunch(launch: PublicKey): Promise<any | null> {
+  async fetchLaunch(launch: PublicKey): Promise<Launch | null> {
     return await this.launchpad.account.launch.fetchNullable(launch);
   }
 
-  async deserializeLaunch(accountInfo: AccountInfo<Buffer>): Promise<any> {
+  async deserializeLaunch(accountInfo: AccountInfo<Buffer>): Promise<Launch> {
     return this.launchpad.coder.accounts.decode("launch", accountInfo.data);
   }
 
-  async getFundingRecord(fundingRecord: PublicKey): Promise<any> {
+  async getFundingRecord(fundingRecord: PublicKey): Promise<FundingRecord> {
     return await this.launchpad.account.fundingRecord.fetch(fundingRecord);
   }
 
-  async fetchFundingRecord(fundingRecord: PublicKey): Promise<any | null> {
+  async fetchFundingRecord(
+    fundingRecord: PublicKey,
+  ): Promise<FundingRecord | null> {
     return await this.launchpad.account.fundingRecord.fetchNullable(
       fundingRecord,
     );
@@ -93,7 +93,7 @@ export class LaunchpadClient {
 
   async deserializeFundingRecord(
     accountInfo: AccountInfo<Buffer>,
-  ): Promise<any> {
+  ): Promise<FundingRecord> {
     return this.launchpad.coder.accounts.decode(
       "fundingRecord",
       accountInfo.data,

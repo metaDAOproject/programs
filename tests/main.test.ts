@@ -2,6 +2,7 @@ import conditionalVault from "./conditionalVault/main.test.js";
 import futarchy from "./futarchy/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 import launchpad_v7 from "./launchpad_v7/main.test.js";
+import launchpad_v8 from "./launchpad_v8/main.test.js";
 import priceBasedPerformancePackage from "./priceBasedPerformancePackage/main.test.js";
 import bidWall from "./bidWall/main.test.js";
 import mintGovernor from "./mintGovernor/main.test.js";
@@ -41,6 +42,7 @@ import {
   sha256,
 } from "@metadaoproject/futarchy-v2";
 import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/futarchy-v2/launchpad/v0.6";
+import { LaunchpadClient as LaunchpadClientV8 } from "@metadaoproject/futarchy-v2/launchpad/v0.8";
 
 import {
   PublicKey,
@@ -89,6 +91,7 @@ export interface TestContext {
   conditionalVault: ConditionalVaultClient;
   futarchy: FutarchyClient;
   launchpad_v7: LaunchpadClientV7;
+  launchpad_v8: LaunchpadClientV8;
   launchpad_v6: LaunchpadClientV6;
   priceBasedPerformancePackage: PriceBasedPerformancePackageClient;
   bidWall: BidWallClient;
@@ -253,6 +256,9 @@ before(async function () {
     provider: provider as any,
   });
   this.launchpad_v7 = LaunchpadClientV7.createClient({
+    provider: provider as any,
+  });
+  this.launchpad_v8 = LaunchpadClientV8.createClient({
     provider: provider as any,
   });
   this.launchpad_v6 = LaunchpadClientV6.createClient({
@@ -741,6 +747,7 @@ before(async function () {
 
 describe("launchpad", launchpad);
 describe("launchpad_v7", launchpad_v7);
+describe("launchpad_v8", launchpad_v8);
 describe("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);

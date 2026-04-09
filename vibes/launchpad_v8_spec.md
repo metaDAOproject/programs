@@ -14,7 +14,7 @@
 | `complete_launch` | Transfers mint authority to DAO | Renamed → `settle_launch`; mints tokens via MintGovernor |
 | `initialize_performance_package` | Initializes PP v1 with pre-minted tokens | Renamed → `finalize_launch`; initializes PP v2 + transfers MintGovernor admin |
 | Migration instructions | `resize_launch`, `resize_funding_record` | Removed (fresh deploy, new program ID) |
-| Program ID | `moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM` | `MooNv7KbVWxQPCbCALJquw4D9pnVF7n8Nh2HmGqsxjg` |
+| Program ID | `moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM` | `moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n` |
 
 ---
 
@@ -1580,7 +1580,7 @@ export class LaunchpadClient {
 
 ```typescript
 // Add to sdk2/src/constants.ts
-export const LAUNCHPAD_V0_8_PROGRAM_ID = new PublicKey("MooNv7KbVWxQPCbCALJquw4D9pnVF7n8Nh2HmGqsxjg");
+export const LAUNCHPAD_V0_8_PROGRAM_ID = new PublicKey("moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n");
 ```
 
 ---

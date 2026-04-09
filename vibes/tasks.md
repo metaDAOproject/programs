@@ -27,17 +27,11 @@
 
 > Reference: `launchpad_v8_spec.md` → "Constants", "State", "Errors", "Events"
 
-- [NEXT] 1.4 Test scaffolding
-  - Create `tests/launchpad_v8/main.test.ts` with bankrun setup (model after `tests/launchpad_v7/main.test.ts`)
-  - Create `tests/launchpad_v8/utils.ts` with `initializeMintWithSeeds` helper targeting v0.8 client
-  - Create empty unit test files in `tests/launchpad_v8/unit/` for all 11 instruction test suites
-  - Verify: `anchor test --skip-build` runs (tests pass vacuously since empty)
-
 ### Phase 2: `initialize_launch`
 
 > Reference: `launchpad_v8_spec.md` → "1. initialize_launch — CHANGED"
 
-- [ ] 2.1 Implement `initialize_launch` instruction (Rust)
+- [NEXT] 2.1 Implement `initialize_launch` instruction (Rust)
   - Create `src/instructions/initialize_launch.rs` with `InitializeLaunchArgs`, `InitializeLaunch` accounts struct, `validate()`, and `handle()`
   - Port validation logic from v7
   - Implement handler: init Launch state, create metadata CPI, MintGovernor CPI chain (init governor → add mint authority → transfer authority)
