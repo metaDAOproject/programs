@@ -31,15 +31,7 @@
 
 > Reference: `launchpad_v8_spec.md` → "1. initialize_launch — CHANGED"
 
-- [NEXT] 2.1 Implement `initialize_launch` instruction (Rust)
-  - Create `src/instructions/initialize_launch.rs` with `InitializeLaunchArgs`, `InitializeLaunch` accounts struct, `validate()`, and `handle()`
-  - Port validation logic from v7
-  - Implement handler: init Launch state, create metadata CPI, MintGovernor CPI chain (init governor → add mint authority → transfer authority)
-  - NO token::mint_to — base vault stays empty
-  - Wire into `lib.rs` and `instructions/mod.rs`
-  - Verify: `./rebuild.sh`
-
-- [ ] 2.2 Add `initializeLaunchIx` to SDK2 client
+- [NEXT] 2.2 Add `initializeLaunchIx` to SDK2 client
   - Add the instruction builder method to `LaunchpadClient.ts` per spec
   - Derives MintGovernor + MintAuthority PDAs, passes all new accounts
   - Verify: `cd sdk2 && npx tsc --noEmit`

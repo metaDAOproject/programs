@@ -7,6 +7,8 @@ pub mod events;
 pub mod instructions;
 pub mod state;
 
+pub use instructions::*;
+
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
 
@@ -63,4 +65,14 @@ pub mod metadao_multisig_vault {
 }
 
 #[program]
-pub mod launchpad_v8 {}
+pub mod launchpad_v8 {
+    use super::*;
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_launch(
+        ctx: Context<InitializeLaunch>,
+        args: InitializeLaunchArgs,
+    ) -> Result<()> {
+        InitializeLaunch::handle(ctx, args)
+    }
+}

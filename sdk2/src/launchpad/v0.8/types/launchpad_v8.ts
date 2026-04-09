@@ -1,7 +1,135 @@
 export type LaunchpadV8 = {
   version: "0.8.0";
   name: "launchpad_v8";
-  instructions: [];
+  instructions: [
+    {
+      name: "initializeLaunch";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenMetadata";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "launchAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "additionalTokensRecipient";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
+        },
+        {
+          name: "mintGovernor";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            'PDA: seeds = [b"mint_governor", base_mint, launch_signer (create_key)]',
+            "Initialized via CPI to mint_governor::initialize_mint_governor",
+          ];
+        },
+        {
+          name: "mintAuthority";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            'PDA: seeds = [b"mint_authority", mint_governor, launch_signer (authorized_minter)]',
+            "Initialized via CPI to mint_governor::add_mint_authority",
+          ];
+        },
+        {
+          name: "mintGovernorProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintGovernorEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "rent";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenMetadataProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeLaunchArgs";
+          };
+        },
+      ];
+    },
+  ];
   accounts: [
     {
       name: "fundingRecord";
@@ -296,6 +424,72 @@ export type LaunchpadV8 = {
           {
             name: "launchSeqNum";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeLaunchArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "minimumRaiseAmount";
+            type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitAmount";
+            type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitMembers";
+            type: {
+              vec: "publicKey";
+            };
+          },
+          {
+            name: "secondsForLaunch";
+            type: "u32";
+          },
+          {
+            name: "tokenName";
+            type: "string";
+          },
+          {
+            name: "tokenSymbol";
+            type: "string";
+          },
+          {
+            name: "tokenUri";
+            type: "string";
+          },
+          {
+            name: "performancePackageGrantee";
+            type: "publicKey";
+          },
+          {
+            name: "performancePackageTokenAmount";
+            type: "u64";
+          },
+          {
+            name: "monthsUntilInsidersCanUnlock";
+            type: "u8";
+          },
+          {
+            name: "teamAddress";
+            type: "publicKey";
+          },
+          {
+            name: "additionalTokensAmount";
+            type: "u64";
+          },
+          {
+            name: "accumulatorActivationDelaySeconds";
+            type: "u32";
+          },
+          {
+            name: "hasBidWall";
+            type: "bool";
           },
         ];
       };
@@ -974,7 +1168,135 @@ export type LaunchpadV8 = {
 export const IDL: LaunchpadV8 = {
   version: "0.8.0",
   name: "launchpad_v8",
-  instructions: [],
+  instructions: [
+    {
+      name: "initializeLaunch",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenMetadata",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "launchAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "additionalTokensRecipient",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
+        },
+        {
+          name: "mintGovernor",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            'PDA: seeds = [b"mint_governor", base_mint, launch_signer (create_key)]',
+            "Initialized via CPI to mint_governor::initialize_mint_governor",
+          ],
+        },
+        {
+          name: "mintAuthority",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            'PDA: seeds = [b"mint_authority", mint_governor, launch_signer (authorized_minter)]',
+            "Initialized via CPI to mint_governor::add_mint_authority",
+          ],
+        },
+        {
+          name: "mintGovernorProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintGovernorEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "rent",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenMetadataProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeLaunchArgs",
+          },
+        },
+      ],
+    },
+  ],
   accounts: [
     {
       name: "fundingRecord",
@@ -1269,6 +1591,72 @@ export const IDL: LaunchpadV8 = {
           {
             name: "launchSeqNum",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeLaunchArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "minimumRaiseAmount",
+            type: "u64",
+          },
+          {
+            name: "monthlySpendingLimitAmount",
+            type: "u64",
+          },
+          {
+            name: "monthlySpendingLimitMembers",
+            type: {
+              vec: "publicKey",
+            },
+          },
+          {
+            name: "secondsForLaunch",
+            type: "u32",
+          },
+          {
+            name: "tokenName",
+            type: "string",
+          },
+          {
+            name: "tokenSymbol",
+            type: "string",
+          },
+          {
+            name: "tokenUri",
+            type: "string",
+          },
+          {
+            name: "performancePackageGrantee",
+            type: "publicKey",
+          },
+          {
+            name: "performancePackageTokenAmount",
+            type: "u64",
+          },
+          {
+            name: "monthsUntilInsidersCanUnlock",
+            type: "u8",
+          },
+          {
+            name: "teamAddress",
+            type: "publicKey",
+          },
+          {
+            name: "additionalTokensAmount",
+            type: "u64",
+          },
+          {
+            name: "accumulatorActivationDelaySeconds",
+            type: "u32",
+          },
+          {
+            name: "hasBidWall",
+            type: "bool",
           },
         ],
       },
