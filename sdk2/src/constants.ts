@@ -34,6 +34,9 @@ export const LAUNCHPAD_V0_6_PROGRAM_ID = new PublicKey(
 export const LAUNCHPAD_V0_7_PROGRAM_ID = new PublicKey(
   "moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM",
 );
+export const LAUNCHPAD_V0_8_PROGRAM_ID = new PublicKey(
+  "MooNv7KbVWxQPCbCALJquw4D9pnVF7n8Nh2HmGqsxjg",
+);
 export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
   "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d",
 );

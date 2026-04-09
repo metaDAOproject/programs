@@ -27,15 +27,7 @@
 
 > Reference: `launchpad_v8_spec.md` → "Constants", "State", "Errors", "Events"
 
-- [NEXT] 1.3 SDK2 scaffolding
-  - Add `LAUNCHPAD_V0_8_PROGRAM_ID` to `sdk2/src/constants.ts`
-  - Create `sdk2/src/launchpad/v0.8/pda.ts` with `getLaunchAddr`, `getLaunchSignerAddr`, `getFundingRecordAddr`
-  - Create `sdk2/src/launchpad/v0.8/types/index.ts` (stub — types will be generated after first build)
-  - Create `sdk2/src/launchpad/v0.8/index.ts` (re-exports)
-  - Create `sdk2/src/launchpad/v0.8/LaunchpadClient.ts` with constructor, `createClient`, fetch/deserialize methods, and address derivation helpers (no instruction builders yet)
-  - Verify: SDK compiles (`cd sdk2 && npx tsc --noEmit`)
-
-- [ ] 1.4 Test scaffolding
+- [NEXT] 1.4 Test scaffolding
   - Create `tests/launchpad_v8/main.test.ts` with bankrun setup (model after `tests/launchpad_v7/main.test.ts`)
   - Create `tests/launchpad_v8/utils.ts` with `initializeMintWithSeeds` helper targeting v0.8 client
   - Create empty unit test files in `tests/launchpad_v8/unit/` for all 11 instruction test suites
