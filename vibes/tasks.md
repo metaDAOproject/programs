@@ -27,17 +27,7 @@
 
 > Reference: `launchpad_v8_spec.md` → "Constants", "State", "Errors", "Events"
 
-- [NEXT] 1.2 Add constants, state, errors, and events
-  - Create `src/state/launch.rs` with the `Launch` struct (including new `mint_governor` field)
-  - Create `src/state/funding_record.rs` with `FundingRecord` struct (unchanged from v7)
-  - Create `src/state/mod.rs`
-  - Create `src/error.rs` with all error variants from spec
-  - Create `src/events.rs` with all events from spec (using `CommonFields` pattern)
-  - Add constants to `lib.rs` (TOKEN_SCALE, PRICE_SCALE, TOKENS_TO_*, PP_* constants)
-  - Create `src/instructions/mod.rs` (empty, will be populated in later phases)
-  - Verify: `anchor build -p v08_launchpad`
-
-- [ ] 1.3 SDK2 scaffolding
+- [NEXT] 1.3 SDK2 scaffolding
   - Add `LAUNCHPAD_V0_8_PROGRAM_ID` to `sdk2/src/constants.ts`
   - Create `sdk2/src/launchpad/v0.8/pda.ts` with `getLaunchAddr`, `getLaunchSignerAddr`, `getFundingRecordAddr`
   - Create `sdk2/src/launchpad/v0.8/types/index.ts` (stub — types will be generated after first build)

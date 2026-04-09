@@ -2,6 +2,10 @@
 use anchor_lang::prelude::*;
 
 pub mod allocator;
+pub mod error;
+pub mod events;
+pub mod instructions;
+pub mod state;
 
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
