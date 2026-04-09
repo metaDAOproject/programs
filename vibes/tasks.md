@@ -1,0 +1,246 @@
+# Launchpad v8 Implementation Tasks
+
+## Instructions for Claude
+
+**READ THIS FIRST:**
+
+1. Look at this file and find the task marked with `[NEXT]`
+2. Read the referenced section in `vibes/launchpad_v8_spec.md` for full context
+3. Do ONLY that task - nothing else
+4. After completing the task, verify with the specified verification command
+5. If successful, remove the completed task from this file
+6. Mark the next task with `[NEXT]`
+7. Stop and wait for the user
+
+**DO NOT:**
+- Do multiple tasks at once
+- Skip ahead
+- Forget to verify
+
+**Reference:** Full implementation plan is in `vibes/launchpad_v8_spec.md`
+
+---
+
+## Tasks
+
+### Phase 1: Scaffolding + State
+
+> Reference: `launchpad_v8_spec.md` → "Constants", "State", "Errors", "Events"
+
+- [NEXT] 1.2 Add constants, state, errors, and events
+  - Create `src/state/launch.rs` with the `Launch` struct (including new `mint_governor` field)
+  - Create `src/state/funding_record.rs` with `FundingRecord` struct (unchanged from v7)
+  - Create `src/state/mod.rs`
+  - Create `src/error.rs` with all error variants from spec
+  - Create `src/events.rs` with all events from spec (using `CommonFields` pattern)
+  - Add constants to `lib.rs` (TOKEN_SCALE, PRICE_SCALE, TOKENS_TO_*, PP_* constants)
+  - Create `src/instructions/mod.rs` (empty, will be populated in later phases)
+  - Verify: `anchor build -p v08_launchpad`
+
+- [ ] 1.3 SDK2 scaffolding
+  - Add `LAUNCHPAD_V0_8_PROGRAM_ID` to `sdk2/src/constants.ts`
+  - Create `sdk2/src/launchpad/v0.8/pda.ts` with `getLaunchAddr`, `getLaunchSignerAddr`, `getFundingRecordAddr`
+  - Create `sdk2/src/launchpad/v0.8/types/index.ts` (stub — types will be generated after first build)
+  - Create `sdk2/src/launchpad/v0.8/index.ts` (re-exports)
+  - Create `sdk2/src/launchpad/v0.8/LaunchpadClient.ts` with constructor, `createClient`, fetch/deserialize methods, and address derivation helpers (no instruction builders yet)
+  - Verify: SDK compiles (`cd sdk2 && npx tsc --noEmit`)
+
+- [ ] 1.4 Test scaffolding
+  - Create `tests/launchpad_v8/main.test.ts` with bankrun setup (model after `tests/launchpad_v7/main.test.ts`)
+  - Create `tests/launchpad_v8/utils.ts` with `initializeMintWithSeeds` helper targeting v0.8 client
+  - Create empty unit test files in `tests/launchpad_v8/unit/` for all 11 instruction test suites
+  - Verify: `anchor test --skip-build` runs (tests pass vacuously since empty)
+
+### Phase 2: `initialize_launch`
+
+> Reference: `launchpad_v8_spec.md` → "1. initialize_launch — CHANGED"
+
+- [ ] 2.1 Implement `initialize_launch` instruction (Rust)
+  - Create `src/instructions/initialize_launch.rs` with `InitializeLaunchArgs`, `InitializeLaunch` accounts struct, `validate()`, and `handle()`
+  - Port validation logic from v7
+  - Implement handler: init Launch state, create metadata CPI, MintGovernor CPI chain (init governor → add mint authority → transfer authority)
+  - NO token::mint_to — base vault stays empty
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 2.2 Add `initializeLaunchIx` to SDK2 client
+  - Add the instruction builder method to `LaunchpadClient.ts` per spec
+  - Derives MintGovernor + MintAuthority PDAs, passes all new accounts
+  - Verify: `cd sdk2 && npx tsc --noEmit`
+
+- [ ] 2.3 Write `initializeLaunch` tests (tests #1–5)
+  - Test #1: "initializes a launch with valid parameters" — verify all Launch fields, MintGovernor setup, mint authority transfer, zero supply
+  - Test #2: "fails when monthly spending limit members contains duplicates"
+  - Test #3: "fails when monthly spending limit members is empty"
+  - Test #4: "rejects accumulator activation delay >= seconds_for_launch"
+  - Test #5: "fails when launch signer is faked"
+  - Verify: `anchor test --skip-build` (with `.only` on this suite)
+
+### Phase 3: `start_launch` + `fund` + `close_launch`
+
+> Reference: `launchpad_v8_spec.md` → instructions 2, 3, 5
+
+- [ ] 3.1 Implement `start_launch` instruction (Rust)
+  - Create `src/instructions/start_launch.rs` — port from v7
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 3.2 Implement `fund` instruction (Rust)
+  - Create `src/instructions/fund.rs` — port from v7
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 3.3 Implement `close_launch` instruction (Rust)
+  - Create `src/instructions/close_launch.rs` — port from v7
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 3.4 Add `startLaunchIx`, `fundIx`, `closeLaunchIx` to SDK2 client
+  - Port from v7 SDK2 client, targeting v0.8 program
+  - Verify: `cd sdk2 && npx tsc --noEmit`
+
+- [ ] 3.5 Write `startLaunch` tests (test #6)
+  - Test #6: "starts launch correctly"
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+- [ ] 3.6 Write `fund` tests (tests #7–15)
+  - Tests #7–15: all fund tests per spec
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+- [ ] 3.7 Write `closeLaunch` tests (tests #16–20)
+  - Tests #16–20: all close_launch tests per spec
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+### Phase 4: `set_funding_record_approval`
+
+> Reference: `launchpad_v8_spec.md` → instruction 4
+
+- [ ] 4.1 Implement `set_funding_record_approval` instruction (Rust)
+  - Create `src/instructions/set_funding_record_approval.rs` — port from v7
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 4.2 Add `setFundingRecordApprovalIx` to SDK2 client
+  - Port from v7 SDK2 client
+  - Verify: `cd sdk2 && npx tsc --noEmit`
+
+- [ ] 4.3 Write `setFundingRecordApproval` tests (tests #21–26)
+  - Tests #21–26: all set_funding_record_approval tests per spec
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+### Phase 5: `settle_launch`
+
+> Reference: `launchpad_v8_spec.md` → "6. settle_launch — CHANGED"
+
+- [ ] 5.1 Implement `settle_launch` instruction (Rust)
+  - Create `src/instructions/settle_launch.rs` with `SettleLaunch` accounts struct, `validate()`, and `handle()`
+  - Port from v7 `complete_launch` with key changes: mint_governor::mint_tokens CPI replaces token::set_authority, no mint authority transfer
+  - Include StaticCompleteLaunchAccounts and MeteoraAccounts nested structs
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 5.2 Add `settleLaunchIx` to SDK2 client
+  - Add the instruction builder method per spec (includes MintGovernor + Meteora + DAO account derivation)
+  - Verify: `cd sdk2 && npx tsc --noEmit`
+
+- [ ] 5.3 Write `settleLaunch` tests (tests #27–33)
+  - Test #27: happy path — tokens minted via MintGovernor, DAO created, liquidity, metadata transfer, USDC distribution, MintGovernor admin still launch_signer
+  - Test #28: sends all USDC to treasury when hasBidWall is false
+  - Test #29: initializes bid wall when hasBidWall is true and funding exceeds 1.25x
+  - Test #30: no bid wall when funding equals minimum raise
+  - Test #31: no bid wall at exactly 1.25x boundary
+  - Test #32: Refunding path — no tokens minted, no DAO
+  - Test #33: fails when launch is in refunding state
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+### Phase 6: `claim` + `refund` + `claim_additional_token_allocation`
+
+> Reference: `launchpad_v8_spec.md` → instructions 8, 9, 10
+
+- [ ] 6.1 Implement `claim` instruction (Rust)
+  - Create `src/instructions/claim.rs` — port from v7
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 6.2 Implement `refund` instruction (Rust)
+  - Create `src/instructions/refund.rs` — port from v7
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 6.3 Implement `claim_additional_token_allocation` instruction (Rust)
+  - Create `src/instructions/claim_additional_token_allocation.rs` — port from v7
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 6.4 Add `claimIx`, `refundIx`, `claimAdditionalTokenAllocationIx` to SDK2 client
+  - Port from v7 SDK2 client
+  - Verify: `cd sdk2 && npx tsc --noEmit`
+
+- [ ] 6.5 Write `claim` tests (tests #37–38)
+  - Test #37: "successfully claims tokens after launch completion"
+  - Test #38: "fails when launch is not complete"
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+- [ ] 6.6 Write `refund` tests (tests #39–41)
+  - Test #39: "allows refunds when launch is in refunding state"
+  - Test #40: "works for oversubscribed launches"
+  - Test #41: "fails when launch is not in refunding or complete state"
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+- [ ] 6.7 Write `claimAdditionalTokenAllocation` tests (tests #42–43)
+  - Test #42: "sets and claims additional token allocation successfully, and only once"
+  - Test #43: "fails to claim additional token allocation if the launch doesn't have one"
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+### Phase 7: `finalize_launch`
+
+> Reference: `launchpad_v8_spec.md` → "7. finalize_launch — CHANGED"
+
+- [ ] 7.1 Implement `finalize_launch` instruction (Rust)
+  - Create `src/instructions/finalize_launch.rs` with `FinalizeLaunch` accounts struct, `validate()`, and `handle()`
+  - Handler: compute tranches, CPI add_mint_authority (PP v2 PDA), CPI initialize_performance_package, CPI update_mint_governor_admin
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 7.2 Add `finalizeLaunchIx` to SDK2 client
+  - Add the instruction builder method per spec
+  - Verify: `cd sdk2 && npx tsc --noEmit`
+
+- [ ] 7.3 Write `finalizeLaunch` tests (tests #34–36)
+  - Test #34: happy path — PP v2 setup (tranches, oracle, recipient, authority), MintGovernor admin transferred to DAO
+  - Test #35: "fails when launch state is not Complete"
+  - Test #36: "can finalize only once"
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+### Phase 8: `extend_launch`
+
+> Reference: `launchpad_v8_spec.md` → instruction 11
+
+- [ ] 8.1 Implement `extend_launch` instruction (Rust)
+  - Create `src/instructions/extend_launch.rs` — port from v7
+  - Wire into `lib.rs` and `instructions/mod.rs`
+  - Verify: `./rebuild.sh`
+
+- [ ] 8.2 Add `extendLaunchIx` to SDK2 client
+  - Port from v7 SDK2 client
+  - Verify: `cd sdk2 && npx tsc --noEmit`
+
+- [ ] 8.3 Write `extendLaunch` tests (tests #44–46)
+  - Test #44: "successfully extends a live launch"
+  - Test #45: "funders can still fund after original deadline if extended"
+  - Test #46: "close_launch respects new extended deadline"
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+### Phase 9: Integration + Full Suite
+
+> Reference: `launchpad_v8_spec.md` → "Integration Test"
+
+- [ ] 9.1 Write integration test
+  - Create `tests/integration/launchpad_v8_full_lifecycle.test.ts`
+  - Full lifecycle: init → start → fund (multiple funders) → close → approve → settle → finalize → claim → refund → claim_additional
+  - Verify: `anchor test --skip-build` (with `.only` on integration suite)
+
+- [ ] 9.2 Run full test suite
+  - Remove all `.only` markers
+  - Run `anchor test` (full build + all tests)
+  - All 46 unit tests + integration test must pass
