@@ -35,12 +35,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 2, 3, 5
 
-- [NEXT] 3.2 Implement `fund` instruction (Rust)
-  - Create `src/instructions/fund.rs` — port from v7
-  - Wire into `lib.rs` and `instructions/mod.rs`
-  - Verify: `./rebuild.sh`
-
-- [ ] 3.3 Implement `close_launch` instruction (Rust)
+- [NEXT] 3.3 Implement `close_launch` instruction (Rust)
   - Create `src/instructions/close_launch.rs` — port from v7
   - Wire into `lib.rs` and `instructions/mod.rs`
   - Verify: `./rebuild.sh`

@@ -80,4 +80,9 @@ pub mod launchpad_v8 {
     pub fn start_launch(ctx: Context<StartLaunch>) -> Result<()> {
         StartLaunch::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate(amount))]
+    pub fn fund(ctx: Context<Fund>, amount: u64) -> Result<()> {
+        Fund::handle(ctx, amount)
+    }
 }

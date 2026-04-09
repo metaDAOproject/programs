@@ -155,6 +155,67 @@ export type LaunchpadV8 = {
       ];
       args: [];
     },
+    {
+      name: "fund";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "fundingRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "funder";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "funderQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "amount";
+          type: "u64";
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -1347,6 +1408,67 @@ export const IDL: LaunchpadV8 = {
         },
       ],
       args: [],
+    },
+    {
+      name: "fund",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "fundingRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "funder",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "funderQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "amount",
+          type: "u64",
+        },
+      ],
     },
   ],
   accounts: [
