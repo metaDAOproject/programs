@@ -31,12 +31,7 @@
 
 > Reference: `launchpad_v8_spec.md` → "1. initialize_launch — CHANGED"
 
-- [NEXT] 2.2 Add `initializeLaunchIx` to SDK2 client
-  - Add the instruction builder method to `LaunchpadClient.ts` per spec
-  - Derives MintGovernor + MintAuthority PDAs, passes all new accounts
-  - Verify: `cd sdk2 && npx tsc --noEmit`
-
-- [ ] 2.3 Write `initializeLaunch` tests (tests #1–5)
+- [NEXT] 2.3 Write `initializeLaunch` tests (tests #1–5)
   - Test #1: "initializes a launch with valid parameters" — verify all Launch fields, MintGovernor setup, mint authority transfer, zero supply
   - Test #2: "fails when monthly spending limit members contains duplicates"
   - Test #3: "fails when monthly spending limit members is empty"
