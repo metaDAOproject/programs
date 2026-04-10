@@ -513,31 +513,6 @@ export type LaunchpadV8 = {
           ];
         },
         {
-          name: "mintGovernorAccounts";
-          accounts: [
-            {
-              name: "mintGovernor";
-              isMut: true;
-              isSigner: false;
-            },
-            {
-              name: "mintAuthority";
-              isMut: true;
-              isSigner: false;
-            },
-            {
-              name: "mintGovernorProgram";
-              isMut: false;
-              isSigner: false;
-            },
-            {
-              name: "mintGovernorEventAuthority";
-              isMut: false;
-              isSigner: false;
-            },
-          ];
-        },
-        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -1583,6 +1558,11 @@ export type LaunchpadV8 = {
       name: "InvalidMintAuthority";
       msg: "Mint authority does not match expected";
     },
+    {
+      code: 6032;
+      name: "InvalidMeteoraAccount";
+      msg: "Invalid Meteora account";
+    },
   ];
 };
 
@@ -2095,31 +2075,6 @@ export const IDL: LaunchpadV8 = {
             },
             {
               name: "dammV2EventAuthority",
-              isMut: false,
-              isSigner: false,
-            },
-          ],
-        },
-        {
-          name: "mintGovernorAccounts",
-          accounts: [
-            {
-              name: "mintGovernor",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "mintAuthority",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "mintGovernorProgram",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "mintGovernorEventAuthority",
               isMut: false,
               isSigner: false,
             },
@@ -3170,6 +3125,11 @@ export const IDL: LaunchpadV8 = {
       code: 6031,
       name: "InvalidMintAuthority",
       msg: "Mint authority does not match expected",
+    },
+    {
+      code: 6032,
+      name: "InvalidMeteoraAccount",
+      msg: "Invalid Meteora account",
     },
   ],
 };

@@ -459,21 +459,6 @@ export class LaunchpadClient {
       this.autocratClient.getProgramId(),
     );
 
-    // MintGovernor PDAs
-    const [mintGovernor] = getMintGovernorAddr({
-      programId: this.mintGovernorClient.programId,
-      mint: baseMint,
-      createKey: launchSigner,
-    });
-    const [mintAuthority] = getMintAuthorityAddr({
-      programId: this.mintGovernorClient.programId,
-      mintGovernor,
-      authorizedMinter: launchSigner,
-    });
-    const [mintGovernorEventAuthority] = getEventAuthorityAddr(
-      this.mintGovernorClient.programId,
-    );
-
     // Meteora PDAs
     const [positionNftMint] = PublicKey.findProgramAddressSync(
       [Buffer.from("position_nft_mint"), baseMint.toBuffer()],
@@ -597,25 +582,19 @@ export class LaunchpadClient {
         feeRecipient,
         meteoraAccounts: {
           dammV2Program: DAMM_V2_PROGRAM_ID,
-          positionNftMint,
-          baseMint,
-          quoteMint,
           config: meteoraConfig,
           token2022Program: TOKEN_2022_PROGRAM_ID,
           positionNftAccount,
           pool,
-          poolCreatorAuthority,
           position,
+          positionNftMint,
+          baseMint,
+          quoteMint,
           tokenAVault,
           tokenBVault,
+          poolCreatorAuthority,
           poolAuthority,
           dammV2EventAuthority,
-        },
-        mintGovernorAccounts: {
-          mintGovernor,
-          mintAuthority,
-          mintGovernorProgram: this.mintGovernorClient.programId,
-          mintGovernorEventAuthority,
         },
       })
       .preInstructions([

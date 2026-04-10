@@ -97,16 +97,30 @@ export async function createLookupTableForTransaction(
       recentSlot: slot - 1n,
     });
 
-  // Extract all unique accounts from the transaction
-  const accountsToAdd = transaction.instructions.map((instruction) =>
+  // Extract all unique accounts from the transaction (deduplicate by base58)
+  const accountsToAdd = transaction.instructions.flatMap((instruction) =>
     instruction.keys.map((key) => key.pubkey),
   );
-  const uniqueAccounts = [...new Set(accountsToAdd.flat())] as PublicKey[];
+  const seen = new Set<string>();
+  const uniqueAccounts: PublicKey[] = [];
+  for (const key of accountsToAdd) {
+    const b58 = key.toBase58();
+    if (!seen.has(b58)) {
+      seen.add(b58);
+      uniqueAccounts.push(key);
+    }
+  }
   console.log("uniqueAccounts", uniqueAccounts.length);
 
   // Add any additional addresses
-  const allAddresses = [...uniqueAccounts, ...additionalAddresses];
-  const finalUniqueAddresses = [...new Set(allAddresses)] as PublicKey[];
+  for (const key of additionalAddresses) {
+    const b58 = key.toBase58();
+    if (!seen.has(b58)) {
+      seen.add(b58);
+      uniqueAccounts.push(key);
+    }
+  }
+  const finalUniqueAddresses = uniqueAccounts;
 
   // Create the lookup table
   const createLutTx = new Transaction().add(createTableIx);

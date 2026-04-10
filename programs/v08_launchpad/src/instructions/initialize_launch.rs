@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 
 use mint_governor::{
     cpi::{
@@ -294,6 +294,28 @@ impl InitializeLaunch<'_> {
             true,
             true,
             None,
+        )?;
+
+        // Mint fixed token amounts into base vault while launch_signer is still the direct authority.
+        // These tokens will be distributed during settlement (participants, futarchy AMM, Meteora LP).
+        // Minting is done here rather than in settle_launch to stay within CPI limits during settlement,
+        // which already performs multiple nested CPIs (initialize_dao, meteora, bid wall).
+        let tokens_to_mint = TOKENS_TO_PARTICIPANTS
+            + TOKENS_TO_FUTARCHY_LIQUIDITY
+            + TOKENS_TO_DAMM_V2_LIQUIDITY
+            + args.additional_tokens_amount;
+
+        token::mint_to(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                MintTo {
+                    mint: ctx.accounts.base_mint.to_account_info(),
+                    to: ctx.accounts.base_vault.to_account_info(),
+                    authority: ctx.accounts.launch_signer.to_account_info(),
+                },
+                signer,
+            ),
+            tokens_to_mint,
         )?;
 
         // Set up MintGovernor: create governor, add launch_signer as minter, transfer mint authority

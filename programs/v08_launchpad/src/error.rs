@@ -66,4 +66,6 @@ pub enum LaunchpadError {
     ExtendDurationExceedsMax,
     #[msg("Mint authority does not match expected")]
     InvalidMintAuthority,
+    #[msg("Invalid Meteora account")]
+    InvalidMeteoraAccount,
 }

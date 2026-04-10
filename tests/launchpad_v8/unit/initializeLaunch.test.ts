@@ -153,10 +153,10 @@ export default function suite() {
     const mintInfo = await this.getMint(META);
     assert.ok(mintInfo.mintAuthority.equals(expectedMintGovernor));
 
-    // Zero supply, zero base vault balance
-    assert.equal(mintInfo.supply.toString(), "0");
+    // Tokens are minted during initialize_launch (before governor takes over)
+    assert.equal(mintInfo.supply.toString(), expectedMaxTotal.toString());
     const baseVaultBalance = await this.getTokenBalance(META, launchSigner);
-    assert.equal(baseVaultBalance.toString(), "0");
+    assert.equal(baseVaultBalance.toString(), expectedMaxTotal.toString());
   });
 
   it("fails when monthly spending limit members contains duplicates", async function () {

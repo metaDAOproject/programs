@@ -12,12 +12,6 @@ use damm_v2_cpi::constants::seeds::{
 use damm_v2_cpi::constants::MAX_SQRT_PRICE;
 use damm_v2_cpi::BaseFeeParameters;
 
-use mint_governor::{
-    cpi::{accounts::MintTokens, mint_tokens},
-    program::MintGovernor as MintGovernorProgram,
-    MintTokensArgs,
-};
-
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCloseEvent, LaunchSettledEvent};
 use crate::state::{Launch, LaunchState};
@@ -72,7 +66,10 @@ pub struct MeteoraAccounts<'info> {
     pub token_2022_program: Program<'info, Token2022>,
 
     /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [POSITION_NFT_ACCOUNT_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
+    #[account(mut,seeds = [
+        POSITION_NFT_ACCOUNT_PREFIX.as_ref(),
+        position_nft_mint.key().as_ref()
+        ], bump, seeds::program = damm_v2_program)]
     pub position_nft_account: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
@@ -85,11 +82,16 @@ pub struct MeteoraAccounts<'info> {
     pub pool: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [POSITION_PREFIX.as_ref(), position_nft_mint.key().as_ref()], bump, seeds::program = damm_v2_program)]
+    #[account(mut, seeds = [
+        POSITION_PREFIX.as_ref(),
+        position_nft_mint.key().as_ref()
+        ], bump, seeds::program = damm_v2_program)]
     pub position: UncheckedAccount<'info>,
 
     /// CHECK: checked by damm v2 program
-    #[account(mut, seeds = [b"position_nft_mint", base_mint.key().as_ref()], bump)]
+    #[account(mut, seeds = [
+        b"position_nft_mint", 
+        base_mint.key().as_ref()], bump)]
     pub position_nft_mint: UncheckedAccount<'info>,
 
     /// CHECK: checked by root struct
@@ -123,23 +125,6 @@ pub struct MeteoraAccounts<'info> {
 
     /// CHECK: checked by damm v2 program
     pub damm_v2_event_authority: UncheckedAccount<'info>,
-}
-
-#[derive(Accounts)]
-pub struct MintGovernorAccounts<'info> {
-    #[account(mut)]
-    pub mint_governor: Box<Account<'info, mint_governor::MintGovernor>>,
-
-    #[account(
-        mut,
-        has_one = mint_governor,
-    )]
-    pub mint_authority: Box<Account<'info, mint_governor::MintAuthority>>,
-
-    pub mint_governor_program: Program<'info, MintGovernorProgram>,
-
-    /// CHECK: checked by mint_governor program
-    pub mint_governor_event_authority: UncheckedAccount<'info>,
 }
 
 #[event_cpi]
@@ -243,7 +228,6 @@ pub struct SettleLaunch<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub static_accounts: StaticCompleteLaunchAccounts<'info>,
     pub meteora_accounts: MeteoraAccounts<'info>,
-    pub mint_governor_accounts: MintGovernorAccounts<'info>,
 }
 
 impl SettleLaunch<'_> {
@@ -253,22 +237,6 @@ impl SettleLaunch<'_> {
         require!(
             self.launch.state == LaunchState::Closed,
             LaunchpadError::InvalidLaunchState
-        );
-
-        // The mint_governor is in a nested struct, so we can't use has_one on the launch account.
-        // Verify it matches the one stored on the launch.
-        require_keys_eq!(
-            self.mint_governor_accounts.mint_governor.key(),
-            self.launch.mint_governor,
-            LaunchpadError::InvalidMintAuthority
-        );
-
-        // The mint_authority's authorized_minter must be the launch_signer so it can
-        // sign the mint_tokens CPI via PDA seeds.
-        require_keys_eq!(
-            self.mint_governor_accounts.mint_authority.authorized_minter,
-            self.launch_signer.key(),
-            LaunchpadError::InvalidMintAuthority
         );
 
         // if the launch was closed within 2 days, the launch authority must be the one
@@ -334,13 +302,8 @@ impl SettleLaunch<'_> {
         ];
         let launch_signer = &[&launch_signer_seeds[..]];
 
-        // Mint all needed tokens via MintGovernor
-        let tokens_to_mint = TOKENS_TO_PARTICIPANTS
-            + TOKENS_TO_FUTARCHY_LIQUIDITY
-            + TOKENS_TO_DAMM_V2_LIQUIDITY
-            + ctx.accounts.launch.additional_tokens_amount;
-
-        ctx.accounts.mint_tokens(tokens_to_mint, launch_signer)?;
+        // Tokens were already minted into launch_base_vault during initialize_launch
+        // (moved there to stay within CPI depth limits during settlement).
 
         let price_1e12 = ((launch_total_approved_amount as u128) * PRICE_SCALE)
             / (TOKENS_TO_PARTICIPANTS as u128);
@@ -407,8 +370,11 @@ impl SettleLaunch<'_> {
                 None
             },
             bid_wall_amount: usdc_to_bid_wall,
-            mint_governor: ctx.accounts.mint_governor_accounts.mint_governor.key(),
-            tokens_minted: tokens_to_mint,
+            mint_governor: launch.mint_governor,
+            tokens_minted: TOKENS_TO_PARTICIPANTS
+                + TOKENS_TO_FUTARCHY_LIQUIDITY
+                + TOKENS_TO_DAMM_V2_LIQUIDITY
+                + launch.additional_tokens_amount,
         });
 
         let refundable_usdc = launch.total_committed_amount - launch_total_approved_amount;
@@ -417,34 +383,6 @@ impl SettleLaunch<'_> {
         ctx.accounts.verify_vaults(refundable_usdc)?;
 
         Ok(())
-    }
-
-    fn mint_tokens(&self, amount: u64, launch_signer: &[&[&[u8]]]) -> Result<()> {
-        mint_tokens(
-            CpiContext::new_with_signer(
-                self.mint_governor_accounts
-                    .mint_governor_program
-                    .to_account_info(),
-                MintTokens {
-                    mint_governor: self.mint_governor_accounts.mint_governor.to_account_info(),
-                    mint_authority: self.mint_governor_accounts.mint_authority.to_account_info(),
-                    mint: self.base_mint.to_account_info(),
-                    destination_ata: self.launch_base_vault.to_account_info(),
-                    authorized_minter: self.launch_signer.to_account_info(),
-                    token_program: self.token_program.to_account_info(),
-                    event_authority: self
-                        .mint_governor_accounts
-                        .mint_governor_event_authority
-                        .to_account_info(),
-                    program: self
-                        .mint_governor_accounts
-                        .mint_governor_program
-                        .to_account_info(),
-                },
-                launch_signer,
-            ),
-            MintTokensArgs { amount },
-        )
     }
 
     #[inline(never)]
@@ -740,9 +678,7 @@ impl SettleLaunch<'_> {
 
         require_gte!(
             self.launch_base_vault.amount,
-            TOKENS_TO_PARTICIPANTS
-                + self.launch.additional_tokens_amount
-                + self.launch.performance_package_token_amount,
+            TOKENS_TO_PARTICIPANTS + self.launch.additional_tokens_amount,
             LaunchpadError::InvariantViolated
         );
         require_gte!(
