@@ -45,14 +45,7 @@
 
 > Reference: `launchpad_v8_spec.md` → "6. settle_launch — CHANGED"
 
-- [NEXT] 5.1 Implement `settle_launch` instruction (Rust)
-  - Create `src/instructions/settle_launch.rs` with `SettleLaunch` accounts struct, `validate()`, and `handle()`
-  - Port from v7 `complete_launch` with key changes: mint_governor::mint_tokens CPI replaces token::set_authority, no mint authority transfer
-  - Include StaticCompleteLaunchAccounts and MeteoraAccounts nested structs
-  - Wire into `lib.rs` and `instructions/mod.rs`
-  - Verify: `./rebuild.sh`
-
-- [ ] 5.2 Add `settleLaunchIx` to SDK2 client
+- [NEXT] 5.2 Add `settleLaunchIx` to SDK2 client
   - Add the instruction builder method per spec (includes MintGovernor + Meteora + DAO account derivation)
   - Verify: `cd sdk2 && npx tsc --noEmit`
 

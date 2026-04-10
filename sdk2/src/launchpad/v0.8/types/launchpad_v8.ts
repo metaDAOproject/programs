@@ -273,6 +273,283 @@ export type LaunchpadV8 = {
         },
       ];
     },
+    {
+      name: "settleLaunch";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchAuthority";
+          isMut: false;
+          isSigner: true;
+          isOptional: true;
+        },
+        {
+          name: "tokenMetadata";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "launchSigner";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "treasuryQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "daoOwnedLpPosition";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "futarchyAmmBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "futarchyAmmQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "spendingLimit";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "bidWall";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "bidWallQuoteTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "feeRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "staticAccounts";
+          accounts: [
+            {
+              name: "futarchyProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenMetadataProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "futarchyEventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "squadsProgramConfig";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "squadsProgramConfigTreasury";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "bidWallProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "bidWallEventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "meteoraAccounts";
+          accounts: [
+            {
+              name: "dammV2Program";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "config";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "token2022Program";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "positionNftAccount";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "pool";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "position";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "positionNftMint";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "baseMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteMint";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "tokenAVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "tokenBVault";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "poolCreatorAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "poolAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "dammV2EventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "mintGovernorAccounts";
+          accounts: [
+            {
+              name: "mintGovernor";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "mintAuthority";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "mintGovernorProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "mintGovernorEventAuthority";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -1583,6 +1860,283 @@ export const IDL: LaunchpadV8 = {
           type: "u64",
         },
       ],
+    },
+    {
+      name: "settleLaunch",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchAuthority",
+          isMut: false,
+          isSigner: true,
+          isOptional: true,
+        },
+        {
+          name: "tokenMetadata",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "launchSigner",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "treasuryQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "daoOwnedLpPosition",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "futarchyAmmBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "futarchyAmmQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "spendingLimit",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "bidWall",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "bidWallQuoteTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "feeRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "staticAccounts",
+          accounts: [
+            {
+              name: "futarchyProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenMetadataProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "futarchyEventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "squadsProgramConfig",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "squadsProgramConfigTreasury",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "bidWallProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "bidWallEventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "meteoraAccounts",
+          accounts: [
+            {
+              name: "dammV2Program",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "config",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "token2022Program",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "positionNftAccount",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "pool",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "position",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "positionNftMint",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "baseMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteMint",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "tokenAVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "tokenBVault",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "poolCreatorAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "poolAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "dammV2EventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "mintGovernorAccounts",
+          accounts: [
+            {
+              name: "mintGovernor",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "mintAuthority",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "mintGovernorProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "mintGovernorEventAuthority",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [

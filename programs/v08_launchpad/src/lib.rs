@@ -98,4 +98,9 @@ pub mod launchpad_v8 {
     ) -> Result<()> {
         SetFundingRecordApproval::handle(ctx, approved_amount)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn settle_launch(ctx: Context<SettleLaunch>) -> Result<()> {
+        SettleLaunch::handle(ctx)
+    }
 }
