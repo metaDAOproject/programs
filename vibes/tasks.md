@@ -37,15 +37,11 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 2, 3, 5
 
-- [NEXT] 3.7 Write `closeLaunch` tests (tests #16–20)
-  - Tests #16–20: all close_launch tests per spec
-  - Verify: `anchor test --skip-build` (with `.only`)
-
 ### Phase 4: `set_funding_record_approval`
 
 > Reference: `launchpad_v8_spec.md` → instruction 4
 
-- [ ] 4.1 Implement `set_funding_record_approval` instruction (Rust)
+- [NEXT] 4.1 Implement `set_funding_record_approval` instruction (Rust)
   - Create `src/instructions/set_funding_record_approval.rs` — port from v7
   - Wire into `lib.rs` and `instructions/mod.rs`
   - Verify: `./rebuild.sh`
