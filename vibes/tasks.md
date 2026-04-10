@@ -45,11 +45,7 @@
 
 > Reference: `launchpad_v8_spec.md` → "6. settle_launch — CHANGED"
 
-- [NEXT] 5.2 Add `settleLaunchIx` to SDK2 client
-  - Add the instruction builder method per spec (includes MintGovernor + Meteora + DAO account derivation)
-  - Verify: `cd sdk2 && npx tsc --noEmit`
-
-- [ ] 5.3 Write `settleLaunch` tests (tests #27–33)
+- [NEXT] 5.3 Write `settleLaunch` tests (tests #27–33)
   - Test #27: happy path — tokens minted via MintGovernor, DAO created, liquidity, metadata transfer, USDC distribution, MintGovernor admin still launch_signer
   - Test #28: sends all USDC to treasury when hasBidWall is false
   - Test #29: initializes bid wall when hasBidWall is true and funding exceeds 1.25x
