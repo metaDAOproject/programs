@@ -298,4 +298,64 @@ export class LaunchpadClient {
         ),
       ]);
   }
+
+  startLaunchIx({
+    launch,
+    launchAuthority = this.provider.publicKey,
+  }: {
+    launch: PublicKey;
+    launchAuthority?: PublicKey;
+  }) {
+    return this.launchpad.methods.startLaunch().accounts({
+      launch,
+      launchAuthority,
+    });
+  }
+
+  fundIx({
+    launch,
+    amount,
+    funder = this.provider.publicKey,
+    payer = this.provider.publicKey,
+    quoteMint = MAINNET_USDC,
+  }: {
+    launch: PublicKey;
+    amount: BN;
+    funder?: PublicKey;
+    payer?: PublicKey;
+    quoteMint?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    const launchQuoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
+      launchSigner,
+      true,
+    );
+    const funderQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      funder,
+      true,
+    );
+    const [fundingRecord] = getFundingRecordAddr(
+      this.launchpad.programId,
+      launch,
+      funder,
+    );
+
+    return this.launchpad.methods.fund(amount).accounts({
+      launch,
+      launchQuoteVault,
+      fundingRecord,
+      funder,
+      payer,
+      funderQuoteAccount,
+    });
+  }
+
+  closeLaunchIx({ launch }: { launch: PublicKey }) {
+    return this.launchpad.methods.closeLaunch().accounts({
+      launch,
+    });
+  }
 }
