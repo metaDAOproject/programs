@@ -17,6 +17,8 @@
 - Skip ahead
 - Forget to verify
 
+**IMPORTANT:** After completing a task, always run `./rebuild.sh` before handing back to the user. This rebuilds programs, regenerates SDK types, syncs node_modules, and lints.
+
 **Reference:** Full implementation plan is in `vibes/launchpad_v8_spec.md`
 
 ---
@@ -35,11 +37,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 2, 3, 5
 
-- [NEXT] 3.5 Write `startLaunch` tests (test #6)
-  - Test #6: "starts launch correctly"
-  - Verify: `anchor test --skip-build` (with `.only`)
-
-- [ ] 3.6 Write `fund` tests (tests #7–15)
+- [NEXT] 3.6 Write `fund` tests (tests #7–15)
   - Tests #7–15: all fund tests per spec
   - Verify: `anchor test --skip-build` (with `.only`)
 
