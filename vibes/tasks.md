@@ -41,15 +41,11 @@
 
 > Reference: `launchpad_v8_spec.md` → instruction 4
 
-- [NEXT] 4.3 Write `setFundingRecordApproval` tests (tests #21–26)
-  - Tests #21–26: all set_funding_record_approval tests per spec
-  - Verify: `anchor test --skip-build` (with `.only`)
-
 ### Phase 5: `settle_launch`
 
 > Reference: `launchpad_v8_spec.md` → "6. settle_launch — CHANGED"
 
-- [ ] 5.1 Implement `settle_launch` instruction (Rust)
+- [NEXT] 5.1 Implement `settle_launch` instruction (Rust)
   - Create `src/instructions/settle_launch.rs` with `SettleLaunch` accounts struct, `validate()`, and `handle()`
   - Port from v7 `complete_launch` with key changes: mint_governor::mint_tokens CPI replaces token::set_authority, no mint authority transfer
   - Include StaticCompleteLaunchAccounts and MeteoraAccounts nested structs
@@ -68,6 +64,10 @@
   - Test #31: no bid wall at exactly 1.25x boundary
   - Test #32: Refunding path — no tokens minted, no DAO
   - Test #33: fails when launch is in refunding state
+  - Verify: `anchor test --skip-build` (with `.only`)
+
+- [ ] 5.4 Finish `setFundingRecordApproval` test #25
+  - Fill in stub: "can't set funding record approval after the launch is completed" (needs Complete state via settle_launch)
   - Verify: `anchor test --skip-build` (with `.only`)
 
 ### Phase 6: `claim` + `refund` + `claim_additional_token_allocation`

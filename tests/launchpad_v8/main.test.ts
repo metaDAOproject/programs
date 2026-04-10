@@ -9,6 +9,7 @@ import initializeLaunch from "./unit/initializeLaunch.test.js";
 import startLaunch from "./unit/startLaunch.test.js";
 import fund from "./unit/fund.test.js";
 import closeLaunch from "./unit/closeLaunch.test.js";
+import setFundingRecordApproval from "./unit/setFundingRecordApproval.test.js";
 
 export default function suite() {
   before(async function () {
@@ -72,4 +73,5 @@ export default function suite() {
   describe("#start_launch", startLaunch);
   describe("#fund", fund);
   describe("#close_launch", closeLaunch);
+  describe("#set_funding_record_approval", setFundingRecordApproval);
 }
