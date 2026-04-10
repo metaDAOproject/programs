@@ -31,7 +31,7 @@ export default function suite() {
     });
   });
 
-  it.only("starts launch correctly", async function () {
+  it("starts launch correctly", async function () {
     // Check initial state
     let launchAccount = await launchpadClient.fetchLaunch(launch);
     assert.isNull(launchAccount.unixTimestampStarted);

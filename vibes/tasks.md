@@ -37,11 +37,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 2, 3, 5
 
-- [NEXT] 3.6 Write `fund` tests (tests #7–15)
-  - Tests #7–15: all fund tests per spec
-  - Verify: `anchor test --skip-build` (with `.only`)
-
-- [ ] 3.7 Write `closeLaunch` tests (tests #16–20)
+- [NEXT] 3.7 Write `closeLaunch` tests (tests #16–20)
   - Tests #16–20: all close_launch tests per spec
   - Verify: `anchor test --skip-build` (with `.only`)
 

@@ -7,6 +7,7 @@ import {
 import BN from "bn.js";
 import initializeLaunch from "./unit/initializeLaunch.test.js";
 import startLaunch from "./unit/startLaunch.test.js";
+import fund from "./unit/fund.test.js";
 
 export default function suite() {
   before(async function () {
@@ -68,4 +69,5 @@ export default function suite() {
 
   describe("#initialize_launch", initializeLaunch);
   describe("#start_launch", startLaunch);
+  describe("#fund", fund);
 }
