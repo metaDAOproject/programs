@@ -237,6 +237,42 @@ export type LaunchpadV8 = {
       ];
       args: [];
     },
+    {
+      name: "setFundingRecordApproval";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "fundingRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchAuthority";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "approvedAmount";
+          type: "u64";
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -1511,6 +1547,42 @@ export const IDL: LaunchpadV8 = {
         },
       ],
       args: [],
+    },
+    {
+      name: "setFundingRecordApproval",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "fundingRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchAuthority",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "approvedAmount",
+          type: "u64",
+        },
+      ],
     },
   ],
   accounts: [

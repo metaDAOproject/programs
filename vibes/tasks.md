@@ -41,12 +41,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instruction 4
 
-- [NEXT] 4.1 Implement `set_funding_record_approval` instruction (Rust)
-  - Create `src/instructions/set_funding_record_approval.rs` — port from v7
-  - Wire into `lib.rs` and `instructions/mod.rs`
-  - Verify: `./rebuild.sh`
-
-- [ ] 4.2 Add `setFundingRecordApprovalIx` to SDK2 client
+- [NEXT] 4.2 Add `setFundingRecordApprovalIx` to SDK2 client
   - Port from v7 SDK2 client
   - Verify: `cd sdk2 && npx tsc --noEmit`
 
