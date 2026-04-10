@@ -41,11 +41,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instruction 4
 
-- [NEXT] 4.2 Add `setFundingRecordApprovalIx` to SDK2 client
-  - Port from v7 SDK2 client
-  - Verify: `cd sdk2 && npx tsc --noEmit`
-
-- [ ] 4.3 Write `setFundingRecordApproval` tests (tests #21–26)
+- [NEXT] 4.3 Write `setFundingRecordApproval` tests (tests #21–26)
   - Tests #21–26: all set_funding_record_approval tests per spec
   - Verify: `anchor test --skip-build` (with `.only`)
 
