@@ -1,4 +1,9 @@
-import { Keypair, PublicKey, ComputeBudgetProgram } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import {
   LaunchpadClient,
@@ -7,7 +12,7 @@ import {
 import { MAINNET_USDC } from "@metadaoproject/futarchy-v2";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../utils.js";
-import { expectError } from "../../utils.js";
+import { expectError, createLookupTableForTransaction } from "../../utils.js";
 
 export default function suite() {
   let launchpadClient: LaunchpadClient;
@@ -290,8 +295,92 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  // TODO: needs settle_launch to reach Complete state
-  it("can't set funding record approval after the launch is completed");
+  it("can't set funding record approval after the launch is completed", async function () {
+    await fundLaunch();
+    await this.advanceBySeconds(secondsForLaunch + 1);
+    await launchpadClient.closeLaunchIx({ launch }).rpc();
+
+    // Approve all funders
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder1Amount,
+        funder: funder1.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder2Amount,
+        funder: funder2.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder3Amount,
+        funder: funder3.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder4Amount,
+        funder: funder4.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc();
+
+    // Settle launch to reach Complete state
+    const settleTx = await launchpadClient
+      .settleLaunchIx({
+        launch,
+        baseMint: META,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .transaction();
+
+    const lut = await createLookupTableForTransaction(settleTx, this);
+
+    const message = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: settleTx.instructions,
+    }).compileToV0Message([lut]);
+
+    const tx = new VersionedTransaction(message);
+    tx.sign([this.payer, launchAuthority]);
+
+    await this.banksClient.processTransaction(tx);
+
+    // Verify launch is now Complete
+    const launchAccount = await launchpadClient.fetchLaunch(launch);
+    assert.deepEqual(launchAccount.state, { complete: {} });
+
+    // Try to set funding record approval after completion
+    const callbacks = expectError("InvalidLaunchState", "Invalid launch state");
+
+    await launchpadClient
+      .setFundingRecordApprovalIx({
+        launch,
+        approvedAmount: funder1Amount,
+        funder: funder1.publicKey,
+        launchAuthority: launchAuthority.publicKey,
+      })
+      .signers([launchAuthority])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
 
   it("can't set funding record approval to an amount greater than the committed amount", async function () {
     await fundLaunch();

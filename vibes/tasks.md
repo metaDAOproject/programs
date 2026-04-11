@@ -45,25 +45,11 @@
 
 > Reference: `launchpad_v8_spec.md` → "6. settle_launch — CHANGED"
 
-- [NEXT] 5.3 Write `settleLaunch` tests (tests #27–33)
-  - Test #27: happy path — tokens minted via MintGovernor, DAO created, liquidity, metadata transfer, USDC distribution, MintGovernor admin still launch_signer
-  - Test #28: sends all USDC to treasury when hasBidWall is false
-  - Test #29: initializes bid wall when hasBidWall is true and funding exceeds 1.25x
-  - Test #30: no bid wall when funding equals minimum raise
-  - Test #31: no bid wall at exactly 1.25x boundary
-  - Test #32: Refunding path — no tokens minted, no DAO
-  - Test #33: fails when launch is in refunding state
-  - Verify: `anchor test --skip-build` (with `.only`)
-
-- [ ] 5.4 Finish `setFundingRecordApproval` test #25
-  - Fill in stub: "can't set funding record approval after the launch is completed" (needs Complete state via settle_launch)
-  - Verify: `anchor test --skip-build` (with `.only`)
-
 ### Phase 6: `claim` + `refund` + `claim_additional_token_allocation`
 
 > Reference: `launchpad_v8_spec.md` → instructions 8, 9, 10
 
-- [ ] 6.1 Implement `claim` instruction (Rust)
+- [NEXT] 6.1 Implement `claim` instruction (Rust)
   - Create `src/instructions/claim.rs` — port from v7
   - Wire into `lib.rs` and `instructions/mod.rs`
   - Verify: `./rebuild.sh`
