@@ -57,12 +57,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instruction 11
 
-- [NEXT] 8.1 Implement `extend_launch` instruction (Rust)
-  - Create `src/instructions/extend_launch.rs` — port from v7
-  - Wire into `lib.rs` and `instructions/mod.rs`
-  - Verify: `./rebuild.sh`
-
-- [ ] 8.2 Add `extendLaunchIx` to SDK2 client
+- [NEXT] 8.2 Add `extendLaunchIx` to SDK2 client
   - Port from v7 SDK2 client
   - Verify: `cd sdk2 && npx tsc --noEmit`
 

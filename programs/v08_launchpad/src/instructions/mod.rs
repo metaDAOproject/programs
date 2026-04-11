@@ -1,6 +1,7 @@
 pub mod claim;
 pub mod claim_additional_token_allocation;
 pub mod close_launch;
+pub mod extend_launch;
 pub mod finalize_launch;
 pub mod fund;
 pub mod initialize_launch;
@@ -12,6 +13,7 @@ pub mod start_launch;
 pub use claim::*;
 pub use claim_additional_token_allocation::*;
 pub use close_launch::*;
+pub use extend_launch::*;
 pub use finalize_launch::*;
 pub use fund::*;
 pub use initialize_launch::*;

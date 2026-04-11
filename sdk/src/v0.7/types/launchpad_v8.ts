@@ -812,6 +812,39 @@ export type LaunchpadV8 = {
       ];
       args: [];
     },
+    {
+      name: "extendLaunch";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "ExtendLaunchArgs";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -1107,6 +1140,18 @@ export type LaunchpadV8 = {
           {
             name: "launchSeqNum";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "ExtendLaunchArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "durationSeconds";
+            type: "u32";
           },
         ];
       };
@@ -2667,6 +2712,39 @@ export const IDL: LaunchpadV8 = {
       ],
       args: [],
     },
+    {
+      name: "extendLaunch",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "ExtendLaunchArgs",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -2962,6 +3040,18 @@ export const IDL: LaunchpadV8 = {
           {
             name: "launchSeqNum",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "ExtendLaunchArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "durationSeconds",
+            type: "u32",
           },
         ],
       },

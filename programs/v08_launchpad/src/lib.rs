@@ -125,4 +125,9 @@ pub mod launchpad_v8 {
     pub fn finalize_launch(ctx: Context<FinalizeLaunch>) -> Result<()> {
         FinalizeLaunch::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn extend_launch(ctx: Context<ExtendLaunch>, args: ExtendLaunchArgs) -> Result<()> {
+        ExtendLaunch::handle(ctx, args)
+    }
 }
