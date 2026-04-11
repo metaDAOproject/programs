@@ -698,6 +698,120 @@ export type LaunchpadV8 = {
       ];
       args: [];
     },
+    {
+      name: "finalizeLaunch";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "launchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "performancePackageGrantee";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintGovernor";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ppMintAuthority";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "MintAuthority for PP v2 PDA — initialized via CPI",
+            'PDA: seeds = [b"mint_authority", mint_governor, performance_package]',
+          ];
+        },
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "PP v2 account — initialized via CPI",
+            'PDA: seeds = [b"performance_package", launch_signer (create_key)]',
+          ];
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintGovernorProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintGovernorEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "performancePackageV2Program";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "performancePackageV2EventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -2423,6 +2537,120 @@ export const IDL: LaunchpadV8 = {
         },
         {
           name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "finalizeLaunch",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "launchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "performancePackageGrantee",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintGovernor",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ppMintAuthority",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "MintAuthority for PP v2 PDA — initialized via CPI",
+            'PDA: seeds = [b"mint_authority", mint_governor, performance_package]',
+          ],
+        },
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "PP v2 account — initialized via CPI",
+            'PDA: seeds = [b"performance_package", launch_signer (create_key)]',
+          ],
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintGovernorProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintGovernorEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "performancePackageV2Program",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "performancePackageV2EventAuthority",
           isMut: false,
           isSigner: false,
         },

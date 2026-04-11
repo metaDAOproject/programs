@@ -53,13 +53,7 @@
 
 > Reference: `launchpad_v8_spec.md` → "7. finalize_launch — CHANGED"
 
-- [NEXT] 7.1 Implement `finalize_launch` instruction (Rust)
-  - Create `src/instructions/finalize_launch.rs` with `FinalizeLaunch` accounts struct, `validate()`, and `handle()`
-  - Handler: compute tranches, CPI add_mint_authority (PP v2 PDA), CPI initialize_performance_package, CPI update_mint_governor_admin
-  - Wire into `lib.rs` and `instructions/mod.rs`
-  - Verify: `./rebuild.sh`
-
-- [ ] 7.2 Add `finalizeLaunchIx` to SDK2 client
+- [NEXT] 7.2 Add `finalizeLaunchIx` to SDK2 client
   - Add the instruction builder method per spec
   - Verify: `cd sdk2 && npx tsc --noEmit`
 

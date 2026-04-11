@@ -120,4 +120,9 @@ pub mod launchpad_v8 {
     ) -> Result<()> {
         ClaimAdditionalTokenAllocation::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn finalize_launch(ctx: Context<FinalizeLaunch>) -> Result<()> {
+        FinalizeLaunch::handle(ctx)
+    }
 }
