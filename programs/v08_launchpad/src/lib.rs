@@ -113,4 +113,11 @@ pub mod launchpad_v8 {
     pub fn refund(ctx: Context<Refund>) -> Result<()> {
         Refund::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn claim_additional_token_allocation(
+        ctx: Context<ClaimAdditionalTokenAllocation>,
+    ) -> Result<()> {
+        ClaimAdditionalTokenAllocation::handle(ctx)
+    }
 }
