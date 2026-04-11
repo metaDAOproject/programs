@@ -108,4 +108,9 @@ pub mod launchpad_v8 {
     pub fn claim(ctx: Context<Claim>) -> Result<()> {
         Claim::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn refund(ctx: Context<Refund>) -> Result<()> {
+        Refund::handle(ctx)
+    }
 }

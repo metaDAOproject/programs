@@ -581,6 +581,57 @@ export type LaunchpadV8 = {
       ];
       args: [];
     },
+    {
+      name: "refund";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "fundingRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "funder";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "funderQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -2184,6 +2235,57 @@ export const IDL: LaunchpadV8 = {
         },
         {
           name: "funderTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "refund",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "fundingRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "funder",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "funderQuoteAccount",
           isMut: true,
           isSigner: false,
         },

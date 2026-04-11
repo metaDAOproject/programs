@@ -49,12 +49,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 8, 9, 10
 
-- [NEXT] 6.2 Implement `refund` instruction (Rust)
-  - Create `src/instructions/refund.rs` — port from v7
-  - Wire into `lib.rs` and `instructions/mod.rs`
-  - Verify: `./rebuild.sh`
-
-- [ ] 6.3 Implement `claim_additional_token_allocation` instruction (Rust)
+- [NEXT] 6.3 Implement `claim_additional_token_allocation` instruction (Rust)
   - Create `src/instructions/claim_additional_token_allocation.rs` — port from v7
   - Wire into `lib.rs` and `instructions/mod.rs`
   - Verify: `./rebuild.sh`
