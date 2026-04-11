@@ -49,16 +49,11 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 8, 9, 10
 
-- [NEXT] 6.7 Write `claimAdditionalTokenAllocation` tests (tests #42–43)
-  - Test #42: "sets and claims additional token allocation successfully, and only once"
-  - Test #43: "fails to claim additional token allocation if the launch doesn't have one"
-  - Verify: `anchor test --skip-build` (with `.only`)
-
 ### Phase 7: `finalize_launch`
 
 > Reference: `launchpad_v8_spec.md` → "7. finalize_launch — CHANGED"
 
-- [ ] 7.1 Implement `finalize_launch` instruction (Rust)
+- [NEXT] 7.1 Implement `finalize_launch` instruction (Rust)
   - Create `src/instructions/finalize_launch.rs` with `FinalizeLaunch` accounts struct, `validate()`, and `handle()`
   - Handler: compute tranches, CPI add_mint_authority (PP v2 PDA), CPI initialize_performance_package, CPI update_mint_governor_admin
   - Wire into `lib.rs` and `instructions/mod.rs`

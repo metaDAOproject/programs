@@ -13,6 +13,7 @@ import setFundingRecordApproval from "./unit/setFundingRecordApproval.test.js";
 import settleLaunch from "./unit/settleLaunch.test.js";
 import claim from "./unit/claim.test.js";
 import refund from "./unit/refund.test.js";
+import claimAdditionalTokenAllocation from "./unit/claimAdditionalTokenAllocation.test.js";
 
 export default function suite() {
   before(async function () {
@@ -80,4 +81,8 @@ export default function suite() {
   describe("#settle_launch", settleLaunch);
   describe("#claim", claim);
   describe("#refund", refund);
+  describe(
+    "#claim_additional_token_allocation",
+    claimAdditionalTokenAllocation,
+  );
 }
