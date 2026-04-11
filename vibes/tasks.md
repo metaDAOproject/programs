@@ -57,17 +57,11 @@
 
 > Reference: `launchpad_v8_spec.md` → instruction 11
 
-- [NEXT] 8.3 Write `extendLaunch` tests (tests #44–46)
-  - Test #44: "successfully extends a live launch"
-  - Test #45: "funders can still fund after original deadline if extended"
-  - Test #46: "close_launch respects new extended deadline"
-  - Verify: `anchor test --skip-build` (with `.only`)
-
 ### Phase 9: Integration + Full Suite
 
 > Reference: `launchpad_v8_spec.md` → "Integration Test"
 
-- [ ] 9.1 Write integration test
+- [NEXT] 9.1 Write integration test
   - Create `tests/integration/launchpad_v8_full_lifecycle.test.ts`
   - Full lifecycle: init → start → fund (multiple funders) → close → approve → settle → finalize → claim → refund → claim_additional
   - Verify: `anchor test --skip-build` (with `.only` on integration suite)

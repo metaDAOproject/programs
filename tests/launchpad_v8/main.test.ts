@@ -15,6 +15,7 @@ import claim from "./unit/claim.test.js";
 import refund from "./unit/refund.test.js";
 import claimAdditionalTokenAllocation from "./unit/claimAdditionalTokenAllocation.test.js";
 import finalizeLaunch from "./unit/finalizeLaunch.test.js";
+import extendLaunch from "./unit/extendLaunch.test.js";
 
 export default function suite() {
   before(async function () {
@@ -87,4 +88,5 @@ export default function suite() {
     claimAdditionalTokenAllocation,
   );
   describe("#finalize_launch", finalizeLaunch);
+  describe("#extend_launch", extendLaunch);
 }
