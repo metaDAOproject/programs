@@ -80,6 +80,7 @@ const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
 import fullLaunch_v7 from "./integration/fullLaunch_v7.test.js";
+import fullLaunch_v8 from "./integration/launchpad_v8_full_lifecycle.test.js";
 import { BN } from "bn.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
@@ -759,4 +760,5 @@ describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);
   describe("full launch v7", fullLaunch_v7);
+  describe("full launch v8", fullLaunch_v8);
 });

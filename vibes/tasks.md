@@ -61,12 +61,7 @@
 
 > Reference: `launchpad_v8_spec.md` → "Integration Test"
 
-- [NEXT] 9.1 Write integration test
-  - Create `tests/integration/launchpad_v8_full_lifecycle.test.ts`
-  - Full lifecycle: init → start → fund (multiple funders) → close → approve → settle → finalize → claim → refund → claim_additional
-  - Verify: `anchor test --skip-build` (with `.only` on integration suite)
-
-- [ ] 9.2 Run full test suite
+- [NEXT] 9.2 Run full test suite
   - Remove all `.only` markers
   - Run `anchor test` (full build + all tests)
   - All 46 unit tests + integration test must pass
