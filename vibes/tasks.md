@@ -57,11 +57,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instruction 11
 
-- [NEXT] 8.2 Add `extendLaunchIx` to SDK2 client
-  - Port from v7 SDK2 client
-  - Verify: `cd sdk2 && npx tsc --noEmit`
-
-- [ ] 8.3 Write `extendLaunch` tests (tests #44–46)
+- [NEXT] 8.3 Write `extendLaunch` tests (tests #44–46)
   - Test #44: "successfully extends a live launch"
   - Test #45: "funders can still fund after original deadline if extended"
   - Test #46: "close_launch respects new extended deadline"

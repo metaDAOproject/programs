@@ -788,4 +788,19 @@ export class LaunchpadClient {
       ),
     });
   }
+
+  extendLaunchIx({
+    launch,
+    durationSeconds,
+    admin = METADAO_MULTISIG_VAULT,
+  }: {
+    launch: PublicKey;
+    durationSeconds: number;
+    admin?: PublicKey;
+  }) {
+    return this.launchpad.methods.extendLaunch({ durationSeconds }).accounts({
+      launch,
+      admin,
+    });
+  }
 }
