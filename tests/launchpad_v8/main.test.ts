@@ -12,6 +12,7 @@ import closeLaunch from "./unit/closeLaunch.test.js";
 import setFundingRecordApproval from "./unit/setFundingRecordApproval.test.js";
 import settleLaunch from "./unit/settleLaunch.test.js";
 import claim from "./unit/claim.test.js";
+import refund from "./unit/refund.test.js";
 
 export default function suite() {
   before(async function () {
@@ -78,4 +79,5 @@ export default function suite() {
   describe("#set_funding_record_approval", setFundingRecordApproval);
   describe("#settle_launch", settleLaunch);
   describe("#claim", claim);
+  describe("#refund", refund);
 }

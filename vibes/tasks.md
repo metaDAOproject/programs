@@ -49,13 +49,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 8, 9, 10
 
-- [NEXT] 6.6 Write `refund` tests (tests #39–41)
-  - Test #39: "allows refunds when launch is in refunding state"
-  - Test #40: "works for oversubscribed launches"
-  - Test #41: "fails when launch is not in refunding or complete state"
-  - Verify: `anchor test --skip-build` (with `.only`)
-
-- [ ] 6.7 Write `claimAdditionalTokenAllocation` tests (tests #42–43)
+- [NEXT] 6.7 Write `claimAdditionalTokenAllocation` tests (tests #42–43)
   - Test #42: "sets and claims additional token allocation successfully, and only once"
   - Test #43: "fails to claim additional token allocation if the launch doesn't have one"
   - Verify: `anchor test --skip-build` (with `.only`)
