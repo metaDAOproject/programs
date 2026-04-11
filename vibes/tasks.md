@@ -49,12 +49,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 8, 9, 10
 
-- [NEXT] 6.1 Implement `claim` instruction (Rust)
-  - Create `src/instructions/claim.rs` — port from v7
-  - Wire into `lib.rs` and `instructions/mod.rs`
-  - Verify: `./rebuild.sh`
-
-- [ ] 6.2 Implement `refund` instruction (Rust)
+- [NEXT] 6.2 Implement `refund` instruction (Rust)
   - Create `src/instructions/refund.rs` — port from v7
   - Wire into `lib.rs` and `instructions/mod.rs`
   - Verify: `./rebuild.sh`

@@ -1,3 +1,4 @@
+pub mod claim;
 pub mod close_launch;
 pub mod fund;
 pub mod initialize_launch;
@@ -5,6 +6,7 @@ pub mod set_funding_record_approval;
 pub mod settle_launch;
 pub mod start_launch;
 
+pub use claim::*;
 pub use close_launch::*;
 pub use fund::*;
 pub use initialize_launch::*;

@@ -525,6 +525,62 @@ export type LaunchpadV8 = {
       ];
       args: [];
     },
+    {
+      name: "claim";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "fundingRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "launchBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "funder";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "funderTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -2079,6 +2135,62 @@ export const IDL: LaunchpadV8 = {
               isSigner: false,
             },
           ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "claim",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "fundingRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "launchBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "funder",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "funderTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
         },
         {
           name: "eventAuthority",

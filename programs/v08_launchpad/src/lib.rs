@@ -103,4 +103,9 @@ pub mod launchpad_v8 {
     pub fn settle_launch(ctx: Context<SettleLaunch>) -> Result<()> {
         SettleLaunch::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn claim(ctx: Context<Claim>) -> Result<()> {
+        Claim::handle(ctx)
+    }
 }
