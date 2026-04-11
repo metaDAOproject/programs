@@ -53,17 +53,11 @@
 
 > Reference: `launchpad_v8_spec.md` → "7. finalize_launch — CHANGED"
 
-- [NEXT] 7.3 Write `finalizeLaunch` tests (tests #34–36)
-  - Test #34: happy path — PP v2 setup (tranches, oracle, recipient, authority), MintGovernor admin transferred to DAO
-  - Test #35: "fails when launch state is not Complete"
-  - Test #36: "can finalize only once"
-  - Verify: `anchor test --skip-build` (with `.only`)
-
 ### Phase 8: `extend_launch`
 
 > Reference: `launchpad_v8_spec.md` → instruction 11
 
-- [ ] 8.1 Implement `extend_launch` instruction (Rust)
+- [NEXT] 8.1 Implement `extend_launch` instruction (Rust)
   - Create `src/instructions/extend_launch.rs` — port from v7
   - Wire into `lib.rs` and `instructions/mod.rs`
   - Verify: `./rebuild.sh`
