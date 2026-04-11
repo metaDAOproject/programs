@@ -49,12 +49,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 8, 9, 10
 
-- [NEXT] 6.5 Write `claim` tests (tests #37–38)
-  - Test #37: "successfully claims tokens after launch completion"
-  - Test #38: "fails when launch is not complete"
-  - Verify: `anchor test --skip-build` (with `.only`)
-
-- [ ] 6.6 Write `refund` tests (tests #39–41)
+- [NEXT] 6.6 Write `refund` tests (tests #39–41)
   - Test #39: "allows refunds when launch is in refunding state"
   - Test #40: "works for oversubscribed launches"
   - Test #41: "fails when launch is not in refunding or complete state"
