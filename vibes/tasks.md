@@ -53,11 +53,7 @@
 
 > Reference: `launchpad_v8_spec.md` → "7. finalize_launch — CHANGED"
 
-- [NEXT] 7.2 Add `finalizeLaunchIx` to SDK2 client
-  - Add the instruction builder method per spec
-  - Verify: `cd sdk2 && npx tsc --noEmit`
-
-- [ ] 7.3 Write `finalizeLaunch` tests (tests #34–36)
+- [NEXT] 7.3 Write `finalizeLaunch` tests (tests #34–36)
   - Test #34: happy path — PP v2 setup (tranches, oracle, recipient, authority), MintGovernor admin transferred to DAO
   - Test #35: "fails when launch state is not Complete"
   - Test #36: "can finalize only once"

@@ -685,6 +685,78 @@ export class LaunchpadClient {
     });
   }
 
+  finalizeLaunchIx({
+    launch,
+    baseMint,
+    performancePackageGrantee,
+    payer = this.provider.publicKey,
+  }: {
+    launch: PublicKey;
+    baseMint: PublicKey;
+    performancePackageGrantee: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    const [dao] = getDaoAddr({
+      nonce: new BN(0),
+      daoCreator: launchSigner,
+    });
+
+    const [squadsMultisig] = multisig.getMultisigPda({ createKey: dao });
+    const [squadsMultisigVault] = multisig.getVaultPda({
+      multisigPda: squadsMultisig,
+      index: 0,
+    });
+
+    const [mintGovernor] = getMintGovernorAddr({
+      programId: this.mintGovernorClient.programId,
+      mint: baseMint,
+      createKey: launchSigner,
+    });
+
+    const performancePackage = getPerformancePackageV2Addr({
+      createKey: launchSigner,
+    })[0];
+
+    const [ppMintAuthority] = getMintAuthorityAddr({
+      programId: this.mintGovernorClient.programId,
+      mintGovernor,
+      authorizedMinter: performancePackage,
+    });
+
+    const [mintGovernorEventAuthority] = getEventAuthorityAddr(
+      this.mintGovernorClient.programId,
+    );
+    const [performancePackageV2EventAuthority] = getEventAuthorityAddr(
+      this.performancePackageV2.programId,
+    );
+
+    return this.launchpad.methods
+      .finalizeLaunch()
+      .accounts({
+        launch,
+        payer,
+        launchSigner,
+        baseMint,
+        dao,
+        squadsMultisig,
+        squadsMultisigVault,
+        performancePackageGrantee,
+        mintGovernor,
+        ppMintAuthority,
+        performancePackage,
+        squadsProgram: SQUADS_PROGRAM_ID,
+        mintGovernorProgram: this.mintGovernorClient.programId,
+        mintGovernorEventAuthority,
+        performancePackageV2Program: this.performancePackageV2.programId,
+        performancePackageV2EventAuthority,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ]);
+  }
+
   claimAdditionalTokenAllocationIx({
     launch,
     baseMint,
