@@ -49,11 +49,7 @@
 
 > Reference: `launchpad_v8_spec.md` → instructions 8, 9, 10
 
-- [NEXT] 6.4 Add `claimIx`, `refundIx`, `claimAdditionalTokenAllocationIx` to SDK2 client
-  - Port from v7 SDK2 client
-  - Verify: `cd sdk2 && npx tsc --noEmit`
-
-- [ ] 6.5 Write `claim` tests (tests #37–38)
+- [NEXT] 6.5 Write `claim` tests (tests #37–38)
   - Test #37: "successfully claims tokens after launch completion"
   - Test #38: "fails when launch is not complete"
   - Verify: `anchor test --skip-build` (with `.only`)

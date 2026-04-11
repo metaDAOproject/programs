@@ -602,4 +602,118 @@ export class LaunchpadClient {
         ComputeBudgetProgram.requestHeapFrame({ bytes: 255 * 1024 }),
       ]);
   }
+
+  claimIx({
+    launch,
+    baseMint,
+    funder = this.provider.publicKey,
+  }: {
+    launch: PublicKey;
+    baseMint: PublicKey;
+    funder?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+    const [fundingRecord] = getFundingRecordAddr(
+      this.launchpad.programId,
+      launch,
+      funder,
+    );
+
+    return this.launchpad.methods
+      .claim()
+      .accounts({
+        launch,
+        fundingRecord,
+        launchSigner,
+        baseMint,
+        launchBaseVault: getAssociatedTokenAddressSync(
+          baseMint,
+          launchSigner,
+          true,
+        ),
+        funder,
+        funderTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          funder,
+          true,
+        ),
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(baseMint, funder, true),
+          funder,
+          baseMint,
+        ),
+      ]);
+  }
+
+  refundIx({
+    launch,
+    funder = this.provider.publicKey,
+    quoteMint = MAINNET_USDC,
+  }: {
+    launch: PublicKey;
+    funder?: PublicKey;
+    quoteMint?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+    const [fundingRecord] = getFundingRecordAddr(
+      this.launchpad.programId,
+      launch,
+      funder,
+    );
+
+    const launchQuoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
+      launchSigner,
+      true,
+    );
+    const funderQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      funder,
+      true,
+    );
+
+    return this.launchpad.methods.refund().accounts({
+      launch,
+      fundingRecord,
+      launchQuoteVault,
+      launchSigner,
+      funder,
+      funderQuoteAccount,
+    });
+  }
+
+  claimAdditionalTokenAllocationIx({
+    launch,
+    baseMint,
+    additionalTokensRecipient,
+    payer = this.provider.publicKey,
+  }: {
+    launch: PublicKey;
+    baseMint: PublicKey;
+    additionalTokensRecipient: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const launchSigner = this.getLaunchSignerAddress({ launch });
+
+    return this.launchpad.methods.claimAdditionalTokenAllocation().accounts({
+      launch,
+      payer,
+      launchSigner,
+      launchBaseVault: getAssociatedTokenAddressSync(
+        baseMint,
+        launchSigner,
+        true,
+      ),
+      baseMint,
+      additionalTokensRecipient,
+      additionalTokensRecipientTokenAccount: getAssociatedTokenAddressSync(
+        baseMint,
+        additionalTokensRecipient,
+        true,
+      ),
+    });
+  }
 }
