@@ -55,6 +55,9 @@ pub const PASS_INDEX: usize = 1;
 // TWAP can only move by $5 per slot
 pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 
+// Unstaking from a proposal should only be allowed after a small delay
+pub const MIN_PROPOSAL_UNSTAKE_DELAY_SECONDS: i64 = 5;
+
 #[program]
 pub mod futarchy {
     use super::*;
