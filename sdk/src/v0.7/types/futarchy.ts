@@ -1204,17 +1204,19 @@ export type Futarchy = {
           isSigner: false;
         },
         {
-          name: "squadsMultisigVaultTransaction";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "squadsMultisigProgram";
           isMut: false;
           isSigner: false;
         },
       ];
-      args: [];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "AdminApproveMultisigProposalArgs";
+          };
+        },
+      ];
     },
     {
       name: "adminExecuteMultisigProposal";
@@ -1692,6 +1694,18 @@ export type Futarchy = {
           },
           {
             name: "daoSeqNum";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "AdminApproveMultisigProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "transactionIndex";
             type: "u64";
           },
         ];
@@ -4493,17 +4507,19 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
-          name: "squadsMultisigVaultTransaction",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "squadsMultisigProgram",
           isMut: false,
           isSigner: false,
         },
       ],
-      args: [],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "AdminApproveMultisigProposalArgs",
+          },
+        },
+      ],
     },
     {
       name: "adminExecuteMultisigProposal",
@@ -4981,6 +4997,18 @@ export const IDL: Futarchy = {
           },
           {
             name: "daoSeqNum",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "AdminApproveMultisigProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "transactionIndex",
             type: "u64",
           },
         ],

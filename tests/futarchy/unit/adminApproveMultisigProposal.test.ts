@@ -9,6 +9,7 @@ import { expectError, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import { createMemoInstruction } from "@solana/spl-memo";
+import BN from "bn.js";
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
@@ -96,12 +97,11 @@ export default function suite() {
     );
 
     await this.futarchy.autocrat.methods
-      .adminApproveMultisigProposal()
+      .adminApproveMultisigProposal({ transactionIndex: new BN(1) })
       .accounts({
         dao: dao,
         squadsMultisig: daoAccount.squadsMultisig,
         squadsMultisigProposal: squadsProposalPda,
-        squadsMultisigVaultTransaction: vaultTransactionPda,
         admin: this.payer.publicKey,
         squadsMultisigProgram: multisig.PROGRAM_ID,
       })
@@ -228,12 +228,13 @@ export default function suite() {
 
     // Approve and execute the config transaction using the new split instructions
     await this.futarchy.autocrat.methods
-      .adminApproveMultisigProposal()
+      .adminApproveMultisigProposal({
+        transactionIndex: new BN(configTransactionIndex.toString()),
+      })
       .accounts({
         dao: dao,
         squadsMultisig: daoAccount.squadsMultisig,
         squadsMultisigProposal: squadsConfigProposalPda,
-        squadsMultisigVaultTransaction: vaultConfigTransactionPda,
         admin: this.payer.publicKey,
         squadsMultisigProgram: multisig.PROGRAM_ID,
       })
@@ -278,12 +279,11 @@ export default function suite() {
     );
 
     await this.futarchy.autocrat.methods
-      .adminApproveMultisigProposal()
+      .adminApproveMultisigProposal({ transactionIndex: new BN(1) })
       .accounts({
         dao: dao,
         squadsMultisig: daoAccount.squadsMultisig,
         squadsMultisigProposal: squadsInvalidatedProposalPda,
-        squadsMultisigVaultTransaction: vaultInvalidatedTransactionPda,
         admin: this.payer.publicKey,
         squadsMultisigProgram: multisig.PROGRAM_ID,
       })
