@@ -1,4 +1,5 @@
 import {
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   Transaction,
@@ -15,7 +16,7 @@ import {
 } from "@metadaoproject/futarchy/v0.7";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../launchpad_v7/utils.js";
-import { createLookupTableForTransaction } from "../utils.js";
+import { createLookupTableForTransaction, expectError } from "../utils.js";
 import * as token from "@solana/spl-token";
 import * as multisig from "@sqds/multisig";
 
@@ -510,7 +511,11 @@ export default async function suite() {
       })
       .rpc();
 
-    // Unstake from the proposal
+    // Unstake should fail immediately after launch due to the unstake delay
+    const unstakeCallbacks = expectError(
+      "ProposalNotReadyToUnstake",
+      "Should not allow unstaking before the lockout delay has passed",
+    );
     await this.futarchy
       .unstakeFromProposalIx({
         proposal,
@@ -518,6 +523,21 @@ export default async function suite() {
         baseMint: META,
         amount: stakeAmount,
       })
+      .rpc()
+      .then(unstakeCallbacks[0], unstakeCallbacks[1]);
+
+    // Advance past the unstake delay and retry
+    await this.advanceBySeconds(5);
+    await this.futarchy
+      .unstakeFromProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        amount: stakeAmount,
+      })
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
+      ])
       .rpc();
 
     await this.conditionalVault

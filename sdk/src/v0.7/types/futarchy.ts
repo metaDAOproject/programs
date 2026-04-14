@@ -3293,6 +3293,11 @@ export type Futarchy = {
       name: "InvalidMint";
       msg: "Base mint and quote mint must be different";
     },
+    {
+      code: 6037;
+      name: "ProposalNotReadyToUnstake";
+      msg: "Proposal is not ready to be unstaked";
+    },
   ];
 };
 
@@ -6590,6 +6595,11 @@ export const IDL: Futarchy = {
       code: 6036,
       name: "InvalidMint",
       msg: "Base mint and quote mint must be different",
+    },
+    {
+      code: 6037,
+      name: "ProposalNotReadyToUnstake",
+      msg: "Proposal is not ready to be unstaked",
     },
   ],
 };
