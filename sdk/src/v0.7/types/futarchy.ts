@@ -1344,17 +1344,19 @@ export type Futarchy = {
           isSigner: false;
         },
         {
-          name: "squadsMultisigVaultTransaction";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "squadsMultisigProgram";
           isMut: false;
           isSigner: false;
         },
       ];
-      args: [];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "AdminApproveMultisigProposalArgs";
+          };
+        },
+      ];
     },
     {
       name: "adminExecuteMultisigProposal";
@@ -1980,6 +1982,18 @@ export type Futarchy = {
           },
           {
             name: "daoSeqNum";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "AdminApproveMultisigProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "transactionIndex";
             type: "u64";
           },
         ];
@@ -3698,36 +3712,41 @@ export type Futarchy = {
     },
     {
       code: 6037;
+      name: "ProposalNotReadyToUnstake";
+      msg: "Proposal is not ready to be unstaked";
+    },
+    {
+      code: 6038;
       name: "InvalidRecipient";
       msg: "Invalid recipient";
     },
     {
-      code: 6038;
+      code: 6039;
       name: "OptimisticGovernanceDisabled";
       msg: "Optimistic governance is disabled";
     },
     {
-      code: 6039;
+      code: 6040;
       name: "ActiveOptimisticProposalAlreadyEnqueued";
       msg: "An active optimistic proposal is already enqueued";
     },
     {
-      code: 6040;
+      code: 6041;
       name: "NoActiveOptimisticProposal";
       msg: "No active optimistic proposal";
     },
     {
-      code: 6041;
+      code: 6042;
       name: "OptimisticProposalAlreadyPassed";
       msg: "Optimistic proposal has already passed";
     },
     {
-      code: 6042;
+      code: 6043;
       name: "CannotSponsorOptimisticProposalChallenge";
       msg: "Team cannot sponsor a challenge to an optimistic proposal";
     },
     {
-      code: 6043;
+      code: 6044;
       name: "InvalidSpendingLimitMint";
       msg: "Invalid spending limit mint. Must be the same as the DAO's quote mint";
     },
@@ -5080,17 +5099,19 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
-          name: "squadsMultisigVaultTransaction",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "squadsMultisigProgram",
           isMut: false,
           isSigner: false,
         },
       ],
-      args: [],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "AdminApproveMultisigProposalArgs",
+          },
+        },
+      ],
     },
     {
       name: "adminExecuteMultisigProposal",
@@ -5716,6 +5737,18 @@ export const IDL: Futarchy = {
           },
           {
             name: "daoSeqNum",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "AdminApproveMultisigProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "transactionIndex",
             type: "u64",
           },
         ],
@@ -7434,36 +7467,41 @@ export const IDL: Futarchy = {
     },
     {
       code: 6037,
+      name: "ProposalNotReadyToUnstake",
+      msg: "Proposal is not ready to be unstaked",
+    },
+    {
+      code: 6038,
       name: "InvalidRecipient",
       msg: "Invalid recipient",
     },
     {
-      code: 6038,
+      code: 6039,
       name: "OptimisticGovernanceDisabled",
       msg: "Optimistic governance is disabled",
     },
     {
-      code: 6039,
+      code: 6040,
       name: "ActiveOptimisticProposalAlreadyEnqueued",
       msg: "An active optimistic proposal is already enqueued",
     },
     {
-      code: 6040,
+      code: 6041,
       name: "NoActiveOptimisticProposal",
       msg: "No active optimistic proposal",
     },
     {
-      code: 6041,
+      code: 6042,
       name: "OptimisticProposalAlreadyPassed",
       msg: "Optimistic proposal has already passed",
     },
     {
-      code: 6042,
+      code: 6043,
       name: "CannotSponsorOptimisticProposalChallenge",
       msg: "Team cannot sponsor a challenge to an optimistic proposal",
     },
     {
-      code: 6043,
+      code: 6044,
       name: "InvalidSpendingLimitMint",
       msg: "Invalid spending limit mint. Must be the same as the DAO's quote mint",
     },

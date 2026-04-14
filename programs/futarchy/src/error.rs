@@ -78,6 +78,8 @@ pub enum FutarchyError {
     InvalidTransactionMessage,
     #[msg("Base mint and quote mint must be different")]
     InvalidMint,
+    #[msg("Proposal is not ready to be unstaked")]
+    ProposalNotReadyToUnstake,
     #[msg("Invalid recipient")]
     InvalidRecipient,
     #[msg("Optimistic governance is disabled")]

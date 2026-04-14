@@ -20,6 +20,7 @@ import adminApproveMultisigProposal from "./unit/adminApproveMultisigProposal.te
 import adminExecuteMultisigProposal from "./unit/adminExecuteMultisigProposal.test.js";
 import adminCancelProposal from "./unit/adminCancelProposal.test.js";
 import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
+import unstakeFromProposal from "./unit/unstakeFromProposal.test.js";
 
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -73,6 +74,7 @@ export default function suite() {
   describe("#admin_execute_multisig_proposal", adminExecuteMultisigProposal);
   describe("#admin_cancel_proposal", adminCancelProposal);
   describe("#admin_remove_proposal", adminRemoveProposal);
+  describe("#unstake_from_proposal", unstakeFromProposal);
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);
