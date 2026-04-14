@@ -78,4 +78,6 @@ pub enum FutarchyError {
     InvalidTransactionMessage,
     #[msg("Base mint and quote mint must be different")]
     InvalidMint,
+    #[msg("Proposal is not ready to be unstaked")]
+    ProposalNotReadyToUnstake,
 }
