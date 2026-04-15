@@ -258,7 +258,7 @@ impl InitializeLaunch<'_> {
                 .map(|a| a.key()),
             additional_tokens_claimed: false,
             unix_timestamp_completed: None,
-            is_performance_package_initialized: false,
+            is_finalized: false,
             accumulator_activation_delay_seconds: args.accumulator_activation_delay_seconds,
             has_bid_wall: args.has_bid_wall,
             mint_governor: ctx.accounts.mint_governor.key(),

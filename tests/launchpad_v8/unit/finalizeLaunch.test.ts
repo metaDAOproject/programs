@@ -147,7 +147,7 @@ export default function suite() {
     // Verify launch is Complete before finalize
     let launchAccount = await launchpadClient.fetchLaunch(launch);
     assert.deepEqual(launchAccount.state, { complete: {} });
-    assert.equal(launchAccount.isPerformancePackageInitialized, false);
+    assert.equal(launchAccount.isFinalized, false);
 
     // Finalize
     await launchpadClient
@@ -160,7 +160,7 @@ export default function suite() {
 
     // Reload launch state
     launchAccount = await launchpadClient.fetchLaunch(launch);
-    assert.equal(launchAccount.isPerformancePackageInitialized, true);
+    assert.equal(launchAccount.isFinalized, true);
 
     // Derive expected addresses
     const mintGovernorAddr = launchpadClient.getMintGovernorAddress({

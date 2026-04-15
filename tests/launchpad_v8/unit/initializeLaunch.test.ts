@@ -115,6 +115,7 @@ export default function suite() {
     assert.isNull(storedLaunch.dao);
     assert.equal(storedLaunch.accumulatorActivationDelaySeconds, 0);
     assert.isTrue(storedLaunch.hasBidWall);
+    assert.isFalse(storedLaunch.isFinalized);
 
     // MintGovernor PDA stored on launch
     const mintGovernorClient = launchpadClient.mintGovernorClient;

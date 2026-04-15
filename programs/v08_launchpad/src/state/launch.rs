@@ -84,8 +84,8 @@ pub struct Launch {
     pub additional_tokens_claimed: bool,
     /// The unix timestamp when the launch was completed.
     pub unix_timestamp_completed: Option<i64>,
-    /// Whether the performance package has been initialized.
-    pub is_performance_package_initialized: bool,
+    /// Whether the launch has been finalized.
+    pub is_finalized: bool,
     /// Number of seconds after launch start before the funding accumulator
     /// begins tracking.
     pub accumulator_activation_delay_seconds: u32,

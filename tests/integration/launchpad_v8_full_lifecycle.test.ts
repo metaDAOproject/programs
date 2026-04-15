@@ -296,7 +296,7 @@ export default async function suite() {
     // =====================
     // 7. finalize_launch → verify PP v2 setup, MintGovernor admin transfer
     // =====================
-    assert.equal(launchAccount.isPerformancePackageInitialized, false);
+    assert.equal(launchAccount.isFinalized, false);
 
     await launchpadClient
       .finalizeLaunchIx({
@@ -307,7 +307,7 @@ export default async function suite() {
       .rpc();
 
     launchAccount = await launchpadClient.fetchLaunch(launch);
-    assert.equal(launchAccount.isPerformancePackageInitialized, true);
+    assert.equal(launchAccount.isFinalized, true);
 
     // Verify MintGovernor admin transferred to DAO squads vault
     const daoAddr = launchpadClient.getLaunchDaoAddress({ launch });
@@ -432,6 +432,6 @@ export default async function suite() {
     );
 
     launchAccount = await launchpadClient.fetchLaunch(launch);
-    assert.equal(launchAccount.additionalTokensClaimed, true);
+    assert.isTrue(launchAccount.additionalTokensClaimed);
   });
 }

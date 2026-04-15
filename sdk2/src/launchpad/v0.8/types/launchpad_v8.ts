@@ -742,19 +742,11 @@ export type LaunchpadV8 = {
           name: "ppMintAuthority";
           isMut: true;
           isSigner: false;
-          docs: [
-            "MintAuthority for PP v2 PDA — initialized via CPI",
-            'PDA: seeds = [b"mint_authority", mint_governor, performance_package]',
-          ];
         },
         {
           name: "performancePackage";
           isMut: true;
           isSigner: false;
-          docs: [
-            "PP v2 account — initialized via CPI",
-            'PDA: seeds = [b"performance_package", launch_signer (create_key)]',
-          ];
         },
         {
           name: "systemProgram";
@@ -1089,8 +1081,8 @@ export type LaunchpadV8 = {
             };
           },
           {
-            name: "isPerformancePackageInitialized";
-            docs: ["Whether the performance package has been initialized."];
+            name: "isFinalized";
+            docs: ["Whether the launch has been finalized."];
             type: "bool";
           },
           {
@@ -2629,19 +2621,11 @@ export const IDL: LaunchpadV8 = {
           name: "ppMintAuthority",
           isMut: true,
           isSigner: false,
-          docs: [
-            "MintAuthority for PP v2 PDA — initialized via CPI",
-            'PDA: seeds = [b"mint_authority", mint_governor, performance_package]',
-          ],
         },
         {
           name: "performancePackage",
           isMut: true,
           isSigner: false,
-          docs: [
-            "PP v2 account — initialized via CPI",
-            'PDA: seeds = [b"performance_package", launch_signer (create_key)]',
-          ],
         },
         {
           name: "systemProgram",
@@ -2976,8 +2960,8 @@ export const IDL: LaunchpadV8 = {
             },
           },
           {
-            name: "isPerformancePackageInitialized",
-            docs: ["Whether the performance package has been initialized."],
+            name: "isFinalized",
+            docs: ["Whether the launch has been finalized."],
             type: "bool",
           },
           {

@@ -86,17 +86,22 @@ pub struct FinalizeLaunch<'info> {
     #[account(mut)]
     pub mint_governor: Account<'info, MintGovernor>,
 
-    /// MintAuthority for PP v2 PDA — initialized via CPI
-    /// PDA: seeds = [b"mint_authority", mint_governor, performance_package]
     /// CHECK: initialized via CPI
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"mint_authority", mint_governor.key().as_ref(), performance_package.key().as_ref()],
+        bump,
+        seeds::program = mint_governor_program.key(),
+    )]
     pub pp_mint_authority: UncheckedAccount<'info>,
 
-    // Performance Package v2
-    /// PP v2 account — initialized via CPI
-    /// PDA: seeds = [b"performance_package", launch_signer (create_key)]
     /// CHECK: initialized via CPI
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"performance_package", launch_signer.key().as_ref()],
+        bump,
+        seeds::program = performance_package_v2_program.key(),
+    )]
     pub performance_package: UncheckedAccount<'info>,
 
     // Programs
@@ -118,7 +123,7 @@ impl FinalizeLaunch<'_> {
             LaunchpadError::InvalidLaunchState
         );
         require!(
-            !self.launch.is_performance_package_initialized,
+            !self.launch.is_finalized,
             LaunchpadError::PerformancePackageAlreadyInitialized
         );
         Ok(())
@@ -225,7 +230,7 @@ impl FinalizeLaunch<'_> {
         ))?;
 
         let launch = &mut ctx.accounts.launch;
-        launch.is_performance_package_initialized = true;
+        launch.is_finalized = true;
         launch.seq_num += 1;
 
         let clock = Clock::get()?;
