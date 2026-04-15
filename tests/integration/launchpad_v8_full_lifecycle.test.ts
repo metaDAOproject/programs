@@ -336,6 +336,20 @@ export default async function suite() {
       ppAccount.recipient.equals(launchAccount.performancePackageGrantee),
     );
 
+    // Verify DAO MintAuthority was created for the squads_multisig_vault
+    const daoMintAuthorityAddr = launchpadClient.getMintAuthorityAddress({
+      mintGovernor: mintGovernorAddr,
+      authorizedMinter: squadsMultisigVault,
+    });
+    const daoMintAuthorityAccount =
+      await launchpadClient.mintGovernorClient.fetchMintAuthority(
+        daoMintAuthorityAddr,
+      );
+    assert.ok(
+      daoMintAuthorityAccount.authorizedMinter.equals(squadsMultisigVault),
+    );
+    assert.isNull(daoMintAuthorityAccount.maxTotal);
+
     // =====================
     // 8. claim (each funder)
     // =====================

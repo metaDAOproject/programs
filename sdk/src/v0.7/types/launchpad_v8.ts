@@ -744,6 +744,11 @@ export type LaunchpadV8 = {
           isSigner: false;
         },
         {
+          name: "daoMintAuthority";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "performancePackage";
           isMut: true;
           isSigner: false;
@@ -1560,6 +1565,11 @@ export type LaunchpadV8 = {
         },
         {
           name: "ppMintAuthority";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "daoMintAuthority";
           type: "publicKey";
           index: false;
         },
@@ -2623,6 +2633,11 @@ export const IDL: LaunchpadV8 = {
           isSigner: false,
         },
         {
+          name: "daoMintAuthority",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "performancePackage",
           isMut: true,
           isSigner: false,
@@ -3439,6 +3454,11 @@ export const IDL: LaunchpadV8 = {
         },
         {
           name: "ppMintAuthority",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "daoMintAuthority",
           type: "publicKey",
           index: false,
         },

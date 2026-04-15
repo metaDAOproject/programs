@@ -96,6 +96,7 @@ pub struct LaunchFinalizedEvent {
     pub mint_governor: Pubkey,
     pub mint_governor_new_admin: Pubkey,
     pub pp_mint_authority: Pubkey,
+    pub dao_mint_authority: Pubkey,
 }
 
 #[event]

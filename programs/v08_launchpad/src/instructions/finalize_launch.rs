@@ -98,6 +98,15 @@ pub struct FinalizeLaunch<'info> {
     /// CHECK: initialized via CPI
     #[account(
         mut,
+        seeds = [b"mint_authority", mint_governor.key().as_ref(), squads_multisig_vault.key().as_ref()],
+        bump,
+        seeds::program = mint_governor_program.key(),
+    )]
+    pub dao_mint_authority: UncheckedAccount<'info>,
+
+    /// CHECK: initialized via CPI
+    #[account(
+        mut,
         seeds = [b"performance_package", launch_signer.key().as_ref()],
         bump,
         seeds::program = performance_package_v2_program.key(),
@@ -172,6 +181,25 @@ impl FinalizeLaunch<'_> {
             },
         )?;
 
+        // CPI → mint_governor::add_mint_authority (DAO)
+        add_mint_authority(
+            CpiContext::new_with_signer(
+                ctx.accounts.mint_governor_program.to_account_info(),
+                AddMintAuthority {
+                    mint_governor: ctx.accounts.mint_governor.to_account_info(),
+                    mint_authority: ctx.accounts.dao_mint_authority.to_account_info(),
+                    admin: ctx.accounts.launch_signer.to_account_info(),
+                    authorized_minter: ctx.accounts.squads_multisig_vault.to_account_info(),
+                    payer: ctx.accounts.payer.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                    event_authority: ctx.accounts.mint_governor_event_authority.to_account_info(),
+                    program: ctx.accounts.mint_governor_program.to_account_info(),
+                },
+                signer,
+            ),
+            AddMintAuthorityArgs { max_total: None },
+        )?;
+
         // CPI → performance_package_v2::initialize_performance_package
         let min_unlock_timestamp = ctx.accounts.launch.unix_timestamp_completed.unwrap()
             + (ctx.accounts.launch.months_until_insiders_can_unlock as i64) * 30 * 24 * 60 * 60;
@@ -241,6 +269,7 @@ impl FinalizeLaunch<'_> {
             mint_governor: ctx.accounts.mint_governor.key(),
             mint_governor_new_admin: ctx.accounts.squads_multisig_vault.key(),
             pp_mint_authority: ctx.accounts.pp_mint_authority.key(),
+            dao_mint_authority: ctx.accounts.dao_mint_authority.key(),
         });
 
         Ok(())

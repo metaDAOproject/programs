@@ -725,6 +725,12 @@ export class LaunchpadClient {
       authorizedMinter: performancePackage,
     });
 
+    const [daoMintAuthority] = getMintAuthorityAddr({
+      programId: this.mintGovernorClient.programId,
+      mintGovernor,
+      authorizedMinter: squadsMultisigVault,
+    });
+
     const [mintGovernorEventAuthority] = getEventAuthorityAddr(
       this.mintGovernorClient.programId,
     );
@@ -745,6 +751,7 @@ export class LaunchpadClient {
         performancePackageGrantee,
         mintGovernor,
         ppMintAuthority,
+        daoMintAuthority,
         performancePackage,
         squadsProgram: SQUADS_PROGRAM_ID,
         mintGovernorProgram: this.mintGovernorClient.programId,
