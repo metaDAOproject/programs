@@ -4,11 +4,10 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 
 use mint_governor::{
     cpi::{
-        accounts::{AddMintAuthority, InitializeMintGovernor, TransferAuthorityToGovernor},
-        add_mint_authority, initialize_mint_governor, transfer_authority_to_governor,
+        accounts::{InitializeMintGovernor, TransferAuthorityToGovernor},
+        initialize_mint_governor, transfer_authority_to_governor,
     },
     program::MintGovernor as MintGovernorProgram,
-    AddMintAuthorityArgs,
 };
 
 use crate::error::LaunchpadError;
@@ -103,16 +102,22 @@ pub struct InitializeLaunch<'info> {
     /// CHECK: Just the recipient of the additional tokens
     pub additional_tokens_recipient: Option<UncheckedAccount<'info>>,
 
-    /// PDA: seeds = [b"mint_governor", base_mint, launch_signer (create_key)]
-    /// Initialized via CPI to mint_governor::initialize_mint_governor
     /// CHECK: initialized via CPI
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"mint_governor", base_mint.key().as_ref(), launch_signer.key().as_ref()],
+        bump,
+        seeds::program = mint_governor_program.key(),
+    )]
     pub mint_governor: UncheckedAccount<'info>,
 
-    /// PDA: seeds = [b"mint_authority", mint_governor, launch_signer (authorized_minter)]
-    /// Initialized via CPI to mint_governor::add_mint_authority
     /// CHECK: initialized via CPI
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"mint_authority", mint_governor.key().as_ref(), launch_signer.key().as_ref()],
+        bump,
+        seeds::program = mint_governor_program.key(),
+    )]
     pub mint_authority: UncheckedAccount<'info>,
 
     pub mint_governor_program: Program<'info, MintGovernorProgram>,
@@ -333,31 +338,6 @@ impl InitializeLaunch<'_> {
             },
             signer,
         ))?;
-
-        let max_total = TOKENS_TO_PARTICIPANTS
-            + TOKENS_TO_FUTARCHY_LIQUIDITY
-            + TOKENS_TO_DAMM_V2_LIQUIDITY
-            + args.additional_tokens_amount;
-
-        add_mint_authority(
-            CpiContext::new_with_signer(
-                ctx.accounts.mint_governor_program.to_account_info(),
-                AddMintAuthority {
-                    mint_governor: ctx.accounts.mint_governor.to_account_info(),
-                    mint_authority: ctx.accounts.mint_authority.to_account_info(),
-                    admin: ctx.accounts.launch_signer.to_account_info(),
-                    authorized_minter: ctx.accounts.launch_signer.to_account_info(),
-                    payer: ctx.accounts.payer.to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    event_authority: ctx.accounts.mint_governor_event_authority.to_account_info(),
-                    program: ctx.accounts.mint_governor_program.to_account_info(),
-                },
-                signer,
-            ),
-            AddMintAuthorityArgs {
-                max_total: Some(max_total),
-            },
-        )?;
 
         transfer_authority_to_governor(CpiContext::new_with_signer(
             ctx.accounts.mint_governor_program.to_account_info(),

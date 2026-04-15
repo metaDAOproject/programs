@@ -60,19 +60,11 @@ export type LaunchpadV8 = {
           name: "mintGovernor";
           isMut: true;
           isSigner: false;
-          docs: [
-            'PDA: seeds = [b"mint_governor", base_mint, launch_signer (create_key)]',
-            "Initialized via CPI to mint_governor::initialize_mint_governor",
-          ];
         },
         {
           name: "mintAuthority";
           isMut: true;
           isSigner: false;
-          docs: [
-            'PDA: seeds = [b"mint_authority", mint_governor, launch_signer (authorized_minter)]',
-            "Initialized via CPI to mint_governor::add_mint_authority",
-          ];
         },
         {
           name: "mintGovernorProgram";
@@ -1960,19 +1952,11 @@ export const IDL: LaunchpadV8 = {
           name: "mintGovernor",
           isMut: true,
           isSigner: false,
-          docs: [
-            'PDA: seeds = [b"mint_governor", base_mint, launch_signer (create_key)]',
-            "Initialized via CPI to mint_governor::initialize_mint_governor",
-          ],
         },
         {
           name: "mintAuthority",
           isMut: true,
           isSigner: false,
-          docs: [
-            'PDA: seeds = [b"mint_authority", mint_governor, launch_signer (authorized_minter)]',
-            "Initialized via CPI to mint_governor::add_mint_authority",
-          ],
         },
         {
           name: "mintGovernorProgram",

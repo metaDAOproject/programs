@@ -131,32 +131,18 @@ export default function suite() {
     assert.ok(mintGovernorAccount.admin.equals(launchSigner));
     assert.ok(mintGovernorAccount.mint.equals(META));
 
-    // MintAuthority for launch_signer with correct max_total
-    const [expectedMintAuthority] = getMintAuthorityAddr({
-      programId: mintGovernorClient.programId,
-      mintGovernor: expectedMintGovernor,
-      authorizedMinter: launchSigner,
-    });
-    const mintAuthorityAccount = await mintGovernorClient.fetchMintAuthority(
-      expectedMintAuthority,
-    );
-    assert.ok(mintAuthorityAccount.authorizedMinter.equals(launchSigner));
-    // max_total = TOKENS_TO_PARTICIPANTS + TOKENS_TO_FUTARCHY_LIQUIDITY + TOKENS_TO_DAMM_V2_LIQUIDITY + additional_tokens_amount
+    // total_supply = TOKENS_TO_PARTICIPANTS + TOKENS_TO_FUTARCHY_LIQUIDITY + TOKENS_TO_DAMM_V2_LIQUIDITY + additional_tokens_amount
     // = 10_000_000 + 2_000_000 + 900_000 + 0 = 12_900_000 tokens (scaled by 10^6)
-    const expectedMaxTotal = new BN("12900000000000"); // 12_900_000 * 1_000_000
-    assert.equal(
-      mintAuthorityAccount.maxTotal.toString(),
-      expectedMaxTotal.toString(),
-    );
+    const expectedTotalSupply = new BN("12900000000000"); // 12_900_000 * 1_000_000
 
     // SPL mint authority is the MintGovernor PDA
     const mintInfo = await this.getMint(META);
     assert.ok(mintInfo.mintAuthority.equals(expectedMintGovernor));
 
     // Tokens are minted during initialize_launch (before governor takes over)
-    assert.equal(mintInfo.supply.toString(), expectedMaxTotal.toString());
+    assert.equal(mintInfo.supply.toString(), expectedTotalSupply.toString());
     const baseVaultBalance = await this.getTokenBalance(META, launchSigner);
-    assert.equal(baseVaultBalance.toString(), expectedMaxTotal.toString());
+    assert.equal(baseVaultBalance.toString(), expectedTotalSupply.toString());
   });
 
   it("fails when monthly spending limit members contains duplicates", async function () {
