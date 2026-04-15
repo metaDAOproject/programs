@@ -9,6 +9,7 @@ import { expectError, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import { createMemoInstruction } from "@solana/spl-memo";
+import BN from "bn.js";
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
@@ -110,12 +111,11 @@ export default function suite() {
 
     // First approve
     await this.futarchy.autocrat.methods
-      .adminApproveMultisigProposal()
+      .adminApproveMultisigProposal({ transactionIndex: new BN(1) })
       .accounts({
         dao: dao,
         squadsMultisig: daoAccount.squadsMultisig,
         squadsMultisigProposal: squadsProposalPda,
-        squadsMultisigVaultTransaction: vaultTransactionPda,
         admin: this.payer.publicKey,
         squadsMultisigProgram: multisig.PROGRAM_ID,
       })
