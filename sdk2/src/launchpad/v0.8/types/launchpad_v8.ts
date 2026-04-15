@@ -1530,11 +1530,6 @@ export type LaunchpadV8 = {
           index: false;
         },
         {
-          name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
           name: "tokensMinted";
           type: "u64";
           index: false;
@@ -3419,11 +3414,6 @@ export const IDL: LaunchpadV8 = {
         {
           name: "bidWallAmount",
           type: "u64",
-          index: false,
-        },
-        {
-          name: "mintGovernor",
-          type: "publicKey",
           index: false,
         },
         {

@@ -187,7 +187,12 @@ pub struct SettleLaunch<'info> {
     pub quote_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: init by futarchy program
-    #[account(mut, seeds = [b"amm_position", dao.key().as_ref(), squads_multisig_vault.key().as_ref()], bump, seeds::program = static_accounts.futarchy_program)]
+    #[account(
+        mut,
+        seeds = [b"amm_position", dao.key().as_ref(), squads_multisig_vault.key().as_ref()],
+        bump,
+        seeds::program = static_accounts.futarchy_program
+    )]
     pub dao_owned_lp_position: UncheckedAccount<'info>,
 
     /// CHECK: checked by futarchy program
@@ -203,13 +208,27 @@ pub struct SettleLaunch<'info> {
     pub dao: UncheckedAccount<'info>,
 
     /// CHECK: checked by futarchy program
-    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
+    #[account(
+        mut,
+        seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()],
+        bump,
+        seeds::program = static_accounts.squads_program
+    )]
     pub squads_multisig: UncheckedAccount<'info>,
     /// CHECK: just a signer
-    #[account(seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = static_accounts.squads_program)]
+    #[account(
+        seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()],
+        bump,
+        seeds::program = static_accounts.squads_program
+    )]
     pub squads_multisig_vault: UncheckedAccount<'info>,
     /// CHECK: initialized by squads
-    #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = static_accounts.squads_program)]
+    #[account(
+        mut,
+        seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()],
+        bump,
+        seeds::program = static_accounts.squads_program
+    )]
     pub spending_limit: UncheckedAccount<'info>,
 
     /// CHECK: checked by bid wall program
@@ -302,9 +321,6 @@ impl SettleLaunch<'_> {
         ];
         let launch_signer = &[&launch_signer_seeds[..]];
 
-        // Tokens were already minted into launch_base_vault during initialize_launch
-        // (moved there to stay within CPI depth limits during settlement).
-
         let price_1e12 = ((launch_total_approved_amount as u128) * PRICE_SCALE)
             / (TOKENS_TO_PARTICIPANTS as u128);
 
@@ -370,7 +386,6 @@ impl SettleLaunch<'_> {
                 None
             },
             bid_wall_amount: usdc_to_bid_wall,
-            mint_governor: launch.mint_governor,
             tokens_minted: TOKENS_TO_PARTICIPANTS
                 + TOKENS_TO_FUTARCHY_LIQUIDITY
                 + TOKENS_TO_DAMM_V2_LIQUIDITY

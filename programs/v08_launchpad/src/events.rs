@@ -85,7 +85,6 @@ pub struct LaunchSettledEvent {
     pub total_approved_amount: u64,
     pub bid_wall: Option<Pubkey>,
     pub bid_wall_amount: u64,
-    pub mint_governor: Pubkey,
     pub tokens_minted: u64,
 }
 

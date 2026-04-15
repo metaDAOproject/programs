@@ -27,6 +27,7 @@ pub struct Fund<'info> {
     pub launch_quote_vault: Account<'info, TokenAccount>,
 
     pub funder: Signer<'info>,
+
     #[account(mut)]
     pub payer: Signer<'info>,
 
