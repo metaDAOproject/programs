@@ -49,6 +49,16 @@ pub struct UnstakeFromProposal<'info> {
 
 impl UnstakeFromProposal<'_> {
     pub fn validate(&self, params: &UnstakeFromProposalParams) -> Result<()> {
+        let clock = Clock::get()?;
+
+        // When a proposal is launched, we allow unstaking after a small delay
+        // Before it is launched, unstaking can happen normally, as the timestamp_enqueued is 0
+        require_gte!(
+            clock.unix_timestamp,
+            self.proposal.timestamp_enqueued + MIN_PROPOSAL_UNSTAKE_DELAY_SECONDS,
+            FutarchyError::ProposalNotReadyToUnstake
+        );
+
         require_keys_eq!(self.proposal.dao, self.dao.key());
 
         require_gt!(params.amount, 0, FutarchyError::InvalidAmount);
