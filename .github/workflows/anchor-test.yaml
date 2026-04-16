@@ -28,10 +28,14 @@ jobs:
         run: |
           cd sdk
           yarn install
+          cd ../sdk2
+          yarn install
 
       - name: Build SDK
         run: |
           cd sdk
+          yarn build
+          cd ../sdk2
           yarn build
 
       - uses: metadaoproject/anchor-test@v2.3
