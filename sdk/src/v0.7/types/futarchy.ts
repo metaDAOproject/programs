@@ -1181,7 +1181,50 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "adminApproveMultisigProposal";
+      name: "adminEnqueueMultisigProposalApproval";
+      accounts: [
+        {
+          name: "dao";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "enqueuedApproval";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "AdminEnqueueMultisigProposalApprovalArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "executeMultisigProposalApproval";
       accounts: [
         {
           name: "dao";
@@ -1189,7 +1232,7 @@ export type Futarchy = {
           isSigner: false;
         },
         {
-          name: "admin";
+          name: "rentReceiver";
           isMut: true;
           isSigner: true;
         },
@@ -1204,19 +1247,17 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "enqueuedApproval";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "squadsMultisigProgram";
           isMut: false;
           isSigner: false;
         },
       ];
-      args: [
-        {
-          name: "args";
-          type: {
-            defined: "AdminApproveMultisigProposalArgs";
-          };
-        },
-      ];
+      args: [];
     },
     {
       name: "adminExecuteMultisigProposal";
@@ -1580,6 +1621,26 @@ export type Futarchy = {
       };
     },
     {
+      name: "enqueuedMultisigProposalApproval";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "transactionIndex";
+            type: "u64";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
       name: "proposal";
       type: {
         kind: "struct";
@@ -1700,7 +1761,7 @@ export type Futarchy = {
       };
     },
     {
-      name: "AdminApproveMultisigProposalArgs";
+      name: "AdminEnqueueMultisigProposalApprovalArgs";
       type: {
         kind: "struct";
         fields: [
@@ -4484,7 +4545,50 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
-      name: "adminApproveMultisigProposal",
+      name: "adminEnqueueMultisigProposalApproval",
+      accounts: [
+        {
+          name: "dao",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "enqueuedApproval",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "AdminEnqueueMultisigProposalApprovalArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "executeMultisigProposalApproval",
       accounts: [
         {
           name: "dao",
@@ -4492,7 +4596,7 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
-          name: "admin",
+          name: "rentReceiver",
           isMut: true,
           isSigner: true,
         },
@@ -4507,19 +4611,17 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
+          name: "enqueuedApproval",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "squadsMultisigProgram",
           isMut: false,
           isSigner: false,
         },
       ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "AdminApproveMultisigProposalArgs",
-          },
-        },
-      ],
+      args: [],
     },
     {
       name: "adminExecuteMultisigProposal",
@@ -4883,6 +4985,26 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "enqueuedMultisigProposalApproval",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "transactionIndex",
+            type: "u64",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
       name: "proposal",
       type: {
         kind: "struct",
@@ -5003,7 +5125,7 @@ export const IDL: Futarchy = {
       },
     },
     {
-      name: "AdminApproveMultisigProposalArgs",
+      name: "AdminEnqueueMultisigProposalApprovalArgs",
       type: {
         kind: "struct",
         fields: [

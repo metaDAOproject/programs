@@ -154,11 +154,18 @@ pub mod futarchy {
     }
 
     #[access_control(ctx.accounts.validate(&args))]
-    pub fn admin_approve_multisig_proposal(
-        ctx: Context<AdminApproveMultisigProposal>,
-        args: AdminApproveMultisigProposalArgs,
+    pub fn admin_enqueue_multisig_proposal_approval(
+        ctx: Context<AdminEnqueueMultisigProposalApproval>,
+        args: AdminEnqueueMultisigProposalApprovalArgs,
     ) -> Result<()> {
-        AdminApproveMultisigProposal::handle(ctx, args)
+        AdminEnqueueMultisigProposalApproval::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn execute_multisig_proposal_approval(
+        ctx: Context<ExecuteMultisigProposalApproval>,
+    ) -> Result<()> {
+        ExecuteMultisigProposalApproval::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate())]
