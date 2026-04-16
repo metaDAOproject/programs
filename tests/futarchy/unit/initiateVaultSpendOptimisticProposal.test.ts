@@ -113,8 +113,6 @@ export default function suite() {
         quoteAmount: new BN(100_000 * 10 ** 6),
       })
       .rpc();
-
-    await setOptimisticGovernanceEnabled(dao, true);
   });
 
   it("can initiate a vault spend optimistic proposal", async function () {

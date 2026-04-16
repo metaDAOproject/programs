@@ -20,29 +20,7 @@ const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
 
-  let setOptimisticGovernanceEnabled: (
-    dao: PublicKey,
-    enabled: boolean,
-  ) => Promise<void>;
-
   beforeEach(async function () {
-    setOptimisticGovernanceEnabled = async (
-      dao: PublicKey,
-      enabled: boolean,
-    ) => {
-      const daoAccount = await this.futarchy.getDao(dao);
-      daoAccount.isOptimisticGovernanceEnabled = enabled;
-      const daoAccountBuffer =
-        await this.futarchy.autocrat.account.dao.coder.accounts.encode(
-          "dao",
-          daoAccount,
-        );
-
-      const daoBanksAccount = await this.banksClient.getAccount(dao);
-      daoBanksAccount.data.set(daoAccountBuffer, 0);
-      this.context.setAccount(dao, daoBanksAccount);
-    };
-
     META = await this.createMint(this.payer.publicKey, 9);
     USDC = await this.createMint(this.payer.publicKey, 6);
 
@@ -190,8 +168,6 @@ export default function suite() {
     let daoAccount = await this.futarchy.getDao(dao);
 
     await this.createTokenAccount(USDC, daoAccount.squadsMultisigVault);
-
-    await setOptimisticGovernanceEnabled(dao, true);
 
     await this.futarchy
       .initiateVaultSpendOptimisticProposalIx({

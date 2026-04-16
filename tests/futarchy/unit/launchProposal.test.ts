@@ -25,29 +25,7 @@ export default function suite() {
     spendingLimit: BN,
     transferAmount: bigint;
 
-  let setOptimisticGovernanceEnabled: (
-    dao: PublicKey,
-    enabled: boolean,
-  ) => Promise<void>;
-
   beforeEach(async function () {
-    setOptimisticGovernanceEnabled = async (
-      dao: PublicKey,
-      enabled: boolean,
-    ) => {
-      const daoAccount = await this.futarchy.getDao(dao);
-      daoAccount.isOptimisticGovernanceEnabled = enabled;
-      const daoAccountBuffer =
-        await this.futarchy.autocrat.account.dao.coder.accounts.encode(
-          "dao",
-          daoAccount,
-        );
-
-      const daoBanksAccount = await this.banksClient.getAccount(dao);
-      daoBanksAccount.data.set(daoAccountBuffer, 0);
-      this.context.setAccount(dao, daoBanksAccount);
-    };
-
     META = await this.createMint(this.payer.publicKey, 6);
     USDC = await this.createMint(this.payer.publicKey, 6);
     spendingLimit = new BN(10_000);
@@ -525,8 +503,6 @@ export default function suite() {
       10_000_000 * 10 ** 6,
     );
 
-    await setOptimisticGovernanceEnabled(dao, true);
-
     let daoAccount = await this.futarchy.getDao(dao);
 
     await this.createTokenAccount(USDC, daoAccount.squadsMultisigVault);
@@ -620,7 +596,6 @@ export default function suite() {
       this.payer,
       10_000_000 * 10 ** 6,
     );
-    await setOptimisticGovernanceEnabled(dao, true);
 
     let daoAccount = await this.futarchy.getDao(dao);
 
