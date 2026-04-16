@@ -22,29 +22,8 @@ const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
-  let setOptimisticGovernanceEnabled: (
-    dao: PublicKey,
-    enabled: boolean,
-  ) => Promise<void>;
 
   beforeEach(async function () {
-    setOptimisticGovernanceEnabled = async (
-      dao: PublicKey,
-      enabled: boolean,
-    ) => {
-      const daoAccount = await this.futarchy.getDao(dao);
-      daoAccount.isOptimisticGovernanceEnabled = enabled;
-      const daoAccountBuffer =
-        await this.futarchy.autocrat.account.dao.coder.accounts.encode(
-          "dao",
-          daoAccount,
-        );
-
-      const daoBanksAccount = await this.banksClient.getAccount(dao);
-      daoBanksAccount.data.set(daoAccountBuffer, 0);
-      this.context.setAccount(dao, daoBanksAccount);
-    };
-
     META = await this.createMint(this.payer.publicKey, 9);
     USDC = MAINNET_USDC;
 
@@ -565,9 +544,7 @@ export default function suite() {
     let daoState = await this.futarchy.getDao(dao);
     assert.isDefined(daoState.amm.state.spot);
 
-    // Step 5: Enable optimistic governance and enqueue a real optimistic proposal
-    await setOptimisticGovernanceEnabled(dao, true);
-
+    // Step 5: Enqueue an optimistic proposal
     await this.futarchy
       .initiateVaultSpendOptimisticProposalIx({
         dao,

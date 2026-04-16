@@ -222,7 +222,8 @@ impl InitializeDao<'_> {
             team_sponsored_pass_threshold_bps,
             team_address,
             optimistic_proposal: None,
-            is_optimistic_governance_enabled: false,
+            // if the team address is not the default address, then optimistic governance should be enabled
+            is_optimistic_governance_enabled: !team_address.eq(&Pubkey::default()),
         });
 
         dao.invariant()?;

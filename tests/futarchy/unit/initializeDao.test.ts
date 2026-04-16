@@ -77,7 +77,7 @@ export default function suite() {
     assert.equal(storedDao.teamSponsoredPassThresholdBps, 123);
 
     assert.isNull(storedDao.optimisticProposal);
-    assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
+    assert.isTrue(storedDao.isOptimisticGovernanceEnabled);
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
@@ -188,7 +188,7 @@ export default function suite() {
     assert.isTrue(storedDao.teamAddress.equals(this.payer.publicKey));
     assert.equal(storedDao.teamSponsoredPassThresholdBps, 123);
     assert.isNull(storedDao.optimisticProposal);
-    assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
+    assert.isTrue(storedDao.isOptimisticGovernanceEnabled);
   });
 
   it("doesn't allow DAOs with identical base and quote mints", async function () {
@@ -213,6 +213,9 @@ export default function suite() {
           passThresholdBps: 300,
           nonce: new BN(9999),
           initialSpendingLimit: null,
+          baseToStake: new BN(1000),
+          teamSponsoredPassThresholdBps: 1500,
+          teamAddress: this.payer.publicKey,
         },
       })
       .rpc()
