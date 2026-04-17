@@ -111,15 +111,6 @@ pub struct InitializeLaunch<'info> {
     )]
     pub mint_governor: UncheckedAccount<'info>,
 
-    /// CHECK: initialized via CPI
-    #[account(
-        mut,
-        seeds = [b"mint_authority", mint_governor.key().as_ref(), launch_signer.key().as_ref()],
-        bump,
-        seeds::program = mint_governor_program.key(),
-    )]
-    pub mint_authority: UncheckedAccount<'info>,
-
     pub mint_governor_program: Program<'info, MintGovernorProgram>,
 
     /// CHECK: checked by mint_governor program

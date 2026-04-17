@@ -62,11 +62,6 @@ export type LaunchpadV8 = {
           isSigner: false;
         },
         {
-          name: "mintAuthority";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "mintGovernorProgram";
           isMut: false;
           isSigner: false;
@@ -1947,11 +1942,6 @@ export const IDL: LaunchpadV8 = {
         },
         {
           name: "mintGovernor",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "mintAuthority",
           isMut: true,
           isSigner: false,
         },

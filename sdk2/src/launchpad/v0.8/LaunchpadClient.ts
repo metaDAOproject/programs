@@ -255,11 +255,6 @@ export class LaunchpadClient {
       mint: baseMint,
       createKey: launchSigner,
     });
-    const [mintAuthority] = getMintAuthorityAddr({
-      programId: this.mintGovernorClient.programId,
-      mintGovernor,
-      authorizedMinter: launchSigner,
-    });
     const [mintGovernorEventAuthority] = getEventAuthorityAddr(
       this.mintGovernorClient.programId,
     );
@@ -294,7 +289,6 @@ export class LaunchpadClient {
         payer,
         additionalTokensRecipient: additionalTokensRecipient ?? null,
         mintGovernor,
-        mintAuthority,
         mintGovernorProgram: this.mintGovernorClient.programId,
         mintGovernorEventAuthority,
       })
