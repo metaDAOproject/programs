@@ -13,7 +13,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError } from "../../utils.js";
+import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
 import { getDaoAddr, MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -28,28 +28,8 @@ const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 
 export default function suite() {
   let META: PublicKey, dao: PublicKey, spendingLimit: BN;
-  let setOptimisticGovernanceEnabled: (
-    dao: PublicKey,
-    enabled: boolean,
-  ) => Promise<void>;
 
   beforeEach(async function () {
-    setOptimisticGovernanceEnabled = async (
-      dao: PublicKey,
-      enabled: boolean,
-    ) => {
-      const daoAccount = await this.futarchy.getDao(dao);
-      daoAccount.isOptimisticGovernanceEnabled = enabled;
-      const daoAccountBuffer =
-        await this.futarchy.autocrat.account.dao.coder.accounts.encode(
-          "dao",
-          daoAccount,
-        );
-
-      const daoBanksAccount = await this.banksClient.getAccount(dao);
-      daoBanksAccount.data.set(daoAccountBuffer, 0);
-      this.context.setAccount(dao, daoBanksAccount);
-    };
     META = await this.createMint(this.payer.publicKey, 9);
     spendingLimit = new BN(10_000);
     // Create payer's token accounts for both mints
@@ -113,6 +93,8 @@ export default function suite() {
         quoteAmount: new BN(100_000 * 10 ** 6),
       })
       .rpc();
+
+    await setOptimisticGovernanceEnabled(this, dao, true);
   });
 
   it("can initiate a vault spend optimistic proposal", async function () {
@@ -334,7 +316,7 @@ export default function suite() {
   });
 
   it("can't initiate a vault spend optimistic proposal if the DAO doesn't have optimistic governance enabled", async function () {
-    await setOptimisticGovernanceEnabled(dao, false);
+    await setOptimisticGovernanceEnabled(this, dao, false);
 
     const callbacks = expectError(
       "OptimisticGovernanceDisabled",

@@ -12,7 +12,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setupBasicDao } from "../../utils.js";
+import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 
@@ -507,6 +507,8 @@ export default function suite() {
 
     await this.createTokenAccount(USDC, daoAccount.squadsMultisigVault);
 
+    await setOptimisticGovernanceEnabled(this, dao, true);
+
     await this.futarchy
       .initiateVaultSpendOptimisticProposalIx({
         dao,
@@ -600,6 +602,8 @@ export default function suite() {
     let daoAccount = await this.futarchy.getDao(dao);
 
     await this.createTokenAccount(USDC, daoAccount.squadsMultisigVault);
+
+    await setOptimisticGovernanceEnabled(this, dao, true);
 
     await this.futarchy
       .initiateVaultSpendOptimisticProposalIx({

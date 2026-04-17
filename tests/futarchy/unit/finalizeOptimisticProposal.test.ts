@@ -9,7 +9,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError } from "../../utils.js";
+import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
 import { getDaoAddr, MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
 import {
   createTransferInstruction,
@@ -81,6 +81,8 @@ export default function suite() {
       daoAccount.squadsMultisigVault,
       100_000 * 1_000_000,
     );
+
+    await setOptimisticGovernanceEnabled(this, dao, true);
 
     await this.futarchy
       .initiateVaultSpendOptimisticProposalIx({

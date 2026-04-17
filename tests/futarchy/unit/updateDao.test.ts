@@ -17,6 +17,7 @@ import {
 } from "@metadaoproject/futarchy/v0.7";
 import { sha256 } from "@metadaoproject/futarchy";
 import BN from "bn.js";
+import { setOptimisticGovernanceEnabled } from "../../utils.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 
@@ -545,6 +546,8 @@ export default function suite() {
     assert.isDefined(daoState.amm.state.spot);
 
     // Step 5: Enqueue an optimistic proposal
+    await setOptimisticGovernanceEnabled(this, dao, true);
+
     await this.futarchy
       .initiateVaultSpendOptimisticProposalIx({
         dao,
