@@ -10,7 +10,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setupBasicDao } from "../../utils.js";
+import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -71,6 +71,8 @@ export default function suite() {
       nonce,
       daoCreator: this.payer.publicKey,
     });
+
+    await setOptimisticGovernanceEnabled(this, dao, true);
   });
 
   it("should initialize a proposal", async function () {
