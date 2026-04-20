@@ -11,7 +11,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError } from "../../utils.js";
+import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
 import {
   createTransferInstruction,
   getAssociatedTokenAddressSync,
@@ -82,6 +82,8 @@ export default function suite() {
       daoAccount.squadsMultisigVault,
       100_000 * 1_000_000,
     );
+
+    await setOptimisticGovernanceEnabled(this, dao, true);
 
     await this.futarchy
       .initiateVaultSpendOptimisticProposalIx({
@@ -190,8 +192,8 @@ export default function suite() {
     await this.banksClient.processTransaction(dupeProposalTx);
 
     const callbacks = expectError(
-      "ConstraintAddress",
-      "An address constraint was violated",
+      "RequireKeysEqViolated",
+      "Squads proposal must not match the enqueued optimistic proposal",
     );
 
     await this.futarchy
@@ -236,25 +238,21 @@ export default function suite() {
       })
       .rpc();
 
-    try {
-      await this.futarchy
-        .finalizeOptimisticProposalIx({
-          dao,
-          squadsProposal: daoAccount.optimisticProposal.squadsProposal,
-        })
-        .preInstructions([
-          // Add any instruction to prevent banksClient from reverting the transaction - compute budget is perfectly fine
-          ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-        ])
-        .rpc();
+    const callbacks = expectError(
+      "NoActiveOptimisticProposal",
+      "No active optimistic proposal expected",
+    );
 
-      assert.fail("Should have thrown error");
-    } catch (error) {
-      const logsAggregated = error.logs.map((log: string) => log).join("\n");
-      assert.include(
-        logsAggregated,
-        "panicked at 'called `Option::unwrap()` on a `None` value'",
-      );
-    }
+    await this.futarchy
+      .finalizeOptimisticProposalIx({
+        dao,
+        squadsProposal: daoAccount.optimisticProposal.squadsProposal,
+      })
+      .preInstructions([
+        // Different compute budget produces a distinct signature from the first finalize call
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

@@ -56,8 +56,7 @@ impl ResizeDao<'_> {
             team_sponsored_pass_threshold_bps: old_dao_data.team_sponsored_pass_threshold_bps,
             team_address: old_dao_data.team_address,
             optimistic_proposal: None,
-            // if the team address is not the default address, then optimistic governance should be enabled
-            is_optimistic_governance_enabled: !old_dao_data.team_address.eq(&Pubkey::default()),
+            is_optimistic_governance_enabled: false,
         };
 
         dao.realloc(AFTER_REALLOC_SIZE, true)?;

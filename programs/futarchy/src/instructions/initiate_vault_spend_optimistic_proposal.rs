@@ -71,7 +71,7 @@ impl InitiateVaultSpendOptimisticProposal<'_> {
 
         // Amount must be less than or equal to 3 times the spending limit
         require_gte!(
-            self.squads_spending_limit.amount * 3,
+            self.squads_spending_limit.amount.saturating_mul(3),
             params.amount,
             FutarchyError::InvalidAmount
         );
