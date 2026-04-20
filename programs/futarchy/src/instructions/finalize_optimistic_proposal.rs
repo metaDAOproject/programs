@@ -5,7 +5,7 @@ use super::*;
 pub struct FinalizeOptimisticProposal<'info> {
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
-    #[account(mut, address = dao.optimistic_proposal.as_ref().unwrap().squads_proposal)]
+    #[account(mut)]
     pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
 
     #[account(mut, has_one = squads_multisig)]
@@ -16,18 +16,22 @@ pub struct FinalizeOptimisticProposal<'info> {
 
 impl FinalizeOptimisticProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        require!(
+            self.dao.optimistic_proposal.is_some(),
+            FutarchyError::NoActiveOptimisticProposal
+        );
+        let optimistic_proposal = self.dao.optimistic_proposal.as_ref().unwrap();
+
+        require_keys_eq!(
+            self.squads_proposal.key(),
+            optimistic_proposal.squads_proposal
+        );
         require_keys_eq!(self.squads_proposal.multisig, self.dao.squads_multisig);
 
-        // A minimum of proposal duration must have passed since the the optimistic proposal was enqueued
-        // We know that the optimistic proposal is not None, because the address constraint would have already panicked
+        // A minimum of proposal duration must have passed since the optimistic proposal was enqueued
         require_gte!(
             Clock::get()?.unix_timestamp,
-            self.dao
-                .optimistic_proposal
-                .as_ref()
-                .unwrap()
-                .enqueued_timestamp
-                + self.dao.seconds_per_proposal as i64,
+            optimistic_proposal.enqueued_timestamp + self.dao.seconds_per_proposal as i64,
             FutarchyError::ProposalTooYoung
         );
 

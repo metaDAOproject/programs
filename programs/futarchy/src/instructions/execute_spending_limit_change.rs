@@ -28,7 +28,7 @@ impl<'info, 'c: 'info> ExecuteSpendingLimitChange<'info> {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
 
-        if matches!(self.dao.optimistic_proposal, Some(_)) {
+        if self.dao.optimistic_proposal.is_some() {
             return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
         }
 

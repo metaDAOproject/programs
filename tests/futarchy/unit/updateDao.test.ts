@@ -586,7 +586,7 @@ export default function suite() {
     } catch (e) {
       assert(
         e.toString().includes("ActiveOptimisticProposalAlreadyEnqueued") ||
-          e.toString().includes("0x1798"),
+          e.toString().includes("0x1797"),
         `Expected ActiveOptimisticProposalAlreadyEnqueued error, got: ${e}`,
       );
     }

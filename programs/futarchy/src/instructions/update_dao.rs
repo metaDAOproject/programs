@@ -31,7 +31,7 @@ impl UpdateDao<'_> {
         }
 
         // Prevent updates to DAO parameters if an optimistic proposal is enqueued
-        if matches!(self.dao.optimistic_proposal, Some(_)) {
+        if self.dao.optimistic_proposal.is_some() {
             return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
         }
 
