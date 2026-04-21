@@ -221,6 +221,8 @@ impl InitializeDao<'_> {
             },
             team_sponsored_pass_threshold_bps,
             team_address,
+            optimistic_proposal: None,
+            is_optimistic_governance_enabled: false,
         });
 
         dao.invariant()?;

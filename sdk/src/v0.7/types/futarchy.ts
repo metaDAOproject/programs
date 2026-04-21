@@ -583,6 +583,27 @@ export type Futarchy = {
       ];
     },
     {
+      name: "resizeDao";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "spotSwap";
       accounts: [
         {
@@ -1181,6 +1202,125 @@ export type Futarchy = {
       args: [];
     },
     {
+      name: "initiateVaultSpendOptimisticProposal";
+      accounts: [
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsSpendingLimit";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsVaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "daoQuoteVaultAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "proposer";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "recipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "recipientQuoteAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "InitiateVaultSpendOptimisticProposalParams";
+          };
+        },
+      ];
+    },
+    {
+      name: "finalizeOptimisticProposal";
+      accounts: [
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "adminApproveMultisigProposal";
       accounts: [
         {
@@ -1576,6 +1716,154 @@ export type Futarchy = {
             name: "teamAddress";
             type: "publicKey";
           },
+          {
+            name: "optimisticProposal";
+            type: {
+              option: {
+                defined: "OptimisticProposal";
+              };
+            };
+          },
+          {
+            name: "isOptimisticGovernanceEnabled";
+            type: "bool";
+          },
+        ];
+      };
+    },
+    {
+      name: "oldDao";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amm";
+            docs: ["Embedded FutarchyAmm - 1:1 relationship"];
+            type: {
+              defined: "FutarchyAmm";
+            };
+          },
+          {
+            name: "nonce";
+            docs: ["`nonce` + `dao_creator` are PDA seeds"];
+            type: "u64";
+          },
+          {
+            name: "daoCreator";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "squadsMultisig";
+            type: "publicKey";
+          },
+          {
+            name: "squadsMultisigVault";
+            type: "publicKey";
+          },
+          {
+            name: "baseMint";
+            type: "publicKey";
+          },
+          {
+            name: "quoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "proposalCount";
+            type: "u32";
+          },
+          {
+            name: "passThresholdBps";
+            type: "u16";
+          },
+          {
+            name: "secondsPerProposal";
+            type: "u32";
+          },
+          {
+            name: "twapInitialObservation";
+            docs: [
+              "For manipulation-resistance the TWAP is a time-weighted average observation,",
+              "where observation tries to approximate price but can only move by",
+              "`twap_max_observation_change_per_update` per update. Because it can only move",
+              "a little bit per update, you need to check that it has a good initial observation.",
+              "Otherwise, an attacker could create a very high initial observation in the pass",
+              "market and a very low one in the fail market to force the proposal to pass.",
+              "",
+              "We recommend setting an initial observation around the spot price of the token,",
+              "and max observation change per update around 2% the spot price of the token.",
+              "For example, if the spot price of META is $400, we'd recommend setting an initial",
+              "observation of 400 (converted into the AMM prices) and a max observation change per",
+              "update of 8 (also converted into the AMM prices). Observations can be updated once",
+              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
+              "in 50 minutes.",
+            ];
+            type: "u128";
+          },
+          {
+            name: "twapMaxObservationChangePerUpdate";
+            type: "u128";
+          },
+          {
+            name: "twapStartDelaySeconds";
+            docs: [
+              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds",
+            ];
+            type: "u32";
+          },
+          {
+            name: "minQuoteFutarchicLiquidity";
+            docs: [
+              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
+              "in both futarchic markets in order to create a proposal.",
+              "",
+              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
+              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
+              "10 * 1_000_000_000 (10 META).",
+            ];
+            type: "u64";
+          },
+          {
+            name: "minBaseFutarchicLiquidity";
+            type: "u64";
+          },
+          {
+            name: "baseToStake";
+            docs: [
+              "Minimum amount of base tokens that must be staked to launch a proposal",
+            ];
+            type: "u64";
+          },
+          {
+            name: "seqNum";
+            type: "u64";
+          },
+          {
+            name: "initialSpendingLimit";
+            type: {
+              option: {
+                defined: "InitialSpendingLimit";
+              };
+            };
+          },
+          {
+            name: "teamSponsoredPassThresholdBps";
+            docs: [
+              "The percentage, in basis points, the pass price needs to be above the",
+              "fail price in order for the proposal to pass for team-sponsored proposals.",
+              "",
+              "Can be negative to allow for team-sponsored proposals to pass by default.",
+            ];
+            type: "i16";
+          },
+          {
+            name: "teamAddress";
+            type: "publicKey";
+          },
         ];
       };
     },
@@ -1800,6 +2088,18 @@ export type Futarchy = {
       };
     },
     {
+      name: "InitiateVaultSpendOptimisticProposalParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
       name: "ProvideLiquidityParams";
       type: {
         kind: "struct";
@@ -1941,6 +2241,12 @@ export type Futarchy = {
               option: "publicKey";
             };
           },
+          {
+            name: "isOptimisticGovernanceEnabled";
+            type: {
+              option: "bool";
+            };
+          },
         ];
       };
     },
@@ -1963,6 +2269,28 @@ export type Futarchy = {
             name: "minQuoteAmount";
             docs: ["Minimum quote tokens to receive"];
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "OptimisticProposal";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "squadsProposal";
+            docs: [
+              "The squads proposal currently enqueued for execution if not challenged by a new proposal.",
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "enqueuedTimestamp";
+            docs: [
+              "The timestamp when the active optimistic squads proposal was enqueued.",
+            ];
+            type: "i64";
           },
         ];
       };
@@ -2462,6 +2790,11 @@ export type Futarchy = {
         {
           name: "teamAddress";
           type: "publicKey";
+          index: false;
+        },
+        {
+          name: "isOptimisticGovernanceEnabled";
+          type: "bool";
           index: false;
         },
       ];
@@ -3106,6 +3439,90 @@ export type Futarchy = {
         },
       ];
     },
+    {
+      name: "InitiateVaultSpendOptimisticProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "proposer";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsProposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisig";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "recipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "daoQuoteVaultAccount";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "recipientQuoteAccount";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "enqueuedTimestamp";
+          type: "i64";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "FinalizeOptimisticProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "squadsProposal";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -3297,6 +3714,31 @@ export type Futarchy = {
       code: 6037;
       name: "ProposalNotReadyToUnstake";
       msg: "Proposal is not ready to be unstaked";
+    },
+    {
+      code: 6038;
+      name: "OptimisticGovernanceDisabled";
+      msg: "Optimistic governance is disabled";
+    },
+    {
+      code: 6039;
+      name: "ActiveOptimisticProposalAlreadyEnqueued";
+      msg: "An active optimistic proposal is already enqueued";
+    },
+    {
+      code: 6040;
+      name: "OptimisticProposalAlreadyPassed";
+      msg: "Optimistic proposal has already passed";
+    },
+    {
+      code: 6041;
+      name: "InvalidSpendingLimitMint";
+      msg: "Invalid spending limit mint. Must be the same as the DAO's quote mint";
+    },
+    {
+      code: 6042;
+      name: "NoActiveOptimisticProposal";
+      msg: "No active optimistic proposal";
     },
   ];
 };
@@ -3884,6 +4326,27 @@ export const IDL: Futarchy = {
           },
         },
       ],
+    },
+    {
+      name: "resizeDao",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
     {
       name: "spotSwap",
@@ -4484,6 +4947,125 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
+      name: "initiateVaultSpendOptimisticProposal",
+      accounts: [
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsSpendingLimit",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsVaultTransaction",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "daoQuoteVaultAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "proposer",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "recipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "recipientQuoteAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "InitiateVaultSpendOptimisticProposalParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "finalizeOptimisticProposal",
+      accounts: [
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "adminApproveMultisigProposal",
       accounts: [
         {
@@ -4879,6 +5461,154 @@ export const IDL: Futarchy = {
             name: "teamAddress",
             type: "publicKey",
           },
+          {
+            name: "optimisticProposal",
+            type: {
+              option: {
+                defined: "OptimisticProposal",
+              },
+            },
+          },
+          {
+            name: "isOptimisticGovernanceEnabled",
+            type: "bool",
+          },
+        ],
+      },
+    },
+    {
+      name: "oldDao",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amm",
+            docs: ["Embedded FutarchyAmm - 1:1 relationship"],
+            type: {
+              defined: "FutarchyAmm",
+            },
+          },
+          {
+            name: "nonce",
+            docs: ["`nonce` + `dao_creator` are PDA seeds"],
+            type: "u64",
+          },
+          {
+            name: "daoCreator",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "squadsMultisig",
+            type: "publicKey",
+          },
+          {
+            name: "squadsMultisigVault",
+            type: "publicKey",
+          },
+          {
+            name: "baseMint",
+            type: "publicKey",
+          },
+          {
+            name: "quoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "proposalCount",
+            type: "u32",
+          },
+          {
+            name: "passThresholdBps",
+            type: "u16",
+          },
+          {
+            name: "secondsPerProposal",
+            type: "u32",
+          },
+          {
+            name: "twapInitialObservation",
+            docs: [
+              "For manipulation-resistance the TWAP is a time-weighted average observation,",
+              "where observation tries to approximate price but can only move by",
+              "`twap_max_observation_change_per_update` per update. Because it can only move",
+              "a little bit per update, you need to check that it has a good initial observation.",
+              "Otherwise, an attacker could create a very high initial observation in the pass",
+              "market and a very low one in the fail market to force the proposal to pass.",
+              "",
+              "We recommend setting an initial observation around the spot price of the token,",
+              "and max observation change per update around 2% the spot price of the token.",
+              "For example, if the spot price of META is $400, we'd recommend setting an initial",
+              "observation of 400 (converted into the AMM prices) and a max observation change per",
+              "update of 8 (also converted into the AMM prices). Observations can be updated once",
+              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
+              "in 50 minutes.",
+            ],
+            type: "u128",
+          },
+          {
+            name: "twapMaxObservationChangePerUpdate",
+            type: "u128",
+          },
+          {
+            name: "twapStartDelaySeconds",
+            docs: [
+              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds",
+            ],
+            type: "u32",
+          },
+          {
+            name: "minQuoteFutarchicLiquidity",
+            docs: [
+              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
+              "in both futarchic markets in order to create a proposal.",
+              "",
+              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
+              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
+              "10 * 1_000_000_000 (10 META).",
+            ],
+            type: "u64",
+          },
+          {
+            name: "minBaseFutarchicLiquidity",
+            type: "u64",
+          },
+          {
+            name: "baseToStake",
+            docs: [
+              "Minimum amount of base tokens that must be staked to launch a proposal",
+            ],
+            type: "u64",
+          },
+          {
+            name: "seqNum",
+            type: "u64",
+          },
+          {
+            name: "initialSpendingLimit",
+            type: {
+              option: {
+                defined: "InitialSpendingLimit",
+              },
+            },
+          },
+          {
+            name: "teamSponsoredPassThresholdBps",
+            docs: [
+              "The percentage, in basis points, the pass price needs to be above the",
+              "fail price in order for the proposal to pass for team-sponsored proposals.",
+              "",
+              "Can be negative to allow for team-sponsored proposals to pass by default.",
+            ],
+            type: "i16",
+          },
+          {
+            name: "teamAddress",
+            type: "publicKey",
+          },
         ],
       },
     },
@@ -5103,6 +5833,18 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "InitiateVaultSpendOptimisticProposalParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "ProvideLiquidityParams",
       type: {
         kind: "struct",
@@ -5244,6 +5986,12 @@ export const IDL: Futarchy = {
               option: "publicKey",
             },
           },
+          {
+            name: "isOptimisticGovernanceEnabled",
+            type: {
+              option: "bool",
+            },
+          },
         ],
       },
     },
@@ -5266,6 +6014,28 @@ export const IDL: Futarchy = {
             name: "minQuoteAmount",
             docs: ["Minimum quote tokens to receive"],
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "OptimisticProposal",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "squadsProposal",
+            docs: [
+              "The squads proposal currently enqueued for execution if not challenged by a new proposal.",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "enqueuedTimestamp",
+            docs: [
+              "The timestamp when the active optimistic squads proposal was enqueued.",
+            ],
+            type: "i64",
           },
         ],
       },
@@ -5765,6 +6535,11 @@ export const IDL: Futarchy = {
         {
           name: "teamAddress",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "isOptimisticGovernanceEnabled",
+          type: "bool",
           index: false,
         },
       ],
@@ -6409,6 +7184,90 @@ export const IDL: Futarchy = {
         },
       ],
     },
+    {
+      name: "InitiateVaultSpendOptimisticProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "proposer",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsProposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisig",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "recipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "daoQuoteVaultAccount",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "recipientQuoteAccount",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "enqueuedTimestamp",
+          type: "i64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "FinalizeOptimisticProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "squadsProposal",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -6600,6 +7459,31 @@ export const IDL: Futarchy = {
       code: 6037,
       name: "ProposalNotReadyToUnstake",
       msg: "Proposal is not ready to be unstaked",
+    },
+    {
+      code: 6038,
+      name: "OptimisticGovernanceDisabled",
+      msg: "Optimistic governance is disabled",
+    },
+    {
+      code: 6039,
+      name: "ActiveOptimisticProposalAlreadyEnqueued",
+      msg: "An active optimistic proposal is already enqueued",
+    },
+    {
+      code: 6040,
+      name: "OptimisticProposalAlreadyPassed",
+      msg: "Optimistic proposal has already passed",
+    },
+    {
+      code: 6041,
+      name: "InvalidSpendingLimitMint",
+      msg: "Invalid spending limit mint. Must be the same as the DAO's quote mint",
+    },
+    {
+      code: 6042,
+      name: "NoActiveOptimisticProposal",
+      msg: "No active optimistic proposal",
     },
   ],
 };

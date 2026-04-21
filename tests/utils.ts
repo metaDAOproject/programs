@@ -70,6 +70,24 @@ export async function setupBasicDao({
   return dao;
 }
 
+export async function setOptimisticGovernanceEnabled(
+  context: TestContext,
+  dao: PublicKey,
+  enabled: boolean,
+): Promise<void> {
+  const daoAccount = await context.futarchy.getDao(dao);
+  daoAccount.isOptimisticGovernanceEnabled = enabled;
+  const daoAccountBuffer =
+    await context.futarchy.autocrat.account.dao.coder.accounts.encode(
+      "dao",
+      daoAccount,
+    );
+
+  const daoBanksAccount = await context.banksClient.getAccount(dao);
+  daoBanksAccount.data.set(daoAccountBuffer, 0);
+  context.context.setAccount(dao, daoBanksAccount);
+}
+
 /**
  * Creates a lookup table for all unique accounts in a transaction
  * @param transaction - The transaction to create a lookup table for

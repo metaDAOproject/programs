@@ -13,6 +13,9 @@ import provideLiquidity from "./unit/provideLiquidity.test.js";
 import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
 
 import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
+
+import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
+import finalizeOptimisticProposal from "./unit/finalizeOptimisticProposal.test.js";
 import adminApproveMultisigProposal from "./unit/adminApproveMultisigProposal.test.js";
 import adminExecuteMultisigProposal from "./unit/adminExecuteMultisigProposal.test.js";
 import adminCancelProposal from "./unit/adminCancelProposal.test.js";
@@ -62,6 +65,11 @@ export default function suite() {
 
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
 
+  describe(
+    "#initiate_vault_spend_optimistic_proposal",
+    initiateVaultSpendOptimisticProposal,
+  );
+  describe("#finalize_optimistic_proposal", finalizeOptimisticProposal);
   describe("#admin_approve_multisig_proposal", adminApproveMultisigProposal);
   describe("#admin_execute_multisig_proposal", adminExecuteMultisigProposal);
   describe("#admin_cancel_proposal", adminCancelProposal);

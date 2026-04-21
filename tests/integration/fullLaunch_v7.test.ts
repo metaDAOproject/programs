@@ -425,6 +425,7 @@ export default async function suite() {
           minBaseFutarchicLiquidity: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          isOptimisticGovernanceEnabled: true,
         },
       })
       .instruction();
@@ -609,6 +610,7 @@ export default async function suite() {
 
     const storedDao2 = await this.futarchy.getDao(dao);
     assert.equal(storedDao2.passThresholdBps, 500);
+    assert.isTrue(storedDao2.isOptimisticGovernanceEnabled);
 
     const storedMeta = await this.getMint(META);
 

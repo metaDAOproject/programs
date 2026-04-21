@@ -80,4 +80,14 @@ pub enum FutarchyError {
     InvalidMint,
     #[msg("Proposal is not ready to be unstaked")]
     ProposalNotReadyToUnstake,
+    #[msg("Optimistic governance is disabled")]
+    OptimisticGovernanceDisabled,
+    #[msg("An active optimistic proposal is already enqueued")]
+    ActiveOptimisticProposalAlreadyEnqueued,
+    #[msg("Optimistic proposal has already passed")]
+    OptimisticProposalAlreadyPassed,
+    #[msg("Invalid spending limit mint. Must be the same as the DAO's quote mint")]
+    InvalidSpendingLimitMint,
+    #[msg("No active optimistic proposal")]
+    NoActiveOptimisticProposal,
 }

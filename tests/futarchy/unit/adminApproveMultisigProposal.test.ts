@@ -1,6 +1,7 @@
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.6";
 import {
   ComputeBudgetProgram,
+  Keypair,
   PublicKey,
   Transaction,
   TransactionMessage,
@@ -290,6 +291,108 @@ export default function suite() {
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
       ])
+      .signers([this.payer])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("should fail when DAO has an active optimistic proposal", async function () {
+    const daoAccount = await this.futarchy.getDao(dao);
+
+    // Create a simple vault transaction + proposal for the admin to approve
+    const transactionIndex = 1n;
+
+    const memoMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [createMemoInstruction("test memo")],
+    });
+
+    const createVtAndProposalTx = new Transaction().add(
+      multisig.instructions.vaultTransactionCreate({
+        multisigPda: daoAccount.squadsMultisig,
+        transactionIndex,
+        creator: PERMISSIONLESS_ACCOUNT.publicKey,
+        rentPayer: this.payer.publicKey,
+        vaultIndex: 0,
+        ephemeralSigners: 0,
+        transactionMessage: memoMessage,
+      }),
+      multisig.instructions.proposalCreate({
+        multisigPda: daoAccount.squadsMultisig,
+        transactionIndex,
+        creator: PERMISSIONLESS_ACCOUNT.publicKey,
+        rentPayer: this.payer.publicKey,
+      }),
+    );
+    createVtAndProposalTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    createVtAndProposalTx.feePayer = this.payer.publicKey;
+    createVtAndProposalTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+
+    await this.banksClient.processTransaction(createVtAndProposalTx);
+
+    const [vaultTransactionPda] = multisig.getTransactionPda({
+      multisigPda: daoAccount.squadsMultisig,
+      index: transactionIndex,
+    });
+
+    const [squadsProposalPda] = multisig.getProposalPda({
+      multisigPda: daoAccount.squadsMultisig,
+      transactionIndex,
+    });
+
+    const transactionAccount =
+      await multisig.accounts.VaultTransaction.fromAccountAddress(
+        this.squadsConnection,
+        vaultTransactionPda,
+      );
+
+    const { accountMetas } = await multisig.utils.accountsForTransactionExecute(
+      {
+        connection: this.squadsConnection,
+        message: transactionAccount.message,
+        ephemeralSignerBumps: [...transactionAccount.ephemeralSignerBumps],
+        vaultPda: daoAccount.squadsMultisigVault,
+        transactionPda: vaultTransactionPda,
+        programId: multisig.PROGRAM_ID,
+      },
+    );
+
+    // Set optimisticProposal on the DAO via direct state manipulation
+    daoAccount.optimisticProposal = {
+      squadsProposal: Keypair.generate().publicKey,
+      enqueuedTimestamp: new BN(1000),
+    };
+    const daoAccountBuffer =
+      await this.futarchy.autocrat.account.dao.coder.accounts.encode(
+        "dao",
+        daoAccount,
+      );
+    const daoBanksAccount = await this.banksClient.getAccount(dao);
+    daoBanksAccount.data.set(daoAccountBuffer, 0);
+    this.context.setAccount(dao, daoBanksAccount);
+
+    const callbacks = expectError(
+      "ActiveOptimisticProposalAlreadyEnqueued",
+      "Should fail because DAO has an active optimistic proposal",
+    );
+
+    await this.futarchy.autocrat.methods
+      .adminApproveMultisigProposal({ transactionIndex: new BN(1) })
+      .accounts({
+        dao: dao,
+        squadsMultisig: daoAccount.squadsMultisig,
+        squadsMultisigProposal: squadsProposalPda,
+        admin: this.payer.publicKey,
+        squadsMultisigProgram: multisig.PROGRAM_ID,
+      })
+      .remainingAccounts(
+        accountMetas.map((meta) =>
+          meta.pubkey.equals(dao) ? { ...meta, isSigner: false } : meta,
+        ),
+      )
       .signers([this.payer])
       .rpc()
       .then(callbacks[0], callbacks[1]);

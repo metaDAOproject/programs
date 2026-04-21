@@ -59,6 +59,11 @@ impl AdminApproveMultisigProposal<'_> {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
 
+        require!(
+            self.dao.optimistic_proposal.is_none(),
+            FutarchyError::ActiveOptimisticProposalAlreadyEnqueued
+        );
+
         Ok(())
     }
 
