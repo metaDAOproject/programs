@@ -99,8 +99,11 @@ impl SellTokens<'_> {
 
         // We work under the assumption that the total supply is 10M tokens
         // We then assume that base tokens are only burned by the bid wall.
-        let remaining_base =
-            (TOKENS_TO_PARTICIPANTS - ctx.accounts.bid_wall.base_bought_amount) as u128;
+        let remaining_base = (TOKENS_TO_PARTICIPANTS
+            .checked_sub(ctx.accounts.bid_wall.base_bought_amount)
+            .ok_or(BidWallError::BidWallDepleted)?) as u128;
+
+        require_gt!(remaining_base, 0u128, BidWallError::BidWallDepleted);
 
         let amount_out_before_fee =
             (amount_in as u128 * total_nav as u128 / remaining_base as u128) as u64;

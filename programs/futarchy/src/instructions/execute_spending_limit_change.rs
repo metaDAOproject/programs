@@ -65,7 +65,13 @@ impl<'info, 'c: 'info> ExecuteSpendingLimitChange<'info> {
                 FutarchyError::InvalidTransaction
             );
 
-            let discriminator: [u8; 8] = instruction.data[0..8].try_into().unwrap();
+            require!(
+                instruction.data.len() >= 8,
+                FutarchyError::InvalidTransaction
+            );
+            let discriminator: [u8; 8] = instruction.data[0..8]
+                .try_into()
+                .map_err(|_| error!(FutarchyError::InvalidTransaction))?;
             if discriminator != squads_multisig_program::instruction::MultisigAddSpendingLimit::DISCRIMINATOR &&
                 discriminator != squads_multisig_program::instruction::MultisigRemoveSpendingLimit::DISCRIMINATOR {
                 return Err(error!(FutarchyError::InvalidTransaction));

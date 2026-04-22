@@ -705,10 +705,15 @@ pub fn arbitrage_after_spot_swap(
         (0, final_fail_output - final_conditional_output)
     };
 
-    assert!(final_conditional_output >= best_input_amount);
-    assert_eq!(
+    require_gte!(
+        final_conditional_output,
+        best_input_amount,
+        FutarchyError::InvariantViolated
+    );
+    require_eq!(
         final_conditional_output - best_input_amount,
-        best_profit as u64
+        best_profit as u64,
+        FutarchyError::InvariantViolated
     );
 
     Ok(ArbitrageResult {
@@ -849,7 +854,11 @@ pub fn arbitrage_after_conditional_swap(
         0
     };
 
-    assert!(final_spot_output >= best_arb_input_amount);
+    require_gte!(
+        final_spot_output,
+        best_arb_input_amount,
+        FutarchyError::InvariantViolated
+    );
     let spot_profit = final_spot_output - best_arb_input_amount;
 
     // assert_eq!(final_spot_output - best_input_amount, best_profit as u64);

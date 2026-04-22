@@ -62,10 +62,11 @@ impl Refund<'_> {
 
         let amount_to_refund = match launch.state {
             LaunchState::Refunding => funding_record.committed_amount,
-            LaunchState::Complete => {
-                funding_record.committed_amount - funding_record.approved_amount
-            }
-            _ => unreachable!(),
+            LaunchState::Complete => funding_record
+                .committed_amount
+                .checked_sub(funding_record.approved_amount)
+                .ok_or(LaunchpadError::InvariantViolated)?,
+            _ => return Err(LaunchpadError::InvalidLaunchState.into()),
         };
 
         let seeds = &[
