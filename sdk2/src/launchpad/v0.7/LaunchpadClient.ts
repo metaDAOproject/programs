@@ -48,7 +48,7 @@ import { BidWallClient } from "../../bid_wall/v0.7/index.js";
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
   launchpadProgramId?: PublicKey;
-  autocratProgramId?: PublicKey;
+  futarchyProgramId?: PublicKey;
   conditionalVaultProgramId?: PublicKey;
   priceBasedUnlockProgramId?: PublicKey;
   bidWallProgramId?: PublicKey;
@@ -57,7 +57,7 @@ export type CreateLaunchpadClientParams = {
 export class LaunchpadClient {
   public launchpad: Program<Launchpad>;
   public provider: AnchorProvider;
-  public autocratClient: FutarchyClient;
+  public futarchyClient: FutarchyClient;
   public priceBasedUnlock: PriceBasedPerformancePackageClient;
   public bidWall: BidWallClient;
 
@@ -68,9 +68,9 @@ export class LaunchpadClient {
       params.launchpadProgramId || LAUNCHPAD_V0_7_PROGRAM_ID,
       this.provider,
     );
-    this.autocratClient = FutarchyClient.createClient({
+    this.futarchyClient = FutarchyClient.createClient({
       provider: this.provider,
-      autocratProgramId: params.autocratProgramId,
+      futarchyProgramId: params.futarchyProgramId,
       conditionalVaultProgramId: params.conditionalVaultProgramId,
     });
     this.priceBasedUnlock = PriceBasedPerformancePackageClient.createClient({
@@ -318,7 +318,7 @@ export class LaunchpadClient {
     });
 
     const [futarchyEventAuthority] = getEventAuthorityAddr(
-      this.autocratClient.getProgramId(),
+      this.futarchyClient.getProgramId(),
     );
 
     const [tokenMetadata] = getMetadataAddr(baseMint);
@@ -342,7 +342,7 @@ export class LaunchpadClient {
 
     const [ammPosition] = PublicKey.findProgramAddressSync(
       [Buffer.from("amm_position"), dao.toBuffer(), multisigVault.toBuffer()],
-      this.autocratClient.getProgramId(),
+      this.futarchyClient.getProgramId(),
     );
 
     const [performancePackage] = getPerformancePackageAddr({
@@ -457,7 +457,7 @@ export class LaunchpadClient {
           true,
         ),
         staticAccounts: {
-          futarchyProgram: this.autocratClient.getProgramId(),
+          futarchyProgram: this.futarchyClient.getProgramId(),
           tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
           futarchyEventAuthority,
           squadsProgram: SQUADS_PROGRAM_ID,

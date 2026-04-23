@@ -384,7 +384,7 @@ export default function suite() {
 
     // Directly modify the DAO's secondsPerProposal to 5 days
     const daoAccountInfo = await this.banksClient.getAccount(dao);
-    const coder = this.futarchy.autocrat.coder.accounts;
+    const coder = this.futarchy.futarchy.coder.accounts;
     const daoData = coder.decode("dao", Buffer.from(daoAccountInfo.data));
     daoData.secondsPerProposal = FIVE_DAYS;
     const encodedData = await coder.encode("dao", daoData);

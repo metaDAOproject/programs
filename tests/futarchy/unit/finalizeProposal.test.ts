@@ -115,7 +115,7 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx);
 
-    // Now initialize the autocrat proposal
+    // Now initialize the futarchy proposal
     proposal = await this.futarchy.initializeProposal(dao, squadsProposalPda);
 
     await this.futarchy
@@ -169,26 +169,6 @@ export default function suite() {
       USDC,
       dao,
     );
-
-    // await this.autocratClient.
-    // await this.futarchy.autocrat.methods.launchProposal()
-    //   .accounts({
-    //     proposal,
-    //     dao,
-    //     baseVault,
-    //     quoteVault,
-    //     passBaseMint,
-    //     passQuoteMint,
-    //     failBaseMint,
-    //     failQuoteMint,
-    //     ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
-    //     ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, dao, true),
-    //     ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
-    //     ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, dao, true),
-    //     payer: this.payer.publicKey,
-    //   })
-    //   .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })])
-    //   .rpc();
 
     await this.futarchy
       .conditionalSwapIx({
@@ -497,7 +477,7 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx);
 
-    // Now initialize the autocrat proposal
+    // Now initialize the futarchy proposal
     const teamSponsoredProposal = await this.futarchy.initializeProposal(
       daoWithTeamSponsorship,
       squadsProposalPda,

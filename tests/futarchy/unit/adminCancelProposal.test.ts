@@ -154,7 +154,7 @@ export default function suite() {
       CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminCancelProposal()
       .accounts({
         proposal,
@@ -303,7 +303,7 @@ export default function suite() {
     };
 
     // Cancel the proposal first
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminCancelProposal()
       .accounts(accounts)
       .preInstructions([
@@ -321,7 +321,7 @@ export default function suite() {
       "should not cancel an already cancelled proposal",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminCancelProposal()
       .accounts(accounts)
       .preInstructions([

@@ -67,7 +67,7 @@ export class LaunchpadClient {
     );
     this.futarchyClient = FutarchyClient.createClient({
       provider: this.provider,
-      autocratProgramId: params.futarchyProgramId,
+      futarchyProgramId: params.futarchyProgramId,
       conditionalVaultProgramId: params.conditionalVaultProgramId,
     });
     this.priceBasedUnlock = PriceBasedPerformancePackageClient.createClient({

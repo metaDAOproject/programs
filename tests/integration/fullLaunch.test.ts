@@ -432,7 +432,7 @@ export default async function suite() {
 
     await this.banksClient.processTransaction(squadsTx);
 
-    // Now initialize the autocrat proposal with the proper squads proposal
+    // Now initialize the futarchy proposal with the proper squads proposal
     const proposal = await this.futarchy.initializeProposal(
       dao,
       squadsProposalPda,
