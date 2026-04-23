@@ -37,7 +37,7 @@ export default function suite() {
 
     // Fetch position before
     const positionBefore =
-      await this.futarchy.autocrat.account.ammPosition.fetch(ammPositionPda);
+      await this.futarchy.futarchy.account.ammPosition.fetch(ammPositionPda);
 
     // Call provideLiquidityIx to add more liquidity
     // maxBaseAmount needs buffer for rounding (add 1% or more)
@@ -56,7 +56,7 @@ export default function suite() {
 
     // Fetch position after
     const positionAfter =
-      await this.futarchy.autocrat.account.ammPosition.fetch(ammPositionPda);
+      await this.futarchy.futarchy.account.ammPosition.fetch(ammPositionPda);
 
     // Assert liquidity increased
     assert.isTrue(positionAfter.liquidity.gt(positionBefore.liquidity));
@@ -88,7 +88,7 @@ export default function suite() {
 
     // Fetch position before attack
     const positionBefore =
-      await this.futarchy.autocrat.account.ammPosition.fetch(ammPositionPda);
+      await this.futarchy.futarchy.account.ammPosition.fetch(ammPositionPda);
 
     // Attacker calls provideLiquidityIx with positionAuthority=victim, liquidityProvider=attacker
     await this.futarchy
@@ -107,7 +107,7 @@ export default function suite() {
 
     // Fetch position after attack
     const positionAfter =
-      await this.futarchy.autocrat.account.ammPosition.fetch(ammPositionPda);
+      await this.futarchy.futarchy.account.ammPosition.fetch(ammPositionPda);
 
     // Assert position_authority is still victim (not overwritten to attacker)
     assert.isTrue(positionAfter.positionAuthority.equals(this.payer.publicKey));
@@ -162,7 +162,7 @@ export default function suite() {
 
     // Fetch position to get current liquidity
     const position =
-      await this.futarchy.autocrat.account.ammPosition.fetch(ammPositionPda);
+      await this.futarchy.futarchy.account.ammPosition.fetch(ammPositionPda);
 
     // Derive event authority
     const [eventAuthority] = PublicKey.findProgramAddressSync(
@@ -171,7 +171,7 @@ export default function suite() {
     );
 
     // Victim withdraws all liquidity
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .withdrawLiquidity({
         liquidityToWithdraw: position.liquidity,
         minBaseAmount: new BN(0),

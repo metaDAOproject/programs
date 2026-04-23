@@ -97,7 +97,7 @@ export default function suite() {
       multisig.generated.isProposalStatusActive(squadsProposal.status),
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminApproveMultisigProposal({ transactionIndex: new BN(1) })
       .accounts({
         dao: dao,
@@ -228,7 +228,7 @@ export default function suite() {
       });
 
     // Approve and execute the config transaction using the new split instructions
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminApproveMultisigProposal({
         transactionIndex: new BN(configTransactionIndex.toString()),
       })
@@ -242,7 +242,7 @@ export default function suite() {
       .signers([this.payer])
       .rpc();
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
       .accounts({
         dao: dao,
@@ -279,7 +279,7 @@ export default function suite() {
       "The proposal should not be approved because it should have been invalidated",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminApproveMultisigProposal({ transactionIndex: new BN(1) })
       .accounts({
         dao: dao,
@@ -366,7 +366,7 @@ export default function suite() {
       enqueuedTimestamp: new BN(1000),
     };
     const daoAccountBuffer =
-      await this.futarchy.autocrat.account.dao.coder.accounts.encode(
+      await this.futarchy.futarchy.account.dao.coder.accounts.encode(
         "dao",
         daoAccount,
       );
@@ -379,7 +379,7 @@ export default function suite() {
       "Should fail because DAO has an active optimistic proposal",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminApproveMultisigProposal({ transactionIndex: new BN(1) })
       .accounts({
         dao: dao,

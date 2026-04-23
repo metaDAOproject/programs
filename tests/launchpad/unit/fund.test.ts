@@ -4,14 +4,13 @@ import {
   getFundingRecordAddr,
   LaunchpadClient,
 } from "@metadaoproject/futarchy-v2/launchpad/v0.6";
-import { FutarchyClient, MAINNET_USDC } from "@metadaoproject/futarchy-v2";
+import { MAINNET_USDC } from "@metadaoproject/futarchy-v2";
 import { getAccount } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {
-  let autocratClient: FutarchyClient;
   let launchpadClient: LaunchpadClient;
   let META: PublicKey;
   let launch: PublicKey;
@@ -29,7 +28,6 @@ export default function suite() {
   const unlockThreshold = new BN(2000_000000);
 
   before(async function () {
-    autocratClient = this.futarchy;
     launchpadClient = this.launchpad_v6;
   });
 

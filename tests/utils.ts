@@ -78,7 +78,7 @@ export async function setOptimisticGovernanceEnabled(
   const daoAccount = await context.futarchy.getDao(dao);
   daoAccount.isOptimisticGovernanceEnabled = enabled;
   const daoAccountBuffer =
-    await context.futarchy.autocrat.account.dao.coder.accounts.encode(
+    await context.futarchy.futarchy.account.dao.coder.accounts.encode(
       "dao",
       daoAccount,
     );

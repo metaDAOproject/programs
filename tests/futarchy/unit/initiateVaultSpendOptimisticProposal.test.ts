@@ -269,7 +269,7 @@ export default function suite() {
       programId: squads.PROGRAM_ID,
     });
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeSpendingLimitChange()
       .accounts({
         squadsMultisig: multisigPda,
@@ -364,7 +364,7 @@ export default function suite() {
     };
 
     const daoAccountBuffer =
-      await this.futarchy.autocrat.account.dao.coder.accounts.encode(
+      await this.futarchy.futarchy.account.dao.coder.accounts.encode(
         "dao",
         daoAccount,
       );
@@ -536,7 +536,7 @@ export default function suite() {
         true,
       );
 
-      return ctx.futarchy.autocrat.methods
+      return ctx.futarchy.futarchy.methods
         .initiateVaultSpendOptimisticProposal({ amount })
         .accounts({
           squadsMultisig: multisigPda,

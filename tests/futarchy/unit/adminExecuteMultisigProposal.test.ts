@@ -110,7 +110,7 @@ export default function suite() {
       });
 
     // First approve
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminApproveMultisigProposal({ transactionIndex: new BN(1) })
       .accounts({
         dao: dao,
@@ -123,7 +123,7 @@ export default function suite() {
       .rpc();
 
     // Then execute
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
       .accounts({
         dao: dao,
@@ -227,7 +227,7 @@ export default function suite() {
       "The proposal should not be executed because it has not been approved",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
       .accounts({
         dao: dao,

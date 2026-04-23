@@ -59,7 +59,7 @@ import { ConditionalVaultClient } from "../../conditional_vault/v0.4/index.js";
 
 export type CreateClientParams = {
   provider: AnchorProvider;
-  autocratProgramId?: PublicKey;
+  futarchyProgramId?: PublicKey;
   conditionalVaultProgramId?: PublicKey;
 };
 
@@ -70,20 +70,20 @@ export type ProposalVaults = {
 
 export class FutarchyClient {
   public readonly provider: AnchorProvider;
-  public readonly autocrat: Program<Futarchy>;
+  public readonly futarchy: Program<Futarchy>;
   public readonly vaultClient: ConditionalVaultClient;
   public readonly luts: AddressLookupTableAccount[];
 
   constructor(
     provider: AnchorProvider,
-    autocratProgramId: PublicKey,
+    futarchyProgramId: PublicKey,
     conditionalVaultProgramId: PublicKey,
     luts: AddressLookupTableAccount[],
   ) {
     this.provider = provider;
-    this.autocrat = new Program<Futarchy>(
+    this.futarchy = new Program<Futarchy>(
       FutarchyIDL,
-      autocratProgramId,
+      futarchyProgramId,
       provider,
     );
     this.vaultClient = ConditionalVaultClient.createClient({
@@ -94,49 +94,49 @@ export class FutarchyClient {
   }
 
   public static createClient(
-    createAutocratClientParams: CreateClientParams,
+    createFutarchyClientParams: CreateClientParams,
   ): FutarchyClient {
-    let { provider, autocratProgramId, conditionalVaultProgramId } =
-      createAutocratClientParams;
+    let { provider, futarchyProgramId, conditionalVaultProgramId } =
+      createFutarchyClientParams;
 
     const luts: AddressLookupTableAccount[] = [];
 
     return new FutarchyClient(
       provider,
-      autocratProgramId || FUTARCHY_V0_6_PROGRAM_ID,
+      futarchyProgramId || FUTARCHY_V0_6_PROGRAM_ID,
       conditionalVaultProgramId || CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
       luts,
     );
   }
 
   getProgramId(): PublicKey {
-    return this.autocrat.programId;
+    return this.futarchy.programId;
   }
 
   async getProposal(proposal: PublicKey): Promise<Proposal> {
-    return this.autocrat.account.proposal.fetch(proposal);
+    return this.futarchy.account.proposal.fetch(proposal);
   }
 
   async getDao(dao: PublicKey): Promise<Dao> {
-    return this.autocrat.account.dao.fetch(dao);
+    return this.futarchy.account.dao.fetch(dao);
   }
 
   async fetchProposal(proposal: PublicKey): Promise<Proposal | null> {
-    return this.autocrat.account.proposal.fetchNullable(proposal);
+    return this.futarchy.account.proposal.fetchNullable(proposal);
   }
 
   async fetchDao(dao: PublicKey): Promise<Dao | null> {
-    return this.autocrat.account.dao.fetchNullable(dao);
+    return this.futarchy.account.dao.fetchNullable(dao);
   }
 
   async deserializeProposal(
     accountInfo: AccountInfo<Buffer>,
   ): Promise<Proposal> {
-    return this.autocrat.coder.accounts.decode("proposal", accountInfo.data);
+    return this.futarchy.coder.accounts.decode("proposal", accountInfo.data);
   }
 
   async deserializeDao(accountInfo: AccountInfo<Buffer>): Promise<Dao> {
-    return this.autocrat.coder.accounts.decode("dao", accountInfo.data);
+    return this.futarchy.coder.accounts.decode("dao", accountInfo.data);
   }
 
   getProposalPdas(
@@ -247,7 +247,7 @@ export class FutarchyClient {
       createKey: dao,
     })[0];
 
-    return this.autocrat.methods.initializeDao(params).accounts({
+    return this.futarchy.methods.initializeDao(params).accounts({
       dao,
       baseMint,
       quoteMint,
@@ -290,7 +290,7 @@ export class FutarchyClient {
 
     const squadsMultisig = multisig.getMultisigPda({ createKey: dao })[0];
 
-    return this.autocrat.methods
+    return this.futarchy.methods
       .launchProposal()
       .accounts({
         proposal,
@@ -347,7 +347,7 @@ export class FutarchyClient {
     minOutputAmount?: BN;
     trader?: PublicKey;
   }) {
-    return this.autocrat.methods
+    return this.futarchy.methods
       .spotSwap({
         swapType: swapType === "buy" ? { buy: {} } : { sell: {} },
         inputAmount,
@@ -409,7 +409,7 @@ export class FutarchyClient {
       this.getProgramId(),
     )[0];
 
-    return this.autocrat.methods
+    return this.futarchy.methods
       .provideLiquidity({
         quoteAmount,
         maxBaseAmount,
@@ -504,7 +504,7 @@ export class FutarchyClient {
       );
     }
 
-    return this.autocrat.methods
+    return this.futarchy.methods
       .conditionalSwap({
         market: market == "pass" ? { pass: {} } : { fail: {} },
         swapType: swapType == "buy" ? { buy: {} } : { sell: {} },
@@ -622,7 +622,7 @@ export class FutarchyClient {
   ): Promise<PublicKey> {
     const storedDao = await this.getDao(dao);
 
-    let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
+    let [proposal] = getProposalAddr(this.futarchy.programId, squadsProposal);
 
     await this.vaultClient.initializeQuestion(
       sha256(`Will ${proposal} pass?/FAIL/PASS`),
@@ -670,7 +670,7 @@ export class FutarchyClient {
     question: PublicKey,
     proposer: PublicKey = this.provider.publicKey,
   ) {
-    let [proposal] = getProposalAddr(this.autocrat.programId, squadsProposal);
+    let [proposal] = getProposalAddr(this.futarchy.programId, squadsProposal);
     const {
       baseVault,
       quoteVault,
@@ -687,7 +687,7 @@ export class FutarchyClient {
 
     const squadsMultisig = multisig.getMultisigPda({ createKey: dao })[0];
 
-    return this.autocrat.methods
+    return this.futarchy.methods
       .initializeProposal()
       .accounts({
         question,
@@ -787,7 +787,7 @@ export class FutarchyClient {
 
     const [vaultEventAuthority] = getEventAuthorityAddr(vaultProgramId);
 
-    return this.autocrat.methods
+    return this.futarchy.methods
       .finalizeProposal()
       .accounts({
         proposal,
@@ -849,7 +849,7 @@ export class FutarchyClient {
       index: 0,
     })[0];
 
-    return this.autocrat.methods.updateDao(params).accounts({
+    return this.futarchy.methods.updateDao(params).accounts({
       dao,
       squadsMultisigVault,
     });
@@ -876,7 +876,7 @@ export class FutarchyClient {
       staker,
     )[0];
 
-    return this.autocrat.methods
+    return this.futarchy.methods
       .stakeToProposal({ amount })
       .accounts({
         proposal,
@@ -932,7 +932,7 @@ export class FutarchyClient {
       staker,
     )[0];
 
-    return this.autocrat.methods.unstakeFromProposal({ amount }).accounts({
+    return this.futarchy.methods.unstakeFromProposal({ amount }).accounts({
       proposal,
       dao,
       stakerBaseAccount: getAssociatedTokenAddressSync(baseMint, staker, true),
@@ -969,7 +969,7 @@ export class FutarchyClient {
       true,
     );
 
-    return this.autocrat.methods.collectFees().accounts({
+    return this.futarchy.methods.collectFees().accounts({
       dao,
       admin: this.provider.publicKey,
       ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
@@ -988,7 +988,7 @@ export class FutarchyClient {
     dao: PublicKey;
     teamAddress?: PublicKey;
   }) {
-    return this.autocrat.methods.sponsorProposal().accounts({
+    return this.futarchy.methods.sponsorProposal().accounts({
       proposal,
       dao,
       teamAddress,
@@ -1085,7 +1085,7 @@ export class FutarchyClient {
 
     const [dammV2EventAuthority] = getEventAuthorityAddr(DAMM_V2_PROGRAM_ID);
 
-    return this.autocrat.methods.collectMeteoraDammFees().accounts({
+    return this.futarchy.methods.collectMeteoraDammFees().accounts({
       dao,
       admin,
       squadsMultisig: multisigPda,
@@ -1195,7 +1195,7 @@ export class FutarchyClient {
       rentPayer: payer,
     });
 
-    return this.autocrat.methods
+    return this.futarchy.methods
       .initiateVaultSpendOptimisticProposal({ amount })
       .accounts({
         squadsMultisig: multisigPda,
@@ -1232,7 +1232,7 @@ export class FutarchyClient {
   }) {
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
-    return this.autocrat.methods.finalizeOptimisticProposal().accounts({
+    return this.futarchy.methods.finalizeOptimisticProposal().accounts({
       squadsMultisig: multisigPda,
       squadsProposal,
       dao,
