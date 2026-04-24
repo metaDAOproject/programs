@@ -7,7 +7,11 @@ import {
 import { assert } from "chai";
 import { mintTo, getAccount } from "spl-token-bankrun";
 import BN from "bn.js";
-import { getPerformancePackageAddr, Tranche } from "@metadaoproject/futarchy";
+import {
+  getPerformancePackageAddr,
+  InitializePerformancePackageParams,
+  Tranche,
+} from "@metadaoproject/futarchy";
 import { expectError } from "../../utils.js";
 
 export default function () {
@@ -85,7 +89,7 @@ export default function () {
         tokenAmount: new BN(200000),
       },
     ];
-    const params = {
+    const params: InitializePerformancePackageParams = {
       tranches,
       grantee: recipient.publicKey,
       performancePackageAuthority: this.payer.publicKey,
@@ -97,8 +101,7 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         byteOffset: 0,
       },
-      twapLengthSeconds: new BN(86_400), // 1 day
-      tokenRecipient: recipient.publicKey,
+      twapLengthSeconds: 86_400, // 1 day
     };
 
     const tx = await this.priceBasedPerformancePackage
@@ -199,7 +202,7 @@ export default function () {
     fundingTx.sign(this.payer);
     await this.banksClient.processTransaction(fundingTx);
 
-    const params = {
+    const params: InitializePerformancePackageParams = {
       tranches: [
         {
           priceThreshold: new BN(1000000),
@@ -216,8 +219,7 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         byteOffset: 0,
       },
-      twapLengthSeconds: new BN(24 * 60 * 60),
-      tokenRecipient: recipient.publicKey,
+      twapLengthSeconds: 24 * 60 * 60,
     };
 
     const tx = await this.priceBasedPerformancePackage
@@ -252,7 +254,7 @@ export default function () {
   it("should fail if recipient equals authority", async function () {
     const sameKeyCreateKey = Keypair.generate();
 
-    const params = {
+    const params: InitializePerformancePackageParams = {
       tranches: [
         {
           priceThreshold: new BN(1000000),
@@ -269,8 +271,7 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         byteOffset: 0,
       },
-      twapLengthSeconds: new BN(86_400),
-      tokenRecipient: this.payer.publicKey,
+      twapLengthSeconds: 86_400,
     };
 
     const callbacks = expectError(
@@ -307,7 +308,7 @@ export default function () {
     fundingTx.sign(this.payer);
     await this.banksClient.processTransaction(fundingTx);
 
-    const params = {
+    const params: InitializePerformancePackageParams = {
       tranches: [
         {
           priceThreshold: new BN(1000000),
@@ -324,8 +325,7 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         byteOffset: 0,
       },
-      twapLengthSeconds: new BN(3600),
-      tokenRecipient: recipient.publicKey,
+      twapLengthSeconds: 3600,
     };
 
     const callbacks = expectError(

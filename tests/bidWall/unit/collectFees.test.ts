@@ -82,6 +82,7 @@ export default function suite() {
         performancePackageTokenAmount: new BN(10), // Effectively no premine
         monthsUntilInsidersCanUnlock: 24, // 2 years
         teamAddress: PublicKey.default,
+        hasBidWall: false,
       })
       .rpc();
 

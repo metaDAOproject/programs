@@ -73,6 +73,7 @@ export default function suite() {
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
+        hasBidWall: false,
       })
       .rpc();
 
@@ -176,16 +177,6 @@ export default function suite() {
       DAMM_V2_PROGRAM_ID,
     );
 
-    const [tokenAVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), META.toBuffer(), pool.toBuffer()],
-      DAMM_V2_PROGRAM_ID,
-    );
-
-    const [tokenBVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), MAINNET_USDC.toBuffer(), pool.toBuffer()],
-      DAMM_V2_PROGRAM_ID,
-    );
-
     const swapTx = await cpAmm._program.methods
       .swap({
         amountIn: new BN(1_000_000), // 1 USDC swap
@@ -202,8 +193,6 @@ export default function suite() {
         payer: this.payer.publicKey,
         pool: pool,
         program: DAMM_V2_PROGRAM_ID,
-        tokenAVault: tokenAVault,
-        tokenBVault: tokenBVault,
       })
       .transaction();
 

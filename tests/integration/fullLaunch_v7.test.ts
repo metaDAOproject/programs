@@ -164,6 +164,7 @@ export default async function suite() {
         monthsUntilInsidersCanUnlock: 24,
         teamAddress: PublicKey.default,
         launchAuthority: launchAuthority.publicKey,
+        hasBidWall: false,
       })
       .rpc();
 

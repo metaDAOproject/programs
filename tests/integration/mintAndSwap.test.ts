@@ -44,6 +44,8 @@ export default async function test() {
         nonce,
         initialSpendingLimit: null,
         baseToStake: new BN(0),
+        teamAddress: PublicKey.default,
+        teamSponsoredPassThresholdBps: 0,
       },
       provideLiquidity: false,
     })

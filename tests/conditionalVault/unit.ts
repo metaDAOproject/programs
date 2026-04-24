@@ -25,7 +25,7 @@ const { PublicKey, Keypair } = web3;
 import {
   ConditionalVault,
   IDL as ConditionalVaultIDL,
-} from "../../target/types/conditional_vault";
+} from "../../target/types/conditional_vault.js";
 import {
   CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
   ConditionalVaultClient,
@@ -463,7 +463,7 @@ describe("conditional_vault", async function () {
       ).then((acc) => acc.amount);
 
       await vaultClient
-        .redeemTokensIx(question, vault, underlyingTokenMint, new BN(600), 2)
+        .redeemTokensIx(question, vault, underlyingTokenMint, 2)
         .rpc();
 
       const balanceAfter = await getAccount(

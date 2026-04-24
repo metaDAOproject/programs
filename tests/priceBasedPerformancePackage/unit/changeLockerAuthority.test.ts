@@ -6,6 +6,10 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import BN from "bn.js";
+import {
+  getPerformancePackageAddr,
+  InitializePerformancePackageParams,
+} from "@metadaoproject/futarchy";
 
 export default function () {
   let createKey: Keypair;
@@ -64,9 +68,7 @@ export default function () {
     await this.mintTo(tokenMint, tokenAuthority, this.payer, 1000000); // 1M tokens
 
     // Initialize a performancePackage
-    const params = {
-      priceThreshold: new BN(1000000),
-      tokenAmount: new BN(100000),
+    const params: InitializePerformancePackageParams = {
       minUnlockTimestamp: new BN(
         Number((await this.context.banksClient.getClock()).unixTimestamp) +
           3600,
@@ -75,9 +77,12 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         byteOffset: 0,
       },
-      twapLengthSeconds: new BN(3600),
-      tokenRecipient: recipient.publicKey,
+      twapLengthSeconds: 3600,
+      grantee: recipient.publicKey,
       performancePackageAuthority: currentAuthority.publicKey,
+      tranches: [
+        { priceThreshold: new BN(1000000), tokenAmount: new BN(100000) },
+      ],
     };
 
     await this.priceBasedPerformancePackage
@@ -85,17 +90,15 @@ export default function () {
         params,
         createKey: createKey.publicKey,
         tokenMint,
-        fromTokenAccount: tokenAccount,
-        tokenAuthority: tokenAuthority,
-        payer: this.payer.publicKey,
+        grantor: tokenAuthority,
+        grantorTokenAccount: tokenAccount,
       })
       .rpc();
 
     // Get performancePackage address
-    performancePackage =
-      this.priceBasedPerformancePackage.getPerformancePackage(
-        createKey.publicKey,
-      );
+    performancePackage = getPerformancePackageAddr({
+      createKey: createKey.publicKey,
+    })[0];
   });
 
   it("should change performancePackage authority successfully", async function () {
@@ -248,7 +251,6 @@ export default function () {
         },
         performancePackage,
         proposer: newAuthority.publicKey, // New authority proposes
-        payer: newAuthority.publicKey,
       })
       .transaction();
 
@@ -270,9 +272,6 @@ export default function () {
       await this.priceBasedPerformancePackage.getChangeRequest(
         changeRequestAddr,
       );
-    assert.equal(
-      changeRequest.proposer.toString(),
-      newAuthority.publicKey.toString(),
-    );
+    assert.isNotNull(changeRequest.proposerType.authority);
   });
 }

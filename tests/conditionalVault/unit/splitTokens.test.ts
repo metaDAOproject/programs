@@ -37,7 +37,7 @@ export default function suite() {
       underlyingTokenMint,
       this.payer.publicKey,
       this.payer,
-      10_000_000_000n,
+      10_000_000_000,
     );
   });
 

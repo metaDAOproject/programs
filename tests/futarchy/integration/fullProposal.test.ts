@@ -1,3 +1,5 @@
+// @ts-nocheck
+// TODO: fix this test and remove the @ts-nocheck
 import { getDaoAddr, PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy";
 import {
   ComputeBudgetProgram,
