@@ -1,7 +1,4 @@
-import {
-  getDaoAddr,
-  PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy-v2";
+import { getDaoAddr, PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy";
 import {
   ComputeBudgetProgram,
   SystemProgram,

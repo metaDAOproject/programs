@@ -12,7 +12,7 @@ import {
   BidWallClient,
   MAINNET_USDC,
   getBidWallAddr,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/futarchy";
 import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";

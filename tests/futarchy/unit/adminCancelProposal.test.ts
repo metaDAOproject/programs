@@ -3,7 +3,7 @@ import {
   CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
   SQUADS_PROGRAM_ID,
   getEventAuthorityAddr,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/futarchy";
 import {
   ComputeBudgetProgram,
   PublicKey,

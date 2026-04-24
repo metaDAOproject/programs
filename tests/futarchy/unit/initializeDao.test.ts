@@ -2,7 +2,7 @@ import {
   getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/futarchy";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { expectError } from "../../utils.js";

@@ -9,7 +9,7 @@ import {
   getFundingRecordAddr,
   LaunchpadClient,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/futarchy";
 import { getAccount } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";

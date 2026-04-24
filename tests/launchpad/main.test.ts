@@ -7,14 +7,12 @@ import refund from "./unit/refund.test.js";
 import closeLaunch from "./unit/closeLaunch.test.js";
 import returnFunds from "./unit/returnFunds.test.js";
 import { PublicKey } from "@solana/web3.js";
-import { LaunchpadClient } from "@metadaoproject/futarchy-v2/launchpad/v0.6";
 import {
   LAUNCHPAD_V0_6_PROGRAM_ID,
   LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/futarchy";
 import BN from "bn.js";
-import { BankrunProvider } from "anchor-bankrun";
 
 // TODO add a many-outcome integration test
 export default function suite() {

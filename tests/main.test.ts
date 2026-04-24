@@ -39,8 +39,8 @@ import {
   LiquidationClient,
   LOW_FEE_RAYDIUM_CONFIG,
   sha256,
-} from "@metadaoproject/futarchy-v2";
-import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/futarchy-v2/launchpad/v0.6";
+} from "@metadaoproject/futarchy";
+import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/futarchy/launchpad/v0.6";
 
 import {
   PublicKey,

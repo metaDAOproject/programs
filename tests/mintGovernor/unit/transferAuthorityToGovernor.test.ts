@@ -1,7 +1,7 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { assert } from "chai";
-import { MintGovernorClient } from "@metadaoproject/futarchy-v2";
+import { MintGovernorClient } from "@metadaoproject/futarchy";
 import { createMintWithAuthority, createMintAndGovernor } from "../utils.js";
 import { expectError } from "../../utils.js";
 

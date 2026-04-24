@@ -2,7 +2,7 @@ import {
   sha256,
   ConditionalVaultClient,
   getQuestionAddr,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/futarchy";
 // const { ConditionalVaultClient, getQuestionAddr } = futarchy;
 import { Keypair } from "@solana/web3.js";
 import { assert } from "chai";

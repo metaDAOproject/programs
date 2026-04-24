@@ -3,8 +3,8 @@ import { assert } from "chai";
 import {
   getFundingRecordAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy-v2/launchpad/v0.6";
-import { MAINNET_USDC } from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/futarchy/launchpad/v0.6";
+import { MAINNET_USDC } from "@metadaoproject/futarchy";
 import { getAccount } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";

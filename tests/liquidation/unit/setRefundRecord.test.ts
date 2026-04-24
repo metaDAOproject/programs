@@ -1,4 +1,4 @@
-import { LiquidationClient } from "@metadaoproject/futarchy-v2";
+import { LiquidationClient } from "@metadaoproject/futarchy";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { expectError } from "../../utils.js";

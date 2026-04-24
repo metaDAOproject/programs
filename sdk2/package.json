@@ -1,6 +1,6 @@
 {
-  "name": "@metadaoproject/futarchy-v2",
-  "version": "0.7.3-alpha.1",
+  "name": "@metadaoproject/futarchy",
+  "version": "0.8.0-alpha.0",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",

@@ -1,7 +1,7 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
-import { FUTARCHY_V0_6_PROGRAM_ID } from "@metadaoproject/futarchy-v2";
+import { FUTARCHY_V0_6_PROGRAM_ID } from "@metadaoproject/futarchy";
 import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,

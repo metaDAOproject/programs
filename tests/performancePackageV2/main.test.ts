@@ -8,7 +8,7 @@ import closePerformancePackage from "./unit/closePerformancePackage.test.js";
 import {
   MintGovernorClient,
   PerformancePackageV2Client,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/futarchy";
 import { BankrunProvider } from "anchor-bankrun";
 
 export default function suite() {

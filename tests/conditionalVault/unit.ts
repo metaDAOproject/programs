@@ -33,7 +33,7 @@ import {
   getQuestionAddr,
   getVaultAddr,
   sha256,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/futarchy";
 
 export type VaultProgram = anchor.Program<ConditionalVault>;
 export type PublicKey = anchor.web3.PublicKey;

@@ -1,4 +1,4 @@
-import { ConditionalVaultClient, sha256 } from "@metadaoproject/futarchy-v2";
+import { ConditionalVaultClient, sha256 } from "@metadaoproject/futarchy";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 

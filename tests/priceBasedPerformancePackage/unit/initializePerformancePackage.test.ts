@@ -7,10 +7,7 @@ import {
 import { assert } from "chai";
 import { mintTo, getAccount } from "spl-token-bankrun";
 import BN from "bn.js";
-import {
-  getPerformancePackageAddr,
-  Tranche,
-} from "@metadaoproject/futarchy-v2";
+import { getPerformancePackageAddr, Tranche } from "@metadaoproject/futarchy";
 import { expectError } from "../../utils.js";
 
 export default function () {
