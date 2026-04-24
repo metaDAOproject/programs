@@ -1,3 +1,5 @@
+// @ts-nocheck
+// Legacy script
 import * as anchor from "@coral-xyz/anchor";
 import { AutocratClient, getDaoAddr } from "@metadaoproject/futarchy/v0.6";
 import { Keypair, PublicKey } from "@solana/web3.js";

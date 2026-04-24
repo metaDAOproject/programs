@@ -19,7 +19,7 @@ import BN from "bn.js";
 import {
   AMM_V0_4_PROGRAM_ID,
   AUTOCRAT_V0_4_PROGRAM_ID,
-  CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   MAINNET_USDC,
   USDC_DECIMALS,
 } from "../../constants.js";
@@ -97,7 +97,7 @@ export class AutocratClient {
     return new AutocratClient(
       provider,
       autocratProgramId || AUTOCRAT_V0_4_PROGRAM_ID,
-      conditionalVaultProgramId || CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+      conditionalVaultProgramId || CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
       ammProgramId || AMM_V0_4_PROGRAM_ID,
       luts,
     );

@@ -28,14 +28,14 @@ export const AUTOCRAT_V0_5_PROGRAM_ID = new PublicKey(
 export const LAUNCHPAD_V0_5_PROGRAM_ID = new PublicKey(
   "mooNhciQJi1LqHDmse2JPic2NqG2PXCanbE3ZYzP3qA",
 );
+export const AMM_V0_5_PROGRAM_ID = new PublicKey(
+  "AMMJdEiCCa8mdugg6JPF7gFirmmxisTfDJoSNSUi5zDJ",
+);
 
 export const FUTARCHY_V0_6_PROGRAM_ID = new PublicKey(
   "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq",
 );
-export const AMM_PROGRAM_ID = new PublicKey(
-  "AMMJdEiCCa8mdugg6JPF7gFirmmxisTfDJoSNSUi5zDJ",
-);
-export const CONDITIONAL_VAULT_v0_4_PROGRAM_ID = new PublicKey(
+export const CONDITIONAL_VAULT_V0_4_PROGRAM_ID = new PublicKey(
   "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg",
 );
 export const LAUNCHPAD_V0_6_PROGRAM_ID = new PublicKey(
@@ -76,7 +76,7 @@ export const DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
 );
 
 export const META_MINT = new PublicKey(
-  "3gN1WVEJwSHNWjo7hr87DgZp6zkf8kWgAJD29DmfE2Gr",
+  "METAwkXcqyXKy1AtsSgJ8JiUHwGCafnZL38n3vYmeta",
 );
 export const MAINNET_USDC = new PublicKey(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",

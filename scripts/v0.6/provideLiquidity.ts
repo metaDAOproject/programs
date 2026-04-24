@@ -1,9 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
-import {
-  FutarchyClient,
-  MAINNET_USDC,
-  DEVNET_USDC,
-} from "@metadaoproject/futarchy/v0.6";
+import { FutarchyClient } from "@metadaoproject/futarchy/futarchy/v0.6";
+import { MAINNET_USDC, DEVNET_USDC } from "@metadaoproject/futarchy";
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";

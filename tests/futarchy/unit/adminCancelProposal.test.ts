@@ -1,6 +1,6 @@
 import {
   PERMISSIONLESS_ACCOUNT,
-  CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   SQUADS_PROGRAM_ID,
   getEventAuthorityAddr,
 } from "@metadaoproject/futarchy";
@@ -152,7 +152,7 @@ export default function suite() {
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const [vaultEventAuthority] = getEventAuthorityAddr(
-      CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
     );
 
     await this.futarchy.futarchy.methods
@@ -195,7 +195,7 @@ export default function suite() {
           dao,
           true,
         ),
-        vaultProgram: CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+        vaultProgram: CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
         vaultEventAuthority,
         quoteVault,
         quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
@@ -250,7 +250,7 @@ export default function suite() {
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const [vaultEventAuthority] = getEventAuthorityAddr(
-      CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
     );
 
     const accounts = {
@@ -283,7 +283,7 @@ export default function suite() {
         dao,
         true,
       ),
-      vaultProgram: CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+      vaultProgram: CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
       vaultEventAuthority,
       quoteVault,
       quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(

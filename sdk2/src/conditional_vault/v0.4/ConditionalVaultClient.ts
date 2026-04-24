@@ -5,7 +5,7 @@ import { ConditionalVaultProgram, ConditionalVaultIDL } from "./types/index.js";
 
 import BN from "bn.js";
 import {
-  CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   MPL_TOKEN_METADATA_PROGRAM_ID,
 } from "../../constants.js";
 import { getMetadataAddr } from "../../pda.js";
@@ -46,7 +46,7 @@ export class ConditionalVaultClient {
 
     return new ConditionalVaultClient(
       provider,
-      conditionalVaultProgramId || CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+      conditionalVaultProgramId || CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
     );
   }
 

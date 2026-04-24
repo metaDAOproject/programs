@@ -27,7 +27,7 @@ import {
   IDL as ConditionalVaultIDL,
 } from "../../target/types/conditional_vault.js";
 import {
-  CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   ConditionalVaultClient,
   getConditionalTokenMintAddr,
   getQuestionAddr,
@@ -97,7 +97,7 @@ describe("conditional_vault", async function () {
 
     vaultProgram = new Program<ConditionalVault>(
       ConditionalVaultIDL,
-      CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
       provider,
     );
 

@@ -1,6 +1,6 @@
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient } from "@metadaoproject/futarchy/v0.7";
+import { LaunchpadClient } from "@metadaoproject/futarchy/launchpad/v0.7";
 
 import dotenv from "dotenv";
 

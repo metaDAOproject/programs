@@ -1,9 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
+import { FutarchyClient } from "@metadaoproject/futarchy/futarchy/v0.6";
 import {
-  CONDITIONAL_VAULT_PROGRAM_ID,
-  FUTARCHY_PROGRAM_ID,
-  FutarchyClient,
-} from "@metadaoproject/futarchy/v0.7";
+  FUTARCHY_V0_6_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+} from "@metadaoproject/futarchy";
 import { PublicKey } from "@solana/web3.js";
 
 // Set the proposal address before running the script
@@ -16,8 +16,8 @@ const payer = provider.wallet["payer"];
 
 const futarchy: FutarchyClient = new FutarchyClient(
   provider,
-  FUTARCHY_PROGRAM_ID,
-  CONDITIONAL_VAULT_PROGRAM_ID,
+  FUTARCHY_V0_6_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   [],
 );
 
@@ -29,7 +29,7 @@ export const removeProposal = async () => {
   console.log(`DAO: ${proposalAccount.dao.toBase58()}`);
   console.log(`Current state: ${JSON.stringify(proposalAccount.state)}`);
 
-  const tx = await futarchy.autocrat.methods
+  const tx = await futarchy.futarchy.methods
     .adminRemoveProposal()
     .accounts({
       proposal,

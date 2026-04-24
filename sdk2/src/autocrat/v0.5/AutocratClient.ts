@@ -16,9 +16,9 @@ import { Autocrat, IDL as AutocratIDL } from "./types/autocrat.js";
 
 import BN from "bn.js";
 import {
-  AMM_PROGRAM_ID,
+  AMM_V0_5_PROGRAM_ID,
   AUTOCRAT_V0_5_PROGRAM_ID,
-  CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   MAINNET_USDC,
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_CONFIG_TREASURY,
@@ -101,8 +101,8 @@ export class AutocratClient {
     return new AutocratClient(
       provider,
       autocratProgramId || AUTOCRAT_V0_5_PROGRAM_ID,
-      conditionalVaultProgramId || CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
-      ammProgramId || AMM_PROGRAM_ID,
+      conditionalVaultProgramId || CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+      ammProgramId || AMM_V0_5_PROGRAM_ID,
       luts,
     );
   }

@@ -21,7 +21,7 @@ import * as multisig from "@sqds/multisig";
 
 import {
   FUTARCHY_V0_6_PROGRAM_ID,
-  CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
   SQUADS_PROGRAM_CONFIG,
@@ -104,7 +104,7 @@ export class FutarchyClient {
     return new FutarchyClient(
       provider,
       futarchyProgramId || FUTARCHY_V0_6_PROGRAM_ID,
-      conditionalVaultProgramId || CONDITIONAL_VAULT_v0_4_PROGRAM_ID,
+      conditionalVaultProgramId || CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
       luts,
     );
   }

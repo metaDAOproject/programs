@@ -2,10 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   FutarchyClient,
   getDaoAddr,
-  DEVNET_USDC,
-  MAINNET_USDC,
-  SQUADS_PROGRAM_CONFIG_TREASURY,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/futarchy/futarchy/v0.6";
 import {
   Keypair,
   PublicKey,
@@ -15,7 +12,7 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
-import { DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY } from "@metadaoproject/futarchy/v0.6";
+import { DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY } from "@metadaoproject/futarchy";
 import * as token from "@solana/spl-token";
 
 // DAO DETAILS
@@ -92,6 +89,8 @@ export const initializeDao = async () => {
         initialSpendingLimit: null,
         baseToStake: new BN(0),
         secondsPerProposal: 60 * 60 * 24 * 3,
+        teamAddress: PublicKey.default,
+        teamSponsoredPassThresholdBps: 0,
       },
     })
     .rpc();

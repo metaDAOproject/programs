@@ -9,7 +9,7 @@ import {
 import { Amm as AmmIDLType, IDL as AmmIDL } from "./types/amm.js";
 
 import BN from "bn.js";
-import { AMM_PROGRAM_ID } from "../../constants.js";
+import { AMM_V0_5_PROGRAM_ID } from "../../constants.js";
 import { Amm } from "./types/index.js";
 import { LowercaseKeys } from "../../utils.js";
 import { getAmmLpMintAddr, getAmmAddr } from "./pda.js";
@@ -50,7 +50,7 @@ export class AmmClient {
 
     const luts: AddressLookupTableAccount[] = [];
 
-    return new AmmClient(provider, programId || AMM_PROGRAM_ID, luts);
+    return new AmmClient(provider, programId || AMM_V0_5_PROGRAM_ID, luts);
   }
 
   getProgramId(): PublicKey {

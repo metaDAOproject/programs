@@ -3,7 +3,7 @@ import {
   LaunchpadClient,
   getLaunchAddr,
   getLaunchSignerAddr,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/futarchy/launchpad/v0.7";
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";
@@ -95,6 +95,7 @@ export const launch = async () => {
         : undefined,
       additionalTokensRecipient: ADDITIONAL_CARVEOUT_RECIPIENT,
       launchAuthority: LAUNCH_AUTHORITY,
+      hasBidWall: false,
     })
     .instruction();
 

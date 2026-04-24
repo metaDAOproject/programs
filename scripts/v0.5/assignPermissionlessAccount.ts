@@ -1,9 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { SystemProgram, Transaction } from "@solana/web3.js";
-import {
-  AutocratClient,
-  PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.5";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy";
+import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.5";
 
 async function main() {
   const provider = anchor.AnchorProvider.env();

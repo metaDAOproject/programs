@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { FutarchyClient } from "@metadaoproject/futarchy/v0.6";
+import { FutarchyClient } from "@metadaoproject/futarchy/futarchy/v0.6";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 
@@ -39,7 +39,7 @@ const executeSpendingLimit = async () => {
     isSigner: false,
   }));
 
-  const executeIx = await futarchy.autocrat.methods
+  const executeIx = await futarchy.futarchy.methods
     .executeSpendingLimitChange()
     .accounts({
       proposal: PROPOSAL,

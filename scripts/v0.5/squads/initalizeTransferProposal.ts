@@ -1,14 +1,14 @@
 import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy";
 import {
   createTransferInstruction,
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountIdempotentInstruction,
 } from "@solana/spl-token";
-import { getSquadsPdasFromDao } from "../utils/squads.js";
-import { USDC } from "../consts.js";
+import { getSquadsPdasFromDao } from "../../utils/squads.js";
+import { USDC } from "../../consts.js";
 
 // we want transfer and config authority removal out the gate
 

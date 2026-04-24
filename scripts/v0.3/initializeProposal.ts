@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 import * as token from "@solana/spl-token";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { AutocratClient } from "@metadaoproject/futarchy/v0.3";
+import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.3";
 
 const { PublicKey } = anchor.web3;
 

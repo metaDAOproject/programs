@@ -6,7 +6,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient } from "@metadaoproject/futarchy/v0.5";
+import { LaunchpadClient } from "@metadaoproject/futarchy/launchpad/v0.5";
 
 import dotenv from "dotenv";
 import { createLookupTableForTransaction } from "../utils/utils.js";
@@ -53,7 +53,7 @@ async function sendAndConfirmTransaction(tx: Transaction, label: string) {
   const completeLaunchLut = await createLookupTableForTransaction(
     tx,
     payer,
-    provider,
+    provider.connection,
   );
 
   console.log("Complete launch lookup table:", completeLaunchLut);

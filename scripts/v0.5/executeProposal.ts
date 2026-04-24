@@ -1,12 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
-import {
-  AutocratClient,
-  getDaoAddr,
-  DEVNET_USDC,
-  MAINNET_USDC,
-  SQUADS_PROGRAM_CONFIG_TREASURY,
-  PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.5";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy";
+import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.5";
 import {
   Keypair,
   PublicKey,

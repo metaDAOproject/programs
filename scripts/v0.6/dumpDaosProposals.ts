@@ -1,11 +1,6 @@
-import {
-  ComputeBudgetProgram,
-  Keypair,
-  Transaction,
-  PublicKey,
-} from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient, FutarchyClient } from "@metadaoproject/futarchy/v0.6";
+import { FutarchyClient } from "@metadaoproject/futarchy/futarchy/v0.6";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
@@ -83,10 +78,10 @@ async function main() {
   console.log(
     `Proposal discriminator (base58): ${bs58.encode(proposalDiscriminator)}`,
   );
-  console.log(`Program ID: ${futarchy.autocrat.programId.toBase58()}\n`);
+  console.log(`Program ID: ${futarchy.futarchy.programId.toBase58()}\n`);
 
   const daoAccounts = await provider.connection.getProgramAccounts(
-    futarchy.autocrat.programId,
+    futarchy.futarchy.programId,
     {
       filters: [
         {
@@ -105,7 +100,7 @@ async function main() {
   }
 
   const proposalAccounts = await provider.connection.getProgramAccounts(
-    futarchy.autocrat.programId,
+    futarchy.futarchy.programId,
     {
       filters: [
         {

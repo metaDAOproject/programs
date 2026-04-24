@@ -1,3 +1,5 @@
+// @ts-nocheck
+// Legacy script
 import * as anchor from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
 const { BN, Program } = anchor;

@@ -5,7 +5,8 @@ import {
   PublicKey,
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { AutocratClient, LaunchpadClient } from "@metadaoproject/futarchy/v0.4";
+import { LaunchpadClient } from "@metadaoproject/futarchy/launchpad/v0.4";
+import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.4";
 import { homedir } from "os";
 import { join } from "path";
 import { input } from "@inquirer/prompts";
