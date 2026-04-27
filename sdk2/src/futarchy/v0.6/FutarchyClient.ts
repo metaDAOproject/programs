@@ -44,6 +44,10 @@ import {
 } from "./types/index.js";
 import { Futarchy, IDL as FutarchyIDL } from "./types/futarchy.js";
 import {
+  Futarchy as v0_6_0_futarchy,
+  IDL as v0_6_0_futarchyIDL,
+} from "./types/v0.6.0-futarchy.js";
+import {
   getDaoAddr,
   getProposalAddr,
   getProposalAddrV2,
@@ -71,6 +75,7 @@ export type ProposalVaults = {
 export class FutarchyClient {
   public readonly provider: AnchorProvider;
   public readonly futarchy: Program<Futarchy>;
+  public readonly v0_6_0_futarchy: Program<v0_6_0_futarchy>;
   public readonly vaultClient: ConditionalVaultClient;
   public readonly luts: AddressLookupTableAccount[];
 
@@ -83,6 +88,11 @@ export class FutarchyClient {
     this.provider = provider;
     this.futarchy = new Program<Futarchy>(
       FutarchyIDL,
+      futarchyProgramId,
+      provider,
+    );
+    this.v0_6_0_futarchy = new Program<v0_6_0_futarchy>(
+      v0_6_0_futarchyIDL,
       futarchyProgramId,
       provider,
     );

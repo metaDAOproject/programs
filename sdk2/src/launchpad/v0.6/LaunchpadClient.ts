@@ -4,7 +4,7 @@ import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
 import {
   Launchpad as v0_6_0_launchpad,
   IDL as v0_6_0_launchpadIDL,
-} from "./types/launchpad.js";
+} from "./types/v0.6.0-launchpad.js";
 import {
   LAUNCHPAD_V0_6_PROGRAM_ID,
   MPL_TOKEN_METADATA_PROGRAM_ID,

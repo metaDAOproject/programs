@@ -12,13 +12,6 @@ export type AddLiquiditySimulation = {
   maxBaseAmount?: BN;
 };
 
-export type SwapSimulation = {
-  expectedOut: BN;
-  newBaseReserves: BN;
-  newQuoteReserves: BN;
-  minExpectedOut?: BN;
-};
-
 export type RemoveLiquiditySimulation = {
   expectedBaseOut: BN;
   expectedQuoteOut: BN;
