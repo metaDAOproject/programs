@@ -1,4 +1,8 @@
-import { PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/futarchy";
+import {
+  PERMISSIONLESS_ACCOUNT,
+  PriceMath,
+  METADAO_MULTISIG_VAULT,
+} from "@metadaoproject/futarchy";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -13,7 +17,6 @@ import BN from "bn.js";
 import { setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
-import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.6/constants.js";
 const { Permissions, Permission } = multisig.types;
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);

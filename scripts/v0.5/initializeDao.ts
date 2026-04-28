@@ -3,6 +3,7 @@ import {
   DEVNET_USDC,
   MAINNET_USDC,
   SQUADS_PROGRAM_CONFIG_TREASURY,
+  DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY,
 } from "@metadaoproject/futarchy";
 import {
   AutocratClient,
@@ -17,7 +18,6 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
-import { DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY } from "../../sdk/src/v0.5/constants.js";
 import * as token from "@solana/spl-token";
 
 const EXISTING_TOKEN = new PublicKey(

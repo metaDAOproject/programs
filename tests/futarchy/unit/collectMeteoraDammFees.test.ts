@@ -13,6 +13,7 @@ import {
   LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
+  METADAO_MULTISIG_VAULT,
 } from "@metadaoproject/futarchy";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../../launchpad_v7/utils.js";
@@ -24,7 +25,6 @@ import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.7/constants.js";
 import { CpAmm } from "@meteora-ag/cp-amm-sdk";
 
 export default function suite() {
