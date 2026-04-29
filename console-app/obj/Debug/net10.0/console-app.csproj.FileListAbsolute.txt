@@ -1,0 +1,15 @@
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\bin\Debug\net10.0\console-app.exe
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\bin\Debug\net10.0\console-app.deps.json
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\bin\Debug\net10.0\console-app.runtimeconfig.json
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\bin\Debug\net10.0\console-app.dll
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\bin\Debug\net10.0\console-app.pdb
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\console-app.GeneratedMSBuildEditorConfig.editorconfig
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\console-app.AssemblyInfoInputs.cache
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\console-app.AssemblyInfo.cs
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\console-app.csproj.CoreCompileInputs.cache
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\console-app.sourcelink.json
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\console-app.dll
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\refint\console-app.dll
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\console-app.pdb
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\console-app.genruntimeconfig.cache
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\console-app\obj\Debug\net10.0\ref\console-app.dll

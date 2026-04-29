@@ -1,0 +1,15 @@
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\bin\Debug\net10.0\dotnet-app.exe
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\bin\Debug\net10.0\dotnet-app.deps.json
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\bin\Debug\net10.0\dotnet-app.runtimeconfig.json
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\bin\Debug\net10.0\dotnet-app.dll
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\bin\Debug\net10.0\dotnet-app.pdb
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\dotnet-app.GeneratedMSBuildEditorConfig.editorconfig
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\dotnet-app.AssemblyInfoInputs.cache
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\dotnet-app.AssemblyInfo.cs
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\dotnet-app.csproj.CoreCompileInputs.cache
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\dotnet-app.sourcelink.json
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\dotnet-app.dll
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\refint\dotnet-app.dll
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\dotnet-app.pdb
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\dotnet-app.genruntimeconfig.cache
+C:\SdrSharp\Plugins\programs.worktrees\pileks\launchpad-v8\dotnet-app\obj\Debug\net10.0\ref\dotnet-app.dll
