@@ -11,7 +11,7 @@ import {
 import { expectError, setupBasicDao } from "../../utils.js";
 import { BN } from "bn.js";
 import { assert } from "chai";
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy-v2";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 import { ComputeBudget } from "litesvm";
 

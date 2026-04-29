@@ -13,7 +13,8 @@ import {
   LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy-v2";
+  METADAO_MULTISIG_VAULT,
+} from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../../launchpad_v7/utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
@@ -24,7 +25,6 @@ import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.7/constants.js";
 import { CpAmm } from "@meteora-ag/cp-amm-sdk";
 
 export default function suite() {
@@ -73,6 +73,7 @@ export default function suite() {
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
+        hasBidWall: false,
       })
       .rpc();
 
@@ -176,16 +177,6 @@ export default function suite() {
       DAMM_V2_PROGRAM_ID,
     );
 
-    const [tokenAVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), META.toBuffer(), pool.toBuffer()],
-      DAMM_V2_PROGRAM_ID,
-    );
-
-    const [tokenBVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), MAINNET_USDC.toBuffer(), pool.toBuffer()],
-      DAMM_V2_PROGRAM_ID,
-    );
-
     const swapTx = await cpAmm._program.methods
       .swap({
         amountIn: new BN(1_000_000), // 1 USDC swap
@@ -202,8 +193,6 @@ export default function suite() {
         payer: this.payer.publicKey,
         pool: pool,
         program: DAMM_V2_PROGRAM_ID,
-        tokenAVault: tokenAVault,
-        tokenBVault: tokenBVault,
       })
       .transaction();
 

@@ -10,17 +10,17 @@ import {
   FutarchyClient,
   MAINNET_USDC,
   MPL_TOKEN_METADATA_PROGRAM_ID,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/programs";
 import {
   LaunchpadClient,
   getLaunchAddr,
   getLaunchSignerAddr,
-} from "@metadaoproject/futarchy-v2/launchpad/v0.8";
+} from "@metadaoproject/programs/launchpad/v0.8";
 import {
   getMintGovernorAddr,
   getMintAuthorityAddr,
-} from "@metadaoproject/futarchy-v2/mint_governor/v0.7";
-import { getMetadataAddr } from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/programs/mint_governor/v0.7";
+import { getMetadataAddr } from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import * as token from "@solana/spl-token";

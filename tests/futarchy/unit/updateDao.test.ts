@@ -15,7 +15,7 @@ import {
   PriceMath,
   MAINNET_USDC,
   sha256,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/programs";
 import BN from "bn.js";
 import { setOptimisticGovernanceEnabled } from "../../utils.js";
 

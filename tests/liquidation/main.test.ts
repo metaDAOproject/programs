@@ -1,4 +1,4 @@
-import { LiquidationClient } from "@metadaoproject/futarchy-v2";
+import { LiquidationClient } from "@metadaoproject/programs";
 import { BankrunProvider } from "anchor-bankrun";
 import initializeLiquidation from "./unit/initializeLiquidation.test.js";
 import setRefundRecord from "./unit/setRefundRecord.test.js";

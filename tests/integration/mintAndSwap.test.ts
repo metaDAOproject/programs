@@ -2,7 +2,7 @@ import {
   ConditionalVaultClient,
   FutarchyClient,
   InstructionUtils,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/programs";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
@@ -44,6 +44,8 @@ export default async function test() {
         nonce,
         initialSpendingLimit: null,
         baseToStake: new BN(0),
+        teamAddress: PublicKey.default,
+        teamSponsoredPassThresholdBps: 0,
       },
       provideLiquidity: false,
     })

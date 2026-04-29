@@ -10,7 +10,7 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { TestContext } from "./main.test.js";
-import { getDaoAddr, PriceMath } from "@metadaoproject/futarchy-v2";
+import { getDaoAddr, PriceMath } from "@metadaoproject/programs";
 
 export const TEN_SECONDS_IN_SLOTS = 25n;
 export const ONE_MINUTE_IN_SLOTS = TEN_SECONDS_IN_SLOTS * 6n;

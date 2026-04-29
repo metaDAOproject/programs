@@ -1,13 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import {
-  CONDITIONAL_VAULT_PROGRAM_ID,
-  FUTARCHY_PROGRAM_ID,
-  FutarchyClient,
-  FEE_RECIPIENT,
-} from "@metadaoproject/futarchy/v0.7";
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+  FUTARCHY_V0_6_PROGRAM_ID,
+  METADAO_MULTISIG_VAULT,
+} from "@metadaoproject/programs";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 // Set the DAO address before running the script
 const dao = new PublicKey("");
@@ -19,8 +18,8 @@ const payer = provider.wallet["payer"];
 
 const futarchy: FutarchyClient = new FutarchyClient(
   provider,
-  FUTARCHY_PROGRAM_ID,
-  CONDITIONAL_VAULT_PROGRAM_ID,
+  FUTARCHY_V0_6_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   [],
 );
 
@@ -28,7 +27,7 @@ const futarchy: FutarchyClient = new FutarchyClient(
 const metadaoSquadsMultisig = new PublicKey(
   "8N3Tvc6B1wEVKVC6iD4s6eyaCNqX2ovj2xze2q3Q9DWH",
 );
-const metadaoSquadsMultisigVault = FEE_RECIPIENT;
+const metadaoSquadsMultisigVault = METADAO_MULTISIG_VAULT;
 
 export const collectFees = async () => {
   const daoAccount = await futarchy.fetchDao(dao);
@@ -41,27 +40,12 @@ export const collectFees = async () => {
       metadaoSquadsMultisig,
     );
 
-  // We want to receive the fees in the Metadao DAO's multisig vault
-  const feeRecipientBaseTokenAccount = getAssociatedTokenAddressSync(
-    daoAccount.baseMint,
-    metadaoSquadsMultisigVault,
-    true,
-  );
-
-  const feeRecipientQuoteTokenAccount = getAssociatedTokenAddressSync(
-    daoAccount.quoteMint,
-    metadaoSquadsMultisigVault,
-    true,
-  );
-
   // Prepare transaction message
   const collectFeesIx = await futarchy
     .collectFeesIx({
       dao,
       baseMint: daoAccount.baseMint,
       quoteMint: daoAccount.quoteMint,
-      baseTokenAccount: feeRecipientBaseTokenAccount,
-      quoteTokenAccount: feeRecipientQuoteTokenAccount,
     })
     .instruction();
 

@@ -1,11 +1,11 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
 import {
-  CONDITIONAL_VAULT_PROGRAM_ID,
-  FUTARCHY_PROGRAM_ID,
-  FutarchyClient,
-  MAINNET_METEORA_CONFIG as V0_6_MAINNET_METEORA_CONFIG,
-} from "@metadaoproject/futarchy/v0.6";
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+  FUTARCHY_V0_6_PROGRAM_ID,
+  LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG as V0_6_MAINNET_METEORA_CONFIG,
+} from "@metadaoproject/programs";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import { PublicKey } from "@solana/web3.js";
 
 const provider = anchor.AnchorProvider.env();
@@ -15,8 +15,8 @@ const payer = provider.wallet["payer"];
 
 const futarchy: FutarchyClient = new FutarchyClient(
   provider,
-  FUTARCHY_PROGRAM_ID,
-  CONDITIONAL_VAULT_PROGRAM_ID,
+  FUTARCHY_V0_6_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   [],
 );
 

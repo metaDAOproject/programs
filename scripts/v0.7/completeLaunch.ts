@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient, getLaunchAddr } from "@metadaoproject/futarchy/v0.7";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.7";
 import {
   PublicKey,
   TransactionMessage,

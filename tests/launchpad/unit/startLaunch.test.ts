@@ -1,10 +1,10 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { LaunchpadClient } from "@metadaoproject/futarchy-v2/launchpad/v0.6";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.6";
 import { BN } from "bn.js";
 
 import { initializeMintWithSeeds } from "../utils.js";
-import { FutarchyClient, MAINNET_USDC } from "@metadaoproject/futarchy-v2";
+import { FutarchyClient, MAINNET_USDC } from "@metadaoproject/programs";
 
 export default function suite() {
   let futarchyClient: FutarchyClient;

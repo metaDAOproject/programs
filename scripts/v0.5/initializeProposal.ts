@@ -1,11 +1,13 @@
+import { ConditionalVaultClient } from "@metadaoproject/programs/conditional_vault/v0.4";
+import { AmmClient } from "@metadaoproject/programs/amm/v0.5";
 import {
-  AmmClient,
-  AUTOCRAT_PROGRAM_ID,
   AutocratClient,
-  ConditionalVaultClient,
   getProposalAddr,
+} from "@metadaoproject/programs/autocrat/v0.5";
+import {
+  AUTOCRAT_V0_5_PROGRAM_ID,
   InstructionUtils,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/programs";
 import {
   LAMPORTS_PER_SOL,
   Message,
@@ -134,7 +136,7 @@ async function main() {
   console.log("minQuoteLiquidity", minQuoteLiquidity.toString());
 
   const [metaDaoProposal] = getProposalAddr(
-    AUTOCRAT_PROGRAM_ID,
+    AUTOCRAT_V0_5_PROGRAM_ID,
     SQUADS_PROPOSAL_PDA,
   );
 

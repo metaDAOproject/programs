@@ -3,7 +3,7 @@ import {
   LAUNCHPAD_V0_8_PROGRAM_ID,
   LAUNCHPAD_V0_8_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/programs";
 import BN from "bn.js";
 import initializeLaunch from "./unit/initializeLaunch.test.js";
 import startLaunch from "./unit/startLaunch.test.js";

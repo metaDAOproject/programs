@@ -6,8 +6,8 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { assert } from "chai";
-import { LaunchpadClient } from "@metadaoproject/futarchy-v2/launchpad/v0.8";
-import { MAINNET_USDC } from "@metadaoproject/futarchy-v2";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.8";
+import { MAINNET_USDC } from "@metadaoproject/programs";
 import BN from "bn.js";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";

@@ -40,8 +40,10 @@ programs/                    # Solana programs (Anchor)
 ├── mint_governor/          # Delegated minting authority management
 └── damm_v2_cpi/            # Meteora AMM CPI wrapper
 
-sdk/                         # TypeScript client library
-├── src/v0.3/ - v0.7/       # Versioned SDKs (backward compatible)
+sdk/                         # TypeScript client library (@metadaoproject/programs)
+├── src/<program>/          # One module per program (futarchy, launchpad, conditional_vault, ...)
+│   ├── v0.X/               #   Each program is independently versioned
+│   └── index.ts            #   Re-exports the latest version
 └── package.json
 
 tests/                       # TypeScript tests (bankrun + mocha)
@@ -180,7 +182,7 @@ Always append new error variants to the **end** of `#[error_code]` enums. Anchor
 
 ### Adding New Instructions
 1. Add instruction to Rust program in `programs/[program]/src/instructions/`
-2. Update client methods in SDK (`sdk/src/v0.7/`)
+2. Update client methods in the corresponding SDK module at the program's current version (e.g. `sdk/src/futarchy/v0.6/`, `sdk/src/launchpad/v0.7/`)
 3. Add unit tests in `tests/[program]/unit/`
 
 ### Testing with Bankrun
@@ -249,17 +251,29 @@ When designing instructions that involve Squads CPIs, check whether either patte
 
 ## SDK Usage
 
-```typescript
-// Import versioned clients
-import { FutarchyClient, ConditionalVaultClient } from "@metadaoproject/futarchy/v0.7";
+The SDK is published as `@metadaoproject/programs` and is organized **per program**, with each program independently versioned. There is no single SDK-wide version anymore — futarchy is at v0.6, launchpad is at v0.7, conditional_vault is at v0.4, etc.
 
-// Key utilities in sdk/src/v0.7/
-// - constants.ts: Program IDs, MAINNET_USDC, SQUADS_PROGRAM_ID
-// - PDA derivation: getDaoAddr, getProposalAddr, etc.
-// - PriceMath.getAmmPrice for price calculations
+```typescript
+// Top-level imports resolve to the latest version of each program (preferred)
+import {
+  FutarchyClient,
+  LaunchpadClient,
+  ConditionalVaultClient,
+  MAINNET_USDC,
+} from "@metadaoproject/programs";
+
+// Or import from a specific program module
+import { FutarchyClient } from "@metadaoproject/programs/futarchy";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad";
+
+// Or pin to a specific version (only when reading historical accounts or
+// interacting with an older deployed program)
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 ```
 
-**Important:** Always use SDK v0.7 imports (`@metadaoproject/futarchy/v0.7`) for new code. Do not use older SDK versions (v0.3-v0.6).
+Each program module exports a `Client` class (constructed via `Client.createClient({ provider })`), PDA helpers, and generated Anchor types. Shared utilities (`constants.ts`, top-level `pda.ts`, `AmmMath`) are exported from the package root.
+
+**Important:** Always use top-level or per-program imports for new code. Only reach for a versioned subpath (e.g. `@metadaoproject/programs/futarchy/v0.6`) when you specifically need an older program version. See `sdk/README.md` for the full layout.
 
 ## Key External Dependencies
 

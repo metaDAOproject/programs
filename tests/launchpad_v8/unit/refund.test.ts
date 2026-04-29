@@ -8,8 +8,8 @@ import { assert } from "chai";
 import {
   LaunchpadClient,
   getFundingRecordAddr,
-} from "@metadaoproject/futarchy-v2/launchpad/v0.8";
-import { MAINNET_USDC } from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/programs/launchpad/v0.8";
+import { MAINNET_USDC } from "@metadaoproject/programs";
 import BN from "bn.js";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";

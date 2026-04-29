@@ -4,7 +4,7 @@ import {
   SQUADS_PROGRAM_ID,
   getDaoAddr,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   Keypair,

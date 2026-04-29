@@ -1,6 +1,6 @@
 import { Keypair, PublicKey, ComputeBudgetProgram } from "@solana/web3.js";
 import { assert } from "chai";
-import { LaunchpadClient } from "@metadaoproject/futarchy-v2/launchpad/v0.8";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.8";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../utils.js";
 import { expectError } from "../../utils.js";

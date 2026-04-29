@@ -1,4 +1,4 @@
-import { PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/futarchy-v2";
+import { PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   Keypair,
@@ -50,6 +50,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();

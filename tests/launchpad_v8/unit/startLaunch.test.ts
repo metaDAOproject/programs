@@ -1,6 +1,6 @@
 import { PublicKey, Keypair, Signer } from "@solana/web3.js";
 import { assert } from "chai";
-import { LaunchpadClient } from "@metadaoproject/futarchy-v2/launchpad/v0.8";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.8";
 import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {

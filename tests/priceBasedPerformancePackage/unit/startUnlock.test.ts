@@ -10,7 +10,7 @@ import {
 import { assert } from "chai";
 import * as token from "@solana/spl-token";
 import BN from "bn.js";
-import { getPerformancePackageAddr } from "@metadaoproject/futarchy-v2";
+import { getPerformancePackageAddr } from "@metadaoproject/programs";
 import { expectError } from "../../utils.js";
 
 export default function () {

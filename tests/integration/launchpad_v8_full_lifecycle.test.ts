@@ -9,11 +9,11 @@ import {
   MAINNET_USDC,
   LAUNCHPAD_V0_8_PROGRAM_ID,
   LAUNCHPAD_V0_8_MAINNET_METEORA_CONFIG,
-} from "@metadaoproject/futarchy-v2";
+} from "@metadaoproject/programs";
 import {
   LaunchpadClient,
   getFundingRecordAddr,
-} from "@metadaoproject/futarchy-v2/launchpad/v0.8";
+} from "@metadaoproject/programs/launchpad/v0.8";
 import * as multisig from "@sqds/multisig";
 import BN from "bn.js";
 import { initializeMintWithSeeds } from "../launchpad_v8/utils.js";

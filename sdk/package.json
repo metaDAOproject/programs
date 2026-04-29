@@ -1,27 +1,44 @@
 {
-  "name": "@metadaoproject/futarchy",
-  "version": "0.7.4-alpha.3",
+  "name": "@metadaoproject/programs",
+  "version": "0.1.0-alpha.0",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./amm": "./dist/amm/index.js",
+    "./autocrat": "./dist/autocrat/index.js",
+    "./bid_wall": "./dist/bid_wall/index.js",
+    "./conditional_vault": "./dist/conditional_vault/index.js",
+    "./futarchy": "./dist/futarchy/index.js",
+    "./launchpad": "./dist/launchpad/index.js",
+    "./liquidation": "./dist/liquidation/index.js",
+    "./mint_governor": "./dist/mint_governor/index.js",
+    "./performance_package_v2": "./dist/performance_package_v2/index.js",
+    "./price_based_performance_package": "./dist/price_based_performance_package/index.js",
+    "./shared_liquidity_manager": "./dist/shared_liquidity_manager/index.js",
+    "./amm/*": "./dist/amm/*/index.js",
+    "./autocrat/*": "./dist/autocrat/*/index.js",
+    "./bid_wall/*": "./dist/bid_wall/*/index.js",
+    "./conditional_vault/*": "./dist/conditional_vault/*/index.js",
+    "./futarchy/*": "./dist/futarchy/*/index.js",
+    "./launchpad/*": "./dist/launchpad/*/index.js",
+    "./liquidation/*": "./dist/liquidation/*/index.js",
+    "./mint_governor/*": "./dist/mint_governor/*/index.js",
+    "./performance_package_v2/*": "./dist/performance_package_v2/*/index.js",
+    "./price_based_performance_package/*": "./dist/price_based_performance_package/*/index.js",
+    "./shared_liquidity_manager/*": "./dist/shared_liquidity_manager/*/index.js"
+  },
   "license": "BSL-1.0",
   "files": [
     "/dist"
   ],
-  "exports": {
-    ".": "./dist/index.js",
-    "./v0.3": "./dist/v0.3/index.js",
-    "./v0.4": "./dist/v0.4/index.js",
-    "./v0.5": "./dist/v0.5/index.js",
-    "./v0.6": "./dist/v0.6/index.js",
-    "./v0.7": "./dist/v0.7/index.js"
-  },
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "build": "tsc",
-    "build-local": "rm -rf ./dist && cp ../target/types/* ./src/v0.7/types && yarn tsc",
+    "build-local": "rm -rf ./dist && ./sync-types.sh && yarn tsc",
     "prepublishOnly": "yarn lint:fix && yarn build"
   },
   "dependencies": {
@@ -47,7 +64,7 @@
     "solana-bankrun": "^0.2.0",
     "spl-token-bankrun": "0.2.3",
     "ts-mocha": "^10.0.0",
-    "typescript": "^5.5.5"
+    "typescript": "5.9.3"
   },
   "resolutions": {
     "error-ex": "=1.3.2",

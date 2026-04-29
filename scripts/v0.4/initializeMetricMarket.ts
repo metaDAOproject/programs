@@ -2,19 +2,17 @@ import * as token from "@solana/spl-token";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
-  AmmClient,
   ConditionalVault,
   ConditionalVaultClient,
-  getAmmAddr,
   getDownAndUpMintAddrs,
-  getEventAuthorityAddr,
   getFailAndPassMintAddrs,
   getQuestionAddr,
   getVaultAddr,
-  MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.4";
-import { sha256 } from "@metadaoproject/futarchy";
-import { Question, Amm } from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/programs/conditional_vault/v0.4";
+import { sha256 } from "@metadaoproject/programs";
+import { Question } from "@metadaoproject/programs/conditional_vault/v0.4";
+import { Amm, AmmClient, getAmmAddr } from "@metadaoproject/programs/amm/v0.4";
+import { MAINNET_USDC } from "@metadaoproject/programs/";
 import { BN } from "bn.js";
 import { homedir } from "os";
 import { join } from "path";

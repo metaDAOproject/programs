@@ -4,6 +4,7 @@
   "scripts": {
     "lint:fix": "prettier */*{.js,.ts} \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "typecheck": "tsc --noEmit",
     "setup-metric-market": "tsx --tsconfig tsconfig.json scripts/setupMetricMarket.ts",
     "launch-init": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchInit.ts",
     "launch-start": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/launchStart.ts",
@@ -24,8 +25,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "=0.29.0",
     "@inquirer/prompts": "^7.3.3",
-    "@metadaoproject/futarchy": "./sdk",
-    "@metadaoproject/futarchy-v2": "./sdk2",
+    "@metadaoproject/programs": "./sdk",
     "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
     "@metaplex-foundation/umi": "^0.9.1",
     "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
@@ -69,7 +69,7 @@
     "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.1",
-    "typescript": "^4.3.5",
+    "typescript": "5.9.3",
     "typescript-eslint": "^8.43.0"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
