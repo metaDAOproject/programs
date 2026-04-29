@@ -1,10 +1,10 @@
-import { AUTOCRAT_V0_5_PROGRAM_ID } from "@metadaoproject/futarchy";
+import { AUTOCRAT_V0_5_PROGRAM_ID } from "@metadaoproject/programs";
 import {
   AutocratClient,
   getProposalAddr,
-} from "@metadaoproject/futarchy/autocrat/v0.5";
-import { AmmClient } from "@metadaoproject/futarchy/amm/v0.5";
-import { ConditionalVaultClient } from "@metadaoproject/futarchy/conditional_vault/v0.4";
+} from "@metadaoproject/programs/autocrat/v0.5";
+import { AmmClient } from "@metadaoproject/programs/amm/v0.5";
+import { ConditionalVaultClient } from "@metadaoproject/programs/conditional_vault/v0.4";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "bn.js";
 import * as anchor from "@coral-xyz/anchor";

@@ -1,13 +1,13 @@
-import { ConditionalVaultClient } from "@metadaoproject/futarchy/conditional_vault/v0.4";
-import { AmmClient } from "@metadaoproject/futarchy/amm/v0.5";
+import { ConditionalVaultClient } from "@metadaoproject/programs/conditional_vault/v0.4";
+import { AmmClient } from "@metadaoproject/programs/amm/v0.5";
 import {
   AutocratClient,
   getProposalAddr,
-} from "@metadaoproject/futarchy/autocrat/v0.5";
+} from "@metadaoproject/programs/autocrat/v0.5";
 import {
   AUTOCRAT_V0_5_PROGRAM_ID,
   InstructionUtils,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import {
   LAMPORTS_PER_SOL,
   Message,

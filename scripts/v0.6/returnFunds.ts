@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
-import { LaunchpadClient } from "@metadaoproject/futarchy/launchpad/v0.6";
-import { MAINNET_USDC, METADAO_MULTISIG_VAULT } from "@metadaoproject/futarchy";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.6";
+import { MAINNET_USDC, METADAO_MULTISIG_VAULT } from "@metadaoproject/programs";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { BN } from "bn.js";

@@ -3,8 +3,8 @@ import { assert } from "chai";
 import {
   getLaunchSignerAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/launchpad/v0.6";
-import { FutarchyClient, MAINNET_USDC } from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs/launchpad/v0.6";
+import { FutarchyClient, MAINNET_USDC } from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,

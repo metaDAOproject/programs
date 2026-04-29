@@ -3,7 +3,7 @@ import {
   LaunchpadClient,
   getLaunchAddr,
   getLaunchSignerAddr,
-} from "@metadaoproject/futarchy/launchpad/v0.7";
+} from "@metadaoproject/programs/launchpad/v0.7";
 import {
   ComputeBudgetProgram,
   PublicKey,

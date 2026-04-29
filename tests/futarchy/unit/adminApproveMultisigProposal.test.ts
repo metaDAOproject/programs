@@ -1,4 +1,4 @@
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   Keypair,

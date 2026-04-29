@@ -12,7 +12,7 @@ import {
   LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../launchpad/utils.js";
 import { createLookupTableForTransaction } from "../utils.js";

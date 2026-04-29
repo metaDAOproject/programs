@@ -2,7 +2,7 @@ import {
   getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,

@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { FutarchyClient } from "@metadaoproject/futarchy/futarchy/v0.6";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 

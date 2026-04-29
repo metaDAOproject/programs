@@ -1,7 +1,7 @@
 import {
   InstructionUtils,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,

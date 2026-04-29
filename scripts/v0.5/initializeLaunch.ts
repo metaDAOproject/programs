@@ -4,7 +4,7 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/launchpad/v0.5";
+} from "@metadaoproject/programs/launchpad/v0.5";
 import { BN } from "bn.js";
 import { USDC } from "../consts.js";
 import {

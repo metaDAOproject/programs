@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Keypair } from "@solana/web3.js";
-import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.4";
+import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.4";
 import * as token from "@solana/spl-token";
 import { BN } from "bn.js";
 

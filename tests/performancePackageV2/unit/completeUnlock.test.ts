@@ -11,7 +11,7 @@ import {
   MintGovernorClient,
   PerformancePackageV2Client,
   getPerformancePackageV2Addr,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import {
   setupPerformancePackageV2,
   setupMintGovernorWithAuthority,

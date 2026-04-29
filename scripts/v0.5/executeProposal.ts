@@ -2,8 +2,8 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   PERMISSIONLESS_ACCOUNT,
   DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY,
-} from "@metadaoproject/futarchy";
-import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.5";
+} from "@metadaoproject/programs";
+import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.5";
 import {
   Keypair,
   PublicKey,

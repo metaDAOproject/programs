@@ -22,11 +22,11 @@ import {
   MAINNET_USDC,
   DEVNET_USDC,
   USDC_DECIMALS,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import {
   AutocratClient,
   getDaoAddr,
-} from "@metadaoproject/futarchy/autocrat/v0.5";
+} from "@metadaoproject/programs/autocrat/v0.5";
 import { BN } from "bn.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";

@@ -12,7 +12,7 @@ import {
 import { expectError, setupBasicDao } from "../../utils.js";
 import BN from "bn.js";
 import { assert } from "chai";
-import { METADAO_MULTISIG_VAULT } from "@metadaoproject/futarchy";
+import { METADAO_MULTISIG_VAULT } from "@metadaoproject/programs";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 
 export default function suite() {

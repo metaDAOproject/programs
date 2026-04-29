@@ -4,8 +4,8 @@ import {
   CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   FUTARCHY_V0_6_PROGRAM_ID,
   LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG as V0_6_MAINNET_METEORA_CONFIG,
-} from "@metadaoproject/futarchy";
-import { FutarchyClient } from "@metadaoproject/futarchy/futarchy/v0.6";
+} from "@metadaoproject/programs";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import { PublicKey } from "@solana/web3.js";
 
 const provider = anchor.AnchorProvider.env();

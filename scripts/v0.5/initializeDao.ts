@@ -4,11 +4,11 @@ import {
   MAINNET_USDC,
   SQUADS_PROGRAM_CONFIG_TREASURY,
   DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import {
   AutocratClient,
   getDaoAddr,
-} from "@metadaoproject/futarchy/autocrat/v0.5";
+} from "@metadaoproject/programs/autocrat/v0.5";
 import {
   Keypair,
   PublicKey,

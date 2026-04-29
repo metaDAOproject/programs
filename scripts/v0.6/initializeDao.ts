@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   FutarchyClient,
   getDaoAddr,
-} from "@metadaoproject/futarchy/futarchy/v0.6";
+} from "@metadaoproject/programs/futarchy/v0.6";
 import {
   Keypair,
   PublicKey,
@@ -12,7 +12,7 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
-import { DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY } from "@metadaoproject/futarchy";
+import { DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY } from "@metadaoproject/programs";
 import * as token from "@solana/spl-token";
 
 // DAO DETAILS

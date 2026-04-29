@@ -2,7 +2,7 @@ import {
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
   METADAO_MULTISIG_VAULT,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,

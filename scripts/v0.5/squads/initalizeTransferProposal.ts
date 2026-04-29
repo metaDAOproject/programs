@@ -1,7 +1,7 @@
 import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 import {
   createTransferInstruction,
   getAssociatedTokenAddressSync,

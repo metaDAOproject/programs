@@ -1,11 +1,11 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
-import { FutarchyClient } from "@metadaoproject/futarchy/futarchy/v0.6";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import {
   CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   FUTARCHY_V0_6_PROGRAM_ID,
   METADAO_MULTISIG_VAULT,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
 
 // Set the DAO address before running the script

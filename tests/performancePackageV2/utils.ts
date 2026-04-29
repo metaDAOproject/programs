@@ -16,11 +16,11 @@ import {
   getPerformancePackageV2Addr,
   PriceMath,
   getDaoAddr,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import type {
   PerformancePackageV2OracleReader,
   PerformancePackageV2RewardFunction,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 
 /**
  * Creates a mint with the specified authority

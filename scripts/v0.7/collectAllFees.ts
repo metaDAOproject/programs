@@ -1,13 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
-import { BidWallClient } from "@metadaoproject/futarchy/bid_wall/v0.7";
-import { FutarchyClient } from "@metadaoproject/futarchy/futarchy/v0.6";
+import { BidWallClient } from "@metadaoproject/programs/bid_wall/v0.7";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import {
   LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
   CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   FUTARCHY_V0_6_PROGRAM_ID,
   BID_WALL_V0_7_PROGRAM_ID,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import { PublicKey } from "@solana/web3.js";
 import {
   getAssociatedTokenAddressSync,

@@ -4,9 +4,9 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   AutocratClient,
   AutocratIDL,
-} from "@metadaoproject/futarchy/autocrat/v0.4";
-import { PriceMath } from "@metadaoproject/futarchy";
-import { AUTOCRAT_V0_4_PROGRAM_ID } from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs/autocrat/v0.4";
+import { PriceMath } from "@metadaoproject/programs";
+import { AUTOCRAT_V0_4_PROGRAM_ID } from "@metadaoproject/programs";
 
 async function main() {
   // Initialize clients

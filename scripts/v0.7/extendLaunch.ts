@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
-import { LaunchpadClient } from "@metadaoproject/futarchy/launchpad/v0.7";
-import { METADAO_MULTISIG_VAULT } from "@metadaoproject/futarchy";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.7";
+import { METADAO_MULTISIG_VAULT } from "@metadaoproject/programs";
 import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 
 // Set the launch address before running the script

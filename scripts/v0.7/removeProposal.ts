@@ -1,9 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
-import { FutarchyClient } from "@metadaoproject/futarchy/futarchy/v0.6";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import {
   FUTARCHY_V0_6_PROGRAM_ID,
   CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import { PublicKey } from "@solana/web3.js";
 
 // Set the proposal address before running the script

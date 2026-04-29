@@ -3,7 +3,7 @@ import {
   getVaultAddr,
   getConditionalTokenMintAddr,
   sha256,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, getMint } from "spl-token-bankrun";

@@ -9,7 +9,7 @@ import {
   FutarchyClient,
   LaunchpadClient,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../utils.js";
 import { createLookupTableForTransaction, expectError } from "../../utils.js";

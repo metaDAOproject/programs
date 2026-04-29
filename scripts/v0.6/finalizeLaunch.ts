@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   LaunchpadClient,
   getLaunchAddr,
-} from "@metadaoproject/futarchy/launchpad/v0.6";
+} from "@metadaoproject/programs/launchpad/v0.6";
 import {
   PublicKey,
   TransactionMessage,

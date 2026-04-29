@@ -1,7 +1,7 @@
 import { ComputeBudgetProgram, PublicKey, Transaction } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { ConditionalVaultClient } from "@metadaoproject/futarchy/conditional_vault/v0.4";
-import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.4";
+import { ConditionalVaultClient } from "@metadaoproject/programs/conditional_vault/v0.4";
+import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.4";
 
 const provider = anchor.AnchorProvider.env();
 const autocrat: AutocratClient = AutocratClient.createClient({ provider });

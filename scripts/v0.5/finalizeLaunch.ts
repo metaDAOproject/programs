@@ -6,7 +6,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient } from "@metadaoproject/futarchy/launchpad/v0.5";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.5";
 
 import dotenv from "dotenv";
 import { createLookupTableForTransaction } from "../utils/utils.js";

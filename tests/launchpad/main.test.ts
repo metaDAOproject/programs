@@ -11,7 +11,7 @@ import {
   LAUNCHPAD_V0_6_PROGRAM_ID,
   LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import BN from "bn.js";
 
 // TODO add a many-outcome integration test

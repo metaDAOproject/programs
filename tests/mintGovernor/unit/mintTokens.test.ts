@@ -5,7 +5,7 @@ import { assert } from "chai";
 import {
   MintGovernorClient,
   getMintAuthorityAddr,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import {
   setupMintWithGovernor,
   createMintAndGovernor,

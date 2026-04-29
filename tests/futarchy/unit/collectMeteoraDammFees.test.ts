@@ -14,7 +14,7 @@ import {
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
   METADAO_MULTISIG_VAULT,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../../launchpad_v7/utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";

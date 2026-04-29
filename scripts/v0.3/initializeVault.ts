@@ -8,7 +8,7 @@ import {
   getVaultAddr,
   getVaultFinalizeMintAddr,
   getVaultRevertMintAddr,
-} from "@metadaoproject/futarchy/conditional_vault/v0.3";
+} from "@metadaoproject/programs/conditional_vault/v0.3";
 
 const CONDITIONAL_VAULT_PROGRAM_ID = new PublicKey(
   "4nCk4qKJSJf8pzJadMnr9LubA6Y7Zw3EacsVqH1TwVXH",

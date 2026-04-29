@@ -1,7 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { ConditionalVaultClient } from "@metadaoproject/futarchy/conditional_vault/v0.3";
-import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.3";
+import { ConditionalVaultClient } from "@metadaoproject/programs/conditional_vault/v0.3";
+import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.3";
 
 const provider = anchor.AnchorProvider.env();
 

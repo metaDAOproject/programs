@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.3";
+import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.3";
 import {
   DEAN_DEVNET,
   DEVNET_DARK,

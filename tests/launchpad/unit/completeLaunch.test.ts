@@ -9,12 +9,12 @@ import {
   FutarchyClient,
   getMetadataAddr,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import {
   getLiquidityPoolAddr,
   getRaydiumCpmmLpMintAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/launchpad/v0.6";
+} from "@metadaoproject/programs/launchpad/v0.6";
 import { BN } from "bn.js";
 import { deserializeMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import {

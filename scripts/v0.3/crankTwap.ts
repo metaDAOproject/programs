@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
-import { AmmClient } from "@metadaoproject/futarchy/amm/v0.3";
-import { AutocratClient } from "@metadaoproject/futarchy/autocrat/v0.3";
+import { AmmClient } from "@metadaoproject/programs/amm/v0.3";
+import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.3";
 import { PublicKey } from "@solana/web3.js";
 
 const proposal1 = new PublicKey("Dssb1oTTqKjWJTe8QVrStFXxcMZfd7LTSpTRbuHuNdnW");

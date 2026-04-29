@@ -5,7 +5,7 @@ import {
   LaunchpadClient,
   getLaunchAddr,
   getLaunchSignerAddr,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 
 export async function initializeMintWithSeeds(
   banksClient: BanksClient,

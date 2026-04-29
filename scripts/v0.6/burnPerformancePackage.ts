@@ -1,10 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
-import { PriceBasedPerformancePackageClient } from "@metadaoproject/futarchy/price_based_performance_package/v0.6";
+import { PriceBasedPerformancePackageClient } from "@metadaoproject/programs/price_based_performance_package/v0.6";
 import {
   METADAO_MULTISIG_VAULT,
   PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
 
 // Set the performance package address before running the script

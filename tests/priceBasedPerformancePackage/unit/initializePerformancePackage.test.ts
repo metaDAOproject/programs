@@ -11,7 +11,7 @@ import {
   getPerformancePackageAddr,
   InitializePerformancePackageParams,
   Tranche,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 import { expectError } from "../../utils.js";
 
 export default function () {
