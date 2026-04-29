@@ -89,7 +89,7 @@ assert.equal(balance.toString(), "500000000", "should have 500 tokens");
 Exception: keep messages in `expectError()` and `assert.fail()`.
 
 ### Token amounts
-Standard mint decimals is 6:
+Standard token mint decimals: 6
 - 100 tokens = `100_000_000`
 - 1,000 tokens = `1_000_000_000`
 
