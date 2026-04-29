@@ -17,14 +17,16 @@ import {
   AuthorityType,
 } from "@solana/spl-token";
 import {
-  AutocratClient,
-  getDaoAddr,
   getMetadataAddr,
   SQUADS_PROGRAM_CONFIG_TREASURY,
   MAINNET_USDC,
   DEVNET_USDC,
   USDC_DECIMALS,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/programs";
+import {
+  AutocratClient,
+  getDaoAddr,
+} from "@metadaoproject/programs/autocrat/v0.5";
 import { BN } from "bn.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";

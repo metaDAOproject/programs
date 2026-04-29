@@ -4,7 +4,7 @@ import {
   PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
   PriceBasedPerformancePackageClient,
   METADAO_MULTISIG_VAULT,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/programs";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
 
 // Set the performance package address before running the script

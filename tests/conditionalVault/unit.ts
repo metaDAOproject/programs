@@ -25,15 +25,15 @@ const { PublicKey, Keypair } = web3;
 import {
   ConditionalVault,
   IDL as ConditionalVaultIDL,
-} from "../../target/types/conditional_vault";
+} from "../../target/types/conditional_vault.js";
 import {
-  CONDITIONAL_VAULT_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   ConditionalVaultClient,
   getConditionalTokenMintAddr,
   getQuestionAddr,
   getVaultAddr,
   sha256,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/programs";
 
 export type VaultProgram = anchor.Program<ConditionalVault>;
 export type PublicKey = anchor.web3.PublicKey;
@@ -97,7 +97,7 @@ describe("conditional_vault", async function () {
 
     vaultProgram = new Program<ConditionalVault>(
       ConditionalVaultIDL,
-      CONDITIONAL_VAULT_PROGRAM_ID,
+      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
       provider,
     );
 
@@ -463,7 +463,7 @@ describe("conditional_vault", async function () {
       ).then((acc) => acc.amount);
 
       await vaultClient
-        .redeemTokensIx(question, vault, underlyingTokenMint, new BN(600), 2)
+        .redeemTokensIx(question, vault, underlyingTokenMint, 2)
         .rpc();
 
       const balanceAfter = await getAccount(

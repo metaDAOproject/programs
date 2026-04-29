@@ -1,11 +1,10 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  FutarchyClient,
   getLaunchSignerAddr,
   LaunchpadClient,
-  MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/programs/launchpad/v0.6";
+import { FutarchyClient, MAINNET_USDC } from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,

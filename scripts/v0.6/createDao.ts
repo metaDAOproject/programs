@@ -2,12 +2,14 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   FutarchyClient,
   getDaoAddr,
+} from "@metadaoproject/programs/futarchy/v0.6";
+import {
   MAINNET_USDC,
   SQUADS_PROGRAM_CONFIG_TREASURY,
   DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY,
   DEVNET_USDC,
   PriceMath,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/programs";
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";

@@ -10,10 +10,11 @@ import {
   DAMM_V2_PROGRAM_ID,
   FutarchyClient,
   LaunchpadClient,
-  MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.7";
+  METADAO_MULTISIG_VAULT,
+} from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../../launchpad_v7/utils.js";
 import { createLookupTableForTransaction } from "../../utils.js";
@@ -24,7 +25,6 @@ import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.7/constants.js";
 import { CpAmm } from "@meteora-ag/cp-amm-sdk";
 
 export default function suite() {
@@ -73,6 +73,7 @@ export default function suite() {
         performancePackageTokenAmount: premineAmount,
         monthsUntilInsidersCanUnlock: 18,
         teamAddress: PublicKey.default,
+        hasBidWall: false,
       })
       .rpc();
 
@@ -169,20 +170,10 @@ export default function suite() {
     const [pool] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("pool"),
-        MAINNET_METEORA_CONFIG.toBuffer(),
+        LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG.toBuffer(),
         sortedMint1,
         sortedMint2,
       ],
-      DAMM_V2_PROGRAM_ID,
-    );
-
-    const [tokenAVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), META.toBuffer(), pool.toBuffer()],
-      DAMM_V2_PROGRAM_ID,
-    );
-
-    const [tokenBVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), MAINNET_USDC.toBuffer(), pool.toBuffer()],
       DAMM_V2_PROGRAM_ID,
     );
 
@@ -202,8 +193,6 @@ export default function suite() {
         payer: this.payer.publicKey,
         pool: pool,
         program: DAMM_V2_PROGRAM_ID,
-        tokenAVault: tokenAVault,
-        tokenBVault: tokenBVault,
       })
       .transaction();
 
@@ -303,7 +292,7 @@ export default function suite() {
         quoteMint: MAINNET_USDC,
         transactionIndex:
           BigInt(squadsMultisigAccount.transactionIndex.toString()) + 1n,
-        meteoraConfig: MAINNET_METEORA_CONFIG,
+        meteoraConfig: LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
         admin: this.payer.publicKey,
       })
       .preInstructions([

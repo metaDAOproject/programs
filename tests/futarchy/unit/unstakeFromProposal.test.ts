@@ -1,7 +1,7 @@
 import {
   InstructionUtils,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -76,6 +76,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();

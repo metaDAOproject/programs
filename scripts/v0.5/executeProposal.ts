@@ -1,12 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
 import {
-  AutocratClient,
-  getDaoAddr,
-  DEVNET_USDC,
-  MAINNET_USDC,
-  SQUADS_PROGRAM_CONFIG_TREASURY,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.5";
+  DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY,
+} from "@metadaoproject/programs";
+import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.5";
 import {
   Keypair,
   PublicKey,
@@ -16,7 +13,6 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
-import { DEVNET_SQUADS_PROGRAM_CONFIG_TREASURY } from "../../sdk/src/v0.5/constants.js";
 import * as token from "@solana/spl-token";
 
 const EXISTING_TOKEN = new PublicKey(

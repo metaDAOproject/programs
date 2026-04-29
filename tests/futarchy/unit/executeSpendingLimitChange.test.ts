@@ -1,7 +1,4 @@
-import {
-  PERMISSIONLESS_ACCOUNT,
-  PriceMath,
-} from "@metadaoproject/futarchy/v0.6";
+import { PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -169,7 +166,7 @@ export default function suite() {
       },
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeSpendingLimitChange()
       .accounts({
         squadsMultisig: multisigPda,
@@ -293,7 +290,7 @@ export default function suite() {
       enqueuedTimestamp: new BN(0),
     };
     const daoAccountBuffer =
-      await this.futarchy.autocrat.account.dao.coder.accounts.encode(
+      await this.futarchy.futarchy.account.dao.coder.accounts.encode(
         "dao",
         daoAccount,
       );
@@ -334,7 +331,7 @@ export default function suite() {
       "Should fail because there is an active optimistic proposal",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeSpendingLimitChange()
       .accounts({
         squadsMultisig: multisigPda,
@@ -461,7 +458,7 @@ export default function suite() {
       "The transaction should not be executed because it contains a call to remove the DAO as a member",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeSpendingLimitChange()
       .accounts({
         squadsMultisig: multisigPda,
@@ -588,7 +585,7 @@ export default function suite() {
       "The transaction should not be executed because it contains a call to remove the DAO as a member",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeSpendingLimitChange()
       .accounts({
         squadsMultisig: multisigPda,

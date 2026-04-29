@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { FutarchyClient } from "@metadaoproject/futarchy/v0.7";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";

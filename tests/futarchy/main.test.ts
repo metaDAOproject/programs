@@ -24,9 +24,9 @@ import unstakeFromProposal from "./unit/unstakeFromProposal.test.js";
 
 import { PublicKey } from "@solana/web3.js";
 import {
-  LAUNCHPAD_PROGRAM_ID,
-  MAINNET_METEORA_CONFIG,
-} from "@metadaoproject/futarchy/v0.7";
+  LAUNCHPAD_V0_7_PROGRAM_ID,
+  LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
+} from "@metadaoproject/programs";
 
 export default function suite() {
   before(async function () {
@@ -41,7 +41,7 @@ export default function suite() {
 
     const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
       [Buffer.from("damm_pool_creator_authority")],
-      LAUNCHPAD_PROGRAM_ID,
+      LAUNCHPAD_V0_7_PROGRAM_ID,
     );
 
     dynamicConfig.data.set(
@@ -50,7 +50,10 @@ export default function suite() {
     );
     dynamicConfig.data.set([1], configTypeOffset);
 
-    this.context.setAccount(MAINNET_METEORA_CONFIG, dynamicConfig);
+    this.context.setAccount(
+      LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
+      dynamicConfig,
+    );
   });
   describe("#initialize_dao", initializeDao);
   describe("#initialize_proposal", initializeProposal);

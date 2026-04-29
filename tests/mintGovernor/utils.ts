@@ -9,7 +9,7 @@ import { BanksClient } from "solana-bankrun";
 import {
   MintGovernorClient,
   getMintGovernorAddr,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/programs";
 
 /**
  * Creates a mint with the payer as the mint authority

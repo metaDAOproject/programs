@@ -2,7 +2,9 @@ import {
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
   SQUADS_PROGRAM_ID,
-} from "@metadaoproject/futarchy/v0.7";
+  getDaoAddr,
+  MAINNET_USDC,
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   Keypair,
@@ -14,7 +16,6 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
-import { getDaoAddr, MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   createTransferInstruction,
@@ -268,7 +269,7 @@ export default function suite() {
       programId: squads.PROGRAM_ID,
     });
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeSpendingLimitChange()
       .accounts({
         squadsMultisig: multisigPda,
@@ -363,7 +364,7 @@ export default function suite() {
     };
 
     const daoAccountBuffer =
-      await this.futarchy.autocrat.account.dao.coder.accounts.encode(
+      await this.futarchy.futarchy.account.dao.coder.accounts.encode(
         "dao",
         daoAccount,
       );
@@ -535,7 +536,7 @@ export default function suite() {
         true,
       );
 
-      return ctx.futarchy.autocrat.methods
+      return ctx.futarchy.futarchy.methods
         .initiateVaultSpendOptimisticProposal({ amount })
         .accounts({
           squadsMultisig: multisigPda,

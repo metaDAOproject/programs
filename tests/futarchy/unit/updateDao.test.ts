@@ -14,8 +14,8 @@ import {
   getDaoAddr,
   PriceMath,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.7";
-import { sha256 } from "@metadaoproject/futarchy";
+  sha256,
+} from "@metadaoproject/programs";
 import BN from "bn.js";
 import { setOptimisticGovernanceEnabled } from "../../utils.js";
 

@@ -2,7 +2,7 @@ import {
   getDaoAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -132,7 +132,7 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx);
 
-    // Now initialize the autocrat proposal
+    // Now initialize the futarchy proposal
     const proposal = await this.futarchy.initializeProposal(
       dao,
       squadsProposalPda,

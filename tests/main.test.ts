@@ -26,7 +26,6 @@ import {
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_ID,
   PERMISSIONLESS_ACCOUNT,
-  FUTARCHY_PROGRAM_ID,
   getDaoAddr,
   PriceMath,
   getProposalAddr,
@@ -34,13 +33,14 @@ import {
   InstructionUtils,
   getPerformancePackageAddr,
   DAMM_V2_PROGRAM_ID,
-  LAUNCHPAD_PROGRAM_ID,
-  MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
   BidWallClient,
   MintGovernorClient,
   LiquidationClient,
-} from "@metadaoproject/futarchy/v0.7";
-import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/futarchy/v0.6";
+  LOW_FEE_RAYDIUM_CONFIG,
+  sha256,
+} from "@metadaoproject/programs";
+import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/programs/launchpad/v0.6";
 
 import {
   PublicKey,
@@ -66,7 +66,6 @@ import { assert } from "chai";
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import * as fs from "fs";
-import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
 import { AccountInfo } from "@solana/web3.js";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
@@ -80,7 +79,6 @@ import mintAndSwap from "./integration/mintAndSwap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
 import fullLaunch_v7 from "./integration/fullLaunch_v7.test.js";
 import { BN } from "bn.js";
-import { sha256 } from "@metadaoproject/futarchy";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 

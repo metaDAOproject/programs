@@ -12,9 +12,8 @@ import {
 import { expectError, setupBasicDao } from "../../utils.js";
 import BN from "bn.js";
 import { assert } from "chai";
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.6";
+import { METADAO_MULTISIG_VAULT } from "@metadaoproject/programs";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
-import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.6/constants.js";
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;

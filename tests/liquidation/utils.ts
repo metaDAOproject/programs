@@ -4,7 +4,7 @@ import {
   ComputeBudgetProgram,
   SystemProgram,
 } from "@solana/web3.js";
-import { LiquidationClient } from "@metadaoproject/futarchy/v0.7";
+import { LiquidationClient } from "@metadaoproject/programs";
 import BN from "bn.js";
 
 export async function setupLiquidation(ctx: Mocha.Context): Promise<{

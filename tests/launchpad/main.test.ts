@@ -8,13 +8,11 @@ import closeLaunch from "./unit/closeLaunch.test.js";
 import returnFunds from "./unit/returnFunds.test.js";
 import { PublicKey } from "@solana/web3.js";
 import {
-  LAUNCHPAD_PROGRAM_ID,
-  LaunchpadClient,
-  MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_6_PROGRAM_ID,
+  LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/programs";
 import BN from "bn.js";
-import { BankrunProvider } from "anchor-bankrun";
 
 // TODO add a many-outcome integration test
 export default function suite() {
@@ -30,7 +28,7 @@ export default function suite() {
 
     const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
       [Buffer.from("damm_pool_creator_authority")],
-      LAUNCHPAD_PROGRAM_ID,
+      LAUNCHPAD_V0_6_PROGRAM_ID,
     );
 
     dynamicConfig.data.set(
@@ -39,7 +37,10 @@ export default function suite() {
     );
     dynamicConfig.data.set([1], configTypeOffset);
 
-    this.context.setAccount(MAINNET_METEORA_CONFIG, dynamicConfig);
+    this.context.setAccount(
+      LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG,
+      dynamicConfig,
+    );
 
     this.setupBasicLaunch = async ({
       baseMint,

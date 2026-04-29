@@ -1,7 +1,4 @@
-import {
-  PERMISSIONLESS_ACCOUNT,
-  PriceMath,
-} from "@metadaoproject/futarchy/v0.6";
+import { PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -77,6 +74,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();
@@ -118,7 +116,7 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx);
 
-    // Now initialize the autocrat proposal
+    // Now initialize the futarchy proposal
     proposal = await this.futarchy.initializeProposal(dao, squadsProposalPda);
 
     await this.futarchy
@@ -172,26 +170,6 @@ export default function suite() {
       USDC,
       dao,
     );
-
-    // await this.autocratClient.
-    // await this.futarchy.autocrat.methods.launchProposal()
-    //   .accounts({
-    //     proposal,
-    //     dao,
-    //     baseVault,
-    //     quoteVault,
-    //     passBaseMint,
-    //     passQuoteMint,
-    //     failBaseMint,
-    //     failQuoteMint,
-    //     ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
-    //     ammPassQuoteVault: getAssociatedTokenAddressSync(passQuoteMint, dao, true),
-    //     ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
-    //     ammFailQuoteVault: getAssociatedTokenAddressSync(failQuoteMint, dao, true),
-    //     payer: this.payer.publicKey,
-    //   })
-    //   .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })])
-    //   .rpc();
 
     await this.futarchy
       .conditionalSwapIx({
@@ -457,6 +435,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();
@@ -500,7 +479,7 @@ export default function suite() {
 
     await this.banksClient.processTransaction(tx);
 
-    // Now initialize the autocrat proposal
+    // Now initialize the futarchy proposal
     const teamSponsoredProposal = await this.futarchy.initializeProposal(
       daoWithTeamSponsorship,
       squadsProposalPda,

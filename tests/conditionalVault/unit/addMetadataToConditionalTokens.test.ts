@@ -1,9 +1,9 @@
-import { sha256 } from "@metadaoproject/futarchy";
 import {
+  sha256,
   ConditionalVaultClient,
   getConditionalTokenMintAddr,
   getMetadataAddr,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/programs";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint } from "spl-token-bankrun";

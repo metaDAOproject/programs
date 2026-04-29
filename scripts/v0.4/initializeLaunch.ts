@@ -5,7 +5,7 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/programs/launchpad/v0.4";
 import { BN } from "bn.js";
 import { homedir } from "os";
 import { join } from "path";

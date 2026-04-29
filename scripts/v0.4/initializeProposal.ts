@@ -3,10 +3,10 @@ import { PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
   AutocratClient,
-  AUTOCRAT_PROGRAM_ID,
   AutocratIDL,
-  PriceMath,
-} from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/programs/autocrat/v0.4";
+import { PriceMath } from "@metadaoproject/programs";
+import { AUTOCRAT_V0_4_PROGRAM_ID } from "@metadaoproject/programs";
 
 async function main() {
   // Initialize clients
@@ -61,7 +61,7 @@ async function main() {
 
   const autocrat = new anchor.Program(
     AutocratIDL,
-    AUTOCRAT_PROGRAM_ID,
+    AUTOCRAT_V0_4_PROGRAM_ID,
     provider,
   );
 

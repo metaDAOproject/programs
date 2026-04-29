@@ -13,7 +13,7 @@ import {
   MAINNET_USDC,
   getBidWallAddr,
   METADAO_MULTISIG_VAULT,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -83,6 +83,7 @@ export default function suite() {
         performancePackageTokenAmount: new BN(10), // Effectively no premine
         monthsUntilInsidersCanUnlock: 24, // 2 years
         teamAddress: PublicKey.default,
+        hasBidWall: true,
       })
       .rpc();
 
@@ -137,7 +138,6 @@ export default function suite() {
     dao = launchAccount.dao;
     daoTreasury = launchAccount.daoVault;
 
-    let ammBaseVaultReserves = new BN(await this.getTokenBalance(META, dao));
     let ammQuoteVaultReserves = new BN(
       await this.getTokenBalance(MAINNET_USDC, dao),
     );

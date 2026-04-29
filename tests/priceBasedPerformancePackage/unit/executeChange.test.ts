@@ -7,7 +7,7 @@ import {
 import { assert } from "chai";
 import BN from "bn.js";
 import { expectError } from "../../utils.js";
-import { getChangeRequestAddr } from "@metadaoproject/futarchy/v0.6";
+import { getChangeRequestAddr } from "@metadaoproject/programs";
 
 export default function () {
   let createKey: Keypair;

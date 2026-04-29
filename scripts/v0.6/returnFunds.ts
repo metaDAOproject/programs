@@ -1,14 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
-import {
-  CONDITIONAL_VAULT_PROGRAM_ID,
-  FUTARCHY_PROGRAM_ID,
-  FutarchyClient,
-  LaunchpadClient,
-  MAINNET_USDC,
-  METADAO_MULTISIG_VAULT,
-  MAINNET_METEORA_CONFIG as V0_6_MAINNET_METEORA_CONFIG,
-} from "@metadaoproject/futarchy/v0.6";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.6";
+import { MAINNET_USDC, METADAO_MULTISIG_VAULT } from "@metadaoproject/programs";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { BN } from "bn.js";
