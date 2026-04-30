@@ -1,13 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
+import { BidWallClient } from "@metadaoproject/programs/bid_wall/v0.7";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import {
-  CONDITIONAL_VAULT_PROGRAM_ID,
-  FUTARCHY_PROGRAM_ID,
-  FutarchyClient,
-  MAINNET_METEORA_CONFIG,
-  BidWallClient,
-  BID_WALL_PROGRAM_ID,
-} from "@metadaoproject/futarchy/v0.7";
+  LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+  FUTARCHY_V0_6_PROGRAM_ID,
+  BID_WALL_V0_7_PROGRAM_ID,
+} from "@metadaoproject/programs";
 import { PublicKey } from "@solana/web3.js";
 import {
   getAssociatedTokenAddressSync,
@@ -28,14 +28,14 @@ const payer = provider.wallet["payer"];
 
 const futarchy: FutarchyClient = new FutarchyClient(
   provider,
-  FUTARCHY_PROGRAM_ID,
-  CONDITIONAL_VAULT_PROGRAM_ID,
+  FUTARCHY_V0_6_PROGRAM_ID,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   [],
 );
 
 const bidWallClient: BidWallClient = BidWallClient.createClient({
   provider,
-  bidWallProgramId: BID_WALL_PROGRAM_ID,
+  bidWallProgramId: BID_WALL_V0_7_PROGRAM_ID,
 });
 
 interface FeeCollectionResult {
@@ -53,7 +53,7 @@ interface FeeCollectionResult {
 const collectAllFees = async () => {
   // Fetch all DAOs
   console.log("[1] Fetching all DAOs...");
-  const allDaos = await futarchy.autocrat.account.dao.all();
+  const allDaos = await futarchy.futarchy.account.dao.all();
   console.log(`Found ${allDaos.length} DAOs`);
 
   // Fetch all bid walls
@@ -153,7 +153,7 @@ const collectAllFees = async () => {
           quoteMint: dao.account.quoteMint,
           transactionIndex:
             BigInt(squadsMultisigAccount.transactionIndex.toString()) + 1n,
-          meteoraConfig: MAINNET_METEORA_CONFIG,
+          meteoraConfig: LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
         })
         .preInstructions([createBaseAtaIx, createQuoteAtaIx])
         .rpc();

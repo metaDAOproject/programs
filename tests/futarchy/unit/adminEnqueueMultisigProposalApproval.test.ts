@@ -1,4 +1,4 @@
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.6";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -48,7 +48,7 @@ export default function suite() {
         daoKey.toBuffer(),
         new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
       ],
-      context.futarchy.autocrat.programId,
+      context.futarchy.futarchy.programId,
     );
     return pda;
   };
@@ -109,7 +109,7 @@ export default function suite() {
 
     const enqueuedApprovalPda = deriveEnqueuedApprovalPda(this, dao, 1n);
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
       .accounts({
         dao,
@@ -122,7 +122,7 @@ export default function suite() {
       .rpc();
 
     const enqueued =
-      await this.futarchy.autocrat.account.enqueuedMultisigProposalApproval.fetch(
+      await this.futarchy.futarchy.account.enqueuedMultisigProposalApproval.fetch(
         enqueuedApprovalPda,
       );
     assert.equal(enqueued.dao.toBase58(), dao.toBase58());
@@ -148,7 +148,7 @@ export default function suite() {
       "enqueue should fail when the AMM is not in Spot state",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
       .accounts({
         dao,
@@ -172,7 +172,7 @@ export default function suite() {
 
     const enqueuedApprovalPda = deriveEnqueuedApprovalPda(this, dao, 1n);
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
       .accounts({
         dao,
@@ -185,7 +185,7 @@ export default function suite() {
       .rpc();
 
     try {
-      await this.futarchy.autocrat.methods
+      await this.futarchy.futarchy.methods
         .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
         .accounts({
           dao,
@@ -217,7 +217,7 @@ export default function suite() {
 
     const enqueuedApprovalPda = deriveEnqueuedApprovalPda(this, dao, 1n);
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
       .accounts({
         dao,
@@ -229,7 +229,7 @@ export default function suite() {
       .signers([this.payer])
       .rpc();
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeMultisigProposalApproval()
       .accounts({
         dao,
@@ -247,7 +247,7 @@ export default function suite() {
       "second enqueue should fail because proposal is no longer Active",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
       .accounts({
         dao,
@@ -331,7 +331,7 @@ export default function suite() {
       configTransactionIndex,
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminEnqueueMultisigProposalApproval({
         transactionIndex: new BN(configTransactionIndex.toString()),
       })
@@ -345,7 +345,7 @@ export default function suite() {
       .signers([this.payer])
       .rpc();
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeMultisigProposalApproval()
       .accounts({
         dao,
@@ -375,7 +375,7 @@ export default function suite() {
         programId: multisig.PROGRAM_ID,
       });
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
       .accounts({
         dao,
@@ -403,7 +403,7 @@ export default function suite() {
       "enqueue should fail because the proposal was invalidated by a later config tx",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
       .accounts({
         dao,

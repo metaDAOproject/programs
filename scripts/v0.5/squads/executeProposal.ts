@@ -1,7 +1,7 @@
 import { PublicKey, Transaction } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs/";
 import { getSquadsPdasFromDao } from "../../utils/squads.js";
 
 const provider = anchor.AnchorProvider.env();

@@ -7,11 +7,13 @@ use conditional_vault::{ConditionalVault, Question};
 pub mod error;
 pub mod events;
 pub mod instructions;
+pub mod squads;
 pub mod state;
 
 pub use error::FutarchyError;
 pub use events::*;
 pub use instructions::*;
+pub use squads::*;
 pub use state::*;
 
 #[cfg(not(feature = "no-entrypoint"))]
@@ -103,6 +105,10 @@ pub mod futarchy {
         UpdateDao::handle(ctx, dao_params)
     }
 
+    pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
+        ResizeDao::handle(ctx)
+    }
+
     // AMM instructions
 
     pub fn spot_swap(ctx: Context<SpotSwap>, params: SpotSwapParams) -> Result<()> {
@@ -151,6 +157,19 @@ pub mod futarchy {
     #[access_control(ctx.accounts.validate())]
     pub fn collect_meteora_damm_fees(ctx: Context<CollectMeteoraDammFees>) -> Result<()> {
         CollectMeteoraDammFees::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn initiate_vault_spend_optimistic_proposal(
+        ctx: Context<InitiateVaultSpendOptimisticProposal>,
+        params: InitiateVaultSpendOptimisticProposalParams,
+    ) -> Result<()> {
+        InitiateVaultSpendOptimisticProposal::handle(ctx, params)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn finalize_optimistic_proposal(ctx: Context<FinalizeOptimisticProposal>) -> Result<()> {
+        FinalizeOptimisticProposal::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate(&args))]

@@ -10,7 +10,7 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { TestContext } from "./main.test.js";
-import { getDaoAddr, PriceMath } from "@metadaoproject/futarchy/v0.6";
+import { getDaoAddr, PriceMath } from "@metadaoproject/programs";
 
 export const TEN_SECONDS_IN_SLOTS = 25n;
 export const ONE_MINUTE_IN_SLOTS = TEN_SECONDS_IN_SLOTS * 6n;
@@ -68,6 +68,24 @@ export async function setupBasicDao({
   });
 
   return dao;
+}
+
+export async function setOptimisticGovernanceEnabled(
+  context: TestContext,
+  dao: PublicKey,
+  enabled: boolean,
+): Promise<void> {
+  const daoAccount = await context.futarchy.getDao(dao);
+  daoAccount.isOptimisticGovernanceEnabled = enabled;
+  const daoAccountBuffer =
+    await context.futarchy.futarchy.account.dao.coder.accounts.encode(
+      "dao",
+      daoAccount,
+    );
+
+  const daoBanksAccount = await context.banksClient.getAccount(dao);
+  daoBanksAccount.data.set(daoAccountBuffer, 0);
+  context.context.setAccount(dao, daoBanksAccount);
 }
 
 /**

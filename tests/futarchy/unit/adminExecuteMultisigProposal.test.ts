@@ -1,4 +1,4 @@
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.6";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -117,11 +117,11 @@ export default function suite() {
         dao.toBuffer(),
         new BN(1).toArrayLike(Buffer, "le", 8),
       ],
-      this.futarchy.autocrat.programId,
+      this.futarchy.futarchy.programId,
     );
 
     // First enqueue an approval (admin-gated)
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
       .accounts({
         dao: dao,
@@ -134,7 +134,7 @@ export default function suite() {
       .rpc();
 
     // Then execute the approval (permissionless)
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeMultisigProposalApproval()
       .accounts({
         dao: dao,
@@ -148,7 +148,7 @@ export default function suite() {
       .rpc();
 
     // Then execute
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
       .accounts({
         dao: dao,
@@ -252,7 +252,7 @@ export default function suite() {
       "The proposal should not be executed because it has not been approved",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
       .accounts({
         dao: dao,

@@ -1,5 +1,4 @@
-import { sha256 } from "@metadaoproject/futarchy";
-import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.5";
+import { sha256, ConditionalVaultClient } from "@metadaoproject/programs";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { getMint } from "spl-token-bankrun";
@@ -38,7 +37,7 @@ export default function suite() {
       underlyingTokenMint,
       this.payer.publicKey,
       this.payer,
-      10_000_000_000n,
+      10_000_000_000,
     );
   });
 

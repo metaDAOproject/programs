@@ -1,10 +1,10 @@
+import { AUTOCRAT_V0_5_PROGRAM_ID } from "@metadaoproject/programs";
 import {
-  AmmClient,
-  AUTOCRAT_PROGRAM_ID,
   AutocratClient,
-  ConditionalVaultClient,
   getProposalAddr,
-} from "@metadaoproject/futarchy/v0.5";
+} from "@metadaoproject/programs/autocrat/v0.5";
+import { AmmClient } from "@metadaoproject/programs/amm/v0.5";
+import { ConditionalVaultClient } from "@metadaoproject/programs/conditional_vault/v0.4";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "bn.js";
 import * as anchor from "@coral-xyz/anchor";
@@ -26,7 +26,7 @@ async function main() {
   const dao = await autocratClient.getDao(DAO_KEY);
 
   const [metaDaoProposal] = getProposalAddr(
-    AUTOCRAT_PROGRAM_ID,
+    AUTOCRAT_V0_5_PROGRAM_ID,
     SQUADS_PROPOSAL_PDA,
   );
 

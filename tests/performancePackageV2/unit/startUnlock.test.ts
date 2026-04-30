@@ -4,7 +4,8 @@ import { assert } from "chai";
 import {
   MintGovernorClient,
   PerformancePackageV2Client,
-} from "@metadaoproject/futarchy/v0.7";
+  getPerformancePackageV2Addr,
+} from "@metadaoproject/programs";
 import {
   setupPerformancePackageV2,
   createCliffLinearReward,
@@ -13,7 +14,6 @@ import {
   setupDaoForTwapTests,
 } from "../utils.js";
 import { expectError } from "../../utils.js";
-import { getPerformancePackageV2Addr } from "@metadaoproject/futarchy/v0.7";
 
 export default function suite() {
   let mintGovernorClient: MintGovernorClient;

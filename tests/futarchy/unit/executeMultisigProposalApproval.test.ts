@@ -1,4 +1,4 @@
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.6";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -48,7 +48,7 @@ export default function suite() {
         daoKey.toBuffer(),
         new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
       ],
-      context.futarchy.autocrat.programId,
+      context.futarchy.futarchy.programId,
     );
     return pda;
   };
@@ -111,7 +111,7 @@ export default function suite() {
       daoKey,
       transactionIndex,
     );
-    await context.futarchy.autocrat.methods
+    await context.futarchy.futarchy.methods
       .adminEnqueueMultisigProposalApproval({
         transactionIndex: new BN(transactionIndex.toString()),
       })
@@ -150,7 +150,7 @@ export default function suite() {
       multisig.generated.isProposalStatusActive(squadsProposal.status),
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeMultisigProposalApproval()
       .accounts({
         dao,
@@ -192,7 +192,7 @@ export default function suite() {
       "execute should fail without an enqueued approval PDA",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeMultisigProposalApproval()
       .accounts({
         dao,
@@ -241,7 +241,7 @@ export default function suite() {
       "execute should fail once the AMM is no longer in Spot state",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeMultisigProposalApproval()
       .accounts({
         dao,
@@ -337,7 +337,7 @@ export default function suite() {
       configTransactionIndex,
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeMultisigProposalApproval()
       .accounts({
         dao,
@@ -367,7 +367,7 @@ export default function suite() {
         programId: multisig.PROGRAM_ID,
       });
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
       .accounts({
         dao,
@@ -393,7 +393,7 @@ export default function suite() {
       "execute should fail because the proposal was invalidated by the config tx",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .executeMultisigProposalApproval()
       .accounts({
         dao,

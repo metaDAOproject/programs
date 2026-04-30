@@ -1,7 +1,8 @@
 import {
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
-} from "@metadaoproject/futarchy/v0.6";
+  METADAO_MULTISIG_VAULT,
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -16,7 +17,6 @@ import BN from "bn.js";
 import { setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
-import { METADAO_MULTISIG_VAULT } from "../../../sdk/src/v0.6/constants.js";
 const { Permissions, Permission } = multisig.types;
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
@@ -81,6 +81,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();
@@ -140,7 +141,7 @@ export default function suite() {
   it("futarchy amm", async function () {
     // Get initial state before spot swap (before launching proposal)
     const daoBeforeSpotSwap =
-      await this.futarchy.autocrat.account.dao.fetch(dao);
+      await this.futarchy.futarchy.account.dao.fetch(dao);
 
     const initialUserBaseBalance = await this.getTokenBalance(
       META,
@@ -166,7 +167,7 @@ export default function suite() {
 
     // Get state after spot swap
     const daoAfterSpotSwap =
-      await this.futarchy.autocrat.account.dao.fetch(dao);
+      await this.futarchy.futarchy.account.dao.fetch(dao);
 
     const finalUserBaseBalance = await this.getTokenBalance(
       META,

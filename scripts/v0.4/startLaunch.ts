@@ -1,6 +1,6 @@
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { getLaunchAddr, LaunchpadClient } from "@metadaoproject/futarchy/v0.4";
+import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.4";
 import { homedir } from "os";
 import { join } from "path";
 import fs from "fs";

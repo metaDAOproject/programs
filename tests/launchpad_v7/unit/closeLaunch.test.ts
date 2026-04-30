@@ -5,7 +5,7 @@ import {
   Signer,
 } from "@solana/web3.js";
 import { assert } from "chai";
-import { LaunchpadClient, MAINNET_USDC } from "@metadaoproject/futarchy/v0.7";
+import { LaunchpadClient, MAINNET_USDC } from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";

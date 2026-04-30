@@ -2,9 +2,9 @@ import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.5";
-import { getSquadsPdasFromDao } from "../utils/squads.js";
-import { USDC } from "../consts.js";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
+import { getSquadsPdasFromDao } from "../../utils/squads.js";
+import { USDC } from "../../consts.js";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];

@@ -6,11 +6,10 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  FutarchyClient,
   getFundingRecordAddr,
   LaunchpadClient,
-  MAINNET_USDC,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/programs/launchpad/v0.6";
+import { FutarchyClient, MAINNET_USDC } from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";

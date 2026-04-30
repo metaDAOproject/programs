@@ -1,5 +1,4 @@
-import { sha256 } from "@metadaoproject/futarchy";
-import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.5";
+import { sha256, ConditionalVaultClient } from "@metadaoproject/programs";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { expectError } from "../../utils.js";

@@ -3,7 +3,7 @@ import { assert } from "chai";
 import {
   MintGovernorClient,
   getMintGovernorAddr,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/programs";
 import { createMintWithAuthority } from "../utils.js";
 
 export default function suite() {

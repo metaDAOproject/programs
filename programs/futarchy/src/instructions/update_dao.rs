@@ -12,6 +12,7 @@ pub struct UpdateDaoParams {
     pub base_to_stake: Option<u64>,
     pub team_sponsored_pass_threshold_bps: Option<i16>,
     pub team_address: Option<Pubkey>,
+    pub is_optimistic_governance_enabled: Option<bool>,
 }
 
 #[derive(Accounts)]
@@ -28,6 +29,12 @@ impl UpdateDao<'_> {
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
+
+        // Prevent updates to DAO parameters if an optimistic proposal is enqueued
+        if self.dao.optimistic_proposal.is_some() {
+            return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
+        }
+
         Ok(())
     }
 
@@ -72,6 +79,10 @@ impl UpdateDao<'_> {
                 .team_sponsored_pass_threshold_bps
                 .unwrap_or(dao.team_sponsored_pass_threshold_bps),
             team_address: dao_params.team_address.unwrap_or(dao.team_address),
+            optimistic_proposal: dao.optimistic_proposal.clone(),
+            is_optimistic_governance_enabled: dao_params
+                .is_optimistic_governance_enabled
+                .unwrap_or(dao.is_optimistic_governance_enabled),
         });
 
         dao.seq_num += 1;
@@ -92,6 +103,7 @@ impl UpdateDao<'_> {
             base_to_stake: dao.base_to_stake,
             team_sponsored_pass_threshold_bps: dao.team_sponsored_pass_threshold_bps,
             team_address: dao.team_address,
+            is_optimistic_governance_enabled: dao.is_optimistic_governance_enabled,
         });
 
         Ok(())

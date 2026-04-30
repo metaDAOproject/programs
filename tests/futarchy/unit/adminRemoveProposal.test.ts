@@ -1,7 +1,4 @@
-import {
-  PERMISSIONLESS_ACCOUNT,
-  PriceMath,
-} from "@metadaoproject/futarchy/v0.6";
+import { PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   Keypair,
@@ -53,6 +50,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();
@@ -102,7 +100,7 @@ export default function suite() {
     assert.exists(storedProposal.state.draft);
 
     // Call admin_remove_proposal
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminRemoveProposal()
       .accounts({
         proposal,
@@ -133,7 +131,7 @@ export default function suite() {
       .rpc();
 
     // Remove the proposal
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminRemoveProposal()
       .accounts({
         proposal,
@@ -169,7 +167,7 @@ export default function suite() {
 
   it("should not allow staking to Removed proposals", async function () {
     // Remove the proposal first
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminRemoveProposal()
       .accounts({
         proposal,
@@ -248,7 +246,7 @@ export default function suite() {
       "Should not allow removing Pending proposal",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminRemoveProposal()
       .accounts({
         proposal,

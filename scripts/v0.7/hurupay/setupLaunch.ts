@@ -3,7 +3,7 @@ import {
   LaunchpadClient,
   getLaunchAddr,
   getLaunchSignerAddr,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/programs/launchpad/v0.7";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -110,6 +110,7 @@ export const launch = async () => {
         : undefined,
       additionalTokensRecipient: ADDITIONAL_CARVEOUT_RECIPIENT,
       launchAuthority: LAUNCH_AUTHORITY,
+      hasBidWall: false,
     })
     .instruction();
 

@@ -13,7 +13,7 @@ import {
   LaunchpadClient,
   MAINNET_USDC,
   PriceBasedPerformancePackageClient,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { deserializeMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import {

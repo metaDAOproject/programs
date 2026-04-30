@@ -5,8 +5,8 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { USDC } from "../consts.js";
-import { getSquadsPdasFromDao } from "../utils/squads.js";
+import { USDC } from "../../consts.js";
+import { getSquadsPdasFromDao } from "../../utils/squads.js";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];

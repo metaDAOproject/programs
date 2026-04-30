@@ -8,11 +8,11 @@ import {
 import { assert } from "chai";
 import {
   getPerformancePackageAddr,
-  LAUNCHPAD_PROGRAM_ID,
-  MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_6_PROGRAM_ID,
+  LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG,
   MAINNET_USDC,
   PERMISSIONLESS_ACCOUNT,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import { initializeMintWithSeeds } from "../launchpad/utils.js";
 import { createLookupTableForTransaction } from "../utils.js";
@@ -34,7 +34,7 @@ export default async function suite() {
 
     const [poolCreatorAuthority] = PublicKey.findProgramAddressSync(
       [Buffer.from("damm_pool_creator_authority")],
-      LAUNCHPAD_PROGRAM_ID,
+      LAUNCHPAD_V0_6_PROGRAM_ID,
     );
 
     dynamicConfig.data.set(
@@ -43,7 +43,10 @@ export default async function suite() {
     );
     dynamicConfig.data.set([1], configTypeOffset);
 
-    this.context.setAccount(MAINNET_METEORA_CONFIG, dynamicConfig);
+    this.context.setAccount(
+      LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG,
+      dynamicConfig,
+    );
   });
 
   it("launch a DAO, have a multi-ix proposal pass, execute it, and have insiders vest their first 2 tranches", async function () {
@@ -380,6 +383,7 @@ export default async function suite() {
           minBaseFutarchicLiquidity: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          isOptimisticGovernanceEnabled: false,
         },
       })
       .instruction();
@@ -428,7 +432,7 @@ export default async function suite() {
 
     await this.banksClient.processTransaction(squadsTx);
 
-    // Now initialize the autocrat proposal with the proper squads proposal
+    // Now initialize the futarchy proposal with the proper squads proposal
     const proposal = await this.futarchy.initializeProposal(
       dao,
       squadsProposalPda,

@@ -1,9 +1,9 @@
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/futarchy/v0.6";
 import {
-  CONDITIONAL_VAULT_PROGRAM_ID,
+  PERMISSIONLESS_ACCOUNT,
+  CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   SQUADS_PROGRAM_ID,
   getEventAuthorityAddr,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -74,6 +74,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();
@@ -151,10 +152,10 @@ export default function suite() {
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const [vaultEventAuthority] = getEventAuthorityAddr(
-      CONDITIONAL_VAULT_PROGRAM_ID,
+      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminCancelProposal()
       .accounts({
         proposal,
@@ -194,7 +195,7 @@ export default function suite() {
           dao,
           true,
         ),
-        vaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
+        vaultProgram: CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
         vaultEventAuthority,
         quoteVault,
         quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
@@ -249,7 +250,7 @@ export default function suite() {
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const [vaultEventAuthority] = getEventAuthorityAddr(
-      CONDITIONAL_VAULT_PROGRAM_ID,
+      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
     );
 
     const accounts = {
@@ -282,7 +283,7 @@ export default function suite() {
         dao,
         true,
       ),
-      vaultProgram: CONDITIONAL_VAULT_PROGRAM_ID,
+      vaultProgram: CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
       vaultEventAuthority,
       quoteVault,
       quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
@@ -303,7 +304,7 @@ export default function suite() {
     };
 
     // Cancel the proposal first
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminCancelProposal()
       .accounts(accounts)
       .preInstructions([
@@ -321,7 +322,7 @@ export default function suite() {
       "should not cancel an already cancelled proposal",
     );
 
-    await this.futarchy.autocrat.methods
+    await this.futarchy.futarchy.methods
       .adminCancelProposal()
       .accounts(accounts)
       .preInstructions([

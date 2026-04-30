@@ -13,7 +13,7 @@ import {
   MAINNET_USDC,
   getBidWallAddr,
   METADAO_MULTISIG_VAULT,
-} from "@metadaoproject/futarchy/v0.7";
+} from "@metadaoproject/programs";
 import { BN } from "bn.js";
 import {
   getAssociatedTokenAddressSync,
@@ -82,6 +82,7 @@ export default function suite() {
         performancePackageTokenAmount: new BN(10), // Effectively no premine
         monthsUntilInsidersCanUnlock: 24, // 2 years
         teamAddress: PublicKey.default,
+        hasBidWall: false,
       })
       .rpc();
 

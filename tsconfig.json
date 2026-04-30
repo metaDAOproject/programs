@@ -16,6 +16,7 @@
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "resolveJsonModule": true,
+    "skipLibCheck": true,
     "paths": {
       "@solana/spl-token": [
         "./node_modules/@solana/spl-token"

@@ -1,7 +1,7 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
-import { MintGovernorClient } from "@metadaoproject/futarchy/v0.7";
+import { MintGovernorClient } from "@metadaoproject/programs";
 import { setupMintWithGovernor } from "../utils.js";
 import { expectError } from "../../utils.js";
 

@@ -1,10 +1,8 @@
 import { PublicKey, Transaction } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
-import {
-  PERMISSIONLESS_ACCOUNT,
-  FutarchyClient,
-} from "@metadaoproject/futarchy/v0.6";
+import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
+import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];

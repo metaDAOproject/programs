@@ -69,6 +69,7 @@ pub struct UpdateDaoEvent {
     pub base_to_stake: u64,
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
+    pub is_optimistic_governance_enabled: bool,
 }
 
 #[event]
@@ -229,4 +230,26 @@ pub struct AdminFixPositionAuthorityEvent {
     pub amm_position: Pubkey,
     pub old_authority: Pubkey,
     pub new_authority: Pubkey,
+}
+
+#[event]
+pub struct InitiateVaultSpendOptimisticProposalEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub proposer: Pubkey,
+    pub squads_proposal: Pubkey,
+    pub squads_multisig: Pubkey,
+    pub squads_multisig_vault: Pubkey,
+    pub amount: u64,
+    pub recipient: Pubkey,
+    pub dao_quote_vault_account: Pubkey,
+    pub recipient_quote_account: Pubkey,
+    pub enqueued_timestamp: i64,
+}
+
+#[event]
+pub struct FinalizeOptimisticProposalEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub squads_proposal: Pubkey,
 }

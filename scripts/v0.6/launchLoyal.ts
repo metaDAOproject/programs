@@ -3,7 +3,7 @@ import {
   LaunchpadClient,
   getLaunchAddr,
   getLaunchSignerAddr,
-} from "@metadaoproject/futarchy/v0.6";
+} from "@metadaoproject/programs/launchpad/v0.6";
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";
@@ -85,6 +85,7 @@ export const launch = async () => {
       ),
       monthsUntilInsidersCanUnlock: PERFORMANCE_PACKAGE_UNLOCK_TIME,
       secondsForLaunch: fourDays,
+      teamAddress: PublicKey.default,
     })
     .rpc();
 
