@@ -84,6 +84,7 @@ import fullLaunch from "./integration/fullLaunch.test.js";
 import fullLaunch_v7 from "./integration/fullLaunch_v7.test.js";
 import fullLaunch_v8 from "./integration/launchpad_v8_full_lifecycle.test.js";
 import gatedLaunchpadV8 from "./integration/gatedLaunchpadV8.test.js";
+import trancheLifecycle_v8 from "./integration/launchpad_v8_tranche_lifecycle.test.js";
 import { BN } from "bn.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
@@ -767,4 +768,5 @@ describe("project-wide integration tests", function () {
   describe("full launch v7", fullLaunch_v7);
   describe("full launch v8", fullLaunch_v8);
   describe("gated_token + launchpad v8", gatedLaunchpadV8);
+  describe("full launch v8 - tranche lifecycle", trancheLifecycle_v8);
 });
