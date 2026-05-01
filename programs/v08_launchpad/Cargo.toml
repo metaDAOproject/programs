@@ -32,3 +32,4 @@ solana-security-txt = "1.1.1"
 squads-multisig-program = { git = "https://github.com/Squads-Protocol/v4", package = "squads-multisig-program", rev = "6d5235da621a2e9b7379ea358e48760e981053be", features = ["cpi"] }
 damm_v2_cpi = { path = "../damm_v2_cpi", features = ["cpi"] }
 bid_wall = { path = "../bid_wall", features = ["cpi"] }
+gated_token = { path = "../gated_token", features = ["no-entrypoint"] }

@@ -7,8 +7,6 @@ import {
 import { setupGatedMint, whitelistUser } from "../utils.js";
 import { expectError } from "../../utils.js";
 
-const GATING_DISABLED_OFFSET = 8 + 32 + 32;
-
 export default function suite() {
   let gatedTokenClient: GatedTokenClient;
   let admin: Keypair;
@@ -101,15 +99,10 @@ export default function suite() {
   });
 
   it("fails after gating is disabled", async function () {
-    const cfgAccount = await this.banksClient.getAccount(gatedMintConfig);
-    const cfgData = Buffer.from(cfgAccount.data);
-    cfgData[GATING_DISABLED_OFFSET] = 1;
-    this.context.setAccount(gatedMintConfig, {
-      data: cfgData,
-      executable: cfgAccount.executable,
-      owner: cfgAccount.owner,
-      lamports: cfgAccount.lamports,
-    });
+    await gatedTokenClient
+      .disableGatingIx({ mint, admin: admin.publicKey })
+      .signers([admin])
+      .rpc();
 
     const user = Keypair.generate().publicKey;
 
