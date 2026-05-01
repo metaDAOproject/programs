@@ -1,0 +1,183 @@
+# Gated Token Implementation Tasks
+
+## Instructions for Claude
+
+**READ THIS FIRST:**
+
+1. Look at this file and find the task marked with `[NEXT]`
+2. Read the referenced section(s) in `vibes/gated-token-tech-spec.md` for full context — it contains the exact code shapes, account constraints, error variants, event shapes, and test cases
+3. Do ONLY that task — nothing else
+4. Run the verification command(s) listed for the task and confirm clean output
+5. If successful, remove the completed task from this file
+6. Mark the next task with `[NEXT]`
+7. Stop and wait for the user
+
+**DO NOT:**
+- Do multiple tasks at once
+- Skip ahead
+- Forget to verify
+- Modify files outside the task's stated scope
+- Leave `.only` markers in tests when declaring a task done
+
+**Internal workflow for per-instruction tasks (Phases 3–7):**
+
+Each per-instruction task touches the program, the SDK, and tests. Work through them in this order to keep feedback loops tight:
+
+1. Write the program instruction (Rust under `programs/gated_token/`)
+2. Run `./rebuild.sh` — confirms the program builds and regenerates the SDK IDL types
+3. Make the SDK changes (the `xxxIx` builder method on `GatedTokenClient`)
+4. Run `./rebuild.sh` — confirms the SDK typechecks against the new IDL
+5. Write the tests (test utils helpers, then unit tests; isolate with `.only` while iterating)
+6. Run `anchor test --skip-build` — adjust tests / code until green; remove all `.only` before declaring the task done
+
+**General rules from `CLAUDE.md`:**
+- Run `./rebuild.sh` after editing any Rust under `programs/` (rebuilds the program **and** regenerates SDK types)
+- Use `anchor test --skip-build` for the test verification step (faster — skips the rebuild we already did)
+- No assertion messages in tests; use round-number token amounts (e.g. `100_000_000` for 100 tokens at 6 decimals)
+- Append new error variants to the **end** of `#[error_code]` enums — never insert in the middle
+- Prefer `has_one` / `address` over generic `constraint`; prefer `associated_token::*` over `token::*` for canonical recipient ATAs
+- Use `emit_cpi!` (not `emit!`) and `#[event_cpi]` on accounts structs
+- Use specific `require_*!` macros (`require_keys_eq!`, `require_eq!`, `require_gte!`, etc.) over generic `require!`
+
+**Reference:** Full implementation plan is in `vibes/gated-token-tech-spec.md`. Companion specs: `vibes/gated-token-spec.md` (rationale, threat model) and `vibes/launchpad-v8-gating-integration-plan.md` (cross-program integration).
+
+---
+
+## Tasks
+
+### Phase 1: Program & SDK Scaffold
+
+> Reference: `gated-token-tech-spec.md` → §1 (Crate), §8 (SDK shape), §10 step 1.
+
+- [NEXT] 1. Set up program crate, SDK module, and test scaffold
+  - **Program crate:**
+    - `programs/gated_token/Cargo.toml` per §1.1.
+    - `Anchor.toml` entry under `[programs.localnet]`: `gated_token = "GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA"`.
+    - `programs/gated_token/src/lib.rs` with `declare_id!`, `security_txt!`, and empty `pub mod` declarations for `constants`, `error`, `events`, `instructions`, `state`. Empty `#[program] pub mod gated_token { use super::*; }` block.
+    - Empty stub files: `src/constants.rs`, `src/error.rs`, `src/events.rs`, `src/state/mod.rs`, `src/instructions/mod.rs`.
+  - **SDK module skeleton (§8.1, §8.2, §8.5):**
+    - `sdk/src/gated_token/v0.1/GatedTokenClient.ts` — skeleton class with `createClient`, `program` field, account fetchers (`fetchGatedMintConfig`, `fetchWhitelistedUser`). No instruction methods yet.
+    - `sdk/src/gated_token/v0.1/pda.ts` — `getGatedMintConfigAddr`, `getWhitelistedUserAddr` per §8.1.
+    - `sdk/src/gated_token/v0.1/types/index.ts` — IDL re-export + `IdlAccounts`/`IdlEvents`-derived types per §8.5.
+    - `sdk/src/gated_token/v0.1/index.ts` — re-exports from `GatedTokenClient`, `pda`, `types`.
+    - `sdk/src/gated_token/index.ts` — re-exports everything from `v0.1`.
+  - **SDK plumbing (§10 step 1) — must not be skipped:**
+    - Append `cp "$TYPES_DIR/gated_token.ts" ./src/gated_token/v0.1/types/` to `sdk/sync-types.sh`.
+    - Add `GATED_TOKEN_V0_1_PROGRAM_ID = new PublicKey("GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA")` to `sdk/src/constants.ts`.
+    - Add `"./gated_token"` and `"./gated_token/*"` exports to `sdk/package.json` (alphabetical position).
+    - Re-export `GatedTokenClient` and PDA helpers from `sdk/src/index.ts`.
+  - **Test scaffold (§9.1):**
+    - `tests/gatedToken/utils.ts` — empty.
+    - `tests/gatedToken/main.test.ts` matching the `tests/mintGovernor/main.test.ts` shape: `before` hook constructing `BankrunProvider` and `this.gatedToken = GatedTokenClient.createClient({...})`. No `describe` blocks yet.
+    - Wire into `tests/main.test.ts` as `describe("Gated Token", gatedTokenSuite)`.
+  - **Verification:** `./rebuild.sh && anchor test --skip-build` — both must succeed end-to-end. Confirm `sdk/src/gated_token/v0.1/types/gated_token.ts` exists after `./rebuild.sh` runs.
+
+### Phase 2: Foundations
+
+> Reference: `gated-token-tech-spec.md` → §2 (Constants), §3 (State), §4 (Errors), §5 (Events).
+
+- [ ] 2. Implement constants, state, errors, events
+  - **`constants.rs` (§2):** `WHITELISTED_PROGRAMS: &[Pubkey]` with the six program IDs (futarchy, launchpad_v8, conditional_vault, bid_wall, mint_governor, damm_v2) using the `pubkey!` macro; raw SPL Token layout constants (`TOKEN_ACCOUNT_LEN`, `TOKEN_ACCOUNT_MINT_OFFSET`, `TOKEN_ACCOUNT_STATE_OFFSET`, `TOKEN_STATE_*` bytes).
+  - **State (§3):**
+    - `state/gated_mint_config.rs` — `GATED_MINT_CONFIG_SEED` const **alongside** the struct, then `GatedMintConfig` with fields per §3.1.
+    - `state/whitelisted_user.rs` — `WHITELISTED_USER_SEED` const + `WhitelistedUser` per §3.2.
+    - Wire `state/mod.rs` to `pub mod` + `pub use` both files.
+  - **`error.rs` (§4):** `GatedTokenError` enum with all variants in §4 in the **exact** order listed (variant order matters — Anchor encodes by position).
+  - **`events.rs` (§5):** `CommonFields` (with `new(clock, seq_num)` constructor) + the five `#[event]` structs.
+  - **Verification:** `./rebuild.sh` succeeds; `sdk/src/gated_token/v0.1/types/index.ts` typechecks against the now-populated IDL.
+
+### Phase 3: `initialize_gated_mint` (program + SDK + tests)
+
+> Reference: `gated-token-tech-spec.md` → §7.1, §9.3.
+
+- [ ] 3. Implement `initialize_gated_mint` end-to-end
+  - **Program (§7.1):** `src/instructions/initialize_gated_mint.rs` with the `InitializeGatedMint` accounts struct. Note: freeze-authority check is on the `mint` account constraint (`mint::freeze_authority = current_freeze_authority @ GatedTokenError::UnauthorizedFreezeAuthority`) — **not** in `validate()`. Wire into `instructions/mod.rs` and `lib.rs`.
+  - **SDK (§8.2):** `initializeGatedMintIx({ mint, currentFreezeAuthority, admin, payer? })` on `GatedTokenClient`.
+  - **Tests (§9.2 utils, §9.3 cases):**
+    - Add to `tests/gatedToken/utils.ts`: `createMintWithFreezeAuthority(banksClient, payer, mintAuthority, freezeAuthority, decimals)`, `setupGatedMint(banksClient, gatedTokenClient, payer, admin?, decimals?)`.
+    - `tests/gatedToken/unit/initializeGatedMint.test.ts` — 4 cases (1 ✅ success asserting all fields + post-call `mint.freeze_authority`, 3 ❌ negatives: no freeze authority / wrong signer / re-init).
+    - Wire into `main.test.ts` as `describe("#initialize_gated_mint", initializeGatedMint)`.
+  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; no `.only` left in tests.
+
+### Phase 4: `add_whitelisted_user` (program + SDK + tests)
+
+> Reference: `gated-token-tech-spec.md` → §7.2, §9.3.
+
+- [ ] 4. Implement `add_whitelisted_user` end-to-end
+  - **Program (§7.2):** `src/instructions/add_whitelisted_user.rs`. `init` on `whitelisted_user`, `has_one = mint` on the config, `gating_disabled` constraint, increment `seq_num`, emit event. Wire into `instructions/mod.rs` and `lib.rs`.
+  - **SDK (§8.2):** `addWhitelistedUserIx({ mint, admin, user, payer? })`.
+  - **Tests (§9.3):**
+    - Add `whitelistUser(gatedTokenClient, mint, admin, user, payer)` helper to `utils.ts`.
+    - `tests/gatedToken/unit/addWhitelistedUser.test.ts` — 5 cases (1 ✅ success exercising `payer ≠ admin`, 3 ❌ negatives: non-admin, re-add, post-disable, 1 ✅ cross-mint isolation).
+    - Wire into `main.test.ts`.
+  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; no `.only` left.
+
+### Phase 5: `disable_gating` (program + SDK + tests)
+
+> Reference: `gated-token-tech-spec.md` → §7.4, §9.3.
+
+- [ ] 5. Implement `disable_gating` end-to-end
+  - **Program (§7.4):** `src/instructions/disable_gating.rs`. Sets `gating_disabled = true`, increments `seq_num`, emits `GatingDisabledEvent`. Wire into `instructions/mod.rs` and `lib.rs`.
+  - **SDK (§8.2):** `disableGatingIx({ mint, admin })`.
+  - **Tests (§9.3):** `tests/gatedToken/unit/disableGating.test.ts` — 3 cases (1 ✅ asserts `gating_disabled == true`, 2 ❌ non-admin, double-disable). Wire into `main.test.ts`.
+  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; no `.only` left.
+
+### Phase 6: `thaw_account` (program + SDK + tests)
+
+> Reference: `gated-token-tech-spec.md` → §7.5, §9.3.
+
+- [ ] 6. Implement `thaw_account` end-to-end
+  - **Program (§7.5):** `src/instructions/thaw_account.rs`. PDA-signed `thaw_account` CPI; constraint `gating_disabled == true`. Wire into `instructions/mod.rs` and `lib.rs`.
+  - **SDK (§8.2):** `thawAccountIx({ mint, tokenAccount })`.
+  - **Tests (§9.3):** `tests/gatedToken/unit/thawAccount.test.ts` — 4 cases (❌ before disable, ✅ after disable + permissionless caller, ✅ already-thawed → SPL error, ❌ wrong mint). Wire into `main.test.ts`.
+  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; no `.only` left.
+
+### Phase 7: `gated_invoke` (program + SDK + tests) — heavy lift
+
+> Reference: `gated-token-tech-spec.md` → §7.3, §9.3 (multiple sub-sections).
+
+- [ ] 7. Implement `gated_invoke` end-to-end
+  - **Program (§7.3):** `src/instructions/gated_invoke.rs` containing:
+    - Private helpers: `is_gated_token_account`, `read_token_state`, `cpi_thaw`, `cpi_freeze` (per §7.3 helper block).
+    - `GatedInvokeArgs { instruction_data: Vec<u8> }`.
+    - `GatedInvoke` accounts struct. **Critical:** `gated_mint_config` must have `mut` (we increment `seq_num`). `whitelisted_user` is `Account<'info, WhitelistedUser>` (existence check via Anchor deserialize). `target_program` and `token_program` are `UncheckedAccount`s; `token_program` has `address = spl_token::ID`.
+    - `validate()` — checks `WHITELISTED_PROGRAMS.contains` and `target != crate::ID`.
+    - `handle()` — pre-CPI thaw pass → inner `invoke` (NOT `invoke_signed`, no program-as-signer) → post-CPI freeze pass → `seq_num` bump + event.
+    - Wire into `instructions/mod.rs` and `lib.rs` with the `'c: 'info` lifetime signature.
+  - **SDK (§8.2):** `gatedInvokeIx({ caller, mint, targetProgram, instructionData, remainingAccounts })`. Builder must call `.remainingAccounts(remainingAccounts)` on the methods chain.
+  - **Tests (§9.3) — all in `tests/gatedToken/unit/gatedInvoke.test.ts`:**
+    - Setup: gated mint, `mint_governor` for the same mint with an authorized minter, whitelisted caller. Build a small helper that wraps a pre-formed `TransactionInstruction` into a `gated_invoke` call (deserialize ix data + accounts → `gatedInvokeIx` args).
+    - **Happy path (5 cases):** whitelisted caller hits whitelisted target (assert event counts); pre-existing frozen ATA stays frozen post-CPI; newly-created ATA ends frozen post-CPI; aliased duplicates handled; non-gated-mint accounts untouched.
+    - **Failure modes (7 cases):** non-whitelisted target program, non-whitelisted caller, caller whitelisted for wrong mint, `target == gated_token::ID`, `gating_disabled == true`, inner-CPI failure rolls back thaws, caller not signer.
+    - **Privilege-escalation guards (2 cases):** caller A passing caller B as signer in `remaining_accounts` (B didn't sign outer tx) must fail; gated_token program treated as signer in inner ix must fail.
+    - Wire into `main.test.ts`.
+  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; **all** `.only` markers across the project removed; full suite passes.
+
+### Phase 8: Cross-program integration tests
+
+> Reference: `gated-token-tech-spec.md` → §9.5; `vibes/launchpad-v8-gating-integration-plan.md`.
+
+- [ ] 8.1 Integration test: `gated_token` ↔ `mint_governor`
+  - Cross-program happy path: gated mint with `mint_governor` set up, `gated_invoke(mint_governor::mint_tokens)`, verify destination ATA frozen post-CPI, verify mint_governor's internal accounting (`total_minted`) updated.
+  - File: `tests/integration/gatedTokenMintGovernor.test.ts` (or extend an existing integration suite if natural).
+  - **Verification:** `anchor test --skip-build` green; no `.only` left.
+
+- [ ] 8.2 Integration test: gated launchpad v8 lifecycle
+  - Reference: `launchpad-v8-gating-integration-plan.md` lifecycle table.
+  - End-to-end: create base mint with freeze authority preset to expected PDA → `initialize_gated_mint` → `add_whitelisted_user` × N → `gated_invoke(launchpad_v8::initialize_launch)` and verify `launch_base_vault` frozen → `start_launch` (direct) → `fund` (direct) → `gated_invoke(settle_launch)` and verify futarchy AMM base vault + DAMM v2 `token_a_vault` frozen → `gated_invoke(claim)` for a whitelisted funder → `disable_gating` → `thaw_account` from a fresh keypair.
+  - File: `tests/integration/gatedLaunchpadV8.test.ts`.
+  - **Verification:** `anchor test --skip-build` green; no `.only` left.
+
+### Phase 9: Closeout
+
+> Reference: `gated-token-tech-spec.md` → §10; `gated-token-spec.md` §13.
+
+- [ ] 9.1 Threat-model walkthrough
+  - For each item in `gated-token-spec.md` §13 (reentrancy, privilege escalation, account aliasing, mint mismatch / spoofing, program upgrade authority, per-mint admin compromise, mint_governor authorized minter discipline), confirm it's either covered in code or by a documented compensating control.
+  - Output: short comment block at the top of `lib.rs` or a `programs/gated_token/SECURITY.md`.
+
+- [ ] 9.2 Final sweep
+  - Grep for any remaining `.only` in `tests/` — must be empty.
+  - Run `./rebuild.sh && anchor test --skip-build` end-to-end. Must be green.
+  - Visual diff review of all files added/modified across the branch.
+  - At this point this file should have only this final task left; remove this task and the file can be deleted.
