@@ -45,25 +45,11 @@ Each per-instruction task touches the program, the SDK, and tests. Work through 
 
 ## Tasks
 
-### Phase 2: Foundations
-
-> Reference: `gated-token-tech-spec.md` → §2 (Constants), §3 (State), §4 (Errors), §5 (Events).
-
-- [NEXT] 2. Implement constants, state, errors, events
-  - **`constants.rs` (§2):** `WHITELISTED_PROGRAMS: &[Pubkey]` with the six program IDs (futarchy, launchpad_v8, conditional_vault, bid_wall, mint_governor, damm_v2) using the `pubkey!` macro; raw SPL Token layout constants (`TOKEN_ACCOUNT_LEN`, `TOKEN_ACCOUNT_MINT_OFFSET`, `TOKEN_ACCOUNT_STATE_OFFSET`, `TOKEN_STATE_*` bytes).
-  - **State (§3):**
-    - `state/gated_mint_config.rs` — `GATED_MINT_CONFIG_SEED` const **alongside** the struct, then `GatedMintConfig` with fields per §3.1.
-    - `state/whitelisted_user.rs` — `WHITELISTED_USER_SEED` const + `WhitelistedUser` per §3.2.
-    - Wire `state/mod.rs` to `pub mod` + `pub use` both files.
-  - **`error.rs` (§4):** `GatedTokenError` enum with all variants in §4 in the **exact** order listed (variant order matters — Anchor encodes by position).
-  - **`events.rs` (§5):** `CommonFields` (with `new(clock, seq_num)` constructor) + the five `#[event]` structs.
-  - **Verification:** `./rebuild.sh` succeeds; `sdk/src/gated_token/v0.1/types/index.ts` typechecks against the now-populated IDL.
-
 ### Phase 3: `initialize_gated_mint` (program + SDK + tests)
 
 > Reference: `gated-token-tech-spec.md` → §7.1, §9.3.
 
-- [ ] 3. Implement `initialize_gated_mint` end-to-end
+- [NEXT] 3. Implement `initialize_gated_mint` end-to-end
   - **Program (§7.1):** `src/instructions/initialize_gated_mint.rs` with the `InitializeGatedMint` accounts struct. Note: freeze-authority check is on the `mint` account constraint (`mint::freeze_authority = current_freeze_authority @ GatedTokenError::UnauthorizedFreezeAuthority`) — **not** in `validate()`. Wire into `instructions/mod.rs` and `lib.rs`.
   - **SDK (§8.2):** `initializeGatedMintIx({ mint, currentFreezeAuthority, admin, payer? })` on `GatedTokenClient`.
   - **Tests (§9.2 utils, §9.3 cases):**
