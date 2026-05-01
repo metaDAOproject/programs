@@ -1,5 +1,6 @@
 import initializeGatedMint from "./unit/initializeGatedMint.test.js";
 import addWhitelistedUser from "./unit/addWhitelistedUser.test.js";
+import disableGating from "./unit/disableGating.test.js";
 import { GatedTokenClient } from "@metadaoproject/programs";
 import { BankrunProvider } from "anchor-bankrun";
 
@@ -13,4 +14,5 @@ export default function suite() {
 
   describe("#initialize_gated_mint", initializeGatedMint);
   describe("#add_whitelisted_user", addWhitelistedUser);
+  describe("#disable_gating", disableGating);
 }

@@ -45,21 +45,11 @@ Each per-instruction task touches the program, the SDK, and tests. Work through 
 
 ## Tasks
 
-### Phase 5: `disable_gating` (program + SDK + tests)
-
-> Reference: `gated-token-tech-spec.md` → §7.4, §9.3.
-
-- [NEXT] 5. Implement `disable_gating` end-to-end
-  - **Program (§7.4):** `src/instructions/disable_gating.rs`. Sets `gating_disabled = true`, increments `seq_num`, emits `GatingDisabledEvent`. Wire into `instructions/mod.rs` and `lib.rs`.
-  - **SDK (§8.2):** `disableGatingIx({ mint, admin })`.
-  - **Tests (§9.3):** `tests/gatedToken/unit/disableGating.test.ts` — 3 cases (1 ✅ asserts `gating_disabled == true`, 2 ❌ non-admin, double-disable). Wire into `main.test.ts`.
-  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; no `.only` left.
-
 ### Phase 6: `thaw_account` (program + SDK + tests)
 
 > Reference: `gated-token-tech-spec.md` → §7.5, §9.3.
 
-- [ ] 6. Implement `thaw_account` end-to-end
+- [NEXT] 6. Implement `thaw_account` end-to-end
   - **Program (§7.5):** `src/instructions/thaw_account.rs`. PDA-signed `thaw_account` CPI; constraint `gating_disabled == true`. Wire into `instructions/mod.rs` and `lib.rs`.
   - **SDK (§8.2):** `thawAccountIx({ mint, tokenAccount })`.
   - **Tests (§9.3):** `tests/gatedToken/unit/thawAccount.test.ts` — 4 cases (❌ before disable, ✅ after disable + permissionless caller, ✅ already-thawed → SPL error, ❌ wrong mint). Wire into `main.test.ts`.

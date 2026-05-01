@@ -104,6 +104,32 @@ export type GatedToken = {
       ];
       args: [];
     },
+    {
+      name: "disableGating";
+      accounts: [
+        {
+          name: "gatedMintConfig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -475,6 +501,32 @@ export const IDL: GatedToken = {
           name: "systemProgram",
           isMut: false,
           isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "disableGating",
+      accounts: [
+        {
+          name: "gatedMintConfig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
         },
         {
           name: "eventAuthority",

@@ -41,4 +41,9 @@ pub mod gated_token {
     pub fn add_whitelisted_user(ctx: Context<AddWhitelistedUser>) -> Result<()> {
         AddWhitelistedUser::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn disable_gating(ctx: Context<DisableGating>) -> Result<()> {
+        DisableGating::handle(ctx)
+    }
 }

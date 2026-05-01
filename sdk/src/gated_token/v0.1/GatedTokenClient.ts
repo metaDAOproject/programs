@@ -128,4 +128,16 @@ export class GatedTokenClient {
       payer,
     });
   }
+
+  disableGatingIx({ mint, admin }: { mint: PublicKey; admin: PublicKey }) {
+    const [gatedMintConfig] = getGatedMintConfigAddr({
+      programId: this.programId,
+      mint,
+    });
+
+    return this.program.methods.disableGating().accounts({
+      gatedMintConfig,
+      admin,
+    });
+  }
 }
