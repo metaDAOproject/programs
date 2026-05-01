@@ -36,4 +36,9 @@ pub mod gated_token {
     pub fn initialize_gated_mint(ctx: Context<InitializeGatedMint>) -> Result<()> {
         InitializeGatedMint::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn add_whitelisted_user(ctx: Context<AddWhitelistedUser>) -> Result<()> {
+        AddWhitelistedUser::handle(ctx)
+    }
 }

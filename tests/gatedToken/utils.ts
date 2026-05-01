@@ -9,6 +9,7 @@ import { BanksClient } from "solana-bankrun";
 import {
   GatedTokenClient,
   getGatedMintConfigAddr,
+  getWhitelistedUserAddr,
 } from "@metadaoproject/programs";
 
 export async function createMintWithFreezeAuthority(
@@ -78,4 +79,37 @@ export async function setupGatedMint(
   const [gatedMintConfig] = getGatedMintConfigAddr({ mint });
 
   return { mint, gatedMintConfig, admin };
+}
+
+export async function whitelistUser(
+  gatedTokenClient: GatedTokenClient,
+  mint: PublicKey,
+  admin: Keypair,
+  user: PublicKey,
+  payer: Keypair,
+): Promise<PublicKey> {
+  const providerKey = gatedTokenClient.provider.publicKey;
+  const signers: Keypair[] = [];
+  if (!admin.publicKey.equals(providerKey)) {
+    signers.push(admin);
+  }
+  if (
+    !payer.publicKey.equals(providerKey) &&
+    !payer.publicKey.equals(admin.publicKey)
+  ) {
+    signers.push(payer);
+  }
+
+  await gatedTokenClient
+    .addWhitelistedUserIx({
+      mint,
+      admin: admin.publicKey,
+      user,
+      payer: payer.publicKey,
+    })
+    .signers(signers)
+    .rpc();
+
+  const [whitelistedUser] = getWhitelistedUserAddr({ mint, user });
+  return whitelistedUser;
 }

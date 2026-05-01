@@ -45,24 +45,11 @@ Each per-instruction task touches the program, the SDK, and tests. Work through 
 
 ## Tasks
 
-### Phase 4: `add_whitelisted_user` (program + SDK + tests)
-
-> Reference: `gated-token-tech-spec.md` → §7.2, §9.3.
-
-- [NEXT] 4. Implement `add_whitelisted_user` end-to-end
-  - **Program (§7.2):** `src/instructions/add_whitelisted_user.rs`. `init` on `whitelisted_user`, `has_one = mint` on the config, `gating_disabled` constraint, increment `seq_num`, emit event. Wire into `instructions/mod.rs` and `lib.rs`.
-  - **SDK (§8.2):** `addWhitelistedUserIx({ mint, admin, user, payer? })`.
-  - **Tests (§9.3):**
-    - Add `whitelistUser(gatedTokenClient, mint, admin, user, payer)` helper to `utils.ts`.
-    - `tests/gatedToken/unit/addWhitelistedUser.test.ts` — 5 cases (1 ✅ success exercising `payer ≠ admin`, 3 ❌ negatives: non-admin, re-add, post-disable, 1 ✅ cross-mint isolation).
-    - Wire into `main.test.ts`.
-  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; no `.only` left.
-
 ### Phase 5: `disable_gating` (program + SDK + tests)
 
 > Reference: `gated-token-tech-spec.md` → §7.4, §9.3.
 
-- [ ] 5. Implement `disable_gating` end-to-end
+- [NEXT] 5. Implement `disable_gating` end-to-end
   - **Program (§7.4):** `src/instructions/disable_gating.rs`. Sets `gating_disabled = true`, increments `seq_num`, emits `GatingDisabledEvent`. Wire into `instructions/mod.rs` and `lib.rs`.
   - **SDK (§8.2):** `disableGatingIx({ mint, admin })`.
   - **Tests (§9.3):** `tests/gatedToken/unit/disableGating.test.ts` — 3 cases (1 ✅ asserts `gating_disabled == true`, 2 ❌ non-admin, double-disable). Wire into `main.test.ts`.

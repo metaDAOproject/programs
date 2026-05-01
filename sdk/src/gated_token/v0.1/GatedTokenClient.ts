@@ -2,7 +2,7 @@ import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { AccountInfo, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { GATED_TOKEN_V0_1_PROGRAM_ID } from "../../constants.js";
-import { getGatedMintConfigAddr } from "./pda.js";
+import { getGatedMintConfigAddr, getWhitelistedUserAddr } from "./pda.js";
 import {
   GatedToken as GatedTokenProgram,
   IDL as GatedTokenIDL,
@@ -95,6 +95,37 @@ export class GatedTokenClient {
       admin,
       payer,
       tokenProgram: TOKEN_PROGRAM_ID,
+    });
+  }
+
+  addWhitelistedUserIx({
+    mint,
+    admin,
+    user,
+    payer = this.provider.publicKey,
+  }: {
+    mint: PublicKey;
+    admin: PublicKey;
+    user: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const [gatedMintConfig] = getGatedMintConfigAddr({
+      programId: this.programId,
+      mint,
+    });
+    const [whitelistedUser] = getWhitelistedUserAddr({
+      programId: this.programId,
+      mint,
+      user,
+    });
+
+    return this.program.methods.addWhitelistedUser().accounts({
+      gatedMintConfig,
+      admin,
+      mint,
+      user,
+      whitelistedUser,
+      payer,
     });
   }
 }
