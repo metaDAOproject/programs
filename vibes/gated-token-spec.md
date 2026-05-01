@@ -60,9 +60,10 @@ A naïve alternative — using a token program with a "transfer hook" that calls
                                          ▼
                   ┌──────────────────────────────────┐
                   │      Whitelisted program         │
-                  │  (futarchy / launchpad /         │
-                  │   conditional_vault / bid_wall / │
-                  │   mint_governor / damm_v2)       │
+                  │  (spl_token / futarchy /         │
+                  │   launchpad / conditional_vault /│
+                  │   bid_wall / mint_governor /     │
+                  │   damm_v2)                       │
                   └──────────────────────────────────┘
 ```
 
@@ -70,7 +71,9 @@ A naïve alternative — using a token program with a "transfer hook" that calls
 
 The program is **multi-mint**: one deployment serves all gated mints, with per-mint state in PDAs.
 
-The program whitelist is hardcoded as a `const WHITELISTED_PROGRAMS: &[Pubkey]` in the program source — not stored on-chain. The initial whitelist is `futarchy`, `launchpad`, `conditional_vault`, `bid_wall`, `mint_governor`, and `damm_v2`. Adding or removing programs requires a `gated_token` redeploy.
+The program whitelist is hardcoded as a `const WHITELISTED_PROGRAMS: &[Pubkey]` in the program source — not stored on-chain. The initial whitelist is `spl_token`, `futarchy`, `launchpad`, `conditional_vault`, `bid_wall`, `mint_governor`, and `damm_v2`. Adding or removing programs requires a `gated_token` redeploy.
+
+`spl_token` is on the whitelist so whitelisted users can transfer / burn / approve / close their own gated-mint accounts via `gated_invoke(token::transfer)` etc. The freeze invariant still holds: post-CPI rescan refreezes any account that landed in an `Initialized` state, including newly-created ones. The freeze authority itself is not at risk because `gated_invoke` uses `invoke` (not `invoke_signed`) for the inner CPI, so the gated_mint_config PDA does not sign the inner instruction — `FreezeAccount` / `ThawAccount` / `SetAuthority(FreezeAccount)` calls forwarded through the wrapper fail by missing-signature.
 
 ### 7.1 `GatedMintConfig` PDA — per-mint config
 
@@ -310,3 +313,4 @@ The wrapped `settle_launch` chain (`gated_token → launchpad → futarchy → s
 - **Program upgrade authority compromise.** Since the program whitelist is hardcoded, a compromised upgrade authority can deploy a malicious version of `gated_token` that whitelists arbitrary programs (or removes gating entirely). Mitigate with a Squads-controlled upgrade authority. After tear-down, this risk also applies to whether the dormant freeze authority could be re-activated by a malicious upgrade — though by then the token is unrestricted anyway.
 - **Per-mint admin compromise.** A compromised admin can (a) add arbitrary users to the user whitelist, allowing them to invoke wrapper calls; (b) call `disable_gating` to permanently end gating. Both are recoverable in spirit (the freeze invariant for token movement still holds; gating just becomes broader / shorter than intended), but (b) is irreversible. Recommend the per-mint admin be a Squads multisig.
 - **`mint_governor` authorized minter must be program-controlled.** Acceptable shapes: a pure program PDA (e.g., `performance_package_v2`), or a Squads-multisig PDA whose sole member is a controlling program (e.g., the DAO Squads vault, whose only member is the futarchy program executing passed proposals). A wallet-controlled or open-multisig authorized minter could mint into a dangling unfrozen ATA, bypassing gating. This is a configuration-time discipline, not enforced on-chain by `gated_token`.
+- **`spl_token` on the whitelist.** Whitelisting the SPL Token program lets whitelisted users move their own gated-mint tokens via `gated_invoke(token::transfer)` etc. Safety relies on the wrapper not signing as the freeze authority for the inner CPI: `gated_invoke` uses `invoke`, not `invoke_signed`, so `FreezeAccount` / `ThawAccount` / `SetAuthority(FreezeAccount)` forwarded through the wrapper fail (the gated_mint_config PDA's signature is required and absent). Authority-bearing token instructions (`Transfer`, `Burn`, `Approve`, `Revoke`, `CloseAccount`, `SetAuthority(AccountOwner)`) are signed by the caller as their own authority over their own account — same privilege they'd have if the account weren't frozen. `MintTo` requires the mint authority to sign, which a caller does not hold under the recommended `mint_governor` setup. Newly-initialized accounts via `InitializeAccount*` are caught by the post-CPI freeze rescan.

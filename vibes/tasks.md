@@ -45,32 +45,11 @@ Each per-instruction task touches the program, the SDK, and tests. Work through 
 
 ## Tasks
 
-### Phase 7: `gated_invoke` (program + SDK + tests) — heavy lift
-
-> Reference: `gated-token-tech-spec.md` → §7.3, §9.3 (multiple sub-sections).
-
-- [NEXT] 7. Implement `gated_invoke` end-to-end
-  - **Program (§7.3):** `src/instructions/gated_invoke.rs` containing:
-    - Private helpers: `is_gated_token_account`, `read_token_state`, `cpi_thaw`, `cpi_freeze` (per §7.3 helper block).
-    - `GatedInvokeArgs { instruction_data: Vec<u8> }`.
-    - `GatedInvoke` accounts struct. **Critical:** `gated_mint_config` must have `mut` (we increment `seq_num`). `whitelisted_user` is `Account<'info, WhitelistedUser>` (existence check via Anchor deserialize). `target_program` and `token_program` are `UncheckedAccount`s; `token_program` has `address = spl_token::ID`.
-    - `validate()` — checks `WHITELISTED_PROGRAMS.contains` and `target != crate::ID`.
-    - `handle()` — pre-CPI thaw pass → inner `invoke` (NOT `invoke_signed`, no program-as-signer) → post-CPI freeze pass → `seq_num` bump + event.
-    - Wire into `instructions/mod.rs` and `lib.rs` with the `'c: 'info` lifetime signature.
-  - **SDK (§8.2):** `gatedInvokeIx({ caller, mint, targetProgram, instructionData, remainingAccounts })`. Builder must call `.remainingAccounts(remainingAccounts)` on the methods chain.
-  - **Tests (§9.3) — all in `tests/gatedToken/unit/gatedInvoke.test.ts`:**
-    - Setup: gated mint, `mint_governor` for the same mint with an authorized minter, whitelisted caller. Build a small helper that wraps a pre-formed `TransactionInstruction` into a `gated_invoke` call (deserialize ix data + accounts → `gatedInvokeIx` args).
-    - **Happy path (5 cases):** whitelisted caller hits whitelisted target (assert event counts); pre-existing frozen ATA stays frozen post-CPI; newly-created ATA ends frozen post-CPI; aliased duplicates handled; non-gated-mint accounts untouched.
-    - **Failure modes (7 cases):** non-whitelisted target program, non-whitelisted caller, caller whitelisted for wrong mint, `target == gated_token::ID`, `gating_disabled == true`, inner-CPI failure rolls back thaws, caller not signer.
-    - **Privilege-escalation guards (2 cases):** caller A passing caller B as signer in `remaining_accounts` (B didn't sign outer tx) must fail; gated_token program treated as signer in inner ix must fail.
-    - Wire into `main.test.ts`.
-  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; **all** `.only` markers across the project removed; full suite passes.
-
 ### Phase 8: Cross-program integration tests
 
 > Reference: `gated-token-tech-spec.md` → §9.5; `vibes/launchpad-v8-gating-integration-plan.md`.
 
-- [ ] 8.1 Integration test: `gated_token` ↔ `mint_governor`
+- [NEXT] 8.1 Integration test: `gated_token` ↔ `mint_governor`
   - Cross-program happy path: gated mint with `mint_governor` set up, `gated_invoke(mint_governor::mint_tokens)`, verify destination ATA frozen post-CPI, verify mint_governor's internal accounting (`total_minted`) updated.
   - File: `tests/integration/gatedTokenMintGovernor.test.ts` (or extend an existing integration suite if natural).
   - **Verification:** `anchor test --skip-build` green; no `.only` left.

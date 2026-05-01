@@ -1,5 +1,6 @@
 import initializeGatedMint from "./unit/initializeGatedMint.test.js";
 import addWhitelistedUser from "./unit/addWhitelistedUser.test.js";
+import gatedInvoke from "./unit/gatedInvoke.test.js";
 import disableGating from "./unit/disableGating.test.js";
 import thawAccount from "./unit/thawAccount.test.js";
 import { GatedTokenClient } from "@metadaoproject/programs";
@@ -15,6 +16,7 @@ export default function suite() {
 
   describe("#initialize_gated_mint", initializeGatedMint);
   describe("#add_whitelisted_user", addWhitelistedUser);
+  describe("#gated_invoke", gatedInvoke);
   describe("#disable_gating", disableGating);
   describe("#thaw_account", thawAccount);
 }

@@ -1,5 +1,9 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { AccountInfo, PublicKey } from "@solana/web3.js";
+import {
+  AccountInfo,
+  PublicKey,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { GATED_TOKEN_V0_1_PROGRAM_ID } from "../../constants.js";
 import { getGatedMintConfigAddr, getWhitelistedUserAddr } from "./pda.js";
@@ -127,6 +131,38 @@ export class GatedTokenClient {
       whitelistedUser,
       payer,
     });
+  }
+
+  gatedInvokeIx({
+    caller,
+    mint,
+    instruction,
+  }: {
+    caller: PublicKey;
+    mint: PublicKey;
+    instruction: TransactionInstruction;
+  }) {
+    const [gatedMintConfig] = getGatedMintConfigAddr({
+      programId: this.programId,
+      mint,
+    });
+    const [whitelistedUser] = getWhitelistedUserAddr({
+      programId: this.programId,
+      mint,
+      user: caller,
+    });
+
+    return this.program.methods
+      .gatedInvoke({ instructionData: instruction.data })
+      .accounts({
+        caller,
+        gatedMintConfig,
+        whitelistedUser,
+        mint,
+        targetProgram: instruction.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(instruction.keys);
   }
 
   disableGatingIx({ mint, admin }: { mint: PublicKey; admin: PublicKey }) {

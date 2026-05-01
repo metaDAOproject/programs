@@ -105,6 +105,59 @@ export type GatedToken = {
       args: [];
     },
     {
+      name: "gatedInvoke";
+      accounts: [
+        {
+          name: "caller";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "gatedMintConfig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "whitelistedUser";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "targetProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "GatedInvokeArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "disableGating";
       accounts: [
         {
@@ -234,6 +287,18 @@ export type GatedToken = {
           {
             name: "gatedMintConfigSeqNum";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "GatedInvokeArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "instructionData";
+            type: "bytes";
           },
         ];
       };
@@ -552,6 +617,59 @@ export const IDL: GatedToken = {
       args: [],
     },
     {
+      name: "gatedInvoke",
+      accounts: [
+        {
+          name: "caller",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "gatedMintConfig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "whitelistedUser",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "targetProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "GatedInvokeArgs",
+          },
+        },
+      ],
+    },
+    {
       name: "disableGating",
       accounts: [
         {
@@ -681,6 +799,18 @@ export const IDL: GatedToken = {
           {
             name: "gatedMintConfigSeqNum",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "GatedInvokeArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "instructionData",
+            type: "bytes",
           },
         ],
       },

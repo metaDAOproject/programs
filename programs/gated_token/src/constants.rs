@@ -2,6 +2,7 @@ use anchor_lang::prelude::Pubkey;
 use anchor_lang::solana_program::pubkey;
 
 pub const WHITELISTED_PROGRAMS: &[Pubkey] = &[
+    pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
     pubkey!("FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"),
     pubkey!("moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n"),
     pubkey!("VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"),

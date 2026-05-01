@@ -88,6 +88,7 @@ use anchor_lang::solana_program::pubkey;
 // Hardcoded program whitelist. Adding/removing programs requires a redeploy.
 // Kept in sync with vibes/gated-token-spec.md §7.
 pub const WHITELISTED_PROGRAMS: &[Pubkey] = &[
+    pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"), // spl_token
     pubkey!("FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"), // futarchy v0.6
     pubkey!("moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n"), // launchpad_v8
     pubkey!("VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"), // conditional_vault v0.4
@@ -108,6 +109,8 @@ pub const TOKEN_STATE_FROZEN: u8 = 2;
 ```
 
 > Note on `WHITELISTED_PROGRAMS`: spec §7 also lists `damm_v2`; we use the runtime DAMM v2 program ID (the same value referenced in the SDK as `DAMM_V2_PROGRAM_ID`). This is **not** the `damm_v2_cpi` wrapper crate's program ID — that crate is a CPI helper, not a deployed program.
+>
+> `spl_token` is on the whitelist so whitelisted users can transfer / burn / approve / close their own gated-mint accounts via `gated_invoke`. Safety relies on `gated_invoke` using `invoke` (not `invoke_signed`) for the inner CPI: the gated_mint_config PDA never signs as the freeze authority for forwarded ixs, so `FreezeAccount` / `ThawAccount` / `SetAuthority(FreezeAccount)` calls routed through `gated_invoke` fail by missing-signature. `MintTo` similarly fails unless the caller holds the mint authority (which they don't under the recommended `mint_governor` setup). See `gated-token-spec.md` §13 for the full per-instruction analysis.
 
 ---
 
@@ -1130,11 +1133,14 @@ Helpers similar to `tests/mintGovernor/utils.ts`:
 - ✅ Distinct mints have independent whitelists (whitelisting U for mint A does not whitelist U for mint B — `gated_invoke` for mint B with caller U fails).
 
 #### `gated_invoke` — happy path
-- ✅ Whitelisted caller can `gated_invoke` a whitelisted target program (use `mint_governor::mint_tokens` as the inner ix; the gated mint must already have a `mint_governor` set up so `mint_tokens` succeeds). Asserts: inner CPI's effect lands, the destination ATA is frozen post-CPI, and `GatedInvokeEvent.thawed_count` / `frozen_count` match what the test setup expects.
-- ✅ Pre-existing frozen ATA passed in `remaining_accounts` ends up frozen post-CPI.
-- ✅ Newly-created ATA (initialized inside the inner CPI via an `init_if_needed` token account) ends up frozen post-CPI.
-- ✅ Aliased duplicate accounts in `remaining_accounts` are handled (no double-thaw or double-freeze error).
-- ✅ Non-gated-mint token accounts in `remaining_accounts` are untouched (e.g. a quote-mint USDC ATA).
+
+Use `spl_token::transfer` as the **primary** inner ix for happy-path tests. It's the simplest whitelisted CPI to set up: pre-mint tokens to a source ATA owned by Alice (a whitelisted user), include both ATAs in `remaining_accounts`, transfer Alice → Bob (also whitelisted), assert balances + frozen state on both ends.
+
+- ✅ **Transfer between whitelisted users.** Alice (whitelisted) calls `gated_invoke(token::transfer)` to send to Bob (whitelisted). Pre-existing Alice ATA (force-frozen via `setAccount`) is thawed pre-CPI, transfer succeeds, both ATAs end up frozen post-CPI. Asserts: balances correct, both ATAs `Frozen`, `GatedInvokeEvent.thawed_count == 1` and `frozen_count == 2` (or whatever the setup dictates).
+- ✅ **Pre-existing frozen ATA passed in `remaining_accounts` ends up frozen post-CPI.** Covered by the transfer test above.
+- ✅ **Newly-created ATA (initialized inside the inner CPI via an `init_if_needed` token account) ends up frozen post-CPI.** This case can't be exercised through `token::transfer` (which requires both accounts to pre-exist), so use `mint_governor::mint_tokens` here: set up a `mint_governor` for the gated mint with an authorized minter, omit the recipient ATA from setup, and `gated_invoke(mint_governor::mint_tokens)`. The recipient ATA is created by `init_if_needed` inside the inner CPI; the post-CPI freeze pass must catch it.
+- ✅ **Aliased duplicate accounts in `remaining_accounts`** are handled (no double-thaw or double-freeze error). Use `token::transfer` and pass the source ATA twice.
+- ✅ **Non-gated-mint token accounts in `remaining_accounts`** are untouched (e.g. a quote-mint USDC ATA included alongside the transfer).
 
 #### `gated_invoke` — failure modes
 - ❌ Non-whitelisted target program (use `system_program::ID`) (`TargetProgramNotWhitelisted`).
@@ -1142,7 +1148,7 @@ Helpers similar to `tests/mintGovernor/utils.ts`:
 - ❌ Caller is whitelisted for mint A but invokes for mint B — fails because Anchor seeds for `whitelisted_user` won't match.
 - ❌ `target_program == gated_token::ID` (`SelfInvocation`).
 - ❌ `gating_disabled == true` (`GatingDisabled`).
-- ❌ Inner CPI itself fails: state should roll back (no thaws should "stick"). Use `mint_governor::mint_tokens` with an authorized minter that doesn't exist to force inner-CPI failure.
+- ❌ Inner CPI itself fails: state should roll back (no thaws should "stick"). Easy to force with `token::transfer` by making the source ATA's balance smaller than the transfer amount — the SPL Token program returns `InsufficientFunds` and the transaction unwinds, leaving the source ATA in its pre-tx (frozen) state.
 - ❌ Caller is not signer for outer transaction — Anchor signer constraint fails.
 
 #### `gated_invoke` — privilege-escalation guard
@@ -1163,8 +1169,8 @@ Helpers similar to `tests/mintGovernor/utils.ts`:
 ### 9.4 Bankrun setup
 
 Use `solana-bankrun` and the existing `BankrunProvider` shape from `tests/mintGovernor/main.test.ts`. The gated_token tests need:
-- A real `mint_governor` deployment (already in fixtures via `Anchor.toml`) for the gated_invoke happy-path inner CPI.
-- A whitelisted_target_program test fixture: pick `mint_governor` (it's already on the whitelist and has a simple `mint_tokens` instruction we can target).
+- The SPL Token program (always loaded by bankrun) for the primary `gated_invoke` happy-path target via `token::transfer`.
+- The `mint_governor` deployment (already in fixtures via `Anchor.toml`) for the "newly-created ATA via `init_if_needed`" test case.
 - A non-whitelisted program: `system_program::ID` works for that negative test.
 
 ### 9.5 Integration test (cross-program)
