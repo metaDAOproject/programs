@@ -45,21 +45,11 @@ Each per-instruction task touches the program, the SDK, and tests. Work through 
 
 ## Tasks
 
-### Phase 6: `thaw_account` (program + SDK + tests)
-
-> Reference: `gated-token-tech-spec.md` → §7.5, §9.3.
-
-- [NEXT] 6. Implement `thaw_account` end-to-end
-  - **Program (§7.5):** `src/instructions/thaw_account.rs`. PDA-signed `thaw_account` CPI; constraint `gating_disabled == true`. Wire into `instructions/mod.rs` and `lib.rs`.
-  - **SDK (§8.2):** `thawAccountIx({ mint, tokenAccount })`.
-  - **Tests (§9.3):** `tests/gatedToken/unit/thawAccount.test.ts` — 4 cases (❌ before disable, ✅ after disable + permissionless caller, ✅ already-thawed → SPL error, ❌ wrong mint). Wire into `main.test.ts`.
-  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; no `.only` left.
-
 ### Phase 7: `gated_invoke` (program + SDK + tests) — heavy lift
 
 > Reference: `gated-token-tech-spec.md` → §7.3, §9.3 (multiple sub-sections).
 
-- [ ] 7. Implement `gated_invoke` end-to-end
+- [NEXT] 7. Implement `gated_invoke` end-to-end
   - **Program (§7.3):** `src/instructions/gated_invoke.rs` containing:
     - Private helpers: `is_gated_token_account`, `read_token_state`, `cpi_thaw`, `cpi_freeze` (per §7.3 helper block).
     - `GatedInvokeArgs { instruction_data: Vec<u8> }`.

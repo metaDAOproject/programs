@@ -46,4 +46,9 @@ pub mod gated_token {
     pub fn disable_gating(ctx: Context<DisableGating>) -> Result<()> {
         DisableGating::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn thaw_account(ctx: Context<ThawAccount>) -> Result<()> {
+        ThawAccount::handle(ctx)
+    }
 }

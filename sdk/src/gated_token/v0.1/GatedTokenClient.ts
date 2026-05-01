@@ -140,4 +140,24 @@ export class GatedTokenClient {
       admin,
     });
   }
+
+  thawAccountIx({
+    mint,
+    tokenAccount,
+  }: {
+    mint: PublicKey;
+    tokenAccount: PublicKey;
+  }) {
+    const [gatedMintConfig] = getGatedMintConfigAddr({
+      programId: this.programId,
+      mint,
+    });
+
+    return this.program.methods.thawAccount().accounts({
+      gatedMintConfig,
+      mint,
+      tokenAccount,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    });
+  }
 }
