@@ -29,4 +29,11 @@ security_txt! {
 declare_id!("GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA");
 
 #[program]
-pub mod gated_token {}
+pub mod gated_token {
+    use super::*;
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn initialize_gated_mint(ctx: Context<InitializeGatedMint>) -> Result<()> {
+        InitializeGatedMint::handle(ctx)
+    }
+}

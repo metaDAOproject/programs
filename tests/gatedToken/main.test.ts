@@ -1,3 +1,4 @@
+import initializeGatedMint from "./unit/initializeGatedMint.test.js";
 import { GatedTokenClient } from "@metadaoproject/programs";
 import { BankrunProvider } from "anchor-bankrun";
 
@@ -8,4 +9,6 @@ export default function suite() {
       provider: provider as any,
     });
   });
+
+  describe("#initialize_gated_mint", initializeGatedMint);
 }

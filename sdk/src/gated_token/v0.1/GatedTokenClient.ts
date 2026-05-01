@@ -1,10 +1,16 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { AccountInfo, PublicKey } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { GATED_TOKEN_V0_1_PROGRAM_ID } from "../../constants.js";
+import { getGatedMintConfigAddr } from "./pda.js";
 import {
   GatedToken as GatedTokenProgram,
   IDL as GatedTokenIDL,
 } from "./types/gated_token.js";
+import type {
+  GatedMintConfigAccount,
+  WhitelistedUserAccount,
+} from "./types/index.js";
 
 export type CreateGatedTokenClientParams = {
   provider: AnchorProvider;
@@ -34,5 +40,61 @@ export class GatedTokenClient {
       provider,
       programId || GATED_TOKEN_V0_1_PROGRAM_ID,
     );
+  }
+
+  async fetchGatedMintConfig(
+    addr: PublicKey,
+  ): Promise<GatedMintConfigAccount | null> {
+    return this.program.account.gatedMintConfig.fetchNullable(addr);
+  }
+
+  async deserializeGatedMintConfig(
+    accountInfo: AccountInfo<Buffer>,
+  ): Promise<GatedMintConfigAccount> {
+    return this.program.coder.accounts.decode(
+      "gatedMintConfig",
+      accountInfo.data,
+    );
+  }
+
+  async fetchWhitelistedUser(
+    addr: PublicKey,
+  ): Promise<WhitelistedUserAccount | null> {
+    return this.program.account.whitelistedUser.fetchNullable(addr);
+  }
+
+  async deserializeWhitelistedUser(
+    accountInfo: AccountInfo<Buffer>,
+  ): Promise<WhitelistedUserAccount> {
+    return this.program.coder.accounts.decode(
+      "whitelistedUser",
+      accountInfo.data,
+    );
+  }
+
+  initializeGatedMintIx({
+    mint,
+    currentFreezeAuthority,
+    admin,
+    payer = this.provider.publicKey,
+  }: {
+    mint: PublicKey;
+    currentFreezeAuthority: PublicKey;
+    admin: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const [gatedMintConfig] = getGatedMintConfigAddr({
+      programId: this.programId,
+      mint,
+    });
+
+    return this.program.methods.initializeGatedMint().accounts({
+      mint,
+      gatedMintConfig,
+      currentFreezeAuthority,
+      admin,
+      payer,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    });
   }
 }

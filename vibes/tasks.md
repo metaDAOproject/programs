@@ -45,24 +45,11 @@ Each per-instruction task touches the program, the SDK, and tests. Work through 
 
 ## Tasks
 
-### Phase 3: `initialize_gated_mint` (program + SDK + tests)
-
-> Reference: `gated-token-tech-spec.md` → §7.1, §9.3.
-
-- [NEXT] 3. Implement `initialize_gated_mint` end-to-end
-  - **Program (§7.1):** `src/instructions/initialize_gated_mint.rs` with the `InitializeGatedMint` accounts struct. Note: freeze-authority check is on the `mint` account constraint (`mint::freeze_authority = current_freeze_authority @ GatedTokenError::UnauthorizedFreezeAuthority`) — **not** in `validate()`. Wire into `instructions/mod.rs` and `lib.rs`.
-  - **SDK (§8.2):** `initializeGatedMintIx({ mint, currentFreezeAuthority, admin, payer? })` on `GatedTokenClient`.
-  - **Tests (§9.2 utils, §9.3 cases):**
-    - Add to `tests/gatedToken/utils.ts`: `createMintWithFreezeAuthority(banksClient, payer, mintAuthority, freezeAuthority, decimals)`, `setupGatedMint(banksClient, gatedTokenClient, payer, admin?, decimals?)`.
-    - `tests/gatedToken/unit/initializeGatedMint.test.ts` — 4 cases (1 ✅ success asserting all fields + post-call `mint.freeze_authority`, 3 ❌ negatives: no freeze authority / wrong signer / re-init).
-    - Wire into `main.test.ts` as `describe("#initialize_gated_mint", initializeGatedMint)`.
-  - **Verification:** `./rebuild.sh && anchor test --skip-build` green; no `.only` left in tests.
-
 ### Phase 4: `add_whitelisted_user` (program + SDK + tests)
 
 > Reference: `gated-token-tech-spec.md` → §7.2, §9.3.
 
-- [ ] 4. Implement `add_whitelisted_user` end-to-end
+- [NEXT] 4. Implement `add_whitelisted_user` end-to-end
   - **Program (§7.2):** `src/instructions/add_whitelisted_user.rs`. `init` on `whitelisted_user`, `has_one = mint` on the config, `gating_disabled` constraint, increment `seq_num`, emit event. Wire into `instructions/mod.rs` and `lib.rs`.
   - **SDK (§8.2):** `addWhitelistedUserIx({ mint, admin, user, payer? })`.
   - **Tests (§9.3):**

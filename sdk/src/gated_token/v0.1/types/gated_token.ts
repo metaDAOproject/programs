@@ -1,7 +1,59 @@
 export type GatedToken = {
   version: "0.1.0";
   name: "gated_token";
-  instructions: [];
+  instructions: [
+    {
+      name: "initializeGatedMint";
+      accounts: [
+        {
+          name: "mint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "gatedMintConfig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "currentFreezeAuthority";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+  ];
   accounts: [
     {
       name: "gatedMintConfig";
@@ -283,7 +335,59 @@ export type GatedToken = {
 export const IDL: GatedToken = {
   version: "0.1.0",
   name: "gated_token",
-  instructions: [],
+  instructions: [
+    {
+      name: "initializeGatedMint",
+      accounts: [
+        {
+          name: "mint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "gatedMintConfig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "currentFreezeAuthority",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+  ],
   accounts: [
     {
       name: "gatedMintConfig",
