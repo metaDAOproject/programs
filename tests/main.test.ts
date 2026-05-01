@@ -8,6 +8,7 @@ import bidWall from "./bidWall/main.test.js";
 import mintGovernor from "./mintGovernor/main.test.js";
 import performancePackageV2 from "./performancePackageV2/main.test.js";
 import liquidation from "./liquidation/main.test.js";
+import gatedToken from "./gatedToken/main.test.js";
 
 import {
   BanksClient,
@@ -37,6 +38,7 @@ import {
   LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
   BidWallClient,
   MintGovernorClient,
+  GatedTokenClient,
   LiquidationClient,
   LOW_FEE_RAYDIUM_CONFIG,
   sha256,
@@ -97,6 +99,7 @@ export interface TestContext {
   priceBasedPerformancePackage: PriceBasedPerformancePackageClient;
   bidWall: BidWallClient;
   mintGovernor: MintGovernorClient;
+  gatedToken: GatedTokenClient;
   liquidation: LiquidationClient;
   payer: Keypair;
   squadsConnection: Connection;
@@ -756,6 +759,7 @@ describe("bid_wall", bidWall);
 describe("mint_governor", mintGovernor);
 describe("performance_package_v2", performancePackageV2);
 describe("liquidation", liquidation);
+describe("gated_token", gatedToken);
 describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);

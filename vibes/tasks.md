@@ -45,38 +45,11 @@ Each per-instruction task touches the program, the SDK, and tests. Work through 
 
 ## Tasks
 
-### Phase 1: Program & SDK Scaffold
-
-> Reference: `gated-token-tech-spec.md` → §1 (Crate), §8 (SDK shape), §10 step 1.
-
-- [NEXT] 1. Set up program crate, SDK module, and test scaffold
-  - **Program crate:**
-    - `programs/gated_token/Cargo.toml` per §1.1.
-    - `Anchor.toml` entry under `[programs.localnet]`: `gated_token = "GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA"`.
-    - `programs/gated_token/src/lib.rs` with `declare_id!`, `security_txt!`, and empty `pub mod` declarations for `constants`, `error`, `events`, `instructions`, `state`. Empty `#[program] pub mod gated_token { use super::*; }` block.
-    - Empty stub files: `src/constants.rs`, `src/error.rs`, `src/events.rs`, `src/state/mod.rs`, `src/instructions/mod.rs`.
-  - **SDK module skeleton (§8.1, §8.2, §8.5):**
-    - `sdk/src/gated_token/v0.1/GatedTokenClient.ts` — skeleton class with `createClient`, `program` field, account fetchers (`fetchGatedMintConfig`, `fetchWhitelistedUser`). No instruction methods yet.
-    - `sdk/src/gated_token/v0.1/pda.ts` — `getGatedMintConfigAddr`, `getWhitelistedUserAddr` per §8.1.
-    - `sdk/src/gated_token/v0.1/types/index.ts` — IDL re-export + `IdlAccounts`/`IdlEvents`-derived types per §8.5.
-    - `sdk/src/gated_token/v0.1/index.ts` — re-exports from `GatedTokenClient`, `pda`, `types`.
-    - `sdk/src/gated_token/index.ts` — re-exports everything from `v0.1`.
-  - **SDK plumbing (§10 step 1) — must not be skipped:**
-    - Append `cp "$TYPES_DIR/gated_token.ts" ./src/gated_token/v0.1/types/` to `sdk/sync-types.sh`.
-    - Add `GATED_TOKEN_V0_1_PROGRAM_ID = new PublicKey("GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA")` to `sdk/src/constants.ts`.
-    - Add `"./gated_token"` and `"./gated_token/*"` exports to `sdk/package.json` (alphabetical position).
-    - Re-export `GatedTokenClient` and PDA helpers from `sdk/src/index.ts`.
-  - **Test scaffold (§9.1):**
-    - `tests/gatedToken/utils.ts` — empty.
-    - `tests/gatedToken/main.test.ts` matching the `tests/mintGovernor/main.test.ts` shape: `before` hook constructing `BankrunProvider` and `this.gatedToken = GatedTokenClient.createClient({...})`. No `describe` blocks yet.
-    - Wire into `tests/main.test.ts` as `describe("Gated Token", gatedTokenSuite)`.
-  - **Verification:** `./rebuild.sh && anchor test --skip-build` — both must succeed end-to-end. Confirm `sdk/src/gated_token/v0.1/types/gated_token.ts` exists after `./rebuild.sh` runs.
-
 ### Phase 2: Foundations
 
 > Reference: `gated-token-tech-spec.md` → §2 (Constants), §3 (State), §4 (Errors), §5 (Events).
 
-- [ ] 2. Implement constants, state, errors, events
+- [NEXT] 2. Implement constants, state, errors, events
   - **`constants.rs` (§2):** `WHITELISTED_PROGRAMS: &[Pubkey]` with the six program IDs (futarchy, launchpad_v8, conditional_vault, bid_wall, mint_governor, damm_v2) using the `pubkey!` macro; raw SPL Token layout constants (`TOKEN_ACCOUNT_LEN`, `TOKEN_ACCOUNT_MINT_OFFSET`, `TOKEN_ACCOUNT_STATE_OFFSET`, `TOKEN_STATE_*` bytes).
   - **State (§3):**
     - `state/gated_mint_config.rs` — `GATED_MINT_CONFIG_SEED` const **alongside** the struct, then `GatedMintConfig` with fields per §3.1.
