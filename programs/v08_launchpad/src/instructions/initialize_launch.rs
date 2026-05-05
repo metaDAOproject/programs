@@ -3,7 +3,7 @@ use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 
-use gated_token::GATED_MINT_CONFIG_SEED;
+use gated_mint::GATED_MINT_CONFIG_SEED;
 use mint_governor::{
     cpi::{
         accounts::{InitializeMintGovernor, TransferAuthorityToGovernor},
@@ -146,11 +146,11 @@ impl InitializeLaunch<'_> {
         );
 
         // Freeze authority must be either unset (classic launch) or the
-        // deterministic `gated_mint_config` PDA owned by the gated_token program (gated launch).
+        // deterministic `gated_mint_config` PDA owned by the gated_mint program (gated launch).
         if let COption::Some(freeze_authority) = self.base_mint.freeze_authority {
             let (expected_gated_mint_config, _) = Pubkey::find_program_address(
                 &[GATED_MINT_CONFIG_SEED, self.base_mint.key().as_ref()],
-                &gated_token::ID,
+                &gated_mint::ID,
             );
             require_keys_eq!(
                 freeze_authority,

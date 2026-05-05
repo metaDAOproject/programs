@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
 use crate::{
-    CommonFields, GatedMintConfig, GatedTokenError, WhitelistedUser, WhitelistedUserAddedEvent,
+    CommonFields, GatedMintConfig, GatedMintError, WhitelistedUser, WhitelistedUserAddedEvent,
     WHITELISTED_USER_SEED,
 };
 
@@ -11,12 +11,12 @@ use crate::{
 pub struct AddWhitelistedUser<'info> {
     #[account(
         mut,
-        has_one = mint @ GatedTokenError::MintMismatch,
-        constraint = !gated_mint_config.gating_disabled @ GatedTokenError::GatingDisabled,
+        has_one = mint @ GatedMintError::MintMismatch,
+        constraint = !gated_mint_config.gating_disabled @ GatedMintError::GatingDisabled,
     )]
     pub gated_mint_config: Account<'info, GatedMintConfig>,
 
-    #[account(address = gated_mint_config.admin @ GatedTokenError::UnauthorizedAdmin)]
+    #[account(address = gated_mint_config.admin @ GatedMintError::UnauthorizedAdmin)]
     pub admin: Signer<'info>,
 
     pub mint: Account<'info, Mint>,

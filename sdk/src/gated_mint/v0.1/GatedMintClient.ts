@@ -5,44 +5,44 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { GATED_TOKEN_V0_1_PROGRAM_ID } from "../../constants.js";
+import { GATED_MINT_V0_1_PROGRAM_ID } from "../../constants.js";
 import { getGatedMintConfigAddr, getWhitelistedUserAddr } from "./pda.js";
 import {
-  GatedToken as GatedTokenProgram,
-  IDL as GatedTokenIDL,
-} from "./types/gated_token.js";
+  GatedMint as GatedMintProgram,
+  IDL as GatedMintIDL,
+} from "./types/gated_mint.js";
 import type {
   GatedMintConfigAccount,
   WhitelistedUserAccount,
 } from "./types/index.js";
 
-export type CreateGatedTokenClientParams = {
+export type CreateGatedMintClientParams = {
   provider: AnchorProvider;
   programId?: PublicKey;
 };
 
-export class GatedTokenClient {
+export class GatedMintClient {
   public readonly provider: AnchorProvider;
-  public readonly program: Program<GatedTokenProgram>;
+  public readonly program: Program<GatedMintProgram>;
   public readonly programId: PublicKey;
 
   constructor(provider: AnchorProvider, programId: PublicKey) {
     this.provider = provider;
     this.programId = programId;
-    this.program = new Program<GatedTokenProgram>(
-      GatedTokenIDL,
+    this.program = new Program<GatedMintProgram>(
+      GatedMintIDL,
       programId,
       provider,
     );
   }
 
   public static createClient(
-    params: CreateGatedTokenClientParams,
-  ): GatedTokenClient {
+    params: CreateGatedMintClientParams,
+  ): GatedMintClient {
     const { provider, programId } = params;
-    return new GatedTokenClient(
+    return new GatedMintClient(
       provider,
-      programId || GATED_TOKEN_V0_1_PROGRAM_ID,
+      programId || GATED_MINT_V0_1_PROGRAM_ID,
     );
   }
 

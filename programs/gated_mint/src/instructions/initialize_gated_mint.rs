@@ -4,7 +4,7 @@ use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, SetAuthority, Token};
 
 use crate::{
-    CommonFields, GatedMintConfig, GatedMintInitializedEvent, GatedTokenError,
+    CommonFields, GatedMintConfig, GatedMintError, GatedMintInitializedEvent,
     GATED_MINT_CONFIG_SEED,
 };
 
@@ -14,7 +14,7 @@ pub struct InitializeGatedMint<'info> {
     #[account(
         mut,
         constraint = mint.freeze_authority == COption::Some(current_freeze_authority.key())
-            @ GatedTokenError::UnauthorizedFreezeAuthority,
+            @ GatedMintError::UnauthorizedFreezeAuthority,
     )]
     pub mint: Account<'info, Mint>,
 

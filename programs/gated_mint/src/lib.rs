@@ -17,7 +17,7 @@ use solana_security_txt::security_txt;
 
 #[cfg(not(feature = "no-entrypoint"))]
 security_txt! {
-    name: "gated_token",
+    name: "gated_mint",
     project_url: "https://metadao.fi",
     contacts: "telegram:metaproph3t,telegram:kollan_house",
     source_code: "https://github.com/metaDAOproject/programs",
@@ -29,7 +29,7 @@ security_txt! {
 declare_id!("GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA");
 
 #[program]
-pub mod gated_token {
+pub mod gated_mint {
     use super::*;
 
     #[access_control(ctx.accounts.validate())]

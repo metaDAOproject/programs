@@ -6,7 +6,7 @@ TYPES_DIR="../target/types"
 cp "$TYPES_DIR/bid_wall.ts"                        ./src/bid_wall/v0.7/types/
 cp "$TYPES_DIR/conditional_vault.ts"               ./src/conditional_vault/v0.4/types/
 cp "$TYPES_DIR/futarchy.ts"                        ./src/futarchy/v0.6/types/
-cp "$TYPES_DIR/gated_token.ts"                     ./src/gated_token/v0.1/types/
+cp "$TYPES_DIR/gated_mint.ts"                      ./src/gated_mint/v0.1/types/
 cp "$TYPES_DIR/launchpad.ts"                       ./src/launchpad/v0.6/types/
 cp "$TYPES_DIR/launchpad_v7.ts"                    ./src/launchpad/v0.7/types/
 cp "$TYPES_DIR/launchpad_v8.ts"                    ./src/launchpad/v0.8/types/

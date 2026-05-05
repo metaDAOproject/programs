@@ -2,7 +2,7 @@ import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { assert } from "chai";
 import {
-  GatedTokenClient,
+  GatedMintClient,
   getGatedMintConfigAddr,
 } from "@metadaoproject/programs";
 import { createMintWithFreezeAuthority } from "../utils.js";
@@ -10,11 +10,11 @@ import { createMintWithAuthority } from "../../mintGovernor/utils.js";
 import { expectError } from "../../utils.js";
 
 export default function suite() {
-  let gatedTokenClient: GatedTokenClient;
+  let gatedMintClient: GatedMintClient;
   let mint: PublicKey;
 
   before(async function () {
-    gatedTokenClient = this.gatedToken;
+    gatedMintClient = this.gatedMint;
   });
 
   beforeEach(async function () {
@@ -31,7 +31,7 @@ export default function suite() {
     const adminKey = Keypair.generate().publicKey;
     const [gatedMintConfig, expectedBump] = getGatedMintConfigAddr({ mint });
 
-    await gatedTokenClient
+    await gatedMintClient
       .initializeGatedMintIx({
         mint,
         currentFreezeAuthority: this.payer.publicKey,
@@ -40,7 +40,7 @@ export default function suite() {
       })
       .rpc();
 
-    const cfg = await gatedTokenClient.fetchGatedMintConfig(gatedMintConfig);
+    const cfg = await gatedMintClient.fetchGatedMintConfig(gatedMintConfig);
 
     assert.isNotNull(cfg);
     assert.equal(cfg.mint.toBase58(), mint.toBase58());
@@ -75,7 +75,7 @@ export default function suite() {
       "Should have failed because mint has no freeze authority",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .initializeGatedMintIx({
         mint: noFreezeMint,
         currentFreezeAuthority: this.payer.publicKey,
@@ -94,7 +94,7 @@ export default function suite() {
       "Should have failed because signer is not the current freeze authority",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .initializeGatedMintIx({
         mint,
         currentFreezeAuthority: wrongSigner.publicKey,
@@ -107,7 +107,7 @@ export default function suite() {
   });
 
   it("fails when re-initializing the same mint", async function () {
-    await gatedTokenClient
+    await gatedMintClient
       .initializeGatedMintIx({
         mint,
         currentFreezeAuthority: this.payer.publicKey,
@@ -117,7 +117,7 @@ export default function suite() {
       .rpc();
 
     try {
-      await gatedTokenClient
+      await gatedMintClient
         .initializeGatedMintIx({
           mint,
           currentFreezeAuthority: this.payer.publicKey,

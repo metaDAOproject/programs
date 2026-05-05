@@ -1,6 +1,6 @@
-export type GatedToken = {
+export type GatedMint = {
   version: "0.1.0";
-  name: "gated_token";
+  name: "gated_mint";
   instructions: [
     {
       name: "initializeGatedMint";
@@ -495,12 +495,12 @@ export type GatedToken = {
     {
       code: 6005;
       name: "TargetProgramNotWhitelisted";
-      msg: "Target program is not on the gated_token whitelist";
+      msg: "Target program is not on the gated_mint whitelist";
     },
     {
       code: 6006;
       name: "SelfInvocation";
-      msg: "Target program may not be the gated_token program itself";
+      msg: "Target program may not be the gated_mint program itself";
     },
     {
       code: 6007;
@@ -510,9 +510,9 @@ export type GatedToken = {
   ];
 };
 
-export const IDL: GatedToken = {
+export const IDL: GatedMint = {
   version: "0.1.0",
-  name: "gated_token",
+  name: "gated_mint",
   instructions: [
     {
       name: "initializeGatedMint",
@@ -1007,12 +1007,12 @@ export const IDL: GatedToken = {
     {
       code: 6005,
       name: "TargetProgramNotWhitelisted",
-      msg: "Target program is not on the gated_token whitelist",
+      msg: "Target program is not on the gated_mint whitelist",
     },
     {
       code: 6006,
       name: "SelfInvocation",
-      msg: "Target program may not be the gated_token program itself",
+      msg: "Target program may not be the gated_mint program itself",
     },
     {
       code: 6007,

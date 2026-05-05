@@ -948,7 +948,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gated_token"
+name = "gated_mint"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
@@ -1206,7 +1206,7 @@ dependencies = [
  "bid_wall",
  "damm_v2_cpi",
  "futarchy",
- "gated_token",
+ "gated_mint",
  "mint_governor",
  "performance_package_v2",
  "solana-program",

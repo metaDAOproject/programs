@@ -9,8 +9,8 @@ import * as token from "@solana/spl-token";
 import { assert } from "chai";
 import BN from "bn.js";
 import {
-  GATED_TOKEN_V0_1_PROGRAM_ID,
-  GatedTokenClient,
+  GATED_MINT_V0_1_PROGRAM_ID,
+  GatedMintClient,
   MintGovernorClient,
   MAINNET_USDC,
   getGatedMintConfigAddr,
@@ -54,7 +54,7 @@ async function forceFreezeAccount(
 }
 
 export default function suite() {
-  let gatedTokenClient: GatedTokenClient;
+  let gatedMintClient: GatedMintClient;
   let mintGovernorClient: MintGovernorClient;
   let admin: Keypair;
   let alice: Keypair;
@@ -64,7 +64,7 @@ export default function suite() {
   let bobAta: PublicKey;
 
   before(async function () {
-    gatedTokenClient = this.gatedToken;
+    gatedMintClient = this.gatedMint;
     mintGovernorClient = MintGovernorClient.createClient({
       provider: this.provider,
     });
@@ -77,20 +77,20 @@ export default function suite() {
 
     ({ mint } = await setupGatedMint(
       this.banksClient,
-      gatedTokenClient,
+      gatedMintClient,
       this.payer,
       admin.publicKey,
     ));
 
     await whitelistUser(
-      gatedTokenClient,
+      gatedMintClient,
       mint,
       admin,
       alice.publicKey,
       this.payer,
     );
     await whitelistUser(
-      gatedTokenClient,
+      gatedMintClient,
       mint,
       admin,
       bob.publicKey,
@@ -121,7 +121,7 @@ export default function suite() {
       50_000_000n,
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .gatedInvokeIx({
         caller: alice.publicKey,
         mint,
@@ -154,7 +154,7 @@ export default function suite() {
     );
 
     const newAdmin = Keypair.generate();
-    await gatedTokenClient
+    await gatedMintClient
       .initializeGatedMintIx({
         mint: newMint,
         currentFreezeAuthority: this.payer.publicKey,
@@ -164,7 +164,7 @@ export default function suite() {
       .rpc();
 
     await whitelistUser(
-      gatedTokenClient,
+      gatedMintClient,
       newMint,
       newAdmin,
       alice.publicKey,
@@ -216,7 +216,7 @@ export default function suite() {
       })
       .instruction();
 
-    await gatedTokenClient
+    await gatedMintClient
       .gatedInvokeIx({
         caller: alice.publicKey,
         mint: newMint,
@@ -254,7 +254,7 @@ export default function suite() {
       user: alice.publicKey,
     });
 
-    await gatedTokenClient.program.methods
+    await gatedMintClient.program.methods
       .gatedInvoke({ instructionData: transferIx.data })
       .accounts({
         caller: alice.publicKey,
@@ -311,7 +311,7 @@ export default function suite() {
       user: alice.publicKey,
     });
 
-    await gatedTokenClient.program.methods
+    await gatedMintClient.program.methods
       .gatedInvoke({ instructionData: transferIx.data })
       .accounts({
         caller: alice.publicKey,
@@ -344,7 +344,7 @@ export default function suite() {
       "Should have failed because system_program is not whitelisted",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .gatedInvokeIx({
         caller: alice.publicKey,
         mint,
@@ -367,7 +367,7 @@ export default function suite() {
     );
 
     try {
-      await gatedTokenClient
+      await gatedMintClient
         .gatedInvokeIx({
           caller: stranger.publicKey,
           mint,
@@ -385,7 +385,7 @@ export default function suite() {
     const otherAdmin = Keypair.generate();
     const { mint: otherMint } = await setupGatedMint(
       this.banksClient,
-      gatedTokenClient,
+      gatedMintClient,
       this.payer,
       otherAdmin.publicKey,
     );
@@ -398,7 +398,7 @@ export default function suite() {
     );
 
     try {
-      await gatedTokenClient
+      await gatedMintClient
         .gatedInvokeIx({
           caller: alice.publicKey,
           mint: otherMint,
@@ -414,19 +414,19 @@ export default function suite() {
     }
   });
 
-  it("fails when target_program == gated_token::ID", async function () {
+  it("fails when target_program == gated_mint::ID", async function () {
     const dummyIx = new TransactionInstruction({
-      programId: GATED_TOKEN_V0_1_PROGRAM_ID,
+      programId: GATED_MINT_V0_1_PROGRAM_ID,
       keys: [],
       data: Buffer.from([]),
     });
 
     const callbacks = expectError(
       "TargetProgramNotWhitelisted",
-      "Should have failed because target is gated_token::ID",
+      "Should have failed because target is gated_mint::ID",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .gatedInvokeIx({
         caller: alice.publicKey,
         mint,
@@ -438,7 +438,7 @@ export default function suite() {
   });
 
   it("fails when gating is disabled", async function () {
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint, admin: admin.publicKey })
       .signers([admin])
       .rpc();
@@ -455,7 +455,7 @@ export default function suite() {
       "Should have failed because gating is disabled",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .gatedInvokeIx({
         caller: alice.publicKey,
         mint,

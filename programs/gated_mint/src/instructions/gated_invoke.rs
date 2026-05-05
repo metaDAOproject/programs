@@ -5,7 +5,7 @@ use anchor_spl::token::spl_token;
 use anchor_spl::token::{Mint, Token};
 
 use crate::{
-    CommonFields, GatedInvokeEvent, GatedMintConfig, GatedTokenError, WhitelistedUser,
+    CommonFields, GatedInvokeEvent, GatedMintConfig, GatedMintError, WhitelistedUser,
     GATED_MINT_CONFIG_SEED, TOKEN_ACCOUNT_LEN, TOKEN_ACCOUNT_MINT_OFFSET,
     TOKEN_ACCOUNT_STATE_OFFSET, TOKEN_STATE_FROZEN, TOKEN_STATE_INITIALIZED, WHITELISTED_PROGRAMS,
     WHITELISTED_USER_SEED,
@@ -23,15 +23,15 @@ pub struct GatedInvoke<'info> {
 
     #[account(
         mut,
-        has_one = mint @ GatedTokenError::MintMismatch,
-        constraint = !gated_mint_config.gating_disabled @ GatedTokenError::GatingDisabled,
+        has_one = mint @ GatedMintError::MintMismatch,
+        constraint = !gated_mint_config.gating_disabled @ GatedMintError::GatingDisabled,
     )]
     pub gated_mint_config: Account<'info, GatedMintConfig>,
 
     #[account(
         seeds = [WHITELISTED_USER_SEED, mint.key().as_ref(), caller.key().as_ref()],
         bump = whitelisted_user.bump,
-        has_one = mint @ GatedTokenError::MintMismatch,
+        has_one = mint @ GatedMintError::MintMismatch,
     )]
     pub whitelisted_user: Account<'info, WhitelistedUser>,
 
@@ -48,9 +48,9 @@ impl<'info, 'c: 'info> GatedInvoke<'info> {
         let target = self.target_program.key();
         require!(
             WHITELISTED_PROGRAMS.contains(&target),
-            GatedTokenError::TargetProgramNotWhitelisted
+            GatedMintError::TargetProgramNotWhitelisted
         );
-        require_keys_neq!(target, crate::ID, GatedTokenError::SelfInvocation);
+        require_keys_neq!(target, crate::ID, GatedMintError::SelfInvocation);
         Ok(())
     }
 
@@ -63,7 +63,7 @@ impl<'info, 'c: 'info> GatedInvoke<'info> {
 
         let mut thawed_count: u32 = 0;
         for acc in ctx.remaining_accounts.iter() {
-            if !is_gated_token_account(acc, &mint_key)? {
+            if !is_gated_mint_token_account(acc, &mint_key)? {
                 continue;
             }
             if read_token_state(acc)? != TOKEN_STATE_FROZEN {
@@ -100,7 +100,7 @@ impl<'info, 'c: 'info> GatedInvoke<'info> {
 
         let mut frozen_count: u32 = 0;
         for acc in ctx.remaining_accounts.iter() {
-            if !is_gated_token_account(acc, &mint_key)? {
+            if !is_gated_mint_token_account(acc, &mint_key)? {
                 continue;
             }
             if read_token_state(acc)? != TOKEN_STATE_INITIALIZED {
@@ -133,7 +133,7 @@ impl<'info, 'c: 'info> GatedInvoke<'info> {
     }
 }
 
-fn is_gated_token_account(acc: &AccountInfo, expected_mint: &Pubkey) -> Result<bool> {
+fn is_gated_mint_token_account(acc: &AccountInfo, expected_mint: &Pubkey) -> Result<bool> {
     if acc.owner != &spl_token::ID {
         return Ok(false);
     }

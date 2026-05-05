@@ -1,17 +1,17 @@
 use anchor_lang::prelude::*;
 
-use crate::{CommonFields, GatedMintConfig, GatedTokenError, GatingDisabledEvent};
+use crate::{CommonFields, GatedMintConfig, GatedMintError, GatingDisabledEvent};
 
 #[event_cpi]
 #[derive(Accounts)]
 pub struct DisableGating<'info> {
     #[account(
         mut,
-        constraint = !gated_mint_config.gating_disabled @ GatedTokenError::GatingDisabled,
+        constraint = !gated_mint_config.gating_disabled @ GatedMintError::GatingDisabled,
     )]
     pub gated_mint_config: Account<'info, GatedMintConfig>,
 
-    #[account(address = gated_mint_config.admin @ GatedTokenError::UnauthorizedAdmin)]
+    #[account(address = gated_mint_config.admin @ GatedMintError::UnauthorizedAdmin)]
     pub admin: Signer<'info>,
 }
 

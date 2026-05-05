@@ -1,36 +1,36 @@
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { GatedTokenClient } from "@metadaoproject/programs";
+import { GatedMintClient } from "@metadaoproject/programs";
 import { setupGatedMint } from "../utils.js";
 import { expectError } from "../../utils.js";
 
 export default function suite() {
-  let gatedTokenClient: GatedTokenClient;
+  let gatedMintClient: GatedMintClient;
   let admin: Keypair;
   let mint: PublicKey;
   let gatedMintConfig: PublicKey;
 
   before(async function () {
-    gatedTokenClient = this.gatedToken;
+    gatedMintClient = this.gatedMint;
   });
 
   beforeEach(async function () {
     admin = Keypair.generate();
     ({ mint, gatedMintConfig } = await setupGatedMint(
       this.banksClient,
-      gatedTokenClient,
+      gatedMintClient,
       this.payer,
       admin.publicKey,
     ));
   });
 
   it("admin successfully disables gating", async function () {
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint, admin: admin.publicKey })
       .signers([admin])
       .rpc();
 
-    const cfg = await gatedTokenClient.fetchGatedMintConfig(gatedMintConfig);
+    const cfg = await gatedMintClient.fetchGatedMintConfig(gatedMintConfig);
     assert.equal(cfg.gatingDisabled, true);
     assert.equal(cfg.seqNum.toString(), "1");
   });
@@ -43,7 +43,7 @@ export default function suite() {
       "Should have failed because signer is not the admin",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint, admin: fakeAdmin.publicKey })
       .signers([fakeAdmin])
       .rpc()
@@ -51,7 +51,7 @@ export default function suite() {
   });
 
   it("fails when disabling twice", async function () {
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint, admin: admin.publicKey })
       .signers([admin])
       .rpc();
@@ -61,7 +61,7 @@ export default function suite() {
       "Should have failed because gating is already disabled",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint, admin: admin.publicKey })
       .postInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),

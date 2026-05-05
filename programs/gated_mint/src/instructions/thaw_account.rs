@@ -4,7 +4,7 @@ use anchor_spl::token::spl_token;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::{
-    AccountThawedEvent, CommonFields, GatedMintConfig, GatedTokenError, GATED_MINT_CONFIG_SEED,
+    AccountThawedEvent, CommonFields, GatedMintConfig, GatedMintError, GATED_MINT_CONFIG_SEED,
 };
 
 #[event_cpi]
@@ -12,8 +12,8 @@ use crate::{
 pub struct ThawAccount<'info> {
     #[account(
         mut,
-        has_one = mint @ GatedTokenError::MintMismatch,
-        constraint = gated_mint_config.gating_disabled @ GatedTokenError::GatingNotDisabled,
+        has_one = mint @ GatedMintError::MintMismatch,
+        constraint = gated_mint_config.gating_disabled @ GatedMintError::GatingNotDisabled,
     )]
     pub gated_mint_config: Account<'info, GatedMintConfig>,
 
@@ -21,7 +21,7 @@ pub struct ThawAccount<'info> {
 
     #[account(
         mut,
-        constraint = token_account.mint == mint.key() @ GatedTokenError::MintMismatch,
+        constraint = token_account.mint == mint.key() @ GatedMintError::MintMismatch,
     )]
     pub token_account: Account<'info, TokenAccount>,
 

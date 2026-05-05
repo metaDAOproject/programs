@@ -59,7 +59,7 @@ export const BID_WALL_V0_7_PROGRAM_ID = new PublicKey(
 export const MINT_GOVERNOR_V0_7_PROGRAM_ID = new PublicKey(
   "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH",
 );
-export const GATED_TOKEN_V0_1_PROGRAM_ID = new PublicKey(
+export const GATED_MINT_V0_1_PROGRAM_ID = new PublicKey(
   "GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA",
 );
 export const PERFORMANCE_PACKAGE_V2_PROGRAM_ID = new PublicKey(

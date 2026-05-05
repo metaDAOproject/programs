@@ -1,6 +1,6 @@
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { GatedTokenClient } from "@metadaoproject/programs";
+import { GatedMintClient } from "@metadaoproject/programs";
 import { setupGatedMint } from "../utils.js";
 import { expectError } from "../../utils.js";
 
@@ -33,21 +33,21 @@ async function getTokenAccountState(
 }
 
 export default function suite() {
-  let gatedTokenClient: GatedTokenClient;
+  let gatedMintClient: GatedMintClient;
   let admin: Keypair;
   let mint: PublicKey;
   let gatedMintConfig: PublicKey;
   let tokenAccount: PublicKey;
 
   before(async function () {
-    gatedTokenClient = this.gatedToken;
+    gatedMintClient = this.gatedMint;
   });
 
   beforeEach(async function () {
     admin = Keypair.generate();
     ({ mint, gatedMintConfig } = await setupGatedMint(
       this.banksClient,
-      gatedTokenClient,
+      gatedMintClient,
       this.payer,
       admin.publicKey,
     ));
@@ -62,14 +62,14 @@ export default function suite() {
       "Should have failed because gating is not disabled",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .thawAccountIx({ mint, tokenAccount })
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
 
   it("permissionless caller can thaw after disable_gating", async function () {
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint, admin: admin.publicKey })
       .signers([admin])
       .rpc();
@@ -80,7 +80,7 @@ export default function suite() {
     );
     assert.equal(stateBefore, TOKEN_STATE_FROZEN);
 
-    await gatedTokenClient.thawAccountIx({ mint, tokenAccount }).rpc();
+    await gatedMintClient.thawAccountIx({ mint, tokenAccount }).rpc();
 
     const stateAfter = await getTokenAccountState(
       this.banksClient,
@@ -88,20 +88,20 @@ export default function suite() {
     );
     assert.equal(stateAfter, TOKEN_STATE_INITIALIZED);
 
-    const cfg = await gatedTokenClient.fetchGatedMintConfig(gatedMintConfig);
+    const cfg = await gatedMintClient.fetchGatedMintConfig(gatedMintConfig);
     assert.equal(cfg.seqNum.toString(), "2");
   });
 
   it("returns SPL token error when thawing already-thawed account", async function () {
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint, admin: admin.publicKey })
       .signers([admin])
       .rpc();
 
-    await gatedTokenClient.thawAccountIx({ mint, tokenAccount }).rpc();
+    await gatedMintClient.thawAccountIx({ mint, tokenAccount }).rpc();
 
     try {
-      await gatedTokenClient
+      await gatedMintClient
         .thawAccountIx({ mint, tokenAccount })
         .postInstructions([
           ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
@@ -121,7 +121,7 @@ export default function suite() {
       this.payer.publicKey,
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint, admin: admin.publicKey })
       .signers([admin])
       .rpc();
@@ -131,7 +131,7 @@ export default function suite() {
       "Should have failed because token account mint does not match gated mint",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .thawAccountIx({ mint, tokenAccount: otherTokenAccount })
       .rpc()
       .then(callbacks[0], callbacks[1]);

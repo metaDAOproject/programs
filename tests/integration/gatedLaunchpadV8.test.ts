@@ -13,7 +13,7 @@ import BN from "bn.js";
 import {
   DAMM_V2_PROGRAM_ID,
   FutarchyClient,
-  GatedTokenClient,
+  GatedMintClient,
   MAINNET_USDC,
   LAUNCHPAD_V0_8_PROGRAM_ID,
   LAUNCHPAD_V0_8_MAINNET_METEORA_CONFIG,
@@ -25,7 +25,7 @@ import {
   getLaunchSignerAddr,
 } from "@metadaoproject/programs/launchpad/v0.8";
 import { CpAmm } from "@meteora-ag/cp-amm-sdk";
-import { whitelistUser } from "../gatedToken/utils.js";
+import { whitelistUser } from "../gatedMint/utils.js";
 import { createLookupTableForTransaction } from "../utils.js";
 
 const TOKEN_ACCOUNT_STATE_OFFSET = 108;
@@ -68,7 +68,7 @@ export default async function suite() {
 
   it("gated launchpad v8 lifecycle: init → start → fund → settle → claim → disable → thaw", async function () {
     const launchpadClient: LaunchpadClient = this.launchpad_v8;
-    const gatedTokenClient: GatedTokenClient = GatedTokenClient.createClient({
+    const gatedMintClient: GatedMintClient = GatedMintClient.createClient({
       provider: this.provider,
     });
 
@@ -137,7 +137,7 @@ export default async function suite() {
     // =====================
     // initialize_gated_mint — freeze authority moves from payer → gated_mint_config PDA
     // =====================
-    await gatedTokenClient
+    await gatedMintClient
       .initializeGatedMintIx({
         mint: META,
         currentFreezeAuthority: this.payer.publicKey,
@@ -154,21 +154,21 @@ export default async function suite() {
     // add_whitelisted_user × 3
     // =====================
     await whitelistUser(
-      gatedTokenClient,
+      gatedMintClient,
       META,
       gatedMintAdmin,
       gatedMintAdmin.publicKey,
       this.payer,
     );
     await whitelistUser(
-      gatedTokenClient,
+      gatedMintClient,
       META,
       gatedMintAdmin,
       launchAuthority.publicKey,
       this.payer,
     );
     await whitelistUser(
-      gatedTokenClient,
+      gatedMintClient,
       META,
       gatedMintAdmin,
       funder1.publicKey,
@@ -206,7 +206,7 @@ export default async function suite() {
       true,
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .gatedInvokeIx({
         caller: gatedMintAdmin.publicKey,
         mint: META,
@@ -290,7 +290,7 @@ export default async function suite() {
       })
       .instruction();
 
-    const wrappedSettleTx = await gatedTokenClient
+    const wrappedSettleTx = await gatedMintClient
       .gatedInvokeIx({
         caller: launchAuthority.publicKey,
         mint: META,
@@ -382,7 +382,7 @@ export default async function suite() {
         META,
       );
 
-    await gatedTokenClient
+    await gatedMintClient
       .gatedInvokeIx({
         caller: funder1.publicKey,
         mint: META,
@@ -442,7 +442,7 @@ export default async function suite() {
       })
       .instruction();
 
-    await gatedTokenClient
+    await gatedMintClient
       .gatedInvokeIx({
         caller: funder1.publicKey,
         mint: META,
@@ -523,7 +523,7 @@ export default async function suite() {
       })
       .instruction();
 
-    await gatedTokenClient
+    await gatedMintClient
       .gatedInvokeIx({
         caller: funder1.publicKey,
         mint: META,
@@ -559,12 +559,12 @@ export default async function suite() {
     // =====================
     // disable_gating
     // =====================
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint: META, admin: gatedMintAdmin.publicKey })
       .signers([gatedMintAdmin])
       .rpc();
 
-    const cfg = await gatedTokenClient.fetchGatedMintConfig(gatedMintConfig);
+    const cfg = await gatedMintClient.fetchGatedMintConfig(gatedMintConfig);
     assert.equal(cfg.gatingDisabled, true);
 
     // =====================
@@ -573,7 +573,7 @@ export default async function suite() {
     const freshThawer = Keypair.generate();
     await fundSol(freshThawer.publicKey, 100_000_000);
 
-    const thawIx = await gatedTokenClient
+    const thawIx = await gatedMintClient
       .thawAccountIx({ mint: META, tokenAccount: funder1BaseAta })
       .instruction();
     const thawTx = new Transaction().add(thawIx);

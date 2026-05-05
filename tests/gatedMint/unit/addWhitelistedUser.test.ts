@@ -1,27 +1,27 @@
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
-  GatedTokenClient,
+  GatedMintClient,
   getWhitelistedUserAddr,
 } from "@metadaoproject/programs";
 import { setupGatedMint, whitelistUser } from "../utils.js";
 import { expectError } from "../../utils.js";
 
 export default function suite() {
-  let gatedTokenClient: GatedTokenClient;
+  let gatedMintClient: GatedMintClient;
   let admin: Keypair;
   let mint: PublicKey;
   let gatedMintConfig: PublicKey;
 
   before(async function () {
-    gatedTokenClient = this.gatedToken;
+    gatedMintClient = this.gatedMint;
   });
 
   beforeEach(async function () {
     admin = Keypair.generate();
     ({ mint, gatedMintConfig } = await setupGatedMint(
       this.banksClient,
-      gatedTokenClient,
+      gatedMintClient,
       this.payer,
       admin.publicKey,
     ));
@@ -31,7 +31,7 @@ export default function suite() {
     const user = Keypair.generate().publicKey;
     const [expectedAddr, expectedBump] = getWhitelistedUserAddr({ mint, user });
 
-    await gatedTokenClient
+    await gatedMintClient
       .addWhitelistedUserIx({
         mint,
         admin: admin.publicKey,
@@ -41,14 +41,14 @@ export default function suite() {
       .signers([admin])
       .rpc();
 
-    const wu = await gatedTokenClient.fetchWhitelistedUser(expectedAddr);
+    const wu = await gatedMintClient.fetchWhitelistedUser(expectedAddr);
 
     assert.isNotNull(wu);
     assert.equal(wu.mint.toBase58(), mint.toBase58());
     assert.equal(wu.user.toBase58(), user.toBase58());
     assert.equal(wu.bump, expectedBump);
 
-    const cfg = await gatedTokenClient.fetchGatedMintConfig(gatedMintConfig);
+    const cfg = await gatedMintClient.fetchGatedMintConfig(gatedMintConfig);
     assert.equal(cfg.seqNum.toString(), "1");
   });
 
@@ -61,7 +61,7 @@ export default function suite() {
       "Should have failed because signer is not the admin",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .addWhitelistedUserIx({
         mint,
         admin: fakeAdmin.publicKey,
@@ -76,10 +76,10 @@ export default function suite() {
   it("fails when re-adding an existing user", async function () {
     const user = Keypair.generate().publicKey;
 
-    await whitelistUser(gatedTokenClient, mint, admin, user, this.payer);
+    await whitelistUser(gatedMintClient, mint, admin, user, this.payer);
 
     try {
-      await gatedTokenClient
+      await gatedMintClient
         .addWhitelistedUserIx({
           mint,
           admin: admin.publicKey,
@@ -99,7 +99,7 @@ export default function suite() {
   });
 
   it("fails after gating is disabled", async function () {
-    await gatedTokenClient
+    await gatedMintClient
       .disableGatingIx({ mint, admin: admin.publicKey })
       .signers([admin])
       .rpc();
@@ -111,7 +111,7 @@ export default function suite() {
       "Should have failed because gating is disabled",
     );
 
-    await gatedTokenClient
+    await gatedMintClient
       .addWhitelistedUserIx({
         mint,
         admin: admin.publicKey,
@@ -127,7 +127,7 @@ export default function suite() {
     const otherAdmin = Keypair.generate();
     const { mint: otherMint } = await setupGatedMint(
       this.banksClient,
-      gatedTokenClient,
+      gatedMintClient,
       this.payer,
       otherAdmin.publicKey,
     );
@@ -135,14 +135,14 @@ export default function suite() {
     const user = Keypair.generate().publicKey;
 
     const wuAddrA = await whitelistUser(
-      gatedTokenClient,
+      gatedMintClient,
       mint,
       admin,
       user,
       this.payer,
     );
     const wuAddrB = await whitelistUser(
-      gatedTokenClient,
+      gatedMintClient,
       otherMint,
       otherAdmin,
       user,
@@ -151,8 +151,8 @@ export default function suite() {
 
     assert.notEqual(wuAddrA.toBase58(), wuAddrB.toBase58());
 
-    const wuA = await gatedTokenClient.fetchWhitelistedUser(wuAddrA);
-    const wuB = await gatedTokenClient.fetchWhitelistedUser(wuAddrB);
+    const wuA = await gatedMintClient.fetchWhitelistedUser(wuAddrA);
+    const wuB = await gatedMintClient.fetchWhitelistedUser(wuAddrB);
 
     assert.isNotNull(wuA);
     assert.isNotNull(wuB);

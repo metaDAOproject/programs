@@ -1,3 +1,3 @@
 export * from "./types/index.js";
 export * from "./pda.js";
-export * from "./GatedTokenClient.js";
+export * from "./GatedMintClient.js";

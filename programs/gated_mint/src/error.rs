@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum GatedTokenError {
+pub enum GatedMintError {
     #[msg("Unauthorized: signer is not the gated mint admin")]
     UnauthorizedAdmin,
     #[msg("Unauthorized: signer is not the current freeze authority of the mint")]
@@ -12,9 +12,9 @@ pub enum GatedTokenError {
     GatingDisabled,
     #[msg("Gating must be disabled to call this instruction")]
     GatingNotDisabled,
-    #[msg("Target program is not on the gated_token whitelist")]
+    #[msg("Target program is not on the gated_mint whitelist")]
     TargetProgramNotWhitelisted,
-    #[msg("Target program may not be the gated_token program itself")]
+    #[msg("Target program may not be the gated_mint program itself")]
     SelfInvocation,
     #[msg("Invalid token account: account is not a valid SPL Token account of the gated mint")]
     InvalidTokenAccount,

@@ -1,8 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
-import { GATED_TOKEN_V0_1_PROGRAM_ID } from "../../constants.js";
+import { GATED_MINT_V0_1_PROGRAM_ID } from "../../constants.js";
 
 export const getGatedMintConfigAddr = ({
-  programId = GATED_TOKEN_V0_1_PROGRAM_ID,
+  programId = GATED_MINT_V0_1_PROGRAM_ID,
   mint,
 }: {
   programId?: PublicKey;
@@ -15,7 +15,7 @@ export const getGatedMintConfigAddr = ({
 };
 
 export const getWhitelistedUserAddr = ({
-  programId = GATED_TOKEN_V0_1_PROGRAM_ID,
+  programId = GATED_MINT_V0_1_PROGRAM_ID,
   mint,
   user,
 }: {
