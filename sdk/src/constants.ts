@@ -44,6 +44,9 @@ export const LAUNCHPAD_V0_6_PROGRAM_ID = new PublicKey(
 export const LAUNCHPAD_V0_7_PROGRAM_ID = new PublicKey(
   "moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM",
 );
+export const LAUNCHPAD_V0_8_PROGRAM_ID = new PublicKey(
+  "moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n",
+);
 export const SHARED_LIQUIDITY_MANAGER_PROGRAM_ID = new PublicKey(
   "EoJc1PYxZbnCjszampLcwJGYcB5Md47jM4oSQacRtD4d",
 );
@@ -153,6 +156,10 @@ export const LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG = new PublicKey(
 
 export const LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG = new PublicKey(
   "FaA6RM9enPh1tU9Y8LiGCq715JubLc49WGcYTdNvDfsc",
+);
+
+export const LAUNCHPAD_V0_8_MAINNET_METEORA_CONFIG = new PublicKey(
+  "83xS3s3egswDMouWkBwEFNZckAuAYhNrGQxrZKAe8GV",
 );
 
 export const METADAO_MULTISIG_VAULT = new PublicKey(
