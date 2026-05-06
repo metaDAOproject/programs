@@ -162,7 +162,7 @@ export const LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG = new PublicKey(
 );
 
 export const LAUNCHPAD_V0_8_MAINNET_METEORA_CONFIG = new PublicKey(
-  "83xS3s3egswDMouWkBwEFNZckAuAYhNrGQxrZKAe8GV",
+  "GtSwkni3qe1R74RKY1UsukU54zc8G7ZQsvN57DDs1ece",
 );
 
 export const METADAO_MULTISIG_VAULT = new PublicKey(
