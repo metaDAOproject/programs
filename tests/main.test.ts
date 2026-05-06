@@ -2,6 +2,7 @@ import conditionalVault from "./conditionalVault/main.test.js";
 import futarchy from "./futarchy/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 import launchpad_v7 from "./launchpad_v7/main.test.js";
+import launchpad_v8 from "./launchpad_v8/main.test.js";
 import priceBasedPerformancePackage from "./priceBasedPerformancePackage/main.test.js";
 import bidWall from "./bidWall/main.test.js";
 import mintGovernor from "./mintGovernor/main.test.js";
@@ -41,6 +42,7 @@ import {
   sha256,
 } from "@metadaoproject/programs";
 import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/programs/launchpad/v0.6";
+import { LaunchpadClient as LaunchpadClientV8 } from "@metadaoproject/programs/launchpad/v0.8";
 
 import {
   PublicKey,
@@ -78,6 +80,8 @@ const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import fullLaunch from "./integration/fullLaunch.test.js";
 import fullLaunch_v7 from "./integration/fullLaunch_v7.test.js";
+import fullLaunch_v8 from "./integration/launchpad_v8_full_lifecycle.test.js";
+import trancheLifecycle_v8 from "./integration/launchpad_v8_tranche_lifecycle.test.js";
 import { BN } from "bn.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
@@ -89,6 +93,7 @@ export interface TestContext {
   conditionalVault: ConditionalVaultClient;
   futarchy: FutarchyClient;
   launchpad_v7: LaunchpadClientV7;
+  launchpad_v8: LaunchpadClientV8;
   launchpad_v6: LaunchpadClientV6;
   priceBasedPerformancePackage: PriceBasedPerformancePackageClient;
   bidWall: BidWallClient;
@@ -253,6 +258,9 @@ before(async function () {
     provider: provider as any,
   });
   this.launchpad_v7 = LaunchpadClientV7.createClient({
+    provider: provider as any,
+  });
+  this.launchpad_v8 = LaunchpadClientV8.createClient({
     provider: provider as any,
   });
   this.launchpad_v6 = LaunchpadClientV6.createClient({
@@ -741,6 +749,7 @@ before(async function () {
 
 describe("launchpad", launchpad);
 describe("launchpad_v7", launchpad_v7);
+describe("launchpad_v8", launchpad_v8);
 describe("price_based_performance_package", priceBasedPerformancePackage);
 describe("conditional_vault", conditionalVault);
 describe("futarchy", futarchy);
@@ -752,4 +761,6 @@ describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);
   describe("full launch v7", fullLaunch_v7);
+  describe("full launch v8", fullLaunch_v8);
+  describe("full launch v8 - tranche lifecycle", trancheLifecycle_v8);
 });

@@ -13,6 +13,7 @@ on:
           - launchpad_v6
           - price_based_performance_package_v6
           - launchpad_v7
+          - launchpad_v8
           - bid_wall
           - liquidation
           - mint_governor
@@ -182,6 +183,25 @@ jobs:
     with:
       program: "performance_package_v2"
       override-program-id: "pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
+
+  launchpad-v8:
+    if: inputs.program == 'launchpad_v8'
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      program: "launchpad_v8"
+      override-program-id: "moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n"
       network: "mainnet"
       deploy: true
       upload_idl: true
