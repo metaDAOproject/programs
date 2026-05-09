@@ -1,0 +1,53 @@
+[workspace]
+
+[package]
+name = "fuzz_tests"
+version = "0.1.0"
+description = "Created with Trident"
+edition = "2021"
+
+[profile.release]
+overflow-checks = true
+
+[dependencies]
+borsh = "1.5.3"
+squads-multisig = { git = "https://github.com/Squads-Protocol/v4", rev = "05f23726a094b6a5a0d97eaccf22af72373ac9c6" }
+
+[dependencies.trident-fuzz]
+version = "0.13.0-rc.3"
+features = ["token"]
+
+[lib]
+path = "common/mod.rs"
+
+[[bin]] 
+name = "fuzz_0"
+path = "fuzz_0/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_1"
+path = "fuzz_1/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_2"
+path = "fuzz_2/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_3"
+path = "fuzz_3/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_launchpad"
+path = "fuzz_launchpad/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_pbpp"
+path = "fuzz_pbpp/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_ppv2"
+path = "fuzz_ppv2/test_fuzz.rs"
+
+[[bin]]
+name = "fuzz_mint_governor"
+path = "fuzz_mint_governor/test_fuzz.rs"
