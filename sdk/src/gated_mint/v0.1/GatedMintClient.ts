@@ -80,11 +80,13 @@ export class GatedMintClient {
     mint,
     currentFreezeAuthority,
     admin,
+    whitelistAdmin = null,
     payer = this.provider.publicKey,
   }: {
     mint: PublicKey;
     currentFreezeAuthority: PublicKey;
     admin: PublicKey;
+    whitelistAdmin?: PublicKey | null;
     payer?: PublicKey;
   }) {
     const [gatedMintConfig] = getGatedMintConfigAddr({
@@ -92,24 +94,26 @@ export class GatedMintClient {
       mint,
     });
 
-    return this.program.methods.initializeGatedMint().accounts({
-      mint,
-      gatedMintConfig,
-      currentFreezeAuthority,
-      admin,
-      payer,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    });
+    return this.program.methods
+      .initializeGatedMint({ whitelistAdmin })
+      .accounts({
+        mint,
+        gatedMintConfig,
+        currentFreezeAuthority,
+        admin,
+        payer,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      });
   }
 
   addWhitelistedUserIx({
     mint,
-    admin,
+    authority,
     user,
     payer = this.provider.publicKey,
   }: {
     mint: PublicKey;
-    admin: PublicKey;
+    authority: PublicKey;
     user: PublicKey;
     payer?: PublicKey;
   }) {
@@ -125,11 +129,31 @@ export class GatedMintClient {
 
     return this.program.methods.addWhitelistedUser().accounts({
       gatedMintConfig,
-      admin,
+      authority,
       mint,
       user,
       whitelistedUser,
       payer,
+    });
+  }
+
+  setWhitelistAdminIx({
+    mint,
+    admin,
+    whitelistAdmin,
+  }: {
+    mint: PublicKey;
+    admin: PublicKey;
+    whitelistAdmin: PublicKey | null;
+  }) {
+    const [gatedMintConfig] = getGatedMintConfigAddr({
+      programId: this.programId,
+      mint,
+    });
+
+    return this.program.methods.setWhitelistAdmin({ whitelistAdmin }).accounts({
+      gatedMintConfig,
+      admin,
     });
   }
 

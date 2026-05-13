@@ -51,7 +51,14 @@ export type GatedMint = {
           isSigner: false;
         },
       ];
-      args: [];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeGatedMintArgs";
+          };
+        },
+      ];
     },
     {
       name: "addWhitelistedUser";
@@ -62,7 +69,7 @@ export type GatedMint = {
           isSigner: false;
         },
         {
-          name: "admin";
+          name: "authority";
           isMut: false;
           isSigner: true;
         },
@@ -103,6 +110,39 @@ export type GatedMint = {
         },
       ];
       args: [];
+    },
+    {
+      name: "setWhitelistAdmin";
+      accounts: [
+        {
+          name: "gatedMintConfig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "SetWhitelistAdminArgs";
+          };
+        },
+      ];
     },
     {
       name: "gatedInvoke";
@@ -235,6 +275,12 @@ export type GatedMint = {
             type: "publicKey";
           },
           {
+            name: "whitelistAdmin";
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
             name: "gatingDisabled";
             type: "bool";
           },
@@ -303,6 +349,34 @@ export type GatedMint = {
         ];
       };
     },
+    {
+      name: "InitializeGatedMintArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "whitelistAdmin";
+            type: {
+              option: "publicKey";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "SetWhitelistAdminArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "whitelistAdmin";
+            type: {
+              option: "publicKey";
+            };
+          },
+        ];
+      };
+    },
   ];
   events: [
     {
@@ -328,6 +402,13 @@ export type GatedMint = {
         {
           name: "admin";
           type: "publicKey";
+          index: false;
+        },
+        {
+          name: "whitelistAdmin";
+          type: {
+            option: "publicKey";
+          };
           index: false;
         },
         {
@@ -370,6 +451,47 @@ export type GatedMint = {
         {
           name: "user";
           type: "publicKey";
+          index: false;
+        },
+        {
+          name: "authority";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "WhitelistAdminSetEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "gatedMintConfig";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "mint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "previousWhitelistAdmin";
+          type: {
+            option: "publicKey";
+          };
+          index: false;
+        },
+        {
+          name: "newWhitelistAdmin";
+          type: {
+            option: "publicKey";
+          };
           index: false;
         },
       ];
@@ -507,6 +629,16 @@ export type GatedMint = {
       name: "InvalidTokenAccount";
       msg: "Invalid token account: account is not a valid SPL Token account of the gated mint";
     },
+    {
+      code: 6008;
+      name: "UnauthorizedWhitelistAuthority";
+      msg: "Unauthorized: signer is neither admin nor whitelist admin";
+    },
+    {
+      code: 6009;
+      name: "InvalidWhitelistAdmin";
+      msg: "Whitelist admin may not equal admin";
+    },
   ];
 };
 
@@ -563,7 +695,14 @@ export const IDL: GatedMint = {
           isSigner: false,
         },
       ],
-      args: [],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeGatedMintArgs",
+          },
+        },
+      ],
     },
     {
       name: "addWhitelistedUser",
@@ -574,7 +713,7 @@ export const IDL: GatedMint = {
           isSigner: false,
         },
         {
-          name: "admin",
+          name: "authority",
           isMut: false,
           isSigner: true,
         },
@@ -615,6 +754,39 @@ export const IDL: GatedMint = {
         },
       ],
       args: [],
+    },
+    {
+      name: "setWhitelistAdmin",
+      accounts: [
+        {
+          name: "gatedMintConfig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "SetWhitelistAdminArgs",
+          },
+        },
+      ],
     },
     {
       name: "gatedInvoke",
@@ -747,6 +919,12 @@ export const IDL: GatedMint = {
             type: "publicKey",
           },
           {
+            name: "whitelistAdmin",
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
             name: "gatingDisabled",
             type: "bool",
           },
@@ -815,6 +993,34 @@ export const IDL: GatedMint = {
         ],
       },
     },
+    {
+      name: "InitializeGatedMintArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "whitelistAdmin",
+            type: {
+              option: "publicKey",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "SetWhitelistAdminArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "whitelistAdmin",
+            type: {
+              option: "publicKey",
+            },
+          },
+        ],
+      },
+    },
   ],
   events: [
     {
@@ -840,6 +1046,13 @@ export const IDL: GatedMint = {
         {
           name: "admin",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "whitelistAdmin",
+          type: {
+            option: "publicKey",
+          },
           index: false,
         },
         {
@@ -882,6 +1095,47 @@ export const IDL: GatedMint = {
         {
           name: "user",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "authority",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "WhitelistAdminSetEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "gatedMintConfig",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "mint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "previousWhitelistAdmin",
+          type: {
+            option: "publicKey",
+          },
+          index: false,
+        },
+        {
+          name: "newWhitelistAdmin",
+          type: {
+            option: "publicKey",
+          },
           index: false,
         },
       ],
@@ -1018,6 +1272,16 @@ export const IDL: GatedMint = {
       code: 6007,
       name: "InvalidTokenAccount",
       msg: "Invalid token account: account is not a valid SPL Token account of the gated mint",
+    },
+    {
+      code: 6008,
+      name: "UnauthorizedWhitelistAuthority",
+      msg: "Unauthorized: signer is neither admin nor whitelist admin",
+    },
+    {
+      code: 6009,
+      name: "InvalidWhitelistAdmin",
+      msg: "Whitelist admin may not equal admin",
     },
   ],
 };

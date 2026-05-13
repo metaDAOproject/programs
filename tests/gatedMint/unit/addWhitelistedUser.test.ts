@@ -34,7 +34,7 @@ export default function suite() {
     await gatedMintClient
       .addWhitelistedUserIx({
         mint,
-        admin: admin.publicKey,
+        authority: admin.publicKey,
         user,
         payer: this.payer.publicKey,
       })
@@ -57,14 +57,14 @@ export default function suite() {
     const user = Keypair.generate().publicKey;
 
     const callbacks = expectError(
-      "UnauthorizedAdmin",
+      "UnauthorizedWhitelistAuthority",
       "Should have failed because signer is not the admin",
     );
 
     await gatedMintClient
       .addWhitelistedUserIx({
         mint,
-        admin: fakeAdmin.publicKey,
+        authority: fakeAdmin.publicKey,
         user,
         payer: this.payer.publicKey,
       })
@@ -82,7 +82,7 @@ export default function suite() {
       await gatedMintClient
         .addWhitelistedUserIx({
           mint,
-          admin: admin.publicKey,
+          authority: admin.publicKey,
           user,
           payer: this.payer.publicKey,
         })
@@ -114,7 +114,7 @@ export default function suite() {
     await gatedMintClient
       .addWhitelistedUserIx({
         mint,
-        admin: admin.publicKey,
+        authority: admin.publicKey,
         user,
         payer: this.payer.publicKey,
       })
@@ -160,5 +160,113 @@ export default function suite() {
     assert.equal(wuB.mint.toBase58(), otherMint.toBase58());
     assert.equal(wuA.user.toBase58(), user.toBase58());
     assert.equal(wuB.user.toBase58(), user.toBase58());
+  });
+
+  it("whitelist_admin can add a whitelisted user when set", async function () {
+    const whitelistAdmin = Keypair.generate();
+    const { mint: m, gatedMintConfig: cfgAddr } = await setupGatedMint(
+      this.banksClient,
+      gatedMintClient,
+      this.payer,
+      admin.publicKey,
+      whitelistAdmin.publicKey,
+    );
+
+    const user = Keypair.generate().publicKey;
+    const [expectedAddr] = getWhitelistedUserAddr({ mint: m, user });
+
+    await gatedMintClient
+      .addWhitelistedUserIx({
+        mint: m,
+        authority: whitelistAdmin.publicKey,
+        user,
+        payer: this.payer.publicKey,
+      })
+      .signers([whitelistAdmin])
+      .rpc();
+
+    const wu = await gatedMintClient.fetchWhitelistedUser(expectedAddr);
+    assert.isNotNull(wu);
+    assert.equal(wu.user.toBase58(), user.toBase58());
+
+    const cfg = await gatedMintClient.fetchGatedMintConfig(cfgAddr);
+    assert.equal(cfg.seqNum.toString(), "1");
+  });
+
+  it("whitelist_admin cannot add after admin clears the whitelist_admin", async function () {
+    const whitelistAdmin = Keypair.generate();
+    const { mint: m } = await setupGatedMint(
+      this.banksClient,
+      gatedMintClient,
+      this.payer,
+      admin.publicKey,
+      whitelistAdmin.publicKey,
+    );
+
+    await gatedMintClient
+      .setWhitelistAdminIx({
+        mint: m,
+        admin: admin.publicKey,
+        whitelistAdmin: null,
+      })
+      .signers([admin])
+      .rpc();
+
+    const user = Keypair.generate().publicKey;
+
+    const callbacks = expectError(
+      "UnauthorizedWhitelistAuthority",
+      "Should have failed because whitelist_admin was cleared",
+    );
+
+    await gatedMintClient
+      .addWhitelistedUserIx({
+        mint: m,
+        authority: whitelistAdmin.publicKey,
+        user,
+        payer: this.payer.publicKey,
+      })
+      .signers([whitelistAdmin])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("previous whitelist_admin cannot add after admin rotates it", async function () {
+    const oldWhitelistAdmin = Keypair.generate();
+    const newWhitelistAdmin = Keypair.generate();
+    const { mint: m } = await setupGatedMint(
+      this.banksClient,
+      gatedMintClient,
+      this.payer,
+      admin.publicKey,
+      oldWhitelistAdmin.publicKey,
+    );
+
+    await gatedMintClient
+      .setWhitelistAdminIx({
+        mint: m,
+        admin: admin.publicKey,
+        whitelistAdmin: newWhitelistAdmin.publicKey,
+      })
+      .signers([admin])
+      .rpc();
+
+    const user = Keypair.generate().publicKey;
+
+    const callbacks = expectError(
+      "UnauthorizedWhitelistAuthority",
+      "Should have failed because the previous whitelist_admin is no longer authorized",
+    );
+
+    await gatedMintClient
+      .addWhitelistedUserIx({
+        mint: m,
+        authority: oldWhitelistAdmin.publicKey,
+        user,
+        payer: this.payer.publicKey,
+      })
+      .signers([oldWhitelistAdmin])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 }

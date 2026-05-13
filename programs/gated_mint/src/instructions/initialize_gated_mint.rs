@@ -8,6 +8,11 @@ use crate::{
     GATED_MINT_CONFIG_SEED,
 };
 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct InitializeGatedMintArgs {
+    pub whitelist_admin: Option<Pubkey>,
+}
+
 #[event_cpi]
 #[derive(Accounts)]
 pub struct InitializeGatedMint<'info> {
@@ -40,11 +45,18 @@ pub struct InitializeGatedMint<'info> {
 }
 
 impl InitializeGatedMint<'_> {
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self, args: &InitializeGatedMintArgs) -> Result<()> {
+        if let Some(wl_admin) = args.whitelist_admin {
+            require_keys_neq!(
+                wl_admin,
+                self.admin.key(),
+                GatedMintError::InvalidWhitelistAdmin
+            );
+        }
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>) -> Result<()> {
+    pub fn handle(ctx: Context<Self>, args: InitializeGatedMintArgs) -> Result<()> {
         let previous_authority = ctx.accounts.current_freeze_authority.key();
         let config_key = ctx.accounts.gated_mint_config.key();
 
@@ -63,6 +75,7 @@ impl InitializeGatedMint<'_> {
         ctx.accounts.gated_mint_config.set_inner(GatedMintConfig {
             mint: ctx.accounts.mint.key(),
             admin: ctx.accounts.admin.key(),
+            whitelist_admin: args.whitelist_admin,
             gating_disabled: false,
             seq_num: 0,
             bump: ctx.bumps.gated_mint_config,
@@ -75,6 +88,7 @@ impl InitializeGatedMint<'_> {
             gated_mint_config: config_key,
             mint: cfg.mint,
             admin: cfg.admin,
+            whitelist_admin: cfg.whitelist_admin,
             previous_freeze_authority: previous_authority,
             pda_bump: cfg.bump,
         });

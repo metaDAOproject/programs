@@ -45,6 +45,7 @@ export default function suite() {
     assert.isNotNull(cfg);
     assert.equal(cfg.mint.toBase58(), mint.toBase58());
     assert.equal(cfg.admin.toBase58(), adminKey.toBase58());
+    assert.isNull(cfg.whitelistAdmin);
     assert.equal(cfg.gatingDisabled, false);
     assert.equal(cfg.seqNum.toString(), "0");
     assert.equal(cfg.bump, expectedBump);
@@ -60,6 +61,47 @@ export default function suite() {
       mintInfo.freezeAuthority.toBase58(),
       gatedMintConfig.toBase58(),
     );
+  });
+
+  it("initializes with a whitelist_admin", async function () {
+    const adminKey = Keypair.generate().publicKey;
+    const whitelistAdminKey = Keypair.generate().publicKey;
+    const [gatedMintConfig] = getGatedMintConfigAddr({ mint });
+
+    await gatedMintClient
+      .initializeGatedMintIx({
+        mint,
+        currentFreezeAuthority: this.payer.publicKey,
+        admin: adminKey,
+        whitelistAdmin: whitelistAdminKey,
+        payer: this.payer.publicKey,
+      })
+      .rpc();
+
+    const cfg = await gatedMintClient.fetchGatedMintConfig(gatedMintConfig);
+    assert.isNotNull(cfg);
+    assert.equal(cfg.admin.toBase58(), adminKey.toBase58());
+    assert.equal(cfg.whitelistAdmin.toBase58(), whitelistAdminKey.toBase58());
+  });
+
+  it("fails when whitelist_admin equals admin", async function () {
+    const adminKey = Keypair.generate().publicKey;
+
+    const callbacks = expectError(
+      "InvalidWhitelistAdmin",
+      "Should have failed because whitelist_admin equals admin",
+    );
+
+    await gatedMintClient
+      .initializeGatedMintIx({
+        mint,
+        currentFreezeAuthority: this.payer.publicKey,
+        admin: adminKey,
+        whitelistAdmin: adminKey,
+        payer: this.payer.publicKey,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("fails when mint has no freeze authority", async function () {

@@ -53,6 +53,7 @@ export async function setupGatedMint(
   gatedMintClient: GatedMintClient,
   payer: Keypair,
   admin: PublicKey = payer.publicKey,
+  whitelistAdmin: PublicKey | null = null,
   decimals: number = 6,
 ): Promise<{
   mint: PublicKey;
@@ -72,6 +73,7 @@ export async function setupGatedMint(
       mint,
       currentFreezeAuthority: payer.publicKey,
       admin,
+      whitelistAdmin,
       payer: payer.publicKey,
     })
     .rpc();
@@ -84,18 +86,18 @@ export async function setupGatedMint(
 export async function whitelistUser(
   gatedMintClient: GatedMintClient,
   mint: PublicKey,
-  admin: Keypair,
+  authority: Keypair,
   user: PublicKey,
   payer: Keypair,
 ): Promise<PublicKey> {
   const providerKey = gatedMintClient.provider.publicKey;
   const signers: Keypair[] = [];
-  if (!admin.publicKey.equals(providerKey)) {
-    signers.push(admin);
+  if (!authority.publicKey.equals(providerKey)) {
+    signers.push(authority);
   }
   if (
     !payer.publicKey.equals(providerKey) &&
-    !payer.publicKey.equals(admin.publicKey)
+    !payer.publicKey.equals(authority.publicKey)
   ) {
     signers.push(payer);
   }
@@ -103,7 +105,7 @@ export async function whitelistUser(
   await gatedMintClient
     .addWhitelistedUserIx({
       mint,
-      admin: admin.publicKey,
+      authority: authority.publicKey,
       user,
       payer: payer.publicKey,
     })

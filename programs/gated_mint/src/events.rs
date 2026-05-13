@@ -23,6 +23,7 @@ pub struct GatedMintInitializedEvent {
     pub gated_mint_config: Pubkey,
     pub mint: Pubkey,
     pub admin: Pubkey,
+    pub whitelist_admin: Option<Pubkey>,
     pub previous_freeze_authority: Pubkey,
     pub pda_bump: u8,
 }
@@ -34,6 +35,16 @@ pub struct WhitelistedUserAddedEvent {
     pub whitelisted_user: Pubkey,
     pub mint: Pubkey,
     pub user: Pubkey,
+    pub authority: Pubkey,
+}
+
+#[event]
+pub struct WhitelistAdminSetEvent {
+    pub common: CommonFields,
+    pub gated_mint_config: Pubkey,
+    pub mint: Pubkey,
+    pub previous_whitelist_admin: Option<Pubkey>,
+    pub new_whitelist_admin: Option<Pubkey>,
 }
 
 #[event]

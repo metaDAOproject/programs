@@ -18,4 +18,8 @@ pub enum GatedMintError {
     SelfInvocation,
     #[msg("Invalid token account: account is not a valid SPL Token account of the gated mint")]
     InvalidTokenAccount,
+    #[msg("Unauthorized: signer is neither admin nor whitelist admin")]
+    UnauthorizedWhitelistAuthority,
+    #[msg("Whitelist admin may not equal admin")]
+    InvalidWhitelistAdmin,
 }

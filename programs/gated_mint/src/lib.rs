@@ -32,14 +32,25 @@ declare_id!("GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA");
 pub mod gated_mint {
     use super::*;
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn initialize_gated_mint(ctx: Context<InitializeGatedMint>) -> Result<()> {
-        InitializeGatedMint::handle(ctx)
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_gated_mint(
+        ctx: Context<InitializeGatedMint>,
+        args: InitializeGatedMintArgs,
+    ) -> Result<()> {
+        InitializeGatedMint::handle(ctx, args)
     }
 
     #[access_control(ctx.accounts.validate())]
     pub fn add_whitelisted_user(ctx: Context<AddWhitelistedUser>) -> Result<()> {
         AddWhitelistedUser::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn set_whitelist_admin(
+        ctx: Context<SetWhitelistAdmin>,
+        args: SetWhitelistAdminArgs,
+    ) -> Result<()> {
+        SetWhitelistAdmin::handle(ctx, args)
     }
 
     #[access_control(ctx.accounts.validate(&args))]

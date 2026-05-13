@@ -16,8 +16,7 @@ pub struct AddWhitelistedUser<'info> {
     )]
     pub gated_mint_config: Account<'info, GatedMintConfig>,
 
-    #[account(address = gated_mint_config.admin @ GatedMintError::UnauthorizedAdmin)]
-    pub admin: Signer<'info>,
+    pub authority: Signer<'info>,
 
     pub mint: Account<'info, Mint>,
 
@@ -41,6 +40,17 @@ pub struct AddWhitelistedUser<'info> {
 
 impl AddWhitelistedUser<'_> {
     pub fn validate(&self) -> Result<()> {
+        let signer = self.authority.key();
+        let is_admin = signer.eq(&self.gated_mint_config.admin);
+        let is_whitelist_admin = self
+            .gated_mint_config
+            .whitelist_admin
+            .map(|wa| wa.eq(&signer))
+            .unwrap_or(false);
+        require!(
+            is_admin || is_whitelist_admin,
+            GatedMintError::UnauthorizedWhitelistAuthority
+        );
         Ok(())
     }
 
@@ -61,6 +71,7 @@ impl AddWhitelistedUser<'_> {
             whitelisted_user: ctx.accounts.whitelisted_user.key(),
             mint: ctx.accounts.mint.key(),
             user: ctx.accounts.user.key(),
+            authority: ctx.accounts.authority.key(),
         });
 
         Ok(())

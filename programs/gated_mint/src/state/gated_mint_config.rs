@@ -7,6 +7,7 @@ pub const GATED_MINT_CONFIG_SEED: &[u8] = b"gated_mint_config";
 pub struct GatedMintConfig {
     pub mint: Pubkey,
     pub admin: Pubkey,
+    pub whitelist_admin: Option<Pubkey>,
     pub gating_disabled: bool,
     pub seq_num: u64,
     pub bump: u8,
