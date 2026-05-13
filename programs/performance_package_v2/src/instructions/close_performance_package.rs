@@ -62,6 +62,7 @@ impl ClosePerformancePackage<'_> {
             },
             performance_package: pp.key(),
             total_rewards_paid_out: pp.total_rewards_paid_out,
+            pp_created_at_timestamp: pp.created_at_timestamp,
         });
 
         // The performance_package account is closed automatically via the `close = rent_destination` constraint

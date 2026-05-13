@@ -70,6 +70,7 @@ impl StartUnlock<'_> {
             performance_package: pp.key(),
             start_time: clock.unix_timestamp,
             start_oracle_value,
+            pp_created_at_timestamp: pp.created_at_timestamp,
         });
 
         Ok(())

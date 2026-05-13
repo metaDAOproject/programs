@@ -99,6 +99,7 @@ impl InitializePerformancePackage<'_> {
             oracle_reader: pp.oracle_reader.clone(),
             reward_function: pp.reward_function.clone(),
             min_unlock_timestamp: pp.min_unlock_timestamp,
+            pp_created_at_timestamp: pp.created_at_timestamp,
         });
 
         Ok(())
