@@ -49,8 +49,10 @@ impl ClosePerformancePackage<'_> {
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let pp = &ctx.accounts.performance_package;
+        let pp = &mut ctx.accounts.performance_package;
         let clock = Clock::get()?;
+
+        pp.seq_num += 1;
 
         emit_cpi!(PerformancePackageClosedEvent {
             common: CommonFields {

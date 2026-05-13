@@ -96,6 +96,9 @@ impl InitializePerformancePackage<'_> {
             recipient: pp.recipient,
             create_key: pp.create_key,
             pda_bump: pp.bump,
+            oracle_reader: pp.oracle_reader.clone(),
+            reward_function: pp.reward_function.clone(),
+            min_unlock_timestamp: pp.min_unlock_timestamp,
         });
 
         Ok(())

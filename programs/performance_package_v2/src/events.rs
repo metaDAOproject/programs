@@ -21,6 +21,9 @@ pub struct PerformancePackageCreatedEvent {
     pub recipient: Pubkey,
     pub create_key: Pubkey,
     pub pda_bump: u8,
+    pub oracle_reader: OracleReader,
+    pub reward_function: RewardFunction,
+    pub min_unlock_timestamp: i64,
 }
 
 /// Emitted by: `start_unlock`
@@ -29,6 +32,8 @@ pub struct UnlockStartedEvent {
     pub common: CommonFields,
     pub performance_package: Pubkey,
     pub start_time: i64,
+    /// Mirrors `UnlockCompletedEvent.oracle_value`.
+    pub start_oracle_value: u128,
 }
 
 /// Emitted by: `complete_unlock`
@@ -74,6 +79,8 @@ pub struct ChangeExecutedEvent {
     pub new_recipient: Option<Pubkey>,
     pub new_oracle_reader: Option<OracleReader>,
     pub new_reward_function: Option<RewardFunction>,
+    /// The ChangeRequest PDA that was executed (and closed) by this instruction
+    pub change_request: Pubkey,
 }
 
 /// Emitted by: `close_performance_package`
