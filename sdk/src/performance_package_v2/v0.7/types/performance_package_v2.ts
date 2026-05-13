@@ -911,6 +911,11 @@ export type PerformancePackageV2 = {
           };
           index: false;
         },
+        {
+          name: "ppCreatedAtTimestamp";
+          type: "i64";
+          index: false;
+        },
       ];
     },
     {
@@ -2008,6 +2013,11 @@ export const IDL: PerformancePackageV2 = {
               defined: "RewardFunction",
             },
           },
+          index: false,
+        },
+        {
+          name: "ppCreatedAtTimestamp",
+          type: "i64",
           index: false,
         },
       ],

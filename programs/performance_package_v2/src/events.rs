@@ -68,6 +68,8 @@ pub struct ChangeProposedEvent {
     pub new_recipient: Option<Pubkey>,
     pub new_oracle_reader: Option<OracleReader>,
     pub new_reward_function: Option<RewardFunction>,
+    /// `PerformancePackage.created_at_timestamp` as stamped onto the ChangeRequest
+    pub pp_created_at_timestamp: i64,
 }
 
 /// Emitted by: `execute_change`
