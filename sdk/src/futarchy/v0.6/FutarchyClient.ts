@@ -1011,6 +1011,8 @@ export class FutarchyClient {
     quoteMint = MAINNET_USDC,
     transactionIndex,
     meteoraConfig = LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
+    launchpadProgramId = LAUNCHPAD_V0_7_PROGRAM_ID,
+    positionNftMint = undefined,
     admin = this.provider.publicKey,
   }: {
     dao: PublicKey;
@@ -1018,6 +1020,8 @@ export class FutarchyClient {
     quoteMint?: PublicKey;
     transactionIndex: bigint;
     meteoraConfig?: PublicKey;
+    launchpadProgramId?: PublicKey;
+    positionNftMint?: PublicKey;
     admin?: PublicKey;
   }) {
     // Squads accounts
@@ -1068,18 +1072,20 @@ export class FutarchyClient {
       DAMM_V2_PROGRAM_ID,
     );
 
-    const [positionNftMint] = PublicKey.findProgramAddressSync(
-      [Buffer.from("position_nft_mint"), baseMint.toBuffer()],
-      LAUNCHPAD_V0_7_PROGRAM_ID,
-    );
+    const resolvedPositionNftMint =
+      positionNftMint ??
+      PublicKey.findProgramAddressSync(
+        [Buffer.from("position_nft_mint"), baseMint.toBuffer()],
+        launchpadProgramId,
+      )[0];
 
     const [positionNftAccount] = PublicKey.findProgramAddressSync(
-      [Buffer.from("position_nft_account"), positionNftMint.toBuffer()],
+      [Buffer.from("position_nft_account"), resolvedPositionNftMint.toBuffer()],
       DAMM_V2_PROGRAM_ID,
     );
 
     const [position] = PublicKey.findProgramAddressSync(
-      [Buffer.from("position"), positionNftMint.toBuffer()],
+      [Buffer.from("position"), resolvedPositionNftMint.toBuffer()],
       DAMM_V2_PROGRAM_ID,
     );
 
