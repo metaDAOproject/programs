@@ -865,7 +865,7 @@
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
 "@metadaoproject/programs@./sdk":
-  version "0.1.0-alpha.5"
+  version "0.1.0-alpha.6"
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@noble/hashes" "^1.4.0"
