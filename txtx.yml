@@ -1,0 +1,11 @@
+---
+name: futarchy
+id: futarchy
+runbooks:
+  - name: deploy-local-programs
+    description: Deploy all active MetaDAO programs to a local Surfnet, cloned to real mainnet program addresses
+    location: runbooks/deploy-local-programs.tx
+environments:
+  localnet:
+    network_id: localnet
+    rpc_api_url: http://127.0.0.1:8899
