@@ -1,0 +1,59 @@
+////////////////////////////////////////////////////////////////
+// Deploy all active program binaries and clone them to their
+// real mainnet program addresses on the local surfnet.
+////////////////////////////////////////////////////////////////
+
+addon "svm" {
+    rpc_api_url = input.rpc_api_url
+    network_id = input.network_id
+}
+
+action "deploy_stack" "svm::setup_surfnet" {
+    description = "Deploy all active program binaries and clone to real program addresses"
+
+    // Core governance + markets
+    deploy_program {
+        program_id = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
+        binary_path = "./target/deploy/futarchy.so"
+    }
+    deploy_program {
+        program_id = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
+        binary_path = "./target/deploy/conditional_vault.so"
+    }
+    deploy_program {
+        program_id = "WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx"
+        binary_path = "./target/deploy/bid_wall.so"
+    }
+
+    // Launchpad versions (v06 legacy, v07 + v08 current)
+    deploy_program {
+        program_id = "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
+        binary_path = "./target/deploy/launchpad.so"
+    }
+    deploy_program {
+        program_id = "moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM"
+        binary_path = "./target/deploy/launchpad_v7.so"
+    }
+    deploy_program {
+        program_id = "moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n"
+        binary_path = "./target/deploy/launchpad_v8.so"
+    }
+
+    // Performance packages + mint governance
+    deploy_program {
+        program_id = "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
+        binary_path = "./target/deploy/price_based_performance_package.so"
+    }
+    deploy_program {
+        program_id = "pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz"
+        binary_path = "./target/deploy/performance_package_v2.so"
+    }
+    deploy_program {
+        program_id = "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH"
+        binary_path = "./target/deploy/mint_governor.so"
+    }
+    deploy_program {
+        program_id = "LiQnowFbFQdYyZhF4pUbpsrZCjxRTQ1upKJxZ2VXjde"
+        binary_path = "./target/deploy/liquidation.so"
+    }
+}
