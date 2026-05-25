@@ -1,0 +1,97 @@
+# Single source of truth for repo-guard policy. See scripts/repo-guard.ts and
+# .github/workflows/repo-guard.yml for the checks that consume this file.
+#
+# Editing this file requires CODEOWNERS review.
+
+[toolchain]
+# Anchor CLI version. Consistent across every workflow.
+anchor_version = "0.29.0"
+
+# Solana CLI declared in Anchor.toml `[toolchain] solana_version`. Local-dev
+# only: anchor test on a developer machine auto-installs this version. CI
+# workflows pass their own solana-cli-version explicitly and ignore Anchor.toml.
+local_dev_solana_version = "1.17.34"
+
+# Per-workflow Solana CLI versions. The split is intentional:
+#
+#   1.17.31 - build/test workflows that compile programs locally. This is the
+#             newest tag published as `ellipsislabs/solana:<ver>` on Docker
+#             Hub, which is what solana-verify uses to reproduce the deployed
+#             .so files. Changing this version changes the bytes that
+#             solana-verify expects, breaking verification of deployed
+#             programs unless they are rebuilt.
+#
+#   1.17.16 - CLI tooling workflows. These do not compile - they only invoke
+#             `solana program write-buffer` / `solana-verify --remote`, which
+#             talk to the cluster RPC. The version mostly does not matter;
+#             1.17.16 is what the repo has used and there is no reason to
+#             move it.
+#
+# `reusable-build.yaml` is intentionally not in this map: it reads versions
+# from Cargo.lock via `solana-developers/github-actions/extract-versions`,
+# so the version is dynamic and stays in sync with the workspace.
+[toolchain.workflow_solana_cli]
+".github/workflows/anchor-test.yaml" = "1.17.31"
+".github/workflows/generate-verifiable-builds.yaml" = "1.17.31"
+".github/workflows/deploy-buffer.yaml" = "1.17.16"
+".github/workflows/verify-build.yaml" = "1.17.16"
+
+[cargo]
+# Every program's Cargo.toml must pin external deps with `=x.y.z`. Loose
+# specs (^, ~, ranges, "*") fail.
+
+# anchor-lang and anchor-spl must be the version declared below across
+# every program manifest. Cross-program divergence (program A pins =0.29.0
+# but program B pins =0.29.1) fails.
+anchor_lang_version = "0.29.0"
+anchor_spl_version = "0.29.0"
+
+# `solana-program` crate version. Distinct from any of the CLI versions
+# above - this is the Solana primitives library that program binaries link
+# against, and Cargo.lock is built around it. Currently pinned by the three
+# launchpads (v06/v07/v08). The guard fails if any program pins a different
+# version. Cargo.lock freshness independently catches drift between this
+# pin and the resolved tree.
+solana_program_version = "1.17.14"
+
+# Minimum age in days for a newly pinned crate version. The check is scoped
+# to crates whose version differs from the PR base, so unrelated bumps that
+# already landed do not re-trip the gate for the full window.
+package_min_age_days = 14
+
+[actions]
+# Third-party GitHub Actions must be SHA-pinned. GitHub-owned actions (the
+# `actions/*` namespace) may stay tag-pinned. The allowlist below maps
+# action repos to the commit SHA we trust; the guard fails if a workflow
+# references a SHA not in this list (or a non-SHA ref for a third-party
+# action).
+#
+# To add a new third-party action: look up the SHA for the desired tag,
+# add it here in a PR that also bumps the workflow reference. CODEOWNERS
+# review is required.
+[actions.sha_allowlist]
+"metadaoproject/anchor-test" = ["876dde6990e0a3d22e1cf1c702b4e4c64aa47d15"]               # v2.3
+"metadaoproject/anchor-verifiable-build" = ["6d8fc1999ea4b7ff701e8b166903b398741e1c50"] # v0.4
+"metadaoproject/setup-anchor" = ["7d1e9699eb18c33ba5f32f6a9952f0e90515996a"]             # v3.2
+"nick-fields/retry" = [
+  "ce71cc2ab81d554ebbe88c79ab5975992d79ba08",                                            # v3
+  "14672906e672a08bd6eeb15720e9ed3ce869cdd4",                                            # v2
+]
+"solana-developers/github-actions" = ["860d4e7d3afc9f180f3c5016593a1e86e77eede4"]        # v0.2.5
+"solana-developers/squads-program-action" = ["5bb4fd81d1ec273b5ca002bb268afbc7dd11f24b"] # v0.3.0
+"EndBug/add-and-commit" = ["a94899bca583c204427a224a7af87c02f9b325d5"]                   # v9.1.4
+"peter-evans/find-comment" = ["3eae4d37986fb5a8592848f6a574fdf654e61f9e"]               # v3
+"peter-evans/create-or-update-comment" = ["71345be0265236311c031f5c7866368bd1eff043"]   # v4
+
+[sensitive_diff]
+# Files where any change should be surfaced for security review even if no
+# heuristic matches. CODEOWNERS is the real merge gate; this is the
+# review-assist signal in the PR comment + GitHub annotations.
+files = [
+  "Anchor.toml",
+  "Cargo.toml",
+  "Cargo.lock",
+  ".github/repo-guard.toml",
+  ".github/workflows/repo-guard.yml",
+  "scripts/repo-guard.ts",
+]

@@ -44,7 +44,7 @@ runs:
     - name: Write IDL buffer
       id: write-buffer
       if: steps.check-idl.outputs.exists == 'true'
-      uses: nick-fields/retry@v2
+      uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2
       with:
         timeout_minutes: 5
         max_attempts: 3
@@ -74,7 +74,7 @@ runs:
 
     - name: Set Buffer Authority
       if: steps.write-buffer.outputs.buffer != ''
-      uses: nick-fields/retry@v2
+      uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2
       with:
         timeout_minutes: 5
         max_attempts: 3
@@ -89,7 +89,7 @@ runs:
 
     - name: Set Program IDL Authority
       if: steps.write-buffer.outputs.buffer != ''
-      uses: nick-fields/retry@v2
+      uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2
       with:
         timeout_minutes: 5
         max_attempts: 3

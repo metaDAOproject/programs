@@ -19,15 +19,15 @@ production = []
 custom-heap = []
 
 [dependencies]
-anchor-lang = "0.29.0"
-anchor-spl = "0.29.0"
+anchor-lang = "=0.29.0"
+anchor-spl = "=0.29.0"
 futarchy = { path = "../futarchy", features = ["cpi"] }
 price_based_performance_package = { path = "../price_based_performance_package", features = ["cpi"] }
 spl-memo = "=4.0.0"
 solana-program = "=1.17.14"
 spl-token = "=4.0.0"
 ahash = "=0.8.6"
-solana-security-txt = "1.1.1"
+solana-security-txt = "=1.1.1"
 squads-multisig-program = { git = "https://github.com/Squads-Protocol/v4", package = "squads-multisig-program", rev = "6d5235da621a2e9b7379ea358e48760e981053be", features = ["cpi"] }
 damm_v2_cpi = { path = "../damm_v2_cpi", features = ["cpi"] }
 bid_wall = { path = "../bid_wall", features = ["cpi"] }

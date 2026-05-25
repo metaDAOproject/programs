@@ -6,6 +6,11 @@ on:
       - production
       - develop
 
+# Jobs commit the verifiable-build .so files back to the branch via
+# EndBug/add-and-commit, so they need write access to repository contents.
+permissions:
+  contents: write
+
 env:
   HUSKY: 0
 
@@ -14,7 +19,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: futarchy
           anchor-version: '0.29.0'
@@ -23,7 +28,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/futarchy.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update futarchy verifiable build'
@@ -31,7 +36,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: conditional_vault
           anchor-version: '0.29.0'
@@ -40,7 +45,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/conditional_vault.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update conditional_vault verifiable build'
@@ -48,7 +53,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: launchpad
           anchor-version: '0.29.0'
@@ -57,7 +62,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/launchpad.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update launchpad_v6 verifiable build'
@@ -65,7 +70,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: price_based_performance_package
           anchor-version: '0.29.0'
@@ -74,7 +79,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/price_based_performance_package.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update price_based_performance_package verifiable build'
@@ -82,7 +87,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: launchpad_v7
           anchor-version: '0.29.0'
@@ -91,7 +96,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/launchpad_v7.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update launchpad_v7 verifiable build'
@@ -99,7 +104,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: bid_wall
           anchor-version: '0.29.0'
@@ -108,7 +113,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/bid_wall.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update bid_wall verifiable build'
@@ -116,7 +121,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: liquidation
           anchor-version: '0.29.0'
@@ -125,7 +130,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/liquidation.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update liquidation verifiable build'
@@ -133,7 +138,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: mint_governor
           anchor-version: '0.29.0'
@@ -142,7 +147,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/mint_governor.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update mint_governor verifiable build'
@@ -150,7 +155,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: performance_package_v2
           anchor-version: '0.29.0'
@@ -159,7 +164,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/performance_package_v2.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update performance_package_v2 verifiable build'
@@ -167,7 +172,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/anchor-verifiable-build@v0.4
+      - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: launchpad_v8
           anchor-version: '0.29.0'
@@ -176,7 +181,7 @@ jobs:
       - run: 'git pull --rebase'
       - run: cp target/deploy/launchpad_v8.so ./verifiable-builds
       - name: Commit verifiable build back to mainline
-        uses: EndBug/add-and-commit@v9.1.4
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           default_author: github_actions
           message: 'Update launchpad_v8 verifiable build'

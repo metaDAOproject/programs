@@ -1,5 +1,8 @@
 name: Reusable Build Solana Program
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:
@@ -133,11 +136,11 @@ jobs:
             echo "MULTISIG_VAULT=${{ secrets.DEVNET_MULTISIG_VAULT }}" >> $GITHUB_ENV
           fi
 
-      - uses: solana-developers/github-actions/extract-versions@v0.2.5
+      - uses: solana-developers/github-actions/extract-versions@860d4e7d3afc9f180f3c5016593a1e86e77eede4 # v0.2.5
         if: inputs.override-solana-version == '' || inputs.override-anchor-version == ''
         id: versions
 
-      - uses: solana-developers/github-actions/setup-all@v0.2.5
+      - uses: solana-developers/github-actions/setup-all@860d4e7d3afc9f180f3c5016593a1e86e77eede4 # v0.2.5
         id: setup
         with:
           solana_version: ${{ inputs.override-solana-version != '' && inputs.override-solana-version || steps.versions.outputs.solana_version }}
@@ -261,14 +264,14 @@ jobs:
           fi
 
       - name: Build Anchor
-        uses: solana-developers/github-actions/build-anchor@v0.2.5
+        uses: solana-developers/github-actions/build-anchor@860d4e7d3afc9f180f3c5016593a1e86e77eede4 # v0.2.5
         if: steps.check-anchor.outputs.is_anchor == 'true'
         with:
           program: ${{ env.PROGRAM_NAME }}
           features: ${{ inputs.features }}
 
       - name: Build Verified
-        uses: solana-developers/github-actions/build-verified@v0.2.5
+        uses: solana-developers/github-actions/build-verified@860d4e7d3afc9f180f3c5016593a1e86e77eede4 # v0.2.5
         id: build-verified
         with:
           program: ${{ env.PROGRAM_NAME }}
@@ -372,7 +375,7 @@ jobs:
           program-keypair: ${{ secrets.PROGRAM_ADDRESS_KEYPAIR }}
 
       - name: IDL Upload
-        uses: solana-developers/github-actions/idl-upload@v0.2.5
+        uses: solana-developers/github-actions/idl-upload@860d4e7d3afc9f180f3c5016593a1e86e77eede4 # v0.2.5
         if: inputs.upload_idl && inputs.use-squads == false
         with:
           program-id: ${{ env.PROGRAM_ID }}
@@ -402,7 +405,7 @@ jobs:
 
       - name: Create squads program upgrade transaction (set Idl buffer, verify pda, set program buffer)
         if: inputs.deploy && inputs.use-squads
-        uses: solana-developers/squads-program-action@v0.3.0
+        uses: solana-developers/squads-program-action@5bb4fd81d1ec273b5ca002bb268afbc7dd11f24b # v0.3.0
         with:
           rpc: ${{ env.DEPLOY_URL }}
           program: ${{ env.PROGRAM_ID }}
