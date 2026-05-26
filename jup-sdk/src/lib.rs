@@ -1,17 +1,19 @@
-use anchor_lang::prelude::{AnchorDeserialize, Pubkey, Space};
+pub mod futarchy_amm;
+pub mod lamport;
 
-use anyhow::{Context, Result, anyhow, bail};
+pub use futarchy_amm::{FutarchyAmm, MAX_BPS, TAKER_FEE_BPS};
+
+use crate::{
+    futarchy_amm::{FutarchyAmmSwap, SwapType},
+    lamport::ToLamport,
+};
+use anchor_lang::prelude::{AnchorDeserialize, Pubkey, Space};
+use anyhow::{Context, Result, bail};
 use jupiter_amm_interface::{
     AccountMap, Amm, AmmContext, AmmProgramIdToLabel, KeyedAccount, Quote, Swap,
     SwapAndAccountMetas, SwapMode, SwapParams,
 };
-
-pub mod futarchy_amm;
-
-pub use futarchy_amm::{FutarchyAmm, MAX_BPS, TAKER_FEE_BPS};
 use rust_decimal::Decimal;
-
-use crate::futarchy_amm::{FutarchyAmmSwap, SwapType};
 
 pub const FUTARCHY_PROGRAM_ID: Pubkey =
     Pubkey::from_str_const("FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq");
@@ -40,6 +42,8 @@ impl std::fmt::Display for FutarchyAmmError {
         write!(f, "{:?}", self)
     }
 }
+
+impl std::error::Error for FutarchyAmmError {}
 
 #[derive(Debug, Clone)]
 pub struct FutarchyAmmClient {
@@ -176,12 +180,8 @@ impl Amm for FutarchyAmmClient {
         let fee_pct = Decimal::new(TAKER_FEE_BPS as i64, 2);
 
         // this isn't exact because of compounding, but should be close enough
-        let fee_amount = (quote_params.amount as u128)
-            .checked_mul(TAKER_FEE_BPS as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?
-            .checked_div(MAX_BPS as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?
-            as u64;
+        let fee_amount =
+            (quote_params.amount.lamports() * TAKER_FEE_BPS.lamports() / MAX_BPS.lamports())?.val();
 
         Ok(Quote {
             in_amount: quote_params.amount,

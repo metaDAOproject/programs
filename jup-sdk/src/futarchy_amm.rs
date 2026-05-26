@@ -1,9 +1,12 @@
 use anchor_lang::prelude::{
-    borsh, AccountMeta, AnchorDeserialize, AnchorSerialize, InitSpace, Pubkey,
+    AccountMeta, AnchorDeserialize, AnchorSerialize, InitSpace, Pubkey, borsh,
 };
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 
-use crate::FutarchyAmmError;
+use crate::{
+    FutarchyAmmError,
+    lamport::{Lamport, ToLamport},
+};
 
 // use crate::{FutarchyError, LP_TAKER_FEE_BPS, MAX_BPS, PROTOCOL_TAKER_FEE_BPS};
 pub const LP_TAKER_FEE_BPS: u16 = 25;
@@ -185,12 +188,9 @@ impl Pool {
     }
 
     pub fn swap(&mut self, input_amount: u64, swap_type: SwapType) -> Result<u64> {
-        let input_amount_after_protocol_fee = (input_amount as u128)
-            .checked_mul((MAX_BPS - PROTOCOL_TAKER_FEE_BPS) as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?
-            .checked_div(MAX_BPS as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?
-            as u64;
+        let input_amount_after_protocol_fee = (input_amount.lamports()
+            * (MAX_BPS - PROTOCOL_TAKER_FEE_BPS).lamports()
+            / MAX_BPS.lamports())?;
 
         let k = self.k();
 
@@ -198,53 +198,34 @@ impl Pool {
             SwapType::Buy => (self.quote_reserves, self.base_reserves),
             SwapType::Sell => (self.base_reserves, self.quote_reserves),
         };
+        let (input_reserve, output_reserve) = (input_reserve.lamports(), output_reserve.lamports());
 
         // airlifted from uniswap v1:
         // https://github.com/Uniswap/v1-contracts/blob/c10c08d81d6114f694baa8bd32f555a40f6264da/contracts/uniswap_exchange.vy#L106-L111
 
-        if input_reserve == 0 || output_reserve == 0 {
+        if input_reserve == Lamport::ZERO || output_reserve == Lamport::ZERO {
             bail!(FutarchyAmmError::InvalidReserves);
         }
 
-        let input_amount_after_lp_fee = (input_amount_after_protocol_fee as u128)
-            .checked_mul((MAX_BPS - LP_TAKER_FEE_BPS) as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
+        let input_amount_after_lp_fee =
+            (input_amount_after_protocol_fee * (MAX_BPS - LP_TAKER_FEE_BPS).lamports())?;
 
-        let numerator = input_amount_after_lp_fee
-            .checked_mul(output_reserve as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
+        let numerator = (input_amount_after_lp_fee * output_reserve)?;
 
-        let denominator = (input_reserve as u128)
-            .checked_mul(MAX_BPS as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?
-            .checked_add(input_amount_after_lp_fee as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
+        let denominator = (input_reserve * MAX_BPS.lamports() + input_amount_after_lp_fee)?;
 
-        let output_amount = (numerator
-            .checked_div(denominator)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?)
-            as u64;
+        let output_amount = (numerator / denominator)?;
 
         match swap_type {
             SwapType::Buy => {
-                self.quote_reserves = self
-                    .quote_reserves
-                    .checked_add(input_amount_after_protocol_fee)
-                    .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
-                self.base_reserves = self
-                    .base_reserves
-                    .checked_sub(output_amount)
-                    .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
+                self.quote_reserves =
+                    (self.quote_reserves.lamports() + input_amount_after_protocol_fee)?.val();
+                self.base_reserves = (self.base_reserves.lamports() - output_amount)?.val();
             }
             SwapType::Sell => {
-                self.base_reserves = self
-                    .base_reserves
-                    .checked_add(input_amount_after_protocol_fee)
-                    .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
-                self.quote_reserves = self
-                    .quote_reserves
-                    .checked_sub(output_amount)
-                    .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
+                self.base_reserves =
+                    (self.base_reserves.lamports() + input_amount_after_protocol_fee)?.val();
+                self.quote_reserves = (self.quote_reserves.lamports() - output_amount)?.val();
             }
         }
 
@@ -254,57 +235,40 @@ impl Pool {
             bail!(FutarchyAmmError::AmmInvariantViolated);
         }
 
-        Ok(output_amount)
+        Ok(output_amount.val())
     }
 
     pub fn feeless_swap(&mut self, input_amount: u64, swap_type: SwapType) -> Result<u64> {
         let k = self.k();
+        let input_amount = input_amount.lamports();
 
         let (input_reserve, output_reserve) = match swap_type {
             SwapType::Buy => (self.quote_reserves, self.base_reserves),
             SwapType::Sell => (self.base_reserves, self.quote_reserves),
         };
+        let (input_reserve, output_reserve) = (input_reserve.lamports(), output_reserve.lamports());
 
         // airlifted from uniswap v1:
         // https://github.com/Uniswap/v1-contracts/blob/c10c08d81d6114f694baa8bd32f555a40f6264da/contracts/uniswap_exchange.vy#L106-L111
 
-        if input_reserve == 0 || output_reserve == 0 {
+        if input_reserve == Lamport::ZERO || output_reserve == Lamport::ZERO {
             bail!(FutarchyAmmError::InvalidReserves);
         }
 
-        let numerator = (input_amount as u128)
-            .checked_mul(output_reserve as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
+        let numerator = (input_amount * output_reserve)?;
 
-        let denominator = (input_reserve as u128)
-            .checked_add(input_amount as u128)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
+        let denominator = (input_reserve + input_amount)?;
 
-        let output_amount = (numerator
-            .checked_div(denominator)
-            .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?)
-            as u64;
+        let output_amount = (numerator / denominator)?;
 
         match swap_type {
             SwapType::Buy => {
-                self.quote_reserves = self
-                    .quote_reserves
-                    .checked_add(input_amount)
-                    .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
-                self.base_reserves = self
-                    .base_reserves
-                    .checked_sub(output_amount)
-                    .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
+                self.quote_reserves = (self.quote_reserves.lamports() + input_amount)?.val();
+                self.base_reserves = (self.base_reserves.lamports() - output_amount)?.val();
             }
             SwapType::Sell => {
-                self.base_reserves = self
-                    .base_reserves
-                    .checked_add(input_amount)
-                    .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
-                self.quote_reserves = self
-                    .quote_reserves
-                    .checked_sub(output_amount)
-                    .ok_or_else(|| anyhow!(FutarchyAmmError::MathOverflow))?;
+                self.base_reserves = (self.base_reserves.lamports() + input_amount)?.val();
+                self.quote_reserves = (self.quote_reserves.lamports() - output_amount)?.val();
             }
         }
 
@@ -314,7 +278,7 @@ impl Pool {
             bail!(FutarchyAmmError::AmmInvariantViolated);
         }
 
-        Ok(output_amount)
+        Ok(output_amount.val())
     }
 
     pub fn simulate_swap(&self, input_amount: u64, swap_type: SwapType) -> Result<u64> {

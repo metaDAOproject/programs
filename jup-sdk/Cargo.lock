@@ -1451,7 +1451,7 @@ checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
 
 [[package]]
 name = "futarchy-amm-jup-sdk"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "ahash 0.8.12",
  "anchor-lang",
