@@ -1,5 +1,8 @@
 name: Verify Build
 
+permissions:
+  contents: read
+
 env:
   HUSKY: 0
 
@@ -37,7 +40,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/setup-anchor@v3.2
+      - uses: metadaoproject/setup-anchor@7d1e9699eb18c33ba5f32f6a9952f0e90515996a # v3.2
         with:
           anchor-version: ${{ inputs.anchor-version }}
           solana-cli-version: ${{ inputs.solana-cli-version }}
