@@ -118,8 +118,10 @@ const BASE_REF = process.env.GITHUB_BASE_REF ?? "";
 const IS_CI = process.env.CI === "true";
 const CONFIG_PATH = join(ROOT, ".github", "repo-guard.toml");
 
-const cargoExactPattern = /^=\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
-const npmExactPattern = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+const cargoExactPattern =
+  /^=\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+const npmExactPattern =
+  /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const sha40Pattern = /^[0-9a-f]{40}$/;
 
 const cargoIgnoredDirectories = new Set([".git", "target", "node_modules"]);
@@ -192,7 +194,9 @@ function parseToml(text: string): Record<string, Record<string, TomlValue>> {
         if (!p) continue;
         const sm = p.match(/^"([^"]*)"$/);
         if (!sm) {
-          throw new Error(`repo-guard.toml line ${i + 1}: array item not a string: ${p}`);
+          throw new Error(
+            `repo-guard.toml line ${i + 1}: array item not a string: ${p}`,
+          );
         }
         items.push(sm[1]!);
       }
@@ -211,7 +215,9 @@ function parseToml(text: string): Record<string, Record<string, TomlValue>> {
       continue;
     }
 
-    throw new Error(`repo-guard.toml line ${i + 1}: unsupported value: ${valuePart}`);
+    throw new Error(
+      `repo-guard.toml line ${i + 1}: unsupported value: ${valuePart}`,
+    );
   }
 
   return result;
@@ -239,7 +245,9 @@ function loadConfig(): GuardConfig {
   const allowlist = new Map<string, Set<string>>();
   for (const [k, v] of Object.entries(toml["actions.sha_allowlist"] ?? {})) {
     if (!Array.isArray(v)) {
-      throw new Error(`repo-guard.toml: actions.sha_allowlist.${k} must be array of strings`);
+      throw new Error(
+        `repo-guard.toml: actions.sha_allowlist.${k} must be array of strings`,
+      );
     }
     allowlist.set(k, new Set(v));
   }
@@ -251,16 +259,23 @@ function loadConfig(): GuardConfig {
   }
 
   const workflowSolanaCli = new Map<string, string>();
-  for (const [k, v] of Object.entries(toml["toolchain.workflow_solana_cli"] ?? {})) {
+  for (const [k, v] of Object.entries(
+    toml["toolchain.workflow_solana_cli"] ?? {},
+  )) {
     if (typeof v !== "string") {
-      throw new Error(`repo-guard.toml: toolchain.workflow_solana_cli.${k} must be a string`);
+      throw new Error(
+        `repo-guard.toml: toolchain.workflow_solana_cli.${k} must be a string`,
+      );
     }
     workflowSolanaCli.set(k, v);
   }
 
   return {
     anchorVersion: requireString("toolchain", "anchor_version"),
-    localDevSolanaVersion: requireString("toolchain", "local_dev_solana_version"),
+    localDevSolanaVersion: requireString(
+      "toolchain",
+      "local_dev_solana_version",
+    ),
     workflowSolanaCli,
     anchorLangVersion: requireString("cargo", "anchor_lang_version"),
     anchorSplVersion: requireString("cargo", "anchor_spl_version"),
@@ -362,7 +377,9 @@ function parseCargoToml(file: string): CargoDep[] {
 
     const section = stripped.match(/^\[([^\]]+)\]$/);
     if (section) {
-      inDeps = /^(dependencies|dev-dependencies|build-dependencies)$/.test(section[1]!);
+      inDeps = /^(dependencies|dev-dependencies|build-dependencies)$/.test(
+        section[1]!,
+      );
       continue;
     }
 
@@ -473,7 +490,10 @@ function checkCrossProgramConsistency(config: GuardConfig): {
   violations: CrossProgramViolation[];
 } {
   const files = walkCargoToml(join(ROOT, "programs"), []);
-  const seen = new Map<string, Map<string, Array<{ file: string; spec: string }>>>();
+  const seen = new Map<
+    string,
+    Map<string, Array<{ file: string; spec: string }>>
+  >();
 
   const watched = new Map<string, string>([
     ["anchor-lang", config.anchorLangVersion],
@@ -517,18 +537,24 @@ function checkCrossProgramConsistency(config: GuardConfig): {
 
 // --- Crates.io age check ---
 
-async function fetchCratePublishTime(crate: string, version: string): Promise<string> {
+async function fetchCratePublishTime(
+  crate: string,
+  version: string,
+): Promise<string> {
   const url = `https://crates.io/api/v1/crates/${encodeURIComponent(crate)}/${encodeURIComponent(version)}`;
   // crates.io requires a descriptive User-Agent. Without it the API returns
   // 403. See https://crates.io/policies#crawlers
   const response = await fetch(url, {
     headers: {
       Accept: "application/json",
-      "User-Agent": "metadao-repo-guard (https://github.com/metaDAOproject/programs)",
+      "User-Agent":
+        "metadao-repo-guard (https://github.com/metaDAOproject/programs)",
     },
   });
   if (!response.ok) {
-    throw new Error(`crates.io returned ${response.status} for ${crate}@${version}`);
+    throw new Error(
+      `crates.io returned ${response.status} for ${crate}@${version}`,
+    );
   }
   const meta = (await response.json()) as { version?: { created_at?: string } };
   const at = meta.version?.created_at;
@@ -540,7 +566,7 @@ async function fetchCratePublishTime(crate: string, version: string): Promise<st
 
 function filterCratesToPRChanges(
   all: Map<string, Set<string>>,
-  diffBase: string
+  diffBase: string,
 ): Map<string, Set<string>> {
   const changed = new Map<string, Set<string>>();
   for (const [key, locations] of all.entries()) {
@@ -568,7 +594,10 @@ function filterCratesToPRChanges(
           const stripped = raw.replace(/\s*#.*$/, "").trimEnd();
           const section = stripped.match(/^\[([^\]]+)\]$/);
           if (section) {
-            inDeps = /^(dependencies|dev-dependencies|build-dependencies)$/.test(section[1]!);
+            inDeps =
+              /^(dependencies|dev-dependencies|build-dependencies)$/.test(
+                section[1]!,
+              );
             continue;
           }
           if (!inDeps) continue;
@@ -597,8 +626,12 @@ function filterCratesToPRChanges(
 
 async function checkCrateAge(
   config: GuardConfig,
-  exactDeps: Map<string, Set<string>>
-): Promise<{ status: CheckStatus; violations: CrateAgeViolation[]; reason?: string }> {
+  exactDeps: Map<string, Set<string>>,
+): Promise<{
+  status: CheckStatus;
+  violations: CrateAgeViolation[];
+  reason?: string;
+}> {
   const diffBase = getDiffBase();
   if (!diffBase) {
     return {
@@ -619,7 +652,7 @@ async function checkCrateAge(
       const version = key.slice(atIdx + 1);
       const publishedAt = await fetchCratePublishTime(name, version);
       const ageDays = Math.floor(
-        (now - new Date(publishedAt).getTime()) / (1000 * 60 * 60 * 24)
+        (now - new Date(publishedAt).getTime()) / (1000 * 60 * 60 * 24),
       );
       if (ageDays >= config.packageMinAgeDays) continue;
       violations.push({
@@ -690,7 +723,9 @@ function checkPackageJsonPinning(): {
     for (const section of npmDepSections) {
       const deps = pkg[section];
       if (!deps || typeof deps !== "object") continue;
-      for (const [name, spec] of Object.entries(deps as Record<string, unknown>)) {
+      for (const [name, spec] of Object.entries(
+        deps as Record<string, unknown>,
+      )) {
         if (typeof spec !== "string") continue;
         if (!shouldPinNpmSpec(spec)) continue;
         if (!npmExactPattern.test(spec)) {
@@ -712,10 +747,13 @@ function checkPackageJsonPinning(): {
   };
 }
 
-async function fetchNpmPublishTime(name: string, version: string): Promise<string> {
+async function fetchNpmPublishTime(
+  name: string,
+  version: string,
+): Promise<string> {
   const response = await fetch(
     `https://registry.npmjs.org/${encodeURIComponent(name)}`,
-    { headers: { Accept: "application/json" } }
+    { headers: { Accept: "application/json" } },
   );
   if (!response.ok) {
     throw new Error(`npm registry returned ${response.status} for ${name}`);
@@ -730,7 +768,7 @@ async function fetchNpmPublishTime(name: string, version: string): Promise<strin
 
 function filterNpmDepsToChanges(
   all: Map<string, Set<string>>,
-  diffBase: string
+  diffBase: string,
 ): Map<string, Set<string>> {
   const locationPattern = /^(.+) \((\w+)\)$/;
   const changed = new Map<string, Set<string>>();
@@ -774,11 +812,19 @@ function filterNpmDepsToChanges(
 
 async function checkNpmAge(
   config: GuardConfig,
-  exactDeps: Map<string, Set<string>>
-): Promise<{ status: CheckStatus; violations: NpmAgeViolation[]; reason?: string }> {
+  exactDeps: Map<string, Set<string>>,
+): Promise<{
+  status: CheckStatus;
+  violations: NpmAgeViolation[];
+  reason?: string;
+}> {
   const diffBase = getDiffBase();
   if (!diffBase) {
-    return { status: "skip", violations: [], reason: "no PR base ref available" };
+    return {
+      status: "skip",
+      violations: [],
+      reason: "no PR base ref available",
+    };
   }
 
   const scoped = filterNpmDepsToChanges(exactDeps, diffBase);
@@ -792,7 +838,7 @@ async function checkNpmAge(
       const version = key.slice(atIdx + 1);
       const publishedAt = await fetchNpmPublishTime(name, version);
       const ageDays = Math.floor(
-        (now - new Date(publishedAt).getTime()) / (1000 * 60 * 60 * 24)
+        (now - new Date(publishedAt).getTime()) / (1000 * 60 * 60 * 24),
       );
       if (ageDays >= config.packageMinAgeDays) continue;
       violations.push({
@@ -822,7 +868,10 @@ async function checkNpmAge(
 
 function listWorkflowFiles(): string[] {
   const acc: string[] = [];
-  for (const dir of [join(ROOT, ".github", "workflows"), join(ROOT, ".github", "actions")]) {
+  for (const dir of [
+    join(ROOT, ".github", "workflows"),
+    join(ROOT, ".github", "actions"),
+  ]) {
     if (!existsSync(dir)) continue;
     walkYaml(dir, acc);
   }
@@ -903,10 +952,20 @@ function checkWorkflowToolchain(config: GuardConfig): {
 // anchor-lang's transitive dep - not our concern here.
 function checkSolanaProgramCrate(config: GuardConfig): {
   status: CheckStatus;
-  violations: Array<{ file: string; line: number; spec: string; expected: string }>;
+  violations: Array<{
+    file: string;
+    line: number;
+    spec: string;
+    expected: string;
+  }>;
 } {
   const files = walkCargoToml(join(ROOT, "programs"), []);
-  const violations: Array<{ file: string; line: number; spec: string; expected: string }> = [];
+  const violations: Array<{
+    file: string;
+    line: number;
+    spec: string;
+    expected: string;
+  }> = [];
 
   for (const file of files) {
     const deps = parseCargoToml(file);
@@ -942,12 +1001,20 @@ function checkAnchorTomlSolanaVersion(config: GuardConfig): {
 } {
   const anchorTomlPath = join(ROOT, "Anchor.toml");
   if (!existsSync(anchorTomlPath)) {
-    return { status: "skip", actual: null, expected: config.localDevSolanaVersion };
+    return {
+      status: "skip",
+      actual: null,
+      expected: config.localDevSolanaVersion,
+    };
   }
   const text = readFileSync(anchorTomlPath, "utf8");
   const match = text.match(/^\s*solana_version\s*=\s*"([^"]+)"/m);
   if (!match) {
-    return { status: "skip", actual: null, expected: config.localDevSolanaVersion };
+    return {
+      status: "skip",
+      actual: null,
+      expected: config.localDevSolanaVersion,
+    };
   }
   const actual = match[1]!;
   return {
@@ -1057,11 +1124,20 @@ function checkSensitiveDiff(config: GuardConfig): {
   }
 
   const changedFiles = new Set(
-    run("git", ["diff", "--name-only", `${diffBase}...HEAD`]).split("\n").filter(Boolean)
+    run("git", ["diff", "--name-only", `${diffBase}...HEAD`])
+      .split("\n")
+      .filter(Boolean),
   );
-  const touchedSensitiveFiles = [...config.sensitiveFiles].filter((f) => changedFiles.has(f));
+  const touchedSensitiveFiles = [...config.sensitiveFiles].filter((f) =>
+    changedFiles.has(f),
+  );
 
-  const diff = run("git", ["diff", "--unified=0", "--no-color", `${diffBase}...HEAD`]);
+  const diff = run("git", [
+    "diff",
+    "--unified=0",
+    "--no-color",
+    `${diffBase}...HEAD`,
+  ]);
 
   const findings: SensitiveFinding[] = [];
   let currentFile = "";
@@ -1092,7 +1168,9 @@ function checkSensitiveDiff(config: GuardConfig): {
       continue;
     }
 
-    const kinds = sensitiveRules.filter((r) => r.pattern.test(text)).map((r) => r.kind);
+    const kinds = sensitiveRules
+      .filter((r) => r.pattern.test(text))
+      .map((r) => r.kind);
     if (kinds.length > 0) {
       findings.push({
         file: currentFile,
@@ -1120,23 +1198,36 @@ function renderHeader(title: string, status: CheckStatus): string[] {
   return [`### ${title}`, "", `- Status: ${status}`];
 }
 
-function renderCargoPinning(r: ReturnType<typeof checkCargoExactPinning>): string[] {
+function renderCargoPinning(
+  r: ReturnType<typeof checkCargoExactPinning>,
+): string[] {
   const lines = renderHeader("Cargo dependency pinning", r.status);
   if (r.status === "pass") {
-    lines.push("- Every `programs/*/Cargo.toml` dep uses `=x.y.z`, a `path = ..` workspace ref, or a git dep with a 40-char `rev`.");
+    lines.push(
+      "- Every `programs/*/Cargo.toml` dep uses `=x.y.z`, a `path = ..` workspace ref, or a git dep with a 40-char `rev`.",
+    );
     return lines;
   }
   lines.push("- The following Cargo entries are not exact:");
   for (const v of r.violations) {
-    lines.push(`- ${fmtPath(v.file)} -> \`${v.dependency}\`: ${v.reason}; spec: \`${v.spec}\``);
+    lines.push(
+      `- ${fmtPath(v.file)} -> \`${v.dependency}\`: ${v.reason}; spec: \`${v.spec}\``,
+    );
   }
   return lines;
 }
 
-function renderCrossProgram(r: ReturnType<typeof checkCrossProgramConsistency>): string[] {
-  const lines = renderHeader("Cross-program Anchor/Solana version consistency", r.status);
+function renderCrossProgram(
+  r: ReturnType<typeof checkCrossProgramConsistency>,
+): string[] {
+  const lines = renderHeader(
+    "Cross-program Anchor/Solana version consistency",
+    r.status,
+  );
   if (r.status === "pass") {
-    lines.push("- `anchor-lang` and `anchor-spl` are pinned to the version declared in `repo-guard.toml` across every program.");
+    lines.push(
+      "- `anchor-lang` and `anchor-spl` are pinned to the version declared in `repo-guard.toml` across every program.",
+    );
     return lines;
   }
   for (const v of r.violations) {
@@ -1148,41 +1239,59 @@ function renderCrossProgram(r: ReturnType<typeof checkCrossProgramConsistency>):
   return lines;
 }
 
-function renderCrateAge(r: Awaited<ReturnType<typeof checkCrateAge>>, config: GuardConfig): string[] {
+function renderCrateAge(
+  r: Awaited<ReturnType<typeof checkCrateAge>>,
+  config: GuardConfig,
+): string[] {
   const lines = renderHeader("Crate minimum age", r.status);
   if (r.status === "pass") {
-    lines.push(`- All Cargo deps changed by this PR are at least ${config.packageMinAgeDays} days old on crates.io.`);
+    lines.push(
+      `- All Cargo deps changed by this PR are at least ${config.packageMinAgeDays} days old on crates.io.`,
+    );
     return lines;
   }
   if (r.status === "skip") {
     lines.push(`- Skipped: ${r.reason}`);
     return lines;
   }
-  lines.push(`- The following crates are newer than ${config.packageMinAgeDays} days:`);
+  lines.push(
+    `- The following crates are newer than ${config.packageMinAgeDays} days:`,
+  );
   for (const v of r.violations) {
     lines.push(
-      `- \`${v.crate}@${v.version}\` is ${v.ageDays} days old (published ${v.publishedAt}); used in ${v.usedIn.map(fmtPath).join(", ")}`
+      `- \`${v.crate}@${v.version}\` is ${v.ageDays} days old (published ${v.publishedAt}); used in ${v.usedIn.map(fmtPath).join(", ")}`,
     );
   }
   return lines;
 }
 
-function renderPackageJson(r: ReturnType<typeof checkPackageJsonPinning>): string[] {
+function renderPackageJson(
+  r: ReturnType<typeof checkPackageJsonPinning>,
+): string[] {
   const lines = renderHeader("Yarn package.json pinning", r.status);
   if (r.status === "pass") {
-    lines.push("- All `package.json` deps use exact versions (no `^`, `~`, ranges).");
+    lines.push(
+      "- All `package.json` deps use exact versions (no `^`, `~`, ranges).",
+    );
     return lines;
   }
   for (const v of r.violations) {
-    lines.push(`- ${fmtPath(v.file)} -> \`${v.section}.${v.dependency}\` uses \`${v.spec}\``);
+    lines.push(
+      `- ${fmtPath(v.file)} -> \`${v.section}.${v.dependency}\` uses \`${v.spec}\``,
+    );
   }
   return lines;
 }
 
-function renderNpmAge(r: Awaited<ReturnType<typeof checkNpmAge>>, config: GuardConfig): string[] {
+function renderNpmAge(
+  r: Awaited<ReturnType<typeof checkNpmAge>>,
+  config: GuardConfig,
+): string[] {
   const lines = renderHeader("npm minimum age", r.status);
   if (r.status === "pass") {
-    lines.push(`- All npm deps changed by this PR are at least ${config.packageMinAgeDays} days old.`);
+    lines.push(
+      `- All npm deps changed by this PR are at least ${config.packageMinAgeDays} days old.`,
+    );
     return lines;
   }
   if (r.status === "skip") {
@@ -1191,55 +1300,81 @@ function renderNpmAge(r: Awaited<ReturnType<typeof checkNpmAge>>, config: GuardC
   }
   for (const v of r.violations) {
     lines.push(
-      `- \`${v.dependency}@${v.version}\` is ${v.ageDays} days old (published ${v.publishedAt}); used in ${v.usedIn.map(fmtPath).join(", ")}`
+      `- \`${v.dependency}@${v.version}\` is ${v.ageDays} days old (published ${v.publishedAt}); used in ${v.usedIn.map(fmtPath).join(", ")}`,
     );
   }
   return lines;
 }
 
-function renderWorkflowToolchain(r: ReturnType<typeof checkWorkflowToolchain>, config: GuardConfig): string[] {
+function renderWorkflowToolchain(
+  r: ReturnType<typeof checkWorkflowToolchain>,
+  config: GuardConfig,
+): string[] {
   const lines = renderHeader("Workflow toolchain consistency", r.status);
   if (r.status === "pass") {
-    lines.push(`- Every workflow declares \`anchor-version: ${config.anchorVersion}\`.`);
-    lines.push("- Per-file \`solana-cli-version\` values match \`[toolchain.workflow_solana_cli]\` in \`repo-guard.toml\`.");
+    lines.push(
+      `- Every workflow declares \`anchor-version: ${config.anchorVersion}\`.`,
+    );
+    lines.push(
+      "- Per-file \`solana-cli-version\` values match \`[toolchain.workflow_solana_cli]\` in \`repo-guard.toml\`.",
+    );
     return lines;
   }
   for (const v of r.violations) {
-    lines.push(`- ${fmtPath(v.file)}:${v.line} has \`${v.key}: ${v.actual}\`, expected \`${v.expected}\``);
+    lines.push(
+      `- ${fmtPath(v.file)}:${v.line} has \`${v.key}: ${v.actual}\`, expected \`${v.expected}\``,
+    );
   }
   return lines;
 }
 
-function renderSolanaProgramCrate(r: ReturnType<typeof checkSolanaProgramCrate>, config: GuardConfig): string[] {
+function renderSolanaProgramCrate(
+  r: ReturnType<typeof checkSolanaProgramCrate>,
+  config: GuardConfig,
+): string[] {
   const lines = renderHeader("solana-program crate pin", r.status);
   if (r.status === "pass") {
-    lines.push(`- Every \`solana-program = "=X"\` declaration is \`=${config.solanaProgramVersion}\` (locked to match \`Cargo.lock\`).`);
+    lines.push(
+      `- Every \`solana-program = "=X"\` declaration is \`=${config.solanaProgramVersion}\` (locked to match \`Cargo.lock\`).`,
+    );
     return lines;
   }
   for (const v of r.violations) {
-    lines.push(`- ${fmtPath(v.file)}:${v.line} has \`solana-program = "${v.spec}"\`, expected \`${v.expected}\``);
+    lines.push(
+      `- ${fmtPath(v.file)}:${v.line} has \`solana-program = "${v.spec}"\`, expected \`${v.expected}\``,
+    );
   }
   return lines;
 }
 
-function renderAnchorTomlSolanaVersion(r: ReturnType<typeof checkAnchorTomlSolanaVersion>): string[] {
+function renderAnchorTomlSolanaVersion(
+  r: ReturnType<typeof checkAnchorTomlSolanaVersion>,
+): string[] {
   const lines = renderHeader("Anchor.toml solana_version", r.status);
   if (r.status === "pass") {
-    lines.push(`- \`Anchor.toml\` declares \`solana_version = "${r.expected}"\` (local-dev install for \`anchor test\`).`);
+    lines.push(
+      `- \`Anchor.toml\` declares \`solana_version = "${r.expected}"\` (local-dev install for \`anchor test\`).`,
+    );
     return lines;
   }
   if (r.status === "skip") {
     lines.push("- Skipped: `Anchor.toml` has no `solana_version` field.");
     return lines;
   }
-  lines.push(`- \`Anchor.toml\` declares \`solana_version = "${r.actual ?? "(missing)"}"\`, expected \`"${r.expected}"\``);
+  lines.push(
+    `- \`Anchor.toml\` declares \`solana_version = "${r.actual ?? "(missing)"}"\`, expected \`"${r.expected}"\``,
+  );
   return lines;
 }
 
-function renderActionPinning(r: ReturnType<typeof checkWorkflowActionPinning>): string[] {
+function renderActionPinning(
+  r: ReturnType<typeof checkWorkflowActionPinning>,
+): string[] {
   const lines = renderHeader("GitHub Action SHA pinning", r.status);
   if (r.status === "pass") {
-    lines.push("- Every third-party action is pinned to a SHA in `[actions.sha_allowlist]`.");
+    lines.push(
+      "- Every third-party action is pinned to a SHA in `[actions.sha_allowlist]`.",
+    );
     return lines;
   }
   for (const v of r.violations) {
@@ -1255,15 +1390,23 @@ function renderSensitive(r: ReturnType<typeof checkSensitiveDiff>): string[] {
     return lines;
   }
   if (r.status === "pass") {
-    lines.push("- No suspicious changes to program IDs, error enums, or sensitive files detected.");
+    lines.push(
+      "- No suspicious changes to program IDs, error enums, or sensitive files detected.",
+    );
     return lines;
   }
-  lines.push("- Review hint only (CODEOWNERS is the merge gate). Lines below match heuristics for security-sensitive changes:");
+  lines.push(
+    "- Review hint only (CODEOWNERS is the merge gate). Lines below match heuristics for security-sensitive changes:",
+  );
   if (r.touchedSensitiveFiles.length > 0) {
-    lines.push(`- High-sensitivity files touched: ${r.touchedSensitiveFiles.map(fmtPath).join(", ")}`);
+    lines.push(
+      `- High-sensitivity files touched: ${r.touchedSensitiveFiles.map(fmtPath).join(", ")}`,
+    );
   }
   for (const f of r.findings.slice(0, 30)) {
-    lines.push(`- ${fmtPath(`${f.file}:${f.line}`)} ${f.kind} -> \`${f.text}\``);
+    lines.push(
+      `- ${fmtPath(`${f.file}:${f.line}`)} ${f.kind} -> \`${f.text}\``,
+    );
   }
   return lines;
 }
@@ -1328,10 +1471,14 @@ async function main() {
   // Sensitive findings as ::warning:: annotations
   if (sensitive.status === "warn") {
     for (const f of sensitive.findings.slice(0, 30)) {
-      console.log(`::warning file=${f.file},line=${f.line}::${f.kind}: ${f.text}`);
+      console.log(
+        `::warning file=${f.file},line=${f.line}::${f.kind}: ${f.text}`,
+      );
     }
     for (const f of sensitive.touchedSensitiveFiles) {
-      console.log(`::warning file=${f}::High-sensitivity file modified - please review carefully.`);
+      console.log(
+        `::warning file=${f}::High-sensitivity file modified - please review carefully.`,
+      );
     }
   }
 
@@ -1344,49 +1491,57 @@ async function main() {
   console.error(summary);
 
   for (const v of cargoPinning.violations) {
-    console.error(`::error file=${v.file}::${v.dependency} ${v.reason} (\`${v.spec}\`)`);
+    console.error(
+      `::error file=${v.file}::${v.dependency} ${v.reason} (\`${v.spec}\`)`,
+    );
   }
   for (const v of crossProgram.violations) {
     for (const inst of v.variants) {
       console.error(
-        `::error file=${inst.file}::${v.dependency} = ${inst.spec}, expected =${v.expected}`
+        `::error file=${inst.file}::${v.dependency} = ${inst.spec}, expected =${v.expected}`,
       );
     }
   }
   for (const v of solanaProgramCrate.violations) {
     console.error(
-      `::error file=${v.file},line=${v.line}::solana-program = "${v.spec}", expected "${v.expected}"`
+      `::error file=${v.file},line=${v.line}::solana-program = "${v.spec}", expected "${v.expected}"`,
     );
   }
   if (anchorTomlSolana.status === "fail") {
     console.error(
-      `::error file=Anchor.toml::solana_version = "${anchorTomlSolana.actual ?? "(missing)"}", expected "${anchorTomlSolana.expected}"`
+      `::error file=Anchor.toml::solana_version = "${anchorTomlSolana.actual ?? "(missing)"}", expected "${anchorTomlSolana.expected}"`,
     );
   }
   if (crateAge.status === "fail") {
     for (const v of crateAge.violations) {
       const where = v.usedIn[0]?.split(":")[0] ?? "Cargo.toml";
       console.error(
-        `::error file=${where}::${v.crate}@${v.version} is ${v.ageDays} days old (min ${config.packageMinAgeDays}d)`
+        `::error file=${where}::${v.crate}@${v.version} is ${v.ageDays} days old (min ${config.packageMinAgeDays}d)`,
       );
     }
   }
   for (const v of npmPinning.violations) {
-    console.error(`::error file=${v.file}::${v.section}.${v.dependency} uses \`${v.spec}\` - pin to exact`);
+    console.error(
+      `::error file=${v.file}::${v.section}.${v.dependency} uses \`${v.spec}\` - pin to exact`,
+    );
   }
   if (npmAge.status === "fail") {
     for (const v of npmAge.violations) {
       const where = v.usedIn[0]?.split(" ")[0] ?? "package.json";
       console.error(
-        `::error file=${where}::${v.dependency}@${v.version} is ${v.ageDays} days old (min ${config.packageMinAgeDays}d)`
+        `::error file=${where}::${v.dependency}@${v.version} is ${v.ageDays} days old (min ${config.packageMinAgeDays}d)`,
       );
     }
   }
   for (const v of workflowToolchain.violations) {
-    console.error(`::error file=${v.file},line=${v.line}::${v.key}: ${v.actual} (expected ${v.expected})`);
+    console.error(
+      `::error file=${v.file},line=${v.line}::${v.key}: ${v.actual} (expected ${v.expected})`,
+    );
   }
   for (const v of actionPinning.violations) {
-    console.error(`::error file=${v.file},line=${v.line}::${v.action}: ${v.reason}`);
+    console.error(
+      `::error file=${v.file},line=${v.line}::${v.action}: ${v.reason}`,
+    );
   }
 
   process.exit(1);

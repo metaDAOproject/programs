@@ -1,24 +1,12 @@
 use super::*;
 
-mod admin {
-    use anchor_lang::prelude::declare_id;
-
-    // MetaDAO-controlled admin - cannot be a Squads signer because of reentrancy
-    declare_id!("CWGawadYU8CzRVBecnJymNw97H7E3ndDinV5sMzesgY2");
-}
-
-#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
-pub struct AdminApproveMultisigProposalArgs {
-    pub transaction_index: u64,
-}
-
 #[derive(Accounts)]
-#[instruction(args: AdminApproveMultisigProposalArgs)]
-pub struct AdminApproveMultisigProposal<'info> {
+pub struct ExecuteMultisigProposalApproval<'info> {
     #[account(mut, has_one = squads_multisig)]
     pub dao: Account<'info, Dao>,
+
     #[account(mut)]
-    pub admin: Signer<'info>,
+    pub rent_receiver: Signer<'info>,
 
     #[account(
         mut,
@@ -28,7 +16,7 @@ pub struct AdminApproveMultisigProposal<'info> {
             dao.key().as_ref(),
         ],
         bump,
-        seeds::program = squads_multisig_program
+        seeds::program = squads_multisig_program::ID,
     )]
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
 
@@ -38,41 +26,58 @@ pub struct AdminApproveMultisigProposal<'info> {
             squads_multisig_program::SEED_PREFIX,
             squads_multisig.key().as_ref(),
             squads_multisig_program::SEED_TRANSACTION,
-            args.transaction_index.to_le_bytes().as_ref(),
+            enqueued_approval.transaction_index.to_le_bytes().as_ref(),
             squads_multisig_program::SEED_PROPOSAL,
         ],
         bump,
-        seeds::program = squads_multisig_program
+        seeds::program = squads_multisig_program::ID,
     )]
     pub squads_multisig_proposal: Account<'info, squads_multisig_program::Proposal>,
+
+    #[account(
+        mut,
+        close = rent_receiver,
+        has_one = dao,
+        seeds = [
+            SEED_ENQUEUED_MULTISIG_PROPOSAL_APPROVAL,
+            dao.key().as_ref(),
+            enqueued_approval.transaction_index.to_le_bytes().as_ref(),
+        ],
+        bump = enqueued_approval.pda_bump,
+    )]
+    pub enqueued_approval: Account<'info, EnqueuedMultisigProposalApproval>,
 
     pub squads_multisig_program:
         Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,
 }
 
-impl AdminApproveMultisigProposal<'_> {
-    pub fn validate(&self, _args: &AdminApproveMultisigProposalArgs) -> Result<()> {
-        #[cfg(feature = "production")]
-        require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
-
+impl ExecuteMultisigProposalApproval<'_> {
+    pub fn validate(&self) -> Result<()> {
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
 
-        require!(
-            self.dao.optimistic_proposal.is_none(),
-            FutarchyError::ActiveOptimisticProposalAlreadyEnqueued
-        );
+        if self.dao.optimistic_proposal.is_some() {
+            return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
+        }
+
+        validate_squads_proposal(
+            &self.squads_multisig_proposal,
+            &self.squads_multisig,
+            &self.dao.squads_multisig,
+            &self.dao.key(),
+        )?;
 
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>, _args: AdminApproveMultisigProposalArgs) -> Result<()> {
+    pub fn handle(ctx: Context<Self>) -> Result<()> {
         let Self {
             dao,
-            admin: _,
+            rent_receiver: _,
             squads_multisig,
             squads_multisig_proposal,
+            enqueued_approval: _,
             squads_multisig_program,
         } = ctx.accounts;
 
@@ -81,7 +86,6 @@ impl AdminApproveMultisigProposal<'_> {
         let dao_seeds = &[SEED_DAO, dao_creator_key, dao_nonce, &[dao.pda_bump]];
         let dao_signer = &[&dao_seeds[..]];
 
-        // Approve the proposal
         squads_multisig_program::cpi::proposal_approve(
             CpiContext::new_with_signer(
                 squads_multisig_program.to_account_info(),

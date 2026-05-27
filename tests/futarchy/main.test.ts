@@ -16,7 +16,8 @@ import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 
 import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
 import finalizeOptimisticProposal from "./unit/finalizeOptimisticProposal.test.js";
-import adminApproveMultisigProposal from "./unit/adminApproveMultisigProposal.test.js";
+import adminEnqueueMultisigProposalApproval from "./unit/adminEnqueueMultisigProposalApproval.test.js";
+import executeMultisigProposalApproval from "./unit/executeMultisigProposalApproval.test.js";
 import adminExecuteMultisigProposal from "./unit/adminExecuteMultisigProposal.test.js";
 import adminCancelProposal from "./unit/adminCancelProposal.test.js";
 import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
@@ -73,7 +74,14 @@ export default function suite() {
     initiateVaultSpendOptimisticProposal,
   );
   describe("#finalize_optimistic_proposal", finalizeOptimisticProposal);
-  describe("#admin_approve_multisig_proposal", adminApproveMultisigProposal);
+  describe(
+    "#admin_enqueue_multisig_proposal_approval",
+    adminEnqueueMultisigProposalApproval,
+  );
+  describe(
+    "#execute_multisig_proposal_approval",
+    executeMultisigProposalApproval,
+  );
   describe("#admin_execute_multisig_proposal", adminExecuteMultisigProposal);
   describe("#admin_cancel_proposal", adminCancelProposal);
   describe("#admin_remove_proposal", adminRemoveProposal);
