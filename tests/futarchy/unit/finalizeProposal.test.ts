@@ -358,8 +358,18 @@ export default function suite() {
       "ProposalTooYoung",
       "proposal should not finalize before the deadline",
     );
+    const storedProposalEarly = await this.futarchy.getProposal(proposal);
     await this.futarchy
-      .finalizeProposal(proposal)
+      .finalizeProposalIxV2({
+        squadsProposal: storedProposalEarly.squadsProposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
+      .rpc()
       .then(earlyCallbacks[0], earlyCallbacks[1]);
 
     // Stop trading. Advance time past the proposal deadline (259,200s).

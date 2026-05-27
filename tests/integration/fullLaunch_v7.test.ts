@@ -585,6 +585,9 @@ export default async function suite() {
           inputAmount: new BN(100 * 1_000_000), // 100 USDC
           minOutputAmount: new BN(0),
         })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+        ])
         .rpc();
     }
 

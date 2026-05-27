@@ -163,6 +163,7 @@ impl CompleteUnlock<'_> {
             recipient: pp.recipient,
             amount_minted: mint_amount,
             total_rewards_paid_out: pp.total_rewards_paid_out,
+            pp_created_at_timestamp: pp.created_at_timestamp,
         });
 
         Ok(())

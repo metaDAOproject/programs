@@ -21,6 +21,10 @@ pub struct PerformancePackageCreatedEvent {
     pub recipient: Pubkey,
     pub create_key: Pubkey,
     pub pda_bump: u8,
+    pub oracle_reader: OracleReader,
+    pub reward_function: RewardFunction,
+    pub min_unlock_timestamp: i64,
+    pub pp_created_at_timestamp: i64,
 }
 
 /// Emitted by: `start_unlock`
@@ -29,6 +33,8 @@ pub struct UnlockStartedEvent {
     pub common: CommonFields,
     pub performance_package: Pubkey,
     pub start_time: i64,
+    pub start_oracle_value: u128,
+    pub pp_created_at_timestamp: i64,
 }
 
 /// Emitted by: `complete_unlock`
@@ -41,6 +47,7 @@ pub struct UnlockCompletedEvent {
     pub amount_minted: u64,
     /// Cumulative after this unlock
     pub total_rewards_paid_out: u64,
+    pub pp_created_at_timestamp: i64,
 }
 
 /// Emitted by: `change_authority`
@@ -50,6 +57,7 @@ pub struct AuthorityChangedEvent {
     pub performance_package: Pubkey,
     pub old_authority: Pubkey,
     pub new_authority: Pubkey,
+    pub pp_created_at_timestamp: i64,
 }
 
 /// Emitted by: `propose_change`
@@ -63,6 +71,8 @@ pub struct ChangeProposedEvent {
     pub new_recipient: Option<Pubkey>,
     pub new_oracle_reader: Option<OracleReader>,
     pub new_reward_function: Option<RewardFunction>,
+    /// `PerformancePackage.created_at_timestamp` as stamped onto the ChangeRequest
+    pub pp_created_at_timestamp: i64,
 }
 
 /// Emitted by: `execute_change`
@@ -74,6 +84,9 @@ pub struct ChangeExecutedEvent {
     pub new_recipient: Option<Pubkey>,
     pub new_oracle_reader: Option<OracleReader>,
     pub new_reward_function: Option<RewardFunction>,
+    /// The ChangeRequest PDA that was executed (and closed) by this instruction
+    pub change_request: Pubkey,
+    pub pp_created_at_timestamp: i64,
 }
 
 /// Emitted by: `close_performance_package`
@@ -83,4 +96,5 @@ pub struct PerformancePackageClosedEvent {
     pub performance_package: Pubkey,
     /// Final cumulative amount paid
     pub total_rewards_paid_out: u64,
+    pub pp_created_at_timestamp: i64,
 }

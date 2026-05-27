@@ -47,6 +47,7 @@ impl ChangeAuthority<'_> {
             performance_package: pp.key(),
             old_authority: ctx.accounts.authority.key(),
             new_authority,
+            pp_created_at_timestamp: pp.created_at_timestamp,
         });
 
         Ok(())

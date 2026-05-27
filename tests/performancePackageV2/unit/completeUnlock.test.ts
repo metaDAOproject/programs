@@ -1,4 +1,5 @@
 import {
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -285,6 +286,9 @@ export default function suite() {
         performancePackage,
         signer: recipient.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .signers([recipient])
       .rpc();
 
@@ -297,6 +301,9 @@ export default function suite() {
         recipient: recipient.publicKey,
         signer: authority.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .signers([authority])
       .rpc();
 
@@ -521,6 +528,9 @@ export default function suite() {
         performancePackage,
         signer: recipient.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .signers([recipient])
       .rpc();
 
@@ -704,6 +714,9 @@ export default function suite() {
         signer: authority.publicKey,
         dao,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .signers([authority])
       .rpc();
 
@@ -790,6 +803,9 @@ export default function suite() {
         performancePackage,
         signer: recipient.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .signers([recipient])
       .rpc();
 
@@ -899,6 +915,9 @@ export default function suite() {
         performancePackage,
         signer: recipient.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .signers([recipient])
       .rpc();
 
@@ -914,6 +933,9 @@ export default function suite() {
         recipient: recipient.publicKey,
         signer: authority.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .signers([authority])
       .rpc();
 
@@ -933,6 +955,9 @@ export default function suite() {
         performancePackage,
         signer: recipient.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 2 }),
+      ])
       .signers([recipient])
       .rpc();
 
@@ -945,6 +970,9 @@ export default function suite() {
         recipient: recipient.publicKey,
         signer: authority.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 2 }),
+      ])
       .signers([authority])
       .rpc();
 

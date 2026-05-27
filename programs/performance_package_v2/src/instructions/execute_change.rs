@@ -111,6 +111,8 @@ impl ExecuteChange<'_> {
             new_recipient: cr.new_recipient,
             new_oracle_reader: cr.new_oracle_reader.clone(),
             new_reward_function: cr.new_reward_function.clone(),
+            change_request: ctx.accounts.change_request.key(),
+            pp_created_at_timestamp: pp.created_at_timestamp,
         });
 
         // The change_request account is closed automatically via the `close = rent_destination` constraint

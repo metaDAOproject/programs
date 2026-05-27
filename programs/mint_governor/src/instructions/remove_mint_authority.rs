@@ -49,6 +49,7 @@ impl RemoveMintAuthority<'_> {
             mint_governor: mint_governor.key(),
             authorized_minter: mint_authority.authorized_minter,
             total_minted: mint_authority.total_minted,
+            mint_authority: mint_authority.key(),
         });
 
         // Mint authority account gets closed using close constraint

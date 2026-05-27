@@ -4,6 +4,7 @@ import {
   Transaction,
   SystemProgram,
   TransactionInstruction,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import { assert } from "chai";
 import * as token from "@solana/spl-token";
@@ -242,6 +243,9 @@ export default function () {
         oracleAccount: oracleAccount.publicKey,
         recipient: recipient.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .signers([recipient])
       .rpc();
 
@@ -268,6 +272,9 @@ export default function () {
         tokenMint,
         tokenRecipient: recipient.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
       .rpc();
 
     const performancePackageAccount2 =

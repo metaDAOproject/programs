@@ -108,6 +108,7 @@ impl ProposeChange<'_> {
             new_recipient: args.new_recipient,
             new_oracle_reader: args.new_oracle_reader,
             new_reward_function: args.new_reward_function,
+            pp_created_at_timestamp: pp.created_at_timestamp,
         });
 
         Ok(())
