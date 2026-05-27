@@ -42,6 +42,7 @@ pub struct TokensMintedEvent {
     pub destination_ata: Pubkey,
     pub amount: u64,
     pub post_total_minted: u64,
+    pub authority_max_total: Option<u64>,
     pub post_mint_supply: u64,
 }
 
@@ -52,15 +53,17 @@ pub struct MintAuthorityUpdatedEvent {
     pub mint_authority: Pubkey,
     pub authorized_minter: Pubkey,
     pub max_total: Option<u64>,
+    pub total_minted: u64,
 }
 
 #[event]
 pub struct MintAuthorityRemovedEvent {
     pub common: CommonFields,
     pub mint_governor: Pubkey,
-    pub authorized_minter: Pubkey,
-    pub total_minted: u64,
     pub mint_authority: Pubkey,
+    pub authorized_minter: Pubkey,
+    pub max_total: Option<u64>,
+    pub total_minted: u64,
 }
 
 #[event]

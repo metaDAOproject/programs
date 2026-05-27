@@ -53,6 +53,7 @@ impl UpdateMintAuthority<'_> {
             mint_authority: mint_authority.key(),
             authorized_minter: mint_authority.authorized_minter,
             max_total: mint_authority.max_total,
+            total_minted: mint_authority.total_minted,
         });
 
         Ok(())
