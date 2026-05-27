@@ -106,6 +106,7 @@ impl MintTokens<'_> {
             destination_ata: ctx.accounts.destination_ata.key(),
             amount: args.amount,
             post_total_minted: mint_authority.total_minted,
+            authority_max_total: mint_authority.max_total,
             post_mint_supply: ctx.accounts.mint.supply,
         });
 

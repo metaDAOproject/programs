@@ -594,6 +594,13 @@ export type MintGovernor = {
           index: false;
         },
         {
+          name: "authorityMaxTotal";
+          type: {
+            option: "u64";
+          };
+          index: false;
+        },
+        {
           name: "postMintSupply";
           type: "u64";
           index: false;
@@ -632,6 +639,11 @@ export type MintGovernor = {
           };
           index: false;
         },
+        {
+          name: "totalMinted";
+          type: "u64";
+          index: false;
+        },
       ];
     },
     {
@@ -650,18 +662,25 @@ export type MintGovernor = {
           index: false;
         },
         {
+          name: "mintAuthority";
+          type: "publicKey";
+          index: false;
+        },
+        {
           name: "authorizedMinter";
           type: "publicKey";
           index: false;
         },
         {
-          name: "totalMinted";
-          type: "u64";
+          name: "maxTotal";
+          type: {
+            option: "u64";
+          };
           index: false;
         },
         {
-          name: "mintAuthority";
-          type: "publicKey";
+          name: "totalMinted";
+          type: "u64";
           index: false;
         },
       ];
@@ -1336,6 +1355,13 @@ export const IDL: MintGovernor = {
           index: false,
         },
         {
+          name: "authorityMaxTotal",
+          type: {
+            option: "u64",
+          },
+          index: false,
+        },
+        {
           name: "postMintSupply",
           type: "u64",
           index: false,
@@ -1374,6 +1400,11 @@ export const IDL: MintGovernor = {
           },
           index: false,
         },
+        {
+          name: "totalMinted",
+          type: "u64",
+          index: false,
+        },
       ],
     },
     {
@@ -1392,18 +1423,25 @@ export const IDL: MintGovernor = {
           index: false,
         },
         {
+          name: "mintAuthority",
+          type: "publicKey",
+          index: false,
+        },
+        {
           name: "authorizedMinter",
           type: "publicKey",
           index: false,
         },
         {
-          name: "totalMinted",
-          type: "u64",
+          name: "maxTotal",
+          type: {
+            option: "u64",
+          },
           index: false,
         },
         {
-          name: "mintAuthority",
-          type: "publicKey",
+          name: "totalMinted",
+          type: "u64",
           index: false,
         },
       ],
