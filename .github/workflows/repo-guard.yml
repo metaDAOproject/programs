@@ -1,0 +1,183 @@
+name: Repository Guard
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  repository-guard:
+    runs-on: ubuntu-22.04
+    env:
+      EMERGENCY_BYPASS: ${{ contains(github.event.pull_request.labels.*.name, 'emergency-override') }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch PR base branch
+        run: git fetch origin "${{ github.base_ref }}" --depth=1
+
+      - name: Show Cargo / Node versions
+        run: |
+          cargo --version
+          node --version
+
+      - name: Verify Cargo.lock is up to date
+        id: cargo_lock
+        continue-on-error: true
+        # `cargo metadata --locked` resolves the workspace without modifying
+        # Cargo.lock; if anything is out of sync this fails. We allow network
+        # so the git dep on Squads can be resolved.
+        run: cargo metadata --locked --format-version 1 > /dev/null
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.18.0'
+          cache: 'yarn'
+
+      - name: Verify root yarn.lock is up to date
+        id: yarn_root
+        continue-on-error: true
+        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive
+
+      - name: Verify sdk yarn.lock is up to date
+        id: yarn_sdk
+        continue-on-error: true
+        run: |
+          cd sdk
+          yarn install --frozen-lockfile --ignore-scripts --non-interactive
+
+      - name: Run repository guard checks
+        id: guard
+        continue-on-error: true
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          REPO_GUARD_SUMMARY_PATH: repo-guard-summary.md
+        # Only run the guard if root yarn install succeeded - otherwise tsx
+        # is not installed and the script cannot run.
+        if: steps.yarn_root.outcome == 'success'
+        run: yarn repo:guard
+
+      - name: Build PR comment
+        id: comment
+        env:
+          CARGO_OUTCOME: ${{ steps.cargo_lock.outcome }}
+          YARN_ROOT_OUTCOME: ${{ steps.yarn_root.outcome }}
+          YARN_SDK_OUTCOME: ${{ steps.yarn_sdk.outcome }}
+          GUARD_OUTCOME: ${{ steps.guard.outcome }}
+        run: |
+          {
+            echo "<!-- repository-guard -->"
+            echo "**Repository Guard**"
+            echo
+
+            if [ "$CARGO_OUTCOME" = "success" ]; then
+              echo "- Cargo.lock: pass"
+            else
+              echo "- Cargo.lock: fail"
+              echo "  - Out of sync with the workspace manifests. Run \`cargo update --workspace\` (or rebuild) and commit the updated \`Cargo.lock\`."
+            fi
+
+            if [ "$YARN_ROOT_OUTCOME" = "success" ]; then
+              echo "- yarn.lock (root): pass"
+            else
+              echo "- yarn.lock (root): fail"
+              echo "  - Root \`yarn.lock\` is out of date. Run \`yarn install\` at the repo root and commit the result."
+            fi
+
+            if [ "$YARN_SDK_OUTCOME" = "success" ]; then
+              echo "- yarn.lock (sdk): pass"
+            else
+              echo "- yarn.lock (sdk): fail"
+              echo "  - \`sdk/yarn.lock\` is out of date. Run \`yarn install\` in \`sdk/\` and commit the result."
+            fi
+
+            if [ "$GUARD_OUTCOME" = "success" ]; then
+              echo "- Repo guard: pass"
+            elif [ "$GUARD_OUTCOME" = "skipped" ]; then
+              echo "- Repo guard: skipped (root yarn install failed - fix that first)"
+            else
+              if [ "$EMERGENCY_BYPASS" = "true" ]; then
+                echo "- Repo guard: bypassed with \`emergency-override\`"
+              else
+                echo "- Repo guard: fail"
+              fi
+            fi
+
+            echo
+            if [ -f repo-guard-summary.md ]; then
+              cat repo-guard-summary.md
+            else
+              echo "_Repository guard summary was not generated._"
+            fi
+          } > body.md
+
+          {
+            echo "body<<EOF"
+            cat body.md
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Find existing comment
+        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3
+        id: find
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: "<!-- repository-guard -->"
+
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find.outputs.comment-id }}
+          body: ${{ steps.comment.outputs.body }}
+          edit-mode: replace
+
+      - name: Fail if any check failed
+        env:
+          CARGO_OUTCOME: ${{ steps.cargo_lock.outcome }}
+          YARN_ROOT_OUTCOME: ${{ steps.yarn_root.outcome }}
+          YARN_SDK_OUTCOME: ${{ steps.yarn_sdk.outcome }}
+          GUARD_OUTCOME: ${{ steps.guard.outcome }}
+        run: |
+          failed=()
+          bypassed=()
+
+          # Lockfile failures are NEVER bypassable - a stale lockfile breaks
+          # builds regardless of override labels.
+          if [ "$CARGO_OUTCOME" != "success" ]; then
+            failed+=("Cargo.lock out of sync - run \`cargo update --workspace\` (or rebuild) and commit")
+          fi
+          if [ "$YARN_ROOT_OUTCOME" != "success" ]; then
+            failed+=("root yarn.lock out of date - run \`yarn install\` at repo root and commit")
+          fi
+          if [ "$YARN_SDK_OUTCOME" != "success" ]; then
+            failed+=("sdk yarn.lock out of date - run \`yarn install\` in \`sdk/\` and commit")
+          fi
+
+          # The guard itself (exact-version, age, action-pinning, toolchain
+          # consistency, sensitive-diff) is bypassable.
+          if [ "$GUARD_OUTCOME" = "failure" ]; then
+            if [ "$EMERGENCY_BYPASS" = "true" ]; then
+              bypassed+=("repo guard")
+            else
+              failed+=("repo guard - see the \"Run repository guard checks\" step logs and Files Changed annotations")
+            fi
+          fi
+
+          if [ ${#bypassed[@]} -gt 0 ]; then
+            echo "::warning::Bypassed via emergency-override label: ${bypassed[*]}"
+          fi
+
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "::error::Repository Guard failed:"
+            for item in "${failed[@]}"; do
+              echo "::error::  - ${item}"
+            done
+            exit 1
+          fi
