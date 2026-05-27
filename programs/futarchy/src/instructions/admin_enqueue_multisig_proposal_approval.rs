@@ -3,8 +3,7 @@ use super::*;
 mod admin {
     use anchor_lang::prelude::declare_id;
 
-    // TODO - update to new admin key
-    declare_id!("CWGawadYU8CzRVBecnJymNw97H7E3ndDinV5sMzesgY2");
+    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
