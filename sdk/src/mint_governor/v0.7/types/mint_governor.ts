@@ -659,6 +659,11 @@ export type MintGovernor = {
           type: "u64";
           index: false;
         },
+        {
+          name: "mintAuthority";
+          type: "publicKey";
+          index: false;
+        },
       ];
     },
     {
@@ -1394,6 +1399,11 @@ export const IDL: MintGovernor = {
         {
           name: "totalMinted",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "mintAuthority",
+          type: "publicKey",
           index: false,
         },
       ],

@@ -51,6 +51,7 @@ impl StartUnlock<'_> {
 
         // Record start snapshot (no-op for Time oracle, reads AMM for FutarchyTwap)
         pp.oracle_reader.record_start(ctx.remaining_accounts)?;
+        let start_oracle_value = pp.oracle_reader.start_snapshot();
 
         // Transition to Unlocking status
         pp.status = PackageStatus::Unlocking;
@@ -68,6 +69,8 @@ impl StartUnlock<'_> {
             },
             performance_package: pp.key(),
             start_time: clock.unix_timestamp,
+            start_oracle_value,
+            pp_created_at_timestamp: pp.created_at_timestamp,
         });
 
         Ok(())

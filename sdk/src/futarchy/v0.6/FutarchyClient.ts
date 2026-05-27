@@ -1011,6 +1011,9 @@ export class FutarchyClient {
     quoteMint = MAINNET_USDC,
     transactionIndex,
     meteoraConfig = LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
+    launchpadProgramId = LAUNCHPAD_V0_7_PROGRAM_ID,
+    positionNftMint = undefined,
+    pool = undefined,
     admin = this.provider.publicKey,
   }: {
     dao: PublicKey;
@@ -1018,6 +1021,9 @@ export class FutarchyClient {
     quoteMint?: PublicKey;
     transactionIndex: bigint;
     meteoraConfig?: PublicKey;
+    launchpadProgramId?: PublicKey;
+    positionNftMint?: PublicKey;
+    pool?: PublicKey;
     admin?: PublicKey;
   }) {
     // Squads accounts
@@ -1063,33 +1069,50 @@ export class FutarchyClient {
     const [sortedMint1, sortedMint2] = sortMints(baseMint, quoteMint);
 
     // Meteora DAMM accounts
-    const [pool] = PublicKey.findProgramAddressSync(
-      [Buffer.from("pool"), meteoraConfig.toBuffer(), sortedMint1, sortedMint2],
-      DAMM_V2_PROGRAM_ID,
-    );
+    const resolvedPool =
+      pool ??
+      PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("pool"),
+          meteoraConfig.toBuffer(),
+          sortedMint1,
+          sortedMint2,
+        ],
+        DAMM_V2_PROGRAM_ID,
+      )[0];
 
-    const [positionNftMint] = PublicKey.findProgramAddressSync(
-      [Buffer.from("position_nft_mint"), baseMint.toBuffer()],
-      LAUNCHPAD_V0_7_PROGRAM_ID,
-    );
+    const resolvedPositionNftMint =
+      positionNftMint ??
+      PublicKey.findProgramAddressSync(
+        [Buffer.from("position_nft_mint"), baseMint.toBuffer()],
+        launchpadProgramId,
+      )[0];
 
     const [positionNftAccount] = PublicKey.findProgramAddressSync(
-      [Buffer.from("position_nft_account"), positionNftMint.toBuffer()],
+      [Buffer.from("position_nft_account"), resolvedPositionNftMint.toBuffer()],
       DAMM_V2_PROGRAM_ID,
     );
 
     const [position] = PublicKey.findProgramAddressSync(
-      [Buffer.from("position"), positionNftMint.toBuffer()],
+      [Buffer.from("position"), resolvedPositionNftMint.toBuffer()],
       DAMM_V2_PROGRAM_ID,
     );
 
     const [tokenAVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), baseMint.toBuffer(), pool.toBuffer()],
+      [
+        Buffer.from("token_vault"),
+        baseMint.toBuffer(),
+        resolvedPool.toBuffer(),
+      ],
       DAMM_V2_PROGRAM_ID,
     );
 
     const [tokenBVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), quoteMint.toBuffer(), pool.toBuffer()],
+      [
+        Buffer.from("token_vault"),
+        quoteMint.toBuffer(),
+        resolvedPool.toBuffer(),
+      ],
       DAMM_V2_PROGRAM_ID,
     );
 
@@ -1107,7 +1130,7 @@ export class FutarchyClient {
         dammV2Program: DAMM_V2_PROGRAM_ID,
         dammV2EventAuthority,
         poolAuthority: DAMM_V2_POOL_AUTHORITY,
-        pool,
+        pool: resolvedPool,
         position,
         tokenAAccount: baseTokenAccount,
         tokenBAccount: quoteTokenAccount,

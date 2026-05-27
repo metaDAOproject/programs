@@ -60,6 +60,7 @@ pub struct MintAuthorityRemovedEvent {
     pub mint_governor: Pubkey,
     pub authorized_minter: Pubkey,
     pub total_minted: u64,
+    pub mint_authority: Pubkey,
 }
 
 #[event]
