@@ -46,7 +46,9 @@ gh run view <id> --json jobs \
 
 Preview: stop at the first run whose job is `<program-job> / build`. Compare: collect two such runs (or use the explicit IDs).
 
-If `<program>` has never been deployed via this workflow (e.g. `mint_governor`, `performance_package_v2` as of 2026-05-27), fall back to showing every PR merge on develop touching the source dir and note "never deployed via workflow."
+**First-deploy case (compare mode, only one successful run exists):** treat it as the first deploy. Use the single run's job log for the buffer/hash/squads section, and the commit range as "everything that touches the source dir up to the deploy commit." Add "(first deploy)" to the `<program>` update heading. The Notes section should briefly describe what the program does (read `programs/<dir>/src/lib.rs` for the entrypoints + doc comments) plus any notable changes since it was first scaffolded.
+
+**Never-deployed case (no successful runs):** fall back to showing every PR merge on develop touching the source dir and note "never deployed via workflow."
 
 ### 3. Walk commits and write bullets
 
@@ -146,8 +148,6 @@ Notes:
 - bullet
 ...
 ````
-
-Do **not** auto-append "Confirmed buffer hash locally" — that's something the user adds after they've actually verified it.
 
 ## Constants
 
