@@ -37,6 +37,8 @@ gh run list --workflow=deploy-programs.yaml --status=success --limit=100 \
   --json databaseId,headSha,createdAt
 ```
 
+**Always use `--limit=100`** — never shortcut to a lower limit "for a quick check." Most deploys are for popular programs (futarchy_v6, launchpad-v*), so the relevant run for a less-frequently-deployed program (mint_governor, performance_package_v2, etc.) can be 30+ runs back. A `--limit=5` peek will silently miss it and lead you to mis-classify the program as never-deployed or first-deploy.
+
 Each deploy run only has one non-skipped job (others gated by `if:`). Walk newest → oldest, checking the active job name:
 
 ```
@@ -51,6 +53,16 @@ Preview: stop at the first run whose job is `<program-job> / build`. Compare: co
 **Never-deployed case (no successful runs):** fall back to showing every PR merge on develop touching the source dir and note "never deployed via workflow."
 
 ### 3. Walk commits and write bullets
+
+**Before bullet-writing, check whether the source dir actually changed between the two refs:**
+
+```
+git diff --stat <from-sha>..<to-sha> -- programs/<dir>/
+```
+
+If the output is empty, you're in the **no-source-diff case** (compare mode only — can happen when the workflow is re-run on the same source, producing a byte-identical `.so` and an identical buffer hash). Skip to the no-source-diff output template in step 5. Do **not** invent bullets or speculate about indirect changes — surface the fact that nothing in the program source changed and that the buffer hash matches the previous deploy.
+
+Otherwise:
 
 ```
 git log --first-parent <from-sha>..<to-sha> -- programs/<dir>/   # PR-merge list, for Related PRs
@@ -147,6 +159,35 @@ Notes:
 - bullet
 - bullet
 ...
+````
+
+**Compare mode, no-source-diff case** (re-deploy of byte-identical `.so`):
+
+Confirm the buffer hash is genuinely unchanged: `solana-verify get-program-hash <program-id> -u <rpc-url>` should match the buffer hash from the new run's log.
+
+````
+`<program>` update (re-deploy, no source changes):
+
+Buffer: `<new-buffer-addr>`
+Buffer Hash: `<hash>`
+Squads Transaction: https://app.squads.so/squads/6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf/transactions/<vault-tx-pda>
+Instruction Simulation: https://explorer.solana.com/tx/inspector?squadsTx=<vault-tx-pda>
+GH Build: https://github.com/metaDAOproject/programs/actions/runs/<new-run-id>/job/<new-job-id>
+GH Related:
+- _(none — no commits touch `programs/<dir>/` between the two deploys)_
+
+Previous deploy for reference: <prev-gh-run-job-url> (commit `<prev-sha>`, <prev-date>)
+This deploy: commit `<new-sha>`, <new-date>
+
+Notes:
+
+This is a re-deploy of `<program>` (program ID `<program-id>`) with **no on-chain behaviour change**:
+
+- `git diff <prev-sha> <new-sha> -- programs/<dir>/` is empty
+- The buffer hash (`<hash-prefix>…`) is byte-for-byte identical to the previously deployed program (verified via `solana-verify get-program-hash`)
+- Approving the Squads transaction will set the program buffer to bytes equal to what's already on-chain — effectively a no-op upgrade
+
+If this was an intentional re-deploy (e.g. a smoke test of the deploy pipeline, or a buffer refresh), no other action is needed once the Squads tx is approved. If it was unintentional, the Squads tx can be cancelled without loss.
 ````
 
 ## Constants
