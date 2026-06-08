@@ -197,7 +197,7 @@ export default async function suite() {
       .rpc();
 
     const settleTx = await launchpadClient
-      .settleLaunchIx({
+      .settleLaunchTxBuilder({
         launch,
         baseMint: META,
         launchAuthority: launchAuthority.publicKey,
@@ -222,7 +222,7 @@ export default async function suite() {
     const dao = launchAccount.dao!;
 
     await launchpadClient
-      .finalizeLaunchIx({
+      .finalizeLaunchTxBuilder({
         launch,
         baseMint: META,
         performancePackageGrantee: launchAccount.performancePackageGrantee,

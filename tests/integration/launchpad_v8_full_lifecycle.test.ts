@@ -251,7 +251,7 @@ export default async function suite() {
     // 6. settle_launch → verify minting, DAO creation
     // =====================
     const settleTx = await launchpadClient
-      .settleLaunchIx({
+      .settleLaunchTxBuilder({
         launch,
         baseMint: META,
         launchAuthority: launchAuthority.publicKey,
@@ -299,7 +299,7 @@ export default async function suite() {
     assert.equal(launchAccount.isFinalized, false);
 
     await launchpadClient
-      .finalizeLaunchIx({
+      .finalizeLaunchTxBuilder({
         launch,
         baseMint: META,
         performancePackageGrantee: launchAccount.performancePackageGrantee,

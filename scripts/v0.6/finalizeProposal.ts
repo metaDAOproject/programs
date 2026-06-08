@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 
 const provider = anchor.AnchorProvider.env();
@@ -32,17 +32,14 @@ const finalizeProposal = async () => {
     })
     .instruction();
 
-  // Create finalize instruction
-  const finalizeIx = await futarchyClient
-    .finalizeProposalIxV2({
+  const tx = await futarchyClient
+    .finalizeProposalTxBuilder({
       squadsProposal: proposal.squadsProposal,
       dao: proposal.dao,
       baseMint: dao.baseMint,
     })
-    .instruction();
-
-  // Build and send transaction
-  const tx = new Transaction().add(spotSwapIx, finalizeIx);
+    .preInstructions([spotSwapIx])
+    .transaction();
   tx.recentBlockhash = (
     await provider.connection.getLatestBlockhash()
   ).blockhash;

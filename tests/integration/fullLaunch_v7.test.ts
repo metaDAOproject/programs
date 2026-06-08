@@ -241,7 +241,7 @@ export default async function suite() {
       .rpc();
 
     const completeLaunchTx = await this.launchpad_v7
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         baseMint: META,
         launchAuthority: launchAuthority.publicKey,
@@ -507,7 +507,7 @@ export default async function suite() {
 
     // Launch the proposal first
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,

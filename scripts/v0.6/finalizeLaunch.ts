@@ -26,7 +26,7 @@ export const launch = async () => {
   await launchpad.closeLaunchIx({ launch }).rpc();
 
   const tx = await launchpad
-    .completeLaunchIx({
+    .completeLaunchTxBuilder({
       launch,
       // quoteMint: DEVNET_USDC,
       baseMint: mintKp,

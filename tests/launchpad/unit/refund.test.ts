@@ -114,7 +114,7 @@ export default function suite() {
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         baseMint: META,
         finalRaiseAmount: new BN(150_000 * 1e6),
@@ -192,7 +192,7 @@ export default function suite() {
     await launchpadClient.closeLaunchIx({ launch }).rpc();
 
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         baseMint: META,
         finalRaiseAmount: new BN(100_000 * 1e6),

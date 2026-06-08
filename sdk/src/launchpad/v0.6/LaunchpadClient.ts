@@ -463,11 +463,16 @@ export class LaunchpadClient {
           dammV2EventAuthority,
         },
         // poolCreatorAuthority,
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 850_000 }),
-        ComputeBudgetProgram.requestHeapFrame({ bytes: 255 * 1024 }),
-      ]);
+      });
+  }
+
+  completeLaunchTxBuilder(
+    args: Parameters<LaunchpadClient["completeLaunchIx"]>[0],
+  ) {
+    return this.completeLaunchIx(args).preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 850_000 }),
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 255 * 1024 }),
+    ]);
   }
 
   refundIx({

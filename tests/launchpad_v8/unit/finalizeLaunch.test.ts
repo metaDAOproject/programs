@@ -36,7 +36,7 @@ export default function suite() {
     additionalSigners: Keypair[] = [],
   ) {
     const settleTx = await client
-      .settleLaunchIx({
+      .settleLaunchTxBuilder({
         launch: params.launch,
         baseMint: params.baseMint,
         launchAuthority: params.launchAuthority,
@@ -150,7 +150,7 @@ export default function suite() {
 
     // Finalize
     await launchpadClient
-      .finalizeLaunchIx({
+      .finalizeLaunchTxBuilder({
         launch,
         baseMint: META,
         performancePackageGrantee: launchAccount.performancePackageGrantee,
@@ -236,7 +236,7 @@ export default function suite() {
     // The DAO constraint fires before validate() since launch.dao is None
     try {
       await launchpadClient
-        .finalizeLaunchIx({
+        .finalizeLaunchTxBuilder({
           launch,
           baseMint: META,
           performancePackageGrantee: this.payer.publicKey,
@@ -262,7 +262,7 @@ export default function suite() {
 
     // First finalize succeeds
     await launchpadClient
-      .finalizeLaunchIx({
+      .finalizeLaunchTxBuilder({
         launch,
         baseMint: META,
         performancePackageGrantee: launchAccount.performancePackageGrantee,
@@ -272,7 +272,7 @@ export default function suite() {
     // Second finalize fails
     try {
       await launchpadClient
-        .finalizeLaunchIx({
+        .finalizeLaunchTxBuilder({
           launch,
           baseMint: META,
           performancePackageGrantee: launchAccount.performancePackageGrantee,

@@ -134,7 +134,7 @@ export default function suite() {
       .rpc();
 
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         baseMint: META,
         launchAuthority: launchAuthority.publicKey,

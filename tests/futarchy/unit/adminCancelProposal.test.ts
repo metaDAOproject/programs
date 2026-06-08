@@ -118,7 +118,7 @@ export default function suite() {
     proposal = await this.futarchy.initializeProposal(dao, squadsProposalPda);
 
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,

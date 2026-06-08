@@ -205,7 +205,7 @@ export default async function suite() {
     await this.launchpad_v6.closeLaunchIx({ launch }).rpc();
 
     const completeLaunchTx = await this.launchpad_v6
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         baseMint: META,
         finalRaiseAmount: new BN(500_000 * 1e6),
@@ -462,7 +462,7 @@ export default async function suite() {
 
     // Launch the proposal first
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,

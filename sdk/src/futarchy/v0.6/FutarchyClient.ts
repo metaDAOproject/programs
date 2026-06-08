@@ -300,44 +300,39 @@ export class FutarchyClient {
 
     const squadsMultisig = multisig.getMultisigPda({ createKey: dao })[0];
 
-    return this.futarchy.methods
-      .launchProposal()
-      .accounts({
-        proposal,
-        dao,
-        baseVault,
-        quoteVault,
-        passBaseMint,
+    return this.futarchy.methods.launchProposal().accounts({
+      proposal,
+      dao,
+      baseVault,
+      quoteVault,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
+      ammPassQuoteVault: getAssociatedTokenAddressSync(
         passQuoteMint,
-        failBaseMint,
+        dao,
+        true,
+      ),
+      ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
+      ammFailQuoteVault: getAssociatedTokenAddressSync(
         failQuoteMint,
-        ammPassBaseVault: getAssociatedTokenAddressSync(
-          passBaseMint,
-          dao,
-          true,
-        ),
-        ammPassQuoteVault: getAssociatedTokenAddressSync(
-          passQuoteMint,
-          dao,
-          true,
-        ),
-        ammFailBaseVault: getAssociatedTokenAddressSync(
-          failBaseMint,
-          dao,
-          true,
-        ),
-        ammFailQuoteVault: getAssociatedTokenAddressSync(
-          failQuoteMint,
-          dao,
-          true,
-        ),
-        squadsMultisig,
-        squadsProposal,
-        payer: this.provider.publicKey,
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-      ]);
+        dao,
+        true,
+      ),
+      squadsMultisig,
+      squadsProposal,
+      payer: this.provider.publicKey,
+    });
+  }
+
+  launchProposalTxBuilder(
+    args: Parameters<FutarchyClient["launchProposalIx"]>[0],
+  ) {
+    return this.launchProposalIx(args).preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ]);
   }
 
   spotSwapIx({
@@ -747,7 +742,11 @@ export class FutarchyClient {
       storedProposal.dao,
       storedDao.baseMint,
       storedDao.quoteMint,
-    ).rpc();
+    )
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
   }
 
   finalizeProposalIxV2({
@@ -770,6 +769,14 @@ export class FutarchyClient {
       baseMint,
       quoteMint,
     );
+  }
+
+  finalizeProposalTxBuilder(
+    args: Parameters<FutarchyClient["finalizeProposalIxV2"]>[0],
+  ) {
+    return this.finalizeProposalIxV2(args).preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ]);
   }
 
   /**
@@ -797,59 +804,46 @@ export class FutarchyClient {
 
     const [vaultEventAuthority] = getEventAuthorityAddr(vaultProgramId);
 
-    return this.futarchy.methods
-      .finalizeProposal()
-      .accounts({
-        proposal,
-        dao,
-        squadsProposal,
-        squadsMultisig: multisigPda,
-        squadsMultisigProgram: SQUADS_PROGRAM_ID,
+    return this.futarchy.methods.finalizeProposal().accounts({
+      proposal,
+      dao,
+      squadsProposal,
+      squadsMultisig: multisigPda,
+      squadsMultisigProgram: SQUADS_PROGRAM_ID,
+      quoteVault,
+      question,
+      quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+        usdc,
         quoteVault,
-        question,
-        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
-          usdc,
-          quoteVault,
-          true,
-        ),
+        true,
+      ),
+      passQuoteMint,
+      failQuoteMint,
+      passBaseMint,
+      failBaseMint,
+      ammPassQuoteVault: getAssociatedTokenAddressSync(
         passQuoteMint,
+        dao,
+        true,
+      ),
+      ammFailQuoteVault: getAssociatedTokenAddressSync(
         failQuoteMint,
-        passBaseMint,
-        failBaseMint,
-        ammPassQuoteVault: getAssociatedTokenAddressSync(
-          passQuoteMint,
-          dao,
-          true,
-        ),
-        ammFailQuoteVault: getAssociatedTokenAddressSync(
-          failQuoteMint,
-          dao,
-          true,
-        ),
-        ammQuoteVault: getAssociatedTokenAddressSync(usdc, dao, true),
-        ammPassBaseVault: getAssociatedTokenAddressSync(
-          passBaseMint,
-          dao,
-          true,
-        ),
-        ammFailBaseVault: getAssociatedTokenAddressSync(
-          failBaseMint,
-          dao,
-          true,
-        ),
-        ammBaseVault: getAssociatedTokenAddressSync(daoToken, dao, true),
+        dao,
+        true,
+      ),
+      ammQuoteVault: getAssociatedTokenAddressSync(usdc, dao, true),
+      ammPassBaseVault: getAssociatedTokenAddressSync(passBaseMint, dao, true),
+      ammFailBaseVault: getAssociatedTokenAddressSync(failBaseMint, dao, true),
+      ammBaseVault: getAssociatedTokenAddressSync(daoToken, dao, true),
+      baseVault,
+      baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+        daoToken,
         baseVault,
-        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
-          daoToken,
-          baseVault,
-          true,
-        ),
-        vaultProgram: this.vaultClient.vaultProgram.programId,
-        vaultEventAuthority,
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-      ]);
+        true,
+      ),
+      vaultProgram: this.vaultClient.vaultProgram.programId,
+      vaultEventAuthority,
+    });
   }
 
   updateDaoIx({ dao, params }: { dao: PublicKey; params: UpdateDaoParams }) {

@@ -1,9 +1,4 @@
-import {
-  ComputeBudgetProgram,
-  Keypair,
-  PublicKey,
-  TransactionMessage,
-} from "@solana/web3.js";
+import { Keypair, PublicKey, TransactionMessage } from "@solana/web3.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
@@ -258,7 +253,7 @@ export default function suite() {
 
     // Finalize the proposal first
     await this.futarchy
-      .finalizeProposalIxV2({
+      .finalizeProposalTxBuilder({
         squadsProposal,
         dao,
         baseMint: META,

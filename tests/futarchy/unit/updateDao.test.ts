@@ -192,7 +192,7 @@ export default function suite() {
 
     // Launch proposal A to put DAO in Futarchy state
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal: proposalA,
         dao,
         baseMint: META,
@@ -346,7 +346,7 @@ export default function suite() {
 
     // Launch proposal B to put DAO in Futarchy state
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal: proposalB,
         dao,
         baseMint: META,
@@ -493,7 +493,7 @@ export default function suite() {
 
     // Launch proposal A to put DAO in Futarchy state
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal: proposalA,
         dao,
         baseMint: META,
