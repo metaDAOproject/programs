@@ -5,7 +5,7 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
-import { BanksClient } from "solana-bankrun";
+import { BanksClient, ProgramTestContext } from "solana-bankrun";
 import {
   GatedMintClient,
   getGatedMintConfigAddr,
@@ -114,4 +114,42 @@ export async function whitelistUser(
 
   const [whitelistedUser] = getWhitelistedUserAddr({ mint, user });
   return whitelistedUser;
+}
+
+const TOKEN_ACCOUNT_STATE_OFFSET = 108;
+// SPL token account states — the byte at TOKEN_ACCOUNT_STATE_OFFSET.
+export const TOKEN_STATE_INITIALIZED = 1;
+export const TOKEN_STATE_FROZEN = 2;
+
+// Read the SPL token account state byte (1 = initialized/thawed, 2 = frozen).
+export async function getTokenAccountState(
+  banksClient: BanksClient,
+  tokenAccount: PublicKey,
+): Promise<number> {
+  const acc = await banksClient.getAccount(tokenAccount);
+  if (!acc) {
+    throw new Error(`token account ${tokenAccount.toBase58()} not found`);
+  }
+  return acc.data[TOKEN_ACCOUNT_STATE_OFFSET];
+}
+
+// Force a token account into the frozen state by patching its raw account data.
+// Reproduces the gated-mint "frozen by default" state without a freeze authority.
+export async function freezeTokenAccount(
+  context: ProgramTestContext,
+  banksClient: BanksClient,
+  tokenAccount: PublicKey,
+): Promise<void> {
+  const acc = await banksClient.getAccount(tokenAccount);
+  if (!acc) {
+    throw new Error(`token account ${tokenAccount.toBase58()} not found`);
+  }
+  const data = Buffer.from(acc.data);
+  data[TOKEN_ACCOUNT_STATE_OFFSET] = TOKEN_STATE_FROZEN;
+  context.setAccount(tokenAccount, {
+    data,
+    executable: acc.executable,
+    owner: acc.owner,
+    lamports: acc.lamports,
+  });
 }

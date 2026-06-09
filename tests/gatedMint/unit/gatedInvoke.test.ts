@@ -20,38 +20,14 @@ import {
   createMintWithFreezeAuthority,
   setupGatedMint,
   whitelistUser,
+  freezeTokenAccount,
+  getTokenAccountState,
+  TOKEN_STATE_INITIALIZED,
+  TOKEN_STATE_FROZEN,
 } from "../utils.js";
 import { initializeMintGovernorWithDefaults } from "../../mintGovernor/utils.js";
 import { expectError } from "../../utils.js";
 import { mintTo } from "spl-token-bankrun";
-
-const TOKEN_ACCOUNT_STATE_OFFSET = 108;
-const TOKEN_STATE_INITIALIZED = 1;
-const TOKEN_STATE_FROZEN = 2;
-
-async function getTokenAccountState(
-  banksClient: any,
-  tokenAccount: PublicKey,
-): Promise<number> {
-  const acc = await banksClient.getAccount(tokenAccount);
-  return acc.data[TOKEN_ACCOUNT_STATE_OFFSET];
-}
-
-async function forceFreezeAccount(
-  context: any,
-  banksClient: any,
-  tokenAccount: PublicKey,
-): Promise<void> {
-  const acc = await banksClient.getAccount(tokenAccount);
-  const data = Buffer.from(acc.data);
-  data[TOKEN_ACCOUNT_STATE_OFFSET] = TOKEN_STATE_FROZEN;
-  context.setAccount(tokenAccount, {
-    data,
-    executable: acc.executable,
-    owner: acc.owner,
-    lamports: acc.lamports,
-  });
-}
 
 export default function suite() {
   let gatedMintClient: GatedMintClient;
@@ -109,8 +85,8 @@ export default function suite() {
       100_000_000n,
     );
 
-    await forceFreezeAccount(this.context, this.banksClient, aliceAta);
-    await forceFreezeAccount(this.context, this.banksClient, bobAta);
+    await freezeTokenAccount(this.context, this.banksClient, aliceAta);
+    await freezeTokenAccount(this.context, this.banksClient, bobAta);
   });
 
   it("transfers between whitelisted users with both ATAs frozen post-CPI", async function () {

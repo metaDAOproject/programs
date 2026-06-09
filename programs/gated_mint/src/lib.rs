@@ -45,6 +45,11 @@ pub mod gated_mint {
         AddWhitelistedUser::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate())]
+    pub fn remove_whitelisted_user(ctx: Context<RemoveWhitelistedUser>) -> Result<()> {
+        RemoveWhitelistedUser::handle(ctx)
+    }
+
     #[access_control(ctx.accounts.validate(&args))]
     pub fn set_whitelist_admin(
         ctx: Context<SetWhitelistAdmin>,

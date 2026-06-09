@@ -112,6 +112,52 @@ export type GatedMint = {
       args: [];
     },
     {
+      name: "removeWhitelistedUser";
+      accounts: [
+        {
+          name: "gatedMintConfig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "authority";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "mint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "user";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "whitelistedUser";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "rentDestination";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "setWhitelistAdmin";
       accounts: [
         {
@@ -461,6 +507,43 @@ export type GatedMint = {
       ];
     },
     {
+      name: "WhitelistedUserRemovedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "gatedMintConfig";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "whitelistedUser";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "mint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "user";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "authority";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
       name: "WhitelistAdminSetEvent";
       fields: [
         {
@@ -740,6 +823,52 @@ export const IDL: GatedMint = {
         {
           name: "systemProgram",
           isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "removeWhitelistedUser",
+      accounts: [
+        {
+          name: "gatedMintConfig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "authority",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "mint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "user",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "whitelistedUser",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "rentDestination",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1069,6 +1198,43 @@ export const IDL: GatedMint = {
     },
     {
       name: "WhitelistedUserAddedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "gatedMintConfig",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "whitelistedUser",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "mint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "user",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "authority",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "WhitelistedUserRemovedEvent",
       fields: [
         {
           name: "common",

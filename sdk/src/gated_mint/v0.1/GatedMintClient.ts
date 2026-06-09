@@ -137,6 +137,37 @@ export class GatedMintClient {
     });
   }
 
+  removeWhitelistedUserIx({
+    mint,
+    authority,
+    user,
+    rentDestination = this.provider.publicKey,
+  }: {
+    mint: PublicKey;
+    authority: PublicKey;
+    user: PublicKey;
+    rentDestination?: PublicKey;
+  }) {
+    const [gatedMintConfig] = getGatedMintConfigAddr({
+      programId: this.programId,
+      mint,
+    });
+    const [whitelistedUser] = getWhitelistedUserAddr({
+      programId: this.programId,
+      mint,
+      user,
+    });
+
+    return this.program.methods.removeWhitelistedUser().accounts({
+      gatedMintConfig,
+      authority,
+      mint,
+      user,
+      whitelistedUser,
+      rentDestination,
+    });
+  }
+
   setWhitelistAdminIx({
     mint,
     admin,

@@ -39,6 +39,16 @@ pub struct WhitelistedUserAddedEvent {
 }
 
 #[event]
+pub struct WhitelistedUserRemovedEvent {
+    pub common: CommonFields,
+    pub gated_mint_config: Pubkey,
+    pub whitelisted_user: Pubkey,
+    pub mint: Pubkey,
+    pub user: Pubkey,
+    pub authority: Pubkey,
+}
+
+#[event]
 pub struct WhitelistAdminSetEvent {
     pub common: CommonFields,
     pub gated_mint_config: Pubkey,
