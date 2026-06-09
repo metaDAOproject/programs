@@ -1,5 +1,8 @@
 name: Deploy Buffer
 
+permissions:
+  contents: read
+
 env:
   HUSKY: 0
 
@@ -25,7 +28,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/setup-anchor@v3.2
+      - uses: metadaoproject/setup-anchor@7d1e9699eb18c33ba5f32f6a9952f0e90515996a # v3.2
         with:
           solana-cli-version: '1.17.16'
           anchor-version: '0.29.0'
@@ -36,7 +39,7 @@ jobs:
       - run: solana-keygen new -s -o buffer-keypair --no-bip39-passphrase
         shell: bash
       - name: Deploy Buffer
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
           timeout_minutes: 30
           max_attempts: 10

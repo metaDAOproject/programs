@@ -49,8 +49,10 @@ impl ClosePerformancePackage<'_> {
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let pp = &ctx.accounts.performance_package;
+        let pp = &mut ctx.accounts.performance_package;
         let clock = Clock::get()?;
+
+        pp.seq_num += 1;
 
         emit_cpi!(PerformancePackageClosedEvent {
             common: CommonFields {
@@ -60,6 +62,7 @@ impl ClosePerformancePackage<'_> {
             },
             performance_package: pp.key(),
             total_rewards_paid_out: pp.total_rewards_paid_out,
+            pp_created_at_timestamp: pp.created_at_timestamp,
         });
 
         // The performance_package account is closed automatically via the `close = rent_destination` constraint

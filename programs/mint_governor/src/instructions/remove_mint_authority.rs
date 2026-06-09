@@ -47,7 +47,9 @@ impl RemoveMintAuthority<'_> {
                 mint_governor_seq_num: mint_governor.seq_num,
             },
             mint_governor: mint_governor.key(),
+            mint_authority: mint_authority.key(),
             authorized_minter: mint_authority.authorized_minter,
+            max_total: mint_authority.max_total,
             total_minted: mint_authority.total_minted,
         });
 

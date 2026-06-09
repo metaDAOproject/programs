@@ -1,0 +1,51 @@
+# Code owners for the futarchy programs repo.
+#
+# Threat model covered here:
+# - On-chain program IDs (declare_id! sites)
+# - Error code enums (Anchor assigns codes by variant position; reordering or
+#   inserting in the middle silently breaks deployed clients - see CLAUDE.md)
+# - Anchor / Cargo build configuration (toolchain, deps, workspace layout)
+# - Mainnet deploy and verification workflows
+# - The repo-guard itself (config, script, workflow) - so it cannot be
+#   disabled without a security signoff
+
+# Program entry points (declare_id!)
+/programs/bid_wall/src/lib.rs @metanallok
+/programs/conditional_vault/src/lib.rs @metanallok
+/programs/damm_v2_cpi/src/lib.rs @metanallok
+/programs/futarchy/src/lib.rs @metanallok
+/programs/liquidation/src/lib.rs @metanallok
+/programs/mint_governor/src/lib.rs @metanallok
+/programs/performance_package_v2/src/lib.rs @metanallok
+/programs/price_based_performance_package/src/lib.rs @metanallok
+/programs/v06_launchpad/src/lib.rs @metanallok
+/programs/v07_launchpad/src/lib.rs @metanallok
+/programs/v08_launchpad/src/lib.rs @metanallok
+
+# Error enums - position-sensitive, breaks deployed clients if reordered
+/programs/bid_wall/src/error.rs @metanallok
+/programs/conditional_vault/src/error.rs @metanallok
+/programs/futarchy/src/error.rs @metanallok
+/programs/liquidation/src/error.rs @metanallok
+/programs/mint_governor/src/error.rs @metanallok
+/programs/performance_package_v2/src/error.rs @metanallok
+/programs/price_based_performance_package/src/error.rs @metanallok
+/programs/v06_launchpad/src/error.rs @metanallok
+/programs/v07_launchpad/src/error.rs @metanallok
+/programs/v08_launchpad/src/error.rs @metanallok
+
+# Build configuration - toolchain, workspace layout, every program manifest
+/Anchor.toml @metanallok
+/Cargo.toml @metanallok
+/Cargo.lock @metanallok
+/programs/*/Cargo.toml @metanallok
+
+# CI / deploy workflows and the actions they call
+/.github/ @metanallok
+/.github/workflows/ @metanallok
+/.github/actions/ @metanallok
+
+# The repo-guard itself - changes here must be reviewed
+/.github/repo-guard.toml @metanallok
+/.github/workflows/repo-guard.yml @metanallok
+/scripts/repo-guard.ts @metanallok

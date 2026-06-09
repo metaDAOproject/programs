@@ -744,6 +744,30 @@ export type PerformancePackageV2 = {
           type: "u8";
           index: false;
         },
+        {
+          name: "oracleReader";
+          type: {
+            defined: "OracleReader";
+          };
+          index: false;
+        },
+        {
+          name: "rewardFunction";
+          type: {
+            defined: "RewardFunction";
+          };
+          index: false;
+        },
+        {
+          name: "minUnlockTimestamp";
+          type: "i64";
+          index: false;
+        },
+        {
+          name: "ppCreatedAtTimestamp";
+          type: "i64";
+          index: false;
+        },
       ];
     },
     {
@@ -763,6 +787,16 @@ export type PerformancePackageV2 = {
         },
         {
           name: "startTime";
+          type: "i64";
+          index: false;
+        },
+        {
+          name: "startOracleValue";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "ppCreatedAtTimestamp";
           type: "i64";
           index: false;
         },
@@ -803,6 +837,11 @@ export type PerformancePackageV2 = {
           type: "u64";
           index: false;
         },
+        {
+          name: "ppCreatedAtTimestamp";
+          type: "i64";
+          index: false;
+        },
       ];
     },
     {
@@ -828,6 +867,11 @@ export type PerformancePackageV2 = {
         {
           name: "newAuthority";
           type: "publicKey";
+          index: false;
+        },
+        {
+          name: "ppCreatedAtTimestamp";
+          type: "i64";
           index: false;
         },
       ];
@@ -887,6 +931,11 @@ export type PerformancePackageV2 = {
           };
           index: false;
         },
+        {
+          name: "ppCreatedAtTimestamp";
+          type: "i64";
+          index: false;
+        },
       ];
     },
     {
@@ -934,6 +983,16 @@ export type PerformancePackageV2 = {
           };
           index: false;
         },
+        {
+          name: "changeRequest";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "ppCreatedAtTimestamp";
+          type: "i64";
+          index: false;
+        },
       ];
     },
     {
@@ -954,6 +1013,11 @@ export type PerformancePackageV2 = {
         {
           name: "totalRewardsPaidOut";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "ppCreatedAtTimestamp";
+          type: "i64";
           index: false;
         },
       ];
@@ -1814,6 +1878,30 @@ export const IDL: PerformancePackageV2 = {
           type: "u8",
           index: false,
         },
+        {
+          name: "oracleReader",
+          type: {
+            defined: "OracleReader",
+          },
+          index: false,
+        },
+        {
+          name: "rewardFunction",
+          type: {
+            defined: "RewardFunction",
+          },
+          index: false,
+        },
+        {
+          name: "minUnlockTimestamp",
+          type: "i64",
+          index: false,
+        },
+        {
+          name: "ppCreatedAtTimestamp",
+          type: "i64",
+          index: false,
+        },
       ],
     },
     {
@@ -1833,6 +1921,16 @@ export const IDL: PerformancePackageV2 = {
         },
         {
           name: "startTime",
+          type: "i64",
+          index: false,
+        },
+        {
+          name: "startOracleValue",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "ppCreatedAtTimestamp",
           type: "i64",
           index: false,
         },
@@ -1873,6 +1971,11 @@ export const IDL: PerformancePackageV2 = {
           type: "u64",
           index: false,
         },
+        {
+          name: "ppCreatedAtTimestamp",
+          type: "i64",
+          index: false,
+        },
       ],
     },
     {
@@ -1898,6 +2001,11 @@ export const IDL: PerformancePackageV2 = {
         {
           name: "newAuthority",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "ppCreatedAtTimestamp",
+          type: "i64",
           index: false,
         },
       ],
@@ -1957,6 +2065,11 @@ export const IDL: PerformancePackageV2 = {
           },
           index: false,
         },
+        {
+          name: "ppCreatedAtTimestamp",
+          type: "i64",
+          index: false,
+        },
       ],
     },
     {
@@ -2004,6 +2117,16 @@ export const IDL: PerformancePackageV2 = {
           },
           index: false,
         },
+        {
+          name: "changeRequest",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "ppCreatedAtTimestamp",
+          type: "i64",
+          index: false,
+        },
       ],
     },
     {
@@ -2024,6 +2147,11 @@ export const IDL: PerformancePackageV2 = {
         {
           name: "totalRewardsPaidOut",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "ppCreatedAtTimestamp",
+          type: "i64",
           index: false,
         },
       ],

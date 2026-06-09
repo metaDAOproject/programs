@@ -57,7 +57,7 @@ runs:
 
     - name: Write program buffer
       id: write-buffer
-      uses: nick-fields/retry@v2
+      uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2
       with:
         timeout_minutes: 60
         max_attempts: 3
@@ -94,7 +94,7 @@ runs:
     # If the deploy fails you can also close the buffer with the multisig using the cli command squad-closebuffer
     - name: Transfer buffer authority
       if: steps.check-program.outputs.exists == 'true'
-      uses: nick-fields/retry@v2
+      uses: nick-fields/retry@14672906e672a08bd6eeb15720e9ed3ce869cdd4 # v2
       with:
         timeout_minutes: 10
         max_attempts: 50

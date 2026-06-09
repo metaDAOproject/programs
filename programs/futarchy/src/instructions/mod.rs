@@ -1,12 +1,13 @@
 use super::*;
 
-pub mod admin_approve_multisig_proposal;
 pub mod admin_cancel_proposal;
+pub mod admin_enqueue_multisig_proposal_approval;
 pub mod admin_execute_multisig_proposal;
 pub mod admin_remove_proposal;
 pub mod collect_fees;
 pub mod collect_meteora_damm_fees;
 pub mod conditional_swap;
+pub mod execute_multisig_proposal_approval;
 pub mod execute_spending_limit_change;
 pub mod finalize_optimistic_proposal;
 pub mod finalize_proposal;
@@ -23,13 +24,14 @@ pub mod unstake_from_proposal;
 pub mod update_dao;
 pub mod withdraw_liquidity;
 
-pub use admin_approve_multisig_proposal::*;
 pub use admin_cancel_proposal::*;
+pub use admin_enqueue_multisig_proposal_approval::*;
 pub use admin_execute_multisig_proposal::*;
 pub use admin_remove_proposal::*;
 pub use collect_fees::*;
 pub use collect_meteora_damm_fees::*;
 pub use conditional_swap::*;
+pub use execute_multisig_proposal_approval::*;
 pub use execute_spending_limit_change::*;
 pub use finalize_optimistic_proposal::*;
 pub use finalize_proposal::*;

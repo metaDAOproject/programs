@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   HUSKY: 0
 
@@ -34,7 +37,7 @@ jobs:
           cd sdk
           yarn build
 
-      - uses: metadaoproject/anchor-test@v2.3
+      - uses: metadaoproject/anchor-test@876dde6990e0a3d22e1cf1c702b4e4c64aa47d15 # v2.3
         with:
           anchor-version: '0.29.0'
           solana-cli-version: '1.17.31'

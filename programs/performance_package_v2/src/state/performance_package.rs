@@ -143,6 +143,15 @@ impl OracleReader {
         }
     }
 
+    /// Returns the start snapshot recorded by `record_start`.
+    /// 0 for `Time` (no snapshot); `start_value` for `FutarchyTwap`.
+    pub fn start_snapshot(&self) -> u128 {
+        match self {
+            OracleReader::Time => 0,
+            OracleReader::FutarchyTwap { start_value, .. } => *start_value,
+        }
+    }
+
     /// Records the end snapshot when unlock completes.
     /// For Time oracle, this is a no-op since it just reads current time on demand.
     /// For FutarchyTwap, reads the accumulator from the Dao's spot pool oracle.

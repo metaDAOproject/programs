@@ -24,6 +24,9 @@ on:
         default: "300000"
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   conditional-vault-v4:
     if: inputs.program == 'conditional_vault_v4'

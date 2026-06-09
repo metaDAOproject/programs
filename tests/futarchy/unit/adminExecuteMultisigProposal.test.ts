@@ -11,6 +11,8 @@ import * as multisig from "@sqds/multisig";
 import { createMemoInstruction } from "@solana/spl-memo";
 import BN from "bn.js";
 
+const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
+
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
 
@@ -109,14 +111,37 @@ export default function suite() {
         programId: multisig.PROGRAM_ID,
       });
 
-    // First approve
+    const [enqueuedApprovalPda] = PublicKey.findProgramAddressSync(
+      [
+        SEED_ENQUEUED_APPROVAL,
+        dao.toBuffer(),
+        new BN(1).toArrayLike(Buffer, "le", 8),
+      ],
+      this.futarchy.futarchy.programId,
+    );
+
+    // First enqueue an approval (admin-gated)
     await this.futarchy.futarchy.methods
-      .adminApproveMultisigProposal({ transactionIndex: new BN(1) })
+      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
       .accounts({
         dao: dao,
+        admin: this.payer.publicKey,
         squadsMultisig: daoAccount.squadsMultisig,
         squadsMultisigProposal: squadsProposalPda,
-        admin: this.payer.publicKey,
+        enqueuedApproval: enqueuedApprovalPda,
+      })
+      .signers([this.payer])
+      .rpc();
+
+    // Then execute the approval (permissionless)
+    await this.futarchy.futarchy.methods
+      .executeMultisigProposalApproval()
+      .accounts({
+        dao: dao,
+        rentReceiver: this.payer.publicKey,
+        squadsMultisig: daoAccount.squadsMultisig,
+        squadsMultisigProposal: squadsProposalPda,
+        enqueuedApproval: enqueuedApprovalPda,
         squadsMultisigProgram: multisig.PROGRAM_ID,
       })
       .signers([this.payer])
