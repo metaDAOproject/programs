@@ -95,3 +95,13 @@ files = [
   ".github/workflows/repo-guard.yml",
   "scripts/repo-guard.ts",
 ]
+
+# Directories whose *content* is excluded from the heuristic diff scan.
+# Name-level tracking (files = [...] above) is unaffected. These hold only
+# content the heuristics cannot meaningfully scan (PDFs, images, compiled
+# .so), and large text-misdetected files here crash the guard's diff buffer.
+exclude_paths = [
+  "audits/",
+  "docs/.gitbook/assets/",
+  "verifiable-builds/",
+]
