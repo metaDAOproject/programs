@@ -2,6 +2,7 @@
 export * from "./bid_wall/index.js";
 export * from "./conditional_vault/index.js";
 export * from "./futarchy/index.js";
+export * from "./gated_mint/index.js";
 export * from "./launchpad/index.js";
 export * from "./liquidation/index.js";
 export * from "./mint_governor/index.js";

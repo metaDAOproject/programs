@@ -948,6 +948,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "gated_mint"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "solana-program",
+ "solana-security-txt",
+ "spl-token",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1195,6 +1206,7 @@ dependencies = [
  "bid_wall",
  "damm_v2_cpi",
  "futarchy",
+ "gated_mint",
  "mint_governor",
  "performance_package_v2",
  "solana-program",

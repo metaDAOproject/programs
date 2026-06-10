@@ -9,6 +9,7 @@ skip-lint = false
 bid_wall = "WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx"
 conditional_vault = "VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg"
 futarchy = "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
+gated_mint = "GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA"
 launchpad = "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV"
 launchpad_v7 = "moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM"
 launchpad_v8 = "moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n"
