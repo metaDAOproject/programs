@@ -48,6 +48,7 @@ type GuardConfig = {
   packageMinAgeDays: number;
   actionShaAllowlist: Map<string, Set<string>>;
   sensitiveFiles: Set<string>;
+  excludePaths: string[];
 };
 
 type CargoViolation = {
@@ -258,6 +259,12 @@ function loadConfig(): GuardConfig {
     for (const f of sd) sensitiveFiles.add(f);
   }
 
+  const excludePaths: string[] = [];
+  const ep = toml["sensitive_diff"]?.["exclude_paths"];
+  if (Array.isArray(ep)) {
+    for (const p of ep) excludePaths.push(p);
+  }
+
   const workflowSolanaCli = new Map<string, string>();
   for (const [k, v] of Object.entries(
     toml["toolchain.workflow_solana_cli"] ?? {},
@@ -283,6 +290,7 @@ function loadConfig(): GuardConfig {
     packageMinAgeDays: requireNumber("cargo", "package_min_age_days"),
     actionShaAllowlist: allowlist,
     sensitiveFiles,
+    excludePaths,
   };
 }
 
@@ -292,6 +300,7 @@ function run(command: string, args: string[]): string {
   return execFileSync(command, args, {
     cwd: ROOT,
     encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024, // 16 MiB — clears every realistic PR (worst case ~7.5 MB raw)
   }).trim();
 }
 
@@ -1137,6 +1146,9 @@ function checkSensitiveDiff(config: GuardConfig): {
     "--unified=0",
     "--no-color",
     `${diffBase}...HEAD`,
+    "--",
+    ".",
+    ...config.excludePaths.map((p) => `:(exclude)${p}`),
   ]);
 
   const findings: SensitiveFinding[] = [];
