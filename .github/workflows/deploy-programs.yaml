@@ -18,6 +18,7 @@ on:
           - liquidation
           - mint_governor
           - performance_package_v2
+          - gated_mint
       priority-fee:
         description: "Priority fee in microlamports"
         required: true
@@ -205,6 +206,25 @@ jobs:
     with:
       program: "launchpad_v8"
       override-program-id: "moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n"
+      network: "mainnet"
+      deploy: true
+      upload_idl: true
+      verify: true
+      use-squads: true
+      features: "production"
+      priority-fee: ${{ inputs.priority-fee }}
+    secrets:
+      MAINNET_SOLANA_DEPLOY_URL: ${{ secrets.MAINNET_SOLANA_DEPLOY_URL }}
+      MAINNET_DEPLOYER_KEYPAIR: ${{ secrets.MAINNET_DEPLOYER_KEYPAIR }}
+      MAINNET_MULTISIG: ${{ secrets.MAINNET_MULTISIG }}
+      MAINNET_MULTISIG_VAULT: ${{ secrets.MAINNET_MULTISIG_VAULT }}
+
+  gated-mint:
+    if: inputs.program == 'gated_mint'
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      program: "gated_mint"
+      override-program-id: "GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA"
       network: "mainnet"
       deploy: true
       upload_idl: true
