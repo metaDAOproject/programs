@@ -89,6 +89,11 @@ import { BN } from "bn.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
+// Every test transaction needs a distinct signature; bankrun rejects a duplicate
+// (same message + blockhash) as "transaction already processed", and the blockhash
+// doesn't always advance between back-to-back txs.
+let mintToTxNonce = 1;
+
 // Export the test context interface for use in other files
 export interface TestContext {
   context: ProgramTestContext;
@@ -384,6 +389,15 @@ before(async function () {
     const tokenAccount = token.getAssociatedTokenAddressSync(mint, to, true);
 
     const tx = new Transaction();
+
+    // Unique compute-unit price per call → unique signature, so two otherwise
+    // identical mints can't collide as "transaction already processed". Price
+    // (not limit) leaves the compute budget untouched and increments freely.
+    tx.add(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: mintToTxNonce++,
+      }),
+    );
 
     tx.add(
       token.createAssociatedTokenAccountIdempotentInstruction(
