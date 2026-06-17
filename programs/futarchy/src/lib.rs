@@ -155,6 +155,11 @@ pub mod futarchy {
     }
 
     #[access_control(ctx.accounts.validate())]
+    pub fn approve_proposal(ctx: Context<ApproveProposal>) -> Result<()> {
+        ApproveProposal::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
     pub fn collect_meteora_damm_fees(ctx: Context<CollectMeteoraDammFees>) -> Result<()> {
         CollectMeteoraDammFees::handle(ctx)
     }

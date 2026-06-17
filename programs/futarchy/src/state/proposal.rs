@@ -36,4 +36,5 @@ pub struct Proposal {
     pub fail_base_mint: Pubkey,
     pub fail_quote_mint: Pubkey,
     pub is_team_sponsored: bool,
+    pub is_metadao_approved: bool,
 }

@@ -1054,6 +1054,37 @@ export type Futarchy = {
       args: [];
     },
     {
+      name: "approveProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "approver";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "collectMeteoraDammFees";
       accounts: [
         {
@@ -1997,6 +2028,10 @@ export type Futarchy = {
           },
           {
             name: "isTeamSponsored";
+            type: "bool";
+          },
+          {
+            name: "isMetadaoApproved";
             type: "bool";
           },
         ];
@@ -3351,6 +3386,33 @@ export type Futarchy = {
       ];
     },
     {
+      name: "ApproveProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "approver";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
       name: "RemoveProposalEvent";
       fields: [
         {
@@ -3800,6 +3862,16 @@ export type Futarchy = {
       code: 6042;
       name: "NoActiveOptimisticProposal";
       msg: "No active optimistic proposal";
+    },
+    {
+      code: 6043;
+      name: "InvalidApprover";
+      msg: "Invalid MetaDAO approver";
+    },
+    {
+      code: 6044;
+      name: "ProposalAlreadyApproved";
+      msg: "Proposal has already been approved by MetaDAO";
     },
   ];
 };
@@ -4860,6 +4932,37 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
+      name: "approveProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "approver",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "collectMeteoraDammFees",
       accounts: [
         {
@@ -5803,6 +5906,10 @@ export const IDL: Futarchy = {
           },
           {
             name: "isTeamSponsored",
+            type: "bool",
+          },
+          {
+            name: "isMetadaoApproved",
             type: "bool",
           },
         ],
@@ -7157,6 +7264,33 @@ export const IDL: Futarchy = {
       ],
     },
     {
+      name: "ApproveProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "approver",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
       name: "RemoveProposalEvent",
       fields: [
         {
@@ -7606,6 +7740,16 @@ export const IDL: Futarchy = {
       code: 6042,
       name: "NoActiveOptimisticProposal",
       msg: "No active optimistic proposal",
+    },
+    {
+      code: 6043,
+      name: "InvalidApprover",
+      msg: "Invalid MetaDAO approver",
+    },
+    {
+      code: 6044,
+      name: "ProposalAlreadyApproved",
+      msg: "Proposal has already been approved by MetaDAO",
     },
   ],
 };

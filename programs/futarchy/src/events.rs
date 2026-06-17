@@ -193,6 +193,14 @@ pub struct SponsorProposalEvent {
 }
 
 #[event]
+pub struct ApproveProposalEvent {
+    pub common: CommonFields,
+    pub proposal: Pubkey,
+    pub dao: Pubkey,
+    pub approver: Pubkey,
+}
+
+#[event]
 pub struct RemoveProposalEvent {
     pub common: CommonFields,
     pub proposal: Pubkey,

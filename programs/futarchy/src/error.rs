@@ -90,4 +90,8 @@ pub enum FutarchyError {
     InvalidSpendingLimitMint,
     #[msg("No active optimistic proposal")]
     NoActiveOptimisticProposal,
+    #[msg("Invalid MetaDAO approver")]
+    InvalidApprover,
+    #[msg("Proposal has already been approved by MetaDAO")]
+    ProposalAlreadyApproved,
 }
