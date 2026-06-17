@@ -604,6 +604,27 @@ export type Futarchy = {
       args: [];
     },
     {
+      name: "resizeProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "spotSwap";
       accounts: [
         {
@@ -2032,6 +2053,86 @@ export type Futarchy = {
           },
           {
             name: "isMetadaoApproved";
+            type: "bool";
+          },
+        ];
+      };
+    },
+    {
+      name: "oldProposal";
+      docs: [
+        "Today's `Proposal` layout **without** `is_metadao_approved`. Read by the",
+        "`resize_proposal` crank to migrate existing accounts to the new layout.",
+        "Mirrors `OldDao` (same `#[account] #[derive(InitSpace)]` derives): `#[account]`",
+        "lists it in the IDL so the resize tests can build old-layout fixtures.",
+      ];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "number";
+            type: "u32";
+          },
+          {
+            name: "proposer";
+            type: "publicKey";
+          },
+          {
+            name: "timestampEnqueued";
+            type: "i64";
+          },
+          {
+            name: "state";
+            type: {
+              defined: "ProposalState";
+            };
+          },
+          {
+            name: "baseVault";
+            type: "publicKey";
+          },
+          {
+            name: "quoteVault";
+            type: "publicKey";
+          },
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "question";
+            type: "publicKey";
+          },
+          {
+            name: "durationInSeconds";
+            type: "u32";
+          },
+          {
+            name: "squadsProposal";
+            type: "publicKey";
+          },
+          {
+            name: "passBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "passQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "failBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "failQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "isTeamSponsored";
             type: "bool";
           },
         ];
@@ -4482,6 +4583,27 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
+      name: "resizeProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "spotSwap",
       accounts: [
         {
@@ -5910,6 +6032,86 @@ export const IDL: Futarchy = {
           },
           {
             name: "isMetadaoApproved",
+            type: "bool",
+          },
+        ],
+      },
+    },
+    {
+      name: "oldProposal",
+      docs: [
+        "Today's `Proposal` layout **without** `is_metadao_approved`. Read by the",
+        "`resize_proposal` crank to migrate existing accounts to the new layout.",
+        "Mirrors `OldDao` (same `#[account] #[derive(InitSpace)]` derives): `#[account]`",
+        "lists it in the IDL so the resize tests can build old-layout fixtures.",
+      ],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "number",
+            type: "u32",
+          },
+          {
+            name: "proposer",
+            type: "publicKey",
+          },
+          {
+            name: "timestampEnqueued",
+            type: "i64",
+          },
+          {
+            name: "state",
+            type: {
+              defined: "ProposalState",
+            },
+          },
+          {
+            name: "baseVault",
+            type: "publicKey",
+          },
+          {
+            name: "quoteVault",
+            type: "publicKey",
+          },
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "question",
+            type: "publicKey",
+          },
+          {
+            name: "durationInSeconds",
+            type: "u32",
+          },
+          {
+            name: "squadsProposal",
+            type: "publicKey",
+          },
+          {
+            name: "passBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "passQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "failBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "failQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "isTeamSponsored",
             type: "bool",
           },
         ],
