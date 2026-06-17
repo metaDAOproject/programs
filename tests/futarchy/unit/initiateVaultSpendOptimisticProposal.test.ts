@@ -59,6 +59,7 @@ export default function suite() {
             members: [this.payer.publicKey],
           },
           baseToStake: new BN(0),
+          baseToSupermajority: new BN(0),
           teamSponsoredPassThresholdBps: 0,
           teamAddress: this.payer.publicKey,
         },

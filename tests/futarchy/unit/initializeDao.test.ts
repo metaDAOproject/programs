@@ -33,6 +33,7 @@ export default function suite() {
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
           baseToStake: new BN(1000),
+          baseToSupermajority: new BN(5000),
           passThresholdBps: 300,
           nonce: new BN(1337),
           initialSpendingLimit: null,
@@ -75,6 +76,8 @@ export default function suite() {
 
     assert.isTrue(storedDao.teamAddress.equals(this.payer.publicKey));
     assert.equal(storedDao.teamSponsoredPassThresholdBps, 123);
+
+    assert.equal(storedDao.baseToSupermajority.toString(), "5000");
 
     assert.isNull(storedDao.optimisticProposal);
     assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
@@ -132,6 +135,7 @@ export default function suite() {
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
           baseToStake: new BN(1000),
+          baseToSupermajority: new BN(0),
           passThresholdBps: 300,
           nonce: new BN(420),
           initialSpendingLimit: {
@@ -214,6 +218,7 @@ export default function suite() {
           nonce: new BN(9999),
           initialSpendingLimit: null,
           baseToStake: new BN(1000),
+          baseToSupermajority: new BN(0),
           teamSponsoredPassThresholdBps: 1500,
           teamAddress: this.payer.publicKey,
         },
@@ -243,8 +248,39 @@ export default function suite() {
           nonce: new BN(1338),
           initialSpendingLimit: null,
           baseToStake: new BN(1000),
+          baseToSupermajority: new BN(0),
           teamSponsoredPassThresholdBps: 123,
           teamAddress: this.payer.publicKey,
+        },
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("doesn't allow base_to_supermajority between 0 and base_to_stake", async function () {
+    const callbacks = expectError(
+      "InvalidSupermajorityThreshold",
+      "DAO initialized despite base_to_supermajority being below base_to_stake",
+    );
+
+    await this.futarchy
+      .initializeDaoIx({
+        baseMint: META,
+        quoteMint: USDC,
+        params: {
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(1),
+          minBaseFutarchicLiquidity: new BN(1000),
+          baseToStake: new BN(1000),
+          baseToSupermajority: new BN(999),
+          passThresholdBps: 300,
+          nonce: new BN(7777),
+          initialSpendingLimit: null,
+          teamAddress: this.payer.publicKey,
+          teamSponsoredPassThresholdBps: 123,
         },
       })
       .rpc()

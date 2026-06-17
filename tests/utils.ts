@@ -54,6 +54,7 @@ export async function setupBasicDao({
         baseToStake: new BN(0),
         teamSponsoredPassThresholdBps,
         teamAddress: teamAddress || context.payer.publicKey,
+        baseToSupermajority: new BN(0),
       },
       provideLiquidity: true,
     })

@@ -7,6 +7,10 @@ pub struct ResizeDao<'info> {
     /// CHECK: we check the discriminator
     #[account(mut)]
     pub dao: UncheckedAccount<'info>,
+    /// The DAO's base mint, bound to `old.base_mint` below. Because this crank is
+    /// permissionless, the mint must be bound so a caller can't pass a fabricated
+    /// low-decimal mint to set a near-zero supermajority bar.
+    pub base_mint: Account<'info, Mint>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -21,8 +25,8 @@ impl ResizeDao<'_> {
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Dao::INIT_SPACE + 8;
-        // 42 bytes: 1 (Option discriminant) + 32 (Pubkey) + 8 (i64) + 1 (bool)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 42;
+        // 8 bytes: base_to_supermajority (u64)
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 8;
 
         if dao.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -31,6 +35,26 @@ impl ResizeDao<'_> {
         }
 
         let old_dao_data = OldDao::deserialize(&mut &dao.try_borrow_data().unwrap()[8..])?;
+
+        // Bind the passed mint to the DAO before trusting its decimals.
+        require_keys_eq!(
+            ctx.accounts.base_mint.key(),
+            old_dao_data.base_mint,
+            FutarchyError::InvalidMint
+        );
+
+        // 2.5M WHOLE tokens scaled to base units by the base mint's on-chain decimals;
+        // checked so a pathological high-decimal mint errors rather than silently wrapping.
+        let scaled = DEFAULT_BASE_TO_SUPERMAJORITY_TOKENS
+            .checked_mul(
+                10u64
+                    .checked_pow(ctx.accounts.base_mint.decimals as u32)
+                    .ok_or(FutarchyError::CastingOverflow)?,
+            )
+            .ok_or(FutarchyError::CastingOverflow)?;
+        // Never below the DAO's own base_to_stake floor, so the supermajority bar can't become the *easier* path.
+        // Satisfies the `base_to_supermajority >= base_to_stake` invariant by construction.
+        let base_to_supermajority = scaled.max(old_dao_data.base_to_stake);
 
         let new_dao_data = Dao {
             amm: old_dao_data.amm,
@@ -55,8 +79,9 @@ impl ResizeDao<'_> {
             initial_spending_limit: old_dao_data.initial_spending_limit,
             team_sponsored_pass_threshold_bps: old_dao_data.team_sponsored_pass_threshold_bps,
             team_address: old_dao_data.team_address,
-            optimistic_proposal: None,
-            is_optimistic_governance_enabled: false,
+            optimistic_proposal: old_dao_data.optimistic_proposal,
+            is_optimistic_governance_enabled: old_dao_data.is_optimistic_governance_enabled,
+            base_to_supermajority,
         };
 
         dao.realloc(AFTER_REALLOC_SIZE, true)?;

@@ -591,6 +591,16 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "The DAO's base mint, bound to `old.base_mint` below. Because this crank is",
+            "permissionless, the mint must be bound so a caller can't pass a fabricated",
+            "low-decimal mint to set a near-zero supermajority bar.",
+          ];
+        },
+        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -1821,6 +1831,14 @@ export type Futarchy = {
             name: "isOptimisticGovernanceEnabled";
             type: "bool";
           },
+          {
+            name: "baseToSupermajority";
+            docs: [
+              "Absolute base-token stake at which a proposal launches on supermajority",
+              "stake alone. `0` disables the supermajority path for this DAO.",
+            ];
+            type: "u64";
+          },
         ];
       };
     },
@@ -1957,6 +1975,18 @@ export type Futarchy = {
             name: "teamAddress";
             type: "publicKey";
           },
+          {
+            name: "optimisticProposal";
+            type: {
+              option: {
+                defined: "OptimisticProposal";
+              };
+            };
+          },
+          {
+            name: "isOptimisticGovernanceEnabled";
+            type: "bool";
+          },
         ];
       };
     },
@@ -2060,12 +2090,6 @@ export type Futarchy = {
     },
     {
       name: "oldProposal";
-      docs: [
-        "Today's `Proposal` layout **without** `is_metadao_approved`. Read by the",
-        "`resize_proposal` crank to migrate existing accounts to the new layout.",
-        "Mirrors `OldDao` (same `#[account] #[derive(InitSpace)]` derives): `#[account]`",
-        "lists it in the IDL so the resize tests can build old-layout fixtures.",
-      ];
       type: {
         kind: "struct";
         fields: [
@@ -2281,6 +2305,10 @@ export type Futarchy = {
             name: "teamAddress";
             type: "publicKey";
           },
+          {
+            name: "baseToSupermajority";
+            type: "u64";
+          },
         ];
       };
     },
@@ -2442,6 +2470,12 @@ export type Futarchy = {
             name: "isOptimisticGovernanceEnabled";
             type: {
               option: "bool";
+            };
+          },
+          {
+            name: "baseToSupermajority";
+            type: {
+              option: "u64";
             };
           },
         ];
@@ -2922,6 +2956,11 @@ export type Futarchy = {
           type: "publicKey";
           index: false;
         },
+        {
+          name: "baseToSupermajority";
+          type: "u64";
+          index: false;
+        },
       ];
     },
     {
@@ -2992,6 +3031,11 @@ export type Futarchy = {
         {
           name: "isOptimisticGovernanceEnabled";
           type: "bool";
+          index: false;
+        },
+        {
+          name: "baseToSupermajority";
+          type: "u64";
           index: false;
         },
       ];
@@ -3974,6 +4018,11 @@ export type Futarchy = {
       name: "ProposalAlreadyApproved";
       msg: "Proposal has already been approved by MetaDAO";
     },
+    {
+      code: 6045;
+      name: "InvalidSupermajorityThreshold";
+      msg: "base_to_supermajority must be 0 (disabled) or >= base_to_stake";
+    },
   ];
 };
 
@@ -4568,6 +4617,16 @@ export const IDL: Futarchy = {
           name: "dao",
           isMut: true,
           isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+          docs: [
+            "The DAO's base mint, bound to `old.base_mint` below. Because this crank is",
+            "permissionless, the mint must be bound so a caller can't pass a fabricated",
+            "low-decimal mint to set a near-zero supermajority bar.",
+          ],
         },
         {
           name: "payer",
@@ -5800,6 +5859,14 @@ export const IDL: Futarchy = {
             name: "isOptimisticGovernanceEnabled",
             type: "bool",
           },
+          {
+            name: "baseToSupermajority",
+            docs: [
+              "Absolute base-token stake at which a proposal launches on supermajority",
+              "stake alone. `0` disables the supermajority path for this DAO.",
+            ],
+            type: "u64",
+          },
         ],
       },
     },
@@ -5936,6 +6003,18 @@ export const IDL: Futarchy = {
             name: "teamAddress",
             type: "publicKey",
           },
+          {
+            name: "optimisticProposal",
+            type: {
+              option: {
+                defined: "OptimisticProposal",
+              },
+            },
+          },
+          {
+            name: "isOptimisticGovernanceEnabled",
+            type: "bool",
+          },
         ],
       },
     },
@@ -6039,12 +6118,6 @@ export const IDL: Futarchy = {
     },
     {
       name: "oldProposal",
-      docs: [
-        "Today's `Proposal` layout **without** `is_metadao_approved`. Read by the",
-        "`resize_proposal` crank to migrate existing accounts to the new layout.",
-        "Mirrors `OldDao` (same `#[account] #[derive(InitSpace)]` derives): `#[account]`",
-        "lists it in the IDL so the resize tests can build old-layout fixtures.",
-      ],
       type: {
         kind: "struct",
         fields: [
@@ -6260,6 +6333,10 @@ export const IDL: Futarchy = {
             name: "teamAddress",
             type: "publicKey",
           },
+          {
+            name: "baseToSupermajority",
+            type: "u64",
+          },
         ],
       },
     },
@@ -6421,6 +6498,12 @@ export const IDL: Futarchy = {
             name: "isOptimisticGovernanceEnabled",
             type: {
               option: "bool",
+            },
+          },
+          {
+            name: "baseToSupermajority",
+            type: {
+              option: "u64",
             },
           },
         ],
@@ -6901,6 +6984,11 @@ export const IDL: Futarchy = {
           type: "publicKey",
           index: false,
         },
+        {
+          name: "baseToSupermajority",
+          type: "u64",
+          index: false,
+        },
       ],
     },
     {
@@ -6971,6 +7059,11 @@ export const IDL: Futarchy = {
         {
           name: "isOptimisticGovernanceEnabled",
           type: "bool",
+          index: false,
+        },
+        {
+          name: "baseToSupermajority",
+          type: "u64",
           index: false,
         },
       ],
@@ -7952,6 +8045,11 @@ export const IDL: Futarchy = {
       code: 6044,
       name: "ProposalAlreadyApproved",
       msg: "Proposal has already been approved by MetaDAO",
+    },
+    {
+      code: 6045,
+      name: "InvalidSupermajorityThreshold",
+      msg: "base_to_supermajority must be 0 (disabled) or >= base_to_stake",
     },
   ],
 };

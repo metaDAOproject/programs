@@ -355,6 +355,7 @@ export async function setupDaoForTwapTests(context: any): Promise<PublicKey> {
         nonce,
         initialSpendingLimit: null,
         baseToStake: new BN(0),
+        baseToSupermajority: new BN(0),
         teamSponsoredPassThresholdBps: 300,
         teamAddress: context.payer.publicKey,
       },

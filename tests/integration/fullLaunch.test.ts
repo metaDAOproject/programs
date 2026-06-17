@@ -385,6 +385,7 @@ export default async function suite() {
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
           isOptimisticGovernanceEnabled: false,
+          baseToSupermajority: null,
         },
       })
       .instruction();

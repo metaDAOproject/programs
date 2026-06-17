@@ -526,6 +526,7 @@ before(async function () {
           baseToStake: new BN(0),
           teamSponsoredPassThresholdBps,
           teamAddress,
+          baseToSupermajority: new BN(0),
         },
         provideLiquidity: true,
       })

@@ -94,4 +94,6 @@ pub enum FutarchyError {
     InvalidApprover,
     #[msg("Proposal has already been approved by MetaDAO")]
     ProposalAlreadyApproved,
+    #[msg("base_to_supermajority must be 0 (disabled) or >= base_to_stake")]
+    InvalidSupermajorityThreshold,
 }
