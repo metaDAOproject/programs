@@ -12,7 +12,11 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
+import {
+  expectError,
+  setOptimisticGovernanceEnabled,
+  nextDaoNonce,
+} from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 
@@ -57,7 +61,7 @@ export default function suite() {
     baseToStake: BN,
     payer: Keypair,
   ): Promise<PublicKey> {
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
+    const nonce = nextDaoNonce();
 
     await context.futarchy
       .initializeDaoIx({

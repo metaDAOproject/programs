@@ -20,6 +20,15 @@ export const DAY_IN_SLOTS = HOUR_IN_SLOTS * 24n;
 export const toBN = (val: bigint): typeof BN.prototype =>
   new BN(val.toString());
 
+// Monotonic DAO-nonce allocator. The DAO PDA is [SEED_DAO, daoCreator, nonce] and
+// every test shares the same creator (the provider wallet), so the nonce space is
+// global across the whole suite. A single shared counter guarantees uniqueness;
+// random nonces collided (birthday bound) and intermittently failed init with the
+// System program's "account already in use" (0x0). Mirrors `mintToTxNonce`.
+let daoNonceCounter = 1;
+export const nextDaoNonce = (): typeof BN.prototype =>
+  new BN(daoNonceCounter++);
+
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
 export async function setupBasicDao({
@@ -35,7 +44,7 @@ export async function setupBasicDao({
   teamSponsoredPassThresholdBps?: number;
   teamAddress?: PublicKey;
 }) {
-  const nonce = new BN(Math.floor(Math.random() * 1000000));
+  const nonce = nextDaoNonce();
 
   await context.futarchy
     .initializeDaoIx({

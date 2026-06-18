@@ -11,7 +11,11 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
+import {
+  expectError,
+  setOptimisticGovernanceEnabled,
+  nextDaoNonce,
+} from "../../utils.js";
 import {
   createTransferInstruction,
   getAssociatedTokenAddressSync,
@@ -37,7 +41,7 @@ export default function suite() {
     // Mint tokens to payer's accounts
     await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
 
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
+    const nonce = nextDaoNonce();
 
     await this.futarchy
       .initializeDaoIx({

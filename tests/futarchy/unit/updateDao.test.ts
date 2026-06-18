@@ -17,7 +17,7 @@ import {
   sha256,
 } from "@metadaoproject/programs";
 import BN from "bn.js";
-import { setOptimisticGovernanceEnabled } from "../../utils.js";
+import { setOptimisticGovernanceEnabled, nextDaoNonce } from "../../utils.js";
 import { TestContext } from "../../main.test.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
@@ -155,7 +155,7 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.mintTo(META, this.payer.publicKey, this.payer, 10_000 * 10 ** 9);
 
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
+    const nonce = nextDaoNonce();
 
     await this.futarchy
       .initializeDaoIx({

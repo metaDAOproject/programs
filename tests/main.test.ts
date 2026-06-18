@@ -86,6 +86,7 @@ import fullLaunch_v8 from "./integration/launchpad_v8_full_lifecycle.test.js";
 import gatedLaunchpadV8 from "./integration/gatedLaunchpadV8.test.js";
 import trancheLifecycle_v8 from "./integration/launchpad_v8_tranche_lifecycle.test.js";
 import { BN } from "bn.js";
+import { nextDaoNonce } from "./utils.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
@@ -507,7 +508,7 @@ before(async function () {
     teamSponsoredPassThresholdBps?: number;
     teamAddress?: PublicKey;
   }) => {
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
+    const nonce = nextDaoNonce();
 
     await this.futarchy
       .initializeDaoIx({

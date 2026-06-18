@@ -5,7 +5,7 @@ import {
 } from "@metadaoproject/programs";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError } from "../../utils.js";
+import { expectError, nextDaoNonce } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission, Period } = multisig.types;
@@ -21,6 +21,7 @@ export default function suite() {
   });
 
   it("should initialize a DAO", async function () {
+    const nonce = nextDaoNonce();
     await this.futarchy
       .initializeDaoIx({
         baseMint: META,
@@ -35,7 +36,7 @@ export default function suite() {
           baseToStake: new BN(1000),
           baseToSupermajority: new BN(5000),
           passThresholdBps: 300,
-          nonce: new BN(1337),
+          nonce,
           initialSpendingLimit: null,
           teamAddress: this.payer.publicKey,
           teamSponsoredPassThresholdBps: 123,
@@ -47,7 +48,7 @@ export default function suite() {
       .rpc();
 
     const [dao, daoBump] = getDaoAddr({
-      nonce: new BN(1337),
+      nonce,
       daoCreator: this.payer.publicKey,
     });
 
@@ -58,7 +59,7 @@ export default function suite() {
     assert.equal(storedDao.pdaBump, daoBump);
     assert.equal(storedDao.proposalCount, 0);
 
-    assert.equal(storedDao.nonce.toString(), "1337");
+    assert.equal(storedDao.nonce.toString(), nonce.toString());
     assert.equal(storedDao.secondsPerProposal, 60 * 60 * 24 * 3);
     assert.equal(storedDao.twapStartDelaySeconds, 60 * 60 * 24);
     assert.equal(
@@ -122,6 +123,7 @@ export default function suite() {
 
   it("should initialize a DAO with an initial spending limit", async function () {
     const spender = Keypair.generate();
+    const nonce = nextDaoNonce();
 
     await this.futarchy
       .initializeDaoIx({
@@ -137,7 +139,7 @@ export default function suite() {
           baseToStake: new BN(1000),
           baseToSupermajority: new BN(0),
           passThresholdBps: 300,
-          nonce: new BN(420),
+          nonce,
           initialSpendingLimit: {
             // 10k per month burn
             amountPerMonth: new BN(10_000 * 10 ** 6),
@@ -150,7 +152,7 @@ export default function suite() {
       .rpc();
 
     const [dao] = getDaoAddr({
-      nonce: new BN(420),
+      nonce,
       daoCreator: this.payer.publicKey,
     });
 
@@ -215,7 +217,7 @@ export default function suite() {
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
           passThresholdBps: 300,
-          nonce: new BN(9999),
+          nonce: nextDaoNonce(),
           initialSpendingLimit: null,
           baseToStake: new BN(1000),
           baseToSupermajority: new BN(0),
@@ -245,7 +247,7 @@ export default function suite() {
           minBaseFutarchicLiquidity: new BN(5000),
           passThresholdBps: 300,
           secondsPerProposal: 5000,
-          nonce: new BN(1338),
+          nonce: nextDaoNonce(),
           initialSpendingLimit: null,
           baseToStake: new BN(1000),
           baseToSupermajority: new BN(0),
@@ -277,7 +279,7 @@ export default function suite() {
           baseToStake: new BN(1000),
           baseToSupermajority: new BN(999),
           passThresholdBps: 300,
-          nonce: new BN(7777),
+          nonce: nextDaoNonce(),
           initialSpendingLimit: null,
           teamAddress: this.payer.publicKey,
           teamSponsoredPassThresholdBps: 123,

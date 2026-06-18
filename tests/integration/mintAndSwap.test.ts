@@ -6,6 +6,7 @@ import {
 import { PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
+import { nextDaoNonce } from "../utils.js";
 
 export default async function test() {
   const vaultClient: ConditionalVaultClient = this.conditionalVault;
@@ -27,7 +28,7 @@ export default async function test() {
   );
 
   // Initialize DAO
-  const nonce = new BN(Math.floor(Math.random() * 1000000));
+  const nonce = nextDaoNonce();
 
   await futarchyClient
     .initializeDaoIx({
