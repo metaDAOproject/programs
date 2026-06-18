@@ -2,7 +2,6 @@ use super::*;
 
 mod metadao_approver {
     use anchor_lang::prelude::declare_id;
-    // METADAO_MULTISIG_VAULT (sdk/src/constants.ts)
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 

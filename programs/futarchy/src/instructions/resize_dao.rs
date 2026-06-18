@@ -43,8 +43,7 @@ impl ResizeDao<'_> {
             FutarchyError::InvalidMint
         );
 
-        // 2.5M WHOLE tokens scaled to base units by the base mint's on-chain decimals;
-        // checked so a pathological high-decimal mint errors rather than silently wrapping.
+        // 2.5M WHOLE tokens scaled to base units by the base mint's on-chain decimals
         let scaled = DEFAULT_BASE_TO_SUPERMAJORITY_TOKENS
             .checked_mul(
                 10u64
@@ -53,7 +52,6 @@ impl ResizeDao<'_> {
             )
             .ok_or(FutarchyError::CastingOverflow)?;
         // Never below the DAO's own base_to_stake floor, so the supermajority bar can't become the *easier* path.
-        // Satisfies the `base_to_supermajority >= base_to_stake` invariant by construction.
         let base_to_supermajority = scaled.max(old_dao_data.base_to_stake);
 
         let new_dao_data = Dao {

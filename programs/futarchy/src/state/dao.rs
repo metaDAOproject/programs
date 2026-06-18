@@ -138,7 +138,7 @@ impl Dao {
 
         // The supermajority bar (`base_to_supermajority`) substitutes overwhelming
         // stake for human review, so it must never be *easier* than the ordinary
-        // token-holder point. `0` disables it. Equality is benign (use `>=`, not `>`).
+        // token-holder point. `0` disables it.
         require!(
             self.base_to_supermajority == 0 || self.base_to_supermajority >= self.base_to_stake,
             FutarchyError::InvalidSupermajorityThreshold
