@@ -4023,6 +4023,11 @@ export type Futarchy = {
       name: "InvalidSupermajorityThreshold";
       msg: "base_to_supermajority must be 0 (disabled) or >= base_to_stake";
     },
+    {
+      code: 6046;
+      name: "InsufficientApprovalToLaunch";
+      msg: "Proposal lacks enough approval points to launch";
+    },
   ];
 };
 
@@ -8050,6 +8055,11 @@ export const IDL: Futarchy = {
       code: 6045,
       name: "InvalidSupermajorityThreshold",
       msg: "base_to_supermajority must be 0 (disabled) or >= base_to_stake",
+    },
+    {
+      code: 6046,
+      name: "InsufficientApprovalToLaunch",
+      msg: "Proposal lacks enough approval points to launch",
     },
   ],
 };

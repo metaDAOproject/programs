@@ -96,4 +96,6 @@ pub enum FutarchyError {
     ProposalAlreadyApproved,
     #[msg("base_to_supermajority must be 0 (disabled) or >= base_to_stake")]
     InvalidSupermajorityThreshold,
+    #[msg("Proposal lacks enough approval points to launch")]
+    InsufficientApprovalToLaunch,
 }

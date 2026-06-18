@@ -226,6 +226,8 @@ export default function suite() {
       transactionIndex: 1n,
     });
 
+    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
+
     // Launch the proposal to move it to Pending state
     await this.futarchy
       .launchProposalIx({

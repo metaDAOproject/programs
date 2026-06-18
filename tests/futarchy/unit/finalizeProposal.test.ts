@@ -120,6 +120,8 @@ export default function suite() {
     // Now initialize the futarchy proposal
     proposal = await this.futarchy.initializeProposal(dao, squadsProposalPda);
 
+    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
+
     await this.futarchy
       .launchProposalIx({
         proposal,

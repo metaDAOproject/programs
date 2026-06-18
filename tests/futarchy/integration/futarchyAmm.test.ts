@@ -215,6 +215,8 @@ export default function suite() {
 
     const proposalAccount = await this.futarchy.getProposal(proposal);
 
+    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
+
     await this.futarchy
       .launchProposalIx({
         proposal,

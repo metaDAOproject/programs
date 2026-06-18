@@ -158,7 +158,9 @@ export default function suite() {
   });
 
   it("rejects approval once the proposal has left Draft", async function () {
-    // baseToStake is 0, so the proposal launches with no stake and no sponsor.
+    // Sponsor so the proposal can launch without being MetaDAO-approved.
+    await this.futarchy.sponsorProposalIx({ proposal, dao }).rpc();
+
     await this.futarchy
       .launchProposalIx({
         proposal,

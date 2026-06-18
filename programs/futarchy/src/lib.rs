@@ -64,6 +64,9 @@ pub const MIN_PROPOSAL_UNSTAKE_DELAY_SECONDS: i64 = 5;
 // of truth; scaled to base units by the base mint's decimals at the point of use.
 pub const DEFAULT_BASE_TO_SUPERMAJORITY_TOKENS: u64 = 2_500_000;
 
+// Number of approval points (of 3: stake, team, MetaDAO) a proposal needs to launch.
+pub const LAUNCH_APPROVAL_POINTS_REQUIRED: usize = 2;
+
 #[program]
 pub mod futarchy {
     use super::*;

@@ -506,6 +506,8 @@ export default async function suite() {
       })
       .rpc();
 
+    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
+
     // Launch the proposal first
     await this.futarchy
       .launchProposalIx({
