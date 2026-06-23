@@ -62,6 +62,7 @@ export default function suite() {
           },
           baseToStake: new BN(0),
           baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
           teamSponsoredPassThresholdBps: 0,
           teamAddress: this.payer.publicKey,
         },
@@ -98,6 +99,7 @@ export default function suite() {
           teamAddress: null,
           isOptimisticGovernanceEnabled: null,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();

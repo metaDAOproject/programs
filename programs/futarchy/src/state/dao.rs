@@ -69,6 +69,10 @@ pub struct Dao {
     /// Absolute base-token stake at which a proposal launches on supermajority
     /// stake alone. `0` disables the supermajority path for this DAO.
     pub base_to_supermajority: u64,
+    /// When enabled, `launch_proposal` enforces the stricter validation gate
+    /// (>= 2 of 3 approval points, or the supermajority path). When disabled,
+    /// the DAO uses the legacy gate
+    pub is_proposal_validation_enabled: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]

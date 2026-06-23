@@ -52,6 +52,7 @@ export default function suite() {
           teamAddress: null,
           isOptimisticGovernanceEnabled: null,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
@@ -225,8 +226,6 @@ export default function suite() {
       multisigPda,
       transactionIndex: 1n,
     });
-
-    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
 
     // Launch the proposal to move it to Pending state
     await this.futarchy

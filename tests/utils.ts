@@ -37,12 +37,14 @@ export async function setupBasicDao({
   quoteMint,
   teamSponsoredPassThresholdBps = 300,
   teamAddress,
+  isProposalValidationEnabled = false,
 }: {
   context: TestContext;
   baseMint: PublicKey;
   quoteMint: PublicKey;
   teamSponsoredPassThresholdBps?: number;
   teamAddress?: PublicKey;
+  isProposalValidationEnabled?: boolean;
 }) {
   const nonce = nextDaoNonce();
 
@@ -64,6 +66,7 @@ export async function setupBasicDao({
         teamSponsoredPassThresholdBps,
         teamAddress: teamAddress || context.payer.publicKey,
         baseToSupermajority: new BN(0),
+        isProposalValidationEnabled,
       },
       provideLiquidity: true,
     })

@@ -96,6 +96,7 @@ export default function suite() {
           teamAddress: null,
           isOptimisticGovernanceEnabled: null,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();

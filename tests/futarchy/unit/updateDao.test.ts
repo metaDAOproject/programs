@@ -27,6 +27,7 @@ const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 function withNulls(overrides: {
   baseToStake?: BN | null;
   baseToSupermajority?: BN | null;
+  isProposalValidationEnabled?: boolean | null;
 }) {
   return {
     passThresholdBps: null,
@@ -41,6 +42,7 @@ function withNulls(overrides: {
     teamAddress: null,
     isOptimisticGovernanceEnabled: null,
     baseToSupermajority: null,
+    isProposalValidationEnabled: null,
     ...overrides,
   };
 }
@@ -55,7 +57,11 @@ function withNulls(overrides: {
 async function executeUpdateDao(
   ctx: TestContext,
   dao: PublicKey,
-  overrides: { baseToStake?: BN | null; baseToSupermajority?: BN | null },
+  overrides: {
+    baseToStake?: BN | null;
+    baseToSupermajority?: BN | null;
+    isProposalValidationEnabled?: boolean | null;
+  },
   transactionIndex: bigint,
 ) {
   const daoAccount = await ctx.futarchy.getDao(dao);
@@ -176,6 +182,7 @@ export default function suite() {
           },
           baseToStake: new BN(0),
           baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
           teamSponsoredPassThresholdBps: 0,
           teamAddress: this.payer.publicKey,
         },
@@ -232,6 +239,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           isOptimisticGovernanceEnabled: null,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
@@ -538,6 +546,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           isOptimisticGovernanceEnabled: null,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
@@ -812,5 +821,28 @@ export default function suite() {
     const after = await this.futarchy.getDao(dao);
     assert.equal(after.baseToStake.toString(), "2000000");
     assert.equal(after.baseToSupermajority.toString(), "2500000");
+  });
+
+  it("toggles is_proposal_validation_enabled on and off", async function () {
+    const before = await this.futarchy.getDao(dao);
+    assert.isFalse(before.isProposalValidationEnabled);
+
+    await executeUpdateDao(
+      this,
+      dao,
+      { isProposalValidationEnabled: true },
+      1n,
+    );
+    const enabled = await this.futarchy.getDao(dao);
+    assert.isTrue(enabled.isProposalValidationEnabled);
+
+    await executeUpdateDao(
+      this,
+      dao,
+      { isProposalValidationEnabled: false },
+      2n,
+    );
+    const disabled = await this.futarchy.getDao(dao);
+    assert.isFalse(disabled.isProposalValidationEnabled);
   });
 }

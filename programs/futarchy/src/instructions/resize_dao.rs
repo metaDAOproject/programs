@@ -7,10 +7,6 @@ pub struct ResizeDao<'info> {
     /// CHECK: we check the discriminator
     #[account(mut)]
     pub dao: UncheckedAccount<'info>,
-    /// The DAO's base mint, bound to `old.base_mint` below. Because this crank is
-    /// permissionless, the mint must be bound so a caller can't pass a fabricated
-    /// low-decimal mint to set a near-zero supermajority bar.
-    pub base_mint: Account<'info, Mint>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -25,8 +21,8 @@ impl ResizeDao<'_> {
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Dao::INIT_SPACE + 8;
-        // 8 bytes: base_to_supermajority (u64)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 8;
+        // 9 bytes: base_to_supermajority (u64) + is_proposal_validation_enabled (bool)
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 9;
 
         if dao.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -36,24 +32,9 @@ impl ResizeDao<'_> {
 
         let old_dao_data = OldDao::deserialize(&mut &dao.try_borrow_data().unwrap()[8..])?;
 
-        // Bind the passed mint to the DAO before trusting its decimals.
-        require_keys_eq!(
-            ctx.accounts.base_mint.key(),
-            old_dao_data.base_mint,
-            FutarchyError::InvalidMint
-        );
-
-        // 2.5M WHOLE tokens scaled to base units by the base mint's on-chain decimals
-        let scaled = DEFAULT_BASE_TO_SUPERMAJORITY_TOKENS
-            .checked_mul(
-                10u64
-                    .checked_pow(ctx.accounts.base_mint.decimals as u32)
-                    .ok_or(FutarchyError::CastingOverflow)?,
-            )
-            .ok_or(FutarchyError::CastingOverflow)?;
-        // Never below the DAO's own base_to_stake floor, so the supermajority bar can't become the *easier* path.
-        let base_to_supermajority = scaled.max(old_dao_data.base_to_stake);
-
+        // Opt-in defaults: existing DAOs migrate in with the validation gate OFF and the
+        // supermajority path disabled, so their launch behavior is unchanged until they
+        // explicitly opt in via update_dao.
         let new_dao_data = Dao {
             amm: old_dao_data.amm,
             nonce: old_dao_data.nonce,
@@ -79,7 +60,8 @@ impl ResizeDao<'_> {
             team_address: old_dao_data.team_address,
             optimistic_proposal: old_dao_data.optimistic_proposal,
             is_optimistic_governance_enabled: old_dao_data.is_optimistic_governance_enabled,
-            base_to_supermajority,
+            base_to_supermajority: 0,
+            is_proposal_validation_enabled: false,
         };
 
         dao.realloc(AFTER_REALLOC_SIZE, true)?;

@@ -431,6 +431,7 @@ export default async function suite() {
           teamAddress: null,
           isOptimisticGovernanceEnabled: true,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();

@@ -76,6 +76,7 @@ export default function suite() {
           teamAddress: null,
           isOptimisticGovernanceEnabled: null,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
@@ -119,8 +120,6 @@ export default function suite() {
 
     // Now initialize the futarchy proposal
     proposal = await this.futarchy.initializeProposal(dao, squadsProposalPda);
-
-    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
 
     await this.futarchy
       .launchProposalIx({
@@ -450,6 +449,7 @@ export default function suite() {
           teamAddress: null,
           isOptimisticGovernanceEnabled: null,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();

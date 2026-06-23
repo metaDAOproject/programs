@@ -591,16 +591,6 @@ export type Futarchy = {
           isSigner: false;
         },
         {
-          name: "baseMint";
-          isMut: false;
-          isSigner: false;
-          docs: [
-            "The DAO's base mint, bound to `old.base_mint` below. Because this crank is",
-            "permissionless, the mint must be bound so a caller can't pass a fabricated",
-            "low-decimal mint to set a near-zero supermajority bar.",
-          ];
-        },
-        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -1839,6 +1829,15 @@ export type Futarchy = {
             ];
             type: "u64";
           },
+          {
+            name: "isProposalValidationEnabled";
+            docs: [
+              "When enabled, `launch_proposal` enforces the stricter validation gate",
+              "(>= 2 of 3 approval points, or the supermajority path). When disabled,",
+              "the DAO uses the legacy gate",
+            ];
+            type: "bool";
+          },
         ];
       };
     },
@@ -2309,6 +2308,10 @@ export type Futarchy = {
             name: "baseToSupermajority";
             type: "u64";
           },
+          {
+            name: "isProposalValidationEnabled";
+            type: "bool";
+          },
         ];
       };
     },
@@ -2476,6 +2479,12 @@ export type Futarchy = {
             name: "baseToSupermajority";
             type: {
               option: "u64";
+            };
+          },
+          {
+            name: "isProposalValidationEnabled";
+            type: {
+              option: "bool";
             };
           },
         ];
@@ -2961,6 +2970,11 @@ export type Futarchy = {
           type: "u64";
           index: false;
         },
+        {
+          name: "isProposalValidationEnabled";
+          type: "bool";
+          index: false;
+        },
       ];
     },
     {
@@ -3036,6 +3050,11 @@ export type Futarchy = {
         {
           name: "baseToSupermajority";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "isProposalValidationEnabled";
+          type: "bool";
           index: false;
         },
       ];
@@ -4624,16 +4643,6 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
-          name: "baseMint",
-          isMut: false,
-          isSigner: false,
-          docs: [
-            "The DAO's base mint, bound to `old.base_mint` below. Because this crank is",
-            "permissionless, the mint must be bound so a caller can't pass a fabricated",
-            "low-decimal mint to set a near-zero supermajority bar.",
-          ],
-        },
-        {
           name: "payer",
           isMut: true,
           isSigner: true,
@@ -5872,6 +5881,15 @@ export const IDL: Futarchy = {
             ],
             type: "u64",
           },
+          {
+            name: "isProposalValidationEnabled",
+            docs: [
+              "When enabled, `launch_proposal` enforces the stricter validation gate",
+              "(>= 2 of 3 approval points, or the supermajority path). When disabled,",
+              "the DAO uses the legacy gate",
+            ],
+            type: "bool",
+          },
         ],
       },
     },
@@ -6342,6 +6360,10 @@ export const IDL: Futarchy = {
             name: "baseToSupermajority",
             type: "u64",
           },
+          {
+            name: "isProposalValidationEnabled",
+            type: "bool",
+          },
         ],
       },
     },
@@ -6509,6 +6531,12 @@ export const IDL: Futarchy = {
             name: "baseToSupermajority",
             type: {
               option: "u64",
+            },
+          },
+          {
+            name: "isProposalValidationEnabled",
+            type: {
+              option: "bool",
             },
           },
         ],
@@ -6994,6 +7022,11 @@ export const IDL: Futarchy = {
           type: "u64",
           index: false,
         },
+        {
+          name: "isProposalValidationEnabled",
+          type: "bool",
+          index: false,
+        },
       ],
     },
     {
@@ -7069,6 +7102,11 @@ export const IDL: Futarchy = {
         {
           name: "baseToSupermajority",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "isProposalValidationEnabled",
+          type: "bool",
           index: false,
         },
       ],

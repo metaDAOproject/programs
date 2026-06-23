@@ -78,6 +78,7 @@ export default function suite() {
           teamAddress: null,
           isOptimisticGovernanceEnabled: null,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
@@ -166,8 +167,6 @@ export default function suite() {
       })
       .rpc();
 
-    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
-
     await this.futarchy
       .launchProposalIx({
         proposal,
@@ -213,8 +212,6 @@ export default function suite() {
       })
       .rpc();
 
-    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
-
     await this.futarchy
       .launchProposalIx({
         proposal,
@@ -247,9 +244,6 @@ export default function suite() {
 
   it("fails when unstaking in the same transaction as launch (flash-loan)", async function () {
     const stakeAmount = new BN(100 * 10 ** 6);
-
-    // Approve up front (separate tx) so the bundled launch has its second point.
-    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
 
     // stakeIxs includes the SDK's ATA-creation preInstructions for the
     // staker/proposal base accounts, which we need because this is the

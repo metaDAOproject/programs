@@ -19,6 +19,7 @@ pub struct InitializeDaoParams {
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
     pub base_to_supermajority: u64,
+    pub is_proposal_validation_enabled: bool,
 }
 
 #[derive(Accounts)]
@@ -95,6 +96,7 @@ impl InitializeDao<'_> {
             team_sponsored_pass_threshold_bps,
             team_address,
             base_to_supermajority,
+            is_proposal_validation_enabled,
         } = params;
 
         let dao = &mut ctx.accounts.dao;
@@ -226,6 +228,7 @@ impl InitializeDao<'_> {
             optimistic_proposal: None,
             is_optimistic_governance_enabled: false,
             base_to_supermajority,
+            is_proposal_validation_enabled,
         });
 
         dao.invariant()?;
@@ -252,6 +255,7 @@ impl InitializeDao<'_> {
             team_sponsored_pass_threshold_bps: dao.team_sponsored_pass_threshold_bps,
             team_address: dao.team_address,
             base_to_supermajority: dao.base_to_supermajority,
+            is_proposal_validation_enabled: dao.is_proposal_validation_enabled,
         });
 
         Ok(())

@@ -445,6 +445,7 @@ impl CompleteLaunch<'_> {
                 team_sponsored_pass_threshold_bps: -300,
                 team_address: self.launch.team_address,
                 base_to_supermajority: futarchy::DEFAULT_BASE_TO_SUPERMAJORITY_TOKENS * TOKEN_SCALE,
+                is_proposal_validation_enabled: true,
             },
         )
     }

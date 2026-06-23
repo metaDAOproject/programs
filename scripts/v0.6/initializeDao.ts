@@ -91,6 +91,8 @@ export const initializeDao = async () => {
         secondsPerProposal: 60 * 60 * 24 * 3,
         teamAddress: PublicKey.default,
         teamSponsoredPassThresholdBps: 0,
+        baseToSupermajority: new BN(0),
+        isProposalValidationEnabled: false,
       },
     })
     .rpc();

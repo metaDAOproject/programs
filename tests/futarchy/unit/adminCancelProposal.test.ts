@@ -76,6 +76,7 @@ export default function suite() {
           teamAddress: null,
           isOptimisticGovernanceEnabled: null,
           baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
@@ -117,8 +118,6 @@ export default function suite() {
     await this.banksClient.processTransaction(tx);
 
     proposal = await this.futarchy.initializeProposal(dao, squadsProposalPda);
-
-    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
 
     await this.futarchy
       .launchProposalIx({

@@ -46,6 +46,7 @@ export default async function test() {
         initialSpendingLimit: null,
         baseToStake: new BN(0),
         baseToSupermajority: new BN(0),
+        isProposalValidationEnabled: false,
         teamAddress: PublicKey.default,
         teamSponsoredPassThresholdBps: 0,
       },

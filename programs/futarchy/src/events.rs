@@ -54,6 +54,7 @@ pub struct InitializeDaoEvent {
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
     pub base_to_supermajority: u64,
+    pub is_proposal_validation_enabled: bool,
 }
 
 #[event]
@@ -72,6 +73,7 @@ pub struct UpdateDaoEvent {
     pub team_address: Pubkey,
     pub is_optimistic_governance_enabled: bool,
     pub base_to_supermajority: u64,
+    pub is_proposal_validation_enabled: bool,
 }
 
 #[event]

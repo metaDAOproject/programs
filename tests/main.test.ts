@@ -528,6 +528,7 @@ before(async function () {
           teamSponsoredPassThresholdBps,
           teamAddress,
           baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
         },
         provideLiquidity: true,
       })

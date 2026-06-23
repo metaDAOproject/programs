@@ -40,6 +40,7 @@ export default function suite() {
           initialSpendingLimit: null,
           teamAddress: this.payer.publicKey,
           teamSponsoredPassThresholdBps: 123,
+          isProposalValidationEnabled: true,
         },
       })
       .preInstructions([
@@ -82,6 +83,7 @@ export default function suite() {
 
     assert.isNull(storedDao.optimisticProposal);
     assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
+    assert.isTrue(storedDao.isProposalValidationEnabled);
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
@@ -138,6 +140,7 @@ export default function suite() {
           minBaseFutarchicLiquidity: new BN(1000),
           baseToStake: new BN(1000),
           baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
           passThresholdBps: 300,
           nonce,
           initialSpendingLimit: {
@@ -195,6 +198,7 @@ export default function suite() {
     assert.equal(storedDao.teamSponsoredPassThresholdBps, 123);
     assert.isNull(storedDao.optimisticProposal);
     assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
+    assert.isFalse(storedDao.isProposalValidationEnabled);
   });
 
   it("doesn't allow DAOs with identical base and quote mints", async function () {
@@ -221,6 +225,7 @@ export default function suite() {
           initialSpendingLimit: null,
           baseToStake: new BN(1000),
           baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
           teamSponsoredPassThresholdBps: 1500,
           teamAddress: this.payer.publicKey,
         },
@@ -251,6 +256,7 @@ export default function suite() {
           initialSpendingLimit: null,
           baseToStake: new BN(1000),
           baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
           teamSponsoredPassThresholdBps: 123,
           teamAddress: this.payer.publicKey,
         },
@@ -278,6 +284,7 @@ export default function suite() {
           minBaseFutarchicLiquidity: new BN(1000),
           baseToStake: new BN(1000),
           baseToSupermajority: new BN(999),
+          isProposalValidationEnabled: false,
           passThresholdBps: 300,
           nonce: nextDaoNonce(),
           initialSpendingLimit: null,
