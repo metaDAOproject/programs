@@ -603,30 +603,6 @@ export default function suite() {
       );
     });
 
-    it("ignores the MetaDAO approval point: an approved, non-team, sub-floor proposal still fails", async function () {
-      const dao = await createDao(this, {
-        baseToStake: BASE_TO_STAKE,
-        baseToSupermajority: new BN(0),
-        isProposalValidationEnabled: false,
-      });
-      await provideLiquidity(this, dao);
-      const { proposal, squadsProposal } = await initDraftProposal(this, dao);
-
-      // MetaDAO approval would be a launch point under the validation gate, but the
-      // legacy gate doesn't consult it — so this still fails on stake alone.
-      await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
-      await stake(this, proposal, dao, BASE_TO_STAKE.subn(1));
-
-      const callbacks = expectError(
-        "InsufficientStakeToLaunch",
-        "the legacy gate must ignore MetaDAO approval",
-      );
-      await launch(this, proposal, dao, squadsProposal).then(
-        callbacks[0],
-        callbacks[1],
-      );
-    });
-
     it("can challenge an optimistic proposal by clearing base_to_stake (no auto team point)", async function () {
       const dao = await createDao(this, {
         baseToStake: BASE_TO_STAKE,

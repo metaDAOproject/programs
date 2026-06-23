@@ -324,8 +324,6 @@ export default function suite() {
       .splitTokensIx(question, quoteVault, USDC, new BN(1000_000_000), 2)
       .rpc();
 
-    await this.futarchy.approveProposalIx({ proposal: proposalA, dao }).rpc();
-
     // Launch proposal A to put DAO in Futarchy state
     await this.futarchy
       .launchProposalIx({
@@ -480,8 +478,6 @@ export default function suite() {
       ])
       .rpc();
 
-    await this.futarchy.approveProposalIx({ proposal: proposalB, dao }).rpc();
-
     // Launch proposal B to put DAO in Futarchy state
     await this.futarchy
       .launchProposalIx({
@@ -630,8 +626,6 @@ export default function suite() {
     await this.conditionalVault
       .splitTokensIx(question, quoteVault, USDC, new BN(1000_000_000), 2)
       .rpc();
-
-    await this.futarchy.approveProposalIx({ proposal: proposalA, dao }).rpc();
 
     // Launch proposal A to put DAO in Futarchy state
     await this.futarchy

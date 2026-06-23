@@ -4047,6 +4047,11 @@ export type Futarchy = {
       name: "InsufficientApprovalToLaunch";
       msg: "Proposal lacks enough approval points to launch";
     },
+    {
+      code: 6047;
+      name: "ProposalValidationDisabled";
+      msg: "Proposal validation is not enabled for this DAO";
+    },
   ];
 };
 
@@ -8098,6 +8103,11 @@ export const IDL: Futarchy = {
       code: 6046,
       name: "InsufficientApprovalToLaunch",
       msg: "Proposal lacks enough approval points to launch",
+    },
+    {
+      code: 6047,
+      name: "ProposalValidationDisabled",
+      msg: "Proposal validation is not enabled for this DAO",
     },
   ],
 };

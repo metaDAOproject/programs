@@ -56,10 +56,13 @@ export default function suite() {
       200_000 * 1_000_000,
     );
 
+    // Validation enabled so the post-crank approve_proposal (which exercises the
+    // un-frozen proposal) is accepted.
     dao = await setupBasicDao({
       context: this,
       baseMint: META,
       quoteMint: USDC,
+      isProposalValidationEnabled: true,
     });
 
     await this.futarchy

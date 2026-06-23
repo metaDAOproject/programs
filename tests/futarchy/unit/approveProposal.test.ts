@@ -6,7 +6,11 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setupBasicDao } from "../../utils.js";
+import {
+  expectError,
+  setupBasicDao,
+  setProposalValidationEnabled,
+} from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 
@@ -32,12 +36,14 @@ export default function suite() {
       200_000 * 1_000_000,
     );
 
-    // setupBasicDao uses baseToStake: 0, so a draft proposal can launch with no
-    // stake (the Task-1 launch gate is unchanged).
+    // Validation enabled so the MetaDAO approval point is live (approve_proposal
+    // requires it); setupBasicDao uses baseToStake: 0, so a draft proposal can
+    // still launch.
     dao = await setupBasicDao({
       context: this,
       baseMint: META,
       quoteMint: USDC,
+      isProposalValidationEnabled: true,
     });
 
     await this.futarchy
@@ -178,6 +184,22 @@ export default function suite() {
     const callbacks = expectError(
       "ProposalNotInDraftState",
       "approval should fail once the proposal has launched",
+    );
+
+    await this.futarchy
+      .approveProposalIx({ proposal, dao, approver: this.payer.publicKey })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects approval when proposal validation is disabled", async function () {
+    // Flip the DAO onto the legacy gate, where the MetaDAO approval point is inert;
+    // approving must then be rejected rather than write dead state.
+    await setProposalValidationEnabled(this, dao, false);
+
+    const callbacks = expectError(
+      "ProposalValidationDisabled",
+      "approval on a non-validating DAO must be rejected",
     );
 
     await this.futarchy

@@ -671,8 +671,6 @@ before(async function () {
       await this.initializeProposal({ dao, instructions });
     const storedDao = await this.futarchy.getDao(dao);
 
-    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
-
     await this.futarchy
       .launchProposalIx({
         proposal,

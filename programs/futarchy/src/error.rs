@@ -98,4 +98,6 @@ pub enum FutarchyError {
     InvalidSupermajorityThreshold,
     #[msg("Proposal lacks enough approval points to launch")]
     InsufficientApprovalToLaunch,
+    #[msg("Proposal validation is not enabled for this DAO")]
+    ProposalValidationDisabled,
 }

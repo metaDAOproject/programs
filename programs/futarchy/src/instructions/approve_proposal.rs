@@ -17,6 +17,11 @@ pub struct ApproveProposal<'info> {
 
 impl ApproveProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        require!(
+            self.dao.is_proposal_validation_enabled,
+            FutarchyError::ProposalValidationDisabled
+        );
+
         #[cfg(feature = "production")]
         require_keys_eq!(
             self.approver.key(),
