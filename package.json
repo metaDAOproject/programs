@@ -26,6 +26,8 @@
   "dependencies": {
     "@coral-xyz/anchor": "0.29.0",
     "@inquirer/prompts": "7.9.0",
+    "@ledgerhq/hw-app-solana": "7.10.2",
+    "@ledgerhq/hw-transport-node-hid": "6.33.2",
     "@metadaoproject/programs": "./sdk",
     "@metaplex-foundation/mpl-token-metadata": "3.4.0",
     "@metaplex-foundation/umi": "0.9.2",
