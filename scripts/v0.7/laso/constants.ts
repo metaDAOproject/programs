@@ -6,10 +6,10 @@ export const TOKEN_SEED = "7VpRX8sqCTEmdAa9";
 // Team Config Details
 export const TEAM_ADDRESS = new PublicKey(
   "82MdwSmh7JEK9cywZusE27m8zwbhmkR9Bs38jQoAwwCc",
-); // Laso team address
+); // Laso team squads address
 
 export const SPENDING_MEMBERS = [
-  new PublicKey("3jRKUoyN8CDA4DngXV3Ym2ZfZKzCP87XVgXKtQJADMws"),
+  new PublicKey("4XMTsBivE5V73ScmuChGVLS6oF8MFb2P3fvR3gt9So9J"),
 ];
 // Even without a performance package, defaults need to be set
 export const PERFORMANCE_PACKAGE_GRANTEE = new PublicKey(
