@@ -26,7 +26,7 @@ import {
   ADDITIONAL_CARVEOUT,
   ADDITIONAL_CARVEOUT_RECIPIENT,
   TEAM_ADDRESS,
-} from "./constants";
+} from "./constants.js";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
