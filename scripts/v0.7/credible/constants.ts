@@ -4,7 +4,9 @@ import { PublicKey } from "@solana/web3.js";
 export const TOKEN_SEED = "MFKO9GdJSBjq8CWO";
 
 // Team Config Details
-export const TEAM_ADDRESS = new PublicKey("11111111111111111111111111111111"); // Credible team squads address
+export const TEAM_ADDRESS = new PublicKey(
+  "44dNkVJsWPZfh3tvRyqpnwgkoL5RYqi3cWsE1d8wfviV",
+); // Credible team squads address
 
 export const SPENDING_MEMBERS = [
   new PublicKey("44dNkVJsWPZfh3tvRyqpnwgkoL5RYqi3cWsE1d8wfviV"),
@@ -13,7 +15,7 @@ export const SPENDING_MEMBERS = [
 ];
 // Even without a performance package, defaults need to be set
 export const PERFORMANCE_PACKAGE_GRANTEE = new PublicKey(
-  "11111111111111111111111111111111", // Placeholder for no performance package
+  "44dNkVJsWPZfh3tvRyqpnwgkoL5RYqi3cWsE1d8wfviV", // Placeholder for no performance package
 );
 
 // Amount Details
