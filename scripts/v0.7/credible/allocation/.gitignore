@@ -1,0 +1,6 @@
+node_modules/
+.env
+.surfpool-run/
+allocation.out.json
+laso-dryrun.out
+allocation.csv
