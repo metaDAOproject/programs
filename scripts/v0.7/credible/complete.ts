@@ -13,7 +13,9 @@ import { token } from "@coral-xyz/anchor/dist/cjs/utils/index.js";
 import { TOKEN_SEED } from "./constants.js";
 
 const provider = anchor.AnchorProvider.env();
-const payer = provider.wallet["payer"];
+const payer = (
+  provider.wallet as anchor.Wallet & { payer: anchor.web3.Keypair }
+).payer;
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
@@ -36,6 +38,10 @@ export const completeLaunch = async () => {
   }
 
   let launchAccount = await launchpad.fetchLaunch(launch);
+
+  if (launchAccount === null) {
+    throw new Error("Launch account not found");
+  }
 
   const tx = await launchpad
     .completeLaunchIx({
@@ -74,6 +80,10 @@ export const completeLaunch = async () => {
 
   // Refresh launch account to get the updated base mint
   launchAccount = await launchpad.fetchLaunch(launch);
+
+  if (launchAccount === null) {
+    throw new Error("Launch account not found");
+  }
 
   // TODO: Review this as we will want to do this manually..
   const initializePerformancePackageTxHash = await launchpad
