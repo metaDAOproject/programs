@@ -3,6 +3,10 @@ import { PublicKey } from "@solana/web3.js";
 // Token Details
 export const TOKEN_SEED = "MFKO9GdJSBjq8CWO";
 
+export const LAUNCH_AUTHORITY = new PublicKey(
+  "LncCxu8MbQJpkdK522x22YWmpFTHShPHFVUbQb9BwuV",
+);
+
 // Team Config Details
 export const TEAM_ADDRESS = new PublicKey(
   "44dNkVJsWPZfh3tvRyqpnwgkoL5RYqi3cWsE1d8wfviV",
