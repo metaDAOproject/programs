@@ -987,42 +987,6 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "executeSpendingLimitChange";
-      accounts: [
-        {
-          name: "proposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsProposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisig";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "vaultTransaction";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
       name: "sponsorProposal";
       accounts: [
         {
@@ -1181,125 +1145,6 @@ export type Futarchy = {
         {
           name: "tokenProgram";
           isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
-      name: "initiateVaultSpendOptimisticProposal";
-      accounts: [
-        {
-          name: "squadsMultisig";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigVault";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsSpendingLimit";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsProposal";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsVaultTransaction";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "daoQuoteVaultAccount";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "proposer";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "recipient";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "recipientQuoteAccount";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "InitiateVaultSpendOptimisticProposalParams";
-          };
-        },
-      ];
-    },
-    {
-      name: "finalizeOptimisticProposal";
-      accounts: [
-        {
-          name: "squadsMultisig";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsProposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: true;
           isSigner: false;
         },
         {
@@ -2144,18 +1989,6 @@ export type Futarchy = {
           {
             name: "teamAddress";
             type: "publicKey";
-          },
-        ];
-      };
-    },
-    {
-      name: "InitiateVaultSpendOptimisticProposalParams";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "amount";
-            type: "u64";
           },
         ];
       };
@@ -3500,90 +3333,6 @@ export type Futarchy = {
         },
       ];
     },
-    {
-      name: "InitiateVaultSpendOptimisticProposalEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "dao";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "proposer";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "squadsProposal";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "squadsMultisig";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "squadsMultisigVault";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "amount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "recipient";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "daoQuoteVaultAccount";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "recipientQuoteAccount";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "enqueuedTimestamp";
-          type: "i64";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "FinalizeOptimisticProposalEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "dao";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "squadsProposal";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
   ];
   errors: [
     {
@@ -4793,42 +4542,6 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
-      name: "executeSpendingLimitChange",
-      accounts: [
-        {
-          name: "proposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsProposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisig",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "vaultTransaction",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "sponsorProposal",
       accounts: [
         {
@@ -4987,125 +4700,6 @@ export const IDL: Futarchy = {
         {
           name: "tokenProgram",
           isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "initiateVaultSpendOptimisticProposal",
-      accounts: [
-        {
-          name: "squadsMultisig",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigVault",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsSpendingLimit",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsProposal",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsVaultTransaction",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "daoQuoteVaultAccount",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "proposer",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "recipient",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "recipientQuoteAccount",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "params",
-          type: {
-            defined: "InitiateVaultSpendOptimisticProposalParams",
-          },
-        },
-      ],
-    },
-    {
-      name: "finalizeOptimisticProposal",
-      accounts: [
-        {
-          name: "squadsMultisig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsProposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: true,
           isSigner: false,
         },
         {
@@ -5950,18 +5544,6 @@ export const IDL: Futarchy = {
           {
             name: "teamAddress",
             type: "publicKey",
-          },
-        ],
-      },
-    },
-    {
-      name: "InitiateVaultSpendOptimisticProposalParams",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "amount",
-            type: "u64",
           },
         ],
       },
@@ -7301,90 +6883,6 @@ export const IDL: Futarchy = {
         },
         {
           name: "newAuthority",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "InitiateVaultSpendOptimisticProposalEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "dao",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "proposer",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "squadsProposal",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "squadsMultisig",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "squadsMultisigVault",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "amount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "recipient",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "daoQuoteVaultAccount",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "recipientQuoteAccount",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "enqueuedTimestamp",
-          type: "i64",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "FinalizeOptimisticProposalEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "dao",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "squadsProposal",
           type: "publicKey",
           index: false,
         },

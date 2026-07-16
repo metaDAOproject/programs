@@ -57,26 +57,8 @@ impl LaunchProposal<'_> {
             }
         }
 
-        // If there is an active optimistic proposal, it must be for the same squads proposal
-        // as the futarchy proposal we're launching, thus challenging the optimistic proposal.
-        // This follows the logic that a DAO can have only one proposal active at a time.
-        if let Some(optimistic_proposal) = &self.dao.optimistic_proposal {
-            require_keys_eq!(
-                optimistic_proposal.squads_proposal,
-                self.proposal.squads_proposal
-            );
-
-            // The optimistic proposal must be younger than seconds_per_proposal, otherwise it is considered passed and must be finalized
-            require_gt!(
-                optimistic_proposal.enqueued_timestamp + self.dao.seconds_per_proposal as i64,
-                Clock::get()?.unix_timestamp,
-                FutarchyError::OptimisticProposalAlreadyPassed
-            );
-        }
-
         // Can only launch a proposal if the underlying squads proposal is active
-        // This check exists mainly to prevent a situation where we try to launch a proposal for a passed optimistic proposal.
-        // However, it also applies in general, to prevent a situation where we enter futarchy with an invalid squads proposal state, thus bricking it.
+        // This prevents a situation where we enter futarchy with an invalid squads proposal state, thus bricking it.
         require!(
             matches!(
                 self.squads_proposal.status,
@@ -187,16 +169,6 @@ impl LaunchProposal<'_> {
         proposal.timestamp_enqueued = clock.unix_timestamp;
         // Additionally, set the duration once more in case it was updated since the proposal was created
         proposal.duration_in_seconds = dao.seconds_per_proposal;
-
-        // If this is moving an optimistic proposal into the futarchy proposal, the futarchy proposal will be treated as team-sponsored (lower pass threshold)
-        if dao.optimistic_proposal.is_some() {
-            proposal.is_team_sponsored = true;
-        }
-
-        // Update the DAO state
-        // There either is no optimistic proposal, or the optimistic proposal is being moved into the futarchy proposal
-        // This means that the optimistic proposal now has to pass a decision market in order to be approved/executed
-        dao.optimistic_proposal = None;
 
         dao.seq_num += 1;
 

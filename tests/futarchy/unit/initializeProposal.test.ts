@@ -10,7 +10,6 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -71,8 +70,6 @@ export default function suite() {
       nonce,
       daoCreator: this.payer.publicKey,
     });
-
-    await setOptimisticGovernanceEnabled(this, dao, true);
   });
 
   it("should initialize a proposal", async function () {
@@ -164,35 +161,5 @@ export default function suite() {
     // Verify the DAO proposal count was incremented
     const storedDao = await this.futarchy.getDao(dao);
     assert.equal(storedDao.proposalCount, 1);
-  });
-
-  it("doesn't allow challenging an optimistic proposal which has already passed due to age", async function () {
-    let daoAccount = await this.futarchy.getDao(dao);
-
-    await this.createTokenAccount(USDC, daoAccount.squadsMultisigVault);
-
-    await this.futarchy
-      .initiateVaultSpendOptimisticProposalIx({
-        dao,
-        amount: new BN(1000),
-        recipient: this.payer.publicKey,
-        transactionIndex: 1n,
-        quoteMint: USDC,
-      })
-      .signers([this.payer, PERMISSIONLESS_ACCOUNT])
-      .rpc();
-
-    daoAccount = await this.futarchy.getDao(dao);
-
-    this.advanceBySeconds(daoAccount.secondsPerProposal);
-
-    const callbacks = expectError(
-      "OptimisticProposalAlreadyPassed",
-      "Optimistic proposal has already passed",
-    );
-
-    await this.futarchy
-      .initializeProposal(dao, daoAccount.optimisticProposal.squadsProposal)
-      .then(callbacks[0], callbacks[1]);
   });
 }

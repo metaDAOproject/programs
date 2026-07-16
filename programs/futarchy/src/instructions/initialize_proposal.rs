@@ -37,19 +37,6 @@ pub struct InitializeProposal<'info> {
 
 impl InitializeProposal<'_> {
     pub fn validate(&self) -> Result<()> {
-        // If we're trying to challenge an optimistic proposal that has already passed due to age, we should error
-        // In the case of an already-optimistically-passed proposal, the optimistic proposal can be cleared
-        // from the DAO state by finalizing the optimistic proposal (finalize_optimistic_proposal)
-        if let Some(ref optimistic_proposal) = self.dao.optimistic_proposal {
-            if optimistic_proposal.squads_proposal == self.squads_proposal.key() {
-                require_gt!(
-                    optimistic_proposal.enqueued_timestamp + self.dao.seconds_per_proposal as i64,
-                    Clock::get()?.unix_timestamp,
-                    FutarchyError::OptimisticProposalAlreadyPassed
-                );
-            }
-        }
-
         require_eq!(
             self.question.num_outcomes(),
             2,

@@ -2,7 +2,6 @@ import {
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
   getDaoAddr,
-  getProposalAddrV2,
 } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
@@ -12,18 +11,14 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
+import { expectError } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
 export default function suite() {
-  let META: PublicKey,
-    USDC: PublicKey,
-    dao: PublicKey,
-    spendingLimit: BN,
-    transferAmount: bigint;
+  let META: PublicKey, USDC: PublicKey, dao: PublicKey, spendingLimit: BN;
 
   beforeEach(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
@@ -454,196 +449,6 @@ export default function suite() {
     const callbacks = expectError(
       "InsufficientStakeToLaunch",
       "Launch should fail when stake is below threshold",
-    );
-
-    await this.futarchy
-      .launchProposalIx({
-        proposal,
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        squadsProposal,
-      })
-      .rpc()
-      .then(callbacks[0], callbacks[1]);
-  });
-
-  it("can challenge an optimistic proposal by launching a new futarchy proposal using the same squads proposal", async function () {
-    const stakeThreshold = new BN(100 * 10 ** 6); // 100 tokens
-    const dao = await createDaoWithStakeThreshold(
-      this,
-      META,
-      USDC,
-      stakeThreshold,
-      this.payer,
-    );
-
-    // Add liquidity so proposal can be launched
-    await this.futarchy
-      .provideLiquidityIx({
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        quoteAmount: new BN(100_000 * 10 ** 6),
-        maxBaseAmount: new BN(100_000 * 10 ** 6),
-        minLiquidity: new BN(0),
-        positionAuthority: this.payer.publicKey,
-        liquidityProvider: this.payer.publicKey,
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-      ])
-      .rpc();
-
-    // Mint DAO tokens to payer's account
-    await this.mintTo(
-      META,
-      this.payer.publicKey,
-      this.payer,
-      10_000_000 * 10 ** 6,
-    );
-
-    let daoAccount = await this.futarchy.getDao(dao);
-
-    await this.createTokenAccount(USDC, daoAccount.squadsMultisigVault);
-
-    await setOptimisticGovernanceEnabled(this, dao, true);
-
-    await this.futarchy
-      .initiateVaultSpendOptimisticProposalIx({
-        dao,
-        amount: new BN(transferAmount),
-        recipient: this.payer.publicKey,
-        transactionIndex: 1n,
-        quoteMint: USDC,
-      })
-      .signers([this.payer, PERMISSIONLESS_ACCOUNT])
-      .rpc();
-
-    daoAccount = await this.futarchy.getDao(dao);
-
-    assert.exists(daoAccount.optimisticProposal);
-
-    const [squadsProposal] = multisig.getProposalPda({
-      multisigPda: daoAccount.squadsMultisig,
-      transactionIndex: 1n,
-    });
-
-    await this.futarchy.initializeProposal(dao, squadsProposal);
-
-    const [proposal] = getProposalAddrV2({ squadsProposal });
-
-    await this.futarchy
-      .stakeToProposalIx({
-        amount: new BN(1_000_000 * 10 ** 6),
-        proposal,
-        dao,
-        baseMint: META,
-      })
-      .rpc();
-
-    await this.futarchy
-      .launchProposalIx({
-        proposal,
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        squadsProposal,
-      })
-      .rpc();
-
-    // Assert that the optimistic proposal has been migrated to the futarchy proposal
-    daoAccount = await this.futarchy.getDao(dao);
-    assert.notExists(daoAccount.optimisticProposal);
-
-    const proposalAccount = await this.futarchy.getProposal(proposal);
-    assert.exists(proposalAccount.state.pending);
-    assert.equal(
-      proposalAccount.squadsProposal.toBase58(),
-      squadsProposal.toBase58(),
-    );
-  });
-
-  it("can't challenge an optimistic proposal if it has already passed due to age", async function () {
-    const stakeThreshold = new BN(100 * 10 ** 6); // 100 tokens
-    const dao = await createDaoWithStakeThreshold(
-      this,
-      META,
-      USDC,
-      stakeThreshold,
-      this.payer,
-    );
-
-    // Add liquidity so proposal can be launched
-    await this.futarchy
-      .provideLiquidityIx({
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        quoteAmount: new BN(100_000 * 10 ** 6),
-        maxBaseAmount: new BN(100_000 * 10 ** 6),
-        minLiquidity: new BN(0),
-        positionAuthority: this.payer.publicKey,
-        liquidityProvider: this.payer.publicKey,
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-      ])
-      .rpc();
-
-    // Mint DAO tokens to payer's account
-    await this.mintTo(
-      META,
-      this.payer.publicKey,
-      this.payer,
-      10_000_000 * 10 ** 6,
-    );
-
-    let daoAccount = await this.futarchy.getDao(dao);
-
-    await this.createTokenAccount(USDC, daoAccount.squadsMultisigVault);
-
-    await setOptimisticGovernanceEnabled(this, dao, true);
-
-    await this.futarchy
-      .initiateVaultSpendOptimisticProposalIx({
-        dao,
-        amount: new BN(transferAmount),
-        recipient: this.payer.publicKey,
-        transactionIndex: 1n,
-        quoteMint: USDC,
-      })
-      .signers([this.payer, PERMISSIONLESS_ACCOUNT])
-      .rpc();
-
-    daoAccount = await this.futarchy.getDao(dao);
-
-    assert.exists(daoAccount.optimisticProposal);
-
-    const [squadsProposal] = multisig.getProposalPda({
-      multisigPda: daoAccount.squadsMultisig,
-      transactionIndex: 1n,
-    });
-
-    // Initialize the futarchy proposal before the optimistic proposal is auto-approved
-    await this.futarchy.initializeProposal(dao, squadsProposal);
-
-    this.advanceBySeconds(daoAccount.secondsPerProposal);
-
-    const [proposal] = getProposalAddrV2({ squadsProposal });
-
-    await this.futarchy
-      .stakeToProposalIx({
-        amount: new BN(1_000_000 * 10 ** 6),
-        proposal,
-        dao,
-        baseMint: META,
-      })
-      .rpc();
-
-    const callbacks = expectError(
-      "OptimisticProposalAlreadyPassed",
-      "Optimistic proposal has already passed",
     );
 
     await this.futarchy

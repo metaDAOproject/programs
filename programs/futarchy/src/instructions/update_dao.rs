@@ -30,11 +30,6 @@ impl UpdateDao<'_> {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
 
-        // Prevent updates to DAO parameters if an optimistic proposal is enqueued
-        if self.dao.optimistic_proposal.is_some() {
-            return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
-        }
-
         Ok(())
     }
 

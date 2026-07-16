@@ -11,7 +11,6 @@ import {
 } from "@solana/web3.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
-  createTransferInstruction,
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
@@ -1155,130 +1154,6 @@ export class FutarchyClient {
       },
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
-      squadsProgram: SQUADS_PROGRAM_ID,
-    });
-  }
-
-  initiateVaultSpendOptimisticProposalIx({
-    dao,
-    quoteMint = MAINNET_USDC,
-    amount,
-    recipient,
-    transactionIndex,
-    proposer = this.provider.publicKey,
-    payer = this.provider.publicKey,
-  }: {
-    dao: PublicKey;
-    quoteMint?: PublicKey;
-    amount: BN;
-    recipient: PublicKey;
-    transactionIndex: bigint;
-    proposer?: PublicKey;
-    payer?: PublicKey;
-  }) {
-    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
-    const squadsMultisigVault = multisig.getVaultPda({
-      multisigPda,
-      index: 0,
-    })[0];
-    const squadsSpendingLimit = multisig.getSpendingLimitPda({
-      multisigPda,
-      createKey: dao,
-    })[0];
-    const squadsProposal = multisig.getProposalPda({
-      multisigPda,
-      transactionIndex,
-    })[0];
-    const squadsVaultTransaction = multisig.getTransactionPda({
-      multisigPda,
-      index: transactionIndex,
-    })[0];
-
-    const daoQuoteVaultAccount = getAssociatedTokenAddressSync(
-      quoteMint,
-      squadsMultisigVault,
-      true,
-    );
-    const recipientQuoteAccount = getAssociatedTokenAddressSync(
-      quoteMint,
-      recipient,
-      true,
-    );
-
-    // Build the SPL token transfer instruction for the vault transaction
-    const transferIx = createTransferInstruction(
-      daoQuoteVaultAccount,
-      recipientQuoteAccount,
-      squadsMultisigVault,
-      BigInt(amount.toString()),
-    );
-
-    // Use the vault as the payerKey so it deduplicates with the transfer authority,
-    // producing a clean message with exactly 1 signer (the vault).
-    const transactionMessage = new TransactionMessage({
-      payerKey: squadsMultisigVault,
-      recentBlockhash: "",
-      instructions: [transferIx],
-    });
-
-    const vaultTxCreate = multisig.instructions.vaultTransactionCreate({
-      multisigPda,
-      transactionIndex,
-      creator: PERMISSIONLESS_ACCOUNT.publicKey,
-      rentPayer: payer,
-      vaultIndex: 0,
-      ephemeralSigners: 0,
-      transactionMessage,
-    });
-
-    const proposalCreate = multisig.instructions.proposalCreate({
-      multisigPda,
-      transactionIndex,
-      creator: PERMISSIONLESS_ACCOUNT.publicKey,
-      rentPayer: payer,
-    });
-
-    return this.futarchy.methods
-      .initiateVaultSpendOptimisticProposal({ amount })
-      .accounts({
-        squadsMultisig: multisigPda,
-        squadsMultisigVault,
-        squadsSpendingLimit,
-        squadsProposal,
-        squadsVaultTransaction,
-        dao,
-        daoQuoteVaultAccount,
-        proposer,
-        recipient,
-        recipientQuoteAccount,
-        squadsProgram: SQUADS_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer,
-          recipientQuoteAccount,
-          recipient,
-          quoteMint,
-        ),
-        vaultTxCreate,
-        proposalCreate,
-      ]);
-  }
-
-  finalizeOptimisticProposalIx({
-    dao,
-    squadsProposal,
-  }: {
-    dao: PublicKey;
-    squadsProposal: PublicKey;
-  }) {
-    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
-
-    return this.futarchy.methods.finalizeOptimisticProposal().accounts({
-      squadsMultisig: multisigPda,
-      squadsProposal,
-      dao,
       squadsProgram: SQUADS_PROGRAM_ID,
     });
   }

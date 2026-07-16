@@ -69,10 +69,6 @@ impl AdminEnqueueMultisigProposalApproval<'_> {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
 
-        if self.dao.optimistic_proposal.is_some() {
-            return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
-        }
-
         validate_squads_proposal(
             &self.squads_multisig_proposal,
             &self.squads_multisig,

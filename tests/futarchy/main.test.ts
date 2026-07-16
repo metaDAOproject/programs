@@ -10,12 +10,8 @@ import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
 import provideLiquidity from "./unit/provideLiquidity.test.js";
 
-import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
-
 import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 
-import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
-import finalizeOptimisticProposal from "./unit/finalizeOptimisticProposal.test.js";
 import adminEnqueueMultisigProposalApproval from "./unit/adminEnqueueMultisigProposalApproval.test.js";
 import executeMultisigProposalApproval from "./unit/executeMultisigProposalApproval.test.js";
 import adminExecuteMultisigProposal from "./unit/adminExecuteMultisigProposal.test.js";
@@ -65,15 +61,9 @@ export default function suite() {
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);
   describe("#provide_liquidity", provideLiquidity);
-  describe("#execute_spending_limit_change", executeSpendingLimitChange);
 
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
 
-  describe(
-    "#initiate_vault_spend_optimistic_proposal",
-    initiateVaultSpendOptimisticProposal,
-  );
-  describe("#finalize_optimistic_proposal", finalizeOptimisticProposal);
   describe(
     "#admin_enqueue_multisig_proposal_approval",
     adminEnqueueMultisigProposalApproval,

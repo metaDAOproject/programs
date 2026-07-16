@@ -47,10 +47,6 @@ export type WithdrawLiquidityEvent =
   IdlEvents<FutarchyProgram>["WithdrawLiquidityEvent"];
 export type SponsorProposalEvent =
   IdlEvents<FutarchyProgram>["SponsorProposalEvent"];
-export type InitiateVaultSpendOptimisticProposalEvent =
-  IdlEvents<FutarchyProgram>["InitiateVaultSpendOptimisticProposalEvent"];
-export type FinalizeOptimisticProposalEvent =
-  IdlEvents<FutarchyProgram>["FinalizeOptimisticProposalEvent"];
 export type FutarchyEvent =
   | CollectFeesEvent
   | InitializeDaoEvent
@@ -64,9 +60,7 @@ export type FutarchyEvent =
   | ConditionalSwapEvent
   | ProvideLiquidityEvent
   | WithdrawLiquidityEvent
-  | SponsorProposalEvent
-  | InitiateVaultSpendOptimisticProposalEvent
-  | FinalizeOptimisticProposalEvent;
+  | SponsorProposalEvent;
 
 export type v0_6_0_CollectFeesEvent =
   IdlEvents<v0_6_0_Futarchy>["CollectFeesEvent"];

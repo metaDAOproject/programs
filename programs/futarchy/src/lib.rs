@@ -143,13 +143,6 @@ pub mod futarchy {
     }
 
     #[access_control(ctx.accounts.validate())]
-    pub fn execute_spending_limit_change<'c: 'info, 'info>(
-        ctx: Context<'_, '_, 'c, 'info, ExecuteSpendingLimitChange<'info>>,
-    ) -> Result<()> {
-        ExecuteSpendingLimitChange::handle(ctx)
-    }
-
-    #[access_control(ctx.accounts.validate())]
     pub fn sponsor_proposal(ctx: Context<SponsorProposal>) -> Result<()> {
         SponsorProposal::handle(ctx)
     }
@@ -157,19 +150,6 @@ pub mod futarchy {
     #[access_control(ctx.accounts.validate())]
     pub fn collect_meteora_damm_fees(ctx: Context<CollectMeteoraDammFees>) -> Result<()> {
         CollectMeteoraDammFees::handle(ctx)
-    }
-
-    #[access_control(ctx.accounts.validate(&params))]
-    pub fn initiate_vault_spend_optimistic_proposal(
-        ctx: Context<InitiateVaultSpendOptimisticProposal>,
-        params: InitiateVaultSpendOptimisticProposalParams,
-    ) -> Result<()> {
-        InitiateVaultSpendOptimisticProposal::handle(ctx, params)
-    }
-
-    #[access_control(ctx.accounts.validate())]
-    pub fn finalize_optimistic_proposal(ctx: Context<FinalizeOptimisticProposal>) -> Result<()> {
-        FinalizeOptimisticProposal::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate(&args))]
