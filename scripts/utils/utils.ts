@@ -2,10 +2,13 @@ import { BN } from "bn.js";
 import {
   AddressLookupTableAccount,
   AddressLookupTableProgram,
+  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
   Transaction,
+  TransactionExpiredBlockheightExceededError,
+  TransactionExpiredTimeoutError,
   TransactionInstruction,
 } from "@solana/web3.js";
 
@@ -17,11 +20,24 @@ export const DAY_IN_SLOTS = HOUR_IN_SLOTS * 24n;
 export const toBN = (val: bigint): typeof BN.prototype =>
   new BN(val.toString());
 
+/** Priority fee for lookup-table transactions (matches the rest of the tooling). */
+const LUT_PRIORITY_FEE_MICRO_LAMPORTS = parseInt(
+  process.env.PRIORITY_FEE_MICRO_LAMPORTS ?? "10000",
+  10,
+);
+
+/** Attempts per lookup-table transaction before giving up. */
+const LUT_TX_RETRIES = 3;
+
 /**
  * Send one lookup-table transaction and wait for confirmation, throwing on an
  * on-chain error. Confirmation matters here: extends fail if the create
- * hasn't landed, and there is no retry loop — a silent drop would otherwise
- * only surface as a generic timeout in the finalization check.
+ * hasn't landed, and a silent drop would otherwise only surface as a generic
+ * timeout in the finalization check.
+ *
+ * Expired (dropped) transactions are retried with a fresh blockhash. That is
+ * safe for extends — a false expiry only appends duplicate addresses, which
+ * compileToV0Message handles fine and the finalization check ignores.
  */
 async function sendAndConfirmLutTx(
   connection: Connection,
@@ -30,25 +46,46 @@ async function sendAndConfirmLutTx(
   authority: Keypair,
   label: string,
 ): Promise<void> {
-  const { blockhash, lastValidBlockHeight } =
-    await connection.getLatestBlockhash();
+  for (let attempt = 1; attempt <= LUT_TX_RETRIES; attempt++) {
+    const { blockhash, lastValidBlockHeight } =
+      await connection.getLatestBlockhash();
 
-  const tx = new Transaction().add(instruction);
-  tx.recentBlockhash = blockhash;
-  tx.feePayer = payer.publicKey;
-  tx.sign(payer, authority);
-
-  const signature = await connection.sendRawTransaction(tx.serialize());
-  const confirmation = await connection.confirmTransaction(
-    { signature, blockhash, lastValidBlockHeight },
-    "confirmed",
-  );
-  if (confirmation.value.err) {
-    throw new Error(
-      `${label} failed on-chain: ${JSON.stringify(confirmation.value.err)} (tx ${signature})`,
+    const tx = new Transaction().add(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: LUT_PRIORITY_FEE_MICRO_LAMPORTS,
+      }),
+      instruction,
     );
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = payer.publicKey;
+    tx.sign(payer, authority);
+
+    const signature = await connection.sendRawTransaction(tx.serialize());
+    try {
+      const confirmation = await connection.confirmTransaction(
+        { signature, blockhash, lastValidBlockHeight },
+        "confirmed",
+      );
+      if (confirmation.value.err) {
+        throw new Error(
+          `${label} failed on-chain: ${JSON.stringify(confirmation.value.err)} (tx ${signature})`,
+        );
+      }
+      console.log(`${label} confirmed: ${signature}`);
+      return;
+    } catch (err) {
+      const isExpiry =
+        err instanceof TransactionExpiredBlockheightExceededError ||
+        err instanceof TransactionExpiredTimeoutError;
+      if (isExpiry && attempt < LUT_TX_RETRIES) {
+        console.log(
+          `${label} expired — retrying with a fresh blockhash (attempt ${attempt}/${LUT_TX_RETRIES})`,
+        );
+        continue;
+      }
+      throw err;
+    }
   }
-  console.log(`${label} confirmed: ${signature}`);
 }
 
 /**
@@ -67,14 +104,6 @@ export async function createLookupTableForTransaction(
   // use a different authority for the lookup table to avoid conflicts
   const lookupAuthority = Keypair.generate();
   // Should ^ be the payer so we can update it?
-  const slot = await connection.getSlot();
-
-  const [createTableIx, lookupTableAddress] =
-    AddressLookupTableProgram.createLookupTable({
-      authority: lookupAuthority.publicKey,
-      payer: payer.publicKey,
-      recentSlot: slot - 1,
-    });
 
   // Extract all unique accounts from the transaction
   const accountsToAdd = transaction.instructions.map((instruction) =>
@@ -87,14 +116,36 @@ export async function createLookupTableForTransaction(
   const allAddresses = [...uniqueAccounts, ...additionalAddresses];
   const finalUniqueAddresses = [...new Set(allAddresses)] as PublicKey[];
 
-  // Create the lookup table — must be confirmed before any extend can land
-  await sendAndConfirmLutTx(
-    connection,
-    createTableIx,
-    payer,
-    lookupAuthority,
-    "Create lookup table",
-  );
+  // Create the lookup table — must be confirmed before any extend can land.
+  // Retried with a re-derived address: createLookupTable requires a slot that
+  // is still in the SlotHashes sysvar, so a create that failed (e.g. a stale
+  // getSlot from a lagging RPC) needs a fresh slot, which changes the derived
+  // table address. An abandoned attempt just strands dust rent.
+  let lookupTableAddress: PublicKey | undefined;
+  for (let attempt = 1; lookupTableAddress === undefined; attempt++) {
+    const slot = await connection.getSlot();
+    const [createTableIx, tableAddress] =
+      AddressLookupTableProgram.createLookupTable({
+        authority: lookupAuthority.publicKey,
+        payer: payer.publicKey,
+        recentSlot: slot - 1,
+      });
+    try {
+      await sendAndConfirmLutTx(
+        connection,
+        createTableIx,
+        payer,
+        lookupAuthority,
+        "Create lookup table",
+      );
+      lookupTableAddress = tableAddress;
+    } catch (err) {
+      if (attempt >= LUT_TX_RETRIES) throw err;
+      console.log(
+        `Create lookup table failed (${err instanceof Error ? err.message : String(err)}) — retrying with a fresh slot`,
+      );
+    }
+  }
 
   // Extend the lookup table with all unique accounts
   const addressesPerExtend = 20;
