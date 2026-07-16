@@ -1,5 +1,5 @@
 export type Futarchy = {
-  version: "0.6.2";
+  version: "0.6.1";
   name: "futarchy";
   instructions: [
     {
@@ -3805,7 +3805,7 @@ export type Futarchy = {
 };
 
 export const IDL: Futarchy = {
-  version: "0.6.2",
+  version: "0.6.1",
   name: "futarchy",
   instructions: [
     {

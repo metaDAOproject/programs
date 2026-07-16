@@ -1,6 +1,6 @@
 [package]
 name = "futarchy"
-version = "0.6.1"
+version = "0.6.2"
 description = "SVM-based program for running futarchy"
 edition = "2021"
 
