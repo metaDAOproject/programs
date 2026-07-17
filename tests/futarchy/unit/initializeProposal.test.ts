@@ -158,6 +158,11 @@ export default function suite() {
     assert.ok(storedProposal.squadsProposal.equals(squadsProposalPda));
     assert.exists(storedProposal.state.draft);
 
+    assert.isDefined(storedProposal.action.executeArbitrary);
+    assert.equal(storedProposal.passThresholdBps, 1000);
+    assert.isTrue(storedProposal.councilCanBlock);
+    assert.equal(storedProposal.durationInSeconds, 864_000);
+
     // Verify the DAO proposal count was incremented
     const storedDao = await this.futarchy.getDao(dao);
     assert.equal(storedDao.proposalCount, 1);

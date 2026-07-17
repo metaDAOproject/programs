@@ -333,7 +333,6 @@ export default function suite() {
   });
 
   it("sets proposal duration_in_seconds to DAO's current seconds_per_proposal on launch", async function () {
-    const THREE_DAYS = 60 * 60 * 24 * 3; // 259200
     const FIVE_DAYS = 60 * 60 * 24 * 5; // 432000
 
     // Create DAO with secondsPerProposal = 3 days
@@ -373,9 +372,10 @@ export default function suite() {
       })
       .rpc();
 
-    // Verify proposal has the original duration (3 days)
+    // Create-time snapshot comes from ExecuteArbitrary's params (10 days),
+    // not the DAO's 3-day secondsPerProposal
     const proposalBefore = await this.futarchy.getProposal(proposal);
-    assert.equal(proposalBefore.durationInSeconds, THREE_DAYS);
+    assert.equal(proposalBefore.durationInSeconds, 864_000);
 
     // Directly modify the DAO's secondsPerProposal to 5 days
     const daoAccountInfo = await this.banksClient.getAccount(dao);

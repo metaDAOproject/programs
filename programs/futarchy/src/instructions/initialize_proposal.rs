@@ -37,6 +37,8 @@ pub struct InitializeProposal<'info> {
 
 impl InitializeProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
         require_eq!(
             self.question.num_outcomes(),
             2,
@@ -85,6 +87,9 @@ impl InitializeProposal<'_> {
 
         dao.proposal_count += 1;
 
+        let action = ProposalAction::ExecuteArbitrary;
+        let params = action.params();
+
         proposal.set_inner(Proposal {
             number: dao.proposal_count,
             squads_proposal: squads_proposal.key(),
@@ -96,15 +101,15 @@ impl InitializeProposal<'_> {
             dao: dao.key(),
             pda_bump: ctx.bumps.proposal,
             question: question.key(),
-            duration_in_seconds: dao.seconds_per_proposal,
+            duration_in_seconds: params.duration_seconds,
             pass_base_mint: base_vault.conditional_token_mints[1],
             fail_base_mint: base_vault.conditional_token_mints[0],
             pass_quote_mint: quote_vault.conditional_token_mints[1],
             fail_quote_mint: quote_vault.conditional_token_mints[0],
             is_team_sponsored: false,
-            pass_threshold_bps: dao.pass_threshold_bps as i16,
-            council_can_block: true,
-            action: ProposalAction::ExecuteArbitrary,
+            pass_threshold_bps: params.pass_threshold_bps,
+            council_can_block: params.council_can_block,
+            action,
         });
 
         dao.seq_num += 1;
