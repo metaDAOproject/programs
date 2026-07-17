@@ -20,6 +20,10 @@ import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
 export type InitializeDaoParams =
   IdlTypes<FutarchyProgram>["InitializeDaoParams"];
 export type UpdateDaoParams = IdlTypes<FutarchyProgram>["UpdateDaoParams"];
+export type InstructionParams = IdlTypes<FutarchyProgram>["InstructionParams"];
+export type SpendingLimitAction =
+  IdlTypes<FutarchyProgram>["SpendingLimitAction"];
+export type ProposalAction = IdlTypes<FutarchyProgram>["ProposalAction"];
 
 export type Dao = IdlAccounts<FutarchyProgram>["dao"];
 export type Proposal = IdlAccounts<FutarchyProgram>["proposal"];

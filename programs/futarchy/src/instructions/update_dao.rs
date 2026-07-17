@@ -78,6 +78,10 @@ impl UpdateDao<'_> {
             is_optimistic_governance_enabled: dao_params
                 .is_optimistic_governance_enabled
                 .unwrap_or(dao.is_optimistic_governance_enabled),
+            liquidator: dao.liquidator,
+            last_failed_takeover_at: dao.last_failed_takeover_at,
+            last_failed_liquidation_at: dao.last_failed_liquidation_at,
+            spending_limit_dirty: dao.spending_limit_dirty,
         });
 
         dao.seq_num += 1;

@@ -90,4 +90,24 @@ pub enum FutarchyError {
     InvalidSpendingLimitMint,
     #[msg("No active optimistic proposal")]
     NoActiveOptimisticProposal,
+    #[msg("This DAO has been liquidated")]
+    DaoLiquidated,
+    #[msg("A hostile proposal of this kind failed recently, so the cooldown must elapse first")]
+    HostileCooldownActive,
+    #[msg("The DAO has no spending limit")]
+    NoSpendingLimit,
+    #[msg("Amount exceeds the cap of 3x the monthly spending limit")]
+    SpendCapExceeded,
+    #[msg("The base mint's authority is neither the treasury vault nor a mint governor")]
+    UnknownMintAuthority,
+    #[msg("This proposal kind must be team-sponsored before it can launch")]
+    ProposalNotTeamSponsored,
+    #[msg("The spending limit record hasn't changed, so there is nothing to sync")]
+    SpendingLimitNotDirty,
+    #[msg("Wrong proposal kind for this instruction")]
+    InvalidProposalKind,
+    #[msg("This DAO has already been liquidated")]
+    AlreadyLiquidated,
+    #[msg("A spending limit can have at most 10 members")]
+    TooManySpendingLimitMembers,
 }

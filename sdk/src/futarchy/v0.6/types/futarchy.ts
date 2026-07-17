@@ -1582,6 +1582,11 @@ export type Futarchy = {
           },
           {
             name: "initialSpendingLimit";
+            docs: [
+              "The authoritative record of what the Squads spending limit should be.",
+              "`None` = no limit. Kept in sync with the Squads-side account by",
+              "`sync_spending_limit`. (Named for its original init-only role)",
+            ];
             type: {
               option: {
                 defined: "InitialSpendingLimit";
@@ -1612,6 +1617,39 @@ export type Futarchy = {
           },
           {
             name: "isOptimisticGovernanceEnabled";
+            type: "bool";
+          },
+          {
+            name: "liquidator";
+            docs: [
+              "`Some` means the DAO has been liquidated, and holds who runs the estate.",
+              "Set once by `apply_liquidation`, never cleared.",
+            ];
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "lastFailedTakeoverAt";
+            docs: [
+              "Unix time of the last failed hostile takeover. 0 = never.",
+              "Stamped by `finalize_proposal`, checked by `launch_proposal`.",
+            ];
+            type: "i64";
+          },
+          {
+            name: "lastFailedLiquidationAt";
+            docs: [
+              "Unix time of the last failed hostile liquidation. 0 = never.",
+            ];
+            type: "i64";
+          },
+          {
+            name: "spendingLimitDirty";
+            docs: [
+              "Set by every write to the spending-limit record (`initial_spending_limit`),",
+              "consumed by `sync_spending_limit`.",
+            ];
             type: "bool";
           },
         ];
@@ -1843,6 +1881,34 @@ export type Futarchy = {
           {
             name: "isTeamSponsored";
             type: "bool";
+          },
+          {
+            name: "passThresholdBps";
+            docs: [
+              "Snapshot of the kind's threshold at create. Only `finalize_proposal`",
+              "reads it.",
+            ];
+            type: "i16";
+          },
+          {
+            name: "councilCanBlock";
+            docs: [
+              "Snapshot of the kind's blockable flag at create. Only",
+              "`admin_cancel_proposal` reads it.",
+            ];
+            type: "bool";
+          },
+          {
+            name: "action";
+            docs: [
+              "The typed action parameters; the variant is the proposal's kind, and",
+              "`ProposalAction::params()` resolves its per-kind constants.",
+              "`apply_liquidation` reads the liquidator from here; clients read the",
+              "rest.",
+            ];
+            type: {
+              defined: "ProposalAction";
+            };
           },
         ];
       };
@@ -2344,6 +2410,42 @@ export type Futarchy = {
       };
     },
     {
+      name: "InstructionParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "durationSeconds";
+            type: "u32";
+          },
+          {
+            name: "passThresholdBps";
+            docs: [
+              "Signed: a negative threshold lets a proposal pass even when the pass",
+              "price is below the fail price.",
+            ];
+            type: "i16";
+          },
+          {
+            name: "requiresTeamSponsorship";
+            docs: [
+              "Launch condition: the proposal must be team-sponsored to launch.",
+            ];
+            type: "bool";
+          },
+          {
+            name: "councilCanBlock";
+            type: "bool";
+          },
+          {
+            name: "cooldownSeconds";
+            docs: ["Failure-triggered cooldown, checked at launch. 0 = none."];
+            type: "u32";
+          },
+        ];
+      };
+    },
+    {
       name: "PoolState";
       type: {
         kind: "enum";
@@ -2426,6 +2528,104 @@ export type Futarchy = {
           },
           {
             name: "Quote";
+          },
+        ];
+      };
+    },
+    {
+      name: "SpendingLimitAction";
+      docs: ["What a hostile takeover declares for the spending limit."];
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Keep";
+          },
+          {
+            name: "Remove";
+          },
+          {
+            name: "Set";
+            fields: [
+              {
+                defined: "InitialSpendingLimit";
+              },
+            ];
+          },
+        ];
+      };
+    },
+    {
+      name: "ProposalAction";
+      docs: [
+        "The typed action parameters, stored on the proposal. The borsh variant tag",
+        "is the proposal's kind discriminator, so variants are append-only — the",
+        "variant index is the wire tag.",
+      ];
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "LargeSpend";
+            fields: [
+              {
+                name: "amount";
+                type: "u64";
+              },
+            ];
+          },
+          {
+            name: "MintTokens";
+            fields: [
+              {
+                name: "amount";
+                type: "u64";
+              },
+              {
+                name: "recipient";
+                type: "publicKey";
+              },
+            ];
+          },
+          {
+            name: "SpendingLimitChange";
+            fields: [
+              {
+                name: "config";
+                type: {
+                  option: {
+                    defined: "InitialSpendingLimit";
+                  };
+                };
+              },
+            ];
+          },
+          {
+            name: "ExecuteArbitrary";
+          },
+          {
+            name: "HostileTakeover";
+            fields: [
+              {
+                name: "newTeamAddress";
+                type: "publicKey";
+              },
+              {
+                name: "spendingLimitAction";
+                type: {
+                  defined: "SpendingLimitAction";
+                };
+              },
+            ];
+          },
+          {
+            name: "HostileLiquidate";
+            fields: [
+              {
+                name: "liquidator";
+                type: "publicKey";
+              },
+            ];
           },
         ];
       };
@@ -2761,6 +2961,13 @@ export type Futarchy = {
         {
           name: "squadsMultisigVault";
           type: "publicKey";
+          index: false;
+        },
+        {
+          name: "action";
+          type: {
+            defined: "ProposalAction";
+          };
           index: false;
         },
       ];
@@ -3333,6 +3540,107 @@ export type Futarchy = {
         },
       ];
     },
+    {
+      name: "SetSpendingLimitEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "config";
+          type: {
+            option: {
+              defined: "InitialSpendingLimit";
+            };
+          };
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "SyncSpendingLimitEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "spendingLimit";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "config";
+          type: {
+            option: {
+              defined: "InitialSpendingLimit";
+            };
+          };
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "ApplyLiquidationEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "liquidator";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "baseSwept";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "quoteSwept";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "postAmmState";
+          type: {
+            defined: "FutarchyAmm";
+          };
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -3549,6 +3857,56 @@ export type Futarchy = {
       code: 6042;
       name: "NoActiveOptimisticProposal";
       msg: "No active optimistic proposal";
+    },
+    {
+      code: 6043;
+      name: "DaoLiquidated";
+      msg: "This DAO has been liquidated";
+    },
+    {
+      code: 6044;
+      name: "HostileCooldownActive";
+      msg: "A hostile proposal of this kind failed recently, so the cooldown must elapse first";
+    },
+    {
+      code: 6045;
+      name: "NoSpendingLimit";
+      msg: "The DAO has no spending limit";
+    },
+    {
+      code: 6046;
+      name: "SpendCapExceeded";
+      msg: "Amount exceeds the cap of 3x the monthly spending limit";
+    },
+    {
+      code: 6047;
+      name: "UnknownMintAuthority";
+      msg: "The base mint's authority is neither the treasury vault nor a mint governor";
+    },
+    {
+      code: 6048;
+      name: "ProposalNotTeamSponsored";
+      msg: "This proposal kind must be team-sponsored before it can launch";
+    },
+    {
+      code: 6049;
+      name: "SpendingLimitNotDirty";
+      msg: "The spending limit record hasn't changed, so there is nothing to sync";
+    },
+    {
+      code: 6050;
+      name: "InvalidProposalKind";
+      msg: "Wrong proposal kind for this instruction";
+    },
+    {
+      code: 6051;
+      name: "AlreadyLiquidated";
+      msg: "This DAO has already been liquidated";
+    },
+    {
+      code: 6052;
+      name: "TooManySpendingLimitMembers";
+      msg: "A spending limit can have at most 10 members";
     },
   ];
 };
@@ -5137,6 +5495,11 @@ export const IDL: Futarchy = {
           },
           {
             name: "initialSpendingLimit",
+            docs: [
+              "The authoritative record of what the Squads spending limit should be.",
+              "`None` = no limit. Kept in sync with the Squads-side account by",
+              "`sync_spending_limit`. (Named for its original init-only role)",
+            ],
             type: {
               option: {
                 defined: "InitialSpendingLimit",
@@ -5167,6 +5530,39 @@ export const IDL: Futarchy = {
           },
           {
             name: "isOptimisticGovernanceEnabled",
+            type: "bool",
+          },
+          {
+            name: "liquidator",
+            docs: [
+              "`Some` means the DAO has been liquidated, and holds who runs the estate.",
+              "Set once by `apply_liquidation`, never cleared.",
+            ],
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "lastFailedTakeoverAt",
+            docs: [
+              "Unix time of the last failed hostile takeover. 0 = never.",
+              "Stamped by `finalize_proposal`, checked by `launch_proposal`.",
+            ],
+            type: "i64",
+          },
+          {
+            name: "lastFailedLiquidationAt",
+            docs: [
+              "Unix time of the last failed hostile liquidation. 0 = never.",
+            ],
+            type: "i64",
+          },
+          {
+            name: "spendingLimitDirty",
+            docs: [
+              "Set by every write to the spending-limit record (`initial_spending_limit`),",
+              "consumed by `sync_spending_limit`.",
+            ],
             type: "bool",
           },
         ],
@@ -5398,6 +5794,34 @@ export const IDL: Futarchy = {
           {
             name: "isTeamSponsored",
             type: "bool",
+          },
+          {
+            name: "passThresholdBps",
+            docs: [
+              "Snapshot of the kind's threshold at create. Only `finalize_proposal`",
+              "reads it.",
+            ],
+            type: "i16",
+          },
+          {
+            name: "councilCanBlock",
+            docs: [
+              "Snapshot of the kind's blockable flag at create. Only",
+              "`admin_cancel_proposal` reads it.",
+            ],
+            type: "bool",
+          },
+          {
+            name: "action",
+            docs: [
+              "The typed action parameters; the variant is the proposal's kind, and",
+              "`ProposalAction::params()` resolves its per-kind constants.",
+              "`apply_liquidation` reads the liquidator from here; clients read the",
+              "rest.",
+            ],
+            type: {
+              defined: "ProposalAction",
+            },
           },
         ],
       },
@@ -5899,6 +6323,42 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "InstructionParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "durationSeconds",
+            type: "u32",
+          },
+          {
+            name: "passThresholdBps",
+            docs: [
+              "Signed: a negative threshold lets a proposal pass even when the pass",
+              "price is below the fail price.",
+            ],
+            type: "i16",
+          },
+          {
+            name: "requiresTeamSponsorship",
+            docs: [
+              "Launch condition: the proposal must be team-sponsored to launch.",
+            ],
+            type: "bool",
+          },
+          {
+            name: "councilCanBlock",
+            type: "bool",
+          },
+          {
+            name: "cooldownSeconds",
+            docs: ["Failure-triggered cooldown, checked at launch. 0 = none."],
+            type: "u32",
+          },
+        ],
+      },
+    },
+    {
       name: "PoolState",
       type: {
         kind: "enum",
@@ -5981,6 +6441,104 @@ export const IDL: Futarchy = {
           },
           {
             name: "Quote",
+          },
+        ],
+      },
+    },
+    {
+      name: "SpendingLimitAction",
+      docs: ["What a hostile takeover declares for the spending limit."],
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Keep",
+          },
+          {
+            name: "Remove",
+          },
+          {
+            name: "Set",
+            fields: [
+              {
+                defined: "InitialSpendingLimit",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      name: "ProposalAction",
+      docs: [
+        "The typed action parameters, stored on the proposal. The borsh variant tag",
+        "is the proposal's kind discriminator, so variants are append-only — the",
+        "variant index is the wire tag.",
+      ],
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "LargeSpend",
+            fields: [
+              {
+                name: "amount",
+                type: "u64",
+              },
+            ],
+          },
+          {
+            name: "MintTokens",
+            fields: [
+              {
+                name: "amount",
+                type: "u64",
+              },
+              {
+                name: "recipient",
+                type: "publicKey",
+              },
+            ],
+          },
+          {
+            name: "SpendingLimitChange",
+            fields: [
+              {
+                name: "config",
+                type: {
+                  option: {
+                    defined: "InitialSpendingLimit",
+                  },
+                },
+              },
+            ],
+          },
+          {
+            name: "ExecuteArbitrary",
+          },
+          {
+            name: "HostileTakeover",
+            fields: [
+              {
+                name: "newTeamAddress",
+                type: "publicKey",
+              },
+              {
+                name: "spendingLimitAction",
+                type: {
+                  defined: "SpendingLimitAction",
+                },
+              },
+            ],
+          },
+          {
+            name: "HostileLiquidate",
+            fields: [
+              {
+                name: "liquidator",
+                type: "publicKey",
+              },
+            ],
           },
         ],
       },
@@ -6316,6 +6874,13 @@ export const IDL: Futarchy = {
         {
           name: "squadsMultisigVault",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "action",
+          type: {
+            defined: "ProposalAction",
+          },
           index: false,
         },
       ],
@@ -6888,6 +7453,107 @@ export const IDL: Futarchy = {
         },
       ],
     },
+    {
+      name: "SetSpendingLimitEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "config",
+          type: {
+            option: {
+              defined: "InitialSpendingLimit",
+            },
+          },
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "SyncSpendingLimitEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "spendingLimit",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "config",
+          type: {
+            option: {
+              defined: "InitialSpendingLimit",
+            },
+          },
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "ApplyLiquidationEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "liquidator",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "baseSwept",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "quoteSwept",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "postAmmState",
+          type: {
+            defined: "FutarchyAmm",
+          },
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -7104,6 +7770,56 @@ export const IDL: Futarchy = {
       code: 6042,
       name: "NoActiveOptimisticProposal",
       msg: "No active optimistic proposal",
+    },
+    {
+      code: 6043,
+      name: "DaoLiquidated",
+      msg: "This DAO has been liquidated",
+    },
+    {
+      code: 6044,
+      name: "HostileCooldownActive",
+      msg: "A hostile proposal of this kind failed recently, so the cooldown must elapse first",
+    },
+    {
+      code: 6045,
+      name: "NoSpendingLimit",
+      msg: "The DAO has no spending limit",
+    },
+    {
+      code: 6046,
+      name: "SpendCapExceeded",
+      msg: "Amount exceeds the cap of 3x the monthly spending limit",
+    },
+    {
+      code: 6047,
+      name: "UnknownMintAuthority",
+      msg: "The base mint's authority is neither the treasury vault nor a mint governor",
+    },
+    {
+      code: 6048,
+      name: "ProposalNotTeamSponsored",
+      msg: "This proposal kind must be team-sponsored before it can launch",
+    },
+    {
+      code: 6049,
+      name: "SpendingLimitNotDirty",
+      msg: "The spending limit record hasn't changed, so there is nothing to sync",
+    },
+    {
+      code: 6050,
+      name: "InvalidProposalKind",
+      msg: "Wrong proposal kind for this instruction",
+    },
+    {
+      code: 6051,
+      name: "AlreadyLiquidated",
+      msg: "This DAO has already been liquidated",
+    },
+    {
+      code: 6052,
+      name: "TooManySpendingLimitMembers",
+      msg: "A spending limit can have at most 10 members",
     },
   ],
 };

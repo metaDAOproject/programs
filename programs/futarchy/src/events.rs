@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{FutarchyAmm, InitialSpendingLimit, Market, ProposalState, SwapType};
+use crate::{FutarchyAmm, InitialSpendingLimit, Market, ProposalAction, ProposalState, SwapType};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {
@@ -87,6 +87,7 @@ pub struct InitializeProposalEvent {
     pub squads_proposal: Pubkey,
     pub squads_multisig: Pubkey,
     pub squads_multisig_vault: Pubkey,
+    pub action: ProposalAction,
 }
 
 #[event]
@@ -230,4 +231,33 @@ pub struct AdminFixPositionAuthorityEvent {
     pub amm_position: Pubkey,
     pub old_authority: Pubkey,
     pub new_authority: Pubkey,
+}
+
+#[event]
+pub struct SetSpendingLimitEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub config: Option<InitialSpendingLimit>,
+}
+
+#[event]
+pub struct SyncSpendingLimitEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    /// The Squads-side SpendingLimit PDA the record was projected onto.
+    pub spending_limit: Pubkey,
+    /// The projected record — the Squads-side end-state after the sync.
+    /// `None` = no limit (removed or never existed).
+    pub config: Option<InitialSpendingLimit>,
+}
+
+#[event]
+pub struct ApplyLiquidationEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub proposal: Pubkey,
+    pub liquidator: Pubkey,
+    pub base_swept: u64,
+    pub quote_swept: u64,
+    pub post_amm_state: FutarchyAmm,
 }

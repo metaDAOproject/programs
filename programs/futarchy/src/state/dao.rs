@@ -57,6 +57,9 @@ pub struct Dao {
     /// Minimum amount of base tokens that must be staked to launch a proposal
     pub base_to_stake: u64,
     pub seq_num: u64,
+    /// The authoritative record of what the Squads spending limit should be.
+    /// `None` = no limit. Kept in sync with the Squads-side account by
+    /// `sync_spending_limit`. (Named for its original init-only role)
     pub initial_spending_limit: Option<InitialSpendingLimit>,
     /// The percentage, in basis points, the pass price needs to be above the
     /// fail price in order for the proposal to pass for team-sponsored proposals.
@@ -66,6 +69,17 @@ pub struct Dao {
     pub team_address: Pubkey,
     pub optimistic_proposal: Option<OptimisticProposal>,
     pub is_optimistic_governance_enabled: bool,
+    /// `Some` means the DAO has been liquidated, and holds who runs the estate.
+    /// Set once by `apply_liquidation`, never cleared.
+    pub liquidator: Option<Pubkey>,
+    /// Unix time of the last failed hostile takeover. 0 = never.
+    /// Stamped by `finalize_proposal`, checked by `launch_proposal`.
+    pub last_failed_takeover_at: i64,
+    /// Unix time of the last failed hostile liquidation. 0 = never.
+    pub last_failed_liquidation_at: i64,
+    /// Set by every write to the spending-limit record (`initial_spending_limit`),
+    /// consumed by `sync_spending_limit`.
+    pub spending_limit_dirty: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]

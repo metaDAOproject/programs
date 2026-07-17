@@ -102,6 +102,9 @@ impl InitializeProposal<'_> {
             pass_quote_mint: quote_vault.conditional_token_mints[1],
             fail_quote_mint: quote_vault.conditional_token_mints[0],
             is_team_sponsored: false,
+            pass_threshold_bps: dao.pass_threshold_bps as i16,
+            council_can_block: true,
+            action: ProposalAction::ExecuteArbitrary,
         });
 
         dao.seq_num += 1;
@@ -120,6 +123,7 @@ impl InitializeProposal<'_> {
             squads_proposal: squads_proposal.key(),
             squads_multisig: dao.squads_multisig,
             squads_multisig_vault: dao.squads_multisig_vault,
+            action: proposal.action.clone(),
         });
 
         Ok(())
