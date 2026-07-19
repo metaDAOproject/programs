@@ -12,7 +12,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Keep in sync with Anchor.toml.
 ARG SOLANA_CLI="1.17.34"
 ARG ANCHOR_CLI="0.29.0"
-ARG NODE_VERSION="v18.16.0"
+ARG NODE_VERSION="v20.18.0"
 
 ENV HOME="/root"
 ENV PATH="${HOME}/.cargo/bin:${PATH}"
