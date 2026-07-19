@@ -48,6 +48,17 @@ Before you can build and test the programs, you'll need to install the following
 - **Node.js**: 16.x or higher (tested with v23.x)
 - **Yarn**: 1.22.22 or compatible
 
+### Dev Container
+
+The repository ships a dev container with all of the above preinstalled. With Docker running, open the repo in VS Code / Zed / Cursor and choose "Reopen in Container", then:
+
+```bash
+yarn install
+anchor build
+```
+
+Note: the image is pinned to `linux/amd64`, so builds on Apple Silicon run under emulation and are slower than a native setup.
+
 ### MacOS Setup
 
 #### 1. Clone the Repository

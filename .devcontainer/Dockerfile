@@ -4,11 +4,13 @@
 # is released on GitHub.
 #
 
-FROM rust:1.75
+# amd64: Solana 1.17 has no prebuilt aarch64-linux binaries.
+FROM --platform=linux/amd64 rust:1.75
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ARG SOLANA_CLI="1.17.16"
+# Keep in sync with Anchor.toml.
+ARG SOLANA_CLI="1.17.34"
 ARG ANCHOR_CLI="0.29.0"
 ARG NODE_VERSION="v18.16.0"
 
@@ -41,17 +43,21 @@ RUN . $NVM_DIR/nvm.sh && \
     npm install -g yarn
 
 # Install Solana tools.
-RUN sh -c "$(curl -sSfL https://release.solana.com/v${SOLANA_CLI}/install)"
+RUN curl -sSfL "https://release.anza.xyz/v${SOLANA_CLI}/install" -o /tmp/solana-install.sh && \
+    sh /tmp/solana-install.sh && \
+    rm /tmp/solana-install.sh
 
 # Install anchor.
-RUN cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-RUN avm install ${ANCHOR_CLI} && avm use ${ANCHOR_CLI}
+RUN cargo install --git https://github.com/coral-xyz/anchor --tag v${ANCHOR_CLI} anchor-cli --locked
 
 # set up keypair
-RUN solana-keygen new --no-bip39-passphrase
+RUN solana-keygen new --no-bip39-passphrase && \
+    solana config set --url localhost
+
+# zsh
+RUN apt-get update -qq && apt-get install -qq zsh && \
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && \
+    chsh -s /usr/bin/zsh root
 
 WORKDIR /workdir
-#be sure to add `/root/.avm/bin` to your PATH to be able to run the installed binaries
 
-# install dependencies
-RUN yarn

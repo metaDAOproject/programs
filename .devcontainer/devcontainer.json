@@ -1,3 +1,29 @@
 {
-  "build": { "dockerfile": "Dockerfile" },
+  "name": "MetaDAO Programs",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "platform": "linux/amd64"
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workdir,type=bind,consistency=cached",
+  "workspaceFolder": "/workdir",
+  "remoteUser": "root",
+  "mounts": [
+    "source=metadao-target,target=/workdir/target,type=volume,consistency=delegated"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml"
+      ]
+    }
+  },
+  "forwardPorts": [8899, 8900],
+  "portsAttributes": {
+    "8899": { "label": "Solana Test Validator" },
+    "8900": { "label": "Solana Test Validator RPC" }
+  },
+  "containerEnv": {
+    "ANCHOR_WALLET": "/root/.config/solana/id.json"
+  }
 }
