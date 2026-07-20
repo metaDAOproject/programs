@@ -128,9 +128,10 @@ export default function suite() {
       .rpc();
   });
 
-  it("should cancel a pending proposal", async function () {
+  it("should cancel a blockable proposal mid-market", async function () {
     let storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.pending);
+    assert.isTrue(storedProposal.councilCanBlock);
 
     const storedDao = await this.futarchy.getDao(dao);
     const seqNumBefore = storedDao.seqNum.toNumber();
