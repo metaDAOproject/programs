@@ -298,7 +298,7 @@ export default function suite() {
   });
 
   it("finalizes when last trade is before the deadline (virtual crank covers the gap)", async function () {
-    // Trade for ~200,000s of the 259,200s proposal duration, then stop
+    // Trade for ~200,000s of the 864,000s proposal duration, then stop
     // trading and advance the clock past the deadline before finalizing.
     // The virtual crank in get_twap() fills in the gap after the last trade.
 
@@ -330,8 +330,8 @@ export default function suite() {
       })
       .rpc();
 
-    // Trade for ~200,000 seconds (10 swaps × 20,000s each)
-    // This is ~77% of the 259,200s proposal duration
+    // Trade for ~200,000 seconds (10 swaps × 20,000s each), well short of
+    // the 864,000s proposal duration
     for (let i = 0; i < 10; i++) {
       await this.advanceBySeconds(20_000);
 
@@ -352,7 +352,7 @@ export default function suite() {
         .rpc();
     }
 
-    // At ~200,000s into a 259,200s proposal — finalization should fail
+    // At ~200,000s into an 864,000s proposal — finalization should fail
     // because wall-clock time hasn't reached the deadline yet.
     const earlyCallbacks = expectError(
       "ProposalTooYoung",
@@ -372,9 +372,9 @@ export default function suite() {
       .rpc()
       .then(earlyCallbacks[0], earlyCallbacks[1]);
 
-    // Stop trading. Advance time past the proposal deadline (259,200s).
-    // Last trade was at ~200,000s. We need at least 60,000 more seconds.
-    await this.advanceBySeconds(70_000);
+    // Stop trading. Advance time past the proposal deadline (864,000s).
+    // Last trade was at ~200,000s. We need at least 664,000 more seconds.
+    await this.advanceBySeconds(700_000);
 
     // Finalize — should succeed because:
     // 1. Wall-clock time is past the deadline (validate() passes)

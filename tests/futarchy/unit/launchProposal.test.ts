@@ -332,9 +332,7 @@ export default function suite() {
     );
   });
 
-  it("sets proposal duration_in_seconds to DAO's current seconds_per_proposal on launch", async function () {
-    const FIVE_DAYS = 60 * 60 * 24 * 5; // 432000
-
+  it("keeps the create-time duration snapshot on launch", async function () {
     // Create DAO with secondsPerProposal = 3 days
     const dao = await createDaoWithStakeThreshold(
       this,
@@ -377,18 +375,6 @@ export default function suite() {
     const proposalBefore = await this.futarchy.getProposal(proposal);
     assert.equal(proposalBefore.durationInSeconds, 864_000);
 
-    // Directly modify the DAO's secondsPerProposal to 5 days
-    const daoAccountInfo = await this.banksClient.getAccount(dao);
-    const coder = this.futarchy.futarchy.coder.accounts;
-    const daoData = coder.decode("dao", Buffer.from(daoAccountInfo.data));
-    daoData.secondsPerProposal = FIVE_DAYS;
-    const encodedData = await coder.encode("dao", daoData);
-    // Preserve original account size (may be larger due to InitSpace allocation)
-    const newData = new Uint8Array(daoAccountInfo.data.length);
-    newData.set(encodedData, 0);
-    daoAccountInfo.data = newData;
-    this.context.setAccount(dao, daoAccountInfo);
-
     // Launch the proposal
     await this.futarchy
       .launchProposalIx({
@@ -400,9 +386,10 @@ export default function suite() {
       })
       .rpc();
 
-    // Verify proposal picked up the new DAO duration
+    // The snapshot is authoritative — launch must not overwrite it with the
+    // DAO's seconds_per_proposal
     const storedProposal = await this.futarchy.getProposal(proposal);
-    assert.equal(storedProposal.durationInSeconds, FIVE_DAYS);
+    assert.equal(storedProposal.durationInSeconds, 864_000);
   });
 
   it("fails for non-team-sponsored with insufficient stake", async function () {

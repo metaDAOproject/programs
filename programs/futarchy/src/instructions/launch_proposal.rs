@@ -38,6 +38,8 @@ pub struct LaunchProposal<'info> {
 
 impl LaunchProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
         msg!("proposal state: {:?}", self.proposal.state);
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
@@ -55,6 +57,30 @@ impl LaunchProposal<'_> {
                     FutarchyError::InsufficientStakeToLaunch
                 );
             }
+        }
+
+        // Kind gates, checked at launch rather than create so that pre-created
+        // drafts can't bypass them
+        let params = self.proposal.action.params();
+
+        if params.requires_team_sponsorship {
+            require!(
+                self.proposal.is_team_sponsored,
+                FutarchyError::ProposalNotTeamSponsored
+            );
+        }
+
+        let last_failed_at = match self.proposal.action {
+            ProposalAction::HostileTakeover { .. } => Some(self.dao.last_failed_takeover_at),
+            ProposalAction::HostileLiquidate { .. } => Some(self.dao.last_failed_liquidation_at),
+            _ => None,
+        };
+        if let Some(last_failed_at) = last_failed_at {
+            require_gte!(
+                Clock::get()?.unix_timestamp,
+                last_failed_at + params.cooldown_seconds as i64,
+                FutarchyError::HostileCooldownActive
+            );
         }
 
         // Can only launch a proposal if the underlying squads proposal is active
@@ -167,8 +193,6 @@ impl LaunchProposal<'_> {
         // Update proposal state to Pending and set timestamp enqueued
         proposal.state = ProposalState::Pending;
         proposal.timestamp_enqueued = clock.unix_timestamp;
-        // Additionally, set the duration once more in case it was updated since the proposal was created
-        proposal.duration_in_seconds = dao.seconds_per_proposal;
 
         dao.seq_num += 1;
 

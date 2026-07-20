@@ -23,12 +23,17 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
 
-    await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+    // 200/200k tokens (not 100/100k): setupBasicDaoWithLiquidity mints the
+    // same 10^11 atoms to the same ATAs, and identical amounts would make
+    // these mintTo transactions byte-identical to the helper's, failing with
+    // "This transaction has already been processed" when they share a
+    // blockhash tick
+    await this.mintTo(META, this.payer.publicKey, this.payer, 200 * 10 ** 9);
     await this.mintTo(
       USDC,
       this.payer.publicKey,
       this.payer,
-      100_000 * 1_000_000,
+      200_000 * 1_000_000,
     );
 
     dao = await this.setupBasicDaoWithLiquidity({
