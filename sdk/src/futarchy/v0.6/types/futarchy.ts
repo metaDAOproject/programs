@@ -616,6 +616,55 @@ export type Futarchy = {
       ];
     },
     {
+      name: "syncSpendingLimit";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "spendingLimit";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "rentPayer";
+          isMut: true;
+          isSigner: true;
+          docs: [
+            "Pays rent when the limit is recreated and receives freed rent when it is removed.",
+          ];
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "resizeDao";
       accounts: [
         {
@@ -4579,6 +4628,55 @@ export const IDL: Futarchy = {
           },
         },
       ],
+    },
+    {
+      name: "syncSpendingLimit",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "spendingLimit",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "rentPayer",
+          isMut: true,
+          isSigner: true,
+          docs: [
+            "Pays rent when the limit is recreated and receives freed rent when it is removed.",
+          ],
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
     {
       name: "resizeDao",

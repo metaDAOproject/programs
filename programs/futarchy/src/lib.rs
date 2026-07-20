@@ -113,6 +113,11 @@ pub mod futarchy {
         SetSpendingLimit::handle(ctx, args)
     }
 
+    #[access_control(ctx.accounts.validate())]
+    pub fn sync_spending_limit(ctx: Context<SyncSpendingLimit>) -> Result<()> {
+        SyncSpendingLimit::handle(ctx)
+    }
+
     pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
         ResizeDao::handle(ctx)
     }

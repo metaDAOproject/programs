@@ -1,5 +1,6 @@
 import { BN, utils } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import * as multisig from "@sqds/multisig";
 
 import { FUTARCHY_V0_6_PROGRAM_ID } from "../../constants.js";
 
@@ -40,6 +41,17 @@ export const getProposalAddrV2 = ({
   squadsProposal: PublicKey;
 }): [PublicKey, number] => {
   return getProposalAddr(programId, squadsProposal);
+};
+
+// The Squads spending-limit PDA — `create_key` is always the DAO, so the
+// address is derivable from the DAO alone.
+export const getSpendingLimitAddr = ({
+  dao,
+}: {
+  dao: PublicKey;
+}): [PublicKey, number] => {
+  const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+  return multisig.getSpendingLimitPda({ multisigPda, createKey: dao });
 };
 
 export const getStakeAddr = (

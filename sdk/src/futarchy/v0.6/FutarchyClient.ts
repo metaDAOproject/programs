@@ -55,6 +55,7 @@ import {
   getDaoAddr,
   getProposalAddr,
   getProposalAddrV2,
+  getSpendingLimitAddr,
   getStakeAddr,
 } from "./pda.js";
 
@@ -891,6 +892,25 @@ export class FutarchyClient {
     return this.futarchy.methods.setSpendingLimit({ config }).accounts({
       dao,
       squadsMultisigVault,
+    });
+  }
+
+  syncSpendingLimitIx({
+    dao,
+    rentPayer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    rentPayer?: PublicKey;
+  }) {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const [spendingLimit] = getSpendingLimitAddr({ dao });
+
+    return this.futarchy.methods.syncSpendingLimit().accounts({
+      dao,
+      squadsMultisig: multisigPda,
+      spendingLimit,
+      rentPayer,
+      squadsProgram: SQUADS_PROGRAM_ID,
     });
   }
 

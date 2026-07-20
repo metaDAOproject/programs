@@ -6,6 +6,7 @@ import launchProposal from "./unit/launchProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
 import setSpendingLimit from "./unit/setSpendingLimit.test.js";
+import syncSpendingLimit from "./unit/syncSpendingLimit.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
@@ -59,6 +60,7 @@ export default function suite() {
   describe("#finalize_proposal", finalizeProposal);
   describe("#update_dao", updateDao);
   describe("#set_spending_limit", setSpendingLimit);
+  describe("#sync_spending_limit", syncSpendingLimit);
 
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);
