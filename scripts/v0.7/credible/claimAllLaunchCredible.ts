@@ -44,7 +44,7 @@ const PRIORITY_FEE_MICRO_LAMPORTS = parseInt(
 const MAX_PASSES = 3;
 
 // Grace for fired transactions to land before the next verification pass.
-const LAND_WAIT_MS = 15_000;
+const LAND_WAIT_MS = 30_000;
 
 // Static compute budgets per instruction, measured on a surfpool fork of the
 // real launch (claim ~35k, refund ~31k, ATA create ~25k / ~5k when it already
@@ -184,7 +184,7 @@ const processPass = async (
       );
     }
 
-    await sendBatch(
+    sendBatch(
       batchIxs,
       batch.length * (ATA_CREATE_CU + CLAIM_CU),
       `Pass ${pass} claim batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(claimRecords.length / BATCH_SIZE)}`,
@@ -223,7 +223,7 @@ const processPass = async (
       );
     }
 
-    await sendBatch(
+    sendBatch(
       batchIxs,
       batch.length * (ATA_CREATE_CU + REFUND_CU),
       `Pass ${pass} refund batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(refundRecords.length / BATCH_SIZE)}`,

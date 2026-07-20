@@ -25,7 +25,10 @@
  *   bun credible.ts --execute     # set the allocation (requires CREDIBLE_AUTHORITY_KEY in .env)
  */
 import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.7";
+import {
+  getLaunchAddr,
+  LaunchpadClient,
+} from "@metadaoproject/programs/launchpad/v0.7";
 import {
   ComputeBudgetProgram,
   Connection,
@@ -61,6 +64,13 @@ import {
   writeAllocationJson,
 } from "./utils.js";
 
+import {
+  TOTAL_ALLOCATION as TOTAL_ALLOCATION_CONSTANT,
+  TOKEN_SEED,
+} from "../constants.js";
+
+import * as token from "@solana/spl-token";
+
 /** Audit file: the exact per-funder allocation this run computed. */
 const ALLOCATION_OUT_FILE = `${import.meta.dir}/allocation.out.json`;
 
@@ -69,14 +79,27 @@ const ALLOCATION_OUT_FILE = `${import.meta.dir}/allocation.out.json`;
 // (e.g. when spawned by test.ts after it rewrote .env).
 loadDotenv({ path: `${import.meta.dir}/.env`, override: true });
 
+const _provider = anchor.AnchorProvider.env();
+
+const _payer = (
+  _provider.wallet as anchor.Wallet & { payer: anchor.web3.Keypair }
+).payer;
 /*************************************************
  * ***********************************************
  * If you see the stars, it means...
  ***********************************************/
 /** The launch to allocate (base58). Live (expired), Closed, or Complete. */
 /****************************************************** */
-const LAUNCH_ADDRESS = ""; // credible Finance ***** TRIPLE CHECK *****
-const TOTAL_ALLOCATION = usdc(); //************** KOLLAN CHANGE ME ***********/
+const TOKEN = await PublicKey.createWithSeed(
+  _payer.publicKey,
+  TOKEN_SEED,
+  token.TOKEN_PROGRAM_ID,
+);
+console.log("Token address:", TOKEN.toBase58());
+
+const [launch] = getLaunchAddr(undefined, TOKEN);
+const LAUNCH_ADDRESS = launch.toBase58(); // credible Finance ***** TRIPLE CHECK *****
+const TOTAL_ALLOCATION = usdc(TOTAL_ALLOCATION_CONSTANT); //************** KOLLAN CHANGE ME ***********/
 
 // ── Accumulator boost same as accelerated-cranker
 const BOOST_MULTIPLIER = 10;

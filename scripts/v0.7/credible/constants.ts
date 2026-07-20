@@ -22,8 +22,13 @@ export const PERFORMANCE_PACKAGE_GRANTEE = new PublicKey(
   "44dNkVJsWPZfh3tvRyqpnwgkoL5RYqi3cWsE1d8wfviV", // Placeholder for no performance package
 );
 
+export const LAUNCH_ADDRESS = new PublicKey(
+  "6GAk85NBtButdHm7ASZ6fykGsc6bB7dUUVky5QFZgm5h",
+); // Credible Launch Address
+
 // Amount Details
 export const MIN_GOAL = 2_000_000; // 2M USDC
+export const TOTAL_ALLOCATION = 4_000_000; // 4M USDC
 export const SPENDING_LIMIT = 250_000; // 250k USDC
 export const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 4_532_678; // 4_532_678 CRED
 export const PERFORMANCE_PACKAGE_UNLOCK_MONTHS = 18; // 18 months
