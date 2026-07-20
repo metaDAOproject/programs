@@ -583,6 +583,39 @@ export type Futarchy = {
       ];
     },
     {
+      name: "setSpendingLimit";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "SetSpendingLimitArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "resizeDao";
       accounts: [
         {
@@ -2086,6 +2119,25 @@ export type Futarchy = {
               "liquidity provider",
             ];
             type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "SetSpendingLimitArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "config";
+            docs: [
+              "`Some` becomes the new record verbatim; `None` deletes it.",
+            ];
+            type: {
+              option: {
+                defined: "InitialSpendingLimit";
+              };
+            };
           },
         ];
       };
@@ -4496,6 +4548,39 @@ export const IDL: Futarchy = {
       ],
     },
     {
+      name: "setSpendingLimit",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "SetSpendingLimitArgs",
+          },
+        },
+      ],
+    },
+    {
       name: "resizeDao",
       accounts: [
         {
@@ -5999,6 +6084,25 @@ export const IDL: Futarchy = {
               "liquidity provider",
             ],
             type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "SetSpendingLimitArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "config",
+            docs: [
+              "`Some` becomes the new record verbatim; `None` deletes it.",
+            ],
+            type: {
+              option: {
+                defined: "InitialSpendingLimit",
+              },
+            },
           },
         ],
       },

@@ -105,6 +105,14 @@ pub mod futarchy {
         UpdateDao::handle(ctx, dao_params)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn set_spending_limit(
+        ctx: Context<SetSpendingLimit>,
+        args: SetSpendingLimitArgs,
+    ) -> Result<()> {
+        SetSpendingLimit::handle(ctx, args)
+    }
+
     pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
         ResizeDao::handle(ctx)
     }

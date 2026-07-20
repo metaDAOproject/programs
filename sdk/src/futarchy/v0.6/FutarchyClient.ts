@@ -40,6 +40,7 @@ import {
   Proposal,
   InitializeDaoParams,
   UpdateDaoParams,
+  SetSpendingLimitArgs,
 } from "./types/index.js";
 import { Futarchy, IDL as FutarchyIDL } from "./types/futarchy.js";
 import {
@@ -869,6 +870,25 @@ export class FutarchyClient {
     })[0];
 
     return this.futarchy.methods.updateDao(params).accounts({
+      dao,
+      squadsMultisigVault,
+    });
+  }
+
+  setSpendingLimitIx({
+    dao,
+    config,
+  }: {
+    dao: PublicKey;
+    config: SetSpendingLimitArgs["config"];
+  }) {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
+
+    return this.futarchy.methods.setSpendingLimit({ config }).accounts({
       dao,
       squadsMultisigVault,
     });
