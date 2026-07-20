@@ -2,6 +2,9 @@ import { PublicKey } from "@solana/web3.js";
 
 // Token Details
 export const TOKEN_SEED = "TVOzl2TKhXCRVn9U";
+export const TOKEN_ADDRESS = new PublicKey(
+  "CARSsxWPkpQWvfyRBwfGMGvysJBHdHGfE46X5MNgmeta",
+);
 
 export const LAUNCH_AUTHORITY = new PublicKey(
   "LncRyJVBbek7EFhnd6QNZRTLT9mReKWPGCpsfu5bqJS",
@@ -12,11 +15,11 @@ export const TEAM_ADDRESS = new PublicKey(
   "CnTDWPAEsN5RAgNapTJerDAc45TWavRQ1m3ACMpukYPd",
 ); // Rip Cars team squads address
 
-export const LAUNCH_ADDRESS = new PublicKey("");
+// export const LAUNCH_ADDRESS = new PublicKey("");
 
 export const SPENDING_MEMBERS = [
   new PublicKey("CqK6aBSSycQU3igvptxvhf9YNC1v5EodCuCxuVLPPohh"),
-  new PublicKey("4Huto5Lv8z59tW4EezrYNSvBJhCc9U5bgmR5yH5csFD"),
+  new PublicKey("4Huto5Lv8z59tW4EezrYNSvBJhCc9U5bgmR5yH5csFDc"),
 ];
 // Even without a performance package, defaults need to be set
 export const PERFORMANCE_PACKAGE_GRANTEE = new PublicKey(
@@ -30,7 +33,10 @@ export const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 12_900_000; // 12.9M CARS
 export const TOTAL_ALLOCATION = 250_000; // 250k USDC
 export const PERFORMANCE_PACKAGE_UNLOCK_MONTHS = 18; // 18 months
 export const ADDITIONAL_CARVEOUT = 0; // 0 CARS
-export const ADDITIONAL_CARVEOUT_RECIPIENT = new PublicKey(""); // Unused
+export const ADDITIONAL_CARVEOUT_RECIPIENT = new PublicKey(
+  "11111111111111111111111111111111",
+); // Unused
+export const LAUNCH_DAYS = 4;
 
 export const TOKEN_NAME = "Rip Cars";
 export const TOKEN_SYMBOL = "CARS";
