@@ -282,6 +282,11 @@ export default function suite() {
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.failed);
 
+    // A failed ExecuteArbitrary stamps no hostile-failure timestamp
+    const storedDao = await this.futarchy.getDao(dao);
+    assert.equal(storedDao.lastFailedTakeoverAt.toString(), "0");
+    assert.equal(storedDao.lastFailedLiquidationAt.toString(), "0");
+
     // Verify Squads proposal is rejected
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const [squadsProposalPda] = multisig.getProposalPda({
@@ -298,7 +303,7 @@ export default function suite() {
   });
 
   it("finalizes when last trade is before the deadline (virtual crank covers the gap)", async function () {
-    // Trade for ~200,000s of the 864,000s proposal duration, then stop
+    // Trade for ~400,000s of the 864,000s proposal duration, then stop
     // trading and advance the clock past the deadline before finalizing.
     // The virtual crank in get_twap() fills in the gap after the last trade.
 
@@ -330,9 +335,11 @@ export default function suite() {
       })
       .rpc();
 
-    // Trade for ~200,000 seconds (10 swaps × 20,000s each), well short of
-    // the 864,000s proposal duration
-    for (let i = 0; i < 10; i++) {
+    // Trade for ~400,000 seconds (20 swaps × 20,000s each), well short of
+    // the 864,000s proposal duration. Each swap moves the pass observation
+    // up by the max change per update, so 20 swaps push the pass TWAP
+    // comfortably past the +10% snapshot threshold.
+    for (let i = 0; i < 20; i++) {
       await this.advanceBySeconds(20_000);
 
       await this.futarchy
@@ -352,7 +359,7 @@ export default function suite() {
         .rpc();
     }
 
-    // At ~200,000s into an 864,000s proposal — finalization should fail
+    // At ~400,000s into an 864,000s proposal — finalization should fail
     // because wall-clock time hasn't reached the deadline yet.
     const earlyCallbacks = expectError(
       "ProposalTooYoung",
@@ -373,7 +380,7 @@ export default function suite() {
       .then(earlyCallbacks[0], earlyCallbacks[1]);
 
     // Stop trading. Advance time past the proposal deadline (864,000s).
-    // Last trade was at ~200,000s. We need at least 664,000 more seconds.
+    // Last trade was at ~400,000s. We need at least 464,000 more seconds.
     await this.advanceBySeconds(700_000);
 
     // Finalize — should succeed because:
@@ -386,8 +393,95 @@ export default function suite() {
     assert.exists(storedProposal.state.passed);
   });
 
-  it("passes proposals when the team sponsors them and pass twap is slightly below fail twap", async function () {
-    // Create a new DAO with -5% team-sponsored threshold
+  it("fails proposals above the DAO threshold but below the snapshot threshold", async function () {
+    // The DAO's pass_threshold_bps is +3%, but the proposal snapshotted
+    // ExecuteArbitrary's +10% at create. Push the pass TWAP ~5% above fail —
+    // clearing the DAO threshold but not the snapshot — and the proposal
+    // must still fail, proving finalize judges at the snapshot.
+    const { baseVault, quoteVault, question } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao,
+    );
+
+    await this.conditionalVault
+      .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
+      .rpc();
+    await this.conditionalVault
+      .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
+      .rpc();
+
+    // Initial swap to pump the pass market price
+    await this.futarchy
+      .conditionalSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        proposal,
+        market: "pass",
+        swapType: "buy",
+        inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
+      })
+      .rpc();
+
+    // 5 swaps × 20,000s: each moves the pass observation up by the max
+    // change per update (1%), landing the pass TWAP ~5% above fail
+    for (let i = 0; i < 5; i++) {
+      await this.advanceBySeconds(20_000);
+
+      await this.futarchy
+        .conditionalSwapIx({
+          dao,
+          baseMint: META,
+          quoteMint: USDC,
+          proposal,
+          market: "pass",
+          swapType: "buy",
+          inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+        ])
+        .rpc();
+    }
+
+    // Advance past the 864,000s proposal deadline
+    await this.advanceBySeconds(800_000);
+
+    // Pin the scenario in the discriminating band: pass TWAP above the
+    // DAO's +3% threshold, at or below the snapshot's +10%
+    const now = (await this.banksClient.getClock()).unixTimestamp;
+    const { pass, fail } = (await this.futarchy.getDao(dao)).amm.state.futarchy;
+    const twap = (pool: typeof pass) => {
+      const start =
+        BigInt(pool.oracle.createdAtTimestamp.toString()) +
+        BigInt(pool.oracle.startDelaySeconds);
+      const finalInterval =
+        now - BigInt(pool.oracle.lastUpdatedTimestamp.toString());
+      const total =
+        BigInt(pool.oracle.aggregator.toString()) +
+        BigInt(pool.oracle.lastObservation.toString()) * finalInterval;
+      return total / (now - start);
+    };
+    const passTwap = twap(pass);
+    const failTwap = twap(fail);
+    assert.isTrue(passTwap > (failTwap * 10_300n) / 10_000n);
+    assert.isTrue(passTwap <= (failTwap * 11_000n) / 10_000n);
+
+    await this.futarchy.finalizeProposal(proposal);
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.exists(storedProposal.state.failed);
+  });
+
+  it("judges team-sponsored proposals at the snapshot threshold, not the DAO's team threshold", async function () {
+    // Create a new DAO with -5% team-sponsored threshold. That per-DAO
+    // threshold is vestigial: finalize judges at the proposal's snapshot
+    // (+10% for ExecuteArbitrary), so with the pass TWAP slightly below
+    // fail this sponsored proposal now fails.
     const META = await this.createMint(this.payer.publicKey, 6);
     const USDC = await this.createMint(this.payer.publicKey, 6);
 
@@ -550,16 +644,13 @@ export default function suite() {
       await this.advanceBySeconds(20_000);
     }
 
-    // Finalize the proposal - should pass because it's team-sponsored
-    // and the pass TWAP is within the -5% threshold
+    // Fails despite team sponsorship: the pass TWAP is below fail, nowhere
+    // near the +10% snapshot threshold
     await this.futarchy.finalizeProposal(teamSponsoredProposal);
 
     const storedProposal = await this.futarchy.getProposal(
       teamSponsoredProposal,
     );
-    assert.exists(
-      storedProposal.state.passed,
-      "Team-sponsored proposal should pass when within threshold",
-    );
+    assert.exists(storedProposal.state.failed);
   });
 }

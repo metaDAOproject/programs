@@ -142,12 +142,7 @@ impl FinalizeProposal<'_> {
         let pass_market_twap = calculate_twap(&pass)?;
         let fail_market_twap = calculate_twap(&fail)?;
 
-        let threshold_bps = if proposal.is_team_sponsored {
-            dao.team_sponsored_pass_threshold_bps
-        } else {
-            // Thanks to invariants this will never error - still it's better to be safe here.
-            i16::try_from(dao.pass_threshold_bps).map_err(|_| FutarchyError::CastingOverflow)?
-        };
+        let threshold_bps = proposal.pass_threshold_bps;
 
         // this can't overflow because each twap can only be MAX_PRICE (~1e31),
         // MAX_BPS + pass_threshold_bps is at most 1e5, and a u128 can hold
@@ -163,6 +158,18 @@ impl FinalizeProposal<'_> {
         };
 
         proposal.state = new_proposal_state;
+
+        if new_proposal_state == ProposalState::Failed {
+            match proposal.action {
+                ProposalAction::HostileTakeover { .. } => {
+                    dao.last_failed_takeover_at = clock.unix_timestamp
+                }
+                ProposalAction::HostileLiquidate { .. } => {
+                    dao.last_failed_liquidation_at = clock.unix_timestamp
+                }
+                _ => {}
+            }
+        }
 
         let cpi_accounts = ResolveQuestion {
             question: question.to_account_info(),

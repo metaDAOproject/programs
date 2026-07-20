@@ -186,7 +186,7 @@ export default function suite() {
       .splitTokensIx(question, baseVault, META, new BN(1000_000_000), 2)
       .rpc();
     await this.conditionalVault
-      .splitTokensIx(question, quoteVault, USDC, new BN(1000_000_000), 2)
+      .splitTokensIx(question, quoteVault, USDC, new BN(6_000_000_000), 2)
       .rpc();
 
     // Launch proposal A to put DAO in Futarchy state
@@ -204,8 +204,9 @@ export default function suite() {
     let daoState = await this.futarchy.getDao(dao);
     assert.isDefined(daoState.amm.state.futarchy);
 
-    // Step 3: Trade on pass market to make proposal A pass
-    // Using conditionalSwapIx which handles all the AMM interaction
+    // Step 3: Trade on pass market to make proposal A pass. 5,000 USDC into
+    // ~50,000 USDC reserves moves the pass price ~20%, clearing the
+    // proposal's +10% snapshot threshold.
     await this.futarchy
       .conditionalSwapIx({
         dao,
@@ -214,7 +215,7 @@ export default function suite() {
         proposal: proposalA,
         market: "pass",
         swapType: "buy",
-        inputAmount: new BN(900_000_000),
+        inputAmount: new BN(5_000_000_000),
         minOutputAmount: new BN(0),
       })
       .rpc();
