@@ -5,6 +5,7 @@ import initializeProposal from "./unit/initializeProposal.test.js";
 import initializeLargeSpendProposal from "./unit/initializeLargeSpendProposal.test.js";
 import initializeMintTokensProposal from "./unit/initializeMintTokensProposal.test.js";
 import initializeSpendingLimitChangeProposal from "./unit/initializeSpendingLimitChangeProposal.test.js";
+import initializeHostileTakeoverProposal from "./unit/initializeHostileTakeoverProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
@@ -64,6 +65,10 @@ export default function suite() {
   describe(
     "#initialize_spending_limit_change_proposal",
     initializeSpendingLimitChangeProposal,
+  );
+  describe(
+    "#initialize_hostile_takeover_proposal",
+    initializeHostileTakeoverProposal,
   );
   describe("#launch_proposal", launchProposal);
   describe("#finalize_proposal", finalizeProposal);

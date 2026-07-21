@@ -28,6 +28,8 @@ export type InitializeMintTokensProposalArgs =
   IdlTypes<FutarchyProgram>["InitializeMintTokensProposalArgs"];
 export type InitializeSpendingLimitChangeProposalArgs =
   IdlTypes<FutarchyProgram>["InitializeSpendingLimitChangeProposalArgs"];
+export type InitializeHostileTakeoverProposalArgs =
+  IdlTypes<FutarchyProgram>["InitializeHostileTakeoverProposalArgs"];
 export type InstructionParams = IdlTypes<FutarchyProgram>["InstructionParams"];
 export type SpendingLimitAction =
   IdlTypes<FutarchyProgram>["SpendingLimitAction"];

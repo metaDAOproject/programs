@@ -44,6 +44,7 @@ import {
   InitializeDaoParams,
   UpdateDaoParams,
   SetSpendingLimitArgs,
+  SpendingLimitAction,
 } from "./types/index.js";
 import { Futarchy, IDL as FutarchyIDL } from "./types/futarchy.js";
 import {
@@ -1125,6 +1126,123 @@ export class FutarchyClient {
 
     return this.futarchy.methods
       .initializeSpendingLimitChangeProposal({ config })
+      .accounts({
+        create: {
+          proposal,
+          dao,
+          squadsMultisig,
+          squadsTransaction,
+          squadsProposal,
+          question,
+          baseVault,
+          quoteVault,
+          proposer,
+          payer,
+          permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
+          squadsProgram: SQUADS_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        },
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
+  // Creates the question + conditional vaults, then the typed proposal. The
+  // payload declares the complete post-takeover regime: update_dao re-points
+  // the team, and unless the action is `keep`, set_spending_limit carries the
+  // declared limit end state.
+  async initializeHostileTakeoverProposal({
+    dao,
+    newTeamAddress,
+    spendingLimitAction,
+  }: {
+    dao: PublicKey;
+    newTeamAddress: PublicKey;
+    spendingLimitAction: SpendingLimitAction;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    const storedDao = await this.getDao(dao);
+    const { transactionIndex, squadsTransaction, squadsProposal, proposal } =
+      await this.getNextProposalAddrs(dao);
+
+    await this.vaultClient.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2,
+    );
+
+    const { question } = this.getProposalPdas(
+      proposal,
+      storedDao.baseMint,
+      storedDao.quoteMint,
+      dao,
+    );
+
+    // it's important that these happen in a single atomic transaction
+    await this.vaultClient
+      .initializeVaultIx(question, storedDao.baseMint, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
+        ),
+      )
+      .rpc();
+
+    await this.initializeHostileTakeoverProposalIx({
+      dao,
+      baseMint: storedDao.baseMint,
+      quoteMint: storedDao.quoteMint,
+      newTeamAddress,
+      spendingLimitAction,
+      transactionIndex,
+    })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
+      .rpc();
+
+    return { proposal, squadsProposal, squadsTransaction };
+  }
+
+  initializeHostileTakeoverProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    newTeamAddress,
+    spendingLimitAction,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    newTeamAddress: PublicKey;
+    spendingLimitAction: SpendingLimitAction;
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
+      getProposalAddrsForTransactionIndex({
+        dao,
+        transactionIndex,
+        programId: this.futarchy.programId,
+      });
+    const { question, baseVault, quoteVault } = this.getProposalPdas(
+      proposal,
+      baseMint,
+      quoteMint,
+      dao,
+    );
+
+    return this.futarchy.methods
+      .initializeHostileTakeoverProposal({
+        newTeamAddress,
+        spendingLimitAction,
+      })
       .accounts({
         create: {
           proposal,

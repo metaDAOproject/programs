@@ -98,6 +98,14 @@ pub mod futarchy {
         InitializeSpendingLimitChangeProposal::handle(ctx, args)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_hostile_takeover_proposal(
+        ctx: Context<InitializeHostileTakeoverProposal>,
+        args: InitializeHostileTakeoverProposalArgs,
+    ) -> Result<()> {
+        InitializeHostileTakeoverProposal::handle(ctx, args)
+    }
+
     #[access_control(ctx.accounts.validate(&params))]
     pub fn stake_to_proposal(
         ctx: Context<StakeToProposal>,
