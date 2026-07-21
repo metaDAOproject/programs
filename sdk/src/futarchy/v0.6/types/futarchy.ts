@@ -276,6 +276,134 @@ export type Futarchy = {
       ];
     },
     {
+      name: "initializeMintTokensProposal";
+      accounts: [
+        {
+          name: "create";
+          accounts: [
+            {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "dao";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsMultisig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsTransaction";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "squadsProposal";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "proposer";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "permissionlessAccount";
+              isMut: false;
+              isSigner: true;
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ];
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintGovernor";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
+          docs: [
+            "Only for governed mints (v0.8 launches): the `MintGovernor` holding the",
+            "base mint's authority.",
+          ];
+        },
+        {
+          name: "mintAuthority";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
+          docs: [
+            "Only for governed mints: the vault's minting rights on `mint_governor`.",
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeMintTokensProposalArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "stakeToProposal";
       accounts: [
         {
@@ -2253,6 +2381,22 @@ export type Futarchy = {
           {
             name: "amount";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeMintTokensProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
+            type: "u64";
+          },
+          {
+            name: "recipient";
+            type: "publicKey";
           },
         ];
       };
@@ -4406,6 +4550,134 @@ export const IDL: Futarchy = {
       ],
     },
     {
+      name: "initializeMintTokensProposal",
+      accounts: [
+        {
+          name: "create",
+          accounts: [
+            {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "dao",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsMultisig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsTransaction",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "squadsProposal",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "proposer",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "permissionlessAccount",
+              isMut: false,
+              isSigner: true,
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ],
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintGovernor",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
+          docs: [
+            "Only for governed mints (v0.8 launches): the `MintGovernor` holding the",
+            "base mint's authority.",
+          ],
+        },
+        {
+          name: "mintAuthority",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
+          docs: [
+            "Only for governed mints: the vault's minting rights on `mint_governor`.",
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeMintTokensProposalArgs",
+          },
+        },
+      ],
+    },
+    {
       name: "stakeToProposal",
       accounts: [
         {
@@ -6383,6 +6655,22 @@ export const IDL: Futarchy = {
           {
             name: "amount",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeMintTokensProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
+            type: "u64",
+          },
+          {
+            name: "recipient",
+            type: "publicKey",
           },
         ],
       },

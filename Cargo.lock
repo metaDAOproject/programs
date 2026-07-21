@@ -943,6 +943,7 @@ dependencies = [
  "anchor-spl",
  "conditional_vault",
  "damm_v2_cpi",
+ "mint_governor",
  "solana-security-txt",
  "squads-multisig-program",
 ]

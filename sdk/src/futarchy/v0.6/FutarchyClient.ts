@@ -12,6 +12,7 @@ import {
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
+  getMint,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { sha256 } from "@noble/hashes/sha256";
@@ -22,6 +23,7 @@ import {
   FUTARCHY_V0_6_PROGRAM_ID,
   CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   MAINNET_USDC,
+  MINT_GOVERNOR_V0_7_PROGRAM_ID,
   PERMISSIONLESS_ACCOUNT,
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_CONFIG_TREASURY,
@@ -32,6 +34,7 @@ import {
   LAUNCHPAD_V0_7_PROGRAM_ID,
   DAMM_V2_POOL_AUTHORITY,
 } from "../../constants.js";
+import { getMintAuthorityAddr } from "../../mint_governor/v0.7/pda.js";
 import { getEventAuthorityAddr } from "../../pda.js";
 import { InstructionUtils } from "../../utils.js";
 
@@ -881,6 +884,155 @@ export class FutarchyClient {
           squadsProgram: SQUADS_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         },
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
+  // Creates the question + conditional vaults, then the typed proposal. Reads
+  // the base mint's authority to pick the template branch: the Squads vault →
+  // SPL MintTo, a MintGovernor → mint_governor::mint_tokens; anything else is
+  // refused by the program.
+  async initializeMintTokensProposal({
+    dao,
+    amount,
+    recipient,
+  }: {
+    dao: PublicKey;
+    amount: BN;
+    recipient: PublicKey;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    const storedDao = await this.getDao(dao);
+    const { transactionIndex, squadsTransaction, squadsProposal, proposal } =
+      await this.getNextProposalAddrs(dao);
+
+    await this.vaultClient.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2,
+    );
+
+    const { question } = this.getProposalPdas(
+      proposal,
+      storedDao.baseMint,
+      storedDao.quoteMint,
+      dao,
+    );
+
+    // it's important that these happen in a single atomic transaction
+    await this.vaultClient
+      .initializeVaultIx(question, storedDao.baseMint, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
+        ),
+      )
+      .rpc();
+
+    const baseMintInfo = await getMint(
+      this.provider.connection,
+      storedDao.baseMint,
+    );
+    let mintGovernor: PublicKey | null = null;
+    if (
+      baseMintInfo.mintAuthority &&
+      !baseMintInfo.mintAuthority.equals(storedDao.squadsMultisigVault)
+    ) {
+      const authorityInfo = await this.provider.connection.getAccountInfo(
+        baseMintInfo.mintAuthority,
+      );
+      if (authorityInfo?.owner.equals(MINT_GOVERNOR_V0_7_PROGRAM_ID)) {
+        mintGovernor = baseMintInfo.mintAuthority;
+      }
+    }
+
+    await this.initializeMintTokensProposalIx({
+      dao,
+      baseMint: storedDao.baseMint,
+      quoteMint: storedDao.quoteMint,
+      amount,
+      recipient,
+      transactionIndex,
+      mintGovernor,
+    })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
+      .rpc();
+
+    return { proposal, squadsProposal, squadsTransaction };
+  }
+
+  initializeMintTokensProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    amount,
+    recipient,
+    transactionIndex,
+    mintGovernor = null,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    amount: BN;
+    recipient: PublicKey;
+    transactionIndex: bigint;
+    mintGovernor?: PublicKey | null;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
+      getProposalAddrsForTransactionIndex({
+        dao,
+        transactionIndex,
+        programId: this.futarchy.programId,
+      });
+    const { question, baseVault, quoteVault } = this.getProposalPdas(
+      proposal,
+      baseMint,
+      quoteMint,
+      dao,
+    );
+
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda: squadsMultisig,
+      index: 0,
+    })[0];
+
+    const mintAuthority = mintGovernor
+      ? getMintAuthorityAddr({
+          mintGovernor,
+          authorizedMinter: squadsMultisigVault,
+        })[0]
+      : null;
+
+    return this.futarchy.methods
+      .initializeMintTokensProposal({ amount, recipient })
+      .accounts({
+        create: {
+          proposal,
+          dao,
+          squadsMultisig,
+          squadsTransaction,
+          squadsProposal,
+          question,
+          baseVault,
+          quoteVault,
+          proposer,
+          payer,
+          permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
+          squadsProgram: SQUADS_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        },
+        baseMint,
+        mintGovernor,
+        mintAuthority,
       })
       .signers([PERMISSIONLESS_ACCOUNT]);
   }

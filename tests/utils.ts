@@ -9,8 +9,13 @@ import {
   PublicKey,
   Transaction,
 } from "@solana/web3.js";
+import * as multisig from "@sqds/multisig";
 import { TestContext } from "./main.test.js";
-import { getDaoAddr, PriceMath } from "@metadaoproject/programs";
+import {
+  getDaoAddr,
+  PERMISSIONLESS_ACCOUNT,
+  PriceMath,
+} from "@metadaoproject/programs";
 
 export const TEN_SECONDS_IN_SLOTS = 25n;
 export const ONE_MINUTE_IN_SLOTS = TEN_SECONDS_IN_SLOTS * 6n;
@@ -68,6 +73,45 @@ export async function setupBasicDao({
   });
 
   return dao;
+}
+
+// Squads' vault_transaction_execute gates only on the proposal's status, so
+// flipping the borsh enum tag from Active (1) to Approved (3) — same payload
+// shape, same size — makes the payload executable without running a market.
+export async function forceApproveSquadsProposal(
+  context: TestContext,
+  squadsProposal: PublicKey,
+) {
+  const account = await context.banksClient.getAccount(squadsProposal);
+  // 8 discriminator + 32 multisig + 8 transaction_index, then the status tag
+  assert.equal(account.data[48], 1);
+  account.data[48] = 3;
+  context.context.setAccount(squadsProposal, account);
+}
+
+export async function executeVaultTransaction(
+  context: TestContext,
+  dao: PublicKey,
+  squadsTransaction: PublicKey,
+) {
+  const vaultTransaction =
+    await multisig.accounts.VaultTransaction.fromAccountAddress(
+      context.squadsConnection,
+      squadsTransaction,
+    );
+
+  const { instruction } = await multisig.instructions.vaultTransactionExecute({
+    connection: context.squadsConnection,
+    multisigPda: multisig.getMultisigPda({ createKey: dao })[0],
+    transactionIndex: BigInt(vaultTransaction.index.toString()),
+    member: PERMISSIONLESS_ACCOUNT.publicKey,
+  });
+
+  const tx = new Transaction().add(instruction);
+  [tx.recentBlockhash] = await context.banksClient.getLatestBlockhash();
+  tx.feePayer = context.payer.publicKey;
+  tx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
+  await context.banksClient.processTransaction(tx);
 }
 
 /**

@@ -82,6 +82,14 @@ pub mod futarchy {
         InitializeLargeSpendProposal::handle(ctx, args)
     }
 
+    #[access_control(ctx.accounts.validate())]
+    pub fn initialize_mint_tokens_proposal(
+        ctx: Context<InitializeMintTokensProposal>,
+        args: InitializeMintTokensProposalArgs,
+    ) -> Result<()> {
+        InitializeMintTokensProposal::handle(ctx, args)
+    }
+
     #[access_control(ctx.accounts.validate(&params))]
     pub fn stake_to_proposal(
         ctx: Context<StakeToProposal>,

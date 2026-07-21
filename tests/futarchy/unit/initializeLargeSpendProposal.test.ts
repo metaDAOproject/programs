@@ -7,7 +7,12 @@ import {
 import BN from "bn.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
-import { expectError, setupBasicDao } from "../../utils.js";
+import {
+  executeVaultTransaction,
+  expectError,
+  forceApproveSquadsProposal,
+  setupBasicDao,
+} from "../../utils.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
@@ -172,5 +177,51 @@ export default function suite() {
         amount: AMOUNT_PER_MONTH.muln(3).addn(1),
       })
       .then(...callbacks);
+  });
+
+  it("the transfer payload executes once the Squads proposal is approved", async function () {
+    const amount = AMOUNT_PER_MONTH.muln(3);
+
+    const { squadsProposal, squadsTransaction } =
+      await this.futarchy.initializeLargeSpendProposal({ dao, amount });
+
+    const storedDao = await this.futarchy.getDao(dao);
+
+    // fund the treasury ATA the payload pulls from
+    const vaultBalanceBefore = await this.getTokenBalance(
+      USDC,
+      storedDao.squadsMultisigVault,
+    );
+    await this.mintTo(
+      USDC,
+      storedDao.squadsMultisigVault,
+      this.payer,
+      amount.toNumber(),
+    );
+
+    // the team is the payer
+    const teamBalanceBefore = await this.getTokenBalance(
+      USDC,
+      this.payer.publicKey,
+    );
+
+    await forceApproveSquadsProposal(this, squadsProposal);
+    await executeVaultTransaction(this, dao, squadsTransaction);
+
+    const teamBalanceAfter = await this.getTokenBalance(
+      USDC,
+      this.payer.publicKey,
+    );
+    assert.equal(
+      (teamBalanceAfter - teamBalanceBefore).toString(),
+      amount.toString(),
+    );
+    // the vault paid out exactly what we funded
+    assert.equal(
+      (
+        await this.getTokenBalance(USDC, storedDao.squadsMultisigVault)
+      ).toString(),
+      vaultBalanceBefore.toString(),
+    );
   });
 }
