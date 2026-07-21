@@ -207,7 +207,8 @@ export default function suite() {
     assert.equal(storedLimit.amount.toString(), "25000000000");
     assert.equal(storedLimit.remainingAmount.toString(), "25000000000");
     assert.equal(storedLimit.period, Period.Month);
-    assert.deepEqual(
+    // Squads stores members sorted, so compare as sets
+    assert.sameMembers(
       storedLimit.members.map((m) => m.toBase58()),
       newMembers.map((m) => m.toBase58()),
     );

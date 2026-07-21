@@ -74,6 +74,14 @@ pub mod futarchy {
         InitializeProposal::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_large_spend_proposal(
+        ctx: Context<InitializeLargeSpendProposal>,
+        args: InitializeLargeSpendProposalArgs,
+    ) -> Result<()> {
+        InitializeLargeSpendProposal::handle(ctx, args)
+    }
+
     #[access_control(ctx.accounts.validate(&params))]
     pub fn stake_to_proposal(
         ctx: Context<StakeToProposal>,

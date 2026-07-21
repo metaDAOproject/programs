@@ -22,6 +22,8 @@ export type InitializeDaoParams =
 export type UpdateDaoParams = IdlTypes<FutarchyProgram>["UpdateDaoParams"];
 export type SetSpendingLimitArgs =
   IdlTypes<FutarchyProgram>["SetSpendingLimitArgs"];
+export type InitializeLargeSpendProposalArgs =
+  IdlTypes<FutarchyProgram>["InitializeLargeSpendProposalArgs"];
 export type InstructionParams = IdlTypes<FutarchyProgram>["InstructionParams"];
 export type SpendingLimitAction =
   IdlTypes<FutarchyProgram>["SpendingLimitAction"];

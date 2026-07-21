@@ -55,6 +55,7 @@ import {
   getDaoAddr,
   getProposalAddr,
   getProposalAddrV2,
+  getProposalAddrsForTransactionIndex,
   getSpendingLimitAddr,
   getStakeAddr,
 } from "./pda.js";
@@ -746,6 +747,142 @@ export class FutarchyClient {
           failQuoteMint,
         ),
       ]);
+  }
+
+  // The PDA set for the proposal a typed create would make next: reads the
+  // multisig's current transaction index and derives the Squads transaction,
+  // Squads proposal, and futarchy proposal addresses for index + 1.
+  async getNextProposalAddrs(dao: PublicKey): Promise<{
+    transactionIndex: bigint;
+    squadsMultisig: PublicKey;
+    squadsTransaction: PublicKey;
+    squadsProposal: PublicKey;
+    proposal: PublicKey;
+  }> {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const multisigAccount = await multisig.accounts.Multisig.fromAccountAddress(
+      this.provider.connection,
+      multisigPda,
+    );
+    const transactionIndex =
+      BigInt(multisigAccount.transactionIndex.toString()) + 1n;
+
+    return {
+      transactionIndex,
+      ...getProposalAddrsForTransactionIndex({
+        dao,
+        transactionIndex,
+        programId: this.futarchy.programId,
+      }),
+    };
+  }
+
+  // Creates the question + conditional vaults, then the typed proposal — same
+  // flow as `initializeProposal`, except the instruction itself creates the
+  // Squads transaction and proposal at the next transaction index.
+  async initializeLargeSpendProposal({
+    dao,
+    amount,
+  }: {
+    dao: PublicKey;
+    amount: BN;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    const storedDao = await this.getDao(dao);
+    const { transactionIndex, squadsTransaction, squadsProposal, proposal } =
+      await this.getNextProposalAddrs(dao);
+
+    await this.vaultClient.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2,
+    );
+
+    const { question } = this.getProposalPdas(
+      proposal,
+      storedDao.baseMint,
+      storedDao.quoteMint,
+      dao,
+    );
+
+    // it's important that these happen in a single atomic transaction
+    await this.vaultClient
+      .initializeVaultIx(question, storedDao.baseMint, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
+        ),
+      )
+      .rpc();
+
+    await this.initializeLargeSpendProposalIx({
+      dao,
+      baseMint: storedDao.baseMint,
+      quoteMint: storedDao.quoteMint,
+      amount,
+      transactionIndex,
+    })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
+      .rpc();
+
+    return { proposal, squadsProposal, squadsTransaction };
+  }
+
+  initializeLargeSpendProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    amount,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    amount: BN;
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
+      getProposalAddrsForTransactionIndex({
+        dao,
+        transactionIndex,
+        programId: this.futarchy.programId,
+      });
+    const { question, baseVault, quoteVault } = this.getProposalPdas(
+      proposal,
+      baseMint,
+      quoteMint,
+      dao,
+    );
+
+    return this.futarchy.methods
+      .initializeLargeSpendProposal({ amount })
+      .accounts({
+        create: {
+          proposal,
+          dao,
+          squadsMultisig,
+          squadsTransaction,
+          squadsProposal,
+          question,
+          baseVault,
+          quoteVault,
+          proposer,
+          payer,
+          permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
+          squadsProgram: SQUADS_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        },
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
   async finalizeProposal(proposal: PublicKey) {

@@ -43,6 +43,44 @@ export const getProposalAddrV2 = ({
   return getProposalAddr(programId, squadsProposal);
 };
 
+// The Squads transaction + proposal PDAs for a given transaction index, and
+// the futarchy proposal PDA seeded on that Squads proposal. All three are
+// derivable before anything exists — the typed create instructions create the
+// Squads accounts at the next index themselves, so the client pins every
+// address up front. The client-side twin of the on-chain derivation.
+export const getProposalAddrsForTransactionIndex = ({
+  dao,
+  transactionIndex,
+  programId = FUTARCHY_V0_6_PROGRAM_ID,
+}: {
+  dao: PublicKey;
+  transactionIndex: bigint;
+  programId?: PublicKey;
+}): {
+  squadsMultisig: PublicKey;
+  squadsTransaction: PublicKey;
+  squadsProposal: PublicKey;
+  proposal: PublicKey;
+} => {
+  const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+  const [squadsTransaction] = multisig.getTransactionPda({
+    multisigPda,
+    index: transactionIndex,
+  });
+  const [squadsProposal] = multisig.getProposalPda({
+    multisigPda,
+    transactionIndex,
+  });
+  const [proposal] = getProposalAddr(programId, squadsProposal);
+
+  return {
+    squadsMultisig: multisigPda,
+    squadsTransaction,
+    squadsProposal,
+    proposal,
+  };
+};
+
 // The Squads spending-limit PDA — `create_key` is always the DAO, so the
 // address is derivable from the DAO alone.
 export const getSpendingLimitAddr = ({
