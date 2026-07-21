@@ -8,11 +8,11 @@ import BN from "bn.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import {
+  assertVaultTransactionPayload,
   executeVaultTransaction,
   expectError,
   forceApproveSquadsProposal,
 } from "../../utils.js";
-import { TestContext } from "../../main.test.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
@@ -55,47 +55,6 @@ export default function suite() {
     [dao] = getDaoAddr({ nonce, daoCreator: this.payer.publicKey });
   });
 
-  // The baked payload must be byte-identical to a directly-built
-  // set_spending_limit carrying the same config.
-  async function assertPayloadIsSetSpendingLimit(
-    context: TestContext,
-    squadsTransaction: PublicKey,
-    config: { amountPerMonth: BN; members: PublicKey[] } | null,
-  ) {
-    const storedDao = await context.futarchy.getDao(dao);
-
-    const vaultTransaction =
-      await multisig.accounts.VaultTransaction.fromAccountAddress(
-        context.squadsConnection,
-        squadsTransaction,
-      );
-    const message = vaultTransaction.message;
-
-    assert.equal(message.instructions.length, 1);
-    // the Squads vault is the inner transaction's only signer
-    assert.equal(message.numSigners, 1);
-    assert.ok(message.accountKeys[0].equals(storedDao.squadsMultisigVault));
-
-    const expectedIx = await context.futarchy
-      .setSpendingLimitIx({ dao, config })
-      .instruction();
-
-    const [innerIx] = message.instructions;
-    assert.ok(
-      message.accountKeys[innerIx.programIdIndex].equals(expectedIx.programId),
-    );
-    assert.deepEqual(
-      [...innerIx.accountIndexes].map((index) =>
-        message.accountKeys[index].toBase58(),
-      ),
-      expectedIx.keys.map((key) => key.pubkey.toBase58()),
-    );
-    assert.equal(
-      Buffer.from(innerIx.data).toString("hex"),
-      expectedIx.data.toString("hex"),
-    );
-  }
-
   it("bakes exactly one vault-signed set_spending_limit and snapshots the kind's params", async function () {
     const config = {
       amountPerMonth: new BN(25_000_000_000), // 25,000 USDC
@@ -108,7 +67,9 @@ export default function suite() {
         config,
       });
 
-    await assertPayloadIsSetSpendingLimit(this, squadsTransaction, config);
+    await assertVaultTransactionPayload(this, dao, squadsTransaction, [
+      await this.futarchy.setSpendingLimitIx({ dao, config }).instruction(),
+    ]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
 
@@ -144,7 +105,11 @@ export default function suite() {
         config: null,
       });
 
-    await assertPayloadIsSetSpendingLimit(this, squadsTransaction, null);
+    await assertVaultTransactionPayload(this, dao, squadsTransaction, [
+      await this.futarchy
+        .setSpendingLimitIx({ dao, config: null })
+        .instruction(),
+    ]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.isNull(storedProposal.action.spendingLimitChange.config);

@@ -8,6 +8,7 @@ import {
   Keypair,
   PublicKey,
   Transaction,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import { TestContext } from "./main.test.js";
@@ -112,6 +113,47 @@ export async function executeVaultTransaction(
   tx.feePayer = context.payer.publicKey;
   tx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
   await context.banksClient.processTransaction(tx);
+}
+
+// The payload a typed create baked into its Squads vault transaction must be
+// byte-identical to the expected instructions, in order, with the DAO's vault
+// as the inner transaction's only signer — nothing re-validates the payload at
+// execution, so exactness at create is the security model.
+export async function assertVaultTransactionPayload(
+  context: TestContext,
+  dao: PublicKey,
+  squadsTransaction: PublicKey,
+  expectedIxs: TransactionInstruction[],
+) {
+  const { squadsMultisigVault } = await context.futarchy.getDao(dao);
+
+  const vaultTransaction =
+    await multisig.accounts.VaultTransaction.fromAccountAddress(
+      context.squadsConnection,
+      squadsTransaction,
+    );
+  const message = vaultTransaction.message;
+
+  assert.equal(message.instructions.length, expectedIxs.length);
+  assert.equal(message.numSigners, 1);
+  assert.ok(message.accountKeys[0].equals(squadsMultisigVault));
+
+  expectedIxs.forEach((expectedIx, i) => {
+    const innerIx = message.instructions[i];
+    assert.ok(
+      message.accountKeys[innerIx.programIdIndex].equals(expectedIx.programId),
+    );
+    assert.deepEqual(
+      [...innerIx.accountIndexes].map((index) =>
+        message.accountKeys[index].toBase58(),
+      ),
+      expectedIx.keys.map((key) => key.pubkey.toBase58()),
+    );
+    assert.equal(
+      Buffer.from(innerIx.data).toString("hex"),
+      expectedIx.data.toString("hex"),
+    );
+  });
 }
 
 /**

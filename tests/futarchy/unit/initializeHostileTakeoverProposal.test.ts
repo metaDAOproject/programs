@@ -3,16 +3,12 @@ import {
   getSpendingLimitAddr,
   PriceMath,
 } from "@metadaoproject/programs";
-import {
-  ComputeBudgetProgram,
-  Keypair,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import {
+  assertVaultTransactionPayload,
   executeVaultTransaction,
   expectError,
   forceApproveSquadsProposal,
@@ -60,47 +56,6 @@ export default function suite() {
     [dao] = getDaoAddr({ nonce, daoCreator: this.payer.publicKey });
   });
 
-  // The baked payload must be byte-identical to directly-built instructions
-  // carrying the same declaration, in the same order.
-  async function assertBakedPayload(
-    context: TestContext,
-    squadsTransaction: PublicKey,
-    expectedIxs: TransactionInstruction[],
-  ) {
-    const storedDao = await context.futarchy.getDao(dao);
-
-    const vaultTransaction =
-      await multisig.accounts.VaultTransaction.fromAccountAddress(
-        context.squadsConnection,
-        squadsTransaction,
-      );
-    const message = vaultTransaction.message;
-
-    assert.equal(message.instructions.length, expectedIxs.length);
-    // the Squads vault is the inner transaction's only signer
-    assert.equal(message.numSigners, 1);
-    assert.ok(message.accountKeys[0].equals(storedDao.squadsMultisigVault));
-
-    expectedIxs.forEach((expectedIx, i) => {
-      const innerIx = message.instructions[i];
-      assert.ok(
-        message.accountKeys[innerIx.programIdIndex].equals(
-          expectedIx.programId,
-        ),
-      );
-      assert.deepEqual(
-        [...innerIx.accountIndexes].map((index) =>
-          message.accountKeys[index].toBase58(),
-        ),
-        expectedIx.keys.map((key) => key.pubkey.toBase58()),
-      );
-      assert.equal(
-        Buffer.from(innerIx.data).toString("hex"),
-        expectedIx.data.toString("hex"),
-      );
-    });
-  }
-
   // update_dao re-pointing the team and changing nothing else
   function expectedUpdateDaoIx(
     context: TestContext,
@@ -136,7 +91,7 @@ export default function suite() {
         spendingLimitAction: { keep: {} },
       });
 
-    await assertBakedPayload(this, squadsTransaction, [
+    await assertVaultTransactionPayload(this, dao, squadsTransaction, [
       await expectedUpdateDaoIx(this, newTeamAddress),
     ]);
 
@@ -177,7 +132,7 @@ export default function suite() {
         spendingLimitAction: { remove: {} },
       });
 
-    await assertBakedPayload(this, squadsTransaction, [
+    await assertVaultTransactionPayload(this, dao, squadsTransaction, [
       await expectedUpdateDaoIx(this, newTeamAddress),
       await this.futarchy
         .setSpendingLimitIx({ dao, config: null })
@@ -204,7 +159,7 @@ export default function suite() {
         spendingLimitAction: { set: { 0: config } },
       });
 
-    await assertBakedPayload(this, squadsTransaction, [
+    await assertVaultTransactionPayload(this, dao, squadsTransaction, [
       await expectedUpdateDaoIx(this, newTeamAddress),
       await this.futarchy.setSpendingLimitIx({ dao, config }).instruction(),
     ]);

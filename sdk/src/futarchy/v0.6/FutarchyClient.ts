@@ -82,6 +82,13 @@ export type ProposalVaults = {
   quoteVault: PublicKey;
 };
 
+// The slice of Anchor's MethodsBuilder the typed-create orchestrator drives.
+type TypedCreateMethodsBuilder = {
+  preInstructions(ixs: TransactionInstruction[]): {
+    rpc(): Promise<string>;
+  };
+};
+
 export class FutarchyClient {
   public readonly provider: AnchorProvider;
   public readonly futarchy: Program<Futarchy>;
@@ -781,15 +788,20 @@ export class FutarchyClient {
     };
   }
 
-  // Creates the question + conditional vaults, then the typed proposal — same
-  // flow as `initializeProposal`, except the instruction itself creates the
-  // Squads transaction and proposal at the next transaction index.
-  async initializeLargeSpendProposal({
+  // The shared orchestration of every typed create: create the question and
+  // both conditional vaults (same flow as `initializeProposal`), then send the
+  // per-type create instruction built by `buildCreateIx` — the instruction
+  // itself creates the Squads transaction and proposal at the next
+  // transaction index.
+  private async createTypedProposal({
     dao,
-    amount,
+    buildCreateIx,
   }: {
     dao: PublicKey;
-    amount: BN;
+    buildCreateIx: (params: {
+      storedDao: Dao;
+      transactionIndex: bigint;
+    }) => TypedCreateMethodsBuilder | Promise<TypedCreateMethodsBuilder>;
   }): Promise<{
     proposal: PublicKey;
     squadsProposal: PublicKey;
@@ -822,19 +834,84 @@ export class FutarchyClient {
       )
       .rpc();
 
-    await this.initializeLargeSpendProposalIx({
-      dao,
-      baseMint: storedDao.baseMint,
-      quoteMint: storedDao.quoteMint,
-      amount,
-      transactionIndex,
-    })
+    await (await buildCreateIx({ storedDao, transactionIndex }))
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
       ])
       .rpc();
 
     return { proposal, squadsProposal, squadsTransaction };
+  }
+
+  // The `create` composite accounts shared by every typed create instruction,
+  // for the proposal at the given transaction index.
+  private typedCreateAccounts({
+    dao,
+    baseMint,
+    quoteMint,
+    transactionIndex,
+    proposer,
+    payer,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    transactionIndex: bigint;
+    proposer: PublicKey;
+    payer: PublicKey;
+  }) {
+    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
+      getProposalAddrsForTransactionIndex({
+        dao,
+        transactionIndex,
+        programId: this.futarchy.programId,
+      });
+    const { question, baseVault, quoteVault } = this.getProposalPdas(
+      proposal,
+      baseMint,
+      quoteMint,
+      dao,
+    );
+
+    return {
+      proposal,
+      dao,
+      squadsMultisig,
+      squadsTransaction,
+      squadsProposal,
+      question,
+      baseVault,
+      quoteVault,
+      proposer,
+      payer,
+      permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
+      squadsProgram: SQUADS_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    };
+  }
+
+  async initializeLargeSpendProposal({
+    dao,
+    amount,
+  }: {
+    dao: PublicKey;
+    amount: BN;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    return this.createTypedProposal({
+      dao,
+      buildCreateIx: ({ storedDao, transactionIndex }) =>
+        this.initializeLargeSpendProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          amount,
+          transactionIndex,
+        }),
+    });
   }
 
   initializeLargeSpendProposalIx({
@@ -854,45 +931,24 @@ export class FutarchyClient {
     proposer?: PublicKey;
     payer?: PublicKey;
   }) {
-    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
-      getProposalAddrsForTransactionIndex({
-        dao,
-        transactionIndex,
-        programId: this.futarchy.programId,
-      });
-    const { question, baseVault, quoteVault } = this.getProposalPdas(
-      proposal,
-      baseMint,
-      quoteMint,
-      dao,
-    );
-
     return this.futarchy.methods
       .initializeLargeSpendProposal({ amount })
       .accounts({
-        create: {
-          proposal,
+        create: this.typedCreateAccounts({
           dao,
-          squadsMultisig,
-          squadsTransaction,
-          squadsProposal,
-          question,
-          baseVault,
-          quoteVault,
+          baseMint,
+          quoteMint,
+          transactionIndex,
           proposer,
           payer,
-          permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
-          squadsProgram: SQUADS_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        },
+        }),
       })
       .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
-  // Creates the question + conditional vaults, then the typed proposal. Reads
-  // the base mint's authority to pick the template branch: the Squads vault →
-  // SPL MintTo, a MintGovernor → mint_governor::mint_tokens; anything else is
-  // refused by the program.
+  // Reads the base mint's authority to pick the template branch: the Squads
+  // vault → SPL MintTo, a MintGovernor → mint_governor::mint_tokens; anything
+  // else is refused by the program.
   async initializeMintTokensProposal({
     dao,
     amount,
@@ -906,65 +962,37 @@ export class FutarchyClient {
     squadsProposal: PublicKey;
     squadsTransaction: PublicKey;
   }> {
-    const storedDao = await this.getDao(dao);
-    const { transactionIndex, squadsTransaction, squadsProposal, proposal } =
-      await this.getNextProposalAddrs(dao);
-
-    await this.vaultClient.initializeQuestion(
-      sha256(`Will ${proposal} pass?/FAIL/PASS`),
-      proposal,
-      2,
-    );
-
-    const { question } = this.getProposalPdas(
-      proposal,
-      storedDao.baseMint,
-      storedDao.quoteMint,
+    return this.createTypedProposal({
       dao,
-    );
+      buildCreateIx: async ({ storedDao, transactionIndex }) => {
+        const baseMintInfo = await getMint(
+          this.provider.connection,
+          storedDao.baseMint,
+        );
+        let mintGovernor: PublicKey | null = null;
+        if (
+          baseMintInfo.mintAuthority &&
+          !baseMintInfo.mintAuthority.equals(storedDao.squadsMultisigVault)
+        ) {
+          const authorityInfo = await this.provider.connection.getAccountInfo(
+            baseMintInfo.mintAuthority,
+          );
+          if (authorityInfo?.owner.equals(MINT_GOVERNOR_V0_7_PROGRAM_ID)) {
+            mintGovernor = baseMintInfo.mintAuthority;
+          }
+        }
 
-    // it's important that these happen in a single atomic transaction
-    await this.vaultClient
-      .initializeVaultIx(question, storedDao.baseMint, 2)
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
-        ),
-      )
-      .rpc();
-
-    const baseMintInfo = await getMint(
-      this.provider.connection,
-      storedDao.baseMint,
-    );
-    let mintGovernor: PublicKey | null = null;
-    if (
-      baseMintInfo.mintAuthority &&
-      !baseMintInfo.mintAuthority.equals(storedDao.squadsMultisigVault)
-    ) {
-      const authorityInfo = await this.provider.connection.getAccountInfo(
-        baseMintInfo.mintAuthority,
-      );
-      if (authorityInfo?.owner.equals(MINT_GOVERNOR_V0_7_PROGRAM_ID)) {
-        mintGovernor = baseMintInfo.mintAuthority;
-      }
-    }
-
-    await this.initializeMintTokensProposalIx({
-      dao,
-      baseMint: storedDao.baseMint,
-      quoteMint: storedDao.quoteMint,
-      amount,
-      recipient,
-      transactionIndex,
-      mintGovernor,
-    })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
-      ])
-      .rpc();
-
-    return { proposal, squadsProposal, squadsTransaction };
+        return this.initializeMintTokensProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          amount,
+          recipient,
+          transactionIndex,
+          mintGovernor,
+        });
+      },
+    });
   }
 
   initializeMintTokensProposalIx({
@@ -988,21 +1016,9 @@ export class FutarchyClient {
     proposer?: PublicKey;
     payer?: PublicKey;
   }) {
-    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
-      getProposalAddrsForTransactionIndex({
-        dao,
-        transactionIndex,
-        programId: this.futarchy.programId,
-      });
-    const { question, baseVault, quoteVault } = this.getProposalPdas(
-      proposal,
-      baseMint,
-      quoteMint,
-      dao,
-    );
-
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
-      multisigPda: squadsMultisig,
+      multisigPda,
       index: 0,
     })[0];
 
@@ -1016,21 +1032,14 @@ export class FutarchyClient {
     return this.futarchy.methods
       .initializeMintTokensProposal({ amount, recipient })
       .accounts({
-        create: {
-          proposal,
+        create: this.typedCreateAccounts({
           dao,
-          squadsMultisig,
-          squadsTransaction,
-          squadsProposal,
-          question,
-          baseVault,
-          quoteVault,
+          baseMint,
+          quoteMint,
+          transactionIndex,
           proposer,
           payer,
-          permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
-          squadsProgram: SQUADS_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        },
+        }),
         baseMint,
         mintGovernor,
         mintAuthority,
@@ -1038,8 +1047,7 @@ export class FutarchyClient {
       .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
-  // Creates the question + conditional vaults, then the typed proposal. The
-  // payload is one vault-signed set_spending_limit: `config` replaces the
+  // The payload is one vault-signed set_spending_limit: `config` replaces the
   // record verbatim, null removes it.
   async initializeSpendingLimitChangeProposal({
     dao,
@@ -1052,46 +1060,17 @@ export class FutarchyClient {
     squadsProposal: PublicKey;
     squadsTransaction: PublicKey;
   }> {
-    const storedDao = await this.getDao(dao);
-    const { transactionIndex, squadsTransaction, squadsProposal, proposal } =
-      await this.getNextProposalAddrs(dao);
-
-    await this.vaultClient.initializeQuestion(
-      sha256(`Will ${proposal} pass?/FAIL/PASS`),
-      proposal,
-      2,
-    );
-
-    const { question } = this.getProposalPdas(
-      proposal,
-      storedDao.baseMint,
-      storedDao.quoteMint,
+    return this.createTypedProposal({
       dao,
-    );
-
-    // it's important that these happen in a single atomic transaction
-    await this.vaultClient
-      .initializeVaultIx(question, storedDao.baseMint, 2)
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
-        ),
-      )
-      .rpc();
-
-    await this.initializeSpendingLimitChangeProposalIx({
-      dao,
-      baseMint: storedDao.baseMint,
-      quoteMint: storedDao.quoteMint,
-      config,
-      transactionIndex,
-    })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
-      ])
-      .rpc();
-
-    return { proposal, squadsProposal, squadsTransaction };
+      buildCreateIx: ({ storedDao, transactionIndex }) =>
+        this.initializeSpendingLimitChangeProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          config,
+          transactionIndex,
+        }),
+    });
   }
 
   initializeSpendingLimitChangeProposalIx({
@@ -1111,45 +1090,24 @@ export class FutarchyClient {
     proposer?: PublicKey;
     payer?: PublicKey;
   }) {
-    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
-      getProposalAddrsForTransactionIndex({
-        dao,
-        transactionIndex,
-        programId: this.futarchy.programId,
-      });
-    const { question, baseVault, quoteVault } = this.getProposalPdas(
-      proposal,
-      baseMint,
-      quoteMint,
-      dao,
-    );
-
     return this.futarchy.methods
       .initializeSpendingLimitChangeProposal({ config })
       .accounts({
-        create: {
-          proposal,
+        create: this.typedCreateAccounts({
           dao,
-          squadsMultisig,
-          squadsTransaction,
-          squadsProposal,
-          question,
-          baseVault,
-          quoteVault,
+          baseMint,
+          quoteMint,
+          transactionIndex,
           proposer,
           payer,
-          permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
-          squadsProgram: SQUADS_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        },
+        }),
       })
       .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
-  // Creates the question + conditional vaults, then the typed proposal. The
-  // payload declares the complete post-takeover regime: update_dao re-points
-  // the team, and unless the action is `keep`, set_spending_limit carries the
-  // declared limit end state.
+  // The payload declares the complete post-takeover regime: update_dao
+  // re-points the team, and unless the action is `keep`, set_spending_limit
+  // carries the declared limit end state.
   async initializeHostileTakeoverProposal({
     dao,
     newTeamAddress,
@@ -1163,47 +1121,18 @@ export class FutarchyClient {
     squadsProposal: PublicKey;
     squadsTransaction: PublicKey;
   }> {
-    const storedDao = await this.getDao(dao);
-    const { transactionIndex, squadsTransaction, squadsProposal, proposal } =
-      await this.getNextProposalAddrs(dao);
-
-    await this.vaultClient.initializeQuestion(
-      sha256(`Will ${proposal} pass?/FAIL/PASS`),
-      proposal,
-      2,
-    );
-
-    const { question } = this.getProposalPdas(
-      proposal,
-      storedDao.baseMint,
-      storedDao.quoteMint,
+    return this.createTypedProposal({
       dao,
-    );
-
-    // it's important that these happen in a single atomic transaction
-    await this.vaultClient
-      .initializeVaultIx(question, storedDao.baseMint, 2)
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
-        ),
-      )
-      .rpc();
-
-    await this.initializeHostileTakeoverProposalIx({
-      dao,
-      baseMint: storedDao.baseMint,
-      quoteMint: storedDao.quoteMint,
-      newTeamAddress,
-      spendingLimitAction,
-      transactionIndex,
-    })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
-      ])
-      .rpc();
-
-    return { proposal, squadsProposal, squadsTransaction };
+      buildCreateIx: ({ storedDao, transactionIndex }) =>
+        this.initializeHostileTakeoverProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          newTeamAddress,
+          spendingLimitAction,
+          transactionIndex,
+        }),
+    });
   }
 
   initializeHostileTakeoverProposalIx({
@@ -1225,40 +1154,20 @@ export class FutarchyClient {
     proposer?: PublicKey;
     payer?: PublicKey;
   }) {
-    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
-      getProposalAddrsForTransactionIndex({
-        dao,
-        transactionIndex,
-        programId: this.futarchy.programId,
-      });
-    const { question, baseVault, quoteVault } = this.getProposalPdas(
-      proposal,
-      baseMint,
-      quoteMint,
-      dao,
-    );
-
     return this.futarchy.methods
       .initializeHostileTakeoverProposal({
         newTeamAddress,
         spendingLimitAction,
       })
       .accounts({
-        create: {
-          proposal,
+        create: this.typedCreateAccounts({
           dao,
-          squadsMultisig,
-          squadsTransaction,
-          squadsProposal,
-          question,
-          baseVault,
-          quoteVault,
+          baseMint,
+          quoteMint,
+          transactionIndex,
           proposer,
           payer,
-          permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
-          squadsProgram: SQUADS_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        },
+        }),
       })
       .signers([PERMISSIONLESS_ACCOUNT]);
   }

@@ -1,13 +1,13 @@
 import { getDaoAddr, PriceMath } from "@metadaoproject/programs";
 import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
 import {
+  createTransferInstruction,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import BN from "bn.js";
 import { assert } from "chai";
-import * as multisig from "@sqds/multisig";
 import {
+  assertVaultTransactionPayload,
   executeVaultTransaction,
   expectError,
   forceApproveSquadsProposal,
@@ -87,48 +87,19 @@ export default function suite() {
 
     const storedDao = await this.futarchy.getDao(dao);
 
-    const vaultTransaction =
-      await multisig.accounts.VaultTransaction.fromAccountAddress(
-        this.squadsConnection,
-        squadsTransaction,
-      );
-    const message = vaultTransaction.message;
-
-    assert.equal(message.instructions.length, 1);
-    // the Squads vault is the inner transaction's only signer
-    assert.equal(message.numSigners, 1);
-    assert.ok(message.accountKeys[0].equals(storedDao.squadsMultisigVault));
-
-    const [transferIx] = message.instructions;
-    assert.ok(
-      message.accountKeys[transferIx.programIdIndex].equals(TOKEN_PROGRAM_ID),
-    );
-
-    const accounts = [...transferIx.accountIndexes].map(
-      (index) => message.accountKeys[index],
-    );
-    assert.equal(accounts.length, 3);
-    assert.ok(
-      accounts[0].equals(
+    // the recipient is the team's quote ATA, pinned at create
+    await assertVaultTransactionPayload(this, dao, squadsTransaction, [
+      createTransferInstruction(
         getAssociatedTokenAddressSync(
           USDC,
           storedDao.squadsMultisigVault,
           true,
         ),
-      ),
-    );
-    assert.ok(
-      accounts[1].equals(
         getAssociatedTokenAddressSync(USDC, this.payer.publicKey, true),
+        storedDao.squadsMultisigVault,
+        BigInt(amount.toString()),
       ),
-    );
-    assert.ok(accounts[2].equals(storedDao.squadsMultisigVault));
-
-    // SPL transfer data: tag 3 + u64 LE amount
-    const data = Buffer.from(transferIx.data);
-    assert.equal(data.length, 9);
-    assert.equal(data[0], 3);
-    assert.equal(new BN(data.subarray(1), "le").toString(), amount.toString());
+    ]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
 

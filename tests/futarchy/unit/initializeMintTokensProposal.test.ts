@@ -1,21 +1,20 @@
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import {
   AuthorityType,
+  createMintToInstruction,
   createSetAuthorityInstruction,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import BN from "bn.js";
 import { assert } from "chai";
-import * as multisig from "@sqds/multisig";
 import {
   getMintAuthorityAddr,
   MintGovernorClient,
-  MINT_GOVERNOR_V0_7_PROGRAM_ID,
 } from "@metadaoproject/programs";
 import { BankrunProvider } from "anchor-bankrun";
 import { initializeMintGovernorWithDefaults } from "../../mintGovernor/utils.js";
 import {
+  assertVaultTransactionPayload,
   executeVaultTransaction,
   expectError,
   forceApproveSquadsProposal,
@@ -91,38 +90,14 @@ export default function suite() {
         recipient,
       });
 
-    const vaultTransaction =
-      await multisig.accounts.VaultTransaction.fromAccountAddress(
-        this.squadsConnection,
-        squadsTransaction,
-      );
-    const message = vaultTransaction.message;
-
-    assert.equal(message.instructions.length, 1);
-    // the Squads vault is the inner transaction's only signer
-    assert.equal(message.numSigners, 1);
-    assert.ok(message.accountKeys[0].equals(squadsMultisigVault));
-
-    const [mintIx] = message.instructions;
-    assert.ok(
-      message.accountKeys[mintIx.programIdIndex].equals(TOKEN_PROGRAM_ID),
-    );
-
-    const accounts = [...mintIx.accountIndexes].map(
-      (index) => message.accountKeys[index],
-    );
-    assert.equal(accounts.length, 3);
-    assert.ok(accounts[0].equals(META));
-    assert.ok(
-      accounts[1].equals(getAssociatedTokenAddressSync(META, recipient, true)),
-    );
-    assert.ok(accounts[2].equals(squadsMultisigVault));
-
-    // SPL mint_to data: tag 7 + u64 LE amount
-    const data = Buffer.from(mintIx.data);
-    assert.equal(data.length, 9);
-    assert.equal(data[0], 7);
-    assert.equal(new BN(data.subarray(1), "le").toString(), amount.toString());
+    await assertVaultTransactionPayload(this, dao, squadsTransaction, [
+      createMintToInstruction(
+        META,
+        getAssociatedTokenAddressSync(META, recipient, true),
+        squadsMultisigVault,
+        BigInt(amount.toString()),
+      ),
+    ]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
 
@@ -185,32 +160,9 @@ export default function suite() {
       })
       .instruction();
 
-    const vaultTransaction =
-      await multisig.accounts.VaultTransaction.fromAccountAddress(
-        this.squadsConnection,
-        squadsTransaction,
-      );
-    const message = vaultTransaction.message;
-
-    assert.equal(message.instructions.length, 1);
-    assert.equal(message.numSigners, 1);
-    assert.ok(message.accountKeys[0].equals(squadsMultisigVault));
-
-    const [mintIx] = message.instructions;
-    assert.ok(
-      message.accountKeys[mintIx.programIdIndex].equals(
-        MINT_GOVERNOR_V0_7_PROGRAM_ID,
-      ),
-    );
-
-    const accounts = [...mintIx.accountIndexes].map(
-      (index) => message.accountKeys[index],
-    );
-    assert.deepEqual(
-      accounts.map((account) => account.toBase58()),
-      expectedIx.keys.map((key) => key.pubkey.toBase58()),
-    );
-    assert.deepEqual(Buffer.from(mintIx.data), expectedIx.data);
+    await assertVaultTransactionPayload(this, dao, squadsTransaction, [
+      expectedIx,
+    ]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
 
