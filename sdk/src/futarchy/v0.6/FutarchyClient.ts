@@ -1037,6 +1037,114 @@ export class FutarchyClient {
       .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
+  // Creates the question + conditional vaults, then the typed proposal. The
+  // payload is one vault-signed set_spending_limit: `config` replaces the
+  // record verbatim, null removes it.
+  async initializeSpendingLimitChangeProposal({
+    dao,
+    config,
+  }: {
+    dao: PublicKey;
+    config: SetSpendingLimitArgs["config"];
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    const storedDao = await this.getDao(dao);
+    const { transactionIndex, squadsTransaction, squadsProposal, proposal } =
+      await this.getNextProposalAddrs(dao);
+
+    await this.vaultClient.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2,
+    );
+
+    const { question } = this.getProposalPdas(
+      proposal,
+      storedDao.baseMint,
+      storedDao.quoteMint,
+      dao,
+    );
+
+    // it's important that these happen in a single atomic transaction
+    await this.vaultClient
+      .initializeVaultIx(question, storedDao.baseMint, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
+        ),
+      )
+      .rpc();
+
+    await this.initializeSpendingLimitChangeProposalIx({
+      dao,
+      baseMint: storedDao.baseMint,
+      quoteMint: storedDao.quoteMint,
+      config,
+      transactionIndex,
+    })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
+      .rpc();
+
+    return { proposal, squadsProposal, squadsTransaction };
+  }
+
+  initializeSpendingLimitChangeProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    config,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    config: SetSpendingLimitArgs["config"];
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
+      getProposalAddrsForTransactionIndex({
+        dao,
+        transactionIndex,
+        programId: this.futarchy.programId,
+      });
+    const { question, baseVault, quoteVault } = this.getProposalPdas(
+      proposal,
+      baseMint,
+      quoteMint,
+      dao,
+    );
+
+    return this.futarchy.methods
+      .initializeSpendingLimitChangeProposal({ config })
+      .accounts({
+        create: {
+          proposal,
+          dao,
+          squadsMultisig,
+          squadsTransaction,
+          squadsProposal,
+          question,
+          baseVault,
+          quoteVault,
+          proposer,
+          payer,
+          permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
+          squadsProgram: SQUADS_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        },
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
   async finalizeProposal(proposal: PublicKey) {
     let storedProposal = await this.getProposal(proposal);
     let storedDao = await this.getDao(storedProposal.dao);

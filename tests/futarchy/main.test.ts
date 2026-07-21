@@ -4,6 +4,7 @@ import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
 import initializeLargeSpendProposal from "./unit/initializeLargeSpendProposal.test.js";
 import initializeMintTokensProposal from "./unit/initializeMintTokensProposal.test.js";
+import initializeSpendingLimitChangeProposal from "./unit/initializeSpendingLimitChangeProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
@@ -60,6 +61,10 @@ export default function suite() {
   describe("#initialize_proposal", initializeProposal);
   describe("#initialize_large_spend_proposal", initializeLargeSpendProposal);
   describe("#initialize_mint_tokens_proposal", initializeMintTokensProposal);
+  describe(
+    "#initialize_spending_limit_change_proposal",
+    initializeSpendingLimitChangeProposal,
+  );
   describe("#launch_proposal", launchProposal);
   describe("#finalize_proposal", finalizeProposal);
   describe("#update_dao", updateDao);

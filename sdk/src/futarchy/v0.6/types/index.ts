@@ -26,6 +26,8 @@ export type InitializeLargeSpendProposalArgs =
   IdlTypes<FutarchyProgram>["InitializeLargeSpendProposalArgs"];
 export type InitializeMintTokensProposalArgs =
   IdlTypes<FutarchyProgram>["InitializeMintTokensProposalArgs"];
+export type InitializeSpendingLimitChangeProposalArgs =
+  IdlTypes<FutarchyProgram>["InitializeSpendingLimitChangeProposalArgs"];
 export type InstructionParams = IdlTypes<FutarchyProgram>["InstructionParams"];
 export type SpendingLimitAction =
   IdlTypes<FutarchyProgram>["SpendingLimitAction"];

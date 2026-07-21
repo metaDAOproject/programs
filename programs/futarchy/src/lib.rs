@@ -90,6 +90,14 @@ pub mod futarchy {
         InitializeMintTokensProposal::handle(ctx, args)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_spending_limit_change_proposal(
+        ctx: Context<InitializeSpendingLimitChangeProposal>,
+        args: InitializeSpendingLimitChangeProposalArgs,
+    ) -> Result<()> {
+        InitializeSpendingLimitChangeProposal::handle(ctx, args)
+    }
+
     #[access_control(ctx.accounts.validate(&params))]
     pub fn stake_to_proposal(
         ctx: Context<StakeToProposal>,
