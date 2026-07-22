@@ -6,11 +6,13 @@ import initializeLargeSpendProposal from "./unit/initializeLargeSpendProposal.te
 import initializeMintTokensProposal from "./unit/initializeMintTokensProposal.test.js";
 import initializeSpendingLimitChangeProposal from "./unit/initializeSpendingLimitChangeProposal.test.js";
 import initializeHostileTakeoverProposal from "./unit/initializeHostileTakeoverProposal.test.js";
+import initializeHostileLiquidateProposal from "./unit/initializeHostileLiquidateProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
 import setSpendingLimit from "./unit/setSpendingLimit.test.js";
 import syncSpendingLimit from "./unit/syncSpendingLimit.test.js";
+import applyLiquidation from "./unit/applyLiquidation.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
@@ -70,11 +72,16 @@ export default function suite() {
     "#initialize_hostile_takeover_proposal",
     initializeHostileTakeoverProposal,
   );
+  describe(
+    "#initialize_hostile_liquidate_proposal",
+    initializeHostileLiquidateProposal,
+  );
   describe("#launch_proposal", launchProposal);
   describe("#finalize_proposal", finalizeProposal);
   describe("#update_dao", updateDao);
   describe("#set_spending_limit", setSpendingLimit);
   describe("#sync_spending_limit", syncSpendingLimit);
+  describe("#apply_liquidation", applyLiquidation);
 
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);

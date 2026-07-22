@@ -1,6 +1,11 @@
-import { PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/programs";
+import {
+  PERMISSIONLESS_ACCOUNT,
+  PriceMath,
+  getDaoAddr,
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
+  Keypair,
   PublicKey,
   Transaction,
   TransactionMessage,
@@ -652,5 +657,212 @@ export default function suite() {
       teamSponsoredProposal,
     );
     assert.exists(storedProposal.state.failed);
+  });
+
+  it("passes an uncontested large_spend at its -10% threshold", async function () {
+    // Fresh DAO with a spending limit — the suite DAO has none and already
+    // has a live proposal
+    const BASE = await this.createMint(this.payer.publicKey, 6);
+    const QUOTE = await this.createMint(this.payer.publicKey, 6);
+
+    await this.createTokenAccount(BASE, this.payer.publicKey);
+    await this.createTokenAccount(QUOTE, this.payer.publicKey);
+
+    await this.mintTo(BASE, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+    await this.mintTo(
+      QUOTE,
+      this.payer.publicKey,
+      this.payer,
+      200_000 * 1_000_000,
+    );
+
+    const nonce = new BN(Math.floor(Math.random() * 1000000));
+
+    await this.futarchy
+      .initializeDaoIx({
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        params: {
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(10_000),
+          minBaseFutarchicLiquidity: new BN(10_000),
+          passThresholdBps: 300,
+          nonce,
+          initialSpendingLimit: {
+            amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+            members: [this.payer.publicKey],
+          },
+          baseToStake: new BN(0),
+          teamSponsoredPassThresholdBps: 300,
+          teamAddress: this.payer.publicKey,
+        },
+        provideLiquidity: true,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const [spendDao] = getDaoAddr({
+      nonce,
+      daoCreator: this.payer.publicKey,
+    });
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao: spendDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal: spendProposal, squadsProposal: spendSquadsProposal } =
+      await this.futarchy.initializeLargeSpendProposal({
+        dao: spendDao,
+        amount: new BN(1_000_000_000), // 1,000 USDC
+      });
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal: spendProposal,
+        dao: spendDao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: spendProposal,
+        dao: spendDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        squadsProposal: spendSquadsProposal,
+      })
+      .rpc();
+
+    // Nobody contests the market: one swap after the TWAP start delay
+    // records an observation in both markets and leaves the TWAPs equal
+    await this.advanceBySeconds(60 * 60 * 24 + 60);
+    await this.futarchy
+      .spotSwapIx({
+        dao: spendDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        swapType: "buy",
+        inputAmount: new BN(1_000),
+      })
+      .rpc();
+
+    // Past the kind's 1.5-day duration snapshot
+    await this.advanceBySeconds(129_600);
+    await this.futarchy.finalizeProposal(spendProposal);
+
+    // Equal TWAPs clear the -10% snapshot threshold
+    const storedProposal = await this.futarchy.getProposal(spendProposal);
+    assert.exists(storedProposal.state.passed);
+
+    const squadsProposalAccount =
+      await multisig.accounts.Proposal.fromAccountAddress(
+        this.squadsConnection,
+        spendSquadsProposal,
+      );
+    assert.isTrue(
+      multisig.generated.isProposalStatusApproved(squadsProposalAccount.status),
+    );
+  });
+
+  it("stamps only its own cooldown timestamp when a hostile proposal fails", async function () {
+    // Fresh DAO — the suite DAO already has a live proposal
+    const BASE = await this.createMint(this.payer.publicKey, 6);
+    const QUOTE = await this.createMint(this.payer.publicKey, 6);
+
+    await this.createTokenAccount(BASE, this.payer.publicKey);
+    await this.createTokenAccount(QUOTE, this.payer.publicKey);
+
+    await this.mintTo(BASE, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+    await this.mintTo(
+      QUOTE,
+      this.payer.publicKey,
+      this.payer,
+      200_000 * 1_000_000,
+    );
+
+    const hostileDao = await setupBasicDao({
+      context: this,
+      baseMint: BASE,
+      quoteMint: QUOTE,
+    });
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao: hostileDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal: hostileProposal, squadsProposal } =
+      await this.futarchy.initializeHostileTakeoverProposal({
+        dao: hostileDao,
+        newTeamAddress: Keypair.generate().publicKey,
+        spendingLimitAction: { keep: {} },
+      });
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: hostileProposal,
+        dao: hostileDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        squadsProposal,
+      })
+      .rpc();
+
+    // One swap after the TWAP start delay records an observation in both
+    // markets; the equal TWAPs it leaves can't clear the +10% threshold
+    await this.advanceBySeconds(60 * 60 * 24 + 60);
+    await this.futarchy
+      .spotSwapIx({
+        dao: hostileDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        swapType: "buy",
+        inputAmount: new BN(1_000),
+      })
+      .rpc();
+
+    await this.advanceBySeconds(60 * 60 * 24 * 20);
+    await this.futarchy.finalizeProposal(hostileProposal);
+
+    const storedProposal = await this.futarchy.getProposal(hostileProposal);
+    assert.exists(storedProposal.state.failed);
+
+    // The failed takeover stamps its own timestamp and only its own
+    const clock = await this.banksClient.getClock();
+    const storedDao = await this.futarchy.getDao(hostileDao);
+    assert.equal(
+      storedDao.lastFailedTakeoverAt.toString(),
+      clock.unixTimestamp.toString(),
+    );
+    assert.equal(storedDao.lastFailedLiquidationAt.toString(), "0");
   });
 }

@@ -1172,6 +1172,65 @@ export class FutarchyClient {
       .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
+  // The payload is one apply_liquidation call whose accounts — including this
+  // proposal's own not-yet-created PDA — the program bakes by derivation from
+  // the next transaction index. The liquidator is stored in `action`.
+  async initializeHostileLiquidateProposal({
+    dao,
+    liquidator,
+  }: {
+    dao: PublicKey;
+    liquidator: PublicKey;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    return this.createTypedProposal({
+      dao,
+      buildCreateIx: ({ storedDao, transactionIndex }) =>
+        this.initializeHostileLiquidateProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          liquidator,
+          transactionIndex,
+        }),
+    });
+  }
+
+  initializeHostileLiquidateProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    liquidator,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    liquidator: PublicKey;
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    return this.futarchy.methods
+      .initializeHostileLiquidateProposal({ liquidator })
+      .accounts({
+        create: this.typedCreateAccounts({
+          dao,
+          baseMint,
+          quoteMint,
+          transactionIndex,
+          proposer,
+          payer,
+        }),
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
   async finalizeProposal(proposal: PublicKey) {
     let storedProposal = await this.getProposal(proposal);
     let storedDao = await this.getDao(storedProposal.dao);

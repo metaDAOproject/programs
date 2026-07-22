@@ -106,6 +106,14 @@ pub mod futarchy {
         InitializeHostileTakeoverProposal::handle(ctx, args)
     }
 
+    #[access_control(ctx.accounts.validate())]
+    pub fn initialize_hostile_liquidate_proposal(
+        ctx: Context<InitializeHostileLiquidateProposal>,
+        args: InitializeHostileLiquidateProposalArgs,
+    ) -> Result<()> {
+        InitializeHostileLiquidateProposal::handle(ctx, args)
+    }
+
     #[access_control(ctx.accounts.validate(&params))]
     pub fn stake_to_proposal(
         ctx: Context<StakeToProposal>,
@@ -148,6 +156,11 @@ pub mod futarchy {
     #[access_control(ctx.accounts.validate())]
     pub fn sync_spending_limit(ctx: Context<SyncSpendingLimit>) -> Result<()> {
         SyncSpendingLimit::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn apply_liquidation(ctx: Context<ApplyLiquidation>) -> Result<()> {
+        ApplyLiquidation::handle(ctx)
     }
 
     pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {

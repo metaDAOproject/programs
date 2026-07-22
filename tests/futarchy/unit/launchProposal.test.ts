@@ -449,4 +449,254 @@ export default function suite() {
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
+
+  it("fails to launch an unsponsored large_spend, launches once sponsored", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal, squadsProposal } =
+      await this.futarchy.initializeLargeSpendProposal({
+        dao,
+        amount: new BN(10_000),
+      });
+
+    const callbacks = expectError(
+      "ProposalNotTeamSponsored",
+      "launched an unsponsored large spend proposal",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
+      .rpc();
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.exists(storedProposal.state.pending);
+  });
+
+  it("fails to launch an unsponsored spending_limit_change, launches once sponsored", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal, squadsProposal } =
+      await this.futarchy.initializeSpendingLimitChangeProposal({
+        dao,
+        config: {
+          amountPerMonth: new BN(20_000),
+          members: [this.payer.publicKey],
+        },
+      });
+
+    const callbacks = expectError(
+      "ProposalNotTeamSponsored",
+      "launched an unsponsored spending limit change proposal",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
+      .rpc();
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.exists(storedProposal.state.pending);
+  });
+
+  it("fails to launch a hostile takeover during its cooldown, launches once it elapses", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    // Fail a first takeover so the DAO stamps last_failed_takeover_at
+    const first = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: Keypair.generate().publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: first.proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal: first.squadsProposal,
+      })
+      .rpc();
+
+    // One swap after the TWAP start delay records an observation in both
+    // markets; the equal TWAPs it leaves can't clear the +10% threshold
+    await this.advanceBySeconds(60 * 60 * 24 + 60);
+    await this.futarchy
+      .spotSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        swapType: "buy",
+        inputAmount: new BN(1_000),
+      })
+      .rpc();
+
+    await this.advanceBySeconds(60 * 60 * 24 * 20);
+    await this.futarchy.finalizeProposal(first.proposal);
+
+    const failedProposal = await this.futarchy.getProposal(first.proposal);
+    assert.exists(failedProposal.state.failed);
+
+    const second = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: Keypair.generate().publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+
+    const callbacks = expectError(
+      "HostileCooldownActive",
+      "launched a hostile takeover during its cooldown",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: second.proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal: second.squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    // The 20-day cooldown gate is inclusive of its final second
+    await this.advanceBySeconds(60 * 60 * 24 * 20);
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: second.proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal: second.squadsProposal,
+      })
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
+      .rpc();
+
+    const storedProposal = await this.futarchy.getProposal(second.proposal);
+    assert.exists(storedProposal.state.pending);
+  });
 }

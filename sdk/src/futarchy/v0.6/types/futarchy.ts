@@ -612,6 +612,110 @@ export type Futarchy = {
       ];
     },
     {
+      name: "initializeHostileLiquidateProposal";
+      accounts: [
+        {
+          name: "create";
+          accounts: [
+            {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "dao";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsMultisig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsTransaction";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "squadsProposal";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "proposer";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "permissionlessAccount";
+              isMut: false;
+              isSigner: true;
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ];
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeHostileLiquidateProposalArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "stakeToProposal";
       accounts: [
         {
@@ -1088,6 +1192,79 @@ export type Futarchy = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "applyLiquidation";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "The linked liquidation proposal, baked into the payload at create.",
+          ];
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: true;
+          docs: [
+            "The vault's signature is only obtainable through a Squads vault",
+            "transaction execution, so the caller is a passed proposal's payload.",
+          ];
+        },
+        {
+          name: "ammPosition";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "seeds, but whether the account exists at execution is unknowable at",
+            "create, so it is parsed manually — a passed liquidation must never",
+            "brick on treasury shape.",
+          ];
+        },
+        {
+          name: "ammBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "vaultBaseAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "vaultQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -2576,6 +2753,18 @@ export type Futarchy = {
           },
           {
             name: "teamAddress";
+            type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeHostileLiquidateProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "liquidator";
             type: "publicKey";
           },
         ];
@@ -5129,6 +5318,110 @@ export const IDL: Futarchy = {
       ],
     },
     {
+      name: "initializeHostileLiquidateProposal",
+      accounts: [
+        {
+          name: "create",
+          accounts: [
+            {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "dao",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsMultisig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsTransaction",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "squadsProposal",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "proposer",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "permissionlessAccount",
+              isMut: false,
+              isSigner: true,
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ],
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeHostileLiquidateProposalArgs",
+          },
+        },
+      ],
+    },
+    {
       name: "stakeToProposal",
       accounts: [
         {
@@ -5605,6 +5898,79 @@ export const IDL: Futarchy = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "applyLiquidation",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: false,
+          isSigner: false,
+          docs: [
+            "The linked liquidation proposal, baked into the payload at create.",
+          ],
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: true,
+          docs: [
+            "The vault's signature is only obtainable through a Squads vault",
+            "transaction execution, so the caller is a passed proposal's payload.",
+          ],
+        },
+        {
+          name: "ammPosition",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "seeds, but whether the account exists at execution is unknowable at",
+            "create, so it is parsed manually — a passed liquidation must never",
+            "brick on treasury shape.",
+          ],
+        },
+        {
+          name: "ammBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "vaultBaseAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "vaultQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -7093,6 +7459,18 @@ export const IDL: Futarchy = {
           },
           {
             name: "teamAddress",
+            type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeHostileLiquidateProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "liquidator",
             type: "publicKey",
           },
         ],
