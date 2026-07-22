@@ -25,6 +25,8 @@ pub struct UpdateDao<'info> {
 
 impl UpdateDao<'_> {
     pub fn validate(&self) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
         // Prevent parameter updates during active futarchy markets
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());

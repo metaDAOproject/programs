@@ -14,6 +14,7 @@ import setSpendingLimit from "./unit/setSpendingLimit.test.js";
 import syncSpendingLimit from "./unit/syncSpendingLimit.test.js";
 import applyLiquidation from "./unit/applyLiquidation.test.js";
 import liquidatorPath from "./unit/liquidatorPath.test.js";
+import liquidatedGuards from "./unit/liquidatedGuards.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
@@ -84,6 +85,7 @@ export default function suite() {
   describe("#sync_spending_limit", syncSpendingLimit);
   describe("#apply_liquidation", applyLiquidation);
   describe("liquidator path", liquidatorPath);
+  describe("liquidated guards", liquidatedGuards);
 
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);

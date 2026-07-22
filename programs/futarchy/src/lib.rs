@@ -169,6 +169,7 @@ pub mod futarchy {
 
     // AMM instructions
 
+    #[access_control(ctx.accounts.validate())]
     pub fn spot_swap(ctx: Context<SpotSwap>, params: SpotSwapParams) -> Result<()> {
         SpotSwap::handle(ctx, params)
     }
@@ -181,6 +182,7 @@ pub mod futarchy {
         ConditionalSwap::handle(ctx, params)
     }
 
+    #[access_control(ctx.accounts.validate())]
     pub fn provide_liquidity(
         ctx: Context<ProvideLiquidity>,
         params: ProvideLiquidityParams,
