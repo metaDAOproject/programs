@@ -2487,6 +2487,18 @@ export type Futarchy = {
             name: "teamAddress";
             type: "publicKey";
           },
+          {
+            name: "optimisticProposal";
+            type: {
+              option: {
+                defined: "OptimisticProposal";
+              };
+            };
+          },
+          {
+            name: "isOptimisticGovernanceEnabled";
+            type: "bool";
+          },
         ];
       };
     },
@@ -7197,6 +7209,18 @@ export const IDL: Futarchy = {
           {
             name: "teamAddress",
             type: "publicKey",
+          },
+          {
+            name: "optimisticProposal",
+            type: {
+              option: {
+                defined: "OptimisticProposal",
+              },
+            },
+          },
+          {
+            name: "isOptimisticGovernanceEnabled",
+            type: "bool",
           },
         ],
       },

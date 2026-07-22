@@ -205,4 +205,6 @@ pub struct OldDao {
     /// Can be negative to allow for team-sponsored proposals to pass by default.
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
+    pub optimistic_proposal: Option<OptimisticProposal>,
+    pub is_optimistic_governance_enabled: bool,
 }
