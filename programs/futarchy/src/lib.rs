@@ -167,6 +167,10 @@ pub mod futarchy {
         ResizeDao::handle(ctx)
     }
 
+    pub fn resize_proposal(ctx: Context<ResizeProposal>) -> Result<()> {
+        ResizeProposal::handle(ctx)
+    }
+
     // AMM instructions
 
     #[access_control(ctx.accounts.validate())]

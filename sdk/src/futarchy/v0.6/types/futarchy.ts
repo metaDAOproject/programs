@@ -1303,6 +1303,36 @@ export type Futarchy = {
       args: [];
     },
     {
+      name: "resizeProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "The proposal's DAO, checked against the deserialized proposal in the",
+            "handler. Must already be migrated to the new layout (crank DAOs first).",
+          ];
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "spotSwap";
       accounts: [
         {
@@ -2620,6 +2650,80 @@ export type Futarchy = {
             type: {
               defined: "ProposalAction";
             };
+          },
+        ];
+      };
+    },
+    {
+      name: "oldProposal";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "number";
+            type: "u32";
+          },
+          {
+            name: "proposer";
+            type: "publicKey";
+          },
+          {
+            name: "timestampEnqueued";
+            type: "i64";
+          },
+          {
+            name: "state";
+            type: {
+              defined: "ProposalState";
+            };
+          },
+          {
+            name: "baseVault";
+            type: "publicKey";
+          },
+          {
+            name: "quoteVault";
+            type: "publicKey";
+          },
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "question";
+            type: "publicKey";
+          },
+          {
+            name: "durationInSeconds";
+            type: "u32";
+          },
+          {
+            name: "squadsProposal";
+            type: "publicKey";
+          },
+          {
+            name: "passBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "passQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "failBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "failQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "isTeamSponsored";
+            type: "bool";
           },
         ];
       };
@@ -6026,6 +6130,36 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
+      name: "resizeProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: false,
+          isSigner: false,
+          docs: [
+            "The proposal's DAO, checked against the deserialized proposal in the",
+            "handler. Must already be migrated to the new layout (crank DAOs first).",
+          ],
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "spotSwap",
       accounts: [
         {
@@ -7343,6 +7477,80 @@ export const IDL: Futarchy = {
             type: {
               defined: "ProposalAction",
             },
+          },
+        ],
+      },
+    },
+    {
+      name: "oldProposal",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "number",
+            type: "u32",
+          },
+          {
+            name: "proposer",
+            type: "publicKey",
+          },
+          {
+            name: "timestampEnqueued",
+            type: "i64",
+          },
+          {
+            name: "state",
+            type: {
+              defined: "ProposalState",
+            },
+          },
+          {
+            name: "baseVault",
+            type: "publicKey",
+          },
+          {
+            name: "quoteVault",
+            type: "publicKey",
+          },
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "question",
+            type: "publicKey",
+          },
+          {
+            name: "durationInSeconds",
+            type: "u32",
+          },
+          {
+            name: "squadsProposal",
+            type: "publicKey",
+          },
+          {
+            name: "passBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "passQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "failBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "failQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "isTeamSponsored",
+            type: "bool",
           },
         ],
       },
