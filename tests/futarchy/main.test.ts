@@ -13,6 +13,7 @@ import updateDao from "./unit/updateDao.test.js";
 import setSpendingLimit from "./unit/setSpendingLimit.test.js";
 import syncSpendingLimit from "./unit/syncSpendingLimit.test.js";
 import applyLiquidation from "./unit/applyLiquidation.test.js";
+import liquidatorPath from "./unit/liquidatorPath.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
@@ -82,6 +83,7 @@ export default function suite() {
   describe("#set_spending_limit", setSpendingLimit);
   describe("#sync_spending_limit", syncSpendingLimit);
   describe("#apply_liquidation", applyLiquidation);
+  describe("liquidator path", liquidatorPath);
 
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);

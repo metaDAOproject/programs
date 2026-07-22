@@ -4701,6 +4701,11 @@ export type Futarchy = {
       name: "TooManySpendingLimitMembers";
       msg: "A spending limit can have at most 10 members";
     },
+    {
+      code: 6053;
+      name: "InvalidLiquidator";
+      msg: "Invalid liquidator";
+    },
   ];
 };
 
@@ -9406,6 +9411,11 @@ export const IDL: Futarchy = {
       code: 6052,
       name: "TooManySpendingLimitMembers",
       msg: "A spending limit can have at most 10 members",
+    },
+    {
+      code: 6053,
+      name: "InvalidLiquidator",
+      msg: "Invalid liquidator",
     },
   ],
 };

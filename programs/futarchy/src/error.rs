@@ -110,4 +110,6 @@ pub enum FutarchyError {
     AlreadyLiquidated,
     #[msg("A spending limit can have at most 10 members")]
     TooManySpendingLimitMembers,
+    #[msg("Invalid liquidator")]
+    InvalidLiquidator,
 }

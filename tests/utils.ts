@@ -26,7 +26,7 @@ export const DAY_IN_SLOTS = HOUR_IN_SLOTS * 24n;
 export const toBN = (val: bigint): typeof BN.prototype =>
   new BN(val.toString());
 
-const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
+export const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
 export async function setupBasicDao({
   context,
@@ -74,6 +74,83 @@ export async function setupBasicDao({
   });
 
   return dao;
+}
+
+// Pumps the pass market far enough above fail to clear any kind's threshold
+// (including HostileLiquidate's +25%), runs out the proposal duration, and
+// finalizes to Passed.
+export async function passProposal(
+  context: TestContext,
+  {
+    dao,
+    proposal,
+    baseMint,
+    quoteMint,
+  }: {
+    dao: PublicKey;
+    proposal: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+  },
+) {
+  const { question, baseVault, quoteVault } = context.futarchy.getProposalPdas(
+    proposal,
+    baseMint,
+    quoteMint,
+    dao,
+  );
+
+  // Splitting both sides also creates the trader's conditional token ATAs
+  await context.conditionalVault
+    .splitTokensIx(question, baseVault, baseMint, new BN(10 * 1_000_000), 2)
+    .rpc();
+  await context.conditionalVault
+    .splitTokensIx(
+      question,
+      quoteVault,
+      quoteMint,
+      new BN(33_000 * 1_000_000),
+      2,
+    )
+    .rpc();
+
+  await context.futarchy
+    .conditionalSwapIx({
+      dao,
+      baseMint,
+      quoteMint,
+      proposal,
+      market: "pass",
+      swapType: "buy",
+      inputAmount: new BN(20_000 * 1_000_000),
+      minOutputAmount: new BN(0),
+    })
+    .rpc();
+
+  for (let i = 0; i < 100; i++) {
+    await context.advanceBySeconds(20_000);
+
+    await context.futarchy
+      .conditionalSwapIx({
+        dao,
+        baseMint,
+        quoteMint,
+        proposal,
+        market: "pass",
+        swapType: "buy",
+        inputAmount: new BN(10),
+        minOutputAmount: new BN(0),
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+      ])
+      .rpc();
+  }
+
+  await context.futarchy.finalizeProposal(proposal);
+
+  const storedProposal = await context.futarchy.getProposal(proposal);
+  assert.exists(storedProposal.state.passed);
 }
 
 // Squads' vault_transaction_execute gates only on the proposal's status, so
