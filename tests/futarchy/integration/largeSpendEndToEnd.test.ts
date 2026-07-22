@@ -6,7 +6,7 @@ import { executeVaultTransaction } from "../../utils.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
-// The "behaviorally optimistic" replacement claim: a sponsored, uncontested
+// The "behaviorally optimistic" replacement: a sponsored, uncontested
 // team payment goes through at -10% with no optimistic machinery.
 export default function suite() {
   it("pays the team's quote ATA: sponsor, launch, uncontested pass at -10%, execute", async function () {

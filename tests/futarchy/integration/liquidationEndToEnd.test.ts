@@ -33,7 +33,7 @@ import {
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
-// The no-window path (#38): finalize + execute + sync land as one
+// The no-window path: finalize + execute + sync land as one
 // transaction, then the liquidated DAO runs as an estate — liquidator-gated
 // enqueue, permissionless approve, ordinary Squads execution — while
 // third-party LPs exit on their own schedule.
