@@ -77,9 +77,9 @@ export async function setupBasicDao({
 }
 
 // Pumps the pass market far enough above fail to clear any kind's threshold
-// (including HostileLiquidate's +25%), runs out the proposal duration, and
-// finalizes to Passed.
-export async function passProposal(
+// (including HostileLiquidate's +25%) and runs out the proposal duration,
+// leaving the proposal ready to finalize to Passed.
+export async function pumpPassMarket(
   context: TestContext,
   {
     dao,
@@ -146,10 +146,23 @@ export async function passProposal(
       ])
       .rpc();
   }
+}
 
-  await context.futarchy.finalizeProposal(proposal);
+// pumpPassMarket, then finalize to Passed.
+export async function passProposal(
+  context: TestContext,
+  args: {
+    dao: PublicKey;
+    proposal: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+  },
+) {
+  await pumpPassMarket(context, args);
 
-  const storedProposal = await context.futarchy.getProposal(proposal);
+  await context.futarchy.finalizeProposal(args.proposal);
+
+  const storedProposal = await context.futarchy.getProposal(args.proposal);
   assert.exists(storedProposal.state.passed);
 }
 
