@@ -142,6 +142,7 @@ impl FinalizeProposal<'_> {
         let pass_market_twap = calculate_twap(&pass)?;
         let fail_market_twap = calculate_twap(&fail)?;
 
+        // Take the pass threshold from the proposal. DAO pass threshold is legacy.
         let threshold_bps = proposal.pass_threshold_bps;
 
         // this can't overflow because each twap can only be MAX_PRICE (~1e31),

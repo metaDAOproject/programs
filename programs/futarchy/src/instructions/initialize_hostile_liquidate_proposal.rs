@@ -16,8 +16,6 @@ pub struct InitializeHostileLiquidateProposal<'info> {
 
 impl InitializeHostileLiquidateProposal<'_> {
     pub fn validate(&self) -> Result<()> {
-        // No per-type creation rules: the liquidator is stored in `action`
-        // and the market prices the choice itself.
         self.create.validate()
     }
 

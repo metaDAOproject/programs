@@ -73,7 +73,6 @@ pub struct Dao {
     /// Set once by `apply_liquidation`, never cleared.
     pub liquidator: Option<Pubkey>,
     /// Unix time of the last failed hostile takeover. 0 = never.
-    /// Stamped by `finalize_proposal`, checked by `launch_proposal`.
     pub last_failed_takeover_at: i64,
     /// Unix time of the last failed hostile liquidation. 0 = never.
     pub last_failed_liquidation_at: i64,

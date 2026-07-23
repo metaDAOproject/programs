@@ -36,16 +36,11 @@ pub struct Proposal {
     pub fail_base_mint: Pubkey,
     pub fail_quote_mint: Pubkey,
     pub is_team_sponsored: bool,
-    /// Snapshot of the kind's threshold at create. Only `finalize_proposal`
-    /// reads it.
+    /// Snapshot of the kind's threshold at create.
     pub pass_threshold_bps: i16,
-    /// Snapshot of the kind's blockable flag at create. Only
-    /// `admin_cancel_proposal` reads it.
+    /// Snapshot of the kind's blockable flag at create.
     pub council_can_block: bool,
-    /// The typed action parameters; the variant is the proposal's kind, and
-    /// `ProposalAction::params()` resolves its per-kind constants.
-    /// `apply_liquidation` reads the liquidator from here; clients read the
-    /// rest.
+    /// The typed action parameters.
     pub action: ProposalAction,
 }
 

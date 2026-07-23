@@ -51,9 +51,7 @@ pub struct ApplyLiquidation<'info> {
 impl ApplyLiquidation<'_> {
     pub fn validate(&self) -> Result<()> {
         // Like every payload instruction that mutates the DAO, only lands in
-        // Spot — the sweep always computes against a whole spot pool. A
-        // mid-market execution reverts whole and stays retryable: the
-        // approved Squads transaction lands once that market finalizes.
+        // Spot — the sweep always computes against a whole spot pool.
         require!(
             matches!(self.dao.amm.state, PoolState::Spot { .. }),
             FutarchyError::PoolNotInSpotState
@@ -91,7 +89,7 @@ impl ApplyLiquidation<'_> {
 
         // The destructure is the kind check: the vault's signature alone is
         // kind-blind, so without it an execute_arbitrary payload could invoke
-        // liquidation at 10 days / +10% blockable.
+        // liquidation at a different duration/threshold.
         let ProposalAction::HostileLiquidate { liquidator } = &proposal.action else {
             return err!(FutarchyError::InvalidProposalKind);
         };
