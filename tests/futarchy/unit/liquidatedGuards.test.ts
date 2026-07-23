@@ -184,6 +184,7 @@ export default function suite() {
       proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 50,
     });
 
     await executeVaultTransaction(this, dao, squadsTransaction);

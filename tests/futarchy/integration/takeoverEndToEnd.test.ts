@@ -164,6 +164,7 @@ export default function suite() {
       proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 90,
     });
 
     // Packed execute + sync: the declared regime is live on Squads the moment

@@ -163,6 +163,8 @@ export async function passProposal(
     proposal: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
+    buyAmount?: typeof BN.prototype;
+    cranks?: number;
   },
 ) {
   await pumpPassMarket(context, args);

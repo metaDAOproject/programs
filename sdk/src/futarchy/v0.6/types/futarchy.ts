@@ -2360,10 +2360,7 @@ export type Futarchy = {
           },
           {
             name: "lastFailedTakeoverAt";
-            docs: [
-              "Unix time of the last failed hostile takeover. 0 = never.",
-              "Stamped by `finalize_proposal`, checked by `launch_proposal`.",
-            ];
+            docs: ["Unix time of the last failed hostile takeover. 0 = never."];
             type: "i64";
           },
           {
@@ -2625,28 +2622,17 @@ export type Futarchy = {
           },
           {
             name: "passThresholdBps";
-            docs: [
-              "Snapshot of the kind's threshold at create. Only `finalize_proposal`",
-              "reads it.",
-            ];
+            docs: ["Snapshot of the kind's threshold at create."];
             type: "i16";
           },
           {
             name: "councilCanBlock";
-            docs: [
-              "Snapshot of the kind's blockable flag at create. Only",
-              "`admin_cancel_proposal` reads it.",
-            ];
+            docs: ["Snapshot of the kind's blockable flag at create."];
             type: "bool";
           },
           {
             name: "action";
-            docs: [
-              "The typed action parameters; the variant is the proposal's kind, and",
-              "`ProposalAction::params()` resolves its per-kind constants.",
-              "`apply_liquidation` reads the liquidator from here; clients read the",
-              "rest.",
-            ];
+            docs: ["The typed action parameters."];
             type: {
               defined: "ProposalAction";
             };
@@ -7187,10 +7173,7 @@ export const IDL: Futarchy = {
           },
           {
             name: "lastFailedTakeoverAt",
-            docs: [
-              "Unix time of the last failed hostile takeover. 0 = never.",
-              "Stamped by `finalize_proposal`, checked by `launch_proposal`.",
-            ],
+            docs: ["Unix time of the last failed hostile takeover. 0 = never."],
             type: "i64",
           },
           {
@@ -7452,28 +7435,17 @@ export const IDL: Futarchy = {
           },
           {
             name: "passThresholdBps",
-            docs: [
-              "Snapshot of the kind's threshold at create. Only `finalize_proposal`",
-              "reads it.",
-            ],
+            docs: ["Snapshot of the kind's threshold at create."],
             type: "i16",
           },
           {
             name: "councilCanBlock",
-            docs: [
-              "Snapshot of the kind's blockable flag at create. Only",
-              "`admin_cancel_proposal` reads it.",
-            ],
+            docs: ["Snapshot of the kind's blockable flag at create."],
             type: "bool",
           },
           {
             name: "action",
-            docs: [
-              "The typed action parameters; the variant is the proposal's kind, and",
-              "`ProposalAction::params()` resolves its per-kind constants.",
-              "`apply_liquidation` reads the liquidator from here; clients read the",
-              "rest.",
-            ],
+            docs: ["The typed action parameters."],
             type: {
               defined: "ProposalAction",
             },

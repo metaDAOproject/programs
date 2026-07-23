@@ -158,6 +158,7 @@ export default function suite() {
       proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 50,
     });
 
     // finalize + execute + sync packed in ONE transaction: the DAO never

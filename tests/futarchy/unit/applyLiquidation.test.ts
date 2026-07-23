@@ -181,6 +181,7 @@ export default function suite() {
       proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 50,
     });
 
     // The expected sweep, computed from the live pre-execution reserves
@@ -287,6 +288,7 @@ export default function suite() {
       proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 50,
     });
 
     try {
@@ -341,6 +343,7 @@ export default function suite() {
       proposal: a.proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 50,
     });
 
     await this.futarchy
@@ -357,6 +360,7 @@ export default function suite() {
       proposal: b.proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 50,
     });
 
     await executeVaultTransaction(this, dao, a.squadsTransaction);
@@ -404,6 +408,7 @@ export default function suite() {
       proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 50,
     });
 
     const preDao = await this.futarchy.getDao(dao);
@@ -457,6 +462,7 @@ export default function suite() {
       proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 50,
     });
 
     // Manufacture an existing-but-empty position at the treasury's PDA
@@ -513,6 +519,7 @@ export default function suite() {
       proposal,
       baseMint: META,
       quoteMint: USDC,
+      cranks: 50,
     });
 
     // A proposal launched in the finalize→execute gap puts the pool
