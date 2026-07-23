@@ -76,9 +76,12 @@ export async function setupBasicDao({
   return dao;
 }
 
-// Pumps the pass market far enough above fail to clear any kind's threshold
-// (including HostileLiquidate's +25%) and runs out the proposal duration,
-// leaving the proposal ready to finalize to Passed.
+// Pumps the pass market with a one-shot conditional-quote buy, then cranks
+// the TWAPs `cranks` times, 20,000s apart. The defaults clear every kind's
+// threshold (including HostileLiquidate's +25%) for the standard test market
+// (~62,500 USDC / 62.5 META per conditional pool at price 1e15) and outlast
+// every kind's duration. Deeper pools need a larger buyAmount; tighter
+// clamps or longer durations need more cranks.
 export async function pumpPassMarket(
   context: TestContext,
   {
@@ -86,11 +89,15 @@ export async function pumpPassMarket(
     proposal,
     baseMint,
     quoteMint,
+    buyAmount = new BN(20_000 * 1_000_000),
+    cranks = 100,
   }: {
     dao: PublicKey;
     proposal: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
+    buyAmount?: typeof BN.prototype;
+    cranks?: number;
   },
 ) {
   const { question, baseVault, quoteVault } = context.futarchy.getProposalPdas(
@@ -109,7 +116,7 @@ export async function pumpPassMarket(
       question,
       quoteVault,
       quoteMint,
-      new BN(33_000 * 1_000_000),
+      buyAmount.addn(cranks * 10 + 10_000),
       2,
     )
     .rpc();
@@ -122,12 +129,12 @@ export async function pumpPassMarket(
       proposal,
       market: "pass",
       swapType: "buy",
-      inputAmount: new BN(20_000 * 1_000_000),
+      inputAmount: buyAmount,
       minOutputAmount: new BN(0),
     })
     .rpc();
 
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < cranks; i++) {
     await context.advanceBySeconds(20_000);
 
     await context.futarchy
