@@ -19,6 +19,8 @@ export const LAUNCH_ADDRESS = new PublicKey(
   "8uMemVUT1ToSuda2jBVhcaPmJWq5C3bKe7DhrM5wkqZP",
 );
 
+export const LUT_ADDRESS = new PublicKey("11111111111111111111111111111111");
+
 export const SPENDING_MEMBERS = [
   new PublicKey("CqK6aBSSycQU3igvptxvhf9YNC1v5EodCuCxuVLPPohh"),
   new PublicKey("4Huto5Lv8z59tW4EezrYNSvBJhCc9U5bgmR5yH5csFDc"),
