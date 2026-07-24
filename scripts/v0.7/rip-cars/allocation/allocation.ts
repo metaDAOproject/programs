@@ -394,7 +394,7 @@ function ownAlloc(
   agents: Agent[],
   onOwn: boolean[],
   ownBudget: number,
-): { alloc: Float64Array; lam: number } {
+): { alloc: number[]; lam: number } {
   const idx: number[] = [];
   for (let i = 0; i < agents.length; i++)
     if (onOwn[i] && agents[i].score > 0) idx.push(i);
@@ -406,7 +406,7 @@ function ownAlloc(
   let rem = ownBudget;
   let act = 0;
   for (const i of idx) act += agents[i].score;
-  const alloc = new Float64Array(agents.length);
+  const alloc = new Array<number>(agents.length).fill(0);
   let lam = 0;
   let from = idx.length;
   for (let k = 0; k < idx.length; k++) {
@@ -435,11 +435,11 @@ function accAlloc(
   agents: Agent[],
   onOwn: boolean[],
   accBudget: number,
-): { alloc: Float64Array; rate: number } {
+): { alloc: number[]; rate: number } {
   let sum = 0;
   for (let i = 0; i < agents.length; i++)
     if (!onOwn[i]) sum += agents[i].weight;
-  const alloc = new Float64Array(agents.length);
+  const alloc = new Array<number>(agents.length).fill(0);
   for (let i = 0; i < agents.length; i++) {
     if (!onOwn[i])
       alloc[i] =
@@ -506,7 +506,7 @@ function solveNash(
   maxRounds = 2000,
 ): {
   onOwn: boolean[];
-  payouts: Float64Array;
+  payouts: number[];
   rounds: number;
   atNash: boolean;
   maxGain: number;
@@ -639,10 +639,10 @@ function allocateWithRoadDust(
   onOwn: boolean[],
   ownBudget: number,
   accBudget: number,
-): Float64Array {
+): number[] {
   const { alloc: oa } = ownAlloc(agents, onOwn, ownBudget);
   const { alloc: aa } = accAlloc(agents, onOwn, accBudget);
-  const out = new Float64Array(agents.length);
+  const out = new Array<number>(agents.length);
   for (let i = 0; i < agents.length; i++) out[i] = onOwn[i] ? oa[i] : aa[i];
 
   dustRoad(out, agents, onOwn, true, ownBudget);
@@ -652,7 +652,7 @@ function allocateWithRoadDust(
 
 /** Redistribute a road's unspent budget among its riders by commit headroom. */
 function dustRoad(
-  alloc: Float64Array,
+  alloc: number[],
   agents: Agent[],
   onOwn: boolean[],
   ownershipRoad: boolean,
@@ -755,11 +755,11 @@ function dollarsToAtomsExact(
  * before atom conversion.
  */
 function fillToPool(
-  payouts: Float64Array,
+  payouts: number[],
   agents: Agent[],
   pool: number,
-): Float64Array {
-  const out = Float64Array.from(payouts);
+): number[] {
+  const out = payouts.slice();
   for (let iter = 0; iter < 50; iter++) {
     for (let i = 0; i < agents.length; i++)
       out[i] = Math.min(agents[i].committed, Math.max(0, out[i]));
@@ -833,15 +833,13 @@ export function computeAllocation(
     config.boost,
   );
 
+  // Keep full USDC precision (atoms / 1e6). Rounding to cents can leave up to
+  // ~5000 atoms of error per funder, which blows past the atom dust pass limit.
   const agents: Agent[] = internal.map((r) => ({
     address: r.address,
-    score: Math.round(r.score * 100) / 100,
-    committed:
-      Math.round((Number(r.committedAtoms) / Number(USDC_SCALAR)) * 100) / 100,
-    weight:
-      Math.round(
-        (Number(weightAtoms.get(r.address) ?? 0n) / Number(USDC_SCALAR)) * 100,
-      ) / 100,
+    score: r.score,
+    committed: Number(r.committedAtoms) / Number(USDC_SCALAR),
+    weight: Number(weightAtoms.get(r.address) ?? 0n) / Number(USDC_SCALAR),
   }));
 
   if (config.reactivity <= 0 || config.reactivity > 1) {
