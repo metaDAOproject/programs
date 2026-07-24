@@ -15,7 +15,9 @@ export const TEAM_ADDRESS = new PublicKey(
   "CnTDWPAEsN5RAgNapTJerDAc45TWavRQ1m3ACMpukYPd",
 ); // Rip Cars team squads address
 
-// export const LAUNCH_ADDRESS = new PublicKey("");
+export const LAUNCH_ADDRESS = new PublicKey(
+  "8uMemVUT1ToSuda2jBVhcaPmJWq5C3bKe7DhrM5wkqZP",
+);
 
 export const SPENDING_MEMBERS = [
   new PublicKey("CqK6aBSSycQU3igvptxvhf9YNC1v5EodCuCxuVLPPohh"),
@@ -32,10 +34,8 @@ export const SPENDING_LIMIT = 40_000; // 40k USDC
 export const PERFORMANCE_PACKAGE_TOKEN_AMOUNT = 12_900_000; // 12.9M CARS
 export const TOTAL_ALLOCATION = 250_000; // 250k USDC
 export const PERFORMANCE_PACKAGE_UNLOCK_MONTHS = 18; // 18 months
-export const ADDITIONAL_CARVEOUT = 0; // 0 CARS
-export const ADDITIONAL_CARVEOUT_RECIPIENT = new PublicKey(
-  "11111111111111111111111111111111",
-); // Unused
+export const ADDITIONAL_CARVEOUT = null; // 0 CARS
+export const ADDITIONAL_CARVEOUT_RECIPIENT = undefined;
 export const LAUNCH_DAYS = 4;
 
 export const TOKEN_NAME = "Rip Cars";
