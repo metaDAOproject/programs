@@ -47,6 +47,7 @@ export const end = async () => {
 
   console.log("Launch closed", txHash);
 
+  // TODO: If complete fails, we need to handle that no need to run ALT...
   console.log("Creating ALT for complete");
   let launchAccount = await launchpad.fetchLaunch(launch);
   if (!launchAccount) {

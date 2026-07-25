@@ -19,7 +19,9 @@ export const LAUNCH_ADDRESS = new PublicKey(
   "8uMemVUT1ToSuda2jBVhcaPmJWq5C3bKe7DhrM5wkqZP",
 );
 
-export const LUT_ADDRESS = new PublicKey("11111111111111111111111111111111");
+export const LUT_ADDRESS = new PublicKey(
+  "5MK8EEbyf8Fi3tgkX1dhAnE57swXw1b3dcBTg1RswSva",
+);
 
 export const SPENDING_MEMBERS = [
   new PublicKey("CqK6aBSSycQU3igvptxvhf9YNC1v5EodCuCxuVLPPohh"),
