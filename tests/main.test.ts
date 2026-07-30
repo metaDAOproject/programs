@@ -159,6 +159,7 @@ export interface TestContext {
     baseVault: PublicKey;
     quoteVault: PublicKey;
     squadsProposal: PublicKey;
+    squadsVaultTransaction: PublicKey;
   }>;
   initializeAndLaunchProposal: ({
     dao,
@@ -172,6 +173,7 @@ export interface TestContext {
     baseVault: PublicKey;
     quoteVault: PublicKey;
     squadsProposal: PublicKey;
+    squadsVaultTransaction: PublicKey;
   }>;
   advanceBySlots: (slots: bigint) => Promise<void>;
   advanceBySeconds: (seconds: number) => Promise<void>;
@@ -375,6 +377,10 @@ before(async function () {
     );
   };
 
+  // Two mintTo calls with the same mint, recipient, and amount produce byte-identical
+  // transactions, which get rejected as duplicates when they land in the same blockhash
+  // window; an incrementing compute budget keeps every mintTo transaction unique.
+  let mintToTxNonce = 0;
   this.mintTo = async (
     mint: PublicKey,
     to: PublicKey,
@@ -385,6 +391,11 @@ before(async function () {
 
     const tx = new Transaction();
 
+    tx.add(
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: 200_000 + mintToTxNonce++,
+      }),
+    );
     tx.add(
       token.createAssociatedTokenAccountIdempotentInstruction(
         this.payer.publicKey,
@@ -575,15 +586,19 @@ before(async function () {
     baseVault: PublicKey;
     quoteVault: PublicKey;
     squadsProposal: PublicKey;
+    squadsVaultTransaction: PublicKey;
   }> => {
     const storedDao = await this.futarchy.getDao(dao);
 
-    const { tx: squadsProposalCreateTx, squadsProposal } =
-      this.futarchy.squadsProposalCreateTx({
-        dao,
-        instructions,
-        transactionIndex: 1n,
-      });
+    const {
+      tx: squadsProposalCreateTx,
+      squadsProposal,
+      squadsVaultTransaction,
+    } = this.futarchy.squadsProposalCreateTx({
+      dao,
+      instructions,
+      transactionIndex: 1n,
+    });
 
     squadsProposalCreateTx.recentBlockhash = (
       await this.banksClient.getLatestBlockhash()
@@ -591,7 +606,7 @@ before(async function () {
     squadsProposalCreateTx.feePayer = this.payer.publicKey;
     squadsProposalCreateTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
 
-    this.banksClient.processTransaction(squadsProposalCreateTx);
+    await this.banksClient.processTransaction(squadsProposalCreateTx);
 
     let [proposal] = getProposalAddrV2({ squadsProposal });
 
@@ -628,13 +643,21 @@ before(async function () {
         storedDao.baseMint,
         storedDao.quoteMint,
         question,
+        squadsVaultTransaction,
       )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
       .rpc();
 
-    return { proposal, question, baseVault, quoteVault, squadsProposal };
+    return {
+      proposal,
+      question,
+      baseVault,
+      quoteVault,
+      squadsProposal,
+      squadsVaultTransaction,
+    };
   };
 
   this.initializeAndLaunchProposal = async ({
@@ -649,9 +672,16 @@ before(async function () {
     baseVault: PublicKey;
     quoteVault: PublicKey;
     squadsProposal: PublicKey;
+    squadsVaultTransaction: PublicKey;
   }> => {
-    const { proposal, question, baseVault, quoteVault, squadsProposal } =
-      await this.initializeProposal({ dao, instructions });
+    const {
+      proposal,
+      question,
+      baseVault,
+      quoteVault,
+      squadsProposal,
+      squadsVaultTransaction,
+    } = await this.initializeProposal({ dao, instructions });
     const storedDao = await this.futarchy.getDao(dao);
     await this.futarchy
       .launchProposalIx({
@@ -660,10 +690,18 @@ before(async function () {
         baseMint: storedDao.baseMint,
         quoteMint: storedDao.quoteMint,
         squadsProposal,
+        squadsVaultTransaction,
       })
       .rpc();
 
-    return { proposal, question, baseVault, quoteVault, squadsProposal };
+    return {
+      proposal,
+      question,
+      baseVault,
+      quoteVault,
+      squadsProposal,
+      squadsVaultTransaction,
+    };
   };
 
   this.setupBasicPerformancePackage = async ({

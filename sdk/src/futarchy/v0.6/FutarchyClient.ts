@@ -276,18 +276,57 @@ export class FutarchyClient {
     });
   }
 
+  /**
+   * Fetches the Squads vault transaction linked to a Squads proposal and returns its
+   * address along with the address lookup table accounts its message references. The
+   * lookup tables must be passed as remaining accounts to `initializeProposal` and
+   * `launchProposal`, which verify each one is frozen.
+   */
+  async getSquadsVaultTransactionAccounts(squadsProposal: PublicKey): Promise<{
+    squadsVaultTransaction: PublicKey;
+    lookupTableKeys: PublicKey[];
+  }> {
+    const squadsProposalAccount =
+      await multisig.accounts.Proposal.fromAccountAddress(
+        this.provider.connection,
+        squadsProposal,
+      );
+
+    const [squadsVaultTransaction] = multisig.getTransactionPda({
+      multisigPda: squadsProposalAccount.multisig,
+      index: BigInt(squadsProposalAccount.transactionIndex.toString()),
+    });
+
+    const vaultTransactionAccount =
+      await multisig.accounts.VaultTransaction.fromAccountAddress(
+        this.provider.connection,
+        squadsVaultTransaction,
+      );
+
+    const lookupTableKeys =
+      vaultTransactionAccount.message.addressTableLookups.map(
+        (lookup) => lookup.accountKey,
+      );
+
+    return { squadsVaultTransaction, lookupTableKeys };
+  }
+
   launchProposalIx({
     proposal,
     dao,
     baseMint,
     quoteMint,
     squadsProposal,
+    squadsVaultTransaction,
+    lookupTables = [],
   }: {
     proposal: PublicKey;
     dao: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
     squadsProposal: PublicKey;
+    squadsVaultTransaction: PublicKey;
+    lookupTables?: PublicKey[];
   }) {
     const {
       baseVault,
@@ -333,8 +372,16 @@ export class FutarchyClient {
         ),
         squadsMultisig,
         squadsProposal,
+        squadsVaultTransaction,
         payer: this.provider.publicKey,
       })
+      .remainingAccounts(
+        lookupTables.map((pubkey) => ({
+          pubkey,
+          isSigner: false,
+          isWritable: false,
+        })),
+      )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ]);
@@ -590,7 +637,11 @@ export class FutarchyClient {
     instructions: TransactionInstruction[];
     transactionIndex: bigint;
     payer?: PublicKey;
-  }): { tx: Transaction; squadsProposal: PublicKey } {
+  }): {
+    tx: Transaction;
+    squadsProposal: PublicKey;
+    squadsVaultTransaction: PublicKey;
+  } {
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
     const transactionMessage = new TransactionMessage({
@@ -621,9 +672,14 @@ export class FutarchyClient {
       transactionIndex: transactionIndex,
     });
 
+    const [squadsVaultTransaction] = multisig.getTransactionPda({
+      multisigPda,
+      index: transactionIndex,
+    });
+
     const tx = new Transaction().add(vaultTxCreate, proposalCreate);
 
-    return { tx, squadsProposal };
+    return { tx, squadsProposal, squadsVaultTransaction };
   }
 
   async initializeProposal(
@@ -657,12 +713,17 @@ export class FutarchyClient {
       )
       .rpc();
 
+    const { squadsVaultTransaction, lookupTableKeys } =
+      await this.getSquadsVaultTransactionAccounts(squadsProposal);
+
     await this.initializeProposalIx(
       squadsProposal,
       dao,
       storedDao.baseMint,
       storedDao.quoteMint,
       question,
+      squadsVaultTransaction,
+      lookupTableKeys,
     )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
@@ -678,6 +739,8 @@ export class FutarchyClient {
     baseMint: PublicKey,
     quoteMint: PublicKey,
     question: PublicKey,
+    squadsVaultTransaction: PublicKey,
+    lookupTables: PublicKey[] = [],
     proposer: PublicKey = this.provider.publicKey,
   ) {
     let [proposal] = getProposalAddr(this.futarchy.programId, squadsProposal);
@@ -703,12 +766,20 @@ export class FutarchyClient {
         question,
         proposal,
         squadsProposal,
+        squadsVaultTransaction,
         dao,
         baseVault,
         quoteVault,
         proposer,
         squadsMultisig,
       })
+      .remainingAccounts(
+        lookupTables.map((pubkey) => ({
+          pubkey,
+          isSigner: false,
+          isWritable: false,
+        })),
+      )
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,

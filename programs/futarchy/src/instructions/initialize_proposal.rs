@@ -13,6 +13,17 @@ pub struct InitializeProposal<'info> {
     pub proposal: Box<Account<'info, Proposal>>,
     pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
     pub squads_multisig: Box<Account<'info, squads_multisig_program::Multisig>>,
+    #[account(
+        seeds = [
+            squads_multisig_program::SEED_PREFIX,
+            squads_multisig.key().as_ref(),
+            squads_multisig_program::SEED_TRANSACTION,
+            squads_proposal.transaction_index.to_le_bytes().as_ref(),
+        ],
+        bump,
+        seeds::program = squads_multisig_program::ID,
+    )]
+    pub squads_vault_transaction: Box<Account<'info, squads_multisig_program::VaultTransaction>>,
     #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(
@@ -35,8 +46,8 @@ pub struct InitializeProposal<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl InitializeProposal<'_> {
-    pub fn validate(&self) -> Result<()> {
+impl<'info, 'c: 'info> InitializeProposal<'info> {
+    pub fn validate(&self, remaining_accounts: &[AccountInfo<'info>]) -> Result<()> {
         // If we're trying to challenge an optimistic proposal that has already passed due to age, we should error
         // In the case of an already-optimistically-passed proposal, the optimistic proposal can be cleared
         // from the DAO state by finalizing the optimistic proposal (finalize_optimistic_proposal)
@@ -72,13 +83,17 @@ impl InitializeProposal<'_> {
             self.squads_multisig.stale_transaction_index
         );
 
+        // Any address lookup table the vault transaction references must be frozen, so the
+        // addresses the market evaluates can't change between approval and execution
+        validate_address_lookup_tables(&self.squads_vault_transaction.message, remaining_accounts)?;
+
         // Should never be the case because the oracle is the proposal account, and you can't re-initialize a proposal
         assert!(!self.question.is_resolved());
 
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>) -> Result<()> {
+    pub fn handle(ctx: Context<'_, '_, 'c, 'info, Self>) -> Result<()> {
         let Self {
             base_vault,
             quote_vault,
@@ -86,6 +101,7 @@ impl InitializeProposal<'_> {
             proposal,
             squads_proposal,
             squads_multisig: _,
+            squads_vault_transaction: _,
             dao,
             proposer,
             payer: _,

@@ -226,6 +226,9 @@ export default function suite() {
     });
 
     // Launch the proposal to move it to Pending state
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda);
+
     await this.futarchy
       .launchProposalIx({
         proposal,
@@ -233,6 +236,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsVaultTransaction,
       })
       .rpc();
 

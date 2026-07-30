@@ -226,6 +226,9 @@ export default function suite() {
 
     // Now launch the futarchy proposal to push the AMM out of Spot.
     const storedDao = await this.futarchy.getDao(dao);
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(proposalPda);
+
     await this.futarchy
       .launchProposalIx({
         proposal,
@@ -233,6 +236,7 @@ export default function suite() {
         baseMint: storedDao.baseMint,
         quoteMint: storedDao.quoteMint,
         squadsProposal: proposalPda,
+        squadsVaultTransaction,
       })
       .rpc();
 
