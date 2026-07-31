@@ -113,6 +113,11 @@ export const withdrawLiquidity = ({
     const liquidityToWithdraw = ammPosition.liquidity
       .muln(fractionBps)
       .divn(10_000);
+    if (liquidityToWithdraw.isZero()) {
+      throw new Error(
+        `fractionBps ${fractionBps} rounds down to zero liquidity for this position`,
+      );
+    }
 
     const spotPool = daoAccount.amm.state.spot;
     if (!spotPool) {
