@@ -72,15 +72,33 @@ export const updateDao =
 // liquidity is worth right now, so reserve changes between now and execution
 // beyond that tolerance fail the withdrawal instead of silently accepting a
 // worse outcome.
-export const withdrawLiquidity =
-  ({
-    fractionBps,
-    slippageBps,
-  }: {
-    fractionBps: number;
-    slippageBps: number;
-  }): DaoActionBuilder =>
-  async ({ provider, futarchy, dao, daoMultisigVault, payer }) => {
+export const withdrawLiquidity = ({
+  fractionBps,
+  slippageBps,
+}: {
+  fractionBps: number;
+  slippageBps: number;
+}): DaoActionBuilder => {
+  if (
+    !Number.isInteger(fractionBps) ||
+    fractionBps <= 0 ||
+    fractionBps > 10_000
+  ) {
+    throw new Error(
+      `fractionBps must be an integer between 1 and 10000, got ${fractionBps}`,
+    );
+  }
+  if (
+    !Number.isInteger(slippageBps) ||
+    slippageBps < 0 ||
+    slippageBps > 10_000
+  ) {
+    throw new Error(
+      `slippageBps must be an integer between 0 and 10000, got ${slippageBps}`,
+    );
+  }
+
+  return async ({ provider, futarchy, dao, daoMultisigVault, payer }) => {
     const daoAccount = await futarchy.getDao(dao);
 
     // The DAO's protocol-owned liquidity position is held by its squads vault
@@ -179,6 +197,7 @@ export const withdrawLiquidity =
       ],
     };
   };
+};
 
 // Transfers tokens from the vault's associated token account to the recipient
 export const transferToken =
@@ -303,7 +322,9 @@ export const buildDaoActionTransactions = async ({
 /**
  * Signs and sends the transactions built by buildDaoActionTransactions in
  * order (setup if any, DAO multisig, ops multisig), logging the created
- * squads transactions and proposals along the way.
+ * squads transactions and proposals along the way. The ops multisig
+ * transaction is built only after the DAO transaction confirms, so its
+ * transaction index is read as late as possible.
  */
 export const signAndSendDaoActionTransactions = async ({
   provider,
@@ -320,11 +341,8 @@ export const signAndSendDaoActionTransactions = async ({
     daoTransactionIndex,
     daoVaultTransactionPda,
     daoProposalPda,
-    metadaoTransaction,
-    metadaoTransactionIndex,
-    metadaoVaultTransactionPda,
-    metadaoProposalPda,
     enqueuedApprovalPda,
+    buildMetadaoTransaction,
   } = transactions;
 
   let setupSignature: string | null = null;
@@ -352,6 +370,14 @@ export const signAndSendDaoActionTransactions = async ({
   console.log("Squads transaction index:", daoTransactionIndex.toString());
   console.log("Squads transaction:", daoVaultTransactionPda.toBase58());
   console.log("Squads proposal:", daoProposalPda.toBase58());
+
+  // Built only now so the ops multisig's transaction index is fresh
+  const {
+    metadaoTransaction,
+    metadaoTransactionIndex,
+    metadaoVaultTransactionPda,
+    metadaoProposalPda,
+  } = await buildMetadaoTransaction();
 
   metadaoTransaction.sign(payer);
 

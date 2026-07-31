@@ -28,11 +28,13 @@ const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
  * 1. `daoTransaction` creates the squads vault transaction + proposal holding
  *    `instructions` on the DAO's multisig. Sign with the payer and
  *    PERMISSIONLESS_ACCOUNT (the creator).
- * 2. `metadaoTransaction` creates the squads vault transaction + proposal on
- *    the MetaDAO operational multisig that enqueues the futarchy admin
- *    approval of the DAO proposal. Sign with the payer, which MUST be a
- *    member of the operational multisig with permission to propose
- *    transactions.
+ * 2. `buildMetadaoTransaction()` builds the transaction that creates the
+ *    squads vault transaction + proposal on the MetaDAO operational multisig
+ *    enqueueing the futarchy admin approval of the DAO proposal. It reads the
+ *    operational multisig's next transaction index at call time, so call it
+ *    right before sending (after `daoTransaction` confirms). Sign with the
+ *    payer, which MUST be a member of the operational multisig with
+ *    permission to propose transactions.
  *
  * Once the operational multisig approves + executes its transaction, the DAO
  * proposal can be approved + executed permissionlessly via
@@ -102,15 +104,6 @@ export const buildAdminApprovalTransactions = async ({
 
   // === Ops multisig: vault transaction enqueueing the admin approval ===
 
-  const metadaoMultisigAccount =
-    await multisig.accounts.Multisig.fromAccountAddress(
-      provider.connection,
-      METADAO_MULTISIG,
-    );
-
-  const metadaoTransactionIndex =
-    BigInt(metadaoMultisigAccount.transactionIndex.toString()) + 1n;
-
   const [enqueuedApprovalPda] = PublicKey.findProgramAddressSync(
     [
       SEED_ENQUEUED_APPROVAL,
@@ -120,66 +113,87 @@ export const buildAdminApprovalTransactions = async ({
     futarchy.futarchy.programId,
   );
 
-  // The vault signs as the futarchy admin and pays rent for the enqueued
-  // approval account, so it needs to hold a small amount of SOL
-  const enqueueApprovalIx = await futarchy.futarchy.methods
-    .adminEnqueueMultisigProposalApproval({
-      transactionIndex: new BN(daoTransactionIndex.toString()),
-    })
-    .accounts({
-      dao,
-      admin: METADAO_MULTISIG_VAULT,
-      squadsMultisig: daoMultisig,
-      squadsMultisigProposal: daoProposalPda,
-      enqueuedApproval: enqueuedApprovalPda,
-    })
-    .instruction();
+  // Built lazily so the shared ops multisig's transaction index is read right
+  // before the transaction is sent - an index read at build time can be
+  // consumed by another operator's proposal in the meantime, which would make
+  // vaultTransactionCreate fail and leave the DAO proposal without its
+  // enqueue proposal
+  const buildMetadaoTransaction = async () => {
+    const metadaoMultisigAccount =
+      await multisig.accounts.Multisig.fromAccountAddress(
+        provider.connection,
+        METADAO_MULTISIG,
+      );
 
-  const enqueueApprovalMessage = new TransactionMessage({
-    payerKey: METADAO_MULTISIG_VAULT,
-    recentBlockhash: (await provider.connection.getLatestBlockhash()).blockhash,
-    instructions: [enqueueApprovalIx],
-  });
+    const metadaoTransactionIndex =
+      BigInt(metadaoMultisigAccount.transactionIndex.toString()) + 1n;
 
-  const {
-    vaultTxCreateIx: enqueueApprovalVaultTxCreateIx,
-    proposalCreateIx: enqueueApprovalProposalCreateIx,
-  } = await createSquadsVaultTxAndProposal(
-    METADAO_MULTISIG,
-    metadaoTransactionIndex,
-    enqueueApprovalMessage,
-    payer,
-    payer,
-  );
+    // The vault signs as the futarchy admin and pays rent for the enqueued
+    // approval account, so it needs to hold a small amount of SOL
+    const enqueueApprovalIx = await futarchy.futarchy.methods
+      .adminEnqueueMultisigProposalApproval({
+        transactionIndex: new BN(daoTransactionIndex.toString()),
+      })
+      .accounts({
+        dao,
+        admin: METADAO_MULTISIG_VAULT,
+        squadsMultisig: daoMultisig,
+        squadsMultisigProposal: daoProposalPda,
+        enqueuedApproval: enqueuedApprovalPda,
+      })
+      .instruction();
 
-  const [metadaoVaultTransactionPda] = multisig.getTransactionPda({
-    multisigPda: METADAO_MULTISIG,
-    index: metadaoTransactionIndex,
-  });
+    const enqueueApprovalMessage = new TransactionMessage({
+      payerKey: METADAO_MULTISIG_VAULT,
+      recentBlockhash: (await provider.connection.getLatestBlockhash())
+        .blockhash,
+      instructions: [enqueueApprovalIx],
+    });
 
-  const [metadaoProposalPda] = multisig.getProposalPda({
-    multisigPda: METADAO_MULTISIG,
-    transactionIndex: metadaoTransactionIndex,
-  });
+    const {
+      vaultTxCreateIx: enqueueApprovalVaultTxCreateIx,
+      proposalCreateIx: enqueueApprovalProposalCreateIx,
+    } = await createSquadsVaultTxAndProposal(
+      METADAO_MULTISIG,
+      metadaoTransactionIndex,
+      enqueueApprovalMessage,
+      payer,
+      payer,
+    );
 
-  const metadaoTransaction = new Transaction().add(
-    enqueueApprovalVaultTxCreateIx,
-    enqueueApprovalProposalCreateIx,
-  );
-  metadaoTransaction.recentBlockhash = (
-    await provider.connection.getLatestBlockhash()
-  ).blockhash;
-  metadaoTransaction.feePayer = payer;
+    const [metadaoVaultTransactionPda] = multisig.getTransactionPda({
+      multisigPda: METADAO_MULTISIG,
+      index: metadaoTransactionIndex,
+    });
+
+    const [metadaoProposalPda] = multisig.getProposalPda({
+      multisigPda: METADAO_MULTISIG,
+      transactionIndex: metadaoTransactionIndex,
+    });
+
+    const metadaoTransaction = new Transaction().add(
+      enqueueApprovalVaultTxCreateIx,
+      enqueueApprovalProposalCreateIx,
+    );
+    metadaoTransaction.recentBlockhash = (
+      await provider.connection.getLatestBlockhash()
+    ).blockhash;
+    metadaoTransaction.feePayer = payer;
+
+    return {
+      metadaoTransaction,
+      metadaoTransactionIndex,
+      metadaoVaultTransactionPda,
+      metadaoProposalPda,
+    };
+  };
 
   return {
     daoTransaction,
     daoTransactionIndex,
     daoVaultTransactionPda,
     daoProposalPda,
-    metadaoTransaction,
-    metadaoTransactionIndex,
-    metadaoVaultTransactionPda,
-    metadaoProposalPda,
     enqueuedApprovalPda,
+    buildMetadaoTransaction,
   };
 };
