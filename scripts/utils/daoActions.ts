@@ -4,6 +4,7 @@ import {
   Keypair,
   PublicKey,
   RpcResponseAndContext,
+  SendTransactionError,
   SignatureResult,
   Transaction,
   TransactionInstruction,
@@ -100,7 +101,7 @@ export const withdrawLiquidity = ({
     );
   }
 
-  return async ({ provider, futarchy, dao, daoMultisigVault, payer }) => {
+  return async ({ futarchy, dao, daoMultisigVault, payer }) => {
     const daoAccount = await futarchy.getDao(dao);
 
     // The DAO's protocol-owned liquidity position is held by its squads vault
@@ -417,7 +418,18 @@ export const signAndSendDaoActionTransactions = async ({
           enqueue.metadaoTransaction.serialize(),
         );
       } catch (error) {
-        // Rejected at preflight, so nothing was broadcast
+        if (!(error instanceof SendTransactionError)) {
+          // Anything but the node rejecting the transaction (e.g. a
+          // transport error) is ambiguous - the transaction may have been
+          // forwarded and could still land, so retrying could create a
+          // duplicate enqueue proposal. Throw out of the retry loop instead.
+          console.error(
+            `Sending the enqueue transaction failed without a node response. It may still land - check whether proposal ${enqueue.metadaoProposalPda.toBase58()} gets created before re-running.`,
+          );
+          throw error;
+        }
+        // The node rejected the transaction at preflight, so nothing was
+        // broadcast
         console.warn(`Enqueue attempt ${attempt} of ${attempts} rejected`);
         lastError = error;
         continue;
