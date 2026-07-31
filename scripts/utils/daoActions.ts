@@ -322,9 +322,9 @@ export const buildDaoActionTransactions = async ({
 /**
  * Signs and sends the transactions built by buildDaoActionTransactions in
  * order (setup if any, DAO multisig, ops multisig), logging the created
- * squads transactions and proposals along the way. The ops multisig
- * transaction is built only after the DAO transaction confirms, so its
- * transaction index is read as late as possible.
+ * squads transactions and proposals along the way. Each squads transaction
+ * is built right before it's sent, so its multisig's transaction index is
+ * read as late as possible.
  */
 export const signAndSendDaoActionTransactions = async ({
   provider,
@@ -335,15 +335,7 @@ export const signAndSendDaoActionTransactions = async ({
   payer: Keypair;
   transactions: Awaited<ReturnType<typeof buildDaoActionTransactions>>;
 }) => {
-  const {
-    setupTransaction,
-    daoTransaction,
-    daoTransactionIndex,
-    daoVaultTransactionPda,
-    daoProposalPda,
-    enqueuedApprovalPda,
-    buildMetadaoTransaction,
-  } = transactions;
+  const { setupTransaction, buildDaoTransaction } = transactions;
 
   let setupSignature: string | null = null;
   if (setupTransaction) {
@@ -357,6 +349,16 @@ export const signAndSendDaoActionTransactions = async ({
     console.log("Setup transaction sent!");
     console.log("Transaction signature:", setupSignature);
   }
+
+  // Built only now so the DAO multisig's transaction index is fresh
+  const {
+    daoTransaction,
+    daoTransactionIndex,
+    daoVaultTransactionPda,
+    daoProposalPda,
+    enqueuedApprovalPda,
+    buildMetadaoTransaction,
+  } = await buildDaoTransaction();
 
   daoTransaction.sign(payer, PERMISSIONLESS_ACCOUNT);
 
