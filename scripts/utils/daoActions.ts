@@ -3,6 +3,8 @@ import BN from "bn.js";
 import {
   Keypair,
   PublicKey,
+  RpcResponseAndContext,
+  SignatureResult,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -421,14 +423,21 @@ export const signAndSendDaoActionTransactions = async ({
         continue;
       }
 
-      const status = await provider.connection
-        .confirmTransaction(signature, "confirmed")
-        .catch((error) => {
-          console.error(
-            `Confirmation of enqueue transaction ${signature} timed out. It may still land - check it before re-running, or a duplicate enqueue proposal could be created.`,
-          );
-          throw error;
-        });
+      let status: RpcResponseAndContext<SignatureResult>;
+      try {
+        status = await provider.connection.confirmTransaction(
+          signature,
+          "confirmed",
+        );
+      } catch (error) {
+        // The timeout is ambiguous - the transaction may still land, so
+        // retrying could create a duplicate enqueue proposal. Throw out of
+        // the retry loop instead.
+        console.error(
+          `Confirmation of enqueue transaction ${signature} timed out. It may still land - check it before re-running, or a duplicate enqueue proposal could be created.`,
+        );
+        throw error;
+      }
 
       if (status.value.err) {
         // Landed on-chain but failed, consuming only the transaction fee
