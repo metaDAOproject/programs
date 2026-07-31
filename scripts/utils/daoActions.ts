@@ -324,12 +324,36 @@ export const buildDaoActionTransactions = async ({
   };
 };
 
+// Sends a signed transaction, throwing if it isn't confirmed or lands with an
+// error
+const sendAndConfirm = async (
+  provider: AnchorProvider,
+  transaction: Transaction,
+) => {
+  const signature = await provider.connection.sendRawTransaction(
+    transaction.serialize(),
+  );
+  const status = await provider.connection.confirmTransaction(
+    signature,
+    "confirmed",
+  );
+  if (status.value.err) {
+    throw new Error(
+      `Transaction ${signature} failed: ${JSON.stringify(status.value.err)}`,
+    );
+  }
+  return signature;
+};
+
 /**
  * Signs and sends the transactions built by buildDaoActionTransactions in
  * order (setup if any, DAO multisig, ops multisig), logging the created
  * squads transactions and proposals along the way. Each squads transaction
  * is built right before it's sent, so its multisig's transaction index is
- * read as late as possible.
+ * read as late as possible, and enqueue proposal creation retries with a
+ * freshly built transaction when an attempt definitively fails (e.g. an
+ * index collision with another operator's proposal on the shared ops
+ * multisig).
  */
 export const signAndSendDaoActionTransactions = async ({
   provider,
@@ -346,10 +370,7 @@ export const signAndSendDaoActionTransactions = async ({
   if (setupTransaction) {
     setupTransaction.sign(payer);
 
-    setupSignature = await provider.connection.sendRawTransaction(
-      setupTransaction.serialize(),
-    );
-    await provider.connection.confirmTransaction(setupSignature, "confirmed");
+    setupSignature = await sendAndConfirm(provider, setupTransaction);
 
     console.log("Setup transaction sent!");
     console.log("Transaction signature:", setupSignature);
@@ -367,10 +388,7 @@ export const signAndSendDaoActionTransactions = async ({
 
   daoTransaction.sign(payer, PERMISSIONLESS_ACCOUNT);
 
-  const daoSignature = await provider.connection.sendRawTransaction(
-    daoTransaction.serialize(),
-  );
-  await provider.connection.confirmTransaction(daoSignature, "confirmed");
+  const daoSignature = await sendAndConfirm(provider, daoTransaction);
 
   console.log("DAO squads transaction created!");
   console.log("Transaction signature:", daoSignature);
@@ -378,20 +396,63 @@ export const signAndSendDaoActionTransactions = async ({
   console.log("Squads transaction:", daoVaultTransactionPda.toBase58());
   console.log("Squads proposal:", daoProposalPda.toBase58());
 
-  // Built only now so the ops multisig's transaction index is fresh
+  // The ops multisig is shared, so another operator's proposal can consume
+  // the transaction index between the build's index read and our transaction
+  // landing. A definitively failed attempt rebuilds with a fresh index and
+  // retries; an ambiguous confirmation timeout is not retried, since the
+  // transaction may still land and a second attempt would then create a
+  // duplicate enqueue proposal.
+  const sendEnqueueTransactionWithRetries = async (attempts: number) => {
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      const enqueue = await buildMetadaoTransaction();
+      enqueue.metadaoTransaction.sign(payer);
+
+      let signature: string;
+      try {
+        signature = await provider.connection.sendRawTransaction(
+          enqueue.metadaoTransaction.serialize(),
+        );
+      } catch (error) {
+        // Rejected at preflight, so nothing was broadcast
+        console.warn(`Enqueue attempt ${attempt} of ${attempts} rejected`);
+        lastError = error;
+        continue;
+      }
+
+      const status = await provider.connection
+        .confirmTransaction(signature, "confirmed")
+        .catch((error) => {
+          console.error(
+            `Confirmation of enqueue transaction ${signature} timed out. It may still land - check it before re-running, or a duplicate enqueue proposal could be created.`,
+          );
+          throw error;
+        });
+
+      if (status.value.err) {
+        // Landed on-chain but failed, consuming only the transaction fee
+        console.warn(
+          `Enqueue attempt ${attempt} of ${attempts} failed on-chain`,
+        );
+        lastError = new Error(
+          `Enqueue transaction ${signature} failed: ${JSON.stringify(status.value.err)}`,
+        );
+        continue;
+      }
+
+      return { ...enqueue, metadaoSignature: signature };
+    }
+
+    throw lastError;
+  };
+
   const {
-    metadaoTransaction,
     metadaoTransactionIndex,
     metadaoVaultTransactionPda,
     metadaoProposalPda,
-  } = await buildMetadaoTransaction();
-
-  metadaoTransaction.sign(payer);
-
-  const metadaoSignature = await provider.connection.sendRawTransaction(
-    metadaoTransaction.serialize(),
-  );
-  await provider.connection.confirmTransaction(metadaoSignature, "confirmed");
+    metadaoSignature,
+  } = await sendEnqueueTransactionWithRetries(3);
 
   console.log("Enqueue approval squads transaction created!");
   console.log("Transaction signature:", metadaoSignature);
