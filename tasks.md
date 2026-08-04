@@ -27,11 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 0 — scaffold"
 
-- [NEXT] 0.2 State + constants
-  - `state/`: `Relaunch`, `DepositRecord`, `RelaunchState` enum — field list per plan Stage 0 (no `usdc_swap_pool` field)
-  - `constants.rs`: `TOKEN_SCALE`, `TOKENS_TO_DEPOSITORS = 10M`, `TOKENS_TO_FUTARCHY_LIQUIDITY = 2M`, `MAX_SECONDS_FOR_DEPOSITS = 14d`, `PRICE_SCALE = 1e12`, `USDC_SWAP_POOL`, WSOL mint, pump_amm / pump_fees / whirlpool program IDs, pump `"pool-authority"` seed
-
-- [ ] 0.3 SDK module scaffold
+- [NEXT] 0.3 SDK module scaffold
   - `sdk/src/relaunch/v0.1/`: `RelaunchClient.createClient({ provider })`, `pda.ts` (`getRelaunchAddr`, `getRelaunchSignerAddr`, `getDepositRecordAddr`), generated types, `index.ts` re-export
   - Package export wiring in `sdk/package.json`
 
