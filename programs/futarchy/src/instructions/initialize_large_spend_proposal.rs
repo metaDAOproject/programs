@@ -8,15 +8,15 @@ pub struct InitializeLargeSpendProposalArgs {
 #[derive(Accounts)]
 #[event_cpi]
 pub struct InitializeLargeSpendProposal<'info> {
-    pub create: TypedCreateAccounts<'info>,
+    pub typed_initialize_accounts: TypedInitializeAccounts<'info>,
 }
 
 impl InitializeLargeSpendProposal<'_> {
     pub fn validate(&self, args: &InitializeLargeSpendProposalArgs) -> Result<()> {
-        self.create.validate()?;
+        self.typed_initialize_accounts.validate()?;
 
         let record = self
-            .create
+            .typed_initialize_accounts
             .dao
             .initial_spending_limit
             .as_ref()
@@ -32,8 +32,8 @@ impl InitializeLargeSpendProposal<'_> {
     }
 
     pub fn handle(ctx: Context<Self>, args: InitializeLargeSpendProposalArgs) -> Result<()> {
-        let create = &mut ctx.accounts.create;
-        let dao = &create.dao;
+        let typed_initialize_accounts = &mut ctx.accounts.typed_initialize_accounts;
+        let dao = &typed_initialize_accounts.dao;
 
         // The recipient is pinned to the DAO's team address at create; a later
         // team change does not re-point it.
@@ -52,12 +52,12 @@ impl InitializeLargeSpendProposal<'_> {
             args.amount,
         )?;
 
-        let event = create.create_proposal(
+        let event = typed_initialize_accounts.initialize_proposal(
             &[transfer_ix],
             ProposalAction::LargeSpend {
                 amount: args.amount,
             },
-            ctx.bumps.create.proposal,
+            ctx.bumps.typed_initialize_accounts.proposal,
         )?;
 
         emit_cpi!(event);

@@ -175,7 +175,7 @@ export type Futarchy = {
       name: "initializeLargeSpendProposal";
       accounts: [
         {
-          name: "create";
+          name: "typedInitializeAccounts";
           accounts: [
             {
               name: "proposal";
@@ -279,7 +279,7 @@ export type Futarchy = {
       name: "initializeMintTokensProposal";
       accounts: [
         {
-          name: "create";
+          name: "typedInitializeAccounts";
           accounts: [
             {
               name: "proposal";
@@ -407,7 +407,7 @@ export type Futarchy = {
       name: "initializeSpendingLimitChangeProposal";
       accounts: [
         {
-          name: "create";
+          name: "typedInitializeAccounts";
           accounts: [
             {
               name: "proposal";
@@ -511,7 +511,7 @@ export type Futarchy = {
       name: "initializeHostileTakeoverProposal";
       accounts: [
         {
-          name: "create";
+          name: "typedInitializeAccounts";
           accounts: [
             {
               name: "proposal";
@@ -615,7 +615,7 @@ export type Futarchy = {
       name: "initializeHostileLiquidateProposal";
       accounts: [
         {
-          name: "create";
+          name: "typedInitializeAccounts";
           accounts: [
             {
               name: "proposal";
@@ -4988,7 +4988,7 @@ export const IDL: Futarchy = {
       name: "initializeLargeSpendProposal",
       accounts: [
         {
-          name: "create",
+          name: "typedInitializeAccounts",
           accounts: [
             {
               name: "proposal",
@@ -5092,7 +5092,7 @@ export const IDL: Futarchy = {
       name: "initializeMintTokensProposal",
       accounts: [
         {
-          name: "create",
+          name: "typedInitializeAccounts",
           accounts: [
             {
               name: "proposal",
@@ -5220,7 +5220,7 @@ export const IDL: Futarchy = {
       name: "initializeSpendingLimitChangeProposal",
       accounts: [
         {
-          name: "create",
+          name: "typedInitializeAccounts",
           accounts: [
             {
               name: "proposal",
@@ -5324,7 +5324,7 @@ export const IDL: Futarchy = {
       name: "initializeHostileTakeoverProposal",
       accounts: [
         {
-          name: "create",
+          name: "typedInitializeAccounts",
           accounts: [
             {
               name: "proposal",
@@ -5428,7 +5428,7 @@ export const IDL: Futarchy = {
       name: "initializeHostileLiquidateProposal",
       accounts: [
         {
-          name: "create",
+          name: "typedInitializeAccounts",
           accounts: [
             {
               name: "proposal",

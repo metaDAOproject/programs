@@ -11,17 +11,17 @@ pub struct InitializeHostileLiquidateProposalArgs {
 #[derive(Accounts)]
 #[event_cpi]
 pub struct InitializeHostileLiquidateProposal<'info> {
-    pub create: TypedCreateAccounts<'info>,
+    pub typed_initialize_accounts: TypedInitializeAccounts<'info>,
 }
 
 impl InitializeHostileLiquidateProposal<'_> {
     pub fn validate(&self) -> Result<()> {
-        self.create.validate()
+        self.typed_initialize_accounts.validate()
     }
 
     pub fn handle(ctx: Context<Self>, args: InitializeHostileLiquidateProposalArgs) -> Result<()> {
-        let create = &mut ctx.accounts.create;
-        let dao = &create.dao;
+        let typed_initialize_accounts = &mut ctx.accounts.typed_initialize_accounts;
+        let dao = &typed_initialize_accounts.dao;
 
         let (event_authority, _) =
             Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
@@ -44,7 +44,7 @@ impl InitializeHostileLiquidateProposal<'_> {
         let apply_liquidation_ix = Instruction {
             program_id: crate::ID,
             accounts: crate::accounts::ApplyLiquidation {
-                proposal: create.proposal.key(),
+                proposal: typed_initialize_accounts.proposal.key(),
                 dao: dao.key(),
                 squads_multisig_vault: dao.squads_multisig_vault,
                 amm_position,
@@ -66,12 +66,12 @@ impl InitializeHostileLiquidateProposal<'_> {
             data: crate::instruction::ApplyLiquidation.data(),
         };
 
-        let event = create.create_proposal(
+        let event = typed_initialize_accounts.initialize_proposal(
             &[apply_liquidation_ix],
             ProposalAction::HostileLiquidate {
                 liquidator: args.liquidator,
             },
-            ctx.bumps.create.proposal,
+            ctx.bumps.typed_initialize_accounts.proposal,
         )?;
 
         emit_cpi!(event);

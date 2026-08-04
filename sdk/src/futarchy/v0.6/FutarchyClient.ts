@@ -82,8 +82,8 @@ export type ProposalVaults = {
   quoteVault: PublicKey;
 };
 
-// The slice of Anchor's MethodsBuilder the typed-create orchestrator drives.
-type TypedCreateMethodsBuilder = {
+// The slice of Anchor's MethodsBuilder the typed-initialize orchestrator drives.
+type TypedInitializeMethodsBuilder = {
   preInstructions(ixs: TransactionInstruction[]): {
     rpc(): Promise<string>;
   };
@@ -760,7 +760,7 @@ export class FutarchyClient {
       ]);
   }
 
-  // The PDA set for the proposal a typed create would make next: reads the
+  // The PDA set for the proposal a typed initialize would make next: reads the
   // multisig's current transaction index and derives the Squads transaction,
   // Squads proposal, and futarchy proposal addresses for index + 1.
   async getNextProposalAddrs(dao: PublicKey): Promise<{
@@ -788,20 +788,22 @@ export class FutarchyClient {
     };
   }
 
-  // The shared orchestration of every typed create: create the question and
+  // The shared orchestration of every typed initialize: create the question and
   // both conditional vaults (same flow as `initializeProposal`), then send the
-  // per-type create instruction built by `buildCreateIx` — the instruction
+  // per-type initialize instruction built by `buildInitializeIx` — the instruction
   // itself creates the Squads transaction and proposal at the next
   // transaction index.
-  private async createTypedProposal({
+  private async initializeTypedProposal({
     dao,
-    buildCreateIx,
+    buildInitializeIx,
   }: {
     dao: PublicKey;
-    buildCreateIx: (params: {
+    buildInitializeIx: (params: {
       storedDao: Dao;
       transactionIndex: bigint;
-    }) => TypedCreateMethodsBuilder | Promise<TypedCreateMethodsBuilder>;
+    }) =>
+      | TypedInitializeMethodsBuilder
+      | Promise<TypedInitializeMethodsBuilder>;
   }): Promise<{
     proposal: PublicKey;
     squadsProposal: PublicKey;
@@ -834,7 +836,7 @@ export class FutarchyClient {
       )
       .rpc();
 
-    await (await buildCreateIx({ storedDao, transactionIndex }))
+    await (await buildInitializeIx({ storedDao, transactionIndex }))
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
       ])
@@ -843,9 +845,9 @@ export class FutarchyClient {
     return { proposal, squadsProposal, squadsTransaction };
   }
 
-  // The `create` composite accounts shared by every typed create instruction,
-  // for the proposal at the given transaction index.
-  private typedCreateAccounts({
+  // The `typed_initialize_accounts` composite accounts shared by every typed
+  // initialize instruction, for the proposal at the given transaction index.
+  private typedInitializeAccounts({
     dao,
     baseMint,
     quoteMint,
@@ -901,9 +903,9 @@ export class FutarchyClient {
     squadsProposal: PublicKey;
     squadsTransaction: PublicKey;
   }> {
-    return this.createTypedProposal({
+    return this.initializeTypedProposal({
       dao,
-      buildCreateIx: ({ storedDao, transactionIndex }) =>
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
         this.initializeLargeSpendProposalIx({
           dao,
           baseMint: storedDao.baseMint,
@@ -934,7 +936,7 @@ export class FutarchyClient {
     return this.futarchy.methods
       .initializeLargeSpendProposal({ amount })
       .accounts({
-        create: this.typedCreateAccounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
           quoteMint,
@@ -962,9 +964,9 @@ export class FutarchyClient {
     squadsProposal: PublicKey;
     squadsTransaction: PublicKey;
   }> {
-    return this.createTypedProposal({
+    return this.initializeTypedProposal({
       dao,
-      buildCreateIx: async ({ storedDao, transactionIndex }) => {
+      buildInitializeIx: async ({ storedDao, transactionIndex }) => {
         const baseMintInfo = await getMint(
           this.provider.connection,
           storedDao.baseMint,
@@ -1032,7 +1034,7 @@ export class FutarchyClient {
     return this.futarchy.methods
       .initializeMintTokensProposal({ amount, recipient })
       .accounts({
-        create: this.typedCreateAccounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
           quoteMint,
@@ -1060,9 +1062,9 @@ export class FutarchyClient {
     squadsProposal: PublicKey;
     squadsTransaction: PublicKey;
   }> {
-    return this.createTypedProposal({
+    return this.initializeTypedProposal({
       dao,
-      buildCreateIx: ({ storedDao, transactionIndex }) =>
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
         this.initializeSpendingLimitChangeProposalIx({
           dao,
           baseMint: storedDao.baseMint,
@@ -1093,7 +1095,7 @@ export class FutarchyClient {
     return this.futarchy.methods
       .initializeSpendingLimitChangeProposal({ config })
       .accounts({
-        create: this.typedCreateAccounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
           quoteMint,
@@ -1121,9 +1123,9 @@ export class FutarchyClient {
     squadsProposal: PublicKey;
     squadsTransaction: PublicKey;
   }> {
-    return this.createTypedProposal({
+    return this.initializeTypedProposal({
       dao,
-      buildCreateIx: ({ storedDao, transactionIndex }) =>
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
         this.initializeHostileTakeoverProposalIx({
           dao,
           baseMint: storedDao.baseMint,
@@ -1160,7 +1162,7 @@ export class FutarchyClient {
         spendingLimitAction,
       })
       .accounts({
-        create: this.typedCreateAccounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
           quoteMint,
@@ -1186,9 +1188,9 @@ export class FutarchyClient {
     squadsProposal: PublicKey;
     squadsTransaction: PublicKey;
   }> {
-    return this.createTypedProposal({
+    return this.initializeTypedProposal({
       dao,
-      buildCreateIx: ({ storedDao, transactionIndex }) =>
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
         this.initializeHostileLiquidateProposalIx({
           dao,
           baseMint: storedDao.baseMint,
@@ -1219,7 +1221,7 @@ export class FutarchyClient {
     return this.futarchy.methods
       .initializeHostileLiquidateProposal({ liquidator })
       .accounts({
-        create: this.typedCreateAccounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
           quoteMint,

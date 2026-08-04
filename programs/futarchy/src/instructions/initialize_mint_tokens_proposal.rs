@@ -13,8 +13,8 @@ pub struct InitializeMintTokensProposalArgs {
 #[derive(Accounts)]
 #[event_cpi]
 pub struct InitializeMintTokensProposal<'info> {
-    pub create: TypedCreateAccounts<'info>,
-    #[account(address = create.dao.base_mint)]
+    pub typed_initialize_accounts: TypedInitializeAccounts<'info>,
+    #[account(address = typed_initialize_accounts.dao.base_mint)]
     pub base_mint: Box<Account<'info, Mint>>,
     /// Only for governed mints (v0.8 launches): the `MintGovernor` holding the
     /// base mint's authority.
@@ -25,9 +25,9 @@ pub struct InitializeMintTokensProposal<'info> {
 
 impl InitializeMintTokensProposal<'_> {
     pub fn validate(&self) -> Result<()> {
-        self.create.validate()?;
+        self.typed_initialize_accounts.validate()?;
 
-        let vault = self.create.dao.squads_multisig_vault;
+        let vault = self.typed_initialize_accounts.dao.squads_multisig_vault;
 
         if self.base_mint.mint_authority == COption::Some(vault) {
             return Ok(());
@@ -69,7 +69,11 @@ impl InitializeMintTokensProposal<'_> {
 
     pub fn handle(ctx: Context<Self>, args: InitializeMintTokensProposalArgs) -> Result<()> {
         let base_mint = ctx.accounts.base_mint.key();
-        let vault = ctx.accounts.create.dao.squads_multisig_vault;
+        let vault = ctx
+            .accounts
+            .typed_initialize_accounts
+            .dao
+            .squads_multisig_vault;
 
         let recipient_ata =
             anchor_spl::associated_token::get_associated_token_address(&args.recipient, &base_mint);
@@ -113,13 +117,13 @@ impl InitializeMintTokensProposal<'_> {
             }
         };
 
-        let event = ctx.accounts.create.create_proposal(
+        let event = ctx.accounts.typed_initialize_accounts.initialize_proposal(
             &[mint_ix],
             ProposalAction::MintTokens {
                 amount: args.amount,
                 recipient: args.recipient,
             },
-            ctx.bumps.create.proposal,
+            ctx.bumps.typed_initialize_accounts.proposal,
         )?;
 
         emit_cpi!(event);

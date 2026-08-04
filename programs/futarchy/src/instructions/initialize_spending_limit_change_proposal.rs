@@ -12,12 +12,12 @@ pub struct InitializeSpendingLimitChangeProposalArgs {
 #[derive(Accounts)]
 #[event_cpi]
 pub struct InitializeSpendingLimitChangeProposal<'info> {
-    pub create: TypedCreateAccounts<'info>,
+    pub typed_initialize_accounts: TypedInitializeAccounts<'info>,
 }
 
 impl InitializeSpendingLimitChangeProposal<'_> {
     pub fn validate(&self, args: &InitializeSpendingLimitChangeProposalArgs) -> Result<()> {
-        self.create.validate()?;
+        self.typed_initialize_accounts.validate()?;
 
         if let Some(config) = &args.config {
             require_gte!(
@@ -34,7 +34,7 @@ impl InitializeSpendingLimitChangeProposal<'_> {
         ctx: Context<Self>,
         args: InitializeSpendingLimitChangeProposalArgs,
     ) -> Result<()> {
-        let create = &mut ctx.accounts.create;
+        let typed_initialize_accounts = &mut ctx.accounts.typed_initialize_accounts;
 
         let (event_authority, _) =
             Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
@@ -42,8 +42,8 @@ impl InitializeSpendingLimitChangeProposal<'_> {
         let set_spending_limit_ix = Instruction {
             program_id: crate::ID,
             accounts: crate::accounts::SetSpendingLimit {
-                dao: create.dao.key(),
-                squads_multisig_vault: create.dao.squads_multisig_vault,
+                dao: typed_initialize_accounts.dao.key(),
+                squads_multisig_vault: typed_initialize_accounts.dao.squads_multisig_vault,
                 event_authority,
                 program: crate::ID,
             }
@@ -56,12 +56,12 @@ impl InitializeSpendingLimitChangeProposal<'_> {
             .data(),
         };
 
-        let event = create.create_proposal(
+        let event = typed_initialize_accounts.initialize_proposal(
             &[set_spending_limit_ix],
             ProposalAction::SpendingLimitChange {
                 config: args.config,
             },
-            ctx.bumps.create.proposal,
+            ctx.bumps.typed_initialize_accounts.proposal,
         )?;
 
         emit_cpi!(event);

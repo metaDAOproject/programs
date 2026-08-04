@@ -2,11 +2,11 @@ use anchor_lang::solana_program::instruction::Instruction;
 
 use super::*;
 
-/// The accounts shared by the typed proposal create instructions
+/// The accounts shared by the typed initialize instructions
 /// (`initialize_*_proposal`), embedded as a composite field. Per-type extra
 /// accounts live on the embedding struct.
 #[derive(Accounts)]
-pub struct TypedCreateAccounts<'info> {
+pub struct TypedInitializeAccounts<'info> {
     #[account(
         init,
         payer = payer,
@@ -53,9 +53,9 @@ pub struct TypedCreateAccounts<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl TypedCreateAccounts<'_> {
-    /// The DAO and market-plumbing checks shared by every typed create.
-    /// Per-type creation rules live on each create's own `validate`.
+impl TypedInitializeAccounts<'_> {
+    /// The DAO and market-plumbing checks shared by every typed initialize.
+    /// Per-type rules live on each embedding instruction's own `validate`.
     pub fn validate(&self) -> Result<()> {
         require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
 
@@ -75,7 +75,7 @@ impl TypedCreateAccounts<'_> {
     /// proposal (`draft: false`), and initializes the futarchy proposal with
     /// `action` and its per-kind snapshots. Returns the event so the embedding
     /// instruction can `emit_cpi!` it.
-    pub fn create_proposal(
+    pub fn initialize_proposal(
         &mut self,
         instructions: &[Instruction],
         action: ProposalAction,
