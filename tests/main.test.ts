@@ -9,6 +9,7 @@ import mintGovernor from "./mintGovernor/main.test.js";
 import performancePackageV2 from "./performancePackageV2/main.test.js";
 import liquidation from "./liquidation/main.test.js";
 import gatedMint from "./gatedMint/main.test.js";
+import relaunch from "./relaunch/main.test.js";
 
 import {
   BanksClient,
@@ -40,6 +41,7 @@ import {
   MintGovernorClient,
   GatedMintClient,
   LiquidationClient,
+  RelaunchClient,
   LOW_FEE_RAYDIUM_CONFIG,
   sha256,
 } from "@metadaoproject/programs";
@@ -103,6 +105,7 @@ export interface TestContext {
   mintGovernor: MintGovernorClient;
   gatedMint: GatedMintClient;
   liquidation: LiquidationClient;
+  relaunch: RelaunchClient;
   payer: Keypair;
   squadsConnection: Connection;
   createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
@@ -762,6 +765,7 @@ describe("mint_governor", mintGovernor);
 describe("performance_package_v2", performancePackageV2);
 describe("liquidation", liquidation);
 describe("gated_mint", gatedMint);
+describe("relaunch", relaunch);
 describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);

@@ -27,11 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 0 — scaffold"
 
-- [NEXT] 0.4 Test utilities
-  - `tests/relaunch/unit/` folder + placeholder test that runs
-  - `setupRelaunch()` helper skeleton (old mint under either token program)
-
-- [ ] 0.5 External fixtures + pool helpers
+- [NEXT] 0.5 External fixtures + pool helpers
   - Dump `pump_amm.so`, `pump_fees.so`, `whirlpool.so` from mainnet into `tests/fixtures/`; Anchor.toml entries
   - `writePumpPool()`: fabricate pump_amm `Pool` + funded pool vaults (+ global/fee config accounts, dumped or fabricated) via bankrun `setAccount` — canonical-shaped WSOL- and USDC-quoted variants, one Token-2022-base, plus non-canonical variants for negative tests. Fabrication is deliberate even with the real program present — see plan Stage 0 note
   - Whirlpool helpers via real instructions: config + fee tier + WSOL/USDC pool + seeded tick arrays (crib `whirlpools-cpi-examples` test setup)
@@ -57,7 +53,7 @@
 > Reference: `relaunch-implementation-plan.md` → "Stage 2 — deposit, close_deposits, mark_failed, claim_refund"
 
 - [ ] 2.1 Token-2022 test availability check
-  - Confirm bankrun ships Token-2022 as a builtin; if not, add the fixture + Anchor.toml entry
+  - ~~Confirm bankrun ships Token-2022 as a builtin~~ — confirmed during 0.4: it's a builtin (`tests/relaunch/unit/scaffold.test.ts` runs a plain Token-2022 old mint), no fixture needed
   - Extend `setupRelaunch()` to produce Token-2022 old mints (with allowed metadata extensions)
 
 - [ ] 2.2 `deposit` (instruction + SDK + tests)

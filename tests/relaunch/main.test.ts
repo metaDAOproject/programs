@@ -1,0 +1,14 @@
+import scaffold from "./unit/scaffold.test.js";
+import { RelaunchClient } from "@metadaoproject/programs";
+import { BankrunProvider } from "anchor-bankrun";
+
+export default function suite() {
+  before(async function () {
+    const provider = new BankrunProvider(this.context);
+    this.relaunch = RelaunchClient.createClient({
+      provider: provider as any,
+    });
+  });
+
+  describe("scaffold", scaffold);
+}
