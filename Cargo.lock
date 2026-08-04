@@ -945,6 +945,7 @@ dependencies = [
  "damm_v2_cpi",
  "mint_governor",
  "solana-security-txt",
+ "spl-memo",
  "squads-multisig-program",
 ]
 

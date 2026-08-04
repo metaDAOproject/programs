@@ -66,8 +66,15 @@ impl InitializeHostileLiquidateProposal<'_> {
             data: crate::instruction::ApplyLiquidation.data(),
         };
 
+        // The IP transfer is a legal-layer fact.
+        // The memo records it in the executed transaction.
+        let memo_ix = spl_memo::build_memo(
+            b"Intellectual property transferred to the DAO upon initialization will be transferred back to the original team.",
+            &[],
+        );
+
         let event = typed_initialize_accounts.initialize_proposal(
-            &[apply_liquidation_ix],
+            &[apply_liquidation_ix, memo_ix],
             ProposalAction::HostileLiquidate {
                 liquidator: args.liquidator,
             },

@@ -4,7 +4,12 @@ import {
   getEventAuthorityAddr,
   PriceMath,
 } from "@metadaoproject/programs";
-import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
@@ -54,7 +59,7 @@ export default function suite() {
     [dao] = getDaoAddr({ nonce, daoCreator: this.payer.publicKey });
   });
 
-  it("bakes an apply_liquidation whose accounts are exactly the derived set, including this proposal's own PDA", async function () {
+  it("bakes an apply_liquidation whose accounts are exactly the derived set, plus an IP-transfer memo", async function () {
     const liquidator = Keypair.generate().publicKey;
 
     const { proposal, squadsProposal, squadsTransaction } =
@@ -89,8 +94,18 @@ export default function suite() {
       })
       .instruction();
 
+    const expectedMemoIx = new TransactionInstruction({
+      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      keys: [],
+      data: Buffer.from(
+        "All intellectual property held by the DAO transfers back to the team.",
+        "utf8",
+      ),
+    });
+
     await assertVaultTransactionPayload(this, dao, squadsTransaction, [
       expectedApplyLiquidationIx,
+      expectedMemoIx,
     ]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);

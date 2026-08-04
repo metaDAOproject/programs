@@ -160,6 +160,8 @@ impl FinalizeProposal<'_> {
 
         proposal.state = new_proposal_state;
 
+        // We want to prevent certain proposals from being retried immediately after failure.
+        // This is to prevent abuse of the system, given that the council can't veto the proposal.
         if new_proposal_state == ProposalState::Failed {
             match proposal.action {
                 ProposalAction::HostileTakeover { .. } => {
