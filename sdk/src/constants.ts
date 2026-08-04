@@ -68,6 +68,9 @@ export const PERFORMANCE_PACKAGE_V2_PROGRAM_ID = new PublicKey(
 export const LIQUIDATION_V0_7_PROGRAM_ID = new PublicKey(
   "LiQnowFbFQdYyZhF4pUbpsrZCjxRTQ1upKJxZ2VXjde",
 );
+export const RELAUNCH_V0_1_PROGRAM_ID = new PublicKey(
+  "vaMpdXN2P3Z5v8y6GtAU5NzCUjxtphnRVpvqu37Spik",
+);
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",

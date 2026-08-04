@@ -27,11 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 0 — scaffold"
 
-- [NEXT] 0.3 SDK module scaffold
-  - `sdk/src/relaunch/v0.1/`: `RelaunchClient.createClient({ provider })`, `pda.ts` (`getRelaunchAddr`, `getRelaunchSignerAddr`, `getDepositRecordAddr`), generated types, `index.ts` re-export
-  - Package export wiring in `sdk/package.json`
-
-- [ ] 0.4 Test utilities
+- [NEXT] 0.4 Test utilities
   - `tests/relaunch/unit/` folder + placeholder test that runs
   - `setupRelaunch()` helper skeleton (old mint under either token program)
 
