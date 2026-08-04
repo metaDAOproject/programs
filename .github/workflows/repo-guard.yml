@@ -117,21 +117,29 @@ jobs:
             fi
           } > body.md
 
+          # Render the same content on the run's Summary page - visible on
+          # fork PRs too, where the comment steps below are skipped.
+          cat body.md >> "$GITHUB_STEP_SUMMARY"
+
           {
             echo "body<<EOF"
             cat body.md
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      # Fork PRs get a read-only GITHUB_TOKEN, so the comment steps would 403.
+      # Skip them there - the "Fail if any check failed" step still gates.
       - name: Find existing comment
         uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3
         id: find
+        if: github.event.pull_request.head.repo.full_name == github.repository
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body-includes: "<!-- repository-guard -->"
 
       - name: Create or update PR comment
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4
+        if: github.event.pull_request.head.repo.full_name == github.repository
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-id: ${{ steps.find.outputs.comment-id }}
