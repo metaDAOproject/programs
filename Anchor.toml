@@ -17,6 +17,7 @@ liquidation = "LiQnowFbFQdYyZhF4pUbpsrZCjxRTQ1upKJxZ2VXjde"
 mint_governor = "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH"
 performance_package_v2 = "pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz"
 price_based_performance_package = "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS"
+relaunch = "vaMpdXN2P3Z5v8y6GtAU5NzCUjxtphnRVpvqu37Spik"
 
 [registry]
 url = "https://api.apr.dev"
