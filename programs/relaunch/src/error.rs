@@ -38,4 +38,8 @@ pub enum RelaunchError {
     RelaunchNotSellPending,
     #[msg("Grace period has not elapsed")]
     GracePeriodStillActive,
+    #[msg("Relaunch must be in the Failed state")]
+    RelaunchNotFailed,
+    #[msg("Deposit record has already been claimed")]
+    AlreadyClaimed,
 }

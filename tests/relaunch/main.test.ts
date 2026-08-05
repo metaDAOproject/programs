@@ -5,6 +5,7 @@ import startDeposits from "./unit/startDeposits.test.js";
 import deposit from "./unit/deposit.test.js";
 import closeDeposits from "./unit/closeDeposits.test.js";
 import markFailed from "./unit/markFailed.test.js";
+import claimRefund from "./unit/claimRefund.test.js";
 import { RelaunchClient } from "@metadaoproject/programs";
 import { BankrunProvider } from "anchor-bankrun";
 
@@ -23,4 +24,5 @@ export default function suite() {
   describe("#deposit", deposit);
   describe("#close_deposits", closeDeposits);
   describe("#mark_failed", markFailed);
+  describe("#claim_refund", claimRefund);
 }

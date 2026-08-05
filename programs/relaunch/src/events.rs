@@ -75,3 +75,13 @@ pub struct RelaunchMarkedFailedEvent {
     pub common: CommonFields,
     pub relaunch: Pubkey,
 }
+
+#[event]
+pub struct RefundClaimedEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+    pub depositor: Pubkey,
+    pub deposit_record: Pubkey,
+    pub amount_refunded: u64,
+    pub deposit_record_seq_num: u64,
+}

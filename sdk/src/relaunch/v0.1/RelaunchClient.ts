@@ -239,6 +239,48 @@ export class RelaunchClient {
     });
   }
 
+  claimRefundIx({
+    relaunch,
+    oldMint,
+    oldTokenProgram,
+    depositor = this.provider.publicKey,
+  }: {
+    relaunch: PublicKey;
+    oldMint: PublicKey;
+    oldTokenProgram: PublicKey;
+    depositor?: PublicKey;
+  }) {
+    const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+    const depositRecord = this.getDepositRecordAddress({
+      relaunch,
+      depositor,
+    });
+
+    const oldTokenVault = getAssociatedTokenAddressSync(
+      oldMint,
+      relaunchSigner,
+      true,
+      oldTokenProgram,
+    );
+    const depositorTokenAccount = getAssociatedTokenAddressSync(
+      oldMint,
+      depositor,
+      false,
+      oldTokenProgram,
+    );
+
+    return this.relaunchProgram.methods.claimRefund().accounts({
+      relaunch,
+      depositRecord,
+      oldMint,
+      oldTokenVault,
+      relaunchSigner,
+      depositor,
+      depositorTokenAccount,
+      oldTokenProgram,
+    });
+  }
+
   // Deposits from the provider wallet, reading the old mint and its owner
   // program from the stored relaunch.
   async deposit({
@@ -267,6 +309,37 @@ export class RelaunchClient {
       oldMint: storedRelaunch.oldMint,
       oldTokenProgram: oldMintAccount.owner,
       amount,
+    }).rpc();
+  }
+
+  // Claims a refund for the given depositor (the provider wallet by default),
+  // reading the old mint and its owner program from the stored relaunch.
+  async claimRefund({
+    relaunch,
+    depositor = this.provider.publicKey,
+  }: {
+    relaunch: PublicKey;
+    depositor?: PublicKey;
+  }): Promise<TransactionSignature> {
+    const storedRelaunch = await this.fetchRelaunch(relaunch);
+    if (storedRelaunch === null) {
+      throw new Error(`relaunch ${relaunch.toBase58()} does not exist`);
+    }
+
+    const oldMintAccount = await this.provider.connection.getAccountInfo(
+      storedRelaunch.oldMint,
+    );
+    if (oldMintAccount === null) {
+      throw new Error(
+        `old mint ${storedRelaunch.oldMint.toBase58()} does not exist`,
+      );
+    }
+
+    return this.claimRefundIx({
+      relaunch,
+      oldMint: storedRelaunch.oldMint,
+      oldTokenProgram: oldMintAccount.owner,
+      depositor,
     }).rpc();
   }
 

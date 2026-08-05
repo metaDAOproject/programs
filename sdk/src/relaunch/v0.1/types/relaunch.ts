@@ -277,6 +277,63 @@ export type Relaunch = {
       ];
       args: [];
     },
+    {
+      name: "claimRefund";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "oldMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "relaunchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "depositor";
+          isMut: false;
+          isSigner: false;
+          docs: ["refunds for any depositor."];
+        },
+        {
+          name: "depositorTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "oldTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -855,6 +912,43 @@ export type Relaunch = {
         },
       ];
     },
+    {
+      name: "RefundClaimedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "depositor";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "depositRecord";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amountRefunded";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "depositRecordSeqNum";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -946,6 +1040,16 @@ export type Relaunch = {
       code: 6017;
       name: "GracePeriodStillActive";
       msg: "Grace period has not elapsed";
+    },
+    {
+      code: 6018;
+      name: "RelaunchNotFailed";
+      msg: "Relaunch must be in the Failed state";
+    },
+    {
+      code: 6019;
+      name: "AlreadyClaimed";
+      msg: "Deposit record has already been claimed";
     },
   ];
 };
@@ -1214,6 +1318,63 @@ export const IDL: Relaunch = {
         {
           name: "relaunch",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "claimRefund",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "oldMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "relaunchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "depositor",
+          isMut: false,
+          isSigner: false,
+          docs: ["refunds for any depositor."],
+        },
+        {
+          name: "depositorTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "oldTokenProgram",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1807,6 +1968,43 @@ export const IDL: Relaunch = {
         },
       ],
     },
+    {
+      name: "RefundClaimedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "depositor",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "depositRecord",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amountRefunded",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "depositRecordSeqNum",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -1898,6 +2096,16 @@ export const IDL: Relaunch = {
       code: 6017,
       name: "GracePeriodStillActive",
       msg: "Grace period has not elapsed",
+    },
+    {
+      code: 6018,
+      name: "RelaunchNotFailed",
+      msg: "Relaunch must be in the Failed state",
+    },
+    {
+      code: 6019,
+      name: "AlreadyClaimed",
+      msg: "Deposit record has already been claimed",
     },
   ],
 };

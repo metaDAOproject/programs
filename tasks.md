@@ -23,19 +23,11 @@
 
 ## Tasks
 
-### Phase 2: deposit + failure loop
-
-> Reference: `relaunch-implementation-plan.md` → "Stage 2 — deposit, close_deposits, mark_failed, claim_refund"
-
-- [NEXT] 2.5 `claim_refund` (instruction + SDK + tests)
-  - `Failed`, returns exact `amount_deposited`, sets `claimed`, event
-  - Tests per plan §10: both token programs, double-refund, wrong state, vault-empty conservation, both end-to-end failure paths
-
 ### Phase 3: PumpSwap + Whirlpool legs
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 3 — execute_sell, execute_usdc_swap, deposit_via_buy"
 
-- [ ] 3.1 `execute_sell` (instruction + SDK + tests)
+- [NEXT] 3.1 `execute_sell` (instruction + SDK + tests)
   - Hand-built `cpi/pump_amm.rs` sell builder (discriminator + borsh args + verified 21-account list from design §06)
   - Admin + `SellPending` + grace gate; sell full vault; `quote_recovered` from measured delta; WSOL → `Sold`, USDC → `Swapped`
   - Tests per plan §6: both quote variants, slippage failure leaves state unchanged, non-admin/wrong-state/after-grace, Token-2022 base pool
