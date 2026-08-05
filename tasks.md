@@ -23,22 +23,11 @@
 
 ## Tasks
 
-### Phase 0: Scaffold
-
-> Reference: `relaunch-implementation-plan.md` → "Stage 0 — scaffold"
-
-- [NEXT] 0.5 External fixtures + pool helpers
-  - Dump `pump_amm.so`, `pump_fees.so`, `whirlpool.so` from mainnet into `tests/fixtures/`; Anchor.toml entries
-  - `writePumpPool()`: fabricate pump_amm `Pool` + funded pool vaults (+ global/fee config accounts, dumped or fabricated) via bankrun `setAccount` — canonical-shaped WSOL- and USDC-quoted variants, one Token-2022-base, plus non-canonical variants for negative tests. Fabrication is deliberate even with the real program present — see plan Stage 0 note
-  - Whirlpool helpers via real instructions: config + fee tier + WSOL/USDC pool + seeded tick arrays (crib `whirlpools-cpi-examples` test setup)
-  - Test-feature override for the `USDC_SWAP_POOL` constant (fixture pool won't sit at the mainnet address)
-  - Verify: smoke test — pump_amm buy/sell against a fabricated pool and a Whirlpool swap both execute in bankrun
-
 ### Phase 1: initialize_relaunch + start_deposits
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 1 — initialize_relaunch + start_deposits"
 
-- [ ] 1.1 `initialize_relaunch` (instruction + SDK + tests)
+- [NEXT] 1.1 `initialize_relaunch` (instruction + SDK + tests)
   - Accounts/validations per plan §1: `mint_authority` Signer proof-of-control, new-mint checks, source-pool canonicality, quote mint ∈ {WSOL, USDC}, old-mint extension allowlist, threshold/window/spending-limit validations; USDC-quoted sources share one ATA for `source_quote_vault`/`usdc_vault`
   - Handler order: `set_authority` → metadata CPI → `mint_to` 12M → snapshot old supply → `set_inner` → event
   - SDK: `initializeRelaunch()` with create-mint-to-self pre-instructions

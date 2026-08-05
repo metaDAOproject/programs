@@ -112,6 +112,24 @@ export const DEVNET_RAYDIUM_AUTHORITY = PublicKey.findProgramAddressSync(
   DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
 )[0];
 
+/// The pump bonding-curve program. Canonical PumpSwap pools have the
+/// `["pool-authority", mint]` PDA of this program as their creator.
+export const PUMP_PROGRAM_ID = new PublicKey(
+  "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+);
+
+export const PUMP_AMM_PROGRAM_ID = new PublicKey(
+  "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+);
+
+export const PUMP_FEES_PROGRAM_ID = new PublicKey(
+  "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ",
+);
+
+export const WHIRLPOOL_PROGRAM_ID = new PublicKey(
+  "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",
+);
+
 export const DAMM_V2_PROGRAM_ID = new PublicKey(
   "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",
 );

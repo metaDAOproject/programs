@@ -43,8 +43,17 @@ import {
   LiquidationClient,
   RelaunchClient,
   LOW_FEE_RAYDIUM_CONFIG,
+  PUMP_AMM_PROGRAM_ID,
+  PUMP_FEES_PROGRAM_ID,
+  WHIRLPOOL_PROGRAM_ID,
   sha256,
 } from "@metadaoproject/programs";
+import {
+  PUMP_GLOBAL_CONFIG,
+  PUMP_FEE_CONFIG,
+  PUMP_GLOBAL_VOLUME_ACCUMULATOR,
+} from "./relaunch/pumpAmm.js";
+import { WHIRLPOOLS_CONFIG, WHIRLPOOL_FEE_TIER } from "./relaunch/whirlpool.js";
 import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/programs/launchpad/v0.6";
 import { LaunchpadClient as LaunchpadClientV8 } from "@metadaoproject/programs/launchpad/v0.8";
 
@@ -203,6 +212,18 @@ before(async function () {
         name: "cp_amm",
         programId: DAMM_V2_PROGRAM_ID,
       },
+      {
+        name: "pump_amm",
+        programId: PUMP_AMM_PROGRAM_ID,
+      },
+      {
+        name: "pump_fees",
+        programId: PUMP_FEES_PROGRAM_ID,
+      },
+      {
+        name: "whirlpool",
+        programId: WHIRLPOOL_PROGRAM_ID,
+      },
     ],
     [
       {
@@ -250,6 +271,62 @@ before(async function () {
           executable: false,
           owner: DAMM_V2_PROGRAM_ID,
           lamports: 1_000_000_000,
+        },
+      },
+      {
+        address: PUMP_GLOBAL_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/pump-global-config"),
+          executable: false,
+          owner: PUMP_AMM_PROGRAM_ID,
+          lamports: 9_215_825,
+        },
+      },
+      {
+        address: PUMP_FEE_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/pump-fee-config"),
+          executable: false,
+          owner: PUMP_FEES_PROGRAM_ID,
+          lamports: 33_103_977,
+        },
+      },
+      {
+        address: PUMP_GLOBAL_VOLUME_ACCUMULATOR,
+        info: {
+          data: fs.readFileSync(
+            "./tests/fixtures/pump-global-volume-accumulator",
+          ),
+          executable: false,
+          owner: PUMP_AMM_PROGRAM_ID,
+          lamports: 28_668_918,
+        },
+      },
+      {
+        address: token.NATIVE_MINT,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/wsol-mint"),
+          executable: false,
+          owner: token.TOKEN_PROGRAM_ID,
+          lamports: 1_642_232_546_455,
+        },
+      },
+      {
+        address: WHIRLPOOLS_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/whirlpool-config"),
+          executable: false,
+          owner: WHIRLPOOL_PROGRAM_ID,
+          lamports: 1_642_560,
+        },
+      },
+      {
+        address: WHIRLPOOL_FEE_TIER,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/whirlpool-fee-tier"),
+          executable: false,
+          owner: WHIRLPOOL_PROGRAM_ID,
+          lamports: 1_197_120,
         },
       },
     ],

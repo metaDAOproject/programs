@@ -94,3 +94,15 @@ program = "./tests/fixtures/openbook_twap.so"
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 program = "./tests/fixtures/mpl_token_metadata.so"
+
+[[test.genesis]]
+address = "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"
+program = "./tests/fixtures/pump_amm.so"
+
+[[test.genesis]]
+address = "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ"
+program = "./tests/fixtures/pump_fees.so"
+
+[[test.genesis]]
+address = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+program = "./tests/fixtures/whirlpool.so"
