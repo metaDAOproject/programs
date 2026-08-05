@@ -11,6 +11,9 @@ import { BanksClient } from "solana-bankrun";
 // 1B tokens at 6 decimals — the supply of a pump token.
 export const DEFAULT_OLD_SUPPLY = 1_000_000_000n * 10n ** 6n;
 
+// Classic SPL mints are plain; Token-2022 mints get the pump-style shape:
+// metadata pointer + mint-embedded token metadata, the only extensions the
+// program's allowlist accepts.
 export async function createOldMint(
   banksClient: BanksClient,
   payer: Signer,
@@ -18,25 +21,63 @@ export async function createOldMint(
   decimals: number = 6,
 ): Promise<PublicKey> {
   const mintKeypair = Keypair.generate();
+  const mint = mintKeypair.publicKey;
   const rent = await banksClient.getRent();
-  const lamports = Number(rent.minimumBalance(BigInt(token.MINT_SIZE)));
 
-  const tx = new Transaction().add(
-    SystemProgram.createAccount({
-      fromPubkey: payer.publicKey,
-      newAccountPubkey: mintKeypair.publicKey,
-      lamports,
-      space: token.MINT_SIZE,
-      programId: tokenProgram,
-    }),
-    token.createInitializeMint2Instruction(
-      mintKeypair.publicKey,
-      decimals,
-      payer.publicKey,
-      null,
-      tokenProgram,
-    ),
-  );
+  const tx = new Transaction();
+  if (tokenProgram.equals(token.TOKEN_2022_PROGRAM_ID)) {
+    const mintLen = token.getMintLen([token.ExtensionType.MetadataPointer]);
+    tx.add(
+      SystemProgram.createAccount({
+        fromPubkey: payer.publicKey,
+        newAccountPubkey: mint,
+        // Overfund so the token metadata TLV realloc stays rent-exempt.
+        lamports: Number(rent.minimumBalance(BigInt(mintLen + 500))),
+        space: mintLen,
+        programId: tokenProgram,
+      }),
+      token.createInitializeMetadataPointerInstruction(
+        mint,
+        payer.publicKey,
+        mint,
+        tokenProgram,
+      ),
+      token.createInitializeMint2Instruction(
+        mint,
+        decimals,
+        payer.publicKey,
+        null,
+        tokenProgram,
+      ),
+      token.createInitializeInstruction({
+        programId: tokenProgram,
+        mint,
+        metadata: mint,
+        name: "Old Token",
+        symbol: "OLD",
+        uri: "https://example.com/old.json",
+        mintAuthority: payer.publicKey,
+        updateAuthority: payer.publicKey,
+      }),
+    );
+  } else {
+    tx.add(
+      SystemProgram.createAccount({
+        fromPubkey: payer.publicKey,
+        newAccountPubkey: mint,
+        lamports: Number(rent.minimumBalance(BigInt(token.MINT_SIZE))),
+        space: token.MINT_SIZE,
+        programId: tokenProgram,
+      }),
+      token.createInitializeMint2Instruction(
+        mint,
+        decimals,
+        payer.publicKey,
+        null,
+        tokenProgram,
+      ),
+    );
+  }
 
   tx.recentBlockhash = (await banksClient.getLatestBlockhash())[0];
   tx.feePayer = payer.publicKey;
@@ -44,7 +85,7 @@ export async function createOldMint(
 
   await banksClient.processTransaction(tx);
 
-  return mintKeypair.publicKey;
+  return mint;
 }
 
 export type SetupRelaunchParams = {

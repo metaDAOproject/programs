@@ -27,11 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 2 — deposit, close_deposits, mark_failed, claim_refund"
 
-- [NEXT] 2.1 Token-2022 test availability check
-  - ~~Confirm bankrun ships Token-2022 as a builtin~~ — confirmed during 0.4: it's a builtin (`tests/relaunch/unit/scaffold.test.ts` runs a plain Token-2022 old mint), no fixture needed
-  - Extend `setupRelaunch()` to produce Token-2022 old mints (with allowed metadata extensions)
-
-- [ ] 2.2 `deposit` (instruction + SDK + tests)
+- [NEXT] 2.2 `deposit` (instruction + SDK + tests)
   - `Live` + window gate, `transfer_checked` under old mint's owner program, `init_if_needed` DepositRecord, accumulate record + total, event
   - Tests per plan §3: both token programs, accumulation, multiple depositors, zero amount, window/state gates
 

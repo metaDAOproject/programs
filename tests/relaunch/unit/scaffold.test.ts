@@ -33,6 +33,16 @@ export default function suite() {
     assert.equal(mint.decimals, 6);
     assert.equal(mint.supply.toString(), DEFAULT_OLD_SUPPLY.toString());
 
+    const extensions = token.getExtensionTypes(mint.tlvData);
+    if (oldTokenProgram.equals(token.TOKEN_2022_PROGRAM_ID)) {
+      assert.sameMembers(extensions, [
+        token.ExtensionType.MetadataPointer,
+        token.ExtensionType.TokenMetadata,
+      ]);
+    } else {
+      assert.isEmpty(extensions);
+    }
+
     const rawTokenAccount =
       await this.banksClient.getAccount(payerOldTokenAccount);
     const tokenAccount = token.unpackAccount(
@@ -47,7 +57,7 @@ export default function suite() {
     await assertOldMintSetup.call(this, token.TOKEN_PROGRAM_ID);
   });
 
-  it("setupRelaunch creates a Token-2022 old mint with supply", async function () {
+  it("setupRelaunch creates a Token-2022 old mint with metadata extensions and supply", async function () {
     await assertOldMintSetup.call(this, token.TOKEN_2022_PROGRAM_ID);
   });
 }

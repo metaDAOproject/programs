@@ -16,7 +16,7 @@ import {
 } from "@metadaoproject/programs";
 import { BanksClient } from "solana-bankrun";
 import { createLookupTableForTransaction } from "../../utils.js";
-import { setupRelaunch, DEFAULT_OLD_SUPPLY } from "../utils.js";
+import { setupRelaunch, createOldMint, DEFAULT_OLD_SUPPLY } from "../utils.js";
 import {
   getPumpPoolAuthorityAddr,
   writePumpPool,
@@ -76,59 +76,6 @@ async function createRawMint(
   await banksClient.processTransaction(tx);
 
   return mintKeypair.publicKey;
-}
-
-// A pump-style Token-2022 mint: metadata pointer + mint-embedded token
-// metadata, nothing else.
-async function createT22MintWithMetadata(
-  banksClient: BanksClient,
-  payer: Keypair,
-): Promise<PublicKey> {
-  const mintKeypair = Keypair.generate();
-  const mint = mintKeypair.publicKey;
-  const rent = await banksClient.getRent();
-  const mintLen = token.getMintLen([token.ExtensionType.MetadataPointer]);
-
-  const tx = new Transaction().add(
-    SystemProgram.createAccount({
-      fromPubkey: payer.publicKey,
-      newAccountPubkey: mint,
-      // Overfund so the token metadata TLV realloc stays rent-exempt.
-      lamports: Number(rent.minimumBalance(BigInt(mintLen + 500))),
-      space: mintLen,
-      programId: token.TOKEN_2022_PROGRAM_ID,
-    }),
-    token.createInitializeMetadataPointerInstruction(
-      mint,
-      payer.publicKey,
-      mint,
-      token.TOKEN_2022_PROGRAM_ID,
-    ),
-    token.createInitializeMint2Instruction(
-      mint,
-      6,
-      payer.publicKey,
-      null,
-      token.TOKEN_2022_PROGRAM_ID,
-    ),
-    token.createInitializeInstruction({
-      programId: token.TOKEN_2022_PROGRAM_ID,
-      mint,
-      metadata: mint,
-      name: "Old Token",
-      symbol: "OLD",
-      uri: "https://example.com/old.json",
-      mintAuthority: payer.publicKey,
-      updateAuthority: payer.publicKey,
-    }),
-  );
-
-  tx.recentBlockhash = (await banksClient.getLatestBlockhash())[0];
-  tx.feePayer = payer.publicKey;
-  tx.sign(payer, mintKeypair);
-  await banksClient.processTransaction(tx);
-
-  return mint;
 }
 
 async function createT22MintWithTransferFee(
@@ -558,9 +505,10 @@ export default function suite() {
   });
 
   it("initializes with a Token-2022 old mint carrying only metadata extensions", async function () {
-    const oldMint22 = await createT22MintWithMetadata(
+    const oldMint22 = await createOldMint(
       this.banksClient,
       this.payer,
+      token.TOKEN_2022_PROGRAM_ID,
     );
     const pool22 = await writePumpPool({
       context: this.context,
