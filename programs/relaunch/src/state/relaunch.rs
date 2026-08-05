@@ -54,7 +54,8 @@ pub struct Relaunch {
     pub grace_period_seconds: u32,
 
     // DAO passthrough config (launchpad-style)
-    /// The monthly spending limit the DAO allocates to the team.
+    /// The monthly spending limit the DAO allocates to the team. Zero, with
+    /// no members, means the DAO launches without a spending limit.
     pub monthly_spending_limit_amount: u64,
     /// The wallets that have access to the monthly spending limit.
     #[max_len(MAX_SPENDING_LIMIT_MEMBERS)]

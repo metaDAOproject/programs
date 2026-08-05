@@ -5,10 +5,13 @@ pub mod constants;
 pub mod error;
 pub mod events;
 pub mod instructions;
+pub mod pump_amm;
 pub mod state;
 
 pub use constants::*;
 pub use state::*;
+
+use instructions::*;
 
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
@@ -27,4 +30,14 @@ security_txt! {
 declare_id!("vaMpdXN2P3Z5v8y6GtAU5NzCUjxtphnRVpvqu37Spik");
 
 #[program]
-pub mod relaunch {}
+pub mod relaunch {
+    use super::*;
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_relaunch(
+        ctx: Context<InitializeRelaunch>,
+        args: InitializeRelaunchArgs,
+    ) -> Result<()> {
+        InitializeRelaunch::handle(ctx, args)
+    }
+}

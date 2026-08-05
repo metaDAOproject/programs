@@ -1,5 +1,6 @@
 import scaffold from "./unit/scaffold.test.js";
 import venues from "./unit/venues.test.js";
+import initializeRelaunch from "./unit/initializeRelaunch.test.js";
 import { RelaunchClient } from "@metadaoproject/programs";
 import { BankrunProvider } from "anchor-bankrun";
 
@@ -13,4 +14,5 @@ export default function suite() {
 
   describe("scaffold", scaffold);
   describe("venues", venues);
+  describe("#initialize_relaunch", initializeRelaunch);
 }

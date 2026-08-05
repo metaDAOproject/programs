@@ -127,6 +127,7 @@ export interface TestContext {
     to: PublicKey,
     mintAuthority: Keypair,
     amount: number,
+    computeUnitPrice?: number,
   ) => Promise<any>;
   getTokenBalance: (mint: PublicKey, owner: PublicKey) => Promise<bigint>;
   getMint: (mint: PublicKey) => Promise<any>;
@@ -455,15 +456,28 @@ before(async function () {
     );
   };
 
+  // computeUnitPrice, when set, prepends a ComputeBudget instruction so an
+  // otherwise byte-identical mint transaction gets a unique hash — bankrun
+  // rejects duplicate hashes within a blockhash window with "This transaction
+  // has already been processed".
   this.mintTo = async (
     mint: PublicKey,
     to: PublicKey,
     mintAuthority: Keypair,
     amount: number,
+    computeUnitPrice?: number,
   ) => {
     const tokenAccount = token.getAssociatedTokenAddressSync(mint, to, true);
 
     const tx = new Transaction();
+
+    if (computeUnitPrice !== undefined) {
+      tx.add(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: computeUnitPrice,
+        }),
+      );
+    }
 
     tx.add(
       token.createAssociatedTokenAccountIdempotentInstruction(

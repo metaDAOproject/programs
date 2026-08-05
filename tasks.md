@@ -27,13 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 1 — initialize_relaunch + start_deposits"
 
-- [NEXT] 1.1 `initialize_relaunch` (instruction + SDK + tests)
-  - Accounts/validations per plan §1: `mint_authority` Signer proof-of-control, new-mint checks, source-pool canonicality, quote mint ∈ {WSOL, USDC}, old-mint extension allowlist, threshold/window/spending-limit validations; USDC-quoted sources share one ATA for `source_quote_vault`/`usdc_vault`
-  - Handler order: `set_authority` → metadata CPI → `mint_to` 12M → snapshot old supply → `set_inner` → event
-  - SDK: `initializeRelaunch()` with create-mint-to-self pre-instructions
-  - Tests: full list in plan §1 (happy path, decoupled mint creation, authority footguns, extension allowlist, canonicality failures, arg bounds, PDA squat + rival relaunch)
-
-- [ ] 1.2 `start_deposits` (instruction + SDK + tests)
+- [NEXT] 1.2 `start_deposits` (instruction + SDK + tests)
   - `has_one = admin` signer gate, `Initialized → Live`, stamp `unix_timestamp_started`, event
   - Tests: happy path, non-admin fails, double-start fails (compute-budget trick for unique sigs)
 

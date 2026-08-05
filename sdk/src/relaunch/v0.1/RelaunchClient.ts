@@ -1,6 +1,24 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { AccountInfo, PublicKey } from "@solana/web3.js";
-import { RELAUNCH_V0_1_PROGRAM_ID } from "../../constants.js";
+import {
+  AccountInfo,
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  TransactionSignature,
+} from "@solana/web3.js";
+import {
+  createInitializeMint2Instruction,
+  getAssociatedTokenAddressSync,
+  MINT_SIZE,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import BN from "bn.js";
+import {
+  MAINNET_USDC,
+  MPL_TOKEN_METADATA_PROGRAM_ID,
+  RELAUNCH_V0_1_PROGRAM_ID,
+} from "../../constants.js";
 import {
   RelaunchProgram,
   RelaunchIDL,
@@ -12,7 +30,7 @@ import {
   getRelaunchSignerAddr,
   getDepositRecordAddr,
 } from "./pda.js";
-import { getEventAuthorityAddr } from "../../pda.js";
+import { getEventAuthorityAddr, getMetadataAddr } from "../../pda.js";
 
 export type CreateRelaunchClientParams = {
   provider: AnchorProvider;
@@ -47,6 +65,214 @@ export class RelaunchClient {
 
   public getProgramId(): PublicKey {
     return this.programId;
+  }
+
+  initializeRelaunchIx({
+    newMint,
+    oldMint,
+    oldTokenProgram,
+    sourcePool,
+    sourceQuoteMint,
+    tokenName,
+    tokenSymbol,
+    tokenUri,
+    secondsForDeposits,
+    gracePeriodSeconds,
+    thresholdBps,
+    // Zero amount with no members initializes without a spending limit.
+    monthlySpendingLimitAmount = new BN(0),
+    monthlySpendingLimitMembers = [],
+    teamAddress,
+    mintAuthority = this.provider.publicKey,
+    admin = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    newMint: PublicKey;
+    oldMint: PublicKey;
+    oldTokenProgram: PublicKey;
+    sourcePool: PublicKey;
+    sourceQuoteMint: PublicKey;
+    tokenName: string;
+    tokenSymbol: string;
+    tokenUri: string;
+    secondsForDeposits: number;
+    gracePeriodSeconds: number;
+    thresholdBps: number;
+    monthlySpendingLimitAmount?: BN;
+    monthlySpendingLimitMembers?: PublicKey[];
+    teamAddress: PublicKey;
+    mintAuthority?: PublicKey;
+    admin?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const relaunch = this.getRelaunchAddress({ newMint });
+    const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+
+    const oldTokenVault = getAssociatedTokenAddressSync(
+      oldMint,
+      relaunchSigner,
+      true,
+      oldTokenProgram,
+    );
+    const newTokenVault = getAssociatedTokenAddressSync(
+      newMint,
+      relaunchSigner,
+      true,
+    );
+    const sourceQuoteVault = getAssociatedTokenAddressSync(
+      sourceQuoteMint,
+      relaunchSigner,
+      true,
+    );
+    const usdcVault = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      relaunchSigner,
+      true,
+    );
+    const [tokenMetadata] = getMetadataAddr(newMint);
+
+    return this.relaunchProgram.methods
+      .initializeRelaunch({
+        tokenName,
+        tokenSymbol,
+        tokenUri,
+        secondsForDeposits,
+        gracePeriodSeconds,
+        thresholdBps,
+        monthlySpendingLimitAmount,
+        monthlySpendingLimitMembers,
+        teamAddress,
+      })
+      .accounts({
+        relaunch,
+        newMint,
+        mintAuthority,
+        relaunchSigner,
+        oldMint,
+        sourcePool,
+        sourceQuoteMint,
+        usdcMint: MAINNET_USDC,
+        oldTokenVault,
+        newTokenVault,
+        sourceQuoteVault,
+        usdcVault,
+        tokenMetadata,
+        admin,
+        payer,
+        oldTokenProgram,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ]);
+  }
+
+  // Builds the create-mint-to-self pre-instructions: a `createAccountWithSeed`
+  // + `initializeMint2` pair with the payer as mint authority, so
+  // `initialize_relaunch` can take the authority from a mint the payer
+  // provably controls.
+  async createNewMintIxs({
+    payer = this.provider.publicKey,
+    seed = Keypair.generate().publicKey.toBase58().slice(0, 32),
+  }: {
+    payer?: PublicKey;
+    seed?: string;
+  } = {}) {
+    const newMint = await PublicKey.createWithSeed(
+      payer,
+      seed,
+      TOKEN_PROGRAM_ID,
+    );
+    const lamports =
+      await this.provider.connection.getMinimumBalanceForRentExemption(
+        MINT_SIZE,
+      );
+
+    const instructions = [
+      SystemProgram.createAccountWithSeed({
+        fromPubkey: payer,
+        basePubkey: payer,
+        seed,
+        newAccountPubkey: newMint,
+        lamports,
+        space: MINT_SIZE,
+        programId: TOKEN_PROGRAM_ID,
+      }),
+      createInitializeMint2Instruction(newMint, 6, payer, null),
+    ];
+
+    return { newMint, instructions };
+  }
+
+  // Creates the new mint and initializes the relaunch in a single
+  // transaction, signed entirely by the provider wallet.
+  async initializeRelaunch({
+    oldMint,
+    sourcePool,
+    sourceQuoteMint,
+    tokenName,
+    tokenSymbol,
+    tokenUri,
+    secondsForDeposits,
+    gracePeriodSeconds,
+    thresholdBps,
+    monthlySpendingLimitAmount,
+    monthlySpendingLimitMembers,
+    teamAddress,
+    admin,
+  }: {
+    oldMint: PublicKey;
+    sourcePool: PublicKey;
+    sourceQuoteMint: PublicKey;
+    tokenName: string;
+    tokenSymbol: string;
+    tokenUri: string;
+    secondsForDeposits: number;
+    gracePeriodSeconds: number;
+    thresholdBps: number;
+    monthlySpendingLimitAmount?: BN;
+    monthlySpendingLimitMembers?: PublicKey[];
+    teamAddress: PublicKey;
+    admin?: PublicKey;
+  }): Promise<{
+    newMint: PublicKey;
+    relaunch: PublicKey;
+    txSignature: TransactionSignature;
+  }> {
+    const { newMint, instructions } = await this.createNewMintIxs();
+
+    const oldMintAccount =
+      await this.provider.connection.getAccountInfo(oldMint);
+    if (oldMintAccount === null) {
+      throw new Error(`old mint ${oldMint.toBase58()} does not exist`);
+    }
+
+    const txSignature = await this.initializeRelaunchIx({
+      newMint,
+      oldMint,
+      oldTokenProgram: oldMintAccount.owner,
+      sourcePool,
+      sourceQuoteMint,
+      tokenName,
+      tokenSymbol,
+      tokenUri,
+      secondsForDeposits,
+      gracePeriodSeconds,
+      thresholdBps,
+      monthlySpendingLimitAmount,
+      monthlySpendingLimitMembers,
+      teamAddress,
+      admin,
+    })
+      .preInstructions(instructions)
+      .rpc();
+
+    return {
+      newMint,
+      relaunch: this.getRelaunchAddress({ newMint }),
+      txSignature,
+    };
   }
 
   async fetchRelaunch(relaunch: PublicKey): Promise<RelaunchAccount | null> {

@@ -7,13 +7,19 @@ pub const TOKENS_TO_DEPOSITORS: u64 = 10_000_000 * TOKEN_SCALE;
 /// 2M tokens with 6 decimals, paired with recovered USDC in the futarchy AMM.
 pub const TOKENS_TO_FUTARCHY_LIQUIDITY: u64 = 2_000_000 * TOKEN_SCALE;
 
-/// 14 days, mirroring launchpad's launch-window cap.
-pub const MAX_SECONDS_FOR_DEPOSITS: u32 = 60 * 60 * 24 * 14;
+/// 1 year.
+pub const MAX_SECONDS_FOR_DEPOSITS: u32 = 60 * 60 * 24 * 365;
 
 pub mod wsol_mint {
     use anchor_lang::prelude::declare_id;
 
     declare_id!("So11111111111111111111111111111111111111112");
+}
+
+pub mod usdc_mint {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 }
 
 // pump
@@ -22,6 +28,10 @@ pub mod wsol_mint {
 /// program: `["pool-authority", mint]`. The canonical PumpSwap pool for a
 /// mint has this PDA as its `creator`.
 pub const PUMP_POOL_AUTHORITY_SEED: &[u8] = b"pool-authority";
+
+/// Seed of PumpSwap pool PDAs, derived under pump_amm:
+/// `["pool", index_le_u16, creator, base_mint, quote_mint]`.
+pub const PUMP_POOL_SEED: &[u8] = b"pool";
 
 /// The pump bonding-curve program. The pool-authority PDA that creates
 /// canonical PumpSwap pools at graduation is derived under this program.

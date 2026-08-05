@@ -1,7 +1,147 @@
 export type Relaunch = {
   version: "0.1.0";
   name: "relaunch";
-  instructions: [];
+  instructions: [
+    {
+      name: "initializeRelaunch";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "newMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mintAuthority";
+          isMut: false;
+          isSigner: true;
+          docs: [
+            "Proof that the initializer controls the new mint: must sign, and the",
+            "handler CPIs `set_authority` to hand minting to `relaunch_signer`.",
+          ];
+        },
+        {
+          name: "relaunchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "sourcePool";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "usdcMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "newTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "usdcVault";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The same account as `source_quote_vault` for USDC-quoted sources, in",
+            "which case the `init_if_needed` is a no-op revalidation.",
+          ];
+        },
+        {
+          name: "tokenMetadata";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "period. Not required to sign, mirroring launchpad's launch_authority.",
+          ];
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "rent";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenMetadataProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeRelaunchArgs";
+          };
+        },
+      ];
+    },
+  ];
   accounts: [
     {
       name: "depositRecord";
@@ -148,7 +288,10 @@ export type Relaunch = {
           },
           {
             name: "monthlySpendingLimitAmount";
-            docs: ["The monthly spending limit the DAO allocates to the team."];
+            docs: [
+              "The monthly spending limit the DAO allocates to the team. Zero, with",
+              "no members, means the DAO launches without a spending limit.",
+            ];
             type: "u64";
           },
           {
@@ -244,6 +387,72 @@ export type Relaunch = {
   ];
   types: [
     {
+      name: "CommonFields";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "slot";
+            type: "u64";
+          },
+          {
+            name: "unixTimestamp";
+            type: "i64";
+          },
+          {
+            name: "relaunchSeqNum";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeRelaunchArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "tokenName";
+            type: "string";
+          },
+          {
+            name: "tokenSymbol";
+            type: "string";
+          },
+          {
+            name: "tokenUri";
+            type: "string";
+          },
+          {
+            name: "secondsForDeposits";
+            type: "u32";
+          },
+          {
+            name: "gracePeriodSeconds";
+            type: "u32";
+          },
+          {
+            name: "thresholdBps";
+            type: "u16";
+          },
+          {
+            name: "monthlySpendingLimitAmount";
+            type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitMembers";
+            type: {
+              vec: "publicKey";
+            };
+          },
+          {
+            name: "teamAddress";
+            type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
       name: "RelaunchState";
       type: {
         kind: "enum";
@@ -273,12 +482,320 @@ export type Relaunch = {
       };
     },
   ];
+  events: [
+    {
+      name: "RelaunchInitializedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "admin";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oldMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "sourcePool";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "sourceQuoteMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "relaunchSigner";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "relaunchSignerBump";
+          type: "u8";
+          index: false;
+        },
+        {
+          name: "oldTokenVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newTokenVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "sourceQuoteVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "usdcVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "thresholdBps";
+          type: "u16";
+          index: false;
+        },
+        {
+          name: "oldSupplySnapshot";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "secondsForDeposits";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "gracePeriodSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "monthlySpendingLimitAmount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "monthlySpendingLimitMembers";
+          type: {
+            vec: "publicKey";
+          };
+          index: false;
+        },
+        {
+          name: "teamAddress";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "pdaBump";
+          type: "u8";
+          index: false;
+        },
+      ];
+    },
+  ];
+  errors: [
+    {
+      code: 6000;
+      name: "SupplyNonZero";
+      msg: "New mint supply must be zero";
+    },
+    {
+      code: 6001;
+      name: "FreezeAuthoritySet";
+      msg: "New mint must not have a freeze authority";
+    },
+    {
+      code: 6002;
+      name: "SourcePoolNotCanonical";
+      msg: "Source pool is not the canonical PumpSwap pool for the old mint";
+    },
+    {
+      code: 6003;
+      name: "SourcePoolQuoteMintMismatch";
+      msg: "Source quote mint does not match the source pool's quote mint";
+    },
+    {
+      code: 6004;
+      name: "InvalidQuoteMint";
+      msg: "Source quote mint must be WSOL or USDC";
+    },
+    {
+      code: 6005;
+      name: "ForbiddenOldMintExtension";
+      msg: "Old mint carries a Token-2022 extension outside the metadata allowlist";
+    },
+    {
+      code: 6006;
+      name: "InvalidThresholdBps";
+      msg: "Threshold must be between 1 and 10000 bps";
+    },
+    {
+      code: 6007;
+      name: "InvalidSecondsForDeposits";
+      msg: "Deposit period must be at most 1 year";
+    },
+    {
+      code: 6008;
+      name: "InvalidMonthlySpendingLimit";
+      msg: "Monthly spending limit amount and members must both be set or both be empty";
+    },
+    {
+      code: 6009;
+      name: "InvalidMonthlySpendingLimitMembers";
+      msg: "There can be at most 10 monthly spending limit members, without duplicates";
+    },
+  ];
 };
 
 export const IDL: Relaunch = {
   version: "0.1.0",
   name: "relaunch",
-  instructions: [],
+  instructions: [
+    {
+      name: "initializeRelaunch",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "newMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mintAuthority",
+          isMut: false,
+          isSigner: true,
+          docs: [
+            "Proof that the initializer controls the new mint: must sign, and the",
+            "handler CPIs `set_authority` to hand minting to `relaunch_signer`.",
+          ],
+        },
+        {
+          name: "relaunchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "sourcePool",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "usdcMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "newTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "usdcVault",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The same account as `source_quote_vault` for USDC-quoted sources, in",
+            "which case the `init_if_needed` is a no-op revalidation.",
+          ],
+        },
+        {
+          name: "tokenMetadata",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: false,
+          docs: [
+            "period. Not required to sign, mirroring launchpad's launch_authority.",
+          ],
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "rent",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenMetadataProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeRelaunchArgs",
+          },
+        },
+      ],
+    },
+  ],
   accounts: [
     {
       name: "depositRecord",
@@ -425,7 +942,10 @@ export const IDL: Relaunch = {
           },
           {
             name: "monthlySpendingLimitAmount",
-            docs: ["The monthly spending limit the DAO allocates to the team."],
+            docs: [
+              "The monthly spending limit the DAO allocates to the team. Zero, with",
+              "no members, means the DAO launches without a spending limit.",
+            ],
             type: "u64",
           },
           {
@@ -521,6 +1041,72 @@ export const IDL: Relaunch = {
   ],
   types: [
     {
+      name: "CommonFields",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "slot",
+            type: "u64",
+          },
+          {
+            name: "unixTimestamp",
+            type: "i64",
+          },
+          {
+            name: "relaunchSeqNum",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeRelaunchArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "tokenName",
+            type: "string",
+          },
+          {
+            name: "tokenSymbol",
+            type: "string",
+          },
+          {
+            name: "tokenUri",
+            type: "string",
+          },
+          {
+            name: "secondsForDeposits",
+            type: "u32",
+          },
+          {
+            name: "gracePeriodSeconds",
+            type: "u32",
+          },
+          {
+            name: "thresholdBps",
+            type: "u16",
+          },
+          {
+            name: "monthlySpendingLimitAmount",
+            type: "u64",
+          },
+          {
+            name: "monthlySpendingLimitMembers",
+            type: {
+              vec: "publicKey",
+            },
+          },
+          {
+            name: "teamAddress",
+            type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
       name: "RelaunchState",
       type: {
         kind: "enum",
@@ -548,6 +1134,174 @@ export const IDL: Relaunch = {
           },
         ],
       },
+    },
+  ],
+  events: [
+    {
+      name: "RelaunchInitializedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "admin",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oldMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "sourcePool",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "sourceQuoteMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "relaunchSigner",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "relaunchSignerBump",
+          type: "u8",
+          index: false,
+        },
+        {
+          name: "oldTokenVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newTokenVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "sourceQuoteVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "usdcVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "thresholdBps",
+          type: "u16",
+          index: false,
+        },
+        {
+          name: "oldSupplySnapshot",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "secondsForDeposits",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "gracePeriodSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "monthlySpendingLimitAmount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "monthlySpendingLimitMembers",
+          type: {
+            vec: "publicKey",
+          },
+          index: false,
+        },
+        {
+          name: "teamAddress",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "pdaBump",
+          type: "u8",
+          index: false,
+        },
+      ],
+    },
+  ],
+  errors: [
+    {
+      code: 6000,
+      name: "SupplyNonZero",
+      msg: "New mint supply must be zero",
+    },
+    {
+      code: 6001,
+      name: "FreezeAuthoritySet",
+      msg: "New mint must not have a freeze authority",
+    },
+    {
+      code: 6002,
+      name: "SourcePoolNotCanonical",
+      msg: "Source pool is not the canonical PumpSwap pool for the old mint",
+    },
+    {
+      code: 6003,
+      name: "SourcePoolQuoteMintMismatch",
+      msg: "Source quote mint does not match the source pool's quote mint",
+    },
+    {
+      code: 6004,
+      name: "InvalidQuoteMint",
+      msg: "Source quote mint must be WSOL or USDC",
+    },
+    {
+      code: 6005,
+      name: "ForbiddenOldMintExtension",
+      msg: "Old mint carries a Token-2022 extension outside the metadata allowlist",
+    },
+    {
+      code: 6006,
+      name: "InvalidThresholdBps",
+      msg: "Threshold must be between 1 and 10000 bps",
+    },
+    {
+      code: 6007,
+      name: "InvalidSecondsForDeposits",
+      msg: "Deposit period must be at most 1 year",
+    },
+    {
+      code: 6008,
+      name: "InvalidMonthlySpendingLimit",
+      msg: "Monthly spending limit amount and members must both be set or both be empty",
+    },
+    {
+      code: 6009,
+      name: "InvalidMonthlySpendingLimitMembers",
+      msg: "There can be at most 10 monthly spending limit members, without duplicates",
     },
   ],
 };
