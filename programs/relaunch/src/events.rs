@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::state::RelaunchState;
+
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {
     pub slot: u64,
@@ -59,4 +61,11 @@ pub struct TokensDepositedEvent {
     pub total_deposited: u64,
     pub total_deposited_by_depositor: u64,
     pub deposit_record_seq_num: u64,
+}
+
+#[event]
+pub struct DepositsClosedEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+    pub new_state: RelaunchState,
 }

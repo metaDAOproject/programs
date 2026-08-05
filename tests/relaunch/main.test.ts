@@ -3,6 +3,7 @@ import venues from "./unit/venues.test.js";
 import initializeRelaunch from "./unit/initializeRelaunch.test.js";
 import startDeposits from "./unit/startDeposits.test.js";
 import deposit from "./unit/deposit.test.js";
+import closeDeposits from "./unit/closeDeposits.test.js";
 import { RelaunchClient } from "@metadaoproject/programs";
 import { BankrunProvider } from "anchor-bankrun";
 
@@ -19,4 +20,5 @@ export default function suite() {
   describe("#initialize_relaunch", initializeRelaunch);
   describe("#start_deposits", startDeposits);
   describe("#deposit", deposit);
+  describe("#close_deposits", closeDeposits);
 }

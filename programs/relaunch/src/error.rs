@@ -32,4 +32,6 @@ pub enum RelaunchError {
     InvalidAmount,
     #[msg("Insufficient balance")]
     InsufficientFunds,
+    #[msg("Deposit window is still open")]
+    DepositWindowStillOpen,
 }

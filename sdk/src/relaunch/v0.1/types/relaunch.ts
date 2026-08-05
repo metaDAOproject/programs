@@ -235,6 +235,27 @@ export type Relaunch = {
         },
       ];
     },
+    {
+      name: "closeDeposits";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -772,6 +793,30 @@ export type Relaunch = {
         },
       ];
     },
+    {
+      name: "DepositsClosedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newState";
+          type: {
+            defined: "RelaunchState";
+          };
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -848,6 +893,11 @@ export type Relaunch = {
       code: 6014;
       name: "InsufficientFunds";
       msg: "Insufficient balance";
+    },
+    {
+      code: 6015;
+      name: "DepositWindowStillOpen";
+      msg: "Deposit window is still open";
     },
   ];
 };
@@ -1088,6 +1138,27 @@ export const IDL: Relaunch = {
           },
         },
       ],
+    },
+    {
+      name: "closeDeposits",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [
@@ -1626,6 +1697,30 @@ export const IDL: Relaunch = {
         },
       ],
     },
+    {
+      name: "DepositsClosedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "newState",
+          type: {
+            defined: "RelaunchState",
+          },
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -1702,6 +1797,11 @@ export const IDL: Relaunch = {
       code: 6014,
       name: "InsufficientFunds",
       msg: "Insufficient balance",
+    },
+    {
+      code: 6015,
+      name: "DepositWindowStillOpen",
+      msg: "Deposit window is still open",
     },
   ],
 };

@@ -227,6 +227,12 @@ export class RelaunchClient {
     });
   }
 
+  closeDepositsIx({ relaunch }: { relaunch: PublicKey }) {
+    return this.relaunchProgram.methods.closeDeposits().accounts({
+      relaunch,
+    });
+  }
+
   // Deposits from the provider wallet, reading the old mint and its owner
   // program from the stored relaunch.
   async deposit({

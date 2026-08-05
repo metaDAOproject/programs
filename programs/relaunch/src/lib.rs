@@ -50,4 +50,9 @@ pub mod relaunch {
     pub fn deposit(ctx: Context<Deposit>, args: DepositArgs) -> Result<()> {
         Deposit::handle(ctx, args)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn close_deposits(ctx: Context<CloseDeposits>) -> Result<()> {
+        CloseDeposits::handle(ctx)
+    }
 }

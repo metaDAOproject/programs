@@ -27,11 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 2 — deposit, close_deposits, mark_failed, claim_refund"
 
-- [NEXT] 2.3 `close_deposits` (instruction + SDK + tests)
-  - Window elapsed; u128 threshold math → `SellPending` | `Failed`; stamp `unix_timestamp_closed`, event
-  - Tests per plan §5: exact-threshold boundary, one-short → Failed, early close fails, 10^15-supply overflow case, permissionless crank
-
-- [ ] 2.4 `mark_failed` (instruction + SDK + tests)
+- [NEXT] 2.4 `mark_failed` (instruction + SDK + tests)
   - `SellPending → Failed` once `now > closed + grace_period_seconds`, event
   - Tests per plan §11: before/after grace, wrong states, permissionless
 
