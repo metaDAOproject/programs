@@ -22,4 +22,6 @@ pub enum RelaunchError {
     InvalidMonthlySpendingLimit,
     #[msg("There can be at most 10 monthly spending limit members, without duplicates")]
     InvalidMonthlySpendingLimitMembers,
+    #[msg("Relaunch must be in the Initialized state")]
+    RelaunchNotInitialized,
 }

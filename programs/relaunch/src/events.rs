@@ -41,3 +41,10 @@ pub struct RelaunchInitializedEvent {
     pub team_address: Pubkey,
     pub pda_bump: u8,
 }
+
+#[event]
+pub struct DepositsStartedEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+    pub admin: Pubkey,
+}

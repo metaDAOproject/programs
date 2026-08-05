@@ -168,6 +168,19 @@ export class RelaunchClient {
       ]);
   }
 
+  startDepositsIx({
+    relaunch,
+    admin = this.provider.publicKey,
+  }: {
+    relaunch: PublicKey;
+    admin?: PublicKey;
+  }) {
+    return this.relaunchProgram.methods.startDeposits().accounts({
+      relaunch,
+      admin,
+    });
+  }
+
   // Builds the create-mint-to-self pre-instructions: a `createAccountWithSeed`
   // + `initializeMint2` pair with the payer as mint authority, so
   // `initialize_relaunch` can take the authority from a mint the payer

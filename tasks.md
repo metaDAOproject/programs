@@ -23,19 +23,11 @@
 
 ## Tasks
 
-### Phase 1: initialize_relaunch + start_deposits
-
-> Reference: `relaunch-implementation-plan.md` → "Stage 1 — initialize_relaunch + start_deposits"
-
-- [NEXT] 1.2 `start_deposits` (instruction + SDK + tests)
-  - `has_one = admin` signer gate, `Initialized → Live`, stamp `unix_timestamp_started`, event
-  - Tests: happy path, non-admin fails, double-start fails (compute-budget trick for unique sigs)
-
 ### Phase 2: deposit + failure loop
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 2 — deposit, close_deposits, mark_failed, claim_refund"
 
-- [ ] 2.1 Token-2022 test availability check
+- [NEXT] 2.1 Token-2022 test availability check
   - ~~Confirm bankrun ships Token-2022 as a builtin~~ — confirmed during 0.4: it's a builtin (`tests/relaunch/unit/scaffold.test.ts` runs a plain Token-2022 old mint), no fixture needed
   - Extend `setupRelaunch()` to produce Token-2022 old mints (with allowed metadata extensions)
 

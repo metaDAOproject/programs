@@ -141,6 +141,32 @@ export type Relaunch = {
         },
       ];
     },
+    {
+      name: "startDeposits";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -597,6 +623,28 @@ export type Relaunch = {
         },
       ];
     },
+    {
+      name: "DepositsStartedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "admin";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -648,6 +696,11 @@ export type Relaunch = {
       code: 6009;
       name: "InvalidMonthlySpendingLimitMembers";
       msg: "There can be at most 10 monthly spending limit members, without duplicates";
+    },
+    {
+      code: 6010;
+      name: "RelaunchNotInitialized";
+      msg: "Relaunch must be in the Initialized state";
     },
   ];
 };
@@ -794,6 +847,32 @@ export const IDL: Relaunch = {
           },
         },
       ],
+    },
+    {
+      name: "startDeposits",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
   ],
   accounts: [
@@ -1251,6 +1330,28 @@ export const IDL: Relaunch = {
         },
       ],
     },
+    {
+      name: "DepositsStartedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "admin",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -1302,6 +1403,11 @@ export const IDL: Relaunch = {
       code: 6009,
       name: "InvalidMonthlySpendingLimitMembers",
       msg: "There can be at most 10 monthly spending limit members, without duplicates",
+    },
+    {
+      code: 6010,
+      name: "RelaunchNotInitialized",
+      msg: "Relaunch must be in the Initialized state",
     },
   ],
 };
