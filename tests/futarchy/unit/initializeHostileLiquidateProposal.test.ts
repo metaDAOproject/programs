@@ -98,7 +98,7 @@ export default function suite() {
       programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
       keys: [],
       data: Buffer.from(
-        "All intellectual property held by the DAO transfers back to the team.",
+        "Intellectual property transferred to the DAO upon initialization will be transferred back to the original team.",
         "utf8",
       ),
     });
