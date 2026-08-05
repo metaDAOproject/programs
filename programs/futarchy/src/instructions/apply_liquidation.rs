@@ -124,57 +124,23 @@ impl ApplyLiquidation<'_> {
 
             if position.liquidity > 0 {
                 let liquidity_to_sweep = position.liquidity;
-                let total_liquidity = dao.amm.total_liquidity;
-                require_gt!(total_liquidity, 0, FutarchyError::AssertFailed);
+                (base_swept, quote_swept) = withdraw_from_position(
+                    dao,
+                    &mut position,
+                    liquidity_to_sweep,
+                    amm_base_vault,
+                    amm_quote_vault,
+                    vault_base_account,
+                    vault_quote_account,
+                    token_program,
+                )?;
 
-                {
-                    let PoolState::Spot { ref mut spot } = dao.amm.state else {
-                        return err!(FutarchyError::PoolNotInSpotState);
-                    };
-
-                    let (base_to_sweep, quote_to_sweep) =
-                        spot.get_base_and_quote_withdrawable(liquidity_to_sweep, total_liquidity);
-                    spot.base_reserves -= base_to_sweep;
-                    spot.quote_reserves -= quote_to_sweep;
-
-                    base_swept = base_to_sweep;
-                    quote_swept = quote_to_sweep;
-                }
-
-                dao.amm.total_liquidity -= liquidity_to_sweep;
-
-                position.liquidity = 0;
+                // The position sits behind an UncheckedAccount, so Anchor
+                // won't write it back on exit — persist it manually.
                 {
                     let mut data = amm_position.try_borrow_mut_data()?;
                     let mut writer: &mut [u8] = &mut data;
                     position.try_serialize(&mut writer)?;
-                }
-
-                let dao_creator = dao.dao_creator;
-                let nonce = dao.nonce.to_le_bytes();
-                let signer_seeds = &[
-                    SEED_DAO,
-                    dao_creator.as_ref(),
-                    nonce.as_ref(),
-                    &[dao.pda_bump],
-                ];
-
-                for (amount_to_sweep, from, to) in [
-                    (base_swept, amm_base_vault, vault_base_account),
-                    (quote_swept, amm_quote_vault, vault_quote_account),
-                ] {
-                    token::transfer(
-                        CpiContext::new_with_signer(
-                            token_program.to_account_info(),
-                            Transfer {
-                                from: from.to_account_info(),
-                                to: to.to_account_info(),
-                                authority: dao.to_account_info(),
-                            },
-                            &[&signer_seeds[..]],
-                        ),
-                        amount_to_sweep,
-                    )?;
                 }
             }
         }

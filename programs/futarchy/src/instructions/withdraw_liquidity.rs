@@ -74,88 +74,31 @@ impl WithdrawLiquidity<'_> {
             program: _,
         } = ctx.accounts;
 
-        // Get the key before any borrows
         let liquidity_provider_key = liquidity_provider.key();
 
-        require_gte!(
-            amm_position.liquidity,
+        let (base_withdrawn, quote_withdrawn) = withdraw_from_position(
+            dao,
+            amm_position,
             liquidity_to_withdraw,
-            FutarchyError::InsufficientBalance
-        );
+            amm_base_vault,
+            amm_quote_vault,
+            liquidity_provider_base_account,
+            liquidity_provider_quote_account,
+            token_program,
+        )?;
 
-        require!(
-            liquidity_to_withdraw > 0,
-            FutarchyError::ZeroLiquidityRemove
-        );
-
-        let total_liquidity = dao.amm.total_liquidity;
-        require_gt!(total_liquidity, 0, FutarchyError::AssertFailed);
-
-        let (base_to_withdraw, quote_to_withdraw) = {
-            let PoolState::Spot { ref spot } = dao.amm.state else {
-                return err!(FutarchyError::PoolNotInSpotState);
-            };
-            spot.get_base_and_quote_withdrawable(liquidity_to_withdraw, total_liquidity)
-        };
-
+        // Checked after the core has already mutated state; an Err reverts
+        // the whole instruction, so this is equivalent to checking before.
         require_gte!(
-            base_to_withdraw,
+            base_withdrawn,
             min_base_amount,
             FutarchyError::SwapSlippageExceeded
         );
         require_gte!(
-            quote_to_withdraw,
+            quote_withdrawn,
             min_quote_amount,
             FutarchyError::SwapSlippageExceeded
         );
-
-        // Update the AMM position
-        amm_position.liquidity -= liquidity_to_withdraw;
-
-        // Update the futarchy AMM
-        dao.amm.total_liquidity -= liquidity_to_withdraw;
-        {
-            let PoolState::Spot { ref mut spot } = dao.amm.state else {
-                return err!(FutarchyError::PoolNotInSpotState);
-            };
-            spot.base_reserves -= base_to_withdraw;
-            spot.quote_reserves -= quote_to_withdraw;
-        }
-
-        let dao_creator = dao.dao_creator;
-        let nonce = dao.nonce.to_le_bytes();
-        let signer_seeds = &[
-            SEED_DAO,
-            dao_creator.as_ref(),
-            nonce.as_ref(),
-            &[dao.pda_bump],
-        ];
-
-        for (amount_to_withdraw, from, to) in [
-            (
-                base_to_withdraw,
-                amm_base_vault,
-                liquidity_provider_base_account,
-            ),
-            (
-                quote_to_withdraw,
-                amm_quote_vault,
-                liquidity_provider_quote_account,
-            ),
-        ] {
-            token::transfer(
-                CpiContext::new_with_signer(
-                    token_program.to_account_info(),
-                    Transfer {
-                        from: from.to_account_info(),
-                        to: to.to_account_info(),
-                        authority: dao.to_account_info(),
-                    },
-                    &[&signer_seeds[..]],
-                ),
-                amount_to_withdraw,
-            )?;
-        }
 
         dao.seq_num += 1;
 
@@ -167,11 +110,88 @@ impl WithdrawLiquidity<'_> {
             liquidity_withdrawn: liquidity_to_withdraw,
             min_base_amount,
             min_quote_amount,
-            base_amount: base_to_withdraw,
-            quote_amount: quote_to_withdraw,
+            base_amount: base_withdrawn,
+            quote_amount: quote_withdrawn,
             post_amm_state: dao.amm.clone(),
         });
 
         Ok(())
     }
+}
+
+/// Burns `liquidity_to_withdraw` from `position` and pays out the pro-rata
+/// share of the spot reserves from the AMM vaults to the recipient accounts.
+/// Returns `(base_withdrawn, quote_withdrawn)`.
+///
+/// Owns the shared state transition only: callers should persist `position`
+/// if it lives behind an `UncheckedAccount`, enforce slippage, bump
+/// `seq_num`, and emit their own event.
+pub fn withdraw_from_position<'info>(
+    dao: &mut Account<'info, Dao>,
+    position: &mut AmmPosition,
+    liquidity_to_withdraw: u128,
+    amm_base_vault: &Account<'info, TokenAccount>,
+    amm_quote_vault: &Account<'info, TokenAccount>,
+    recipient_base_account: &Account<'info, TokenAccount>,
+    recipient_quote_account: &Account<'info, TokenAccount>,
+    token_program: &Program<'info, Token>,
+) -> Result<(u64, u64)> {
+    require_gte!(
+        position.liquidity,
+        liquidity_to_withdraw,
+        FutarchyError::InsufficientBalance
+    );
+
+    require!(
+        liquidity_to_withdraw > 0,
+        FutarchyError::ZeroLiquidityRemove
+    );
+
+    let total_liquidity = dao.amm.total_liquidity;
+    require_gt!(total_liquidity, 0, FutarchyError::AssertFailed);
+
+    let (base_to_withdraw, quote_to_withdraw) = {
+        let PoolState::Spot { ref mut spot } = dao.amm.state else {
+            return err!(FutarchyError::PoolNotInSpotState);
+        };
+
+        let (base_to_withdraw, quote_to_withdraw) =
+            spot.get_base_and_quote_withdrawable(liquidity_to_withdraw, total_liquidity);
+        spot.base_reserves -= base_to_withdraw;
+        spot.quote_reserves -= quote_to_withdraw;
+
+        (base_to_withdraw, quote_to_withdraw)
+    };
+
+    position.liquidity -= liquidity_to_withdraw;
+    dao.amm.total_liquidity -= liquidity_to_withdraw;
+
+    let dao_creator = dao.dao_creator;
+    let nonce = dao.nonce.to_le_bytes();
+    let signer_seeds = &[
+        SEED_DAO,
+        dao_creator.as_ref(),
+        nonce.as_ref(),
+        &[dao.pda_bump],
+    ];
+
+    for (amount_to_withdraw, from, to) in [
+        (base_to_withdraw, amm_base_vault, recipient_base_account),
+        (quote_to_withdraw, amm_quote_vault, recipient_quote_account),
+    ] {
+        token::transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    from: from.to_account_info(),
+                    to: to.to_account_info(),
+                    authority: dao.to_account_info(),
+                },
+                &[&signer_seeds[..]],
+            ),
+            amount_to_withdraw,
+        )?;
+    }
+
+    Ok((base_to_withdraw, quote_to_withdraw))
 }

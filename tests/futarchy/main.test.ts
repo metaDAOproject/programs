@@ -23,6 +23,7 @@ import liquidatedGuards from "./unit/liquidatedGuards.test.js";
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
 import provideLiquidity from "./unit/provideLiquidity.test.js";
+import withdrawLiquidity from "./unit/withdrawLiquidity.test.js";
 
 import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 
@@ -96,6 +97,7 @@ export default function suite() {
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);
   describe("#provide_liquidity", provideLiquidity);
+  describe("#withdraw_liquidity", withdrawLiquidity);
 
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
 
