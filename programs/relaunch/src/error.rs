@@ -24,4 +24,12 @@ pub enum RelaunchError {
     InvalidMonthlySpendingLimitMembers,
     #[msg("Relaunch must be in the Initialized state")]
     RelaunchNotInitialized,
+    #[msg("Relaunch must be in the Live state")]
+    RelaunchNotLive,
+    #[msg("Deposit window has closed")]
+    DepositWindowClosed,
+    #[msg("Amount must be greater than zero")]
+    InvalidAmount,
+    #[msg("Insufficient balance")]
+    InsufficientFunds,
 }

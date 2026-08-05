@@ -167,6 +167,74 @@ export type Relaunch = {
       ];
       args: [];
     },
+    {
+      name: "deposit";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "oldMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositor";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "depositorTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "oldTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "DepositArgs";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -433,6 +501,18 @@ export type Relaunch = {
       };
     },
     {
+      name: "DepositArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
       name: "InitializeRelaunchArgs";
       type: {
         kind: "struct";
@@ -645,6 +725,53 @@ export type Relaunch = {
         },
       ];
     },
+    {
+      name: "TokensDepositedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "depositor";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "depositRecord";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "totalDeposited";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "totalDepositedByDepositor";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "depositRecordSeqNum";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -701,6 +828,26 @@ export type Relaunch = {
       code: 6010;
       name: "RelaunchNotInitialized";
       msg: "Relaunch must be in the Initialized state";
+    },
+    {
+      code: 6011;
+      name: "RelaunchNotLive";
+      msg: "Relaunch must be in the Live state";
+    },
+    {
+      code: 6012;
+      name: "DepositWindowClosed";
+      msg: "Deposit window has closed";
+    },
+    {
+      code: 6013;
+      name: "InvalidAmount";
+      msg: "Amount must be greater than zero";
+    },
+    {
+      code: 6014;
+      name: "InsufficientFunds";
+      msg: "Insufficient balance";
     },
   ];
 };
@@ -873,6 +1020,74 @@ export const IDL: Relaunch = {
         },
       ],
       args: [],
+    },
+    {
+      name: "deposit",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "oldMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositor",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "depositorTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "oldTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "DepositArgs",
+          },
+        },
+      ],
     },
   ],
   accounts: [
@@ -1140,6 +1355,18 @@ export const IDL: Relaunch = {
       },
     },
     {
+      name: "DepositArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "InitializeRelaunchArgs",
       type: {
         kind: "struct",
@@ -1352,6 +1579,53 @@ export const IDL: Relaunch = {
         },
       ],
     },
+    {
+      name: "TokensDepositedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "depositor",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "depositRecord",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "totalDeposited",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "totalDepositedByDepositor",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "depositRecordSeqNum",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -1408,6 +1682,26 @@ export const IDL: Relaunch = {
       code: 6010,
       name: "RelaunchNotInitialized",
       msg: "Relaunch must be in the Initialized state",
+    },
+    {
+      code: 6011,
+      name: "RelaunchNotLive",
+      msg: "Relaunch must be in the Live state",
+    },
+    {
+      code: 6012,
+      name: "DepositWindowClosed",
+      msg: "Deposit window has closed",
+    },
+    {
+      code: 6013,
+      name: "InvalidAmount",
+      msg: "Amount must be greater than zero",
+    },
+    {
+      code: 6014,
+      name: "InsufficientFunds",
+      msg: "Insufficient balance",
     },
   ],
 };

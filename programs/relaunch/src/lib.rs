@@ -45,4 +45,9 @@ pub mod relaunch {
     pub fn start_deposits(ctx: Context<StartDeposits>) -> Result<()> {
         StartDeposits::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn deposit(ctx: Context<Deposit>, args: DepositArgs) -> Result<()> {
+        Deposit::handle(ctx, args)
+    }
 }

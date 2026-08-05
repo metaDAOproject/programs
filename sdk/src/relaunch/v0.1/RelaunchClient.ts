@@ -181,6 +181,83 @@ export class RelaunchClient {
     });
   }
 
+  depositIx({
+    relaunch,
+    oldMint,
+    oldTokenProgram,
+    amount,
+    depositor = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    relaunch: PublicKey;
+    oldMint: PublicKey;
+    oldTokenProgram: PublicKey;
+    amount: BN;
+    depositor?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+    const depositRecord = this.getDepositRecordAddress({
+      relaunch,
+      depositor,
+    });
+
+    const oldTokenVault = getAssociatedTokenAddressSync(
+      oldMint,
+      relaunchSigner,
+      true,
+      oldTokenProgram,
+    );
+    const depositorTokenAccount = getAssociatedTokenAddressSync(
+      oldMint,
+      depositor,
+      false,
+      oldTokenProgram,
+    );
+
+    return this.relaunchProgram.methods.deposit({ amount }).accounts({
+      relaunch,
+      depositRecord,
+      oldMint,
+      oldTokenVault,
+      depositor,
+      depositorTokenAccount,
+      payer,
+      oldTokenProgram,
+    });
+  }
+
+  // Deposits from the provider wallet, reading the old mint and its owner
+  // program from the stored relaunch.
+  async deposit({
+    relaunch,
+    amount,
+  }: {
+    relaunch: PublicKey;
+    amount: BN;
+  }): Promise<TransactionSignature> {
+    const storedRelaunch = await this.fetchRelaunch(relaunch);
+    if (storedRelaunch === null) {
+      throw new Error(`relaunch ${relaunch.toBase58()} does not exist`);
+    }
+
+    const oldMintAccount = await this.provider.connection.getAccountInfo(
+      storedRelaunch.oldMint,
+    );
+    if (oldMintAccount === null) {
+      throw new Error(
+        `old mint ${storedRelaunch.oldMint.toBase58()} does not exist`,
+      );
+    }
+
+    return this.depositIx({
+      relaunch,
+      oldMint: storedRelaunch.oldMint,
+      oldTokenProgram: oldMintAccount.owner,
+      amount,
+    }).rpc();
+  }
+
   // Builds the create-mint-to-self pre-instructions: a `createAccountWithSeed`
   // + `initializeMint2` pair with the payer as mint authority, so
   // `initialize_relaunch` can take the authority from a mint the payer

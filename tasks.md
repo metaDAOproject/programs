@@ -27,11 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 2 — deposit, close_deposits, mark_failed, claim_refund"
 
-- [NEXT] 2.2 `deposit` (instruction + SDK + tests)
-  - `Live` + window gate, `transfer_checked` under old mint's owner program, `init_if_needed` DepositRecord, accumulate record + total, event
-  - Tests per plan §3: both token programs, accumulation, multiple depositors, zero amount, window/state gates
-
-- [ ] 2.3 `close_deposits` (instruction + SDK + tests)
+- [NEXT] 2.3 `close_deposits` (instruction + SDK + tests)
   - Window elapsed; u128 threshold math → `SellPending` | `Failed`; stamp `unix_timestamp_closed`, event
   - Tests per plan §5: exact-threshold boundary, one-short → Failed, early close fails, 10^15-supply overflow case, permissionless crank
 

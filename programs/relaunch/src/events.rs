@@ -48,3 +48,15 @@ pub struct DepositsStartedEvent {
     pub relaunch: Pubkey,
     pub admin: Pubkey,
 }
+
+#[event]
+pub struct TokensDepositedEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+    pub depositor: Pubkey,
+    pub deposit_record: Pubkey,
+    pub amount: u64,
+    pub total_deposited: u64,
+    pub total_deposited_by_depositor: u64,
+    pub deposit_record_seq_num: u64,
+}
