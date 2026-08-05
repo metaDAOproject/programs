@@ -256,6 +256,27 @@ export type Relaunch = {
       ];
       args: [];
     },
+    {
+      name: "markFailed";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -817,6 +838,23 @@ export type Relaunch = {
         },
       ];
     },
+    {
+      name: "RelaunchMarkedFailedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -898,6 +936,16 @@ export type Relaunch = {
       code: 6015;
       name: "DepositWindowStillOpen";
       msg: "Deposit window is still open";
+    },
+    {
+      code: 6016;
+      name: "RelaunchNotSellPending";
+      msg: "Relaunch must be in the SellPending state";
+    },
+    {
+      code: 6017;
+      name: "GracePeriodStillActive";
+      msg: "Grace period has not elapsed";
     },
   ];
 };
@@ -1141,6 +1189,27 @@ export const IDL: Relaunch = {
     },
     {
       name: "closeDeposits",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "markFailed",
       accounts: [
         {
           name: "relaunch",
@@ -1721,6 +1790,23 @@ export const IDL: Relaunch = {
         },
       ],
     },
+    {
+      name: "RelaunchMarkedFailedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -1802,6 +1888,16 @@ export const IDL: Relaunch = {
       code: 6015,
       name: "DepositWindowStillOpen",
       msg: "Deposit window is still open",
+    },
+    {
+      code: 6016,
+      name: "RelaunchNotSellPending",
+      msg: "Relaunch must be in the SellPending state",
+    },
+    {
+      code: 6017,
+      name: "GracePeriodStillActive",
+      msg: "Grace period has not elapsed",
     },
   ],
 };

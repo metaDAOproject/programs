@@ -69,3 +69,9 @@ pub struct DepositsClosedEvent {
     pub relaunch: Pubkey,
     pub new_state: RelaunchState,
 }
+
+#[event]
+pub struct RelaunchMarkedFailedEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+}

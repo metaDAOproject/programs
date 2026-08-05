@@ -34,4 +34,8 @@ pub enum RelaunchError {
     InsufficientFunds,
     #[msg("Deposit window is still open")]
     DepositWindowStillOpen,
+    #[msg("Relaunch must be in the SellPending state")]
+    RelaunchNotSellPending,
+    #[msg("Grace period has not elapsed")]
+    GracePeriodStillActive,
 }

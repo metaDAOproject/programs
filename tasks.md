@@ -27,11 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 2 — deposit, close_deposits, mark_failed, claim_refund"
 
-- [NEXT] 2.4 `mark_failed` (instruction + SDK + tests)
-  - `SellPending → Failed` once `now > closed + grace_period_seconds`, event
-  - Tests per plan §11: before/after grace, wrong states, permissionless
-
-- [ ] 2.5 `claim_refund` (instruction + SDK + tests)
+- [NEXT] 2.5 `claim_refund` (instruction + SDK + tests)
   - `Failed`, returns exact `amount_deposited`, sets `claimed`, event
   - Tests per plan §10: both token programs, double-refund, wrong state, vault-empty conservation, both end-to-end failure paths
 

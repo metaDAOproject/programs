@@ -233,6 +233,12 @@ export class RelaunchClient {
     });
   }
 
+  markFailedIx({ relaunch }: { relaunch: PublicKey }) {
+    return this.relaunchProgram.methods.markFailed().accounts({
+      relaunch,
+    });
+  }
+
   // Deposits from the provider wallet, reading the old mint and its owner
   // program from the stored relaunch.
   async deposit({

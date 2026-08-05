@@ -85,12 +85,12 @@ export default function suite() {
     await client.startDepositsIx({ relaunch }).rpc();
 
     try {
-      // The compute-unit-limit instruction makes the transaction hash unique
+      // The compute-unit-price instruction makes the transaction hash unique
       // so the retry isn't rejected as a duplicate of the first call.
       await client
         .startDepositsIx({ relaunch })
         .postInstructions([
-          ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
         ])
         .rpc();
       assert.fail("Should have thrown error");

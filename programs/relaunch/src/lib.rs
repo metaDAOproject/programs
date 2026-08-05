@@ -55,4 +55,9 @@ pub mod relaunch {
     pub fn close_deposits(ctx: Context<CloseDeposits>) -> Result<()> {
         CloseDeposits::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn mark_failed(ctx: Context<MarkFailed>) -> Result<()> {
+        MarkFailed::handle(ctx)
+    }
 }
