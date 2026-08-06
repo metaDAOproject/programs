@@ -257,6 +257,161 @@ export type Relaunch = {
       args: [];
     },
     {
+      name: "executeSell";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "relaunchSigner";
+          isMut: true;
+          isSigner: false;
+          docs: ["user account writable."];
+        },
+        {
+          name: "oldMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sourcePool";
+          isMut: true;
+          isSigner: false;
+          docs: ["rechecks its internal consistency."];
+        },
+        {
+          name: "pumpGlobalConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "protocolFeeRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "protocolFeeRecipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "poolBaseTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "poolQuoteTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "coinCreatorVaultAta";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "coinCreatorVaultAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "pumpFeeConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "pumpFeeProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "poolV2";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "buybackFeeRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "buybackFeeRecipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "pumpEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "pumpAmmProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "ExecuteSellArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "markFailed";
       accounts: [
         {
@@ -612,6 +767,21 @@ export type Relaunch = {
       };
     },
     {
+      name: "ExecuteSellArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "minQuoteOut";
+            docs: [
+              "The admin's live, client-computed slippage floor on the sell proceeds.",
+            ];
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
       name: "InitializeRelaunchArgs";
       type: {
         kind: "struct";
@@ -913,6 +1083,40 @@ export type Relaunch = {
       ];
     },
     {
+      name: "SellExecutedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "baseSold";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "quoteRecovered";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "newState";
+          type: {
+            defined: "RelaunchState";
+          };
+          index: false;
+        },
+      ];
+    },
+    {
       name: "RefundClaimedEvent";
       fields: [
         {
@@ -1050,6 +1254,11 @@ export type Relaunch = {
       code: 6019;
       name: "AlreadyClaimed";
       msg: "Deposit record has already been claimed";
+    },
+    {
+      code: 6020;
+      name: "GracePeriodElapsed";
+      msg: "Grace period has elapsed";
     },
   ];
 };
@@ -1311,6 +1520,161 @@ export const IDL: Relaunch = {
         },
       ],
       args: [],
+    },
+    {
+      name: "executeSell",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "relaunchSigner",
+          isMut: true,
+          isSigner: false,
+          docs: ["user account writable."],
+        },
+        {
+          name: "oldMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sourcePool",
+          isMut: true,
+          isSigner: false,
+          docs: ["rechecks its internal consistency."],
+        },
+        {
+          name: "pumpGlobalConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "protocolFeeRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "protocolFeeRecipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "poolBaseTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "poolQuoteTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "coinCreatorVaultAta",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "coinCreatorVaultAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "pumpFeeConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "pumpFeeProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "poolV2",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "buybackFeeRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "buybackFeeRecipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "pumpEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "pumpAmmProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "ExecuteSellArgs",
+          },
+        },
+      ],
     },
     {
       name: "markFailed",
@@ -1668,6 +2032,21 @@ export const IDL: Relaunch = {
       },
     },
     {
+      name: "ExecuteSellArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "minQuoteOut",
+            docs: [
+              "The admin's live, client-computed slippage floor on the sell proceeds.",
+            ],
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "InitializeRelaunchArgs",
       type: {
         kind: "struct",
@@ -1969,6 +2348,40 @@ export const IDL: Relaunch = {
       ],
     },
     {
+      name: "SellExecutedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "baseSold",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "quoteRecovered",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "newState",
+          type: {
+            defined: "RelaunchState",
+          },
+          index: false,
+        },
+      ],
+    },
+    {
       name: "RefundClaimedEvent",
       fields: [
         {
@@ -2106,6 +2519,11 @@ export const IDL: Relaunch = {
       code: 6019,
       name: "AlreadyClaimed",
       msg: "Deposit record has already been claimed",
+    },
+    {
+      code: 6020,
+      name: "GracePeriodElapsed",
+      msg: "Grace period has elapsed",
     },
   ],
 };

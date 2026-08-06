@@ -56,6 +56,11 @@ pub mod relaunch {
         CloseDeposits::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn execute_sell(ctx: Context<ExecuteSell>, args: ExecuteSellArgs) -> Result<()> {
+        ExecuteSell::handle(ctx, args)
+    }
+
     #[access_control(ctx.accounts.validate())]
     pub fn mark_failed(ctx: Context<MarkFailed>) -> Result<()> {
         MarkFailed::handle(ctx)

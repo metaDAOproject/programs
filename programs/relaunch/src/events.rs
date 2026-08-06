@@ -77,6 +77,15 @@ pub struct RelaunchMarkedFailedEvent {
 }
 
 #[event]
+pub struct SellExecutedEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+    pub base_sold: u64,
+    pub quote_recovered: u64,
+    pub new_state: RelaunchState,
+}
+
+#[event]
 pub struct RefundClaimedEvent {
     pub common: CommonFields,
     pub relaunch: Pubkey,

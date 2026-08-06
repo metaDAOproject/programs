@@ -42,4 +42,6 @@ pub enum RelaunchError {
     RelaunchNotFailed,
     #[msg("Deposit record has already been claimed")]
     AlreadyClaimed,
+    #[msg("Grace period has elapsed")]
+    GracePeriodElapsed,
 }

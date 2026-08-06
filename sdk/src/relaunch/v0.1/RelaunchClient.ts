@@ -8,6 +8,8 @@ import {
   TransactionSignature,
 } from "@solana/web3.js";
 import {
+  AccountLayout,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   createInitializeMint2Instruction,
   getAssociatedTokenAddressSync,
   MINT_SIZE,
@@ -17,6 +19,8 @@ import BN from "bn.js";
 import {
   MAINNET_USDC,
   MPL_TOKEN_METADATA_PROGRAM_ID,
+  PUMP_AMM_PROGRAM_ID,
+  PUMP_FEES_PROGRAM_ID,
   RELAUNCH_V0_1_PROGRAM_ID,
 } from "../../constants.js";
 import {
@@ -30,6 +34,15 @@ import {
   getRelaunchSignerAddr,
   getDepositRecordAddr,
 } from "./pda.js";
+import {
+  getPumpCreatorVaultAuthorityAddr,
+  getPumpPoolV2Addr,
+  parsePumpGlobalConfig,
+  parsePumpPool,
+  PUMP_AMM_EVENT_AUTHORITY,
+  PUMP_AMM_FEE_CONFIG,
+  PUMP_AMM_GLOBAL_CONFIG,
+} from "./pumpAmm.js";
 import { getEventAuthorityAddr, getMetadataAddr } from "../../pda.js";
 
 export type CreateRelaunchClientParams = {
@@ -233,6 +246,91 @@ export class RelaunchClient {
     });
   }
 
+  executeSellIx({
+    relaunch,
+    oldMint,
+    oldTokenProgram,
+    sourceQuoteMint,
+    sourcePool,
+    poolBaseTokenAccount,
+    poolQuoteTokenAccount,
+    coinCreator,
+    protocolFeeRecipient,
+    buybackFeeRecipient,
+    minQuoteOut,
+    admin = this.provider.publicKey,
+  }: {
+    relaunch: PublicKey;
+    oldMint: PublicKey;
+    oldTokenProgram: PublicKey;
+    sourceQuoteMint: PublicKey;
+    sourcePool: PublicKey;
+    poolBaseTokenAccount: PublicKey;
+    poolQuoteTokenAccount: PublicKey;
+    coinCreator: PublicKey;
+    protocolFeeRecipient: PublicKey;
+    buybackFeeRecipient: PublicKey;
+    minQuoteOut: BN;
+    admin?: PublicKey;
+  }) {
+    const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+
+    const oldTokenVault = getAssociatedTokenAddressSync(
+      oldMint,
+      relaunchSigner,
+      true,
+      oldTokenProgram,
+    );
+    const sourceQuoteVault = getAssociatedTokenAddressSync(
+      sourceQuoteMint,
+      relaunchSigner,
+      true,
+    );
+    const coinCreatorVaultAuthority =
+      getPumpCreatorVaultAuthorityAddr(coinCreator);
+
+    return this.relaunchProgram.methods.executeSell({ minQuoteOut }).accounts({
+      relaunch,
+      admin,
+      relaunchSigner,
+      oldMint,
+      sourceQuoteMint,
+      oldTokenVault,
+      sourceQuoteVault,
+      sourcePool,
+      pumpGlobalConfig: PUMP_AMM_GLOBAL_CONFIG,
+      protocolFeeRecipient,
+      protocolFeeRecipientTokenAccount: getAssociatedTokenAddressSync(
+        sourceQuoteMint,
+        protocolFeeRecipient,
+        true,
+      ),
+      poolBaseTokenAccount,
+      poolQuoteTokenAccount,
+      coinCreatorVaultAta: getAssociatedTokenAddressSync(
+        sourceQuoteMint,
+        coinCreatorVaultAuthority,
+        true,
+      ),
+      coinCreatorVaultAuthority,
+      pumpFeeConfig: PUMP_AMM_FEE_CONFIG,
+      pumpFeeProgram: PUMP_FEES_PROGRAM_ID,
+      poolV2: getPumpPoolV2Addr(oldMint),
+      buybackFeeRecipient,
+      buybackFeeRecipientTokenAccount: getAssociatedTokenAddressSync(
+        sourceQuoteMint,
+        buybackFeeRecipient,
+        true,
+      ),
+      pumpEventAuthority: PUMP_AMM_EVENT_AUTHORITY,
+      pumpAmmProgram: PUMP_AMM_PROGRAM_ID,
+      baseTokenProgram: oldTokenProgram,
+      quoteTokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    });
+  }
+
   markFailedIx({ relaunch }: { relaunch: PublicKey }) {
     return this.relaunchProgram.methods.markFailed().accounts({
       relaunch,
@@ -310,6 +408,88 @@ export class RelaunchClient {
       oldTokenProgram: oldMintAccount.owner,
       amount,
     }).rpc();
+  }
+
+  // Sells the whole old-token vault as the admin (the provider wallet),
+  // deriving the pump account set from the stored relaunch, its pool, and
+  // pump's global config. When minQuoteOut is not given, it is computed live
+  // from the pool reserves: the constant-product output of the sell minus
+  // slippageBps (which must also cover pump's swap fees).
+  async executeSell({
+    relaunch,
+    minQuoteOut,
+    slippageBps = 100,
+  }: {
+    relaunch: PublicKey;
+    minQuoteOut?: BN;
+    slippageBps?: number;
+  }): Promise<TransactionSignature> {
+    const storedRelaunch = await this.fetchRelaunch(relaunch);
+    if (storedRelaunch === null) {
+      throw new Error(`relaunch ${relaunch.toBase58()} does not exist`);
+    }
+
+    const oldMintAccount = await this.provider.connection.getAccountInfo(
+      storedRelaunch.oldMint,
+    );
+    if (oldMintAccount === null) {
+      throw new Error(
+        `old mint ${storedRelaunch.oldMint.toBase58()} does not exist`,
+      );
+    }
+
+    const poolAccount = await this.provider.connection.getAccountInfo(
+      storedRelaunch.sourcePool,
+    );
+    if (poolAccount === null) {
+      throw new Error(
+        `source pool ${storedRelaunch.sourcePool.toBase58()} does not exist`,
+      );
+    }
+    const pool = parsePumpPool(poolAccount.data);
+
+    const globalConfigAccount = await this.provider.connection.getAccountInfo(
+      PUMP_AMM_GLOBAL_CONFIG,
+    );
+    if (globalConfigAccount === null) {
+      throw new Error("pump_amm global config does not exist");
+    }
+    const globalConfig = parsePumpGlobalConfig(globalConfigAccount.data);
+
+    if (minQuoteOut === undefined) {
+      const [baseIn, baseReserve, quoteReserve] = await Promise.all(
+        [
+          storedRelaunch.oldTokenVault,
+          pool.poolBaseTokenAccount,
+          pool.poolQuoteTokenAccount,
+        ].map((address) => this.fetchTokenBalance(address)),
+      );
+      const grossOut = (quoteReserve * baseIn) / (baseReserve + baseIn);
+      const floor = (grossOut * (10_000n - BigInt(slippageBps))) / 10_000n;
+      minQuoteOut = new BN(floor.toString());
+    }
+
+    return this.executeSellIx({
+      relaunch,
+      oldMint: storedRelaunch.oldMint,
+      oldTokenProgram: oldMintAccount.owner,
+      sourceQuoteMint: storedRelaunch.sourceQuoteMint,
+      sourcePool: storedRelaunch.sourcePool,
+      poolBaseTokenAccount: pool.poolBaseTokenAccount,
+      poolQuoteTokenAccount: pool.poolQuoteTokenAccount,
+      coinCreator: pool.coinCreator,
+      protocolFeeRecipient: globalConfig.protocolFeeRecipients[0],
+      buybackFeeRecipient: globalConfig.buybackFeeRecipients[0],
+      minQuoteOut,
+    }).rpc();
+  }
+
+  private async fetchTokenBalance(address: PublicKey): Promise<bigint> {
+    const accountInfo = await this.provider.connection.getAccountInfo(address);
+    if (accountInfo === null) {
+      throw new Error(`token account ${address.toBase58()} does not exist`);
+    }
+    return AccountLayout.decode(accountInfo.data).amount;
   }
 
   // Claims a refund for the given depositor (the provider wallet by default),

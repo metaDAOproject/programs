@@ -7,7 +7,6 @@ import { setupRelaunch } from "../utils.js";
 import {
   getBuybackFeeRecipients,
   getCanonicalPumpPoolAddr,
-  getCreatorVaultAuthorityAddr,
   getProtocolFeeRecipient,
   getUserVolumeAccumulatorAddr,
   pumpBuyIx,
@@ -22,7 +21,10 @@ import {
   whirlpoolSwapV2Ix,
   wrapSol,
 } from "../whirlpool.js";
-import { MAINNET_USDC } from "@metadaoproject/programs";
+import {
+  getPumpCreatorVaultAuthorityAddr,
+  MAINNET_USDC,
+} from "@metadaoproject/programs";
 
 const POOL_BASE_RESERVE = 1_000_000n * 10n ** 6n; // 1M old tokens
 const WSOL_POOL_QUOTE_RESERVE = 100n * 10n ** 9n; // 100 SOL
@@ -62,7 +64,7 @@ export default function suite() {
     const feeAtas = [
       protocolFeeRecipient,
       buybackFeeRecipient,
-      getCreatorVaultAuthorityAddr(pool.coinCreator),
+      getPumpCreatorVaultAuthorityAddr(pool.coinCreator),
     ].map((owner) =>
       token.getAssociatedTokenAddressSync(pool.quoteMint, owner, true),
     );

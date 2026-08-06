@@ -43,16 +43,14 @@ import {
   LiquidationClient,
   RelaunchClient,
   LOW_FEE_RAYDIUM_CONFIG,
+  PUMP_AMM_FEE_CONFIG,
+  PUMP_AMM_GLOBAL_CONFIG,
   PUMP_AMM_PROGRAM_ID,
   PUMP_FEES_PROGRAM_ID,
   WHIRLPOOL_PROGRAM_ID,
   sha256,
 } from "@metadaoproject/programs";
-import {
-  PUMP_GLOBAL_CONFIG,
-  PUMP_FEE_CONFIG,
-  PUMP_GLOBAL_VOLUME_ACCUMULATOR,
-} from "./relaunch/pumpAmm.js";
+import { PUMP_GLOBAL_VOLUME_ACCUMULATOR } from "./relaunch/pumpAmm.js";
 import { WHIRLPOOLS_CONFIG, WHIRLPOOL_FEE_TIER } from "./relaunch/whirlpool.js";
 import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/programs/launchpad/v0.6";
 import { LaunchpadClient as LaunchpadClientV8 } from "@metadaoproject/programs/launchpad/v0.8";
@@ -275,7 +273,7 @@ before(async function () {
         },
       },
       {
-        address: PUMP_GLOBAL_CONFIG,
+        address: PUMP_AMM_GLOBAL_CONFIG,
         info: {
           data: fs.readFileSync("./tests/fixtures/pump-global-config"),
           executable: false,
@@ -284,7 +282,7 @@ before(async function () {
         },
       },
       {
-        address: PUMP_FEE_CONFIG,
+        address: PUMP_AMM_FEE_CONFIG,
         info: {
           data: fs.readFileSync("./tests/fixtures/pump-fee-config"),
           executable: false,

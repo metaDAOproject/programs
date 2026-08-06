@@ -27,12 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 3 — execute_sell, execute_usdc_swap, deposit_via_buy"
 
-- [NEXT] 3.1 `execute_sell` (instruction + SDK + tests)
-  - Hand-built `cpi/pump_amm.rs` sell builder (discriminator + borsh args + verified 21-account list from design §06)
-  - Admin + `SellPending` + grace gate; sell full vault; `quote_recovered` from measured delta; WSOL → `Sold`, USDC → `Swapped`
-  - Tests per plan §6: both quote variants, slippage failure leaves state unchanged, non-admin/wrong-state/after-grace, Token-2022 base pool
-
-- [ ] 3.2 `execute_usdc_swap` (instruction + SDK + tests)
+- [NEXT] 3.2 `execute_usdc_swap` (instruction + SDK + tests)
   - Whirlpool `swap_v2` CPI (`orca_whirlpools_client` if clean under 0.29, else hand-built; verified 15-account list incl. `memo_program`); pool pinned `address = USDC_SWAP_POOL`
   - Admin + `Sold`; full WSOL balance a→b; set `usdc_recovered`
   - SDK: tick-array derivation helper + `min_usdc_out`

@@ -7,7 +7,13 @@ import {
 import * as token from "@solana/spl-token";
 import { BanksClient, ProgramTestContext } from "solana-bankrun";
 import {
-  MAINNET_USDC,
+  getPumpCreatorVaultAuthorityAddr,
+  getPumpPoolV2Addr,
+  parsePumpGlobalConfig,
+  PumpGlobalConfigAccount,
+  PUMP_AMM_EVENT_AUTHORITY,
+  PUMP_AMM_FEE_CONFIG,
+  PUMP_AMM_GLOBAL_CONFIG,
   PUMP_AMM_PROGRAM_ID,
   PUMP_FEES_PROGRAM_ID,
   PUMP_PROGRAM_ID,
@@ -15,25 +21,9 @@ import {
 
 const TOKEN_ACCOUNT_RENT = 2_039_280n;
 
-export const PUMP_GLOBAL_CONFIG = PublicKey.findProgramAddressSync(
-  [Buffer.from("global_config")],
-  PUMP_AMM_PROGRAM_ID,
-)[0];
-
-export const PUMP_EVENT_AUTHORITY = PublicKey.findProgramAddressSync(
-  [Buffer.from("__event_authority")],
-  PUMP_AMM_PROGRAM_ID,
-)[0];
-
 export const PUMP_GLOBAL_VOLUME_ACCUMULATOR = PublicKey.findProgramAddressSync(
   [Buffer.from("global_volume_accumulator")],
   PUMP_AMM_PROGRAM_ID,
-)[0];
-
-// Per-consumer fee config the pump fee program keeps for pump_amm.
-export const PUMP_FEE_CONFIG = PublicKey.findProgramAddressSync(
-  [Buffer.from("fee_config"), PUMP_AMM_PROGRAM_ID.toBuffer()],
-  PUMP_FEES_PROGRAM_ID,
 )[0];
 
 // Stable coin creator used by fabricated pools so creator-vault ATAs are
@@ -86,15 +76,6 @@ export function getCanonicalPumpPoolAddr(
   });
 }
 
-export function getCreatorVaultAuthorityAddr(
-  coinCreator: PublicKey,
-): PublicKey {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("creator_vault"), coinCreator.toBuffer()],
-    PUMP_AMM_PROGRAM_ID,
-  )[0];
-}
-
 export function getUserVolumeAccumulatorAddr(user: PublicKey): PublicKey {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("user_volume_accumulator"), user.toBuffer()],
@@ -102,70 +83,27 @@ export function getUserVolumeAccumulatorAddr(user: PublicKey): PublicKey {
   )[0];
 }
 
-// The current pump_amm requires this PDA as the first remaining account on
-// buys and sells (checked by address only — the account need not exist;
-// verified against live mainnet swaps 2026-08-04). Newer than the published
-// IDL's account list.
-export function getPoolV2Addr(baseMint: PublicKey): PublicKey {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("pool-v2"), baseMint.toBuffer()],
-    PUMP_AMM_PROGRAM_ID,
-  )[0];
-}
-
-async function globalConfigRecipients(
+async function fetchGlobalConfig(
   banksClient: BanksClient,
-  offset: number,
-): Promise<PublicKey[]> {
-  const globalConfig = await banksClient.getAccount(PUMP_GLOBAL_CONFIG);
-  const data = Buffer.from(globalConfig!.data);
-  const recipients: PublicKey[] = [];
-  for (let i = 0; i < 8; i++) {
-    const recipient = new PublicKey(
-      data.subarray(offset + i * 32, offset + (i + 1) * 32),
-    );
-    if (!recipient.equals(PublicKey.default)) {
-      recipients.push(recipient);
-    }
-  }
-  return recipients;
+): Promise<PumpGlobalConfigAccount> {
+  const globalConfig = await banksClient.getAccount(PUMP_AMM_GLOBAL_CONFIG);
+  return parsePumpGlobalConfig(Buffer.from(globalConfig!.data));
 }
 
-// GlobalConfig layout
-//
-//   offset size field
-//        0    8 discriminator
-//        8   32 admin
-//       40    8 lp_fee_basis_points
-//       48    8 protocol_fee_basis_points
-//       56    1 disable_flags
-//       57  256 protocol_fee_recipients [Pubkey; 8]   <- getProtocolFeeRecipient
-//      313    8 coin_creator_fee_basis_points
-//      321   32 admin_set_coin_creator_authority
-//      353   32 whitelist_pda
-//      385   32 reserved_fee_recipient
-//      417    1 mayhem_mode_enabled
-//      418  224 reserved_fee_recipients [Pubkey; 7]
-//      642    1 is_cashback_enabled
-//      643  256 buyback_fee_recipients [Pubkey; 8]    <- getBuybackFeeRecipients
-//      899    8 buyback_basis_points
-//      907   32 boost_authority
-//      939    1 boost_enabled
-//      940      total
 export async function getProtocolFeeRecipient(
   banksClient: BanksClient,
 ): Promise<PublicKey> {
-  const recipients = await globalConfigRecipients(banksClient, 57);
-  if (recipients.length === 0) {
+  const { protocolFeeRecipients } = await fetchGlobalConfig(banksClient);
+  if (protocolFeeRecipients.length === 0) {
     throw new Error("no protocol fee recipient in global config");
   }
-  return recipients[0];
+  return protocolFeeRecipients[0];
 }
 
 export async function getBuybackFeeRecipients(
   banksClient: BanksClient,
 ): Promise<PublicKey[]> {
-  return globalConfigRecipients(banksClient, 643);
+  return (await fetchGlobalConfig(banksClient)).buybackFeeRecipients;
 }
 
 function packTokenAccount({
@@ -362,14 +300,14 @@ export async function writePumpPool({
   // fabricated pool already wrote so accrued balances survive.
   const creatorVaultAta = token.getAssociatedTokenAddressSync(
     quoteMint,
-    getCreatorVaultAuthorityAddr(coinCreator),
+    getPumpCreatorVaultAuthorityAddr(coinCreator),
     true,
   );
   if (!(await context.banksClient.getAccount(creatorVaultAta))) {
     writeTokenAccount(context, {
       address: creatorVaultAta,
       mint: quoteMint,
-      owner: getCreatorVaultAuthorityAddr(coinCreator),
+      owner: getPumpCreatorVaultAuthorityAddr(coinCreator),
       amount: 0n,
     });
   }
@@ -424,7 +362,7 @@ function swapAccountMetas(
     protocolFeeRecipient,
     true,
   );
-  const coinCreatorVaultAuthority = getCreatorVaultAuthorityAddr(
+  const coinCreatorVaultAuthority = getPumpCreatorVaultAuthorityAddr(
     pool.coinCreator,
   );
   const coinCreatorVaultAta = token.getAssociatedTokenAddressSync(
@@ -436,7 +374,7 @@ function swapAccountMetas(
   return [
     { pubkey: pool.pool, isSigner: false, isWritable: true },
     { pubkey: user, isSigner: true, isWritable: true },
-    { pubkey: PUMP_GLOBAL_CONFIG, isSigner: false, isWritable: false },
+    { pubkey: PUMP_AMM_GLOBAL_CONFIG, isSigner: false, isWritable: false },
     { pubkey: pool.baseMint, isSigner: false, isWritable: false },
     { pubkey: pool.quoteMint, isSigner: false, isWritable: false },
     { pubkey: userBaseTokenAccount, isSigner: false, isWritable: true },
@@ -457,7 +395,7 @@ function swapAccountMetas(
       isSigner: false,
       isWritable: false,
     },
-    { pubkey: PUMP_EVENT_AUTHORITY, isSigner: false, isWritable: false },
+    { pubkey: PUMP_AMM_EVENT_AUTHORITY, isSigner: false, isWritable: false },
     { pubkey: PUMP_AMM_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: coinCreatorVaultAta, isSigner: false, isWritable: true },
     { pubkey: coinCreatorVaultAuthority, isSigner: false, isWritable: false },
@@ -490,10 +428,10 @@ export function pumpSellIx({
 
   const keys = [
     ...swapAccountMetas(pool, user, protocolFeeRecipient),
-    { pubkey: PUMP_FEE_CONFIG, isSigner: false, isWritable: false },
+    { pubkey: PUMP_AMM_FEE_CONFIG, isSigner: false, isWritable: false },
     { pubkey: PUMP_FEES_PROGRAM_ID, isSigner: false, isWritable: false },
     {
-      pubkey: getPoolV2Addr(pool.baseMint),
+      pubkey: getPumpPoolV2Addr(pool.baseMint),
       isSigner: false,
       isWritable: false,
     },
@@ -555,10 +493,10 @@ export function pumpBuyIx({
       isSigner: false,
       isWritable: true,
     },
-    { pubkey: PUMP_FEE_CONFIG, isSigner: false, isWritable: false },
+    { pubkey: PUMP_AMM_FEE_CONFIG, isSigner: false, isWritable: false },
     { pubkey: PUMP_FEES_PROGRAM_ID, isSigner: false, isWritable: false },
     {
-      pubkey: getPoolV2Addr(pool.baseMint),
+      pubkey: getPumpPoolV2Addr(pool.baseMint),
       isSigner: false,
       isWritable: false,
     },
@@ -599,7 +537,7 @@ export function pumpInitUserVolumeAccumulatorIx({
         isWritable: true,
       },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: PUMP_EVENT_AUTHORITY, isSigner: false, isWritable: false },
+      { pubkey: PUMP_AMM_EVENT_AUTHORITY, isSigner: false, isWritable: false },
       { pubkey: PUMP_AMM_PROGRAM_ID, isSigner: false, isWritable: false },
     ],
     data: Buffer.from([94, 6, 202, 115, 255, 96, 232, 183]),

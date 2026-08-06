@@ -55,6 +55,28 @@ pub mod pump_fees_program {
     declare_id!("pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ");
 }
 
+/// pump_amm's global config: the `["global_config"]` PDA under pump_amm.
+pub mod pump_amm_global_config {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("ADyA8hdefvWN2dbGGWFotbzWxrAvLW83WG6QCVXvJKqw");
+}
+
+/// pump_amm's event authority: the `["__event_authority"]` PDA under pump_amm.
+pub mod pump_amm_event_authority {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("GS4CU59F31iL7aR2Q8zVS8DRrcRnXX1yjQ66TqNVQnaR");
+}
+
+/// The fee config the pump fee program keeps for pump_amm: the
+/// `["fee_config", pump_amm program id]` PDA under pump_fees.
+pub mod pump_amm_fee_config {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("5PHirr8joyTMp9JMm6nW7hNDVyEYdkzDqazxPD7RaTjx");
+}
+
 // Orca
 
 pub mod whirlpool_program {
