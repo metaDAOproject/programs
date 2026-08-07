@@ -32,6 +32,7 @@ import executeMultisigProposalApproval from "./unit/executeMultisigProposalAppro
 import adminExecuteMultisigProposal from "./unit/adminExecuteMultisigProposal.test.js";
 import adminCancelProposal from "./unit/adminCancelProposal.test.js";
 import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
+import adminUpdateProposalParams from "./unit/adminUpdateProposalParams.test.js";
 import unstakeFromProposal from "./unit/unstakeFromProposal.test.js";
 import resizeDao from "./unit/resizeDao.test.js";
 import resizeProposal from "./unit/resizeProposal.test.js";
@@ -112,6 +113,7 @@ export default function suite() {
   describe("#admin_execute_multisig_proposal", adminExecuteMultisigProposal);
   describe("#admin_cancel_proposal", adminCancelProposal);
   describe("#admin_remove_proposal", adminRemoveProposal);
+  describe("#admin_update_proposal_params", adminUpdateProposalParams);
   describe("#unstake_from_proposal", unstakeFromProposal);
   describe("#resize_dao", resizeDao);
   describe("#resize_proposal", resizeProposal);

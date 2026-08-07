@@ -2,6 +2,10 @@ use super::*;
 
 pub const SEED_PROPOSAL: &[u8] = b"proposal";
 
+/// The range `admin_update_proposal_params` may set `pass_threshold_bps` to.
+pub const MIN_PROPOSAL_PASS_THRESHOLD_BPS: i16 = -9_999;
+pub const MAX_PROPOSAL_PASS_THRESHOLD_BPS: i16 = 9_999;
+
 #[derive(Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, InitSpace)]
 pub enum ProposalState {
     Draft { amount_staked: u64 },

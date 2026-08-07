@@ -202,6 +202,18 @@ pub struct RemoveProposalEvent {
 }
 
 #[event]
+pub struct AdminUpdateProposalParamsEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub proposal: Pubkey,
+    pub admin: Pubkey,
+    pub old_duration_in_seconds: u32,
+    pub new_duration_in_seconds: u32,
+    pub old_pass_threshold_bps: i16,
+    pub new_pass_threshold_bps: i16,
+}
+
+#[event]
 pub struct AdminCancelProposalEvent {
     pub common: CommonFields,
     pub proposal: Pubkey,

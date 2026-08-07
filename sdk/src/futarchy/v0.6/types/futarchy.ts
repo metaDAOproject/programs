@@ -2176,6 +2176,45 @@ export type Futarchy = {
       ];
       args: [];
     },
+    {
+      name: "adminUpdateProposalParams";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+          docs: ["Mutable only to bump `seq_num` for the event."];
+        },
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "AdminUpdateProposalParamsArgs";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -2768,6 +2807,27 @@ export type Futarchy = {
           {
             name: "transactionIndex";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "AdminUpdateProposalParamsArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "durationInSeconds";
+            docs: ["`None` leaves the proposal's current value in place."];
+            type: {
+              option: "u32";
+            };
+          },
+          {
+            name: "passThresholdBps";
+            type: {
+              option: "i16";
+            };
           },
         ];
       };
@@ -4318,6 +4378,53 @@ export type Futarchy = {
       ];
     },
     {
+      name: "AdminUpdateProposalParamsEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "admin";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oldDurationInSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "newDurationInSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "oldPassThresholdBps";
+          type: "i16";
+          index: false;
+        },
+        {
+          name: "newPassThresholdBps";
+          type: "i16";
+          index: false;
+        },
+      ];
+    },
+    {
       name: "AdminCancelProposalEvent";
       fields: [
         {
@@ -4812,6 +4919,16 @@ export type Futarchy = {
       code: 6053;
       name: "InvalidLiquidator";
       msg: "Invalid liquidator";
+    },
+    {
+      code: 6054;
+      name: "InvalidProposalPassThreshold";
+      msg: "Pass threshold must be between -99.99% and 99.99%";
+    },
+    {
+      code: 6055;
+      name: "EmptyProposalParamsUpdate";
+      msg: "A proposal params update must set at least one field";
     },
   ];
 };
@@ -6994,6 +7111,45 @@ export const IDL: Futarchy = {
       ],
       args: [],
     },
+    {
+      name: "adminUpdateProposalParams",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+          docs: ["Mutable only to bump `seq_num` for the event."],
+        },
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "AdminUpdateProposalParamsArgs",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -7586,6 +7742,27 @@ export const IDL: Futarchy = {
           {
             name: "transactionIndex",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "AdminUpdateProposalParamsArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "durationInSeconds",
+            docs: ["`None` leaves the proposal's current value in place."],
+            type: {
+              option: "u32",
+            },
+          },
+          {
+            name: "passThresholdBps",
+            type: {
+              option: "i16",
+            },
           },
         ],
       },
@@ -9136,6 +9313,53 @@ export const IDL: Futarchy = {
       ],
     },
     {
+      name: "AdminUpdateProposalParamsEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "admin",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oldDurationInSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "newDurationInSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "oldPassThresholdBps",
+          type: "i16",
+          index: false,
+        },
+        {
+          name: "newPassThresholdBps",
+          type: "i16",
+          index: false,
+        },
+      ],
+    },
+    {
       name: "AdminCancelProposalEvent",
       fields: [
         {
@@ -9630,6 +9854,16 @@ export const IDL: Futarchy = {
       code: 6053,
       name: "InvalidLiquidator",
       msg: "Invalid liquidator",
+    },
+    {
+      code: 6054,
+      name: "InvalidProposalPassThreshold",
+      msg: "Pass threshold must be between -99.99% and 99.99%",
+    },
+    {
+      code: 6055,
+      name: "EmptyProposalParamsUpdate",
+      msg: "A proposal params update must set at least one field",
     },
   ],
 };

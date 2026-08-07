@@ -34,12 +34,17 @@ export async function setupBasicDao({
   quoteMint,
   teamSponsoredPassThresholdBps = 300,
   teamAddress,
+  initialSpendingLimit = null,
 }: {
   context: TestContext;
   baseMint: PublicKey;
   quoteMint: PublicKey;
   teamSponsoredPassThresholdBps?: number;
   teamAddress?: PublicKey;
+  initialSpendingLimit?: {
+    amountPerMonth: typeof BN.prototype;
+    members: PublicKey[];
+  } | null;
 }) {
   const nonce = new BN(Math.floor(Math.random() * 1000000));
 
@@ -56,7 +61,7 @@ export async function setupBasicDao({
         minBaseFutarchicLiquidity: new BN(10_000),
         passThresholdBps: 300,
         nonce,
-        initialSpendingLimit: null,
+        initialSpendingLimit,
         baseToStake: new BN(0),
         teamSponsoredPassThresholdBps,
         teamAddress: teamAddress || context.payer.publicKey,

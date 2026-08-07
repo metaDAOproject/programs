@@ -1539,6 +1539,28 @@ export class FutarchyClient {
     });
   }
 
+  adminUpdateProposalParamsIx({
+    proposal,
+    dao,
+    durationInSeconds = null,
+    passThresholdBps = null,
+    admin = this.provider.publicKey,
+  }: {
+    proposal: PublicKey;
+    dao: PublicKey;
+    durationInSeconds?: number | null;
+    passThresholdBps?: number | null;
+    admin?: PublicKey;
+  }) {
+    return this.futarchy.methods
+      .adminUpdateProposalParams({ durationInSeconds, passThresholdBps })
+      .accounts({
+        dao,
+        proposal,
+        admin,
+      });
+  }
+
   collectMeteoraDammFeesIx({
     dao,
     baseMint,

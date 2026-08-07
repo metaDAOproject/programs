@@ -247,4 +247,12 @@ pub mod futarchy {
     pub fn admin_remove_proposal(ctx: Context<AdminRemoveProposal>) -> Result<()> {
         AdminRemoveProposal::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn admin_update_proposal_params(
+        ctx: Context<AdminUpdateProposalParams>,
+        args: AdminUpdateProposalParamsArgs,
+    ) -> Result<()> {
+        AdminUpdateProposalParams::handle(ctx, args)
+    }
 }

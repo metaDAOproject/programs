@@ -197,6 +197,31 @@ export default function suite() {
     );
   });
 
+  it("leaves a migrated draft retunable by admin_update_proposal_params", async function () {
+    await makeOldLayout(this, proposal);
+
+    await this.futarchy.futarchy.methods
+      .resizeProposal()
+      .accounts({ proposal, dao, payer: this.payer.publicKey })
+      .rpc();
+
+    // Migration stamps every proposal `ExecuteArbitrary` with a threshold
+    // copied from the retired per-DAO field, so retuning is the only way to
+    // bring one in line with the catalog without starting over.
+    await this.futarchy
+      .adminUpdateProposalParamsIx({
+        proposal,
+        dao,
+        durationInSeconds: 60 * 60 * 24 * 2,
+        passThresholdBps: 1000,
+      })
+      .rpc();
+
+    const retuned = await this.futarchy.getProposal(proposal);
+    assert.equal(retuned.durationInSeconds, 60 * 60 * 24 * 2);
+    assert.equal(retuned.passThresholdBps, 1000);
+  });
+
   it("rejects a DAO that is not the proposal's", async function () {
     const otherDao = await setupBasicDao({
       context: this,

@@ -112,4 +112,8 @@ pub enum FutarchyError {
     TooManySpendingLimitMembers,
     #[msg("Invalid liquidator")]
     InvalidLiquidator,
+    #[msg("Pass threshold must be between -99.99% and 99.99%")]
+    InvalidProposalPassThreshold,
+    #[msg("A proposal params update must set at least one field")]
+    EmptyProposalParamsUpdate,
 }
