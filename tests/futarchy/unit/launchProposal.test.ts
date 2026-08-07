@@ -51,6 +51,7 @@ export default function suite() {
     quoteMint: PublicKey,
     baseToStake: BN,
     payer: Keypair,
+    twapStartDelaySeconds: number = 60 * 60 * 24,
   ): Promise<PublicKey> {
     const nonce = new BN(Math.floor(Math.random() * 1000000));
 
@@ -60,7 +61,7 @@ export default function suite() {
         quoteMint,
         params: {
           secondsPerProposal: 60 * 60 * 24 * 3,
-          twapStartDelaySeconds: 60 * 60 * 24,
+          twapStartDelaySeconds,
           twapInitialObservation: THOUSAND_BUCK_PRICE,
           twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(10_000),
@@ -390,6 +391,116 @@ export default function suite() {
     // DAO's seconds_per_proposal
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.equal(storedProposal.durationInSeconds, 864_000);
+  });
+
+  it("gives execute_arbitrary the kind's start delay, not the DAO's", async function () {
+    // 30 hours, so a DAO value that matches no kind's start delay
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+      60 * 60 * 30,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const storedDaoBefore = await this.futarchy.getDao(dao);
+    assert.equal(storedDaoBefore.twapStartDelaySeconds, 108_000);
+
+    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc();
+
+    const { pass, fail } = (await this.futarchy.getDao(dao)).amm.state.futarchy;
+    assert.equal(pass.oracle.startDelaySeconds, 86_400);
+    assert.equal(fail.oracle.startDelaySeconds, 86_400);
+  });
+
+  it("gives large_spend half a day, not the DAO's start delay", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+      60 * 60 * 30,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal, squadsProposal } =
+      await this.futarchy.initializeLargeSpendProposal({
+        dao,
+        amount: new BN(10_000),
+      });
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc();
+
+    const { pass, fail } = (await this.futarchy.getDao(dao)).amm.state.futarchy;
+    assert.equal(pass.oracle.startDelaySeconds, 43_200);
+    assert.equal(fail.oracle.startDelaySeconds, 43_200);
   });
 
   it("fails for non-team-sponsored with insufficient stake", async function () {

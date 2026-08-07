@@ -3337,6 +3337,11 @@ export type Futarchy = {
             docs: ["Failure-triggered cooldown, checked at launch. 0 = none."];
             type: "u32";
           },
+          {
+            name: "twapStartDelaySeconds";
+            docs: ["Delay before the conditional TWAPs start to accumulate"];
+            type: "u32";
+          },
         ];
       };
     },
@@ -8148,6 +8153,11 @@ export const IDL: Futarchy = {
           {
             name: "cooldownSeconds",
             docs: ["Failure-triggered cooldown, checked at launch. 0 = none."],
+            type: "u32",
+          },
+          {
+            name: "twapStartDelaySeconds",
+            docs: ["Delay before the conditional TWAPs start to accumulate"],
             type: "u32",
           },
         ],

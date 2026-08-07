@@ -106,8 +106,9 @@ export default function suite() {
       .rpc();
 
     // Nobody contests the market: one swap after the TWAP start delay records
-    // an observation in both markets and leaves the TWAPs equal
-    await this.advanceBySeconds(60 * 60 * 24 + 60);
+    // an observation in both markets and leaves the TWAPs equal.
+    // The delay is the kind's own 12 hours.
+    await this.advanceBySeconds(60 * 60 * 12 + 60);
     await this.futarchy
       .spotSwapIx({
         dao,

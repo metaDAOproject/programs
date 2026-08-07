@@ -70,6 +70,15 @@ impl LaunchProposal<'_> {
             );
         }
 
+        // A market that doesn't outlive its start delay reaches its nominal end
+        // with an empty aggregator, and `MarketsTooYoung` blocks finalize.
+        // Strict, because finalize needs the last update past that boundary.
+        require_gt!(
+            self.proposal.duration_in_seconds,
+            params.twap_start_delay_seconds,
+            FutarchyError::ProposalDurationTooShort
+        );
+
         let last_failed_at = match self.proposal.action {
             ProposalAction::HostileTakeover { .. } => Some(self.dao.last_failed_takeover_at),
             ProposalAction::HostileLiquidate { .. } => Some(self.dao.last_failed_liquidation_at),
@@ -162,6 +171,9 @@ impl LaunchProposal<'_> {
 
         let clock = Clock::get()?;
 
+        // Per-kind, not per-DAO: `dao.twap_start_delay_seconds` is vestigial.
+        let twap_start_delay_seconds = proposal.action.params().twap_start_delay_seconds;
+
         dao.amm.state = PoolState::Futarchy {
             spot,
             pass: Pool {
@@ -173,7 +185,7 @@ impl LaunchProposal<'_> {
                     clock.unix_timestamp,
                     dao.twap_initial_observation,
                     dao.twap_max_observation_change_per_update,
-                    dao.twap_start_delay_seconds,
+                    twap_start_delay_seconds,
                 ),
             },
             fail: Pool {
@@ -185,7 +197,7 @@ impl LaunchProposal<'_> {
                     clock.unix_timestamp,
                     dao.twap_initial_observation,
                     dao.twap_max_observation_change_per_update,
-                    dao.twap_start_delay_seconds,
+                    twap_start_delay_seconds,
                 ),
             },
         };

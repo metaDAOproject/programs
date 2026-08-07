@@ -13,6 +13,8 @@ pub struct InstructionParams {
     pub council_can_block: bool,
     /// Failure-triggered cooldown, checked at launch. 0 = none.
     pub cooldown_seconds: u32,
+    /// Delay before the conditional TWAPs start to accumulate
+    pub twap_start_delay_seconds: u32,
 }
 
 /// What a hostile takeover declares for the spending limit.
@@ -60,6 +62,7 @@ impl ProposalAction {
                 requires_team_sponsorship: true,
                 council_can_block: true,
                 cooldown_seconds: 0,
+                twap_start_delay_seconds: DAY_SECONDS / 2,
             },
             ProposalAction::MintTokens { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 5,
@@ -67,6 +70,7 @@ impl ProposalAction {
                 requires_team_sponsorship: false,
                 council_can_block: true,
                 cooldown_seconds: 0,
+                twap_start_delay_seconds: DAY_SECONDS,
             },
             ProposalAction::SpendingLimitChange { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 5,
@@ -74,6 +78,7 @@ impl ProposalAction {
                 requires_team_sponsorship: true,
                 council_can_block: true,
                 cooldown_seconds: 0,
+                twap_start_delay_seconds: DAY_SECONDS,
             },
             ProposalAction::ExecuteArbitrary => InstructionParams {
                 duration_seconds: DAY_SECONDS * 10,
@@ -81,6 +86,7 @@ impl ProposalAction {
                 requires_team_sponsorship: false,
                 council_can_block: true,
                 cooldown_seconds: 0,
+                twap_start_delay_seconds: DAY_SECONDS,
             },
             ProposalAction::HostileTakeover { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 20,
@@ -88,6 +94,7 @@ impl ProposalAction {
                 requires_team_sponsorship: false,
                 council_can_block: false,
                 cooldown_seconds: DAY_SECONDS * 20,
+                twap_start_delay_seconds: DAY_SECONDS,
             },
             ProposalAction::HostileLiquidate { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 10,
@@ -95,6 +102,7 @@ impl ProposalAction {
                 requires_team_sponsorship: false,
                 council_can_block: false,
                 cooldown_seconds: DAY_SECONDS * 10,
+                twap_start_delay_seconds: DAY_SECONDS,
             },
         }
     }
