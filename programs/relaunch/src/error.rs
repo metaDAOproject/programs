@@ -44,4 +44,8 @@ pub enum RelaunchError {
     AlreadyClaimed,
     #[msg("Grace period has elapsed")]
     GracePeriodElapsed,
+    #[msg("Relaunch must be in the Sold state")]
+    RelaunchNotSold,
+    #[msg("Swap output is below the minimum output amount")]
+    SlippageExceeded,
 }

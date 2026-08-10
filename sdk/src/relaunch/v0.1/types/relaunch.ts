@@ -412,6 +412,119 @@ export type Relaunch = {
       ];
     },
     {
+      name: "executeUsdcSwap";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "relaunchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteVault";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The WSOL vault holding the sell proceeds; `Sold` only occurs for",
+            "WSOL-quoted sources.",
+          ];
+        },
+        {
+          name: "usdcVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "whirlpool";
+          isMut: true;
+          isSigner: false;
+          docs: ["its internal consistency."];
+        },
+        {
+          name: "wsolMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "usdcMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "whirlpoolWsolVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "whirlpoolUsdcVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tickArray0";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tickArray1";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tickArray2";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "oracle";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "memoProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "whirlpoolProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "ExecuteUsdcSwapArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "markFailed";
       accounts: [
         {
@@ -782,6 +895,21 @@ export type Relaunch = {
       };
     },
     {
+      name: "ExecuteUsdcSwapArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "minUsdcOut";
+            docs: [
+              "The admin's live, client-computed slippage floor on the swap output.",
+            ];
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
       name: "InitializeRelaunchArgs";
       type: {
         kind: "struct";
@@ -1117,6 +1245,33 @@ export type Relaunch = {
       ];
     },
     {
+      name: "UsdcSwapExecutedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "wsolSold";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "usdcRecovered";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+    {
       name: "RefundClaimedEvent";
       fields: [
         {
@@ -1259,6 +1414,16 @@ export type Relaunch = {
       code: 6020;
       name: "GracePeriodElapsed";
       msg: "Grace period has elapsed";
+    },
+    {
+      code: 6021;
+      name: "RelaunchNotSold";
+      msg: "Relaunch must be in the Sold state";
+    },
+    {
+      code: 6022;
+      name: "SlippageExceeded";
+      msg: "Swap output is below the minimum output amount";
     },
   ];
 };
@@ -1677,6 +1842,119 @@ export const IDL: Relaunch = {
       ],
     },
     {
+      name: "executeUsdcSwap",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "relaunchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteVault",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The WSOL vault holding the sell proceeds; `Sold` only occurs for",
+            "WSOL-quoted sources.",
+          ],
+        },
+        {
+          name: "usdcVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "whirlpool",
+          isMut: true,
+          isSigner: false,
+          docs: ["its internal consistency."],
+        },
+        {
+          name: "wsolMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "usdcMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "whirlpoolWsolVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "whirlpoolUsdcVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tickArray0",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tickArray1",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tickArray2",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "oracle",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "memoProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "whirlpoolProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "ExecuteUsdcSwapArgs",
+          },
+        },
+      ],
+    },
+    {
       name: "markFailed",
       accounts: [
         {
@@ -2047,6 +2325,21 @@ export const IDL: Relaunch = {
       },
     },
     {
+      name: "ExecuteUsdcSwapArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "minUsdcOut",
+            docs: [
+              "The admin's live, client-computed slippage floor on the swap output.",
+            ],
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "InitializeRelaunchArgs",
       type: {
         kind: "struct",
@@ -2382,6 +2675,33 @@ export const IDL: Relaunch = {
       ],
     },
     {
+      name: "UsdcSwapExecutedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "wsolSold",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "usdcRecovered",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
       name: "RefundClaimedEvent",
       fields: [
         {
@@ -2524,6 +2844,16 @@ export const IDL: Relaunch = {
       code: 6020,
       name: "GracePeriodElapsed",
       msg: "Grace period has elapsed",
+    },
+    {
+      code: 6021,
+      name: "RelaunchNotSold",
+      msg: "Relaunch must be in the Sold state",
+    },
+    {
+      code: 6022,
+      name: "SlippageExceeded",
+      msg: "Swap output is below the minimum output amount",
     },
   ],
 };

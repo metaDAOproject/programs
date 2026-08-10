@@ -11,6 +11,7 @@ import {
 } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
+import { BanksClient } from "solana-bankrun";
 import { BN } from "bn.js";
 import * as fs from "fs";
 import { MAINNET_USDC, WHIRLPOOL_PROGRAM_ID } from "@metadaoproject/programs";
@@ -173,6 +174,38 @@ export type WhirlpoolFixture = {
   tokenVaultB: PublicKey;
   tickArrayStarts: number[];
 };
+
+// Returns the fixture for an already-initialized whirlpool, or builds it via
+// setupWhirlpool. The pool PDA is fixed, so whichever suite runs first
+// creates it and everyone after reuses it.
+export async function ensureWhirlpool({
+  provider,
+  payer,
+  banksClient,
+}: {
+  provider: anchor.AnchorProvider;
+  payer: Signer;
+  banksClient: BanksClient;
+}): Promise<WhirlpoolFixture> {
+  const program = whirlpoolProgram(provider);
+  const whirlpool = getWhirlpoolAddr();
+
+  const existing = await banksClient.getAccount(whirlpool);
+  if (!existing) {
+    return setupWhirlpool({ provider, payer });
+  }
+
+  const pool = await program.account.whirlpool.fetch(whirlpool);
+  return {
+    program,
+    config: WHIRLPOOLS_CONFIG,
+    whirlpool,
+    oracle: getOracleAddr(whirlpool),
+    tokenVaultA: pool.tokenVaultA as PublicKey,
+    tokenVaultB: pool.tokenVaultB as PublicKey,
+    tickArrayStarts: [],
+  };
+}
 
 // Builds a real WSOL/USDC whirlpool through the program's own instructions
 // under the dumped mainnet config: pool + tick arrays + a full-range

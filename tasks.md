@@ -27,13 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 3 — execute_sell, execute_usdc_swap, deposit_via_buy"
 
-- [NEXT] 3.2 `execute_usdc_swap` (instruction + SDK + tests)
-  - Whirlpool `swap_v2` CPI (`orca_whirlpools_client` if clean under 0.29, else hand-built; verified 15-account list incl. `memo_program`); pool pinned `address = USDC_SWAP_POOL`
-  - Admin + `Sold`; full WSOL balance a→b; set `usdc_recovered`
-  - SDK: tick-array derivation helper + `min_usdc_out`
-  - Tests per plan §7: happy path, wrong pool address, slippage failure, non-admin/wrong-state
-
-- [ ] 3.3 `deposit_via_buy` (instruction + SDK + tests)
+- [NEXT] 3.3 `deposit_via_buy` (instruction + SDK + tests)
   - `cpi/pump_amm.rs` buy builder (23 accounts = sell + volume accumulators); pull quote → buy → refund unspent → credit measured old-vault delta
   - Tests per plan §4: both quote variants, mixes with direct deposits, tight `max_quote_in` fails cleanly, window/state gates, credited tokens refund on later failure
   - SDK: `depositViaBuy()` + SOL→WSOL wrap pre-instructions

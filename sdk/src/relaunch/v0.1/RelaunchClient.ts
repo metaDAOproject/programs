@@ -13,6 +13,7 @@ import {
   createInitializeMint2Instruction,
   getAssociatedTokenAddressSync,
   MINT_SIZE,
+  NATIVE_MINT,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import BN from "bn.js";
@@ -22,6 +23,7 @@ import {
   PUMP_AMM_PROGRAM_ID,
   PUMP_FEES_PROGRAM_ID,
   RELAUNCH_V0_1_PROGRAM_ID,
+  WHIRLPOOL_PROGRAM_ID,
 } from "../../constants.js";
 import {
   RelaunchProgram,
@@ -43,6 +45,13 @@ import {
   PUMP_AMM_FEE_CONFIG,
   PUMP_AMM_GLOBAL_CONFIG,
 } from "./pumpAmm.js";
+import {
+  getWhirlpoolOracleAddr,
+  getWhirlpoolSwapTickArrayAddrs,
+  MEMO_PROGRAM_ID,
+  parseWhirlpool,
+  USDC_SWAP_POOL,
+} from "./whirlpool.js";
 import { getEventAuthorityAddr, getMetadataAddr } from "../../pda.js";
 
 export type CreateRelaunchClientParams = {
@@ -289,46 +298,157 @@ export class RelaunchClient {
     const coinCreatorVaultAuthority =
       getPumpCreatorVaultAuthorityAddr(coinCreator);
 
-    return this.relaunchProgram.methods.executeSell({ minQuoteOut }).accounts({
-      relaunch,
-      admin,
-      relaunchSigner,
-      oldMint,
-      sourceQuoteMint,
-      oldTokenVault,
-      sourceQuoteVault,
-      sourcePool,
-      pumpGlobalConfig: PUMP_AMM_GLOBAL_CONFIG,
-      protocolFeeRecipient,
-      protocolFeeRecipientTokenAccount: getAssociatedTokenAddressSync(
+    return this.relaunchProgram.methods
+      .executeSell({ minQuoteOut })
+      .accounts({
+        relaunch,
+        admin,
+        relaunchSigner,
+        oldMint,
         sourceQuoteMint,
+        oldTokenVault,
+        sourceQuoteVault,
+        sourcePool,
+        pumpGlobalConfig: PUMP_AMM_GLOBAL_CONFIG,
         protocolFeeRecipient,
-        true,
-      ),
-      poolBaseTokenAccount,
-      poolQuoteTokenAccount,
-      coinCreatorVaultAta: getAssociatedTokenAddressSync(
-        sourceQuoteMint,
+        protocolFeeRecipientTokenAccount: getAssociatedTokenAddressSync(
+          sourceQuoteMint,
+          protocolFeeRecipient,
+          true,
+        ),
+        poolBaseTokenAccount,
+        poolQuoteTokenAccount,
+        coinCreatorVaultAta: getAssociatedTokenAddressSync(
+          sourceQuoteMint,
+          coinCreatorVaultAuthority,
+          true,
+        ),
         coinCreatorVaultAuthority,
-        true,
-      ),
-      coinCreatorVaultAuthority,
-      pumpFeeConfig: PUMP_AMM_FEE_CONFIG,
-      pumpFeeProgram: PUMP_FEES_PROGRAM_ID,
-      poolV2: getPumpPoolV2Addr(oldMint),
-      buybackFeeRecipient,
-      buybackFeeRecipientTokenAccount: getAssociatedTokenAddressSync(
-        sourceQuoteMint,
+        pumpFeeConfig: PUMP_AMM_FEE_CONFIG,
+        pumpFeeProgram: PUMP_FEES_PROGRAM_ID,
+        poolV2: getPumpPoolV2Addr(oldMint),
         buybackFeeRecipient,
+        buybackFeeRecipientTokenAccount: getAssociatedTokenAddressSync(
+          sourceQuoteMint,
+          buybackFeeRecipient,
+          true,
+        ),
+        pumpEventAuthority: PUMP_AMM_EVENT_AUTHORITY,
+        pumpAmmProgram: PUMP_AMM_PROGRAM_ID,
+        baseTokenProgram: oldTokenProgram,
+        quoteTokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .preInstructions([
+        // The sell runs close to the 200k default, and PDA derivation costs
+        // vary with the bump seeds; give it fixed headroom.
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ]);
+  }
+
+  executeUsdcSwapIx({
+    relaunch,
+    whirlpoolWsolVault,
+    whirlpoolUsdcVault,
+    tickArrays,
+    minUsdcOut,
+    whirlpool = USDC_SWAP_POOL,
+    admin = this.provider.publicKey,
+  }: {
+    relaunch: PublicKey;
+    whirlpoolWsolVault: PublicKey;
+    whirlpoolUsdcVault: PublicKey;
+    tickArrays: [PublicKey, PublicKey, PublicKey];
+    minUsdcOut: BN;
+    whirlpool?: PublicKey;
+    admin?: PublicKey;
+  }) {
+    const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+
+    const sourceQuoteVault = getAssociatedTokenAddressSync(
+      NATIVE_MINT,
+      relaunchSigner,
+      true,
+    );
+    const usdcVault = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      relaunchSigner,
+      true,
+    );
+
+    return this.relaunchProgram.methods
+      .executeUsdcSwap({ minUsdcOut })
+      .accounts({
+        relaunch,
+        admin,
+        relaunchSigner,
+        sourceQuoteVault,
+        usdcVault,
+        whirlpool,
+        wsolMint: NATIVE_MINT,
+        usdcMint: MAINNET_USDC,
+        whirlpoolWsolVault,
+        whirlpoolUsdcVault,
+        tickArray0: tickArrays[0],
+        tickArray1: tickArrays[1],
+        tickArray2: tickArrays[2],
+        oracle: getWhirlpoolOracleAddr(whirlpool),
+        memoProgram: MEMO_PROGRAM_ID,
+        whirlpoolProgram: WHIRLPOOL_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .preInstructions([
+        // The whirlpool swap's cost grows with the initialized ticks it
+        // crosses; give it fixed headroom over the 200k default.
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ]);
+  }
+
+  // Swaps the whole WSOL vault to USDC as the admin (the provider wallet),
+  // deriving the whirlpool account set from the pinned pool's live state.
+  // When minUsdcOut is not given, it is computed from the pool's spot price
+  // minus slippageBps (which must also cover the swap fee + price impact).
+  async executeUsdcSwap({
+    relaunch,
+    minUsdcOut,
+    slippageBps = 100,
+  }: {
+    relaunch: PublicKey;
+    minUsdcOut?: BN;
+    slippageBps?: number;
+  }): Promise<TransactionSignature> {
+    const whirlpoolAccount =
+      await this.provider.connection.getAccountInfo(USDC_SWAP_POOL);
+    if (whirlpoolAccount === null) {
+      throw new Error(`whirlpool ${USDC_SWAP_POOL.toBase58()} does not exist`);
+    }
+    const whirlpool = parseWhirlpool(whirlpoolAccount.data);
+
+    if (minUsdcOut === undefined) {
+      const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+      const wsolIn = await this.fetchTokenBalance(
+        getAssociatedTokenAddressSync(NATIVE_MINT, relaunchSigner, true),
+      );
+      // Spot price in USDC-raw per WSOL-raw is (sqrtPrice / 2^64)^2.
+      const spotOut =
+        (wsolIn * whirlpool.sqrtPrice * whirlpool.sqrtPrice) >> 128n;
+      const floor = (spotOut * (10_000n - BigInt(slippageBps))) / 10_000n;
+      minUsdcOut = new BN(floor.toString());
+    }
+
+    return this.executeUsdcSwapIx({
+      relaunch,
+      whirlpoolWsolVault: whirlpool.tokenVaultA,
+      whirlpoolUsdcVault: whirlpool.tokenVaultB,
+      tickArrays: getWhirlpoolSwapTickArrayAddrs(
+        USDC_SWAP_POOL,
+        whirlpool.tickCurrentIndex,
+        whirlpool.tickSpacing,
         true,
       ),
-      pumpEventAuthority: PUMP_AMM_EVENT_AUTHORITY,
-      pumpAmmProgram: PUMP_AMM_PROGRAM_ID,
-      baseTokenProgram: oldTokenProgram,
-      quoteTokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
-    });
+      minUsdcOut,
+    }).rpc();
   }
 
   markFailedIx({ relaunch }: { relaunch: PublicKey }) {

@@ -91,3 +91,10 @@ pub mod usdc_swap_pool {
 
     declare_id!("Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE");
 }
+
+/// SPL Memo, required by whirlpool's v2 instructions.
+pub mod memo_program {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+}

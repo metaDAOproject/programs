@@ -7,6 +7,7 @@ pub mod events;
 pub mod instructions;
 pub mod pump_amm;
 pub mod state;
+pub mod whirlpool;
 
 pub use constants::*;
 pub use state::*;
@@ -59,6 +60,14 @@ pub mod relaunch {
     #[access_control(ctx.accounts.validate(&args))]
     pub fn execute_sell(ctx: Context<ExecuteSell>, args: ExecuteSellArgs) -> Result<()> {
         ExecuteSell::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn execute_usdc_swap(
+        ctx: Context<ExecuteUsdcSwap>,
+        args: ExecuteUsdcSwapArgs,
+    ) -> Result<()> {
+        ExecuteUsdcSwap::handle(ctx, args)
     }
 
     #[access_control(ctx.accounts.validate())]

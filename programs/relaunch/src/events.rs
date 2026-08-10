@@ -86,6 +86,14 @@ pub struct SellExecutedEvent {
 }
 
 #[event]
+pub struct UsdcSwapExecutedEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+    pub wsol_sold: u64,
+    pub usdc_recovered: u64,
+}
+
+#[event]
 pub struct RefundClaimedEvent {
     pub common: CommonFields,
     pub relaunch: Pubkey,
