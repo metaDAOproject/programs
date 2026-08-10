@@ -52,6 +52,11 @@ pub mod relaunch {
         Deposit::handle(ctx, args)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn deposit_via_buy(ctx: Context<DepositViaBuy>, args: DepositViaBuyArgs) -> Result<()> {
+        DepositViaBuy::handle(ctx, args)
+    }
+
     #[access_control(ctx.accounts.validate())]
     pub fn close_deposits(ctx: Context<CloseDeposits>) -> Result<()> {
         CloseDeposits::handle(ctx)

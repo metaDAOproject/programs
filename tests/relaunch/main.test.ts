@@ -3,6 +3,7 @@ import venues from "./unit/venues.test.js";
 import initializeRelaunch from "./unit/initializeRelaunch.test.js";
 import startDeposits from "./unit/startDeposits.test.js";
 import deposit from "./unit/deposit.test.js";
+import depositViaBuy from "./unit/depositViaBuy.test.js";
 import closeDeposits from "./unit/closeDeposits.test.js";
 import executeSell from "./unit/executeSell.test.js";
 import executeUsdcSwap from "./unit/executeUsdcSwap.test.js";
@@ -24,6 +25,7 @@ export default function suite() {
   describe("#initialize_relaunch", initializeRelaunch);
   describe("#start_deposits", startDeposits);
   describe("#deposit", deposit);
+  describe("#deposit_via_buy", depositViaBuy);
   describe("#close_deposits", closeDeposits);
   describe("#execute_sell", executeSell);
   describe("#execute_usdc_swap", executeUsdcSwap);

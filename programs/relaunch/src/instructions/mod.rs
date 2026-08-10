@@ -1,6 +1,7 @@
 pub mod claim_refund;
 pub mod close_deposits;
 pub mod deposit;
+pub mod deposit_via_buy;
 pub mod execute_sell;
 pub mod execute_usdc_swap;
 pub mod initialize_relaunch;
@@ -10,6 +11,7 @@ pub mod start_deposits;
 pub use claim_refund::*;
 pub use close_deposits::*;
 pub use deposit::*;
+pub use deposit_via_buy::*;
 pub use execute_sell::*;
 pub use execute_usdc_swap::*;
 pub use initialize_relaunch::*;

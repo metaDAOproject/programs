@@ -102,3 +102,18 @@ pub struct RefundClaimedEvent {
     pub amount_refunded: u64,
     pub deposit_record_seq_num: u64,
 }
+
+#[event]
+pub struct TokensDepositedViaBuyEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+    pub depositor: Pubkey,
+    pub deposit_record: Pubkey,
+    /// The old tokens bought and credited (the measured old-vault delta).
+    pub amount: u64,
+    /// The quote consumed by the buy, inclusive of pump's fees.
+    pub quote_spent: u64,
+    pub total_deposited: u64,
+    pub total_deposited_by_depositor: u64,
+    pub deposit_record_seq_num: u64,
+}

@@ -5,12 +5,15 @@ import {
   Keypair,
   PublicKey,
   SystemProgram,
+  Transaction,
   TransactionSignature,
 } from "@solana/web3.js";
 import {
   AccountLayout,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
   createInitializeMint2Instruction,
+  createSyncNativeInstruction,
   getAssociatedTokenAddressSync,
   MINT_SIZE,
   NATIVE_MINT,
@@ -39,11 +42,13 @@ import {
 import {
   getPumpCreatorVaultAuthorityAddr,
   getPumpPoolV2Addr,
+  getPumpUserVolumeAccumulatorAddr,
   parsePumpGlobalConfig,
   parsePumpPool,
   PUMP_AMM_EVENT_AUTHORITY,
   PUMP_AMM_FEE_CONFIG,
   PUMP_AMM_GLOBAL_CONFIG,
+  PUMP_AMM_GLOBAL_VOLUME_ACCUMULATOR,
 } from "./pumpAmm.js";
 import {
   getWhirlpoolOracleAddr,
@@ -253,6 +258,116 @@ export class RelaunchClient {
     return this.relaunchProgram.methods.closeDeposits().accounts({
       relaunch,
     });
+  }
+
+  depositViaBuyIx({
+    relaunch,
+    oldMint,
+    oldTokenProgram,
+    sourceQuoteMint,
+    sourcePool,
+    poolBaseTokenAccount,
+    poolQuoteTokenAccount,
+    coinCreator,
+    protocolFeeRecipient,
+    buybackFeeRecipient,
+    baseOut,
+    maxQuoteIn,
+    depositor = this.provider.publicKey,
+    payer = this.provider.publicKey,
+    depositorQuoteAccount = getAssociatedTokenAddressSync(
+      sourceQuoteMint,
+      depositor,
+    ),
+  }: {
+    relaunch: PublicKey;
+    oldMint: PublicKey;
+    oldTokenProgram: PublicKey;
+    sourceQuoteMint: PublicKey;
+    sourcePool: PublicKey;
+    poolBaseTokenAccount: PublicKey;
+    poolQuoteTokenAccount: PublicKey;
+    coinCreator: PublicKey;
+    protocolFeeRecipient: PublicKey;
+    buybackFeeRecipient: PublicKey;
+    baseOut: BN;
+    maxQuoteIn: BN;
+    depositor?: PublicKey;
+    payer?: PublicKey;
+    depositorQuoteAccount?: PublicKey;
+  }) {
+    const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+    const depositRecord = this.getDepositRecordAddress({
+      relaunch,
+      depositor,
+    });
+
+    const oldTokenVault = getAssociatedTokenAddressSync(
+      oldMint,
+      relaunchSigner,
+      true,
+      oldTokenProgram,
+    );
+    const sourceQuoteVault = getAssociatedTokenAddressSync(
+      sourceQuoteMint,
+      relaunchSigner,
+      true,
+    );
+    const coinCreatorVaultAuthority =
+      getPumpCreatorVaultAuthorityAddr(coinCreator);
+
+    return this.relaunchProgram.methods
+      .depositViaBuy({ baseOut, maxQuoteIn })
+      .accounts({
+        relaunch,
+        depositRecord,
+        depositor,
+        payer,
+        relaunchSigner,
+        oldMint,
+        sourceQuoteMint,
+        oldTokenVault,
+        sourceQuoteVault,
+        depositorQuoteAccount,
+        sourcePool,
+        pumpGlobalConfig: PUMP_AMM_GLOBAL_CONFIG,
+        protocolFeeRecipient,
+        protocolFeeRecipientTokenAccount: getAssociatedTokenAddressSync(
+          sourceQuoteMint,
+          protocolFeeRecipient,
+          true,
+        ),
+        poolBaseTokenAccount,
+        poolQuoteTokenAccount,
+        coinCreatorVaultAta: getAssociatedTokenAddressSync(
+          sourceQuoteMint,
+          coinCreatorVaultAuthority,
+          true,
+        ),
+        coinCreatorVaultAuthority,
+        globalVolumeAccumulator: PUMP_AMM_GLOBAL_VOLUME_ACCUMULATOR,
+        userVolumeAccumulator: getPumpUserVolumeAccumulatorAddr(relaunchSigner),
+        pumpFeeConfig: PUMP_AMM_FEE_CONFIG,
+        pumpFeeProgram: PUMP_FEES_PROGRAM_ID,
+        poolV2: getPumpPoolV2Addr(oldMint),
+        buybackFeeRecipient,
+        buybackFeeRecipientTokenAccount: getAssociatedTokenAddressSync(
+          sourceQuoteMint,
+          buybackFeeRecipient,
+          true,
+        ),
+        pumpEventAuthority: PUMP_AMM_EVENT_AUTHORITY,
+        pumpAmmProgram: PUMP_AMM_PROGRAM_ID,
+        baseTokenProgram: oldTokenProgram,
+        quoteTokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .preInstructions([
+        // The buy does the sell's work plus volume-accumulator handling and
+        // the pull/refund transfers; give it fixed headroom over 200k.
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ]);
   }
 
   executeSellIx({
@@ -527,6 +642,128 @@ export class RelaunchClient {
       oldMint: storedRelaunch.oldMint,
       oldTokenProgram: oldMintAccount.owner,
       amount,
+    }).rpc();
+  }
+
+  // Buys baseOut old tokens off the source pool as the provider wallet and
+  // credits them as a deposit, deriving the pump account set like
+  // executeSell. When maxQuoteIn is not given, it is computed live from the
+  // pool reserves: the constant-product input for the exact output plus
+  // slippageBps (which must also cover pump's swap fees). For WSOL-quoted
+  // pools, any shortfall in the depositor's WSOL ATA is wrapped from SOL in
+  // a separate preparatory transaction — the buy transaction sits within a
+  // few bytes of the 1232-byte legacy size limit and cannot absorb the wrap
+  // instructions for Token-2022 old mints.
+  async depositViaBuy({
+    relaunch,
+    baseOut,
+    maxQuoteIn,
+    slippageBps = 100,
+  }: {
+    relaunch: PublicKey;
+    baseOut: BN;
+    maxQuoteIn?: BN;
+    slippageBps?: number;
+  }): Promise<TransactionSignature> {
+    const storedRelaunch = await this.fetchRelaunch(relaunch);
+    if (storedRelaunch === null) {
+      throw new Error(`relaunch ${relaunch.toBase58()} does not exist`);
+    }
+
+    const oldMintAccount = await this.provider.connection.getAccountInfo(
+      storedRelaunch.oldMint,
+    );
+    if (oldMintAccount === null) {
+      throw new Error(
+        `old mint ${storedRelaunch.oldMint.toBase58()} does not exist`,
+      );
+    }
+
+    const poolAccount = await this.provider.connection.getAccountInfo(
+      storedRelaunch.sourcePool,
+    );
+    if (poolAccount === null) {
+      throw new Error(
+        `source pool ${storedRelaunch.sourcePool.toBase58()} does not exist`,
+      );
+    }
+    const pool = parsePumpPool(poolAccount.data);
+
+    const globalConfigAccount = await this.provider.connection.getAccountInfo(
+      PUMP_AMM_GLOBAL_CONFIG,
+    );
+    if (globalConfigAccount === null) {
+      throw new Error("pump_amm global config does not exist");
+    }
+    const globalConfig = parsePumpGlobalConfig(globalConfigAccount.data);
+
+    if (maxQuoteIn === undefined) {
+      const [baseReserve, quoteReserve] = await Promise.all(
+        [pool.poolBaseTokenAccount, pool.poolQuoteTokenAccount].map((address) =>
+          this.fetchTokenBalance(address),
+        ),
+      );
+      const baseOutBig = BigInt(baseOut.toString());
+      if (baseOutBig >= baseReserve) {
+        throw new Error(
+          `baseOut ${baseOutBig} exceeds the pool's base reserve ${baseReserve}`,
+        );
+      }
+      const grossIn = (quoteReserve * baseOutBig) / (baseReserve - baseOutBig);
+      const cap = (grossIn * (10_000n + BigInt(slippageBps))) / 10_000n;
+      maxQuoteIn = new BN(cap.toString());
+    }
+
+    if (storedRelaunch.sourceQuoteMint.equals(NATIVE_MINT)) {
+      const wsolAta = getAssociatedTokenAddressSync(
+        NATIVE_MINT,
+        this.provider.publicKey,
+      );
+      let wsolAtaAccount: AccountInfo<Buffer> | null = null;
+      try {
+        wsolAtaAccount = await this.provider.connection.getAccountInfo(wsolAta);
+      } catch {
+        // anchor-bankrun's connection proxy throws for missing accounts
+        // instead of returning null.
+      }
+      const wsolBalance =
+        wsolAtaAccount === null
+          ? 0n
+          : AccountLayout.decode(wsolAtaAccount.data).amount;
+      const shortfall = BigInt(maxQuoteIn.toString()) - wsolBalance;
+      if (shortfall > 0n) {
+        await this.provider.sendAndConfirm!(
+          new Transaction().add(
+            createAssociatedTokenAccountIdempotentInstruction(
+              this.provider.publicKey,
+              wsolAta,
+              this.provider.publicKey,
+              NATIVE_MINT,
+            ),
+            SystemProgram.transfer({
+              fromPubkey: this.provider.publicKey,
+              toPubkey: wsolAta,
+              lamports: Number(shortfall),
+            }),
+            createSyncNativeInstruction(wsolAta),
+          ),
+        );
+      }
+    }
+
+    return this.depositViaBuyIx({
+      relaunch,
+      oldMint: storedRelaunch.oldMint,
+      oldTokenProgram: oldMintAccount.owner,
+      sourceQuoteMint: storedRelaunch.sourceQuoteMint,
+      sourcePool: storedRelaunch.sourcePool,
+      poolBaseTokenAccount: pool.poolBaseTokenAccount,
+      poolQuoteTokenAccount: pool.poolQuoteTokenAccount,
+      coinCreator: pool.coinCreator,
+      protocolFeeRecipient: globalConfig.protocolFeeRecipients[0],
+      buybackFeeRecipient: globalConfig.buybackFeeRecipients[0],
+      baseOut,
+      maxQuoteIn,
     }).rpc();
   }
 

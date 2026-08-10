@@ -17,6 +17,19 @@ export const PUMP_AMM_FEE_CONFIG = PublicKey.findProgramAddressSync(
   PUMP_FEES_PROGRAM_ID,
 )[0];
 
+export const PUMP_AMM_GLOBAL_VOLUME_ACCUMULATOR =
+  PublicKey.findProgramAddressSync(
+    [Buffer.from("global_volume_accumulator")],
+    PUMP_AMM_PROGRAM_ID,
+  )[0];
+
+export function getPumpUserVolumeAccumulatorAddr(user: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("user_volume_accumulator"), user.toBuffer()],
+    PUMP_AMM_PROGRAM_ID,
+  )[0];
+}
+
 // The current pump_amm requires this PDA as the first remaining account on
 // buys and sells (checked by address only — the account need not exist).
 export function getPumpPoolV2Addr(baseMint: PublicKey): PublicKey {

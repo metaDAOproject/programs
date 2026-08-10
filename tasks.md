@@ -23,20 +23,11 @@
 
 ## Tasks
 
-### Phase 3: PumpSwap + Whirlpool legs
-
-> Reference: `relaunch-implementation-plan.md` → "Stage 3 — execute_sell, execute_usdc_swap, deposit_via_buy"
-
-- [NEXT] 3.3 `deposit_via_buy` (instruction + SDK + tests)
-  - `cpi/pump_amm.rs` buy builder (23 accounts = sell + volume accumulators); pull quote → buy → refund unspent → credit measured old-vault delta
-  - Tests per plan §4: both quote variants, mixes with direct deposits, tight `max_quote_in` fails cleanly, window/state gates, credited tokens refund on later failure
-  - SDK: `depositViaBuy()` + SOL→WSOL wrap pre-instructions
-
 ### Phase 4: complete_relaunch
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 4 — complete_relaunch"
 
-- [ ] 4.1 `complete_relaunch` (instruction + SDK + tests)
+- [NEXT] 4.1 `complete_relaunch` (instruction + SDK + tests)
   - u128 `price_1e12`; CPI `futarchy::initialize_dao` (launchpad-parity params incl. 1.5M min stake) + `provide_liquidity` (2M base, `usdc_recovered / 5` quote, Squads-vault position); transfer remaining USDC + mint & metadata authorities to Squads vault; store `dao`/`dao_vault`; `Complete`
   - Squads accounts pre-created/PDA-derived exactly as launchpad (reentrancy-safe shape)
   - Tests per plan §8: param assertions, AMM-ratio == twap identity, treasury remainder, authority handoffs, permissionless crank, rounding conservation

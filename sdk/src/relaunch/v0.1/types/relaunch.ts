@@ -236,6 +236,187 @@ export type Relaunch = {
       ];
     },
     {
+      name: "depositViaBuy";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositor";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "relaunchSigner";
+          isMut: true;
+          isSigner: false;
+          docs: ["user account writable."];
+        },
+        {
+          name: "oldMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositorQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sourcePool";
+          isMut: true;
+          isSigner: false;
+          docs: ["rechecks its internal consistency."];
+        },
+        {
+          name: "pumpGlobalConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "protocolFeeRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "protocolFeeRecipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "poolBaseTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "poolQuoteTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "coinCreatorVaultAta";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "coinCreatorVaultAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "globalVolumeAccumulator";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "userVolumeAccumulator";
+          isMut: true;
+          isSigner: false;
+          docs: ["on the first buy"];
+        },
+        {
+          name: "pumpFeeConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "pumpFeeProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "poolV2";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "buybackFeeRecipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "buybackFeeRecipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "pumpEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "pumpAmmProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "DepositViaBuyArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "closeDeposits";
       accounts: [
         {
@@ -868,6 +1049,30 @@ export type Relaunch = {
       };
     },
     {
+      name: "DepositViaBuyArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "baseOut";
+            docs: [
+              "The exact amount of old tokens to buy off the source pool (pump's buy",
+              "is exact-output).",
+            ];
+            type: "u64";
+          },
+          {
+            name: "maxQuoteIn";
+            docs: [
+              "The depositor's live slippage cap on the quote spent, inclusive of",
+              "pump's fees.",
+            ];
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
       name: "DepositArgs";
       type: {
         kind: "struct";
@@ -1308,6 +1513,58 @@ export type Relaunch = {
         },
       ];
     },
+    {
+      name: "TokensDepositedViaBuyEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "depositor";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "depositRecord";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "quoteSpent";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "totalDeposited";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "totalDepositedByDepositor";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "depositRecordSeqNum";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -1661,6 +1918,187 @@ export const IDL: Relaunch = {
           name: "args",
           type: {
             defined: "DepositArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "depositViaBuy",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositor",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "relaunchSigner",
+          isMut: true,
+          isSigner: false,
+          docs: ["user account writable."],
+        },
+        {
+          name: "oldMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositorQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sourcePool",
+          isMut: true,
+          isSigner: false,
+          docs: ["rechecks its internal consistency."],
+        },
+        {
+          name: "pumpGlobalConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "protocolFeeRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "protocolFeeRecipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "poolBaseTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "poolQuoteTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "coinCreatorVaultAta",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "coinCreatorVaultAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "globalVolumeAccumulator",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "userVolumeAccumulator",
+          isMut: true,
+          isSigner: false,
+          docs: ["on the first buy"],
+        },
+        {
+          name: "pumpFeeConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "pumpFeeProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "poolV2",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "buybackFeeRecipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "buybackFeeRecipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "pumpEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "pumpAmmProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "DepositViaBuyArgs",
           },
         },
       ],
@@ -2298,6 +2736,30 @@ export const IDL: Relaunch = {
       },
     },
     {
+      name: "DepositViaBuyArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "baseOut",
+            docs: [
+              "The exact amount of old tokens to buy off the source pool (pump's buy",
+              "is exact-output).",
+            ],
+            type: "u64",
+          },
+          {
+            name: "maxQuoteIn",
+            docs: [
+              "The depositor's live slippage cap on the quote spent, inclusive of",
+              "pump's fees.",
+            ],
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "DepositArgs",
       type: {
         kind: "struct",
@@ -2728,6 +3190,58 @@ export const IDL: Relaunch = {
         },
         {
           name: "amountRefunded",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "depositRecordSeqNum",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "TokensDepositedViaBuyEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "depositor",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "depositRecord",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "quoteSpent",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "totalDeposited",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "totalDepositedByDepositor",
           type: "u64",
           index: false,
         },
