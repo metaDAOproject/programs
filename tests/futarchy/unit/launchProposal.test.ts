@@ -776,7 +776,7 @@ export default function suite() {
     });
 
     const callbacks = expectError(
-      "HostileCooldownActive",
+      "ProposalKindCooldownActive",
       "launched a hostile takeover during its cooldown",
     );
 

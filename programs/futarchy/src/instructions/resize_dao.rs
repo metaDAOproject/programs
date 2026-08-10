@@ -21,8 +21,8 @@ impl ResizeDao<'_> {
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Dao::INIT_SPACE + 8;
-        // 50 bytes: 33 (Option<Pubkey> liquidator) + 8 (i64) + 8 (i64) + 1 (bool)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 50;
+        // 58 bytes: 33 (Option<Pubkey> liquidator) + 8 (i64) + 8 (i64) + 1 (bool) + 8 (i64)
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 58;
 
         if dao.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -63,6 +63,7 @@ impl ResizeDao<'_> {
             last_failed_takeover_at: 0,
             last_failed_liquidation_at: 0,
             spending_limit_dirty: false,
+            last_buyback_finalized_at: 0,
         };
 
         dao.realloc(AFTER_REALLOC_SIZE, true)?;

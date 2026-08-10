@@ -716,6 +716,110 @@ export type Futarchy = {
       ];
     },
     {
+      name: "initializeBuybackTokenProposal";
+      accounts: [
+        {
+          name: "typedInitializeAccounts";
+          accounts: [
+            {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "dao";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsMultisig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsTransaction";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "squadsProposal";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "proposer";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "permissionlessAccount";
+              isMut: false;
+              isSigner: true;
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ];
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeBuybackTokenProposalArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "stakeToProposal";
       accounts: [
         {
@@ -2183,7 +2287,6 @@ export type Futarchy = {
           name: "dao";
           isMut: true;
           isSigner: false;
-          docs: ["Mutable only to bump `seq_num` for the event."];
         },
         {
           name: "proposal";
@@ -2416,6 +2519,11 @@ export type Futarchy = {
               "consumed by `sync_spending_limit`.",
             ];
             type: "bool";
+          },
+          {
+            name: "lastBuybackFinalizedAt";
+            docs: ["Unix time of the last buyback finalization. 0 = never."];
+            type: "i64";
           },
         ];
       };
@@ -2818,7 +2926,6 @@ export type Futarchy = {
         fields: [
           {
             name: "durationInSeconds";
-            docs: ["`None` leaves the proposal's current value in place."];
             type: {
               option: "u32";
             };
@@ -2856,6 +2963,42 @@ export type Futarchy = {
           {
             name: "minOutputAmount";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeBuybackTokenProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "quoteAmount";
+            type: "u64";
+          },
+          {
+            name: "quoteAmountPerCycle";
+            type: "u64";
+          },
+          {
+            name: "cycleFrequencySeconds";
+            type: "u32";
+          },
+          {
+            name: "startDelaySeconds";
+            type: "u32";
+          },
+          {
+            name: "minPrice";
+            type: {
+              option: "u64";
+            };
+          },
+          {
+            name: "maxPrice";
+            type: {
+              option: "u64";
+            };
           },
         ];
       };
@@ -3394,7 +3537,7 @@ export type Futarchy = {
           },
           {
             name: "cooldownSeconds";
-            docs: ["Failure-triggered cooldown, checked at launch. 0 = none."];
+            docs: ["Cooldown checked at launch. 0 = none."];
             type: "u32";
           },
           {
@@ -3584,6 +3727,49 @@ export type Futarchy = {
               {
                 name: "liquidator";
                 type: "publicKey";
+              },
+            ];
+          },
+          {
+            name: "BuybackToken";
+            fields: [
+              {
+                name: "quoteAmount";
+                docs: ["Total quote to deploy. Capped at 25% of the treasury."];
+                type: "u64";
+              },
+              {
+                name: "quoteAmountPerCycle";
+                type: "u64";
+              },
+              {
+                name: "cycleFrequencySeconds";
+                docs: ["Seconds between orders."];
+                type: "u32";
+              },
+              {
+                name: "startDelaySeconds";
+                docs: [
+                  "Seconds after execution before the first order. 0 = immediately.",
+                ];
+                type: "u32";
+              },
+              {
+                name: "minPrice";
+                docs: [
+                  "Optional price band, in quote native units per whole base token:",
+                  "1_600_000 = 1.6 USDC per token.",
+                  "`None` = unguarded.",
+                ];
+                type: {
+                  option: "u64";
+                };
+              },
+              {
+                name: "maxPrice";
+                type: {
+                  option: "u64";
+                };
               },
             ];
           },
@@ -4872,8 +5058,8 @@ export type Futarchy = {
     },
     {
       code: 6044;
-      name: "HostileCooldownActive";
-      msg: "A hostile proposal of this kind failed recently, so the cooldown must elapse first";
+      name: "ProposalKindCooldownActive";
+      msg: "A proposal of this kind finalized recently, so the cooldown must elapse first";
     },
     {
       code: 6045;
@@ -4929,6 +5115,46 @@ export type Futarchy = {
       code: 6055;
       name: "EmptyProposalParamsUpdate";
       msg: "A proposal params update must set at least one field";
+    },
+    {
+      code: 6056;
+      name: "BuybackCapExceeded";
+      msg: "Buyback amount exceeds 25% of the treasury";
+    },
+    {
+      code: 6057;
+      name: "InvalidBuybackAmount";
+      msg: "The total must be an exact multiple of the non-zero per-cycle amount, at least twice over";
+    },
+    {
+      code: 6058;
+      name: "InvalidBuybackCycleFrequency";
+      msg: "Cycle frequency must be between 60 seconds and 1 year";
+    },
+    {
+      code: 6059;
+      name: "InvalidBuybackStartDelay";
+      msg: "Start delay must be at most 30 days";
+    },
+    {
+      code: 6060;
+      name: "InvalidBuybackPriceBand";
+      msg: "min_price must be no greater than max_price";
+    },
+    {
+      code: 6061;
+      name: "InvalidTreasuryAccount";
+      msg: "A treasury account is neither a vault-owned quote account nor the treasury's AMM position";
+    },
+    {
+      code: 6062;
+      name: "TreasuryAccountsNotSorted";
+      msg: "Treasury accounts must be in strictly ascending key order";
+    },
+    {
+      code: 6063;
+      name: "UnexpectedLaunchAccounts";
+      msg: "This proposal kind's launch takes no extra accounts";
     },
   ];
 };
@@ -5646,6 +5872,110 @@ export const IDL: Futarchy = {
           name: "args",
           type: {
             defined: "InitializeHostileLiquidateProposalArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "initializeBuybackTokenProposal",
+      accounts: [
+        {
+          name: "typedInitializeAccounts",
+          accounts: [
+            {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "dao",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsMultisig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsTransaction",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "squadsProposal",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "proposer",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "permissionlessAccount",
+              isMut: false,
+              isSigner: true,
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ],
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeBuybackTokenProposalArgs",
           },
         },
       ],
@@ -7118,7 +7448,6 @@ export const IDL: Futarchy = {
           name: "dao",
           isMut: true,
           isSigner: false,
-          docs: ["Mutable only to bump `seq_num` for the event."],
         },
         {
           name: "proposal",
@@ -7351,6 +7680,11 @@ export const IDL: Futarchy = {
               "consumed by `sync_spending_limit`.",
             ],
             type: "bool",
+          },
+          {
+            name: "lastBuybackFinalizedAt",
+            docs: ["Unix time of the last buyback finalization. 0 = never."],
+            type: "i64",
           },
         ],
       },
@@ -7753,7 +8087,6 @@ export const IDL: Futarchy = {
         fields: [
           {
             name: "durationInSeconds",
-            docs: ["`None` leaves the proposal's current value in place."],
             type: {
               option: "u32",
             },
@@ -7791,6 +8124,42 @@ export const IDL: Futarchy = {
           {
             name: "minOutputAmount",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeBuybackTokenProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "quoteAmount",
+            type: "u64",
+          },
+          {
+            name: "quoteAmountPerCycle",
+            type: "u64",
+          },
+          {
+            name: "cycleFrequencySeconds",
+            type: "u32",
+          },
+          {
+            name: "startDelaySeconds",
+            type: "u32",
+          },
+          {
+            name: "minPrice",
+            type: {
+              option: "u64",
+            },
+          },
+          {
+            name: "maxPrice",
+            type: {
+              option: "u64",
+            },
           },
         ],
       },
@@ -8329,7 +8698,7 @@ export const IDL: Futarchy = {
           },
           {
             name: "cooldownSeconds",
-            docs: ["Failure-triggered cooldown, checked at launch. 0 = none."],
+            docs: ["Cooldown checked at launch. 0 = none."],
             type: "u32",
           },
           {
@@ -8519,6 +8888,49 @@ export const IDL: Futarchy = {
               {
                 name: "liquidator",
                 type: "publicKey",
+              },
+            ],
+          },
+          {
+            name: "BuybackToken",
+            fields: [
+              {
+                name: "quoteAmount",
+                docs: ["Total quote to deploy. Capped at 25% of the treasury."],
+                type: "u64",
+              },
+              {
+                name: "quoteAmountPerCycle",
+                type: "u64",
+              },
+              {
+                name: "cycleFrequencySeconds",
+                docs: ["Seconds between orders."],
+                type: "u32",
+              },
+              {
+                name: "startDelaySeconds",
+                docs: [
+                  "Seconds after execution before the first order. 0 = immediately.",
+                ],
+                type: "u32",
+              },
+              {
+                name: "minPrice",
+                docs: [
+                  "Optional price band, in quote native units per whole base token:",
+                  "1_600_000 = 1.6 USDC per token.",
+                  "`None` = unguarded.",
+                ],
+                type: {
+                  option: "u64",
+                },
+              },
+              {
+                name: "maxPrice",
+                type: {
+                  option: "u64",
+                },
               },
             ],
           },
@@ -9807,8 +10219,8 @@ export const IDL: Futarchy = {
     },
     {
       code: 6044,
-      name: "HostileCooldownActive",
-      msg: "A hostile proposal of this kind failed recently, so the cooldown must elapse first",
+      name: "ProposalKindCooldownActive",
+      msg: "A proposal of this kind finalized recently, so the cooldown must elapse first",
     },
     {
       code: 6045,
@@ -9864,6 +10276,46 @@ export const IDL: Futarchy = {
       code: 6055,
       name: "EmptyProposalParamsUpdate",
       msg: "A proposal params update must set at least one field",
+    },
+    {
+      code: 6056,
+      name: "BuybackCapExceeded",
+      msg: "Buyback amount exceeds 25% of the treasury",
+    },
+    {
+      code: 6057,
+      name: "InvalidBuybackAmount",
+      msg: "The total must be an exact multiple of the non-zero per-cycle amount, at least twice over",
+    },
+    {
+      code: 6058,
+      name: "InvalidBuybackCycleFrequency",
+      msg: "Cycle frequency must be between 60 seconds and 1 year",
+    },
+    {
+      code: 6059,
+      name: "InvalidBuybackStartDelay",
+      msg: "Start delay must be at most 30 days",
+    },
+    {
+      code: 6060,
+      name: "InvalidBuybackPriceBand",
+      msg: "min_price must be no greater than max_price",
+    },
+    {
+      code: 6061,
+      name: "InvalidTreasuryAccount",
+      msg: "A treasury account is neither a vault-owned quote account nor the treasury's AMM position",
+    },
+    {
+      code: 6062,
+      name: "TreasuryAccountsNotSorted",
+      msg: "Treasury accounts must be in strictly ascending key order",
+    },
+    {
+      code: 6063,
+      name: "UnexpectedLaunchAccounts",
+      msg: "This proposal kind's launch takes no extra accounts",
     },
   ],
 };

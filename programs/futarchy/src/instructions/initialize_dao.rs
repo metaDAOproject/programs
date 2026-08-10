@@ -227,6 +227,7 @@ impl InitializeDao<'_> {
             last_failed_takeover_at: 0,
             last_failed_liquidation_at: 0,
             spending_limit_dirty: false,
+            last_buyback_finalized_at: 0,
         });
 
         dao.invariant()?;

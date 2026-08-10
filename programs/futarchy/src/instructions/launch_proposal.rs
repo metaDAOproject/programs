@@ -36,8 +36,8 @@ pub struct LaunchProposal<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
-impl LaunchProposal<'_> {
-    pub fn validate(&self) -> Result<()> {
+impl<'info> LaunchProposal<'info> {
+    pub fn validate(&self, remaining_accounts: &'info [AccountInfo<'info>]) -> Result<()> {
         require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
 
         msg!("proposal state: {:?}", self.proposal.state);
@@ -79,16 +79,17 @@ impl LaunchProposal<'_> {
             FutarchyError::ProposalDurationTooShort
         );
 
-        let last_failed_at = match self.proposal.action {
+        let cooldown_started_at = match self.proposal.action {
             ProposalAction::HostileTakeover { .. } => Some(self.dao.last_failed_takeover_at),
             ProposalAction::HostileLiquidate { .. } => Some(self.dao.last_failed_liquidation_at),
+            ProposalAction::BuybackToken { .. } => Some(self.dao.last_buyback_finalized_at),
             _ => None,
         };
-        if let Some(last_failed_at) = last_failed_at {
+        if let Some(cooldown_started_at) = cooldown_started_at {
             require_gte!(
                 Clock::get()?.unix_timestamp,
-                last_failed_at + params.cooldown_seconds as i64,
-                FutarchyError::HostileCooldownActive
+                cooldown_started_at + params.cooldown_seconds as i64,
+                FutarchyError::ProposalKindCooldownActive
             );
         }
 
@@ -107,6 +108,10 @@ impl LaunchProposal<'_> {
             self.squads_proposal.transaction_index,
             self.squads_multisig.stale_transaction_index
         );
+
+        self.proposal
+            .action
+            .verify_launch_accounts(&self.dao, remaining_accounts)?;
 
         Ok(())
     }

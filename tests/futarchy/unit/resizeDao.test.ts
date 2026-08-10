@@ -32,9 +32,10 @@ async function makeOldLayout(
 ): Promise<{ AFTER: number; BEFORE: number }> {
   const raw = await ctx.banksClient.getAccount(dao);
   const AFTER = raw.data.length;
-  // 50 bytes: liquidator (Option<Pubkey>) + last_failed_takeover_at (i64)
+  // 58 bytes: liquidator (Option<Pubkey>) + last_failed_takeover_at (i64)
   // + last_failed_liquidation_at (i64) + spending_limit_dirty (bool)
-  const BEFORE = AFTER - 50;
+  // + last_buyback_finalized_at (i64)
+  const BEFORE = AFTER - 58;
 
   const disc = Buffer.from(raw.data.slice(0, 8));
   const coder = ctx.futarchy.futarchy.account.dao.coder.accounts;
@@ -85,6 +86,7 @@ export default function suite() {
     assert.equal(original.lastFailedTakeoverAt.toString(), "0");
     assert.equal(original.lastFailedLiquidationAt.toString(), "0");
     assert.isFalse(original.spendingLimitDirty);
+    assert.equal(original.lastBuybackFinalizedAt.toString(), "0");
 
     const { AFTER, BEFORE } = await makeOldLayout(this, dao);
 
@@ -104,6 +106,7 @@ export default function suite() {
     assert.equal(migrated.lastFailedTakeoverAt.toString(), "0");
     assert.equal(migrated.lastFailedLiquidationAt.toString(), "0");
     assert.isFalse(migrated.spendingLimitDirty);
+    assert.equal(migrated.lastBuybackFinalizedAt.toString(), "0");
 
     assert.deepEqual(
       JSON.parse(JSON.stringify(migrated)),
@@ -147,6 +150,7 @@ export default function suite() {
     assert.equal(migrated.lastFailedTakeoverAt.toString(), "0");
     assert.equal(migrated.lastFailedLiquidationAt.toString(), "0");
     assert.isFalse(migrated.spendingLimitDirty);
+    assert.equal(migrated.lastBuybackFinalizedAt.toString(), "0");
   });
 
   it("is a no-op on an already-new-layout DAO", async function () {
@@ -172,7 +176,7 @@ export default function suite() {
     const rent = await this.banksClient.getRent();
     const raw0 = await this.banksClient.getAccount(dao);
     const AFTER = raw0.data.length;
-    const BEFORE = AFTER - 50;
+    const BEFORE = AFTER - 58;
     const rentBefore = rent.minimumBalance(BigInt(BEFORE));
     const rentAfter = rent.minimumBalance(BigInt(AFTER));
     const delta = rentAfter - rentBefore;

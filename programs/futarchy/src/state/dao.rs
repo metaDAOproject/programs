@@ -79,6 +79,8 @@ pub struct Dao {
     /// Set by every write to the spending-limit record (`initial_spending_limit`),
     /// consumed by `sync_spending_limit`.
     pub spending_limit_dirty: bool,
+    /// Unix time of the last buyback finalization. 0 = never.
+    pub last_buyback_finalized_at: i64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]

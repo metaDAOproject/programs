@@ -30,6 +30,8 @@ export type InitializeSpendingLimitChangeProposalArgs =
   IdlTypes<FutarchyProgram>["InitializeSpendingLimitChangeProposalArgs"];
 export type InitializeHostileTakeoverProposalArgs =
   IdlTypes<FutarchyProgram>["InitializeHostileTakeoverProposalArgs"];
+export type InitializeBuybackTokenProposalArgs =
+  IdlTypes<FutarchyProgram>["InitializeBuybackTokenProposalArgs"];
 export type InstructionParams = IdlTypes<FutarchyProgram>["InstructionParams"];
 export type SpendingLimitAction =
   IdlTypes<FutarchyProgram>["SpendingLimitAction"];

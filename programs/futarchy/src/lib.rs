@@ -114,6 +114,14 @@ pub mod futarchy {
         InitializeHostileLiquidateProposal::handle(ctx, args)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_buyback_token_proposal(
+        ctx: Context<InitializeBuybackTokenProposal>,
+        args: InitializeBuybackTokenProposalArgs,
+    ) -> Result<()> {
+        InitializeBuybackTokenProposal::handle(ctx, args)
+    }
+
     #[access_control(ctx.accounts.validate(&params))]
     pub fn stake_to_proposal(
         ctx: Context<StakeToProposal>,
@@ -130,8 +138,10 @@ pub mod futarchy {
         UnstakeFromProposal::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn launch_proposal(ctx: Context<LaunchProposal>) -> Result<()> {
+    #[access_control(ctx.accounts.validate(ctx.remaining_accounts))]
+    pub fn launch_proposal<'c: 'info, 'info>(
+        ctx: Context<'_, '_, 'c, 'info, LaunchProposal<'info>>,
+    ) -> Result<()> {
         LaunchProposal::handle(ctx)
     }
 

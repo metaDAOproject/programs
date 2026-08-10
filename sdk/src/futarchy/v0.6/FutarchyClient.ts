@@ -299,18 +299,59 @@ export class FutarchyClient {
     });
   }
 
+  // The treasury account list a buyback launch must supply as remaining
+  // accounts: the vault's quote ATA and the treasury's AMM position, existing
+  // accounts only, sorted ascending as the program requires.
+  async assembleBuybackTreasuryAccounts({
+    dao,
+  }: {
+    dao: PublicKey;
+  }): Promise<PublicKey[]> {
+    const storedDao = await this.getDao(dao);
+
+    const vaultQuoteAccount = getAssociatedTokenAddressSync(
+      storedDao.quoteMint,
+      storedDao.squadsMultisigVault,
+      true,
+    );
+    const [ammPosition] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("amm_position"),
+        dao.toBuffer(),
+        storedDao.squadsMultisigVault.toBuffer(),
+      ],
+      this.getProgramId(),
+    );
+
+    const existing: PublicKey[] = [];
+    for (const candidate of [vaultQuoteAccount, ammPosition]) {
+      // Bankrun's connection proxy throws on missing accounts where a real
+      // RPC returns null; treat both as "doesn't exist"
+      const info = await this.provider.connection
+        .getAccountInfo(candidate)
+        .catch(() => null);
+      if (info) {
+        existing.push(candidate);
+      }
+    }
+
+    return existing.sort((a, b) => a.toBuffer().compare(b.toBuffer()));
+  }
+
   launchProposalIx({
     proposal,
     dao,
     baseMint,
     quoteMint,
     squadsProposal,
+    treasuryAccounts = [],
   }: {
     proposal: PublicKey;
     dao: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
     squadsProposal: PublicKey;
+    treasuryAccounts?: PublicKey[];
   }) {
     const {
       baseVault,
@@ -358,6 +399,13 @@ export class FutarchyClient {
         squadsProposal,
         payer: this.provider.publicKey,
       })
+      .remainingAccounts(
+        treasuryAccounts.map((pubkey) => ({
+          pubkey,
+          isSigner: false,
+          isWritable: false,
+        })),
+      )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ]);
@@ -1220,6 +1268,97 @@ export class FutarchyClient {
   }) {
     return this.futarchy.methods
       .initializeHostileLiquidateProposal({ liquidator })
+      .accounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
+          dao,
+          baseMint,
+          quoteMint,
+          transactionIndex,
+          proposer,
+          payer,
+        }),
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
+  // The payload is a single program-built memo carrying the DCA-shaped
+  // parameters — a passed buyback authorizes nothing on-chain; ops executes
+  // the programme off-chain with authority it already holds.
+  async initializeBuybackTokenProposal({
+    dao,
+    quoteAmount,
+    quoteAmountPerCycle,
+    cycleFrequencySeconds,
+    startDelaySeconds,
+    minPrice = null,
+    maxPrice = null,
+  }: {
+    dao: PublicKey;
+    quoteAmount: BN;
+    quoteAmountPerCycle: BN;
+    cycleFrequencySeconds: number;
+    startDelaySeconds: number;
+    minPrice?: BN | null;
+    maxPrice?: BN | null;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    return this.initializeTypedProposal({
+      dao,
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
+        this.initializeBuybackTokenProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          quoteAmount,
+          quoteAmountPerCycle,
+          cycleFrequencySeconds,
+          startDelaySeconds,
+          minPrice,
+          maxPrice,
+          transactionIndex,
+        }),
+    });
+  }
+
+  initializeBuybackTokenProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    quoteAmount,
+    quoteAmountPerCycle,
+    cycleFrequencySeconds,
+    startDelaySeconds,
+    minPrice = null,
+    maxPrice = null,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    quoteAmount: BN;
+    quoteAmountPerCycle: BN;
+    cycleFrequencySeconds: number;
+    startDelaySeconds: number;
+    minPrice?: BN | null;
+    maxPrice?: BN | null;
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    return this.futarchy.methods
+      .initializeBuybackTokenProposal({
+        quoteAmount,
+        quoteAmountPerCycle,
+        cycleFrequencySeconds,
+        startDelaySeconds,
+        minPrice,
+        maxPrice,
+      })
       .accounts({
         typedInitializeAccounts: this.typedInitializeAccounts({
           dao,

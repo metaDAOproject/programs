@@ -92,8 +92,8 @@ pub enum FutarchyError {
     NoActiveOptimisticProposal,
     #[msg("This DAO has been liquidated")]
     DaoLiquidated,
-    #[msg("A hostile proposal of this kind failed recently, so the cooldown must elapse first")]
-    HostileCooldownActive,
+    #[msg("A proposal of this kind finalized recently, so the cooldown must elapse first")]
+    ProposalKindCooldownActive,
     #[msg("The DAO has no spending limit")]
     NoSpendingLimit,
     #[msg("Amount exceeds the cap of 3x the monthly spending limit")]
@@ -116,4 +116,20 @@ pub enum FutarchyError {
     InvalidProposalPassThreshold,
     #[msg("A proposal params update must set at least one field")]
     EmptyProposalParamsUpdate,
+    #[msg("Buyback amount exceeds 25% of the treasury")]
+    BuybackCapExceeded,
+    #[msg("The total must be an exact multiple of the non-zero per-cycle amount, at least twice over")]
+    InvalidBuybackAmount,
+    #[msg("Cycle frequency must be between 60 seconds and 1 year")]
+    InvalidBuybackCycleFrequency,
+    #[msg("Start delay must be at most 30 days")]
+    InvalidBuybackStartDelay,
+    #[msg("min_price must be no greater than max_price")]
+    InvalidBuybackPriceBand,
+    #[msg("A treasury account is neither a vault-owned quote account nor the treasury's AMM position")]
+    InvalidTreasuryAccount,
+    #[msg("Treasury accounts must be in strictly ascending key order")]
+    TreasuryAccountsNotSorted,
+    #[msg("This proposal kind's launch takes no extra accounts")]
+    UnexpectedLaunchAccounts,
 }

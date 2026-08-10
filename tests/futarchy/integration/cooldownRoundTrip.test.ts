@@ -124,7 +124,7 @@ export default function suite() {
     });
 
     const callbacks = expectError(
-      "HostileCooldownActive",
+      "ProposalKindCooldownActive",
       "launched a hostile liquidation during its cooldown",
     );
 

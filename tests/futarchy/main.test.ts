@@ -11,6 +11,7 @@ import initializeMintTokensProposal from "./unit/initializeMintTokensProposal.te
 import initializeSpendingLimitChangeProposal from "./unit/initializeSpendingLimitChangeProposal.test.js";
 import initializeHostileTakeoverProposal from "./unit/initializeHostileTakeoverProposal.test.js";
 import initializeHostileLiquidateProposal from "./unit/initializeHostileLiquidateProposal.test.js";
+import initializeBuybackTokenProposal from "./unit/initializeBuybackTokenProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
@@ -85,6 +86,10 @@ export default function suite() {
   describe(
     "#initialize_hostile_liquidate_proposal",
     initializeHostileLiquidateProposal,
+  );
+  describe(
+    "#initialize_buyback_token_proposal",
+    initializeBuybackTokenProposal,
   );
   describe("#launch_proposal", launchProposal);
   describe("#finalize_proposal", finalizeProposal);

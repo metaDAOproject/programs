@@ -11,7 +11,7 @@ pub struct InstructionParams {
     /// Launch condition: the proposal must be team-sponsored to launch.
     pub requires_team_sponsorship: bool,
     pub council_can_block: bool,
-    /// Failure-triggered cooldown, checked at launch. 0 = none.
+    /// Cooldown checked at launch. 0 = none.
     pub cooldown_seconds: u32,
     /// Delay before the conditional TWAPs start to accumulate
     pub twap_start_delay_seconds: u32,
@@ -48,6 +48,20 @@ pub enum ProposalAction {
     },
     HostileLiquidate {
         liquidator: Pubkey,
+    },
+    BuybackToken {
+        /// Total quote to deploy. Capped at 25% of the treasury.
+        quote_amount: u64,
+        quote_amount_per_cycle: u64,
+        /// Seconds between orders.
+        cycle_frequency_seconds: u32,
+        /// Seconds after execution before the first order. 0 = immediately.
+        start_delay_seconds: u32,
+        /// Optional price band, in quote native units per whole base token:
+        /// 1_600_000 = 1.6 USDC per token.
+        /// `None` = unguarded.
+        min_price: Option<u64>,
+        max_price: Option<u64>,
     },
 }
 
@@ -104,6 +118,124 @@ impl ProposalAction {
                 cooldown_seconds: DAY_SECONDS * 10,
                 twap_start_delay_seconds: DAY_SECONDS,
             },
+            ProposalAction::BuybackToken { .. } => InstructionParams {
+                duration_seconds: DAY_SECONDS * 10,
+                pass_threshold_bps: 1000,
+                requires_team_sponsorship: false,
+                council_can_block: true,
+                cooldown_seconds: DAY_SECONDS * 90,
+                twap_start_delay_seconds: DAY_SECONDS,
+            },
         }
     }
+
+    /// Per-kind launch gates over caller-supplied accounts, hooked in by
+    /// `launch_proposal`. Kinds with no account gate require an empty list.
+    pub fn verify_launch_accounts<'info>(
+        &self,
+        dao: &Account<'info, Dao>,
+        accounts: &'info [AccountInfo<'info>],
+    ) -> Result<()> {
+        match self {
+            ProposalAction::BuybackToken { quote_amount, .. } => {
+                verify_buyback_treasury_cap(*quote_amount, dao, accounts)
+            }
+            _ => {
+                require_eq!(
+                    accounts.len(),
+                    0,
+                    FutarchyError::UnexpectedLaunchAccounts
+                );
+                Ok(())
+            }
+        }
+    }
+}
+
+/// The 25% treasury cap, measured from the supplied account list. Launch is
+/// permissionless, so the list is considered adversarial input.
+fn verify_buyback_treasury_cap<'info>(
+    quote_amount: u64,
+    dao: &Account<'info, Dao>,
+    treasury_accounts: &'info [AccountInfo<'info>],
+) -> Result<()> {
+    let PoolState::Spot { ref spot } = dao.amm.state else {
+        return err!(FutarchyError::PoolNotInSpotState);
+    };
+
+    // The treasury's own AMM position sits at its derived PDA, so at most
+    // one account in existence can pass this check.
+    let (position_pda, _) = Pubkey::find_program_address(
+        &[
+            SEED_AMM_POSITION,
+            dao.key().as_ref(),
+            dao.squads_multisig_vault.as_ref(),
+        ],
+        &crate::ID,
+    );
+
+    let mut treasury_quote: u128 = 0;
+    let mut previous_key: Option<Pubkey> = None;
+
+    for account in treasury_accounts {
+        // Strictly ascending keys prove uniqueness.
+        if let Some(previous_key) = previous_key {
+            require_gt!(
+                account.key(),
+                previous_key,
+                FutarchyError::TreasuryAccountsNotSorted
+            );
+        }
+        previous_key = Some(account.key());
+
+        if account.owner == &token::ID {
+            // Any vault-owned quote account counts.
+            let token_account = Account::<TokenAccount>::try_from(account)?;
+            require_keys_eq!(
+                token_account.mint,
+                dao.quote_mint,
+                FutarchyError::InvalidTreasuryAccount
+            );
+            require_keys_eq!(
+                token_account.owner,
+                dao.squads_multisig_vault,
+                FutarchyError::InvalidTreasuryAccount
+            );
+            treasury_quote += token_account.amount as u128;
+        } else if account.owner == &crate::ID {
+            let position = Account::<AmmPosition>::try_from(account)?;
+            require_keys_eq!(
+                account.key(),
+                position_pda,
+                FutarchyError::InvalidTreasuryAccount
+            );
+            // The address already binds these fields, but keep it explicit.
+            require_keys_eq!(
+                position.dao,
+                dao.key(),
+                FutarchyError::InvalidTreasuryAccount
+            );
+            require_keys_eq!(
+                position.position_authority,
+                dao.squads_multisig_vault,
+                FutarchyError::InvalidTreasuryAccount
+            );
+            // The quote a withdrawal would deliver right now.
+            if dao.amm.total_liquidity > 0 {
+                treasury_quote += spot
+                    .get_quote_withdrawable(position.liquidity, dao.amm.total_liquidity)
+                    as u128;
+            }
+        } else {
+            return err!(FutarchyError::InvalidTreasuryAccount);
+        }
+    }
+
+    require_gte!(
+        treasury_quote,
+        quote_amount as u128 * 4,
+        FutarchyError::BuybackCapExceeded
+    );
+
+    Ok(())
 }

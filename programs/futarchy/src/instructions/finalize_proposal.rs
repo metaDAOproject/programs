@@ -174,6 +174,15 @@ impl FinalizeProposal<'_> {
             }
         }
 
+        // The buyback cooldown stamps on either outcome: it rate-limits an
+        // action the DAO consented to — draining the treasury through a
+        // sequence of individually reasonable votes — rather than deterring
+        // retries of a rejected proposal. `admin_cancel_proposal` writes no
+        // timestamp, so a council block can't lock buybacks out for a quarter.
+        if matches!(proposal.action, ProposalAction::BuybackToken { .. }) {
+            dao.last_buyback_finalized_at = clock.unix_timestamp;
+        }
+
         let cpi_accounts = ResolveQuestion {
             question: question.to_account_info(),
             oracle: proposal.to_account_info(),
