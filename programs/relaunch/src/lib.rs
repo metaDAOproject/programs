@@ -76,6 +76,11 @@ pub mod relaunch {
     }
 
     #[access_control(ctx.accounts.validate())]
+    pub fn complete_relaunch(ctx: Context<CompleteRelaunch>) -> Result<()> {
+        CompleteRelaunch::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
     pub fn mark_failed(ctx: Context<MarkFailed>) -> Result<()> {
         MarkFailed::handle(ctx)
     }

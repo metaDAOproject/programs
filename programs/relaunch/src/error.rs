@@ -48,4 +48,6 @@ pub enum RelaunchError {
     RelaunchNotSold,
     #[msg("Swap output is below the minimum output amount")]
     SlippageExceeded,
+    #[msg("Relaunch must be in the Swapped state")]
+    RelaunchNotSwapped,
 }

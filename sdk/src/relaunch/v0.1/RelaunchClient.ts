@@ -20,14 +20,20 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import BN from "bn.js";
+import * as multisig from "@sqds/multisig";
 import {
+  FUTARCHY_V0_6_PROGRAM_ID,
   MAINNET_USDC,
   MPL_TOKEN_METADATA_PROGRAM_ID,
   PUMP_AMM_PROGRAM_ID,
   PUMP_FEES_PROGRAM_ID,
   RELAUNCH_V0_1_PROGRAM_ID,
+  SQUADS_PROGRAM_CONFIG,
+  SQUADS_PROGRAM_CONFIG_TREASURY,
+  SQUADS_PROGRAM_ID,
   WHIRLPOOL_PROGRAM_ID,
 } from "../../constants.js";
+import { getDaoAddr } from "../../futarchy/v0.6/index.js";
 import {
   RelaunchProgram,
   RelaunchIDL,
@@ -563,6 +569,108 @@ export class RelaunchClient {
         true,
       ),
       minUsdcOut,
+    }).rpc();
+  }
+
+  completeRelaunchIx({
+    relaunch,
+    newMint,
+    payer = this.provider.publicKey,
+  }: {
+    relaunch: PublicKey;
+    newMint: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+
+    const newTokenVault = getAssociatedTokenAddressSync(
+      newMint,
+      relaunchSigner,
+      true,
+    );
+    const usdcVault = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      relaunchSigner,
+      true,
+    );
+    const [tokenMetadata] = getMetadataAddr(newMint);
+
+    const [dao] = getDaoAddr({ nonce: new BN(0), daoCreator: relaunchSigner });
+    const [futarchyEventAuthority] = getEventAuthorityAddr(
+      FUTARCHY_V0_6_PROGRAM_ID,
+    );
+
+    const [multisigPda] = multisig.getMultisigPda({ createKey: dao });
+    const [multisigVault] = multisig.getVaultPda({ multisigPda, index: 0 });
+    const [spendingLimit] = multisig.getSpendingLimitPda({
+      multisigPda,
+      createKey: dao,
+    });
+
+    const [ammPosition] = PublicKey.findProgramAddressSync(
+      [Buffer.from("amm_position"), dao.toBuffer(), multisigVault.toBuffer()],
+      FUTARCHY_V0_6_PROGRAM_ID,
+    );
+
+    return this.relaunchProgram.methods
+      .completeRelaunch()
+      .accounts({
+        relaunch,
+        payer,
+        relaunchSigner,
+        newMint,
+        usdcMint: MAINNET_USDC,
+        newTokenVault,
+        usdcVault,
+        tokenMetadata,
+        dao,
+        futarchyAmmBaseVault: getAssociatedTokenAddressSync(newMint, dao, true),
+        futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
+          MAINNET_USDC,
+          dao,
+          true,
+        ),
+        ammPosition,
+        squadsMultisig: multisigPda,
+        squadsMultisigVault: multisigVault,
+        spendingLimit,
+        squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+        squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
+        treasuryUsdcAccount: getAssociatedTokenAddressSync(
+          MAINNET_USDC,
+          multisigVault,
+          true,
+        ),
+        futarchyProgram: FUTARCHY_V0_6_PROGRAM_ID,
+        futarchyEventAuthority,
+        squadsProgram: SQUADS_PROGRAM_ID,
+        tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .preInstructions([
+        // DAO init + Squads multisig creation + AMM seeding in one tx run
+        // just shy of 400k; give the budget real headroom.
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
+      ]);
+  }
+
+  // Completes the relaunch as any cranker (the provider wallet), reading the
+  // new mint from the stored relaunch.
+  async completeRelaunch({
+    relaunch,
+  }: {
+    relaunch: PublicKey;
+  }): Promise<TransactionSignature> {
+    const storedRelaunch = await this.fetchRelaunch(relaunch);
+    if (storedRelaunch === null) {
+      throw new Error(`relaunch ${relaunch.toBase58()} does not exist`);
+    }
+
+    return this.completeRelaunchIx({
+      relaunch,
+      newMint: storedRelaunch.newMint,
     }).rpc();
   }
 

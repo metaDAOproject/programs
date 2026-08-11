@@ -706,6 +706,156 @@ export type Relaunch = {
       ];
     },
     {
+      name: "completeRelaunch";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "relaunchSigner";
+          isMut: false;
+          isSigner: false;
+          docs: ["handoffs."];
+        },
+        {
+          name: "newMint";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The DAO's base mint; its mint authority moves to the Squads vault.",
+          ];
+        },
+        {
+          name: "usdcMint";
+          isMut: false;
+          isSigner: false;
+          docs: ["The DAO's quote mint."];
+        },
+        {
+          name: "newTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "usdcVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenMetadata";
+          isMut: true;
+          isSigner: false;
+          docs: ["Squads vault."];
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+          docs: ["hardcoded `nonce: 0` CPI param."];
+        },
+        {
+          name: "futarchyAmmBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "futarchyAmmQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammPosition";
+          isMut: true;
+          isSigner: false;
+          docs: ["position."];
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: false;
+          docs: ["authorities."];
+        },
+        {
+          name: "spendingLimit";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgramConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgramConfigTreasury";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "treasuryUsdcAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "futarchyProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "futarchyEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenMetadataProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "markFailed";
       accounts: [
         {
@@ -1514,6 +1664,53 @@ export type Relaunch = {
       ];
     },
     {
+      name: "RelaunchCompletedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "daoVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "usdcRecovered";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "twapInitialObservation";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "usdcToLp";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "usdcToTreasury";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+    {
       name: "TokensDepositedViaBuyEvent";
       fields: [
         {
@@ -1681,6 +1878,11 @@ export type Relaunch = {
       code: 6022;
       name: "SlippageExceeded";
       msg: "Swap output is below the minimum output amount";
+    },
+    {
+      code: 6023;
+      name: "RelaunchNotSwapped";
+      msg: "Relaunch must be in the Swapped state";
     },
   ];
 };
@@ -2391,6 +2593,156 @@ export const IDL: Relaunch = {
           },
         },
       ],
+    },
+    {
+      name: "completeRelaunch",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "relaunchSigner",
+          isMut: false,
+          isSigner: false,
+          docs: ["handoffs."],
+        },
+        {
+          name: "newMint",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The DAO's base mint; its mint authority moves to the Squads vault.",
+          ],
+        },
+        {
+          name: "usdcMint",
+          isMut: false,
+          isSigner: false,
+          docs: ["The DAO's quote mint."],
+        },
+        {
+          name: "newTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "usdcVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenMetadata",
+          isMut: true,
+          isSigner: false,
+          docs: ["Squads vault."],
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+          docs: ["hardcoded `nonce: 0` CPI param."],
+        },
+        {
+          name: "futarchyAmmBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "futarchyAmmQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammPosition",
+          isMut: true,
+          isSigner: false,
+          docs: ["position."],
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: false,
+          docs: ["authorities."],
+        },
+        {
+          name: "spendingLimit",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgramConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgramConfigTreasury",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "treasuryUsdcAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "futarchyProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "futarchyEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenMetadataProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
     },
     {
       name: "markFailed",
@@ -3201,6 +3553,53 @@ export const IDL: Relaunch = {
       ],
     },
     {
+      name: "RelaunchCompletedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "daoVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "usdcRecovered",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "twapInitialObservation",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "usdcToLp",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "usdcToTreasury",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
       name: "TokensDepositedViaBuyEvent",
       fields: [
         {
@@ -3368,6 +3767,11 @@ export const IDL: Relaunch = {
       code: 6022,
       name: "SlippageExceeded",
       msg: "Swap output is below the minimum output amount",
+    },
+    {
+      code: 6023,
+      name: "RelaunchNotSwapped",
+      msg: "Relaunch must be in the Swapped state",
     },
   ],
 };

@@ -23,20 +23,11 @@
 
 ## Tasks
 
-### Phase 4: complete_relaunch
-
-> Reference: `relaunch-implementation-plan.md` → "Stage 4 — complete_relaunch"
-
-- [NEXT] 4.1 `complete_relaunch` (instruction + SDK + tests)
-  - u128 `price_1e12`; CPI `futarchy::initialize_dao` (launchpad-parity params incl. 1.5M min stake) + `provide_liquidity` (2M base, `usdc_recovered / 5` quote, Squads-vault position); transfer remaining USDC + mint & metadata authorities to Squads vault; store `dao`/`dao_vault`; `Complete`
-  - Squads accounts pre-created/PDA-derived exactly as launchpad (reentrancy-safe shape)
-  - Tests per plan §8: param assertions, AMM-ratio == twap identity, treasury remainder, authority handoffs, permissionless crank, rounding conservation
-
 ### Phase 5: claim + full lifecycle
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 5 — claim + full lifecycle"
 
-- [ ] 5.1 `claim` (instruction + SDK + tests)
+- [NEXT] 5.1 `claim` (instruction + SDK + tests)
   - `Complete`, u128 floor pro-rata, transfer to depositor ATA (`associated_token` constraints), set `claimed`; dust stays in vault (no closes in v1)
   - Tests per plan §9: pro-rata correctness, dust bound, double-claim, wrong state, buy-depositor parity
 

@@ -104,6 +104,18 @@ pub struct RefundClaimedEvent {
 }
 
 #[event]
+pub struct RelaunchCompletedEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+    pub dao: Pubkey,
+    pub dao_vault: Pubkey,
+    pub usdc_recovered: u64,
+    pub twap_initial_observation: u128,
+    pub usdc_to_lp: u64,
+    pub usdc_to_treasury: u64,
+}
+
+#[event]
 pub struct TokensDepositedViaBuyEvent {
     pub common: CommonFields,
     pub relaunch: Pubkey,
