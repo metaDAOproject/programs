@@ -8,6 +8,7 @@ import closeDeposits from "./unit/closeDeposits.test.js";
 import executeSell from "./unit/executeSell.test.js";
 import executeUsdcSwap from "./unit/executeUsdcSwap.test.js";
 import completeRelaunch from "./unit/completeRelaunch.test.js";
+import claim from "./unit/claim.test.js";
 import markFailed from "./unit/markFailed.test.js";
 import claimRefund from "./unit/claimRefund.test.js";
 import { RelaunchClient } from "@metadaoproject/programs";
@@ -31,6 +32,7 @@ export default function suite() {
   describe("#execute_sell", executeSell);
   describe("#execute_usdc_swap", executeUsdcSwap);
   describe("#complete_relaunch", completeRelaunch);
+  describe("#claim", claim);
   describe("#mark_failed", markFailed);
   describe("#claim_refund", claimRefund);
 }

@@ -1,3 +1,4 @@
+pub mod claim;
 pub mod claim_refund;
 pub mod close_deposits;
 pub mod complete_relaunch;
@@ -9,6 +10,7 @@ pub mod initialize_relaunch;
 pub mod mark_failed;
 pub mod start_deposits;
 
+pub use claim::*;
 pub use claim_refund::*;
 pub use close_deposits::*;
 pub use complete_relaunch::*;

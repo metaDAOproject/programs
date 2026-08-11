@@ -27,11 +27,7 @@
 
 > Reference: `relaunch-implementation-plan.md` → "Stage 5 — claim + full lifecycle"
 
-- [NEXT] 5.1 `claim` (instruction + SDK + tests)
-  - `Complete`, u128 floor pro-rata, transfer to depositor ATA (`associated_token` constraints), set `claimed`; dust stays in vault (no closes in v1)
-  - Tests per plan §9: pro-rata correctness, dust bound, double-claim, wrong state, buy-depositor parity
-
-- [ ] 5.2 Full-lifecycle integration tests
+- [NEXT] 5.2 Full-lifecycle integration tests
   - `tests/integration/relaunch.test.ts`: happy path with money-math identities at each hop; failure path A (threshold miss → refunds); failure path B (grace lapse → `mark_failed` → refunds)
   - Matrix: WSOL × USDC source, classic-SPL × Token-2022 old mint (happy path minimum per combination)
   - Finish: full `anchor test --skip-build` suite green, no `.only` anywhere

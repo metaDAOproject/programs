@@ -722,6 +722,56 @@ export class RelaunchClient {
     });
   }
 
+  claimIx({
+    relaunch,
+    newMint,
+    depositor = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    relaunch: PublicKey;
+    newMint: PublicKey;
+    depositor?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+    const depositRecord = this.getDepositRecordAddress({
+      relaunch,
+      depositor,
+    });
+
+    const newTokenVault = getAssociatedTokenAddressSync(
+      newMint,
+      relaunchSigner,
+      true,
+    );
+    const depositorTokenAccount = getAssociatedTokenAddressSync(
+      newMint,
+      depositor,
+      false,
+    );
+
+    return this.relaunchProgram.methods
+      .claim()
+      .accounts({
+        relaunch,
+        depositRecord,
+        newMint,
+        newTokenVault,
+        relaunchSigner,
+        depositor,
+        depositorTokenAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          depositorTokenAccount,
+          depositor,
+          newMint,
+        ),
+      ]);
+  }
+
   // Deposits from the provider wallet, reading the old mint and its owner
   // program from the stored relaunch.
   async deposit({
@@ -984,6 +1034,27 @@ export class RelaunchClient {
       relaunch,
       oldMint: storedRelaunch.oldMint,
       oldTokenProgram: oldMintAccount.owner,
+      depositor,
+    }).rpc();
+  }
+
+  // Claims the depositor's pro-rata share of the new token (the provider
+  // wallet by default), reading the new mint from the stored relaunch.
+  async claim({
+    relaunch,
+    depositor = this.provider.publicKey,
+  }: {
+    relaunch: PublicKey;
+    depositor?: PublicKey;
+  }): Promise<TransactionSignature> {
+    const storedRelaunch = await this.fetchRelaunch(relaunch);
+    if (storedRelaunch === null) {
+      throw new Error(`relaunch ${relaunch.toBase58()} does not exist`);
+    }
+
+    return this.claimIx({
+      relaunch,
+      newMint: storedRelaunch.newMint,
       depositor,
     }).rpc();
   }

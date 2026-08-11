@@ -50,4 +50,8 @@ pub enum RelaunchError {
     SlippageExceeded,
     #[msg("Relaunch must be in the Swapped state")]
     RelaunchNotSwapped,
+    #[msg("Relaunch must be in the Complete state")]
+    RelaunchNotComplete,
+    #[msg("Casting overflow. If you're seeing this, please report this")]
+    CastingOverflow,
 }

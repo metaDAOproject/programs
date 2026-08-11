@@ -81,6 +81,11 @@ pub mod relaunch {
     }
 
     #[access_control(ctx.accounts.validate())]
+    pub fn claim(ctx: Context<Claim>) -> Result<()> {
+        Claim::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
     pub fn mark_failed(ctx: Context<MarkFailed>) -> Result<()> {
         MarkFailed::handle(ctx)
     }

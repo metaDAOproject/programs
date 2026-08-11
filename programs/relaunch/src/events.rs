@@ -116,6 +116,16 @@ pub struct RelaunchCompletedEvent {
 }
 
 #[event]
+pub struct TokensClaimedEvent {
+    pub common: CommonFields,
+    pub relaunch: Pubkey,
+    pub depositor: Pubkey,
+    pub deposit_record: Pubkey,
+    pub amount_claimed: u64,
+    pub deposit_record_seq_num: u64,
+}
+
+#[event]
 pub struct TokensDepositedViaBuyEvent {
     pub common: CommonFields,
     pub relaunch: Pubkey,

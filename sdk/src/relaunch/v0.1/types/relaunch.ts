@@ -856,6 +856,63 @@ export type Relaunch = {
       args: [];
     },
     {
+      name: "claim";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "newMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "newTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "relaunchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "depositor";
+          isMut: false;
+          isSigner: false;
+          docs: ["claims for any depositor."];
+        },
+        {
+          name: "depositorTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "markFailed";
       accounts: [
         {
@@ -1711,6 +1768,43 @@ export type Relaunch = {
       ];
     },
     {
+      name: "TokensClaimedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "relaunch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "depositor";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "depositRecord";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amountClaimed";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "depositRecordSeqNum";
+          type: "u64";
+          index: false;
+        },
+      ];
+    },
+    {
       name: "TokensDepositedViaBuyEvent";
       fields: [
         {
@@ -1883,6 +1977,16 @@ export type Relaunch = {
       code: 6023;
       name: "RelaunchNotSwapped";
       msg: "Relaunch must be in the Swapped state";
+    },
+    {
+      code: 6024;
+      name: "RelaunchNotComplete";
+      msg: "Relaunch must be in the Complete state";
+    },
+    {
+      code: 6025;
+      name: "CastingOverflow";
+      msg: "Casting overflow. If you're seeing this, please report this";
     },
   ];
 };
@@ -2728,6 +2832,63 @@ export const IDL: Relaunch = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "claim",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "newMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "newTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "relaunchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "depositor",
+          isMut: false,
+          isSigner: false,
+          docs: ["claims for any depositor."],
+        },
+        {
+          name: "depositorTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -3600,6 +3761,43 @@ export const IDL: Relaunch = {
       ],
     },
     {
+      name: "TokensClaimedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "relaunch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "depositor",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "depositRecord",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amountClaimed",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "depositRecordSeqNum",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
       name: "TokensDepositedViaBuyEvent",
       fields: [
         {
@@ -3772,6 +3970,16 @@ export const IDL: Relaunch = {
       code: 6023,
       name: "RelaunchNotSwapped",
       msg: "Relaunch must be in the Swapped state",
+    },
+    {
+      code: 6024,
+      name: "RelaunchNotComplete",
+      msg: "Relaunch must be in the Complete state",
+    },
+    {
+      code: 6025,
+      name: "CastingOverflow",
+      msg: "Casting overflow. If you're seeing this, please report this",
     },
   ],
 };
