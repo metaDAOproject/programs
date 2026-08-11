@@ -22,6 +22,9 @@ import adminExecuteMultisigProposal from "./unit/adminExecuteMultisigProposal.te
 import adminCancelProposal from "./unit/adminCancelProposal.test.js";
 import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
 import unstakeFromProposal from "./unit/unstakeFromProposal.test.js";
+import approveProposal from "./unit/approveProposal.test.js";
+import resizeProposal from "./unit/resizeProposal.test.js";
+import resizeDao from "./unit/resizeDao.test.js";
 
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -86,6 +89,9 @@ export default function suite() {
   describe("#admin_cancel_proposal", adminCancelProposal);
   describe("#admin_remove_proposal", adminRemoveProposal);
   describe("#unstake_from_proposal", unstakeFromProposal);
+  describe("#approve_proposal", approveProposal);
+  describe("#resize_proposal", resizeProposal);
+  describe("#resize_dao", resizeDao);
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);

@@ -1005,6 +1005,22 @@ export class FutarchyClient {
     });
   }
 
+  approveProposalIx({
+    proposal,
+    dao,
+    approver = this.provider.publicKey,
+  }: {
+    proposal: PublicKey;
+    dao: PublicKey;
+    approver?: PublicKey;
+  }) {
+    return this.futarchy.methods.approveProposal().accounts({
+      proposal,
+      dao,
+      approver,
+    });
+  }
+
   collectMeteoraDammFeesIx({
     dao,
     baseMint,

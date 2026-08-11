@@ -21,8 +21,8 @@ impl ResizeDao<'_> {
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Dao::INIT_SPACE + 8;
-        // 42 bytes: 1 (Option discriminant) + 32 (Pubkey) + 8 (i64) + 1 (bool)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 42;
+        // 9 bytes: base_to_supermajority (u64) + is_proposal_validation_enabled (bool)
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 9;
 
         if dao.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -32,6 +32,9 @@ impl ResizeDao<'_> {
 
         let old_dao_data = OldDao::deserialize(&mut &dao.try_borrow_data().unwrap()[8..])?;
 
+        // Opt-in defaults: existing DAOs migrate in with the validation gate OFF and the
+        // supermajority path disabled, so their launch behavior is unchanged until they
+        // explicitly opt in via update_dao.
         let new_dao_data = Dao {
             amm: old_dao_data.amm,
             nonce: old_dao_data.nonce,
@@ -55,8 +58,10 @@ impl ResizeDao<'_> {
             initial_spending_limit: old_dao_data.initial_spending_limit,
             team_sponsored_pass_threshold_bps: old_dao_data.team_sponsored_pass_threshold_bps,
             team_address: old_dao_data.team_address,
-            optimistic_proposal: None,
-            is_optimistic_governance_enabled: false,
+            optimistic_proposal: old_dao_data.optimistic_proposal,
+            is_optimistic_governance_enabled: old_dao_data.is_optimistic_governance_enabled,
+            base_to_supermajority: 0,
+            is_proposal_validation_enabled: false,
         };
 
         dao.realloc(AFTER_REALLOC_SIZE, true)?;

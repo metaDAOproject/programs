@@ -86,8 +86,14 @@ import fullLaunch_v8 from "./integration/launchpad_v8_full_lifecycle.test.js";
 import gatedLaunchpadV8 from "./integration/gatedLaunchpadV8.test.js";
 import trancheLifecycle_v8 from "./integration/launchpad_v8_tranche_lifecycle.test.js";
 import { BN } from "bn.js";
+import { nextDaoNonce } from "./utils.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
+
+// Every test transaction needs a distinct signature; bankrun rejects a duplicate
+// (same message + blockhash) as "transaction already processed", and the blockhash
+// doesn't always advance between back-to-back txs.
+let mintToTxNonce = 1;
 
 // Export the test context interface for use in other files
 export interface TestContext {
@@ -385,6 +391,15 @@ before(async function () {
 
     const tx = new Transaction();
 
+    // Unique compute-unit price per call → unique signature, so two otherwise
+    // identical mints can't collide as "transaction already processed". Price
+    // (not limit) leaves the compute budget untouched and increments freely.
+    tx.add(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: mintToTxNonce++,
+      }),
+    );
+
     tx.add(
       token.createAssociatedTokenAccountIdempotentInstruction(
         this.payer.publicKey,
@@ -493,7 +508,7 @@ before(async function () {
     teamSponsoredPassThresholdBps?: number;
     teamAddress?: PublicKey;
   }) => {
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
+    const nonce = nextDaoNonce();
 
     await this.futarchy
       .initializeDaoIx({
@@ -512,6 +527,8 @@ before(async function () {
           baseToStake: new BN(0),
           teamSponsoredPassThresholdBps,
           teamAddress,
+          baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
         },
         provideLiquidity: true,
       })
@@ -653,6 +670,7 @@ before(async function () {
     const { proposal, question, baseVault, quoteVault, squadsProposal } =
       await this.initializeProposal({ dao, instructions });
     const storedDao = await this.futarchy.getDao(dao);
+
     await this.futarchy
       .launchProposalIx({
         proposal,

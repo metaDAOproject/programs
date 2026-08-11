@@ -3,6 +3,7 @@ import {
   Keypair,
   Transaction,
   SystemProgram,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { BanksClient, ProgramTestContext } from "solana-bankrun";
@@ -11,6 +12,10 @@ import {
   getGatedMintConfigAddr,
   getWhitelistedUserAddr,
 } from "@metadaoproject/programs";
+
+// Ever-incrementing compute-unit price so each whitelistUser call gets a unique
+// transaction signature (avoids bankrun "transaction already processed").
+let whitelistTxNonce = 1;
 
 export async function createMintWithFreezeAuthority(
   banksClient: BanksClient,
@@ -109,6 +114,11 @@ export async function whitelistUser(
       user,
       payer: payer.publicKey,
     })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: whitelistTxNonce++,
+      }),
+    ])
     .signers(signers)
     .rpc();
 
