@@ -23,21 +23,9 @@
 
 ## Tasks
 
-### Phase 5: claim + full lifecycle
-
-> Reference: `relaunch-implementation-plan.md` → "Stage 5 — claim + full lifecycle"
-
-- [NEXT] 5.2 Full-lifecycle integration tests
-  - `tests/integration/relaunch.test.ts`: happy path with money-math identities at each hop; failure path A (threshold miss → refunds); failure path B (grace lapse → `mark_failed` → refunds)
-  - Matrix: WSOL × USDC source, classic-SPL × Token-2022 old mint (happy path minimum per combination)
-  - Finish: full `anchor test --skip-build` suite green, no `.only` anywhere
-
 ### Phase 6: Release prep
 
 > Reference: `relaunch-implementation-plan.md` → "After the code"
 
-- [ ] 6.1 Final program ID
-  - Grind vanity keypair, set `declare_id!` + Anchor.toml, `./rebuild.sh`, full suite green
-
-- [ ] 6.2 README deployments-table entry + verifiable build
+- [NEXT] 6.2 README deployments-table entry + verifiable build
   - Note: first mainnet deploy itself is manual (Squads flow is upgrade-only) — user-led, not a task here
