@@ -72,6 +72,11 @@ import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import * as fs from "fs";
 import { AccountInfo } from "@solana/web3.js";
 
+// Incrementing CU limit so otherwise-identical helper transactions (e.g.
+// repeated mintTo calls with the same mint/amount) get unique signatures and
+// bankrun doesn't reject them as "transaction already processed".
+let mintToCuNonce = 200_000;
+
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
 );
@@ -385,6 +390,12 @@ before(async function () {
 
     const tx = new Transaction();
 
+    // Unique CU limit per call so two mintTo txs with identical args don't
+    // collide on signature ("transaction already processed").
+    tx.add(
+      ComputeBudgetProgram.setComputeUnitLimit({ units: mintToCuNonce++ }),
+    );
+
     tx.add(
       token.createAssociatedTokenAccountIdempotentInstruction(
         this.payer.publicKey,
@@ -654,7 +665,7 @@ before(async function () {
       await this.initializeProposal({ dao, instructions });
     const storedDao = await this.futarchy.getDao(dao);
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: storedDao.baseMint,

@@ -105,7 +105,7 @@ export default function suite() {
   it("initializes performance package successfully after launch is complete", async function () {
     // Complete launch
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,
@@ -221,7 +221,7 @@ export default function suite() {
   it("can initialize a performance package only once", async function () {
     // Complete launch
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,

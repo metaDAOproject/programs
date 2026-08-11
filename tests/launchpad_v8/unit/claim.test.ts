@@ -37,7 +37,7 @@ export default function suite() {
     additionalSigners: Keypair[] = [],
   ) {
     const settleTx = await client
-      .settleLaunchIx({
+      .settleLaunchTxBuilder({
         launch: params.launch,
         baseMint: params.baseMint,
         launchAuthority: params.launchAuthority,

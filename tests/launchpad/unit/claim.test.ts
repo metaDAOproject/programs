@@ -77,7 +77,7 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 24 * 7 + 100);
     await launchpadClient.closeLaunchIx({ launch }).rpc();
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,

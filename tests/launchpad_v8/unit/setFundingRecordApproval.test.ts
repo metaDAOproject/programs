@@ -343,7 +343,7 @@ export default function suite() {
 
     // Settle launch to reach Complete state
     const settleTx = await launchpadClient
-      .settleLaunchIx({
+      .settleLaunchTxBuilder({
         launch,
         baseMint: META,
         launchAuthority: launchAuthority.publicKey,

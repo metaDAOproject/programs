@@ -120,7 +120,7 @@ export default function suite() {
     proposal = await this.futarchy.initializeProposal(dao, squadsProposalPda);
 
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,
@@ -360,7 +360,7 @@ export default function suite() {
     );
     const storedProposalEarly = await this.futarchy.getProposal(proposal);
     await this.futarchy
-      .finalizeProposalIxV2({
+      .finalizeProposalTxBuilder({
         squadsProposal: storedProposalEarly.squadsProposal,
         dao,
         baseMint: META,
@@ -505,7 +505,7 @@ export default function suite() {
       .rpc();
 
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal: teamSponsoredProposal,
         dao: daoWithTeamSponsorship,
         baseMint: META,

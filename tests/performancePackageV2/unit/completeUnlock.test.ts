@@ -822,6 +822,9 @@ export default function suite() {
         recipient: recipient.publicKey,
         signer: authority.publicKey,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
+      ])
       .signers([authority])
       .rpc();
 

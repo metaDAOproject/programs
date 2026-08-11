@@ -205,7 +205,7 @@ export default function suite() {
 
     // Launch proposal without staking anything - should succeed because it's team-sponsored
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,
@@ -264,7 +264,7 @@ export default function suite() {
 
     // Launch should succeed
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,
@@ -321,7 +321,7 @@ export default function suite() {
 
     // Launch should succeed at exact threshold
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,
@@ -396,7 +396,7 @@ export default function suite() {
 
     // Launch the proposal
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,
@@ -457,7 +457,7 @@ export default function suite() {
     );
 
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,
@@ -543,7 +543,7 @@ export default function suite() {
       .rpc();
 
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,
@@ -647,7 +647,7 @@ export default function suite() {
     );
 
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,

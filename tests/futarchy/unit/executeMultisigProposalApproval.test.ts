@@ -227,7 +227,7 @@ export default function suite() {
     // Now launch the futarchy proposal to push the AMM out of Spot.
     const storedDao = await this.futarchy.getDao(dao);
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: storedDao.baseMint,

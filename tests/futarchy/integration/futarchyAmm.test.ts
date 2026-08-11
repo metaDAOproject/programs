@@ -215,7 +215,7 @@ export default function suite() {
     const proposalAccount = await this.futarchy.getProposal(proposal);
 
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,

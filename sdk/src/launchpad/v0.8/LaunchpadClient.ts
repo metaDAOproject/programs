@@ -531,70 +531,69 @@ export class LaunchpadClient {
       true,
     );
 
-    return this.launchpad.methods
-      .settleLaunch()
-      .accounts({
-        launch,
-        launchSigner,
-        launchQuoteVault,
-        launchBaseVault,
-        launchAuthority,
-        dao,
-        treasuryQuoteAccount,
+    return this.launchpad.methods.settleLaunch().accounts({
+      launch,
+      launchSigner,
+      launchQuoteVault,
+      launchBaseVault,
+      launchAuthority,
+      dao,
+      treasuryQuoteAccount,
+      quoteMint,
+      baseMint,
+      tokenMetadata,
+      payer,
+      daoOwnedLpPosition: ammPosition,
+      futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
         quoteMint,
+        dao,
+        true,
+      ),
+      futarchyAmmBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
+      staticAccounts: {
+        futarchyProgram: this.futarchyClient.getProgramId(),
+        tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+        futarchyEventAuthority,
+        squadsProgram: SQUADS_PROGRAM_ID,
+        squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+        squadsProgramConfigTreasury: isDevnet
+          ? SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET
+          : SQUADS_PROGRAM_CONFIG_TREASURY,
+        bidWallProgram: this.bidWall.programId,
+        bidWallEventAuthority: this.bidWall.getEventAuthorityAddress(),
+      },
+      squadsMultisig: multisigPda,
+      squadsMultisigVault: multisigVault,
+      spendingLimit,
+      bidWall,
+      bidWallQuoteTokenAccount,
+      feeRecipient,
+      meteoraAccounts: {
+        dammV2Program: DAMM_V2_PROGRAM_ID,
+        config: meteoraConfig,
+        token2022Program: TOKEN_2022_PROGRAM_ID,
+        positionNftAccount,
+        pool,
+        position,
+        positionNftMint,
         baseMint,
-        tokenMetadata,
-        payer,
-        daoOwnedLpPosition: ammPosition,
-        futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
-          quoteMint,
-          dao,
-          true,
-        ),
-        futarchyAmmBaseVault: getAssociatedTokenAddressSync(
-          baseMint,
-          dao,
-          true,
-        ),
-        staticAccounts: {
-          futarchyProgram: this.futarchyClient.getProgramId(),
-          tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
-          futarchyEventAuthority,
-          squadsProgram: SQUADS_PROGRAM_ID,
-          squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
-          squadsProgramConfigTreasury: isDevnet
-            ? SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET
-            : SQUADS_PROGRAM_CONFIG_TREASURY,
-          bidWallProgram: this.bidWall.programId,
-          bidWallEventAuthority: this.bidWall.getEventAuthorityAddress(),
-        },
-        squadsMultisig: multisigPda,
-        squadsMultisigVault: multisigVault,
-        spendingLimit,
-        bidWall,
-        bidWallQuoteTokenAccount,
-        feeRecipient,
-        meteoraAccounts: {
-          dammV2Program: DAMM_V2_PROGRAM_ID,
-          config: meteoraConfig,
-          token2022Program: TOKEN_2022_PROGRAM_ID,
-          positionNftAccount,
-          pool,
-          position,
-          positionNftMint,
-          baseMint,
-          quoteMint,
-          tokenAVault,
-          tokenBVault,
-          poolCreatorAuthority,
-          poolAuthority,
-          dammV2EventAuthority,
-        },
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 800_000 }),
-        ComputeBudgetProgram.requestHeapFrame({ bytes: 255 * 1024 }),
-      ]);
+        quoteMint,
+        tokenAVault,
+        tokenBVault,
+        poolCreatorAuthority,
+        poolAuthority,
+        dammV2EventAuthority,
+      },
+    });
+  }
+
+  settleLaunchTxBuilder(
+    args: Parameters<LaunchpadClient["settleLaunchIx"]>[0],
+  ) {
+    return this.settleLaunchIx(args).preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 800_000 }),
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 255 * 1024 }),
+    ]);
   }
 
   claimIx({
@@ -732,30 +731,33 @@ export class LaunchpadClient {
       this.performancePackageV2.programId,
     );
 
-    return this.launchpad.methods
-      .finalizeLaunch()
-      .accounts({
-        launch,
-        payer,
-        launchSigner,
-        baseMint,
-        dao,
-        squadsMultisig,
-        squadsMultisigVault,
-        performancePackageGrantee,
-        mintGovernor,
-        ppMintAuthority,
-        daoMintAuthority,
-        performancePackage,
-        squadsProgram: SQUADS_PROGRAM_ID,
-        mintGovernorProgram: this.mintGovernorClient.programId,
-        mintGovernorEventAuthority,
-        performancePackageV2Program: this.performancePackageV2.programId,
-        performancePackageV2EventAuthority,
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
-      ]);
+    return this.launchpad.methods.finalizeLaunch().accounts({
+      launch,
+      payer,
+      launchSigner,
+      baseMint,
+      dao,
+      squadsMultisig,
+      squadsMultisigVault,
+      performancePackageGrantee,
+      mintGovernor,
+      ppMintAuthority,
+      daoMintAuthority,
+      performancePackage,
+      squadsProgram: SQUADS_PROGRAM_ID,
+      mintGovernorProgram: this.mintGovernorClient.programId,
+      mintGovernorEventAuthority,
+      performancePackageV2Program: this.performancePackageV2.programId,
+      performancePackageV2EventAuthority,
+    });
+  }
+
+  finalizeLaunchTxBuilder(
+    args: Parameters<LaunchpadClient["finalizeLaunchIx"]>[0],
+  ) {
+    return this.finalizeLaunchIx(args).preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+    ]);
   }
 
   claimAdditionalTokenAllocationIx({

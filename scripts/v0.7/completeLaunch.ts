@@ -26,7 +26,7 @@ export const completeLaunch = async () => {
   let launchAccount = await launchpad.fetchLaunch(LAUNCH_TO_COMPLETE);
 
   const tx = await launchpad
-    .completeLaunchIx({
+    .completeLaunchTxBuilder({
       launch: LAUNCH_TO_COMPLETE,
       baseMint: launchAccount.baseMint,
       launchAuthority: payer.publicKey,

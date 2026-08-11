@@ -166,7 +166,7 @@ export default function suite() {
       .rpc();
 
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,
@@ -211,7 +211,7 @@ export default function suite() {
       .rpc();
 
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,

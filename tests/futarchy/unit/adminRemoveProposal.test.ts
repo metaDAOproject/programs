@@ -227,7 +227,7 @@ export default function suite() {
 
     // Launch the proposal to move it to Pending state
     await this.futarchy
-      .launchProposalIx({
+      .launchProposalTxBuilder({
         proposal,
         dao,
         baseMint: META,

@@ -110,7 +110,7 @@ export default function suite() {
       .rpc();
 
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,
@@ -228,7 +228,7 @@ export default function suite() {
       .rpc();
 
     const completeLaunchTx = await launchpadClient
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         quoteMint: MAINNET_USDC,
         baseMint: META,

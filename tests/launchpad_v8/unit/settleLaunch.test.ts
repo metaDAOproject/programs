@@ -3,7 +3,6 @@ import {
   PublicKey,
   TransactionMessage,
   VersionedTransaction,
-  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import { assert } from "chai";
 import { getMetadataAddr, MAINNET_USDC } from "@metadaoproject/programs";
@@ -48,7 +47,7 @@ export default function suite() {
     additionalSigners: Keypair[] = [],
   ) {
     const settleTx = await client
-      .settleLaunchIx({
+      .settleLaunchTxBuilder({
         launch: params.launch,
         baseMint: params.baseMint,
         launchAuthority: params.launchAuthority,
@@ -80,7 +79,7 @@ export default function suite() {
     additionalSigners: Keypair[] = [],
   ) {
     const settleTx = await client
-      .settleLaunchIx({
+      .settleLaunchTxBuilder({
         launch: params.launch,
         baseMint: params.baseMint,
         launchAuthority: params.launchAuthority,

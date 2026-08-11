@@ -239,7 +239,7 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
 
     await this.futarchy
-      .finalizeProposalIxV2({
+      .finalizeProposalTxBuilder({
         squadsProposal,
         dao,
         baseMint: META,

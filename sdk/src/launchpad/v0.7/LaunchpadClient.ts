@@ -432,72 +432,71 @@ export class LaunchpadClient {
       true,
     );
 
-    return this.launchpad.methods
-      .completeLaunch()
-      .accounts({
-        launch,
-        launchSigner,
-        launchQuoteVault,
-        launchBaseVault,
-        launchAuthority,
-        dao,
-        treasuryQuoteAccount,
+    return this.launchpad.methods.completeLaunch().accounts({
+      launch,
+      launchSigner,
+      launchQuoteVault,
+      launchBaseVault,
+      launchAuthority,
+      dao,
+      treasuryQuoteAccount,
+      quoteMint,
+      baseMint,
+      tokenMetadata,
+      daoOwnedLpPosition: ammPosition,
+      futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
         quoteMint,
+        dao,
+        true,
+      ),
+      futarchyAmmBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
+      staticAccounts: {
+        futarchyProgram: this.futarchyClient.getProgramId(),
+        tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+        futarchyEventAuthority,
+        squadsProgram: SQUADS_PROGRAM_ID,
+        squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
+        squadsProgramConfigTreasury: isDevnet
+          ? SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET
+          : SQUADS_PROGRAM_CONFIG_TREASURY,
+        bidWallProgram: this.bidWall.programId,
+        bidWallEventAuthority: this.bidWall.getEventAuthorityAddress(),
+      },
+      squadsMultisig: multisigPda,
+      squadsMultisigVault: multisigVault,
+      spendingLimit,
+      bidWall,
+      bidWallQuoteTokenAccount,
+      feeRecipient,
+      meteoraAccounts: {
+        dammV2Program: DAMM_V2_PROGRAM_ID,
+        positionNftMint,
         baseMint,
-        tokenMetadata,
-        daoOwnedLpPosition: ammPosition,
-        futarchyAmmQuoteVault: getAssociatedTokenAddressSync(
-          quoteMint,
-          dao,
-          true,
-        ),
-        futarchyAmmBaseVault: getAssociatedTokenAddressSync(
-          baseMint,
-          dao,
-          true,
-        ),
-        staticAccounts: {
-          futarchyProgram: this.futarchyClient.getProgramId(),
-          tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
-          futarchyEventAuthority,
-          squadsProgram: SQUADS_PROGRAM_ID,
-          squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
-          squadsProgramConfigTreasury: isDevnet
-            ? SQUADS_PROGRAM_CONFIG_TREASURY_DEVNET
-            : SQUADS_PROGRAM_CONFIG_TREASURY,
-          bidWallProgram: this.bidWall.programId,
-          bidWallEventAuthority: this.bidWall.getEventAuthorityAddress(),
-        },
-        squadsMultisig: multisigPda,
-        squadsMultisigVault: multisigVault,
-        spendingLimit,
-        bidWall,
-        bidWallQuoteTokenAccount,
-        feeRecipient,
-        meteoraAccounts: {
-          dammV2Program: DAMM_V2_PROGRAM_ID,
-          positionNftMint,
-          baseMint,
-          quoteMint,
-          config: meteoraConfig,
-          token2022Program: TOKEN_2022_PROGRAM_ID,
-          positionNftAccount,
-          pool,
-          // baseMint,
-          // quoteMint,
-          poolCreatorAuthority,
-          position,
-          tokenAVault,
-          tokenBVault,
-          poolAuthority,
-          dammV2EventAuthority,
-        },
-        // poolCreatorAuthority,
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 800_000 }),
-        ComputeBudgetProgram.requestHeapFrame({ bytes: 255 * 1024 }),
-      ]);
+        quoteMint,
+        config: meteoraConfig,
+        token2022Program: TOKEN_2022_PROGRAM_ID,
+        positionNftAccount,
+        pool,
+        // baseMint,
+        // quoteMint,
+        poolCreatorAuthority,
+        position,
+        tokenAVault,
+        tokenBVault,
+        poolAuthority,
+        dammV2EventAuthority,
+      },
+      // poolCreatorAuthority,
+    });
+  }
+
+  completeLaunchTxBuilder(
+    args: Parameters<LaunchpadClient["completeLaunchIx"]>[0],
+  ) {
+    return this.completeLaunchIx(args).preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 800_000 }),
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 255 * 1024 }),
+    ]);
   }
 
   refundIx({

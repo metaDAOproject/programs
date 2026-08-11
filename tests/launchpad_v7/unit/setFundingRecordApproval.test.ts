@@ -386,7 +386,7 @@ export default function suite() {
 
     // Complete the launch
     const completeLaunchTx = await this.launchpad_v7
-      .completeLaunchIx({
+      .completeLaunchTxBuilder({
         launch,
         baseMint: META,
         launchAuthority: launchAuthority.publicKey,
