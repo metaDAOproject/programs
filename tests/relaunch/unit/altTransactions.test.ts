@@ -151,9 +151,7 @@ export default function suite() {
       depositor,
     );
     return [
-      // .instruction() drops the builder's compute-budget preInstruction, so
-      // the assembled transaction states its own 400k limit.
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 350_000 }),
       token.createAssociatedTokenAccountIdempotentInstruction(
         depositor,
         wsolAta,
@@ -324,7 +322,7 @@ export default function suite() {
       100n;
 
     const ixs = [
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 250_000 }),
       await client
         .executeSellIx({
           relaunch,

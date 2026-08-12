@@ -370,9 +370,7 @@ export class RelaunchClient {
         systemProgram: SystemProgram.programId,
       })
       .preInstructions([
-        // The buy does the sell's work plus volume-accumulator handling and
-        // the pull/refund transfers; give it fixed headroom over 200k.
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ]);
   }
 
@@ -462,9 +460,7 @@ export class RelaunchClient {
         systemProgram: SystemProgram.programId,
       })
       .preInstructions([
-        // The sell runs close to the 200k default, and PDA derivation costs
-        // vary with the bump seeds; give it fixed headroom.
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 250_000 }),
       ]);
   }
 
@@ -518,12 +514,7 @@ export class RelaunchClient {
         memoProgram: MEMO_PROGRAM_ID,
         whirlpoolProgram: WHIRLPOOL_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .preInstructions([
-        // The whirlpool swap's cost grows with the initialized ticks it
-        // crosses; give it fixed headroom over the 200k default.
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
-      ]);
+      });
   }
 
   // Swaps the whole WSOL vault to USDC as the admin (the provider wallet),
@@ -650,9 +641,7 @@ export class RelaunchClient {
         systemProgram: SystemProgram.programId,
       })
       .preInstructions([
-        // DAO init + Squads multisig creation + AMM seeding in one tx run
-        // just shy of 400k; give the budget real headroom.
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }),
       ]);
   }
 
