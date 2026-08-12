@@ -17,3 +17,24 @@ pub struct DepositRecord {
     /// The PDA bump.
     pub pda_bump: u8,
 }
+
+impl DepositRecord {
+    /// Credits a deposit, initializing the record on first use: a fresh
+    /// record holds the default pubkey, an existing one holds the
+    /// depositor's pubkey.
+    pub fn credit(&mut self, relaunch: Pubkey, depositor: Pubkey, amount: u64, pda_bump: u8) {
+        if self.depositor == depositor {
+            self.amount_deposited += amount;
+            self.seq_num += 1;
+        } else {
+            *self = DepositRecord {
+                relaunch,
+                depositor,
+                amount_deposited: amount,
+                claimed: false,
+                seq_num: 0,
+                pda_bump,
+            };
+        }
+    }
+}

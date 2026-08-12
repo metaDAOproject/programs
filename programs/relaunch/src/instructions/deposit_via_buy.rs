@@ -282,23 +282,12 @@ impl DepositViaBuy<'_> {
             )?;
         }
 
-        let deposit_record = &mut ctx.accounts.deposit_record;
-
-        // A fresh record holds the default pubkey, an existing one
-        // holds the depositor's pubkey.
-        if deposit_record.depositor == ctx.accounts.depositor.key() {
-            deposit_record.amount_deposited += tokens_bought;
-            deposit_record.seq_num += 1;
-        } else {
-            deposit_record.set_inner(DepositRecord {
-                relaunch: relaunch_key,
-                depositor: ctx.accounts.depositor.key(),
-                amount_deposited: tokens_bought,
-                claimed: false,
-                seq_num: 0,
-                pda_bump: ctx.bumps.deposit_record,
-            });
-        }
+        ctx.accounts.deposit_record.credit(
+            relaunch_key,
+            ctx.accounts.depositor.key(),
+            tokens_bought,
+            ctx.bumps.deposit_record,
+        );
 
         let relaunch = &mut ctx.accounts.relaunch;
         relaunch.total_deposited += tokens_bought;
