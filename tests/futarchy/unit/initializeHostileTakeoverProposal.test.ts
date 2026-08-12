@@ -113,10 +113,10 @@ export default function suite() {
       storedProposal.action.hostileTakeover.spendingLimitAction.keep,
     );
 
-    // 20 days, +10%, unblockable
+    // 20 days, +10%, blockable
     assert.equal(storedProposal.durationInSeconds, 1_728_000);
     assert.equal(storedProposal.passThresholdBps, 1000);
-    assert.isFalse(storedProposal.councilCanBlock);
+    assert.isTrue(storedProposal.councilCanBlock);
 
     const storedDao = await this.futarchy.getDao(dao);
     assert.equal(storedDao.proposalCount, 1);

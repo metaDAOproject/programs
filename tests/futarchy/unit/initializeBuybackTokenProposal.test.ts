@@ -665,13 +665,13 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  it.only("stamps no cooldown on an admin cancel, so a new buyback launches immediately", async function () {
+  it("stamps no cooldown on an admin cancel, so a new buyback launches immediately", async function () {
     await this.mintTo(USDC, vault, this.payer, 1_600 * 1_000_000);
 
     // Assert that the test environment's clock is not zero (would mess with program assumptions)
     let clock = await this.banksClient.getClock();
     assert.isTrue(clock.unixTimestamp > 0n);
-    
+
     const first = await this.futarchy.initializeBuybackTokenProposal({
       dao,
       quoteAmount: new BN(400_000_000),

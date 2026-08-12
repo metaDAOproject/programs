@@ -335,7 +335,8 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  it("should not cancel a live hostile proposal", async function () {
+  // This will be blockable in the future
+  it("should cancel a live hostile proposal", async function () {
     // Fresh DAO — the suite DAO already has a live blockable proposal
     const BASE = await this.createMint(this.payer.publicKey, 6);
     const QUOTE = await this.createMint(this.payer.publicKey, 6);
@@ -392,7 +393,7 @@ export default function suite() {
 
     let storedProposal = await this.futarchy.getProposal(hostileProposal);
     assert.exists(storedProposal.state.pending);
-    assert.isFalse(storedProposal.councilCanBlock);
+    assert.isTrue(storedProposal.councilCanBlock);
 
     const {
       question,
@@ -407,11 +408,6 @@ export default function suite() {
     const multisigPda = multisig.getMultisigPda({ createKey: hostileDao })[0];
     const [vaultEventAuthority] = getEventAuthorityAddr(
       CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
-    );
-
-    const callbacks = expectError(
-      "InvalidProposalKind",
-      "cancelled a live hostile proposal",
     );
 
     await this.futarchy.futarchy.methods
@@ -469,11 +465,13 @@ export default function suite() {
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
       .signers([this.payer])
-      .rpc()
-      .then(callbacks[0], callbacks[1]);
+      .rpc();
 
-    // The live hostile market is untouched
     storedProposal = await this.futarchy.getProposal(hostileProposal);
-    assert.exists(storedProposal.state.pending);
+    assert.exists(storedProposal.state.failed);
+
+    const storedDaoAfter = await this.futarchy.getDao(hostileDao);
+    assert.exists(storedDaoAfter.amm.state.spot);
+    assert.notExists(storedDaoAfter.amm.state.futarchy);
   });
 }

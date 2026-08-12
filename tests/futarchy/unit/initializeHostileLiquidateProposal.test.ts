@@ -120,10 +120,10 @@ export default function suite() {
       storedProposal.action.hostileLiquidate.liquidator.equals(liquidator),
     );
 
-    // 10 days, +25%, unblockable
+    // 10 days, +25%, blockable
     assert.equal(storedProposal.durationInSeconds, 864_000);
     assert.equal(storedProposal.passThresholdBps, 2500);
-    assert.isFalse(storedProposal.councilCanBlock);
+    assert.isTrue(storedProposal.councilCanBlock);
 
     const updatedDao = await this.futarchy.getDao(dao);
     assert.equal(updatedDao.proposalCount, 1);
