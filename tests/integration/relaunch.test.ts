@@ -296,9 +296,7 @@ export default function suite() {
       );
 
       const whirlpoolState = parseWhirlpool(
-        Buffer.from(
-          (await this.banksClient.getAccount(USDC_SWAP_POOL))!.data,
-        ),
+        Buffer.from((await this.banksClient.getAccount(USDC_SWAP_POOL))!.data),
       );
       // Spot price in USDC-raw per WSOL-raw is (sqrtPrice / 2^64)^2.
       const spotUsdcOut =

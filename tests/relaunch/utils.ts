@@ -1,15 +1,45 @@
 import {
+  AddressLookupTableAccount,
   Keypair,
   PublicKey,
   Signer,
   SystemProgram,
   Transaction,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { BanksClient } from "solana-bankrun";
 
 // 1B tokens at 6 decimals — the supply of a pump token.
 export const DEFAULT_OLD_SUPPLY = 1_000_000_000n * 10n ** 6n;
+
+// Compiles instructions into a signed v0 transaction, resolving every
+// account it can through the given lookup tables.
+export async function buildV0Tx({
+  banksClient,
+  payerKey,
+  instructions,
+  signers,
+  tables,
+}: {
+  banksClient: BanksClient;
+  payerKey: PublicKey;
+  instructions: TransactionInstruction[];
+  signers: Keypair[];
+  tables: AddressLookupTableAccount[];
+}): Promise<VersionedTransaction> {
+  const [blockhash] = (await banksClient.getLatestBlockhash())!;
+  const message = new TransactionMessage({
+    payerKey,
+    recentBlockhash: blockhash,
+    instructions,
+  }).compileToV0Message(tables);
+  const tx = new VersionedTransaction(message);
+  tx.sign(signers);
+  return tx;
+}
 
 // Classic SPL mints are plain; Token-2022 mints get the pump-style shape:
 // metadata pointer + mint-embedded token metadata, the only extensions the

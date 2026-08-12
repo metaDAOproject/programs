@@ -11,6 +11,7 @@ import completeRelaunch from "./unit/completeRelaunch.test.js";
 import claim from "./unit/claim.test.js";
 import markFailed from "./unit/markFailed.test.js";
 import claimRefund from "./unit/claimRefund.test.js";
+import altTransactions from "./unit/altTransactions.test.js";
 import { RelaunchClient } from "@metadaoproject/programs";
 import { BankrunProvider } from "anchor-bankrun";
 
@@ -35,4 +36,5 @@ export default function suite() {
   describe("#claim", claim);
   describe("#mark_failed", markFailed);
   describe("#claim_refund", claimRefund);
+  describe("ALT transactions", altTransactions);
 }

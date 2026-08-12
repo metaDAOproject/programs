@@ -47,6 +47,7 @@ import {
   PUMP_AMM_GLOBAL_CONFIG,
   PUMP_AMM_PROGRAM_ID,
   PUMP_FEES_PROGRAM_ID,
+  RELAUNCH_V0_1_GLOBAL_ALT,
   WHIRLPOOL_PROGRAM_ID,
   sha256,
 } from "@metadaoproject/programs";
@@ -63,6 +64,7 @@ import {
   Transaction,
   ComputeBudgetProgram,
   TransactionInstruction,
+  AddressLookupTableProgram,
 } from "@solana/web3.js";
 
 import {
@@ -103,6 +105,7 @@ const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 export interface TestContext {
   context: ProgramTestContext;
   banksClient: BanksClient;
+  connection: Connection;
   conditionalVault: ConditionalVaultClient;
   futarchy: FutarchyClient;
   launchpad_v7: LaunchpadClientV7;
@@ -329,11 +332,29 @@ before(async function () {
           lamports: 1_197_120,
         },
       },
+      {
+        // Dumped by `yarn relaunch-create-alt dump`, which zeroes
+        // last_extended_slot so every entry is active at bankrun's low slots.
+        address: RELAUNCH_V0_1_GLOBAL_ALT,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/relaunch-global-alt"),
+          executable: false,
+          owner: AddressLookupTableProgram.programId,
+          lamports: 41_815_680,
+        },
+      },
     ],
   );
   this.banksClient = this.context.banksClient;
   const provider = new BankrunProvider(this.context);
   anchor.setProvider(provider);
+  // web3.js implements getAddressLookupTable purely in terms of
+  // getAccountInfoAndContext, which the bankrun connection proxy provides, so
+  // grafting the real implementation on lets tests fetch lookup tables the
+  // same way a script would.
+  (provider.connection as any).getAddressLookupTable =
+    Connection.prototype.getAddressLookupTable;
+  this.connection = provider.connection;
 
   this.conditionalVault = ConditionalVaultClient.createClient({
     provider: provider as any,
