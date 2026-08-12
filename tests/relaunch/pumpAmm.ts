@@ -90,22 +90,6 @@ async function fetchGlobalConfig(
   return parsePumpGlobalConfig(Buffer.from(globalConfig!.data));
 }
 
-export async function getProtocolFeeRecipient(
-  banksClient: BanksClient,
-): Promise<PublicKey> {
-  const { protocolFeeRecipients } = await fetchGlobalConfig(banksClient);
-  if (protocolFeeRecipients.length === 0) {
-    throw new Error("no protocol fee recipient in global config");
-  }
-  return protocolFeeRecipients[0];
-}
-
-export async function getBuybackFeeRecipients(
-  banksClient: BanksClient,
-): Promise<PublicKey[]> {
-  return (await fetchGlobalConfig(banksClient)).buybackFeeRecipients;
-}
-
 function packTokenAccount({
   mint,
   owner,
@@ -311,10 +295,9 @@ export async function writePumpPool({
       amount: 0n,
     });
   }
-  for (const recipient of [
-    await getProtocolFeeRecipient(context.banksClient),
-    ...(await getBuybackFeeRecipients(context.banksClient)),
-  ]) {
+  const { protocolFeeRecipients, buybackFeeRecipients } =
+    await fetchGlobalConfig(context.banksClient);
+  for (const recipient of [protocolFeeRecipients[0], ...buybackFeeRecipients]) {
     const recipientAta = token.getAssociatedTokenAddressSync(
       quoteMint,
       recipient,

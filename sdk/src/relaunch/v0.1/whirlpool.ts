@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { WHIRLPOOL_PROGRAM_ID } from "../../constants.js";
 
 // Orca Whirlpool SOL/USDC 0.04% — the swap venue pinned by the relaunch
@@ -91,4 +91,16 @@ export function parseWhirlpool(data: Buffer): WhirlpoolAccount {
     tokenMintB: new PublicKey(data.subarray(181, 213)),
     tokenVaultB: new PublicKey(data.subarray(213, 245)),
   };
+}
+
+/** Fetches and parses a whirlpool (the pinned USDC swap pool by default). */
+export async function fetchWhirlpool(
+  connection: Connection,
+  whirlpool: PublicKey = USDC_SWAP_POOL,
+): Promise<WhirlpoolAccount> {
+  const info = await connection.getAccountInfo(whirlpool);
+  if (info === null) {
+    throw new Error(`whirlpool ${whirlpool.toBase58()} does not exist`);
+  }
+  return parseWhirlpool(info.data);
 }

@@ -5,13 +5,12 @@ import { BN } from "bn.js";
 import { BanksClient } from "solana-bankrun";
 import {
   getDepositRecordAddr,
+  getPumpFeeRecipients,
   MAINNET_USDC,
   RelaunchClient,
 } from "@metadaoproject/programs";
 import { setupRelaunch } from "../utils.js";
 import {
-  getBuybackFeeRecipients,
-  getProtocolFeeRecipient,
   getUserVolumeAccumulatorAddr,
   writePumpPool,
   PumpPool,
@@ -55,8 +54,9 @@ export default function suite() {
     client = this.relaunch;
     // Both recipients come from the loaded global-config fixture, so one
     // fetch serves the whole suite.
-    protocolFeeRecipient = await getProtocolFeeRecipient(this.banksClient);
-    buybackFeeRecipient = (await getBuybackFeeRecipients(this.banksClient))[0];
+    ({ protocolFeeRecipient, buybackFeeRecipient } = await getPumpFeeRecipients(
+      this.connection,
+    ));
   });
 
   const setupLiveRelaunch = async function (
@@ -315,9 +315,10 @@ export default function suite() {
     });
     assert.equal(record.amountDeposited.toString(), BASE_OUT.toString());
 
+    const { oldTokenVault } = await client.fetchRelaunch(relaunch);
     const vaultBalance = await tokenBalance(
       this.banksClient,
-      (await client.fetchRelaunch(relaunch)).oldTokenVault,
+      oldTokenVault,
       oldTokenProgram,
     );
     assert.equal(vaultBalance.toString(), BASE_OUT.toString());
@@ -355,9 +356,10 @@ export default function suite() {
     });
     assert.equal(record.amountDeposited.toString(), BASE_OUT.toString());
 
+    const { oldTokenVault } = await client.fetchRelaunch(relaunch);
     const vaultBalance = await tokenBalance(
       this.banksClient,
-      (await client.fetchRelaunch(relaunch)).oldTokenVault,
+      oldTokenVault,
       oldTokenProgram,
     );
     assert.equal(vaultBalance.toString(), BASE_OUT.toString());

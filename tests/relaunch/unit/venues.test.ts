@@ -5,9 +5,7 @@ import { BankrunProvider } from "anchor-bankrun";
 import { BanksClient } from "solana-bankrun";
 import { setupRelaunch } from "../utils.js";
 import {
-  getBuybackFeeRecipients,
   getCanonicalPumpPoolAddr,
-  getProtocolFeeRecipient,
   getUserVolumeAccumulatorAddr,
   pumpBuyIx,
   pumpInitUserVolumeAccumulatorIx,
@@ -23,6 +21,7 @@ import {
 } from "../whirlpool.js";
 import {
   getPumpCreatorVaultAuthorityAddr,
+  getPumpFeeRecipients,
   MAINNET_USDC,
 } from "@metadaoproject/programs";
 
@@ -55,12 +54,8 @@ export default function suite() {
     pool: PumpPool,
     quoteTokenAccount: PublicKey,
   ) {
-    const protocolFeeRecipient = await getProtocolFeeRecipient(
-      this.banksClient,
-    );
-    const buybackFeeRecipient = (
-      await getBuybackFeeRecipients(this.banksClient)
-    )[0];
+    const { protocolFeeRecipient, buybackFeeRecipient } =
+      await getPumpFeeRecipients(this.connection);
     const feeAtas = [
       protocolFeeRecipient,
       buybackFeeRecipient,
@@ -168,9 +163,8 @@ export default function suite() {
     await sellIntoPumpPool.call(this, pool, wsolAta);
 
     // Exact-output buy of the same 10k tokens, capped by max_quote_in.
-    const protocolFeeRecipient = await getProtocolFeeRecipient(
-      this.banksClient,
-    );
+    const { protocolFeeRecipient, buybackFeeRecipient } =
+      await getPumpFeeRecipients(this.connection);
     await wrapSol(this.bankrunProvider, this.payer, 2n * 10n ** 9n);
 
     const payerOldTokenAccount = token.getAssociatedTokenAddressSync(
@@ -204,9 +198,7 @@ export default function suite() {
         pool,
         user: this.payer.publicKey,
         protocolFeeRecipient,
-        buybackFeeRecipient: (
-          await getBuybackFeeRecipients(this.banksClient)
-        )[0],
+        buybackFeeRecipient,
         baseAmountOut: SELL_AMOUNT,
         maxQuoteAmountIn: 2n * 10n ** 9n,
       }),

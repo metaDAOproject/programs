@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { PUMP_AMM_PROGRAM_ID, PUMP_FEES_PROGRAM_ID } from "../../constants.js";
 
 export const PUMP_AMM_GLOBAL_CONFIG = PublicKey.findProgramAddressSync(
@@ -77,6 +77,18 @@ export function parsePumpPool(data: Buffer): PumpPoolAccount {
   };
 }
 
+/** Fetches and parses `pool` as a pump_amm pool account. */
+export async function fetchPumpPool(
+  connection: Connection,
+  pool: PublicKey,
+): Promise<PumpPoolAccount> {
+  const info = await connection.getAccountInfo(pool);
+  if (info === null) {
+    throw new Error(`pump pool ${pool.toBase58()} does not exist`);
+  }
+  return parsePumpPool(info.data);
+}
+
 export type PumpGlobalConfigAccount = {
   protocolFeeRecipients: PublicKey[];
   buybackFeeRecipients: PublicKey[];
@@ -121,5 +133,37 @@ export function parsePumpGlobalConfig(data: Buffer): PumpGlobalConfigAccount {
   return {
     protocolFeeRecipients: readRecipients(data, 57),
     buybackFeeRecipients: readRecipients(data, 643),
+  };
+}
+
+/** Fetches and parses pump_amm's global config. */
+export async function fetchPumpGlobalConfig(
+  connection: Connection,
+): Promise<PumpGlobalConfigAccount> {
+  const info = await connection.getAccountInfo(PUMP_AMM_GLOBAL_CONFIG);
+  if (info === null) {
+    throw new Error("pump_amm global config does not exist");
+  }
+  return parsePumpGlobalConfig(info.data);
+}
+
+/**
+ * The fee-recipient pair pump's buy and sell instructions need, resolved
+ * from the global config. pump accepts any member of each list; this picks
+ * the first of both — pass a different member to the ix builders if
+ * write-lock contention on the recipients' ATAs matters.
+ */
+export async function getPumpFeeRecipients(connection: Connection): Promise<{
+  protocolFeeRecipient: PublicKey;
+  buybackFeeRecipient: PublicKey;
+}> {
+  const { protocolFeeRecipients, buybackFeeRecipients } =
+    await fetchPumpGlobalConfig(connection);
+  if (protocolFeeRecipients.length === 0 || buybackFeeRecipients.length === 0) {
+    throw new Error("pump_amm global config has no fee recipients");
+  }
+  return {
+    protocolFeeRecipient: protocolFeeRecipients[0],
+    buybackFeeRecipient: buybackFeeRecipients[0],
   };
 }

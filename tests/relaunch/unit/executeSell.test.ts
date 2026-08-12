@@ -3,14 +3,13 @@ import * as token from "@solana/spl-token";
 import { assert } from "chai";
 import { BN } from "bn.js";
 import { BanksClient } from "solana-bankrun";
-import { MAINNET_USDC, RelaunchClient } from "@metadaoproject/programs";
-import { setupRelaunch, DEFAULT_OLD_SUPPLY } from "../utils.js";
 import {
-  getBuybackFeeRecipients,
-  getProtocolFeeRecipient,
-  writePumpPool,
-  PumpPool,
-} from "../pumpAmm.js";
+  getPumpFeeRecipients,
+  MAINNET_USDC,
+  RelaunchClient,
+} from "@metadaoproject/programs";
+import { setupRelaunch, DEFAULT_OLD_SUPPLY } from "../utils.js";
+import { writePumpPool, PumpPool } from "../pumpAmm.js";
 
 const POOL_BASE_RESERVE = 1_000_000n * 10n ** 6n; // 1M old tokens
 const WSOL_POOL_QUOTE_RESERVE = 100n * 10n ** 9n; // 100 SOL
@@ -258,6 +257,9 @@ export default function suite() {
       await setupSellPendingRelaunch.call(this);
     const nonAdmin = Keypair.generate();
 
+    const { protocolFeeRecipient, buybackFeeRecipient } =
+      await getPumpFeeRecipients(this.connection);
+
     try {
       await client
         .executeSellIx({
@@ -269,10 +271,8 @@ export default function suite() {
           poolBaseTokenAccount: pool.poolBaseTokenAccount,
           poolQuoteTokenAccount: pool.poolQuoteTokenAccount,
           coinCreator: pool.coinCreator,
-          protocolFeeRecipient: await getProtocolFeeRecipient(this.banksClient),
-          buybackFeeRecipient: (
-            await getBuybackFeeRecipients(this.banksClient)
-          )[0],
+          protocolFeeRecipient,
+          buybackFeeRecipient,
           minQuoteOut: new BN(0),
           admin: nonAdmin.publicKey,
         })

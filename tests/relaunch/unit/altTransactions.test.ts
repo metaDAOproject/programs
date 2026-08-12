@@ -17,16 +17,12 @@ import { assert } from "chai";
 import { BN } from "bn.js";
 import { BanksClient } from "solana-bankrun";
 import {
+  getPumpFeeRecipients,
   RELAUNCH_V0_1_GLOBAL_ALT,
   RelaunchClient,
 } from "@metadaoproject/programs";
 import { buildV0Tx, setupRelaunch, DEFAULT_OLD_SUPPLY } from "../utils.js";
-import {
-  getBuybackFeeRecipients,
-  getProtocolFeeRecipient,
-  writePumpPool,
-  PumpPool,
-} from "../pumpAmm.js";
+import { writePumpPool, PumpPool } from "../pumpAmm.js";
 
 const POOL_BASE_RESERVE = 1_000_000n * 10n ** 6n; // 1M old tokens
 const WSOL_POOL_QUOTE_RESERVE = 100n * 10n ** 9n; // 100 SOL
@@ -71,8 +67,9 @@ export default function suite() {
 
   before(async function () {
     client = this.relaunch;
-    protocolFeeRecipient = await getProtocolFeeRecipient(this.banksClient);
-    buybackFeeRecipient = (await getBuybackFeeRecipients(this.banksClient))[0];
+    ({ protocolFeeRecipient, buybackFeeRecipient } = await getPumpFeeRecipients(
+      this.connection,
+    ));
     // Fetched the way a script would fetch it: the harness connection runs
     // web3.js's real getAddressLookupTable against bankrun state.
     globalAlt = (
@@ -224,10 +221,8 @@ export default function suite() {
     });
     assert.equal(record.amountDeposited.toString(), BASE_OUT.toString());
 
-    const vaultBalance = await tokenBalance(
-      this.banksClient,
-      (await client.fetchRelaunch(relaunch)).oldTokenVault,
-    );
+    const { oldTokenVault } = await client.fetchRelaunch(relaunch);
+    const vaultBalance = await tokenBalance(this.banksClient, oldTokenVault);
     assert.equal(vaultBalance.toString(), BASE_OUT.toString());
 
     // The refund came back as native SOL: the WSOL ATA is gone, and the

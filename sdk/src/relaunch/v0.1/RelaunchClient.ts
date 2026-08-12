@@ -46,21 +46,21 @@ import {
   getDepositRecordAddr,
 } from "./pda.js";
 import {
+  fetchPumpPool,
   getPumpCreatorVaultAuthorityAddr,
+  getPumpFeeRecipients,
   getPumpPoolV2Addr,
   getPumpUserVolumeAccumulatorAddr,
-  parsePumpGlobalConfig,
-  parsePumpPool,
   PUMP_AMM_EVENT_AUTHORITY,
   PUMP_AMM_FEE_CONFIG,
   PUMP_AMM_GLOBAL_CONFIG,
   PUMP_AMM_GLOBAL_VOLUME_ACCUMULATOR,
 } from "./pumpAmm.js";
 import {
+  fetchWhirlpool,
   getWhirlpoolOracleAddr,
   getWhirlpoolSwapTickArrayAddrs,
   MEMO_PROGRAM_ID,
-  parseWhirlpool,
   USDC_SWAP_POOL,
 } from "./whirlpool.js";
 import { getEventAuthorityAddr, getMetadataAddr } from "../../pda.js";
@@ -530,12 +530,7 @@ export class RelaunchClient {
     minUsdcOut?: BN;
     slippageBps?: number;
   }): Promise<TransactionSignature> {
-    const whirlpoolAccount =
-      await this.provider.connection.getAccountInfo(USDC_SWAP_POOL);
-    if (whirlpoolAccount === null) {
-      throw new Error(`whirlpool ${USDC_SWAP_POOL.toBase58()} does not exist`);
-    }
-    const whirlpool = parseWhirlpool(whirlpoolAccount.data);
+    const whirlpool = await fetchWhirlpool(this.provider.connection);
 
     if (minUsdcOut === undefined) {
       const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
@@ -826,23 +821,12 @@ export class RelaunchClient {
       );
     }
 
-    const poolAccount = await this.provider.connection.getAccountInfo(
+    const pool = await fetchPumpPool(
+      this.provider.connection,
       storedRelaunch.sourcePool,
     );
-    if (poolAccount === null) {
-      throw new Error(
-        `source pool ${storedRelaunch.sourcePool.toBase58()} does not exist`,
-      );
-    }
-    const pool = parsePumpPool(poolAccount.data);
-
-    const globalConfigAccount = await this.provider.connection.getAccountInfo(
-      PUMP_AMM_GLOBAL_CONFIG,
-    );
-    if (globalConfigAccount === null) {
-      throw new Error("pump_amm global config does not exist");
-    }
-    const globalConfig = parsePumpGlobalConfig(globalConfigAccount.data);
+    const { protocolFeeRecipient, buybackFeeRecipient } =
+      await getPumpFeeRecipients(this.provider.connection);
 
     if (maxQuoteIn === undefined) {
       const [baseReserve, quoteReserve] = await Promise.all(
@@ -907,8 +891,8 @@ export class RelaunchClient {
       poolBaseTokenAccount: pool.poolBaseTokenAccount,
       poolQuoteTokenAccount: pool.poolQuoteTokenAccount,
       coinCreator: pool.coinCreator,
-      protocolFeeRecipient: globalConfig.protocolFeeRecipients[0],
-      buybackFeeRecipient: globalConfig.buybackFeeRecipients[0],
+      protocolFeeRecipient,
+      buybackFeeRecipient,
       baseOut,
       maxQuoteIn,
     }).rpc();
@@ -942,23 +926,12 @@ export class RelaunchClient {
       );
     }
 
-    const poolAccount = await this.provider.connection.getAccountInfo(
+    const pool = await fetchPumpPool(
+      this.provider.connection,
       storedRelaunch.sourcePool,
     );
-    if (poolAccount === null) {
-      throw new Error(
-        `source pool ${storedRelaunch.sourcePool.toBase58()} does not exist`,
-      );
-    }
-    const pool = parsePumpPool(poolAccount.data);
-
-    const globalConfigAccount = await this.provider.connection.getAccountInfo(
-      PUMP_AMM_GLOBAL_CONFIG,
-    );
-    if (globalConfigAccount === null) {
-      throw new Error("pump_amm global config does not exist");
-    }
-    const globalConfig = parsePumpGlobalConfig(globalConfigAccount.data);
+    const { protocolFeeRecipient, buybackFeeRecipient } =
+      await getPumpFeeRecipients(this.provider.connection);
 
     if (minQuoteOut === undefined) {
       const [baseIn, baseReserve, quoteReserve] = await Promise.all(
@@ -982,8 +955,8 @@ export class RelaunchClient {
       poolBaseTokenAccount: pool.poolBaseTokenAccount,
       poolQuoteTokenAccount: pool.poolQuoteTokenAccount,
       coinCreator: pool.coinCreator,
-      protocolFeeRecipient: globalConfig.protocolFeeRecipients[0],
-      buybackFeeRecipient: globalConfig.buybackFeeRecipients[0],
+      protocolFeeRecipient,
+      buybackFeeRecipient,
       minQuoteOut,
     }).rpc();
   }
