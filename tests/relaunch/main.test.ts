@@ -4,6 +4,7 @@ import initializeRelaunch from "./unit/initializeRelaunch.test.js";
 import startDeposits from "./unit/startDeposits.test.js";
 import deposit from "./unit/deposit.test.js";
 import depositViaBuy from "./unit/depositViaBuy.test.js";
+import depositViaBuyRaydium from "./unit/depositViaBuyRaydium.test.js";
 import closeDeposits from "./unit/closeDeposits.test.js";
 import executeSell from "./unit/executeSell.test.js";
 import executeSellRaydium from "./unit/executeSellRaydium.test.js";
@@ -30,6 +31,7 @@ export default function suite() {
   describe("#start_deposits", startDeposits);
   describe("#deposit", deposit);
   describe("#deposit_via_buy", depositViaBuy);
+  describe("#deposit_via_buy_raydium", depositViaBuyRaydium);
   describe("#close_deposits", closeDeposits);
   describe("#execute_sell", executeSell);
   describe("#execute_sell_raydium", executeSellRaydium);

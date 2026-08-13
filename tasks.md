@@ -23,21 +23,11 @@
 
 ## Tasks
 
-### Phase 3: deposit_via_buy_raydium
-
-> Reference: `relaunch-raydium-implementation-plan.md` → "Stage 3 — deposit_via_buy_raydium"
-
-- [NEXT] 3.1 `deposit_via_buy_raydium` (instruction + SDK + tests)
-  - Transfer `max_quote_in` → CPI `swap_base_out_v2(max_quote_in, base_out)` → refund unspent → `DepositRecord::credit` measured delta
-  - No volume accumulators, no fee recipients; same `TokensDepositedViaBuyEvent`
-  - SDK: `depositViaBuyRaydiumIx` + `depositViaBuy()` venue dispatch (wrap logic unchanged)
-  - Tests in new `tests/relaunch/unit/depositViaBuyRaydium.test.ts` per plan Stage 3, incl. exact-refund assertion and wrong-venue gating both directions
-
 ### Phase 4: Lifecycle, ALT, budgets
 
 > Reference: `relaunch-raydium-implementation-plan.md` → "Stage 4 — lifecycle, ALT, budgets"
 
-- [ ] 4.1 Full-lifecycle integration tests
+- [NEXT] 4.1 Full-lifecycle integration tests
   - `tests/integration/relaunch.test.ts`: Raydium-source happy path with money-math identities at each hop; threshold-miss failure path with refunds
   - Matrix note: WSOL × classic-SPL only — other combinations impossible for this venue
 

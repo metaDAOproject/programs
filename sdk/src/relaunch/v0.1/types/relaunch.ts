@@ -424,6 +424,110 @@ export type Relaunch = {
       ];
     },
     {
+      name: "depositViaBuyRaydium";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositor";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "relaunchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "depositorQuoteAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sourcePool";
+          isMut: true;
+          isSigner: false;
+          docs: ["rechecks its internal consistency."];
+        },
+        {
+          name: "ammAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "ammCoinVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammPcVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "raydiumAmmProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "DepositViaBuyRaydiumArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "closeDeposits";
       accounts: [
         {
@@ -1345,6 +1449,30 @@ export type Relaunch = {
           },
           {
             name: "relaunchSeqNum";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "DepositViaBuyRaydiumArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "baseOut";
+            docs: [
+              "The exact amount of old tokens to buy off the source pool",
+              "(swap_base_out_v2 is exact-output).",
+            ];
+            type: "u64";
+          },
+          {
+            name: "maxQuoteIn";
+            docs: [
+              "The depositor's live slippage cap on the quote spent, inclusive of",
+              "the AMM's 25 bps fee.",
+            ];
             type: "u64";
           },
         ];
@@ -2577,6 +2705,110 @@ export const IDL: Relaunch = {
       ],
     },
     {
+      name: "depositViaBuyRaydium",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositor",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "relaunchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "depositorQuoteAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sourcePool",
+          isMut: true,
+          isSigner: false,
+          docs: ["rechecks its internal consistency."],
+        },
+        {
+          name: "ammAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "ammCoinVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammPcVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "raydiumAmmProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "DepositViaBuyRaydiumArgs",
+          },
+        },
+      ],
+    },
+    {
       name: "closeDeposits",
       accounts: [
         {
@@ -3498,6 +3730,30 @@ export const IDL: Relaunch = {
           },
           {
             name: "relaunchSeqNum",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "DepositViaBuyRaydiumArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "baseOut",
+            docs: [
+              "The exact amount of old tokens to buy off the source pool",
+              "(swap_base_out_v2 is exact-output).",
+            ],
+            type: "u64",
+          },
+          {
+            name: "maxQuoteIn",
+            docs: [
+              "The depositor's live slippage cap on the quote spent, inclusive of",
+              "the AMM's 25 bps fee.",
+            ],
             type: "u64",
           },
         ],

@@ -66,9 +66,6 @@ pub struct DepositViaBuy<'info> {
     #[account(mut)]
     pub source_quote_vault: Box<Account<'info, TokenAccount>>,
 
-    // token::* over associated_token::* deliberately: the depositor may fund
-    // the buy from any quote account they own (e.g. an ephemeral WSOL
-    // account); the refund returns to the same account.
     #[account(
         mut,
         token::mint = source_quote_mint,
@@ -76,8 +73,7 @@ pub struct DepositViaBuy<'info> {
     )]
     pub depositor_quote_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: fingerprint-validated at init and pinned by has_one; pump_amm
-    /// rechecks its internal consistency.
+    /// CHECK: fingerprint-validated at init and pinned by has_one
     #[account(mut)]
     pub source_pool: UncheckedAccount<'info>,
 

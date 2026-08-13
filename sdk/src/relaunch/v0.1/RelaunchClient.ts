@@ -76,6 +76,10 @@ export type CreateRelaunchClientParams = {
   relaunchProgramId?: PublicKey;
 };
 
+function ceilDiv(a: bigint, b: bigint): bigint {
+  return (a + b - 1n) / b;
+}
+
 export class RelaunchClient {
   public readonly provider: AnchorProvider;
   public readonly relaunchProgram: Program<RelaunchProgram>;
@@ -382,6 +386,73 @@ export class RelaunchClient {
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ]);
+  }
+
+  depositViaBuyRaydiumIx({
+    relaunch,
+    oldMint,
+    sourceQuoteMint,
+    sourcePool,
+    ammCoinVault,
+    ammPcVault,
+    baseOut,
+    maxQuoteIn,
+    depositor = this.provider.publicKey,
+    payer = this.provider.publicKey,
+    depositorQuoteAccount = getAssociatedTokenAddressSync(
+      sourceQuoteMint,
+      depositor,
+    ),
+  }: {
+    relaunch: PublicKey;
+    oldMint: PublicKey;
+    sourceQuoteMint: PublicKey;
+    sourcePool: PublicKey;
+    ammCoinVault: PublicKey;
+    ammPcVault: PublicKey;
+    baseOut: BN;
+    maxQuoteIn: BN;
+    depositor?: PublicKey;
+    payer?: PublicKey;
+    depositorQuoteAccount?: PublicKey;
+  }) {
+    const relaunchSigner = this.getRelaunchSignerAddress({ relaunch });
+    const depositRecord = this.getDepositRecordAddress({
+      relaunch,
+      depositor,
+    });
+
+    const oldTokenVault = getAssociatedTokenAddressSync(
+      oldMint,
+      relaunchSigner,
+      true,
+    );
+    const sourceQuoteVault = getAssociatedTokenAddressSync(
+      sourceQuoteMint,
+      relaunchSigner,
+      true,
+    );
+
+    return this.relaunchProgram.methods
+      .depositViaBuyRaydium({ baseOut, maxQuoteIn })
+      .accounts({
+        relaunch,
+        depositRecord,
+        depositor,
+        payer,
+        relaunchSigner,
+        sourceQuoteMint,
+        oldTokenVault,
+        sourceQuoteVault,
+        depositorQuoteAccount,
+        sourcePool,
+        ammAuthority: RAYDIUM_AMM_AUTHORITY,
+        ammCoinVault,
+        ammPcVault,
+        raydiumAmmProgram: RAYDIUM_AMM_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      });
   }
 
   executeSellIx({
@@ -846,15 +917,54 @@ export class RelaunchClient {
     }).rpc();
   }
 
+  // Tops the provider wallet's WSOL ATA up to maxQuoteIn, wrapping any
+  // shortfall from SOL in a separate preparatory transaction
+  private async wrapWsolShortfall(maxQuoteIn: BN): Promise<void> {
+    const wsolAta = getAssociatedTokenAddressSync(
+      NATIVE_MINT,
+      this.provider.publicKey,
+    );
+    let wsolAtaAccount: AccountInfo<Buffer> | null = null;
+    try {
+      wsolAtaAccount = await this.provider.connection.getAccountInfo(wsolAta);
+    } catch {
+      // anchor-bankrun's connection proxy throws for missing accounts
+      // instead of returning null.
+    }
+    const wsolBalance =
+      wsolAtaAccount === null
+        ? 0n
+        : AccountLayout.decode(wsolAtaAccount.data).amount;
+    const shortfall = BigInt(maxQuoteIn.toString()) - wsolBalance;
+    if (shortfall > 0n) {
+      await this.provider.sendAndConfirm!(
+        new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(
+            this.provider.publicKey,
+            wsolAta,
+            this.provider.publicKey,
+            NATIVE_MINT,
+          ),
+          SystemProgram.transfer({
+            fromPubkey: this.provider.publicKey,
+            toPubkey: wsolAta,
+            lamports: Number(shortfall),
+          }),
+          createSyncNativeInstruction(wsolAta),
+        ),
+      );
+    }
+  }
+
   // Buys baseOut old tokens off the source pool as the provider wallet and
-  // credits them as a deposit, deriving the pump account set like
-  // executeSell. When maxQuoteIn is not given, it is computed live from the
-  // pool reserves: the constant-product input for the exact output plus
-  // slippageBps (which must also cover pump's swap fees). For WSOL-quoted
-  // pools, any shortfall in the depositor's WSOL ATA is wrapped from SOL in
-  // a separate preparatory transaction — the buy transaction sits within a
-  // few bytes of the 1232-byte legacy size limit and cannot absorb the wrap
-  // instructions for Token-2022 old mints.
+  // credits them as a deposit, dispatching on the relaunch's stored source
+  // venue and deriving the venue's account set like executeSell. When
+  // maxQuoteIn is not given, it is computed live from the pool reserves: the
+  // constant-product input for the exact output plus slippageBps. Pump's
+  // swap fees are not modeled, so slippageBps must also cover them;
+  // Raydium's flat 25 bps fee is modeled exactly, so slippageBps only covers
+  // price movement. For WSOL-quoted pools, any shortfall in the depositor's
+  // WSOL ATA is wrapped from SOL in a separate preparatory transaction.
   async depositViaBuy({
     relaunch,
     baseOut,
@@ -869,6 +979,52 @@ export class RelaunchClient {
     const storedRelaunch = await this.fetchRelaunch(relaunch);
     if (storedRelaunch === null) {
       throw new Error(`relaunch ${relaunch.toBase58()} does not exist`);
+    }
+
+    if (storedRelaunch.sourceVenue.raydiumAmmV4 !== undefined) {
+      const pool = await fetchRaydiumPool(
+        this.provider.connection,
+        storedRelaunch.sourcePool,
+      );
+
+      if (maxQuoteIn === undefined) {
+        const tokenIsCoin = pool.coinMint.equals(storedRelaunch.oldMint);
+        const [tokenReserve, quoteReserve] = await Promise.all(
+          [
+            tokenIsCoin ? pool.coinVault : pool.pcVault,
+            tokenIsCoin ? pool.pcVault : pool.coinVault,
+          ].map((address) => this.fetchTokenBalance(address)),
+        );
+        const baseOutBig = BigInt(baseOut.toString());
+        if (baseOutBig >= tokenReserve) {
+          throw new Error(
+            `baseOut ${baseOutBig} exceeds the pool's token reserve ${tokenReserve}`,
+          );
+        }
+        // The exact-out input is ceil-rounded, with the 25 bps fee
+        // ceil-rounded on top of it (the fee stays in the pool).
+        const inBeforeFee = ceilDiv(
+          quoteReserve * baseOutBig,
+          tokenReserve - baseOutBig,
+        );
+        const grossIn = ceilDiv(inBeforeFee * 10_000n, 9_975n);
+        const cap = (grossIn * (10_000n + BigInt(slippageBps))) / 10_000n;
+        maxQuoteIn = new BN(cap.toString());
+      }
+
+      // Raydium sources are WSOL-quoted by construction.
+      await this.wrapWsolShortfall(maxQuoteIn);
+
+      return this.depositViaBuyRaydiumIx({
+        relaunch,
+        oldMint: storedRelaunch.oldMint,
+        sourceQuoteMint: storedRelaunch.sourceQuoteMint,
+        sourcePool: storedRelaunch.sourcePool,
+        ammCoinVault: pool.coinVault,
+        ammPcVault: pool.pcVault,
+        baseOut,
+        maxQuoteIn,
+      }).rpc();
     }
 
     const oldMintAccount = await this.provider.connection.getAccountInfo(
@@ -905,40 +1061,7 @@ export class RelaunchClient {
     }
 
     if (storedRelaunch.sourceQuoteMint.equals(NATIVE_MINT)) {
-      const wsolAta = getAssociatedTokenAddressSync(
-        NATIVE_MINT,
-        this.provider.publicKey,
-      );
-      let wsolAtaAccount: AccountInfo<Buffer> | null = null;
-      try {
-        wsolAtaAccount = await this.provider.connection.getAccountInfo(wsolAta);
-      } catch {
-        // anchor-bankrun's connection proxy throws for missing accounts
-        // instead of returning null.
-      }
-      const wsolBalance =
-        wsolAtaAccount === null
-          ? 0n
-          : AccountLayout.decode(wsolAtaAccount.data).amount;
-      const shortfall = BigInt(maxQuoteIn.toString()) - wsolBalance;
-      if (shortfall > 0n) {
-        await this.provider.sendAndConfirm!(
-          new Transaction().add(
-            createAssociatedTokenAccountIdempotentInstruction(
-              this.provider.publicKey,
-              wsolAta,
-              this.provider.publicKey,
-              NATIVE_MINT,
-            ),
-            SystemProgram.transfer({
-              fromPubkey: this.provider.publicKey,
-              toPubkey: wsolAta,
-              lamports: Number(shortfall),
-            }),
-            createSyncNativeInstruction(wsolAta),
-          ),
-        );
-      }
+      await this.wrapWsolShortfall(maxQuoteIn);
     }
 
     return this.depositViaBuyIx({
