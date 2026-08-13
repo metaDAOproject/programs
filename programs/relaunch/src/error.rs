@@ -54,4 +54,14 @@ pub enum RelaunchError {
     RelaunchNotComplete,
     #[msg("Casting overflow. If you're seeing this, please report this")]
     CastingOverflow,
+    #[msg("Source pool LP mint must be supplied for Raydium sources only and match the pool's stored LP mint")]
+    SourcePoolLpMintMismatch,
+    #[msg("Source pool's burned LP is below the required floor")]
+    SourcePoolLpNotBurned,
+    #[msg("Source pool's status does not permit swaps")]
+    SourcePoolSwapsDisabled,
+    #[msg("Source pool was not created in the orderbook era")]
+    SourcePoolWrongEra,
+    #[msg("Instruction does not match the relaunch's source venue")]
+    WrongSourceVenue,
 }

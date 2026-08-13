@@ -22,6 +22,7 @@ import {
   writePumpPool,
   PumpPool,
 } from "../pumpAmm.js";
+import { writeRaydiumPool, WriteRaydiumPoolParams } from "../raydiumAmm.js";
 
 type InitializeRelaunchParams = Parameters<
   RelaunchClient["initializeRelaunchIx"]
@@ -191,6 +192,19 @@ export default function suite() {
     }
   };
 
+  const writeCanonicalRaydiumPool = function (
+    this: Mocha.Context,
+    overrides: Partial<WriteRaydiumPoolParams> = {},
+  ) {
+    return writeRaydiumPool({
+      context: this.context,
+      oldMint,
+      tokenReserve: POOL_BASE_RESERVE,
+      quoteReserve: WSOL_POOL_QUOTE_RESERVE,
+      ...overrides,
+    });
+  };
+
   it("initializes a relaunch with valid parameters", async function () {
     const params = defaultParams.call(this);
     const { newMint, relaunch, txSignature } =
@@ -258,6 +272,7 @@ export default function suite() {
     assert.isNull(storedRelaunch.dao);
     assert.isNull(storedRelaunch.daoVault);
     assert.equal(storedRelaunch.seqNum.toString(), "0");
+    assert.isDefined(storedRelaunch.sourceVenue.pumpSwap);
 
     const [expectedRelaunch, pdaBump] = PublicKey.findProgramAddressSync(
       [Buffer.from("relaunch"), newMint.toBuffer()],
@@ -680,6 +695,271 @@ export default function suite() {
       this,
       { sourceQuoteMint: MAINNET_USDC },
       "SourcePoolQuoteMintMismatch",
+    );
+  });
+
+  it("initializes with a canonical-shaped Raydium pool", async function () {
+    const raydiumPool = writeCanonicalRaydiumPool.call(this);
+    const params = defaultParams.call(this);
+
+    const newMint = await initializeWithParams.call(this, {
+      sourcePool: raydiumPool.pool,
+      sourcePoolLpMint: raydiumPool.lpMint,
+    });
+
+    const relaunch = client.getRelaunchAddress({ newMint });
+    const relaunchSigner = client.getRelaunchSignerAddress({ relaunch });
+    const storedRelaunch = await client.fetchRelaunch(relaunch);
+
+    assert.isTrue(storedRelaunch.admin.equals(this.payer.publicKey));
+    assert.isTrue(storedRelaunch.newMint.equals(newMint));
+    assert.isTrue(storedRelaunch.oldMint.equals(oldMint));
+    assert.isTrue(storedRelaunch.sourcePool.equals(raydiumPool.pool));
+    assert.isTrue(storedRelaunch.sourceQuoteMint.equals(token.NATIVE_MINT));
+    assert.isTrue(storedRelaunch.relaunchSigner.equals(relaunchSigner));
+    assert.isTrue(
+      storedRelaunch.oldTokenVault.equals(
+        token.getAssociatedTokenAddressSync(oldMint, relaunchSigner, true),
+      ),
+    );
+    assert.isTrue(
+      storedRelaunch.newTokenVault.equals(
+        token.getAssociatedTokenAddressSync(newMint, relaunchSigner, true),
+      ),
+    );
+    assert.isTrue(
+      storedRelaunch.sourceQuoteVault.equals(
+        token.getAssociatedTokenAddressSync(
+          token.NATIVE_MINT,
+          relaunchSigner,
+          true,
+        ),
+      ),
+    );
+    assert.isTrue(
+      storedRelaunch.usdcVault.equals(
+        token.getAssociatedTokenAddressSync(MAINNET_USDC, relaunchSigner, true),
+      ),
+    );
+    assert.equal(storedRelaunch.thresholdBps, params.thresholdBps);
+    assert.equal(
+      storedRelaunch.oldSupplySnapshot.toString(),
+      DEFAULT_OLD_SUPPLY.toString(),
+    );
+    assert.equal(storedRelaunch.secondsForDeposits, params.secondsForDeposits);
+    assert.equal(storedRelaunch.gracePeriodSeconds, params.gracePeriodSeconds);
+    assert.equal(
+      storedRelaunch.monthlySpendingLimitAmount.toString(),
+      params.monthlySpendingLimitAmount.toString(),
+    );
+    assert.equal(storedRelaunch.monthlySpendingLimitMembers.length, 1);
+    assert.isTrue(
+      storedRelaunch.monthlySpendingLimitMembers[0].equals(
+        this.payer.publicKey,
+      ),
+    );
+    assert.isTrue(storedRelaunch.teamAddress.equals(this.payer.publicKey));
+    assert.isDefined(storedRelaunch.state.initialized);
+    assert.equal(storedRelaunch.totalDeposited.toString(), "0");
+    assert.equal(storedRelaunch.quoteRecovered.toString(), "0");
+    assert.equal(storedRelaunch.usdcRecovered.toString(), "0");
+    assert.isNull(storedRelaunch.unixTimestampStarted);
+    assert.isNull(storedRelaunch.unixTimestampClosed);
+    assert.isNull(storedRelaunch.unixTimestampCompleted);
+    assert.isNull(storedRelaunch.dao);
+    assert.isNull(storedRelaunch.daoVault);
+    assert.equal(storedRelaunch.seqNum.toString(), "0");
+    assert.isDefined(storedRelaunch.sourceVenue.raydiumAmmV4);
+
+    const [expectedRelaunch, pdaBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("relaunch"), newMint.toBuffer()],
+      client.getProgramId(),
+    );
+    assert.isTrue(relaunch.equals(expectedRelaunch));
+    assert.equal(storedRelaunch.pdaBump, pdaBump);
+    const [, signerBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("relaunch_signer"), relaunch.toBuffer()],
+      client.getProgramId(),
+    );
+    assert.equal(storedRelaunch.relaunchSignerBump, signerBump);
+
+    const rawNewMint = await this.banksClient.getAccount(newMint);
+    const newMintState = token.unpackMint(newMint, {
+      ...rawNewMint,
+      data: Buffer.from(rawNewMint.data),
+    } as any);
+    assert.isTrue(newMintState.mintAuthority.equals(relaunchSigner));
+    assert.equal(newMintState.supply.toString(), TOTAL_MINTED.toString());
+
+    const rawVault = await this.banksClient.getAccount(
+      storedRelaunch.newTokenVault,
+    );
+    const vault = token.unpackAccount(storedRelaunch.newTokenVault, {
+      ...rawVault,
+      data: Buffer.from(rawVault.data),
+    } as any);
+    assert.equal(vault.amount.toString(), TOTAL_MINTED.toString());
+
+    const metadata = await this.banksClient.getAccount(
+      getMetadataAddr(newMint)[0],
+    );
+    assert.isNotNull(metadata);
+  });
+
+  it("initializes with a flipped-orientation Raydium pool", async function () {
+    const raydiumPool = writeCanonicalRaydiumPool.call(this, {
+      tokenSide: "coin",
+    });
+
+    const newMint = await initializeWithParams.call(this, {
+      sourcePool: raydiumPool.pool,
+      sourcePoolLpMint: raydiumPool.lpMint,
+    });
+
+    const storedRelaunch = await client.getRelaunch({ newMint });
+    assert.isDefined(storedRelaunch.sourceVenue.raydiumAmmV4);
+  });
+
+  it("initializes when the burned LP floor is met under a large unburned supply", async function () {
+    // burned = 8,086 − 4,043 = 4,043 LP: organic unburned liquidity on top
+    // must not trip the floor.
+    const raydiumPool = writeCanonicalRaydiumPool.call(this, {
+      lpAmount: 8_086n * 10n ** 9n,
+      lpSupply: 4_043n * 10n ** 9n,
+    });
+
+    const newMint = await initializeWithParams.call(this, {
+      sourcePool: raydiumPool.pool,
+      sourcePoolLpMint: raydiumPool.lpMint,
+    });
+
+    const storedRelaunch = await client.getRelaunch({ newMint });
+    assert.isDefined(storedRelaunch.sourceVenue.raydiumAmmV4);
+  });
+
+  it("fails when the source pool is owned by neither pump_amm nor the Raydium AMM", async function () {
+    const foreignPool = writeCanonicalRaydiumPool.call(this, {
+      owner: token.TOKEN_PROGRAM_ID,
+    });
+
+    await expectInitializeToFail.call(
+      this,
+      { sourcePool: foreignPool.pool, sourcePoolLpMint: foreignPool.lpMint },
+      "SourcePoolNotCanonical",
+    );
+  });
+
+  it("fails when the Raydium pool data is not 752 bytes", async function () {
+    const raydiumPool = writeCanonicalRaydiumPool.call(this);
+    const raw = await this.banksClient.getAccount(raydiumPool.pool);
+    this.context.setAccount(raydiumPool.pool, {
+      data: Buffer.from(raw.data.subarray(0, 751)),
+      owner: raw.owner,
+      lamports: Number(raw.lamports),
+      executable: false,
+    });
+
+    await expectInitializeToFail.call(
+      this,
+      { sourcePool: raydiumPool.pool, sourcePoolLpMint: raydiumPool.lpMint },
+      "SourcePoolNotCanonical",
+    );
+  });
+
+  it("fails when the Raydium pool pair does not include the old mint", async function () {
+    const otherPool = writeCanonicalRaydiumPool.call(this, {
+      oldMint: Keypair.generate().publicKey,
+    });
+
+    await expectInitializeToFail.call(
+      this,
+      { sourcePool: otherPool.pool, sourcePoolLpMint: otherPool.lpMint },
+      "SourcePoolNotCanonical",
+    );
+  });
+
+  it("fails when the quote side of the Raydium pool is not WSOL", async function () {
+    const usdcPool = writeCanonicalRaydiumPool.call(this, {
+      quoteMint: MAINNET_USDC,
+    });
+
+    await expectInitializeToFail.call(
+      this,
+      {
+        sourcePool: usdcPool.pool,
+        sourcePoolLpMint: usdcPool.lpMint,
+        sourceQuoteMint: MAINNET_USDC,
+      },
+      "InvalidQuoteMint",
+    );
+  });
+
+  it("fails when the Raydium pool status disables swaps", async function () {
+    const disabledPool = writeCanonicalRaydiumPool.call(this, { status: 2n });
+
+    await expectInitializeToFail.call(
+      this,
+      { sourcePool: disabledPool.pool, sourcePoolLpMint: disabledPool.lpMint },
+      "SourcePoolSwapsDisabled",
+    );
+  });
+
+  it("fails when the Raydium pool's market program is the system program", async function () {
+    // Pools created after Raydium removed the orderbook path store the
+    // system program as market_program — the wrong-era fingerprint.
+    const modernPool = writeCanonicalRaydiumPool.call(this, {
+      marketProgram: SystemProgram.programId,
+    });
+
+    await expectInitializeToFail.call(
+      this,
+      { sourcePool: modernPool.pool, sourcePoolLpMint: modernPool.lpMint },
+      "SourcePoolWrongEra",
+    );
+  });
+
+  it("fails when the Raydium pool's burned LP is below the floor", async function () {
+    // burned = 4,045 − 200 = 3,845 LP, under the 4,000 floor.
+    const shallowBurnPool = writeCanonicalRaydiumPool.call(this, {
+      lpAmount: 4_045n * 10n ** 9n,
+      lpSupply: 200n * 10n ** 9n,
+    });
+
+    await expectInitializeToFail.call(
+      this,
+      {
+        sourcePool: shallowBurnPool.pool,
+        sourcePoolLpMint: shallowBurnPool.lpMint,
+      },
+      "SourcePoolLpNotBurned",
+    );
+  });
+
+  it("fails when the supplied LP mint is not the pool's LP mint", async function () {
+    const raydiumPool = writeCanonicalRaydiumPool.call(this);
+
+    await expectInitializeToFail.call(
+      this,
+      { sourcePool: raydiumPool.pool, sourcePoolLpMint: oldMint },
+      "SourcePoolLpMintMismatch",
+    );
+  });
+
+  it("fails when the LP mint is omitted for a Raydium source", async function () {
+    const raydiumPool = writeCanonicalRaydiumPool.call(this);
+
+    await expectInitializeToFail.call(
+      this,
+      { sourcePool: raydiumPool.pool },
+      "SourcePoolLpMintMismatch",
+    );
+  });
+
+  it("fails when an LP mint is supplied for a PumpSwap source", async function () {
+    await expectInitializeToFail.call(
+      this,
+      { sourcePoolLpMint: oldMint },
+      "SourcePoolLpMintMismatch",
     );
   });
 

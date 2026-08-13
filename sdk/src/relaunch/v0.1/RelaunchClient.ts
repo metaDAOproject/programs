@@ -56,6 +56,7 @@ import {
   PUMP_AMM_GLOBAL_CONFIG,
   PUMP_AMM_GLOBAL_VOLUME_ACCUMULATOR,
 } from "./pumpAmm.js";
+import { parseRaydiumPool, RAYDIUM_AMM_PROGRAM_ID } from "./raydiumAmm.js";
 import {
   fetchWhirlpool,
   getWhirlpoolOracleAddr,
@@ -105,6 +106,8 @@ export class RelaunchClient {
     oldMint,
     oldTokenProgram,
     sourcePool,
+    // Required for Raydium sources (the pool's LP mint), null for PumpSwap.
+    sourcePoolLpMint = null,
     sourceQuoteMint,
     tokenName,
     tokenSymbol,
@@ -124,6 +127,7 @@ export class RelaunchClient {
     oldMint: PublicKey;
     oldTokenProgram: PublicKey;
     sourcePool: PublicKey;
+    sourcePoolLpMint?: PublicKey | null;
     sourceQuoteMint: PublicKey;
     tokenName: string;
     tokenSymbol: string;
@@ -183,6 +187,7 @@ export class RelaunchClient {
         relaunchSigner,
         oldMint,
         sourcePool,
+        sourcePoolLpMint,
         sourceQuoteMint,
         usdcMint: MAINNET_USDC,
         oldTokenVault,
@@ -1101,11 +1106,25 @@ export class RelaunchClient {
       throw new Error(`old mint ${oldMint.toBase58()} does not exist`);
     }
 
+    const sourcePoolAccount =
+      await this.provider.connection.getAccountInfo(sourcePool);
+    if (sourcePoolAccount === null) {
+      throw new Error(`source pool ${sourcePool.toBase58()} does not exist`);
+    }
+    // Raydium sources need the pool's LP mint alongside for the burned-LP
+    // check; PumpSwap sources are validated purely from the pool account.
+    const sourcePoolLpMint = sourcePoolAccount.owner.equals(
+      RAYDIUM_AMM_PROGRAM_ID,
+    )
+      ? parseRaydiumPool(sourcePoolAccount.data).lpMint
+      : null;
+
     const txSignature = await this.initializeRelaunchIx({
       newMint,
       oldMint,
       oldTokenProgram: oldMintAccount.owner,
       sourcePool,
+      sourcePoolLpMint,
       sourceQuoteMint,
       tokenName,
       tokenSymbol,

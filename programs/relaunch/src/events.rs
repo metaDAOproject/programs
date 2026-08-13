@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::RelaunchState;
+use crate::state::{RelaunchState, SourceVenue};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {
@@ -42,6 +42,7 @@ pub struct RelaunchInitializedEvent {
     pub monthly_spending_limit_members: Vec<Pubkey>,
     pub team_address: Pubkey,
     pub pda_bump: u8,
+    pub source_venue: SourceVenue,
 }
 
 #[event]

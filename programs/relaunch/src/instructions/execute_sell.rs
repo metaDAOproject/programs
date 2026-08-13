@@ -6,7 +6,7 @@ use anchor_spl::token_interface;
 use crate::error::RelaunchError;
 use crate::events::{CommonFields, SellExecutedEvent};
 use crate::pump_amm;
-use crate::state::{Relaunch, RelaunchState};
+use crate::state::{Relaunch, RelaunchState, SourceVenue};
 use crate::{
     pump_amm_event_authority, pump_amm_fee_config, pump_amm_global_config, pump_amm_program,
     pump_fees_program, usdc_mint,
@@ -119,6 +119,11 @@ impl ExecuteSell<'_> {
         require!(
             self.relaunch.state == RelaunchState::SellPending,
             RelaunchError::RelaunchNotSellPending
+        );
+
+        require!(
+            self.relaunch.source_venue == SourceVenue::PumpSwap,
+            RelaunchError::WrongSourceVenue
         );
 
         let clock = Clock::get()?;

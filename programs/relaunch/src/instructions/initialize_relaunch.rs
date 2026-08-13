@@ -16,10 +16,12 @@ use anchor_spl::token_interface;
 use crate::error::RelaunchError;
 use crate::events::{CommonFields, RelaunchInitializedEvent};
 use crate::pump_amm;
-use crate::state::{Relaunch, RelaunchState};
+use crate::raydium_amm;
+use crate::state::{Relaunch, RelaunchState, SourceVenue};
 use crate::{
-    pump_amm_program, pump_program, usdc_mint, wsol_mint, MAX_SECONDS_FOR_DEPOSITS,
-    PUMP_POOL_AUTHORITY_SEED, PUMP_POOL_SEED, TOKENS_TO_DEPOSITORS, TOKENS_TO_FUTARCHY_LIQUIDITY,
+    openbook_program, pump_amm_program, pump_program, raydium_amm_program, usdc_mint, wsol_mint,
+    MAX_SECONDS_FOR_DEPOSITS, PUMP_POOL_AUTHORITY_SEED, PUMP_POOL_SEED, RAYDIUM_MIN_BURNED_LP,
+    TOKENS_TO_DEPOSITORS, TOKENS_TO_FUTARCHY_LIQUIDITY,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -72,6 +74,9 @@ pub struct InitializeRelaunch<'info> {
     pub source_pool: UncheckedAccount<'info>,
 
     pub source_quote_mint: Box<Account<'info, Mint>>,
+
+    /// The source pool's LP mint: required for Raydium sources
+    pub source_pool_lp_mint: Option<Box<Account<'info, Mint>>>,
 
     #[account(address = usdc_mint::id())]
     pub usdc_mint: Box<Account<'info, Mint>>,
@@ -145,62 +150,13 @@ impl InitializeRelaunch<'_> {
             RelaunchError::FreezeAuthoritySet
         );
 
-        require!(
-            self.source_quote_mint.key() == wsol_mint::id()
-                || self.source_quote_mint.key() == usdc_mint::id(),
-            RelaunchError::InvalidQuoteMint
-        );
-
-        require_keys_eq!(
-            *self.source_pool.owner,
-            pump_amm_program::id(),
-            RelaunchError::SourcePoolNotCanonical
-        );
-
-        let pool = pump_amm::PumpSwapPool::try_parse(&self.source_pool.try_borrow_data()?)?;
-
-        require_eq!(pool.index, 0, RelaunchError::SourcePoolNotCanonical);
-
-        require_keys_eq!(
-            pool.base_mint,
-            self.old_mint.key(),
-            RelaunchError::SourcePoolNotCanonical
-        );
-
-        let (pool_authority, _) = Pubkey::find_program_address(
-            &[PUMP_POOL_AUTHORITY_SEED, self.old_mint.key().as_ref()],
-            &pump_program::id(),
-        );
-        require_keys_eq!(
-            pool.creator,
-            pool_authority,
-            RelaunchError::SourcePoolNotCanonical
-        );
-
-        require_keys_eq!(
-            pool.quote_mint,
-            self.source_quote_mint.key(),
-            RelaunchError::SourcePoolQuoteMintMismatch
-        );
-
-        // The fields above are also the pool PDA's seeds, so re-deriving the
-        // address re-checks them without relying on pump_amm keeping stored
-        // fields consistent with seeds.
-        let (canonical_pool, _) = Pubkey::find_program_address(
-            &[
-                PUMP_POOL_SEED,
-                &0u16.to_le_bytes(),
-                pool_authority.as_ref(),
-                self.old_mint.key().as_ref(),
-                self.source_quote_mint.key().as_ref(),
-            ],
-            &pump_amm_program::id(),
-        );
-        require_keys_eq!(
-            self.source_pool.key(),
-            canonical_pool,
-            RelaunchError::SourcePoolNotCanonical
-        );
+        if *self.source_pool.owner == pump_amm_program::id() {
+            self.validate_pump_source()?;
+        } else if *self.source_pool.owner == raydium_amm_program::id() {
+            self.validate_raydium_source()?;
+        } else {
+            return err!(RelaunchError::SourcePoolNotCanonical);
+        }
 
         // Old mints may carry only mint-embedded metadata extensions; anything
         // else (transfer fees, hooks, ...) is rejected rather than assumed safe.
@@ -257,8 +213,131 @@ impl InitializeRelaunch<'_> {
         Ok(())
     }
 
+    fn validate_pump_source(&self) -> Result<()> {
+        require!(
+            self.source_pool_lp_mint.is_none(),
+            RelaunchError::SourcePoolLpMintMismatch
+        );
+
+        require!(
+            self.source_quote_mint.key() == wsol_mint::id()
+                || self.source_quote_mint.key() == usdc_mint::id(),
+            RelaunchError::InvalidQuoteMint
+        );
+
+        let pool = pump_amm::PumpSwapPool::try_parse(&self.source_pool.try_borrow_data()?)?;
+
+        require_eq!(pool.index, 0, RelaunchError::SourcePoolNotCanonical);
+
+        require_keys_eq!(
+            pool.base_mint,
+            self.old_mint.key(),
+            RelaunchError::SourcePoolNotCanonical
+        );
+
+        let (pool_authority, _) = Pubkey::find_program_address(
+            &[PUMP_POOL_AUTHORITY_SEED, self.old_mint.key().as_ref()],
+            &pump_program::id(),
+        );
+        require_keys_eq!(
+            pool.creator,
+            pool_authority,
+            RelaunchError::SourcePoolNotCanonical
+        );
+
+        require_keys_eq!(
+            pool.quote_mint,
+            self.source_quote_mint.key(),
+            RelaunchError::SourcePoolQuoteMintMismatch
+        );
+
+        // The fields above are also the pool PDA's seeds, so re-deriving the
+        // address re-checks them without relying on pump_amm keeping stored
+        // fields consistent with seeds.
+        let (canonical_pool, _) = Pubkey::find_program_address(
+            &[
+                PUMP_POOL_SEED,
+                &0u16.to_le_bytes(),
+                pool_authority.as_ref(),
+                self.old_mint.key().as_ref(),
+                self.source_quote_mint.key().as_ref(),
+            ],
+            &pump_amm_program::id(),
+        );
+        require_keys_eq!(
+            self.source_pool.key(),
+            canonical_pool,
+            RelaunchError::SourcePoolNotCanonical
+        );
+
+        Ok(())
+    }
+
+    /// No PDA provenance exists on AMM v4, so canonicality is owner + shape,
+    /// the right pair, swappability, the orderbook-era mark, and a migration's
+    /// worth of burned LP.
+    fn validate_raydium_source(&self) -> Result<()> {
+        require_keys_eq!(
+            self.source_quote_mint.key(),
+            wsol_mint::id(),
+            RelaunchError::InvalidQuoteMint
+        );
+
+        let pool = raydium_amm::RaydiumPool::try_parse(&self.source_pool.try_borrow_data()?)?;
+
+        // The right pair in either orientation
+        let expected = (self.old_mint.key(), self.source_quote_mint.key());
+        require!(
+            (pool.coin_mint, pool.pc_mint) == expected
+                || (pool.pc_mint, pool.coin_mint) == expected,
+            RelaunchError::SourcePoolNotCanonical
+        );
+
+        // The AMM's own swap_permission(): 1 (Initialized), 6 (SwapOnly),
+        // 7 (WaitingTrade).
+        require!(
+            matches!(pool.status, 1 | 6 | 7),
+            RelaunchError::SourcePoolSwapsDisabled
+        );
+
+        // The orderbook fingerprint: pools created since Raydium removed the
+        // orderbook path store the system program here, so no decoy created
+        // today can pass.
+        require_keys_eq!(
+            pool.market_program,
+            openbook_program::id(),
+            RelaunchError::SourcePoolWrongEra
+        );
+
+        // burned = lp_amount - supply is monotone: deposits and withdrawals
+        // move both terms monotonically, so only external burns increase it.
+        let lp_mint = match &self.source_pool_lp_mint {
+            Some(lp_mint) => lp_mint,
+            None => return err!(RelaunchError::SourcePoolLpMintMismatch),
+        };
+        require_keys_eq!(
+            lp_mint.key(),
+            pool.lp_mint,
+            RelaunchError::SourcePoolLpMintMismatch
+        );
+        require_gte!(
+            pool.lp_amount.saturating_sub(lp_mint.supply),
+            RAYDIUM_MIN_BURNED_LP,
+            RelaunchError::SourcePoolLpNotBurned
+        );
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, args: InitializeRelaunchArgs) -> Result<()> {
         let relaunch_key = ctx.accounts.relaunch.key();
+
+        // validate() already required the owner to be one of the two venues.
+        let source_venue = if *ctx.accounts.source_pool.owner == raydium_amm_program::id() {
+            SourceVenue::RaydiumAmmV4
+        } else {
+            SourceVenue::PumpSwap
+        };
 
         let seeds = &[
             b"relaunch_signer",
@@ -352,6 +431,7 @@ impl InitializeRelaunch<'_> {
             dao_vault: None,
             seq_num: 0,
             pda_bump: ctx.bumps.relaunch,
+            source_venue,
         });
 
         let clock = Clock::get()?;
@@ -377,6 +457,7 @@ impl InitializeRelaunch<'_> {
             monthly_spending_limit_members: args.monthly_spending_limit_members,
             team_address: args.team_address,
             pda_bump: ctx.bumps.relaunch,
+            source_venue,
         });
 
         Ok(())

@@ -1,19 +1,14 @@
 import { Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { ProgramTestContext } from "solana-bankrun";
+import {
+  OPENBOOK_PROGRAM_ID,
+  RAYDIUM_AMM_AUTHORITY,
+  RAYDIUM_AMM_PROGRAM_ID,
+} from "@metadaoproject/programs";
 import { writeTokenAccount } from "./pumpAmm.js";
 
-// SDK constants arrive with the Stage 1 SDK module; until then they live here.
-export const RAYDIUM_AMM_PROGRAM_ID = new PublicKey(
-  "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
-);
-// The global ["amm authority"] PDA (nonce 254) owning every AMM v4 vault.
-export const RAYDIUM_AMM_AUTHORITY = new PublicKey(
-  "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1",
-);
-export const OPENBOOK_PROGRAM_ID = new PublicKey(
-  "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX",
-);
+export { OPENBOOK_PROGRAM_ID, RAYDIUM_AMM_AUTHORITY, RAYDIUM_AMM_PROGRAM_ID };
 
 const AMM_INFO_LEN = 752;
 const POOL_RENT = 6_124_800n; // rent-exempt minimum for 752 bytes
@@ -28,6 +23,8 @@ export type WriteRaydiumPoolParams = {
   // pc side with WSOL as coin; "coin" fabricates the flipped orientation.
   tokenSide?: "pc" | "coin";
   // Overrides below fabricate non-canonical pools for negative tests.
+  owner?: PublicKey;
+  quoteMint?: PublicKey;
   status?: bigint;
   marketProgram?: PublicKey;
   lpAmount?: bigint;
@@ -93,6 +90,8 @@ export function writeRaydiumPool({
   tokenReserve,
   quoteReserve,
   tokenSide = "pc",
+  owner = RAYDIUM_AMM_PROGRAM_ID,
+  quoteMint = token.NATIVE_MINT,
   status = 6n,
   marketProgram = OPENBOOK_PROGRAM_ID,
   lpAmount = 4_045_000_000_000n,
@@ -104,8 +103,8 @@ export function writeRaydiumPool({
   const lpMint = Keypair.generate().publicKey;
 
   const tokenAsPc = tokenSide === "pc";
-  const coinMint = tokenAsPc ? token.NATIVE_MINT : oldMint;
-  const pcMint = tokenAsPc ? oldMint : token.NATIVE_MINT;
+  const coinMint = tokenAsPc ? quoteMint : oldMint;
+  const pcMint = tokenAsPc ? oldMint : quoteMint;
   const coinReserve = tokenAsPc ? quoteReserve : tokenReserve;
   const pcReserve = tokenAsPc ? tokenReserve : quoteReserve;
 
@@ -153,7 +152,7 @@ export function writeRaydiumPool({
 
   context.setAccount(pool, {
     data,
-    owner: RAYDIUM_AMM_PROGRAM_ID,
+    owner,
     lamports: Number(POOL_RENT),
     executable: false,
   });

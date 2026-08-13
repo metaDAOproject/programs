@@ -45,6 +45,13 @@ export type Relaunch = {
           isSigner: false;
         },
         {
+          name: "sourcePoolLpMint";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
+          docs: ["The source pool's LP mint: required for Raydium sources"];
+        },
+        {
           name: "usdcMint";
           isMut: false;
           isSigner: false;
@@ -1230,6 +1237,15 @@ export type Relaunch = {
             docs: ["The PDA bump."];
             type: "u8";
           },
+          {
+            name: "sourceVenue";
+            docs: [
+              "The venue of the source pool, set from the pool's owner at init.",
+            ];
+            type: {
+              defined: "SourceVenue";
+            };
+          },
         ];
       };
     },
@@ -1396,6 +1412,24 @@ export type Relaunch = {
         ];
       };
     },
+    {
+      name: "SourceVenue";
+      docs: [
+        "The venue the source pool lives on, deciding how the pool was validated",
+        "at init and which sell/buy instructions apply.",
+      ];
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "PumpSwap";
+          },
+          {
+            name: "RaydiumAmmV4";
+          },
+        ];
+      };
+    },
   ];
   events: [
     {
@@ -1508,6 +1542,13 @@ export type Relaunch = {
         {
           name: "pdaBump";
           type: "u8";
+          index: false;
+        },
+        {
+          name: "sourceVenue";
+          type: {
+            defined: "SourceVenue";
+          };
           index: false;
         },
       ];
@@ -1988,6 +2029,31 @@ export type Relaunch = {
       name: "CastingOverflow";
       msg: "Casting overflow. If you're seeing this, please report this";
     },
+    {
+      code: 6026;
+      name: "SourcePoolLpMintMismatch";
+      msg: "Source pool LP mint must be supplied for Raydium sources only and match the pool's stored LP mint";
+    },
+    {
+      code: 6027;
+      name: "SourcePoolLpNotBurned";
+      msg: "Source pool's burned LP is below the required floor";
+    },
+    {
+      code: 6028;
+      name: "SourcePoolSwapsDisabled";
+      msg: "Source pool's status does not permit swaps";
+    },
+    {
+      code: 6029;
+      name: "SourcePoolWrongEra";
+      msg: "Source pool was not created in the orderbook era";
+    },
+    {
+      code: 6030;
+      name: "WrongSourceVenue";
+      msg: "Instruction does not match the relaunch's source venue";
+    },
   ];
 };
 
@@ -2036,6 +2102,13 @@ export const IDL: Relaunch = {
           name: "sourceQuoteMint",
           isMut: false,
           isSigner: false,
+        },
+        {
+          name: "sourcePoolLpMint",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
+          docs: ["The source pool's LP mint: required for Raydium sources"],
         },
         {
           name: "usdcMint",
@@ -3223,6 +3296,15 @@ export const IDL: Relaunch = {
             docs: ["The PDA bump."],
             type: "u8",
           },
+          {
+            name: "sourceVenue",
+            docs: [
+              "The venue of the source pool, set from the pool's owner at init.",
+            ],
+            type: {
+              defined: "SourceVenue",
+            },
+          },
         ],
       },
     },
@@ -3389,6 +3471,24 @@ export const IDL: Relaunch = {
         ],
       },
     },
+    {
+      name: "SourceVenue",
+      docs: [
+        "The venue the source pool lives on, deciding how the pool was validated",
+        "at init and which sell/buy instructions apply.",
+      ],
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "PumpSwap",
+          },
+          {
+            name: "RaydiumAmmV4",
+          },
+        ],
+      },
+    },
   ],
   events: [
     {
@@ -3501,6 +3601,13 @@ export const IDL: Relaunch = {
         {
           name: "pdaBump",
           type: "u8",
+          index: false,
+        },
+        {
+          name: "sourceVenue",
+          type: {
+            defined: "SourceVenue",
+          },
           index: false,
         },
       ],
@@ -3980,6 +4087,31 @@ export const IDL: Relaunch = {
       code: 6025,
       name: "CastingOverflow",
       msg: "Casting overflow. If you're seeing this, please report this",
+    },
+    {
+      code: 6026,
+      name: "SourcePoolLpMintMismatch",
+      msg: "Source pool LP mint must be supplied for Raydium sources only and match the pool's stored LP mint",
+    },
+    {
+      code: 6027,
+      name: "SourcePoolLpNotBurned",
+      msg: "Source pool's burned LP is below the required floor",
+    },
+    {
+      code: 6028,
+      name: "SourcePoolSwapsDisabled",
+      msg: "Source pool's status does not permit swaps",
+    },
+    {
+      code: 6029,
+      name: "SourcePoolWrongEra",
+      msg: "Source pool was not created in the orderbook era",
+    },
+    {
+      code: 6030,
+      name: "WrongSourceVenue",
+      msg: "Instruction does not match the relaunch's source venue",
     },
   ],
 };

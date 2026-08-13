@@ -6,7 +6,7 @@ use anchor_spl::token_interface;
 use crate::error::RelaunchError;
 use crate::events::{CommonFields, TokensDepositedViaBuyEvent};
 use crate::pump_amm;
-use crate::state::{DepositRecord, Relaunch, RelaunchState};
+use crate::state::{DepositRecord, Relaunch, RelaunchState, SourceVenue};
 use crate::{
     pump_amm_event_authority, pump_amm_fee_config, pump_amm_global_config, pump_amm_program,
     pump_fees_program,
@@ -152,6 +152,11 @@ impl DepositViaBuy<'_> {
         require!(
             self.relaunch.state == RelaunchState::Live,
             RelaunchError::RelaunchNotLive
+        );
+
+        require!(
+            self.relaunch.source_venue == SourceVenue::PumpSwap,
+            RelaunchError::WrongSourceVenue
         );
 
         let clock = Clock::get()?;

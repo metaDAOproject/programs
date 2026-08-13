@@ -23,22 +23,11 @@
 
 ## Tasks
 
-### Phase 1: Venue-aware initialize_relaunch
-
-> Reference: `relaunch-raydium-implementation-plan.md` → "Stage 1 — venue-aware initialize_relaunch"
-
-- [NEXT] 1.1 `initialize_relaunch` venue branch (instruction + SDK + tests)
-  - `SourceVenue` enum + `source_venue` field appended after `pda_bump`; event field; venue gate on the pump-venue sell/buy; errors appended per plan
-  - `source_pool_lp_mint: Option<Account<Mint>>` — required iff Raydium, rejected for PumpSwap sources
-  - Five-gate Raydium validation: owner + 752 parse, pair-as-set with WSOL-pinned quote, `swap_permission`, `market_program == openbook`, burned-LP floor
-  - SDK: `sdk/src/relaunch/v0.1/raydiumAmm.ts` + `initializeRelaunch()` owner dispatch
-  - Tests: full accept/reject matrix per plan Stage 1 (13 new cases; existing pump cases stay green)
-
 ### Phase 2: execute_sell_raydium
 
 > Reference: `relaunch-raydium-implementation-plan.md` → "Stage 2 — execute_sell_raydium"
 
-- [ ] 2.1 `execute_sell_raydium` (instruction + SDK + tests)
+- [NEXT] 2.1 `execute_sell_raydium` (instruction + SDK + tests)
   - Extract `Relaunch::record_sell_outcome` shared tail; pump handler refactored, behavior-identical
   - New instruction per plan account list (~11 accounts, no mint accounts); coin/pc vaults pinned locally against the parsed pool
   - CPI `swap_base_in_v2(vault amount, min_quote_out)`; measured delta → `Sold`; same `SellExecutedEvent`

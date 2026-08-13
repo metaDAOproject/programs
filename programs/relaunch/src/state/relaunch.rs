@@ -12,6 +12,14 @@ pub enum RelaunchState {
     Failed,
 }
 
+/// The venue the source pool lives on, deciding how the pool was validated
+/// at init and which sell/buy instructions apply.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub enum SourceVenue {
+    PumpSwap,
+    RaydiumAmmV4,
+}
+
 #[account]
 #[derive(InitSpace)]
 pub struct Relaunch {
@@ -86,4 +94,6 @@ pub struct Relaunch {
     pub seq_num: u64,
     /// The PDA bump.
     pub pda_bump: u8,
+    /// The venue of the source pool, set from the pool's owner at init.
+    pub source_venue: SourceVenue,
 }
