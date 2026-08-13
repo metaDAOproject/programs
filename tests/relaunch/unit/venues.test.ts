@@ -14,6 +14,11 @@ import {
   PumpPool,
 } from "../pumpAmm.js";
 import {
+  raydiumSwapBaseInV2Ix,
+  raydiumSwapBaseOutV2Ix,
+  writeRaydiumPool,
+} from "../raydiumAmm.js";
+import {
   FIXTURE_USDC_SWAP_POOL,
   setupWhirlpool,
   whirlpoolSwapV2Ix,
@@ -42,6 +47,30 @@ async function tokenBalance(
     { ...raw, data: Buffer.from(raw.data) } as any,
     tokenProgram,
   ).amount;
+}
+
+function ceilDiv(a: bigint, b: bigint): bigint {
+  return (a + b - 1n) / b;
+}
+
+// AMM v4 swap math at the 25 bps flat fee. The fee is
+// ceil-rounded off the input and stays in the pool.
+function raydiumExactInOutput(
+  amountIn: bigint,
+  inReserve: bigint,
+  outReserve: bigint,
+): bigint {
+  const net = amountIn - ceilDiv(amountIn * 25n, 10_000n);
+  return (outReserve * net) / (inReserve + net);
+}
+
+function raydiumExactOutInput(
+  amountOut: bigint,
+  inReserve: bigint,
+  outReserve: bigint,
+): bigint {
+  const inBeforeFee = ceilDiv(inReserve * amountOut, outReserve - amountOut);
+  return ceilDiv(inBeforeFee * 10_000n, 9_975n);
 }
 
 export default function suite() {
@@ -309,6 +338,224 @@ export default function suite() {
     const usdcReceived = usdcAfter - usdcBefore;
     assert.isTrue(
       usdcReceived > 95n * 10n ** 6n && usdcReceived < 100n * 10n ** 6n,
+    );
+  });
+
+  it("raydium_amm exact-in sell moves exactly the constant-product output at 25 bps", async function () {
+    const { oldMint, payerOldTokenAccount } = await setupRelaunch({
+      banksClient: this.banksClient,
+      payer: this.payer,
+    });
+
+    const pool = writeRaydiumPool({
+      context: this.context,
+      oldMint,
+      tokenReserve: POOL_BASE_RESERVE,
+      quoteReserve: WSOL_POOL_QUOTE_RESERVE,
+    });
+    const wsolAta = await wrapSol(this.bankrunProvider, this.payer, 0n);
+
+    // Token is pc, WSOL is coin: selling tokens swaps pc → coin.
+    const predictedOut = raydiumExactInOutput(
+      SELL_AMOUNT,
+      POOL_BASE_RESERVE,
+      WSOL_POOL_QUOTE_RESERVE,
+    );
+
+    const tokenBefore = await tokenBalance(
+      this.banksClient,
+      payerOldTokenAccount,
+    );
+    const wsolBefore = await tokenBalance(this.banksClient, wsolAta);
+
+    const tx = new Transaction().add(
+      raydiumSwapBaseInV2Ix({
+        pool,
+        userSourceTokenAccount: payerOldTokenAccount,
+        userDestinationTokenAccount: wsolAta,
+        userSourceOwner: this.payer.publicKey,
+        amountIn: SELL_AMOUNT,
+        // The floor check is inclusive, so the exact prediction passes —
+        // the AMM itself asserts our formula.
+        minimumAmountOut: predictedOut,
+      }),
+    );
+    tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = this.payer.publicKey;
+    tx.sign(this.payer);
+    await this.banksClient.processTransaction(tx);
+
+    const tokenAfter = await tokenBalance(
+      this.banksClient,
+      payerOldTokenAccount,
+    );
+    const wsolAfter = await tokenBalance(this.banksClient, wsolAta);
+
+    assert.equal((tokenBefore - tokenAfter).toString(), SELL_AMOUNT.toString());
+    assert.equal((wsolAfter - wsolBefore).toString(), predictedOut.toString());
+
+    // The fee stays in the pool: the pc vault gains the full input, the coin
+    // vault pays out exactly the prediction. No fee-recipient transfers.
+    assert.equal(
+      (await tokenBalance(this.banksClient, pool.pcVault)).toString(),
+      (POOL_BASE_RESERVE + SELL_AMOUNT).toString(),
+    );
+    assert.equal(
+      (await tokenBalance(this.banksClient, pool.coinVault)).toString(),
+      (WSOL_POOL_QUOTE_RESERVE - predictedOut).toString(),
+    );
+  });
+
+  it("raydium_amm exact-out buy pulls exactly the computed input and leaves the rest untouched", async function () {
+    const { oldMint, payerOldTokenAccount } = await setupRelaunch({
+      banksClient: this.banksClient,
+      payer: this.payer,
+    });
+
+    const pool = writeRaydiumPool({
+      context: this.context,
+      oldMint,
+      tokenReserve: POOL_BASE_RESERVE,
+      quoteReserve: WSOL_POOL_QUOTE_RESERVE,
+    });
+    const maxAmountIn = 2n * 10n ** 9n;
+    const wsolAta = await wrapSol(
+      this.bankrunProvider,
+      this.payer,
+      maxAmountIn,
+    );
+
+    // Buying tokens (pc) with WSOL (coin): coin is the input reserve.
+    const predictedIn = raydiumExactOutInput(
+      SELL_AMOUNT,
+      WSOL_POOL_QUOTE_RESERVE,
+      POOL_BASE_RESERVE,
+    );
+
+    const tokenBefore = await tokenBalance(
+      this.banksClient,
+      payerOldTokenAccount,
+    );
+    const wsolBefore = await tokenBalance(this.banksClient, wsolAta);
+
+    const tx = new Transaction().add(
+      raydiumSwapBaseOutV2Ix({
+        pool,
+        userSourceTokenAccount: wsolAta,
+        userDestinationTokenAccount: payerOldTokenAccount,
+        userSourceOwner: this.payer.publicKey,
+        maxAmountIn,
+        amountOut: SELL_AMOUNT,
+      }),
+    );
+    tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = this.payer.publicKey;
+    tx.sign(this.payer);
+    await this.banksClient.processTransaction(tx);
+
+    const tokenAfter = await tokenBalance(
+      this.banksClient,
+      payerOldTokenAccount,
+    );
+    const wsolAfter = await tokenBalance(this.banksClient, wsolAta);
+
+    assert.equal((tokenAfter - tokenBefore).toString(), SELL_AMOUNT.toString());
+    // Only the computed input is pulled; the rest of the allowance stays.
+    assert.equal((wsolBefore - wsolAfter).toString(), predictedIn.toString());
+    assert.isTrue(predictedIn < maxAmountIn);
+    assert.equal(
+      (await tokenBalance(this.banksClient, pool.coinVault)).toString(),
+      (WSOL_POOL_QUOTE_RESERVE + predictedIn).toString(),
+    );
+  });
+
+  it("raydium_amm flipped-orientation pool swaps correctly in both directions", async function () {
+    const { oldMint, payerOldTokenAccount } = await setupRelaunch({
+      banksClient: this.banksClient,
+      payer: this.payer,
+    });
+
+    const pool = writeRaydiumPool({
+      context: this.context,
+      oldMint,
+      tokenReserve: POOL_BASE_RESERVE,
+      quoteReserve: WSOL_POOL_QUOTE_RESERVE,
+      tokenSide: "coin",
+    });
+    assert.isTrue(pool.coinMint.equals(oldMint));
+
+    const wsolAta = await wrapSol(this.bankrunProvider, this.payer, 0n);
+
+    // Direction is inferred from the mints, so the same sell is coin → pc
+    // on this pool.
+    const predictedOut = raydiumExactInOutput(
+      SELL_AMOUNT,
+      POOL_BASE_RESERVE,
+      WSOL_POOL_QUOTE_RESERVE,
+    );
+
+    const wsolBefore = await tokenBalance(this.banksClient, wsolAta);
+
+    const sellTx = new Transaction().add(
+      raydiumSwapBaseInV2Ix({
+        pool,
+        userSourceTokenAccount: payerOldTokenAccount,
+        userDestinationTokenAccount: wsolAta,
+        userSourceOwner: this.payer.publicKey,
+        amountIn: SELL_AMOUNT,
+        minimumAmountOut: predictedOut,
+      }),
+    );
+    sellTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    sellTx.feePayer = this.payer.publicKey;
+    sellTx.sign(this.payer);
+    await this.banksClient.processTransaction(sellTx);
+
+    const wsolAfterSell = await tokenBalance(this.banksClient, wsolAta);
+    assert.equal(
+      (wsolAfterSell - wsolBefore).toString(),
+      predictedOut.toString(),
+    );
+
+    // Buy the same tokens back (pc → coin) off the post-sell reserves.
+    const tokenReserveAfterSell = POOL_BASE_RESERVE + SELL_AMOUNT;
+    const quoteReserveAfterSell = WSOL_POOL_QUOTE_RESERVE - predictedOut;
+    const predictedIn = raydiumExactOutInput(
+      SELL_AMOUNT,
+      quoteReserveAfterSell,
+      tokenReserveAfterSell,
+    );
+
+    const tokenBefore = await tokenBalance(
+      this.banksClient,
+      payerOldTokenAccount,
+    );
+
+    const buyTx = new Transaction().add(
+      raydiumSwapBaseOutV2Ix({
+        pool,
+        userSourceTokenAccount: wsolAta,
+        userDestinationTokenAccount: payerOldTokenAccount,
+        userSourceOwner: this.payer.publicKey,
+        maxAmountIn: wsolAfterSell,
+        amountOut: SELL_AMOUNT,
+      }),
+    );
+    buyTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    buyTx.feePayer = this.payer.publicKey;
+    buyTx.sign(this.payer);
+    await this.banksClient.processTransaction(buyTx);
+
+    const tokenAfter = await tokenBalance(
+      this.banksClient,
+      payerOldTokenAccount,
+    );
+    const wsolAfterBuy = await tokenBalance(this.banksClient, wsolAta);
+
+    assert.equal((tokenAfter - tokenBefore).toString(), SELL_AMOUNT.toString());
+    assert.equal(
+      (wsolAfterSell - wsolAfterBuy).toString(),
+      predictedIn.toString(),
     );
   });
 }

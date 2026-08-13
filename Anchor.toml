@@ -106,3 +106,7 @@ program = "./tests/fixtures/pump_fees.so"
 [[test.genesis]]
 address = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
 program = "./tests/fixtures/whirlpool.so"
+
+[[test.genesis]]
+address = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+program = "./tests/fixtures/raydium_amm.so"

@@ -79,6 +79,35 @@ pub mod pump_amm_fee_config {
     declare_id!("5PHirr8joyTMp9JMm6nW7hNDVyEYdkzDqazxPD7RaTjx");
 }
 
+// Raydium
+
+/// Raydium's legacy "Standard" AMM v4, where pre-PumpSwap pump graduations
+/// live.
+pub mod raydium_amm_program {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
+}
+
+/// The global authority PDA over every AMM v4 vault: `["amm authority"]`.
+pub mod raydium_amm_authority {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1");
+}
+
+/// OpenBook v1. Stored as `market_program` by every orderbook-era AMM v4
+/// pool. All pump graduations have this as an orderbook.
+pub mod openbook_program {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX");
+}
+
+/// A Raydium source pool must have at least this much LP burned
+/// (`lp_amount - lp_mint.supply`, raw units, 9 decimals).
+pub const RAYDIUM_MIN_BURNED_LP: u64 = 4_000_000_000_000;
+
 // Orca
 
 pub mod whirlpool_program {

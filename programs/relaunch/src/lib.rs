@@ -6,6 +6,7 @@ pub mod error;
 pub mod events;
 pub mod instructions;
 pub mod pump_amm;
+pub mod raydium_amm;
 pub mod state;
 pub mod whirlpool;
 

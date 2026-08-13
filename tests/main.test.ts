@@ -52,6 +52,7 @@ import {
   sha256,
 } from "@metadaoproject/programs";
 import { PUMP_GLOBAL_VOLUME_ACCUMULATOR } from "./relaunch/pumpAmm.js";
+import { RAYDIUM_AMM_PROGRAM_ID } from "./relaunch/raydiumAmm.js";
 import { WHIRLPOOLS_CONFIG, WHIRLPOOL_FEE_TIER } from "./relaunch/whirlpool.js";
 import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/programs/launchpad/v0.6";
 import { LaunchpadClient as LaunchpadClientV8 } from "@metadaoproject/programs/launchpad/v0.8";
@@ -226,6 +227,10 @@ before(async function () {
       {
         name: "whirlpool",
         programId: WHIRLPOOL_PROGRAM_ID,
+      },
+      {
+        name: "raydium_amm",
+        programId: RAYDIUM_AMM_PROGRAM_ID,
       },
     ],
     [
