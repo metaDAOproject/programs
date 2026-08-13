@@ -69,6 +69,14 @@ pub mod relaunch {
     }
 
     #[access_control(ctx.accounts.validate(&args))]
+    pub fn execute_sell_raydium(
+        ctx: Context<ExecuteSellRaydium>,
+        args: ExecuteSellRaydiumArgs,
+    ) -> Result<()> {
+        ExecuteSellRaydium::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
     pub fn execute_usdc_swap(
         ctx: Context<ExecuteUsdcSwap>,
         args: ExecuteUsdcSwapArgs,

@@ -6,6 +6,7 @@ import deposit from "./unit/deposit.test.js";
 import depositViaBuy from "./unit/depositViaBuy.test.js";
 import closeDeposits from "./unit/closeDeposits.test.js";
 import executeSell from "./unit/executeSell.test.js";
+import executeSellRaydium from "./unit/executeSellRaydium.test.js";
 import executeUsdcSwap from "./unit/executeUsdcSwap.test.js";
 import completeRelaunch from "./unit/completeRelaunch.test.js";
 import claim from "./unit/claim.test.js";
@@ -31,6 +32,7 @@ export default function suite() {
   describe("#deposit_via_buy", depositViaBuy);
   describe("#close_deposits", closeDeposits);
   describe("#execute_sell", executeSell);
+  describe("#execute_sell_raydium", executeSellRaydium);
   describe("#execute_usdc_swap", executeUsdcSwap);
   describe("#complete_relaunch", completeRelaunch);
   describe("#claim", claim);

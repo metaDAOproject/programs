@@ -23,22 +23,11 @@
 
 ## Tasks
 
-### Phase 2: execute_sell_raydium
-
-> Reference: `relaunch-raydium-implementation-plan.md` → "Stage 2 — execute_sell_raydium"
-
-- [NEXT] 2.1 `execute_sell_raydium` (instruction + SDK + tests)
-  - Extract `Relaunch::record_sell_outcome` shared tail; pump handler refactored, behavior-identical
-  - New instruction per plan account list (~11 accounts, no mint accounts); coin/pc vaults pinned locally against the parsed pool
-  - CPI `swap_base_in_v2(vault amount, min_quote_out)`; measured delta → `Sold`; same `SellExecutedEvent`
-  - SDK: `executeSellRaydiumIx` + `executeSell()` venue dispatch; 25 bps constant-product floor
-  - Tests in new `tests/relaunch/unit/executeSellRaydium.test.ts` per plan Stage 2, incl. wrong-venue gating both directions and vault-pinning failure
-
 ### Phase 3: deposit_via_buy_raydium
 
 > Reference: `relaunch-raydium-implementation-plan.md` → "Stage 3 — deposit_via_buy_raydium"
 
-- [ ] 3.1 `deposit_via_buy_raydium` (instruction + SDK + tests)
+- [NEXT] 3.1 `deposit_via_buy_raydium` (instruction + SDK + tests)
   - Transfer `max_quote_in` → CPI `swap_base_out_v2(max_quote_in, base_out)` → refund unspent → `DepositRecord::credit` measured delta
   - No volume accumulators, no fee recipients; same `TokensDepositedViaBuyEvent`
   - SDK: `depositViaBuyRaydiumIx` + `depositViaBuy()` venue dispatch (wrap logic unchanged)

@@ -600,6 +600,85 @@ export type Relaunch = {
       ];
     },
     {
+      name: "executeSellRaydium";
+      accounts: [
+        {
+          name: "relaunch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "relaunchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "oldTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sourceQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "sourcePool";
+          isMut: true;
+          isSigner: false;
+          docs: ["rechecks its internal consistency."];
+        },
+        {
+          name: "ammAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "ammCoinVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammPcVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "raydiumAmmProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "ExecuteSellRaydiumArgs";
+          };
+        },
+      ];
+    },
+    {
       name: "executeUsdcSwap";
       accounts: [
         {
@@ -1302,6 +1381,21 @@ export type Relaunch = {
         fields: [
           {
             name: "amount";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "ExecuteSellRaydiumArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "minQuoteOut";
+            docs: [
+              "The admin's live, client-computed slippage floor on the sell proceeds.",
+            ];
             type: "u64";
           },
         ];
@@ -2659,6 +2753,85 @@ export const IDL: Relaunch = {
       ],
     },
     {
+      name: "executeSellRaydium",
+      accounts: [
+        {
+          name: "relaunch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "relaunchSigner",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "oldTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sourceQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "sourcePool",
+          isMut: true,
+          isSigner: false,
+          docs: ["rechecks its internal consistency."],
+        },
+        {
+          name: "ammAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "ammCoinVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammPcVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "raydiumAmmProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "ExecuteSellRaydiumArgs",
+          },
+        },
+      ],
+    },
+    {
       name: "executeUsdcSwap",
       accounts: [
         {
@@ -3361,6 +3534,21 @@ export const IDL: Relaunch = {
         fields: [
           {
             name: "amount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "ExecuteSellRaydiumArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "minQuoteOut",
+            docs: [
+              "The admin's live, client-computed slippage floor on the sell proceeds.",
+            ],
             type: "u64",
           },
         ],
