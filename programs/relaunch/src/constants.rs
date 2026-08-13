@@ -2,10 +2,11 @@ pub const TOKEN_SCALE: u64 = 1_000_000;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
-/// 10M tokens with 6 decimals, distributed pro-rata to depositors.
-pub const TOKENS_TO_DEPOSITORS: u64 = 10_000_000 * TOKEN_SCALE;
-/// 2M tokens with 6 decimals, paired with recovered USDC in the futarchy AMM.
-pub const TOKENS_TO_FUTARCHY_LIQUIDITY: u64 = 2_000_000 * TOKEN_SCALE;
+/// 12.5M tokens with 6 decimals, distributed pro-rata to depositors.
+pub const TOKENS_TO_DEPOSITORS: u64 = 12_500_000 * TOKEN_SCALE;
+/// 12.5M tokens with 6 decimals, paired with all recovered USDC in the
+/// futarchy AMM.
+pub const TOKENS_TO_FUTARCHY_LIQUIDITY: u64 = 12_500_000 * TOKEN_SCALE;
 /// 1.5M tokens with 6 decimals, staked to create a proposal (launchpad's value).
 pub const PROPOSAL_MIN_STAKE_TOKENS: u64 = 1_500_000 * TOKEN_SCALE;
 

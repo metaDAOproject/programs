@@ -15,7 +15,7 @@ import { writePumpPool } from "../pumpAmm.js";
 const POOL_BASE_RESERVE = 1_000_000n * 10n ** 6n; // 1M old tokens
 const USDC_POOL_QUOTE_RESERVE = 100_000n * 10n ** 6n; // 100k USDC
 
-const TOKENS_TO_DEPOSITORS = 10_000_000n * 10n ** 6n;
+const TOKENS_TO_DEPOSITORS = 12_500_000n * 10n ** 6n;
 
 const ONE_WEEK = 60 * 60 * 24 * 7;
 const ONE_DAY = 60 * 60 * 24;
@@ -170,18 +170,18 @@ export default function suite() {
     await client.claimIx({ relaunch, newMint, depositor: bob.publicKey }).rpc();
     await client.claimIx({ relaunch, newMint }).rpc();
 
-    // 10M × 25/200, 10M × 75/200, 10M × 100/200.
+    // 12.5M × 25/200, 12.5M × 75/200, 12.5M × 100/200.
     assert.equal(
       (await newTokenBalance.call(this, alice.publicKey)).toString(),
-      "1250000000000",
+      "1562500000000",
     );
     assert.equal(
       (await newTokenBalance.call(this, bob.publicKey)).toString(),
-      "3750000000000",
+      "4687500000000",
     );
     assert.equal(
       (await newTokenBalance.call(this, this.payer.publicKey)).toString(),
-      "5000000000000",
+      "6250000000000",
     );
 
     const record = await client.getDepositRecord({
@@ -263,10 +263,10 @@ export default function suite() {
       .rpc();
     await client.claimIx({ relaunch, newMint }).rpc();
 
-    // Equal deposits, equal shares: 10M × 50k/100k each.
+    // Equal deposits, equal shares: 12.5M × 50k/100k each.
     const aliceClaimed = await newTokenBalance.call(this, alice.publicKey);
     const payerClaimed = await newTokenBalance.call(this, this.payer.publicKey);
-    assert.equal(aliceClaimed.toString(), "5000000000000");
+    assert.equal(aliceClaimed.toString(), "6250000000000");
     assert.equal(payerClaimed.toString(), aliceClaimed.toString());
   });
 

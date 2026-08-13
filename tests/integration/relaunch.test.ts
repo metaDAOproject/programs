@@ -31,8 +31,8 @@ const POOL_BASE_RESERVE = 1_000_000n * 10n ** 6n; // 1M old tokens
 const WSOL_POOL_QUOTE_RESERVE = 5n * 10n ** 9n; // 5 SOL
 const USDC_POOL_QUOTE_RESERVE = 100_000n * 10n ** 6n; // 100k USDC
 
-const TOKENS_TO_DEPOSITORS = 10_000_000n * 10n ** 6n;
-const TOKENS_TO_FUTARCHY_LIQUIDITY = 2_000_000n * 10n ** 6n;
+const TOKENS_TO_DEPOSITORS = 12_500_000n * 10n ** 6n;
+const TOKENS_TO_FUTARCHY_LIQUIDITY = 12_500_000n * 10n ** 6n;
 const PRICE_SCALE = 10n ** 12n;
 
 const ONE_WEEK = 60 * 60 * 24 * 7;
@@ -351,10 +351,11 @@ export default function suite() {
     assert.ok(storedDao.baseMint.equals(newMint));
     assert.ok(storedDao.quoteMint.equals(MAINNET_USDC));
 
-    // Price identity: the TWAP opens at the raise valued over the depositor
-    // bucket, and the AMM opens at exactly that ratio — the full 2M
-    // liquidity bucket against raise/5.
-    const expectedTwap = (usdcRecovered * PRICE_SCALE) / TOKENS_TO_DEPOSITORS;
+    // Price identity: the TWAP opens at the raise valued over the liquidity
+    // bucket, and the AMM opens at exactly that ratio — the full 12.5M
+    // liquidity bucket against the whole raise.
+    const expectedTwap =
+      (usdcRecovered * PRICE_SCALE) / TOKENS_TO_FUTARCHY_LIQUIDITY;
     assert.equal(
       storedDao.twapInitialObservation.toString(),
       expectedTwap.toString(),
@@ -364,7 +365,6 @@ export default function suite() {
       (expectedTwap / 20n).toString(),
     );
 
-    const usdcToLp = usdcRecovered / 5n;
     const spot = storedDao.amm.state.spot.spot;
     const baseReserves = BigInt(spot.baseReserves.toString());
     const quoteReserves = BigInt(spot.quoteReserves.toString());
@@ -372,22 +372,18 @@ export default function suite() {
       baseReserves.toString(),
       TOKENS_TO_FUTARCHY_LIQUIDITY.toString(),
     );
-    assert.equal(quoteReserves.toString(), usdcToLp.toString());
+    assert.equal(quoteReserves.toString(), usdcRecovered.toString());
     assert.equal(
       ((quoteReserves * PRICE_SCALE) / baseReserves).toString(),
       expectedTwap.toString(),
     );
 
-    // Treasury remainder: whatever the LP seed left goes to the Squads
-    // vault, conserving every raw unit of the raise.
+    // The whole raise seeds the AMM; the Squads vault gets no USDC.
     const treasuryBalance = await tokenBalance(
       this.banksClient,
       token.getAssociatedTokenAddressSync(MAINNET_USDC, stored.daoVault, true),
     );
-    assert.equal(
-      treasuryBalance.toString(),
-      (usdcRecovered - usdcToLp).toString(),
-    );
+    assert.equal(treasuryBalance.toString(), "0");
     assert.equal(
       (await tokenBalance(this.banksClient, stored.usdcVault)).toString(),
       "0",
@@ -400,8 +396,8 @@ export default function suite() {
     const mint = await this.getMint(newMint);
     assert.ok(mint.mintAuthority.equals(stored.daoVault));
 
-    // Claims: 10M × 60M/100M, 10M × 39.99M/100M, 10M × 10k/100M — every
-    // share divides exactly, so the vault empties with zero dust.
+    // Claims: 12.5M × 60M/100M, 12.5M × 39.99M/100M, 12.5M × 10k/100M —
+    // every share divides exactly, so the vault empties with zero dust.
     await client
       .claimIx({ relaunch, newMint, depositor: alice.publicKey })
       .rpc();
@@ -409,9 +405,9 @@ export default function suite() {
     await client.claimIx({ relaunch, newMint }).rpc();
 
     const expectedClaims: [PublicKey, bigint][] = [
-      [alice.publicKey, 6_000_000n * 10n ** 6n],
-      [bob.publicKey, 3_999_000n * 10n ** 6n],
-      [this.payer.publicKey, 1_000n * 10n ** 6n],
+      [alice.publicKey, 7_500_000n * 10n ** 6n],
+      [bob.publicKey, 4_998_750n * 10n ** 6n],
+      [this.payer.publicKey, 1_250n * 10n ** 6n],
     ];
     for (const [owner, amount] of expectedClaims) {
       assert.equal(

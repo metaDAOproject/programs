@@ -991,11 +991,6 @@ export type Relaunch = {
           isSigner: false;
         },
         {
-          name: "treasuryUsdcAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "futarchyProgram";
           isMut: false;
           isSigner: false;
@@ -3266,11 +3261,6 @@ export const IDL: Relaunch = {
         },
         {
           name: "squadsProgramConfigTreasury",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "treasuryUsdcAccount",
           isMut: true,
           isSigner: false,
         },

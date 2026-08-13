@@ -30,8 +30,8 @@ const POOL_BASE_RESERVE = 1_000_000n * 10n ** 6n; // 1M old tokens
 const WSOL_POOL_QUOTE_RESERVE = 100n * 10n ** 9n; // 100 SOL
 const USDC_POOL_QUOTE_RESERVE = 100_000n * 10n ** 6n; // 100k USDC
 
-const TOKENS_TO_DEPOSITORS = 10_000_000n * 10n ** 6n;
-const TOKENS_TO_FUTARCHY_LIQUIDITY = 2_000_000n * 10n ** 6n;
+const TOKENS_TO_DEPOSITORS = 12_500_000n * 10n ** 6n;
+const TOKENS_TO_FUTARCHY_LIQUIDITY = 12_500_000n * 10n ** 6n;
 const PROPOSAL_MIN_STAKE_TOKENS = 1_500_000n * 10n ** 6n;
 const PRICE_SCALE = 10n ** 12n;
 
@@ -160,7 +160,6 @@ export default function suite() {
 
     let storedRelaunch = await client.fetchRelaunch(relaunch);
     const usdcRecovered = BigInt(storedRelaunch.usdcRecovered.toString());
-    const usdcToLp = usdcRecovered / 5n;
 
     await client.completeRelaunch({ relaunch });
 
@@ -184,7 +183,8 @@ export default function suite() {
     assert.ok(storedDao.squadsMultisig.equals(multisigPda));
     assert.ok(storedDao.squadsMultisigVault.equals(multisigVault));
 
-    const expectedTwap = (usdcRecovered * PRICE_SCALE) / TOKENS_TO_DEPOSITORS;
+    const expectedTwap =
+      (usdcRecovered * PRICE_SCALE) / TOKENS_TO_FUTARCHY_LIQUIDITY;
     assert.equal(
       storedDao.twapInitialObservation.toString(),
       expectedTwap.toString(),
@@ -219,8 +219,8 @@ export default function suite() {
     });
     assert.isNotNull(await this.banksClient.getAccount(spendingLimit));
 
-    // The AMM holds the full 2M bucket against raise/5, so its open ratio is
-    // exactly the TWAP's initial observation.
+    // The AMM holds the full 12.5M bucket against the whole raise, so its
+    // open ratio is exactly the TWAP's initial observation.
     const spot = storedDao.amm.state.spot.spot;
     const baseReserves = BigInt(spot.baseReserves.toString());
     const quoteReserves = BigInt(spot.quoteReserves.toString());
@@ -228,7 +228,7 @@ export default function suite() {
       baseReserves.toString(),
       TOKENS_TO_FUTARCHY_LIQUIDITY.toString(),
     );
-    assert.equal(quoteReserves.toString(), usdcToLp.toString());
+    assert.equal(quoteReserves.toString(), usdcRecovered.toString());
     assert.equal(
       ((quoteReserves * PRICE_SCALE) / baseReserves).toString(),
       expectedTwap.toString(),
@@ -246,7 +246,7 @@ export default function suite() {
       this.banksClient,
       token.getAssociatedTokenAddressSync(MAINNET_USDC, dao, true),
     );
-    assert.equal(ammQuoteVaultBalance.toString(), usdcToLp.toString());
+    assert.equal(ammQuoteVaultBalance.toString(), usdcRecovered.toString());
 
     const [ammPosition] = PublicKey.findProgramAddressSync(
       [Buffer.from("amm_position"), dao.toBuffer(), multisigVault.toBuffer()],
@@ -261,10 +261,7 @@ export default function suite() {
       this.banksClient,
       token.getAssociatedTokenAddressSync(MAINNET_USDC, multisigVault, true),
     );
-    assert.equal(
-      treasuryBalance.toString(),
-      (usdcRecovered - usdcToLp).toString(),
-    );
+    assert.equal(treasuryBalance.toString(), "0");
 
     const usdcVaultBalance = await tokenBalance(
       this.banksClient,
@@ -343,9 +340,9 @@ export default function suite() {
     assert.isDefined(storedRelaunch.state.complete);
   });
 
-  it("conserves every USDC raw unit across the LP/treasury split", async function () {
-    // 7% of the supply at a 5% threshold, so the recovered amount lands on a
-    // different residue than the happy path's.
+  it("sends every recovered USDC raw unit to the AMM", async function () {
+    // 7% of the supply at a 5% threshold, so a different recovered amount
+    // than the happy path's.
     const { relaunch } = await setupSwappedRelaunch.call(this, {
       depositAmount: (DEFAULT_OLD_SUPPLY * 7n) / 100n,
       thresholdBps: 500,
@@ -361,7 +358,7 @@ export default function suite() {
     const quoteReserves = BigInt(
       storedDao.amm.state.spot.spot.quoteReserves.toString(),
     );
-    assert.equal(quoteReserves.toString(), (usdcRecovered / 5n).toString());
+    assert.equal(quoteReserves.toString(), usdcRecovered.toString());
 
     const treasuryBalance = await tokenBalance(
       this.banksClient,
@@ -371,10 +368,7 @@ export default function suite() {
         true,
       ),
     );
-    assert.equal(
-      (quoteReserves + treasuryBalance).toString(),
-      usdcRecovered.toString(),
-    );
+    assert.equal(treasuryBalance.toString(), "0");
 
     const usdcVaultBalance = await tokenBalance(
       this.banksClient,

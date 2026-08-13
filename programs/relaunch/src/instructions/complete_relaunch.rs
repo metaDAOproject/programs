@@ -5,7 +5,7 @@ use anchor_spl::metadata::{
     UpdateMetadataAccountsV2,
 };
 use anchor_spl::token::{
-    self, spl_token::instruction::AuthorityType, Mint, SetAuthority, Token, TokenAccount, Transfer,
+    self, spl_token::instruction::AuthorityType, Mint, SetAuthority, Token, TokenAccount,
 };
 
 use futarchy::program::Futarchy;
@@ -17,8 +17,7 @@ use crate::error::RelaunchError;
 use crate::events::{CommonFields, RelaunchCompletedEvent};
 use crate::state::{Relaunch, RelaunchState};
 use crate::{
-    usdc_mint, PRICE_SCALE, PROPOSAL_MIN_STAKE_TOKENS, TOKENS_TO_DEPOSITORS,
-    TOKENS_TO_FUTARCHY_LIQUIDITY,
+    usdc_mint, PRICE_SCALE, PROPOSAL_MIN_STAKE_TOKENS, TOKENS_TO_FUTARCHY_LIQUIDITY,
 };
 
 #[event_cpi]
@@ -101,7 +100,7 @@ pub struct CompleteRelaunch<'info> {
     )]
     pub squads_multisig: UncheckedAccount<'info>,
 
-    /// CHECK: the DAO treasury that receives the remaining USDC and both
+    /// CHECK: the DAO treasury that receives the mint and metadata
     /// authorities.
     #[account(
         seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()],
@@ -130,14 +129,6 @@ pub struct CompleteRelaunch<'info> {
     /// CHECK: checked by squads.
     #[account(mut)]
     pub squads_program_config_treasury: UncheckedAccount<'info>,
-
-    #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = usdc_mint,
-        associated_token::authority = squads_multisig_vault,
-    )]
-    pub treasury_usdc_account: Box<Account<'info, TokenAccount>>,
 
     pub futarchy_program: Program<'info, Futarchy>,
     /// CHECK: the futarchy program's event-CPI authority PDA.
@@ -171,13 +162,15 @@ impl CompleteRelaunch<'_> {
         let signer = &[&seeds[..]];
 
         let usdc_recovered = ctx.accounts.relaunch.usdc_recovered;
-        let price_1e12 = (usdc_recovered as u128 * PRICE_SCALE) / (TOKENS_TO_DEPOSITORS as u128);
-        let usdc_to_lp = usdc_recovered / 5;
+        // LP the vault's live balance rather than the recorded proceeds so
+        // stray donations end up in the pool instead of stranding.
+        let usdc_to_lp = ctx.accounts.usdc_vault.amount;
+        let price_1e12 =
+            (usdc_to_lp as u128 * PRICE_SCALE) / (TOKENS_TO_FUTARCHY_LIQUIDITY as u128);
 
         ctx.accounts.initialize_dao(price_1e12, signer)?;
         ctx.accounts
             .provide_futarchy_amm_liquidity(usdc_to_lp, signer)?;
-        let usdc_to_treasury = ctx.accounts.send_remaining_usdc_to_dao(signer)?;
         ctx.accounts.transfer_mint_authority_to_dao(signer)?;
         ctx.accounts.transfer_metadata_authority_to_dao(signer)?;
 
@@ -197,7 +190,7 @@ impl CompleteRelaunch<'_> {
             usdc_recovered,
             twap_initial_observation: price_1e12,
             usdc_to_lp,
-            usdc_to_treasury,
+            usdc_to_treasury: 0,
         });
 
         Ok(())
@@ -288,29 +281,6 @@ impl CompleteRelaunch<'_> {
                 position_authority: self.squads_multisig_vault.key(),
             },
         )
-    }
-
-    /// Sweeps everything left in the USDC vault to the DAO treasury.
-    #[inline(never)]
-    fn send_remaining_usdc_to_dao(&mut self, signer: &[&[&[u8]]]) -> Result<u64> {
-        // Ensure the vault is updated before reading its amount.
-        self.usdc_vault.reload()?;
-        let usdc_to_treasury = self.usdc_vault.amount;
-
-        token::transfer(
-            CpiContext::new_with_signer(
-                self.token_program.to_account_info(),
-                Transfer {
-                    from: self.usdc_vault.to_account_info(),
-                    to: self.treasury_usdc_account.to_account_info(),
-                    authority: self.relaunch_signer.to_account_info(),
-                },
-                signer,
-            ),
-            usdc_to_treasury,
-        )?;
-
-        Ok(usdc_to_treasury)
     }
 
     #[inline(never)]

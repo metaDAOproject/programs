@@ -752,11 +752,6 @@ export class RelaunchClient {
         spendingLimit,
         squadsProgramConfig: SQUADS_PROGRAM_CONFIG,
         squadsProgramConfigTreasury: SQUADS_PROGRAM_CONFIG_TREASURY,
-        treasuryUsdcAccount: getAssociatedTokenAddressSync(
-          MAINNET_USDC,
-          multisigVault,
-          true,
-        ),
         futarchyProgram: FUTARCHY_V0_6_PROGRAM_ID,
         futarchyEventAuthority,
         squadsProgram: SQUADS_PROGRAM_ID,
