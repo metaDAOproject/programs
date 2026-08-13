@@ -345,7 +345,7 @@ before(async function () {
           data: fs.readFileSync("./tests/fixtures/relaunch-global-alt"),
           executable: false,
           owner: AddressLookupTableProgram.programId,
-          lamports: 41_815_680,
+          lamports: 42_261_120,
         },
       },
     ],

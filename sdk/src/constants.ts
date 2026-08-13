@@ -73,12 +73,13 @@ export const RELAUNCH_V0_1_PROGRAM_ID = new PublicKey(
 );
 
 // The relaunch global frozen address lookup table (contents documented in
-// vibes/relaunch-alt-contents.html, created by `yarn relaunch-create-alt`).
-// PLACEHOLDER: this is the table from the 2026-08-11 surfpool dry run, which
+// vibes/relaunch-alt-contents.html plus the two Raydium AMM v4 statics,
+// created by `yarn relaunch-create-alt`).
+// PLACEHOLDER: this is the table from the 2026-08-12 surfpool dry run, which
 // tests/fixtures/relaunch-global-alt mirrors byte-for-byte. Replace with the
 // real table address once it is created and frozen on mainnet.
 export const RELAUNCH_V0_1_GLOBAL_ALT = new PublicKey(
-  "4Wer9Wo1me9kzQewyzc4bEKw3qgVjUFuagcs65mujdoS",
+  "HXH8J1qEhfXWoAgsFhstHgcLkRXqvheoiNuRbXM3VS13",
 );
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(

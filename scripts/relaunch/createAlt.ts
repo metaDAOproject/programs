@@ -1,11 +1,5 @@
 // Creates the relaunch SDK's global frozen address lookup table.
 //
-// The address list mirrors vibes/relaunch-alt-contents.html: groups A-G are
-// protocol statics, group H is the whirlpool tick-array band (32 arrays below
-// the current price up through tick 0 = $1,000/SOL). Groups D/E/H are
-// re-resolved from mainnet at run time, so run `plan` and eyeball the list
-// right before creating.
-//
 // Usage (env: ANCHOR_PROVIDER_URL, ANCHOR_WALLET, PRIORITY_FEE_MICRO_LAMPORTS):
 //   yarn relaunch-create-alt                          # plan: print the list, no txs
 //   yarn relaunch-create-alt create                   # create table + extend + verify
@@ -43,6 +37,8 @@ import {
   MPL_TOKEN_METADATA_PROGRAM_ID,
   PUMP_AMM_PROGRAM_ID,
   PUMP_FEES_PROGRAM_ID,
+  RAYDIUM_AMM_AUTHORITY,
+  RAYDIUM_AMM_PROGRAM_ID,
   RELAUNCH_V0_1_PROGRAM_ID,
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_CONFIG_TREASURY,
@@ -95,7 +91,7 @@ async function buildAddressList(connection: Connection): Promise<Entry[]> {
   const entries: Entry[] = [];
   const push = (label: string, key: PublicKey) => entries.push({ label, key });
 
-  // A. Relaunch protocol
+  // Relaunch protocol
   push("relaunch program", RELAUNCH_V0_1_PROGRAM_ID);
   push(
     "relaunch event authority",
@@ -105,7 +101,7 @@ async function buildAddressList(connection: Connection): Promise<Entry[]> {
     )[0],
   );
 
-  // B. Core programs, sysvars, mints
+  // Core programs, sysvars, mints
   push("system program", SystemProgram.programId);
   push("token program", TOKEN_PROGRAM_ID);
   push("token-2022 program", TOKEN_2022_PROGRAM_ID);
@@ -116,7 +112,7 @@ async function buildAddressList(connection: Connection): Promise<Entry[]> {
   push("WSOL mint", NATIVE_MINT);
   push("USDC mint", MAINNET_USDC);
 
-  // C. pump statics
+  // pump statics
   push("pump_amm program", PUMP_AMM_PROGRAM_ID);
   push("pump fees program", PUMP_FEES_PROGRAM_ID);
   push("pump global config", PUMP_AMM_GLOBAL_CONFIG);
@@ -124,7 +120,7 @@ async function buildAddressList(connection: Connection): Promise<Entry[]> {
   push("pump fee config", PUMP_AMM_FEE_CONFIG);
   push("pump global volume accumulator", PUMP_AMM_GLOBAL_VOLUME_ACCUMULATOR);
 
-  // D/E. fee recipients + their quote-mint ATAs (config-order snapshot)
+  // fee recipients + their quote-mint ATAs (config-order snapshot)
   const pushRecipients = (kind: string, recipients: PublicKey[]) => {
     recipients.forEach((recipient, i) => {
       push(`${kind} fee recipient #${i + 1}`, recipient);
@@ -141,14 +137,14 @@ async function buildAddressList(connection: Connection): Promise<Entry[]> {
   pushRecipients("protocol", protocolFeeRecipients);
   pushRecipients("buyback", buybackFeeRecipients);
 
-  // F. whirlpool statics
+  // whirlpool statics
   push("whirlpool program", WHIRLPOOL_PROGRAM_ID);
   push("USDC_SWAP_POOL", USDC_SWAP_POOL);
   push("USDC_SWAP_POOL WSOL vault", pool.tokenVaultA);
   push("USDC_SWAP_POOL USDC vault", pool.tokenVaultB);
   push("USDC_SWAP_POOL oracle", getWhirlpoolOracleAddr(USDC_SWAP_POOL));
 
-  // G. futarchy + squads statics
+  // futarchy + squads statics
   push("futarchy program", FUTARCHY_V0_6_PROGRAM_ID);
   push(
     "futarchy event authority",
@@ -161,7 +157,7 @@ async function buildAddressList(connection: Connection): Promise<Entry[]> {
   push("squads program config", SQUADS_PROGRAM_CONFIG);
   push("squads program config treasury", SQUADS_PROGRAM_CONFIG_TREASURY);
 
-  // H. whirlpool tick-array band
+  // whirlpool tick-array band
   const span = 88 * pool.tickSpacing;
   const currentStart = Math.floor(pool.tickCurrentIndex / span) * span;
   if (currentStart > TICK_BAND_TOP_START) {
@@ -179,6 +175,11 @@ async function buildAddressList(connection: Connection): Promise<Entry[]> {
       getWhirlpoolTickArrayAddr(USDC_SWAP_POOL, start),
     );
   }
+
+  // raydium statics — the AMM v4 venue's two global keys (every other
+  // Raydium-side account is per-pool)
+  push("raydium amm v4 program", RAYDIUM_AMM_PROGRAM_ID);
+  push("raydium amm authority", RAYDIUM_AMM_AUTHORITY);
 
   const seen = new Set<string>();
   for (const { label, key } of entries) {

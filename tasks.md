@@ -27,15 +27,6 @@
 
 > Reference: `relaunch-raydium-implementation-plan.md` → "Stage 4 — lifecycle, ALT, budgets"
 
-- [NEXT] 4.1 Full-lifecycle integration tests
-  - `tests/integration/relaunch.test.ts`: Raydium-source happy path with money-math identities at each hop; threshold-miss failure path with refunds
-  - Matrix note: WSOL × classic-SPL only — other combinations impossible for this venue
-
-- [ ] 4.2 ALT statics
-  - AMM v4 program + `5Q544…` authority into `scripts/relaunch/createAlt.ts` groups; re-dump the fork fixture
-  - `altTransactions.test.ts`: Raydium buy as a single legacy tx and as v0 against the extended table
-  - Must land before the mainnet ALT freeze (follow-ups item 3)
-
-- [ ] 4.3 Compute budgets for the new builders
+- [NEXT] 4.3 Compute budgets for the new builders
   - Measure worst-case CU from bankrun logs (surfpool figures as cross-check); worst +20% or drop to the 200k default
   - Confirm pump-variant budgets untouched by the shared-tail refactor

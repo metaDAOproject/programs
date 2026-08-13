@@ -300,7 +300,6 @@ export type Relaunch = {
           name: "sourcePool";
           isMut: true;
           isSigner: false;
-          docs: ["rechecks its internal consistency."];
         },
         {
           name: "pumpGlobalConfig";
@@ -475,7 +474,6 @@ export type Relaunch = {
           name: "sourcePool";
           isMut: true;
           isSigner: false;
-          docs: ["rechecks its internal consistency."];
         },
         {
           name: "ammAuthority";
@@ -2581,7 +2579,6 @@ export const IDL: Relaunch = {
           name: "sourcePool",
           isMut: true,
           isSigner: false,
-          docs: ["rechecks its internal consistency."],
         },
         {
           name: "pumpGlobalConfig",
@@ -2756,7 +2753,6 @@ export const IDL: Relaunch = {
           name: "sourcePool",
           isMut: true,
           isSigner: false,
-          docs: ["rechecks its internal consistency."],
         },
         {
           name: "ammAuthority",

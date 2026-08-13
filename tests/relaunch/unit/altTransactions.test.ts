@@ -18,11 +18,14 @@ import { BN } from "bn.js";
 import { BanksClient } from "solana-bankrun";
 import {
   getPumpFeeRecipients,
+  RAYDIUM_AMM_AUTHORITY,
+  RAYDIUM_AMM_PROGRAM_ID,
   RELAUNCH_V0_1_GLOBAL_ALT,
   RelaunchClient,
 } from "@metadaoproject/programs";
 import { buildV0Tx, setupRelaunch, DEFAULT_OLD_SUPPLY } from "../utils.js";
 import { writePumpPool, PumpPool } from "../pumpAmm.js";
+import { writeRaydiumPool, RaydiumPool } from "../raydiumAmm.js";
 
 const POOL_BASE_RESERVE = 1_000_000n * 10n ** 6n; // 1M old tokens
 const WSOL_POOL_QUOTE_RESERVE = 100n * 10n ** 9n; // 100 SOL
@@ -292,6 +295,181 @@ export default function suite() {
     assert.isTrue(
       (await lamports(this.banksClient, sponsor.publicKey)) < sponsorBefore,
     );
+  });
+
+  const setupLiveRaydiumRelaunch = async function (
+    this: Mocha.Context,
+  ): Promise<{
+    relaunch: PublicKey;
+    pool: RaydiumPool;
+    oldMint: PublicKey;
+  }> {
+    const setup = await setupRelaunch({
+      banksClient: this.banksClient,
+      payer: this.payer,
+    });
+    const pool = writeRaydiumPool({
+      context: this.context,
+      oldMint: setup.oldMint,
+      tokenReserve: POOL_BASE_RESERVE,
+      quoteReserve: WSOL_POOL_QUOTE_RESERVE,
+    });
+
+    const { relaunch } = await client.initializeRelaunch({
+      oldMint: setup.oldMint,
+      sourcePool: pool.pool,
+      sourceQuoteMint: token.NATIVE_MINT,
+      tokenName: "Relaunched",
+      tokenSymbol: "RLNCH",
+      tokenUri: "https://example.com/rlnch.json",
+      secondsForDeposits: ONE_WEEK,
+      gracePeriodSeconds: ONE_DAY,
+      thresholdBps: 1000,
+      teamAddress: this.payer.publicKey,
+    });
+    await client.startDepositsIx({ relaunch }).rpc();
+
+    return { oldMint: setup.oldMint, pool, relaunch };
+  };
+
+  // The Raydium counterpart of wrapBuyUnwrapIxs: same wrap choreography, no
+  // pump fee-recipient or volume-accumulator accounts.
+  const wrapBuyUnwrapRaydiumIxs = async ({
+    relaunch,
+    pool,
+    oldMint,
+    depositor,
+    payer,
+  }: {
+    relaunch: PublicKey;
+    pool: RaydiumPool;
+    oldMint: PublicKey;
+    depositor: PublicKey;
+    payer: PublicKey;
+  }) => {
+    const wsolAta = token.getAssociatedTokenAddressSync(
+      token.NATIVE_MINT,
+      depositor,
+    );
+    return [
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 250_000 }),
+      token.createAssociatedTokenAccountIdempotentInstruction(
+        depositor,
+        wsolAta,
+        depositor,
+        token.NATIVE_MINT,
+      ),
+      SystemProgram.transfer({
+        fromPubkey: depositor,
+        toPubkey: wsolAta,
+        lamports: Number(MAX_QUOTE_IN),
+      }),
+      token.createSyncNativeInstruction(wsolAta),
+      await client
+        .depositViaBuyRaydiumIx({
+          relaunch,
+          oldMint,
+          sourceQuoteMint: token.NATIVE_MINT,
+          sourcePool: pool.pool,
+          ammCoinVault: pool.coinVault,
+          ammPcVault: pool.pcVault,
+          baseOut: new BN(BASE_OUT.toString()),
+          maxQuoteIn: new BN(MAX_QUOTE_IN.toString()),
+          depositor,
+          payer,
+        })
+        .instruction(),
+      token.createCloseAccountInstruction(wsolAta, depositor, depositor),
+    ];
+  };
+
+  it("deposit_via_buy_raydium: the wrap-buy-unwrap flow fits a single legacy transaction", async function () {
+    const { relaunch, pool, oldMint } =
+      await setupLiveRaydiumRelaunch.call(this);
+    const depositor = Keypair.generate();
+    await fundSol.call(this, depositor.publicKey, 5n * 10n ** 9n);
+
+    const ixs = await wrapBuyUnwrapRaydiumIxs({
+      relaunch,
+      pool,
+      oldMint,
+      depositor: depositor.publicKey,
+      payer: depositor.publicKey,
+    });
+
+    // No fee-recipient tail and no volume accumulator: unlike the pump
+    // variant above, the Raydium buy fits the 1232-byte legacy limit without
+    // the lookup table.
+    const legacyTx = new Transaction().add(...ixs);
+    legacyTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    legacyTx.feePayer = depositor.publicKey;
+    legacyTx.sign(depositor);
+    assert.isAtMost(legacyTx.serialize().length, 1232);
+    await this.banksClient.processTransaction(legacyTx);
+
+    const record = await client.getDepositRecord({
+      relaunch,
+      depositor: depositor.publicKey,
+    });
+    assert.equal(record.amountDeposited.toString(), BASE_OUT.toString());
+
+    const { oldTokenVault } = await client.fetchRelaunch(relaunch);
+    const vaultBalance = await tokenBalance(this.banksClient, oldTokenVault);
+    assert.equal(vaultBalance.toString(), BASE_OUT.toString());
+
+    // The refund unwrapped: the WSOL ATA closed at the end of the flow.
+    const wsolAta = token.getAssociatedTokenAddressSync(
+      token.NATIVE_MINT,
+      depositor.publicKey,
+    );
+    assert.isNull(await this.banksClient.getAccount(wsolAta));
+  });
+
+  it("deposit_via_buy_raydium: built as a v0 transaction against the extended table", async function () {
+    const { relaunch, pool, oldMint } =
+      await setupLiveRaydiumRelaunch.call(this);
+    const depositor = Keypair.generate();
+    await fundSol.call(this, depositor.publicKey, 5n * 10n ** 9n);
+
+    // The extension that landed with the Raydium venue: both AMM v4 statics
+    // are entries of the frozen table.
+    const tableKeys = globalAlt.state.addresses.map((k) => k.toBase58());
+    assert.include(tableKeys, RAYDIUM_AMM_PROGRAM_ID.toBase58());
+    assert.include(tableKeys, RAYDIUM_AMM_AUTHORITY.toBase58());
+
+    const ixs = await wrapBuyUnwrapRaydiumIxs({
+      relaunch,
+      pool,
+      oldMint,
+      depositor: depositor.publicKey,
+      payer: depositor.publicKey,
+    });
+    const tx = await buildV0Tx({
+      banksClient: this.banksClient,
+      payerKey: depositor.publicKey,
+      instructions: ixs,
+      signers: [depositor],
+      tables: [globalAlt],
+    });
+    assert.isAtMost(tx.serialize().length, 1232);
+
+    // Both statics resolved through the table instead of riding as static
+    // message keys.
+    const staticKeys = tx.message.staticAccountKeys.map((k) => k.toBase58());
+    assert.notInclude(staticKeys, RAYDIUM_AMM_PROGRAM_ID.toBase58());
+    assert.notInclude(staticKeys, RAYDIUM_AMM_AUTHORITY.toBase58());
+
+    await this.banksClient.processTransaction(tx);
+
+    const record = await client.getDepositRecord({
+      relaunch,
+      depositor: depositor.publicKey,
+    });
+    assert.equal(record.amountDeposited.toString(), BASE_OUT.toString());
+
+    const { oldTokenVault } = await client.fetchRelaunch(relaunch);
+    const vaultBalance = await tokenBalance(this.banksClient, oldTokenVault);
+    assert.equal(vaultBalance.toString(), BASE_OUT.toString());
   });
 
   it("execute_sell: built as a v0 transaction with the ALT", async function () {
