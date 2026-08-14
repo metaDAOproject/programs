@@ -27,10 +27,10 @@ import { TestContext } from "../../main.test.js";
 
 // Every blocked instruction refuses on a liquidated DAO; every allowed one
 // still works. Not covered here because a liquidated DAO can't reach them:
-// - finalize_proposal: a market can never be live once the DAO is liquidated
-//   (launch is guarded and apply_liquidation requires a spot pool), so the
-//   gap-market interleaving it exists for is pinned by the packed
-//   finalize + execute + sync case in applyLiquidation.test.ts
+// - finalize_proposal: the liquidator is written by finalize itself, while no
+//   other market can be live, and launch refuses from then on — so a
+//   liquidated DAO never has a market left to finalize (the packed
+//   finalize + execute + sync flow is pinned by liquidationEndToEnd.test.ts)
 // - the liquidator path: liquidatorPath.test.ts runs the estate cycle
 // - collect_meteora_damm_fees: reads no liquidation state (its own suite
 //   covers the mechanics; setup needs a full launchpad DAMM pool)

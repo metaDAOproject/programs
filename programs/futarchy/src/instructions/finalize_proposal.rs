@@ -174,6 +174,13 @@ impl FinalizeProposal<'_> {
             }
         }
 
+        // In case of a hostile liquidation, set the liquidator immediately.
+        if new_proposal_state == ProposalState::Passed {
+            if let ProposalAction::HostileLiquidate { liquidator } = &proposal.action {
+                dao.liquidator = Some(*liquidator);
+            }
+        }
+
         // The buyback cooldown stamps on either outcome: it rate-limits an
         // action the DAO consented to — draining the treasury through a
         // sequence of individually reasonable votes — rather than deterring

@@ -2494,7 +2494,8 @@ export type Futarchy = {
             name: "liquidator";
             docs: [
               "`Some` means the DAO has been liquidated, and holds who runs the estate.",
-              "Set once by `apply_liquidation`, never cleared.",
+              "Set once by `finalize_proposal` the moment a hostile liquidation",
+              "passes, never cleared.",
             ];
             type: {
               option: "publicKey";
@@ -7655,7 +7656,8 @@ export const IDL: Futarchy = {
             name: "liquidator",
             docs: [
               "`Some` means the DAO has been liquidated, and holds who runs the estate.",
-              "Set once by `apply_liquidation`, never cleared.",
+              "Set once by `finalize_proposal` the moment a hostile liquidation",
+              "passes, never cleared.",
             ],
             type: {
               option: "publicKey",

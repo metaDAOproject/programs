@@ -116,6 +116,8 @@ export default function suite() {
       storedDao.lastFailedLiquidationAt.toString(),
       clock.unixTimestamp.toString(),
     );
+    // Only a PASSED liquidation reserves the DAO at finalize
+    assert.isNull(storedDao.liquidator);
 
     // An immediate relaunch is refused
     const second = await this.futarchy.initializeHostileLiquidateProposal({

@@ -1,13 +1,5 @@
-import {
-  ComputeBudgetProgram,
-  Keypair,
-  PublicKey,
-  Transaction,
-  TransactionMessage,
-  VersionedTransaction,
-} from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import * as multisig from "@sqds/multisig";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import {
@@ -15,14 +7,13 @@ import {
   getDaoAddr,
   getEventAuthorityAddr,
   getProposalAddrsForTransactionIndex,
-  getSpendingLimitAddr,
   PERMISSIONLESS_ACCOUNT,
   PriceMath,
 } from "@metadaoproject/programs";
 import BN from "bn.js";
 import {
-  createLookupTableForTransaction,
   executeVaultTransaction,
+  expectError,
   passProposal,
 } from "../../utils.js";
 import { TestContext } from "../../main.test.js";
@@ -151,7 +142,7 @@ export default function suite() {
       .rpc();
   });
 
-  it("installs the liquidator, zeroes the record, and sweeps the treasury position", async function () {
+  it("zeroes the record and sweeps the treasury position after finalize installs the liquidator", async function () {
     await provideTreasuryLiquidity(this, {
       dao,
       vault,
@@ -186,6 +177,11 @@ export default function suite() {
 
     // The expected sweep, computed from the live pre-execution reserves
     const preDao = await this.futarchy.getDao(dao);
+    // finalize already installed the liquidator; the payload owes only the
+    // record zeroing and the sweep
+    assert.ok(preDao.liquidator.equals(liquidator));
+    assert.isNotNull(preDao.initialSpendingLimit);
+    assert.isFalse(preDao.spendingLimitDirty);
     const preSpot = preDao.amm.state.spot.spot;
     const prePosition =
       await this.futarchy.futarchy.account.ammPosition.fetch(ammPosition);
@@ -307,7 +303,7 @@ export default function suite() {
     assert.isNull(storedDao.liquidator);
   });
 
-  it("refuses a second passed liquidation after the first has executed", async function () {
+  it("refuses to launch a second liquidation once the first has passed", async function () {
     await provideTreasuryLiquidity(this, {
       dao,
       vault,
@@ -318,6 +314,7 @@ export default function suite() {
     const liquidatorA = Keypair.generate().publicKey;
     const liquidatorB = Keypair.generate().publicKey;
 
+    // Both drafts exist before either market runs
     const a = await this.futarchy.initializeHostileLiquidateProposal({
       dao,
       liquidator: liquidatorA,
@@ -327,8 +324,6 @@ export default function suite() {
       liquidator: liquidatorB,
     });
 
-    // Both markets run to Passed before either payload executes — possible
-    // because the DAO only becomes liquidated at execution
     await this.futarchy
       .launchProposalIx({
         proposal: a.proposal,
@@ -346,6 +341,12 @@ export default function suite() {
       cranks: 50,
     });
 
+    // finalize wrote liquidatorA, so the pre-created second draft can never
+    // reach Passed — only one liquidation record can ever hold the DAO
+    const callbacks = expectError(
+      "DaoLiquidated",
+      "launched a liquidation after another had already passed",
+    );
     await this.futarchy
       .launchProposalIx({
         proposal: b.proposal,
@@ -354,34 +355,12 @@ export default function suite() {
         quoteMint: USDC,
         squadsProposal: b.squadsProposal,
       })
-      .rpc();
-    await passProposal(this, {
-      dao,
-      proposal: b.proposal,
-      baseMint: META,
-      quoteMint: USDC,
-      cranks: 50,
-    });
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
 
     await executeVaultTransaction(this, dao, a.squadsTransaction);
 
-    let storedDao = await this.futarchy.getDao(dao);
-    assert.ok(storedDao.liquidator.equals(liquidatorA));
-
-    try {
-      await executeVaultTransaction(this, dao, b.squadsTransaction);
-      assert.fail("Should have failed with AlreadyLiquidated");
-    } catch (e) {
-      // The error surfaces through the Squads CPI: AlreadyLiquidated (0x17a3 = 6051)
-      assert(
-        e.toString().includes("AlreadyLiquidated") ||
-          e.toString().includes("0x17a3"),
-        `Expected AlreadyLiquidated error, got: ${e}`,
-      );
-    }
-
-    // The first liquidator is not overwritten
-    storedDao = await this.futarchy.getDao(dao);
+    const storedDao = await this.futarchy.getDao(dao);
     assert.ok(storedDao.liquidator.equals(liquidatorA));
   });
 
@@ -489,7 +468,7 @@ export default function suite() {
     assert.equal((await this.getTokenBalance(USDC, vault)).toString(), "0");
   });
 
-  it("reverts mid-market and lands with the packed finalize + execute + sync once that market finalizes", async function () {
+  it("reserves the DAO at finalize, so a pre-staged draft can't launch in the finalize→execute gap", async function () {
     await provideTreasuryLiquidity(this, {
       dao,
       vault,
@@ -504,26 +483,8 @@ export default function suite() {
         liquidator,
       });
 
-    await this.futarchy
-      .launchProposalIx({
-        proposal,
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        squadsProposal,
-      })
-      .rpc();
-
-    await passProposal(this, {
-      dao,
-      proposal,
-      baseMint: META,
-      quoteMint: USDC,
-      cranks: 50,
-    });
-
-    // A proposal launched in the finalize→execute gap puts the pool
-    // mid-market before anyone executes the liquidation payload
+    // The blocker draft is staged while the DAO is still healthy, ready to
+    // launch the moment the liquidation market ends
     const { tx: gapCreateTx, squadsProposal: gapSquadsProposal } =
       this.futarchy.squadsProposalCreateTx({
         dao,
@@ -547,6 +508,35 @@ export default function suite() {
       dao,
       gapSquadsProposal,
     );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc();
+
+    await passProposal(this, {
+      dao,
+      proposal,
+      baseMint: META,
+      quoteMint: USDC,
+      cranks: 50,
+    });
+
+    // The liquidator is written by finalize itself, before any payload runs
+    let storedDao = await this.futarchy.getDao(dao);
+    assert.ok(storedDao.liquidator.equals(liquidator));
+
+    // So the staged blocker can no longer flip the pool out of Spot and make
+    // the approved payload revert
+    const callbacks = expectError(
+      "DaoLiquidated",
+      "launched a blocker in the finalize→execute gap",
+    );
     await this.futarchy
       .launchProposalIx({
         proposal: gapProposal,
@@ -555,87 +545,15 @@ export default function suite() {
         quoteMint: USDC,
         squadsProposal: gapSquadsProposal,
       })
-      .rpc();
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
 
-    try {
-      await executeVaultTransaction(this, dao, squadsTransaction);
-      assert.fail("Should have failed with PoolNotInSpotState");
-    } catch (e) {
-      // The error surfaces through the Squads CPI: PoolNotInSpotState (0x178a = 6026)
-      assert(
-        e.toString().includes("PoolNotInSpotState") ||
-          e.toString().includes("0x178a"),
-        `Expected PoolNotInSpotState error, got: ${e}`,
-      );
-    }
-
-    // Nothing was lost: the approved Squads transaction stays retryable
-    let storedDao = await this.futarchy.getDao(dao);
-    assert.isNull(storedDao.liquidator);
-
-    // Run out the gap market uncontested (one observation after the TWAP
-    // start delay lets it finalize)
-    await this.advanceBySeconds(60 * 60 * 24 + 60);
-    await this.futarchy
-      .spotSwapIx({
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        swapType: "buy",
-        inputAmount: new BN(1_000),
-      })
-      .rpc();
-    await this.advanceBySeconds(864_000);
-
-    // The same payload lands as one transaction: the gap market's
-    // finalize_proposal + vault_transaction_execute + sync_spending_limit.
-    const packIxs = [
-      await this.futarchy
-        .finalizeProposalIxV2({
-          squadsProposal: gapSquadsProposal,
-          dao,
-          baseMint: META,
-          quoteMint: USDC,
-        })
-        .instruction(),
-      (
-        await multisig.instructions.vaultTransactionExecute({
-          connection: this.squadsConnection,
-          multisigPda: multisig.getMultisigPda({ createKey: dao })[0],
-          transactionIndex: 1n,
-          member: PERMISSIONLESS_ACCOUNT.publicKey,
-        })
-      ).instruction,
-      await this.futarchy.syncSpendingLimitIx({ dao }).instruction(),
-    ];
-
-    const lut = await createLookupTableForTransaction(
-      new Transaction().add(...packIxs),
-      this,
-    );
-
-    const packMessage = new TransactionMessage({
-      payerKey: this.payer.publicKey,
-      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-      instructions: [
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
-        ...packIxs,
-      ],
-    }).compileToV0Message([lut]);
-    const packTx = new VersionedTransaction(packMessage);
-    packTx.sign([this.payer, PERMISSIONLESS_ACCOUNT]);
-    await this.banksClient.processTransaction(packTx);
-
-    const storedGap = await this.futarchy.getProposal(gapProposal);
-    assert.exists(storedGap.state.failed);
+    await executeVaultTransaction(this, dao, squadsTransaction);
 
     storedDao = await this.futarchy.getDao(dao);
     assert.ok(storedDao.liquidator.equals(liquidator));
     assert.isNull(storedDao.initialSpendingLimit);
-    // The packed sync already projected the removal onto Squads
-    assert.isFalse(storedDao.spendingLimitDirty);
-    const [spendingLimit] = getSpendingLimitAddr({ dao });
-    assert.isNull(await this.banksClient.getAccount(spendingLimit));
+    assert.isTrue(storedDao.spendingLimitDirty);
 
     const postPosition =
       await this.futarchy.futarchy.account.ammPosition.fetch(ammPosition);

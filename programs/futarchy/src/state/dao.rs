@@ -70,7 +70,8 @@ pub struct Dao {
     pub optimistic_proposal: Option<OptimisticProposal>,
     pub is_optimistic_governance_enabled: bool,
     /// `Some` means the DAO has been liquidated, and holds who runs the estate.
-    /// Set once by `apply_liquidation`, never cleared.
+    /// Set once by `finalize_proposal` the moment a hostile liquidation
+    /// passes, never cleared.
     pub liquidator: Option<Pubkey>,
     /// Unix time of the last failed hostile takeover. 0 = never.
     pub last_failed_takeover_at: i64,

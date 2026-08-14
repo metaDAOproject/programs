@@ -62,11 +62,15 @@ impl ApplyLiquidation<'_> {
             FutarchyError::ProposalNotPassed
         );
 
-        // Execution is permissionless and a second passed liquidation can
-        // exist, so replay must be refused, not double-applied.
+        // Only a proposal with a hostile liquidation action can be applied.
+        let ProposalAction::HostileLiquidate { liquidator } = &self.proposal.action else {
+            return err!(FutarchyError::InvalidProposalKind);
+        };
+
+        // The liquidator must be the same as the one set by finalize_proposal.
         require!(
-            self.dao.liquidator.is_none(),
-            FutarchyError::AlreadyLiquidated
+            self.dao.liquidator == Some(*liquidator),
+            FutarchyError::InvalidLiquidator
         );
 
         Ok(())
@@ -87,16 +91,10 @@ impl ApplyLiquidation<'_> {
             program: _,
         } = ctx.accounts;
 
-        // The destructure is the kind check: the vault's signature alone is
-        // kind-blind, so without it an execute_arbitrary payload could invoke
-        // liquidation at a different duration/threshold.
         let ProposalAction::HostileLiquidate { liquidator } = &proposal.action else {
             return err!(FutarchyError::InvalidProposalKind);
         };
         let liquidator = *liquidator;
-
-        // `Some` is the liquidated flag, and it is terminal.
-        dao.liquidator = Some(liquidator);
 
         // Zero the record; the next sync removes the Squads-side limit, so
         // the outgoing team's pull rights end.
