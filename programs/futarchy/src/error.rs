@@ -132,4 +132,6 @@ pub enum FutarchyError {
     TreasuryAccountsNotSorted,
     #[msg("This proposal kind's launch takes no extra accounts")]
     UnexpectedLaunchAccounts,
+    #[msg("Spending limit account is not the canonical spending-limit PDA")]
+    InvalidSpendingLimitAccount,
 }

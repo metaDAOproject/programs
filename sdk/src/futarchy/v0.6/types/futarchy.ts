@@ -1394,6 +1394,15 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "spendingLimit";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "spending-limit PDA (`create_key` is always the DAO); read-only and may",
+            "not exist",
+          ];
+        },
+        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -5157,6 +5166,11 @@ export type Futarchy = {
       name: "UnexpectedLaunchAccounts";
       msg: "This proposal kind's launch takes no extra accounts";
     },
+    {
+      code: 6064;
+      name: "InvalidSpendingLimitAccount";
+      msg: "Spending limit account is not the canonical spending-limit PDA";
+    },
   ];
 };
 
@@ -6554,6 +6568,15 @@ export const IDL: Futarchy = {
           name: "dao",
           isMut: true,
           isSigner: false,
+        },
+        {
+          name: "spendingLimit",
+          isMut: false,
+          isSigner: false,
+          docs: [
+            "spending-limit PDA (`create_key` is always the DAO); read-only and may",
+            "not exist",
+          ],
         },
         {
           name: "payer",
@@ -10318,6 +10341,11 @@ export const IDL: Futarchy = {
       code: 6063,
       name: "UnexpectedLaunchAccounts",
       msg: "This proposal kind's launch takes no extra accounts",
+    },
+    {
+      code: 6064,
+      name: "InvalidSpendingLimitAccount",
+      msg: "Spending limit account is not the canonical spending-limit PDA",
     },
   ],
 };

@@ -27,7 +27,9 @@ async function main() {
 
   const daoDiscriminator = getDiscriminator("Dao");
 
-  const batchSize = 20;
+  // Each resize now references two per-DAO accounts (dao + spending limit);
+  // 10 keeps the transaction under the 1232-byte packet limit.
+  const batchSize = 10;
 
   console.log(`Dao discriminator (hex): ${daoDiscriminator.toString("hex")}`);
   console.log(`Program ID: ${futarchyClient.getProgramId().toBase58()}\n`);
@@ -58,12 +60,8 @@ async function main() {
 
     const ixs = await Promise.all(
       batch.map(async ({ pubkey }) => {
-        return await autocrat.methods
-          .resizeDao()
-          .accounts({
-            dao: pubkey,
-            payer: payer.publicKey,
-          })
+        return await futarchyClient
+          .resizeDaoIx({ dao: pubkey, payer: payer.publicKey })
           .instruction();
       }),
     );
@@ -84,6 +82,13 @@ async function main() {
     console.log(`  Team address: ${dao.teamAddress.toBase58()}`);
     console.log(
       `  Optimistic governance enabled: ${dao.isOptimisticGovernanceEnabled}`,
+    );
+    console.log(
+      `  Spending limit: ${
+        dao.initialSpendingLimit
+          ? `${dao.initialSpendingLimit.amountPerMonth.toString()}/mo, ${dao.initialSpendingLimit.members.length} member(s)`
+          : "none"
+      } (dirty: ${dao.spendingLimitDirty})`,
     );
   }
 }

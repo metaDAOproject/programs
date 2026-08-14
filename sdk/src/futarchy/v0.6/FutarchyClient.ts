@@ -1538,6 +1538,22 @@ export class FutarchyClient {
     });
   }
 
+  resizeDaoIx({
+    dao,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const [spendingLimit] = getSpendingLimitAddr({ dao });
+
+    return this.futarchy.methods.resizeDao().accounts({
+      dao,
+      spendingLimit,
+      payer,
+    });
+  }
+
   stakeToProposalIx({
     proposal,
     dao,
