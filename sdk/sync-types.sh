@@ -14,3 +14,4 @@ cp "$TYPES_DIR/liquidation.ts"                     ./src/liquidation/v0.7/types/
 cp "$TYPES_DIR/mint_governor.ts"                   ./src/mint_governor/v0.7/types/
 cp "$TYPES_DIR/performance_package_v2.ts"          ./src/performance_package_v2/v0.7/types/
 cp "$TYPES_DIR/price_based_performance_package.ts" ./src/price_based_performance_package/v0.6/types/
+cp "$TYPES_DIR/relaunch.ts"                        ./src/relaunch/v0.1/types/

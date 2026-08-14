@@ -18,6 +18,7 @@
     "./mint_governor": "./dist/mint_governor/index.js",
     "./performance_package_v2": "./dist/performance_package_v2/index.js",
     "./price_based_performance_package": "./dist/price_based_performance_package/index.js",
+    "./relaunch": "./dist/relaunch/index.js",
     "./shared_liquidity_manager": "./dist/shared_liquidity_manager/index.js",
     "./amm/*": "./dist/amm/*/index.js",
     "./autocrat/*": "./dist/autocrat/*/index.js",
@@ -30,6 +31,7 @@
     "./mint_governor/*": "./dist/mint_governor/*/index.js",
     "./performance_package_v2/*": "./dist/performance_package_v2/*/index.js",
     "./price_based_performance_package/*": "./dist/price_based_performance_package/*/index.js",
+    "./relaunch/*": "./dist/relaunch/*/index.js",
     "./shared_liquidity_manager/*": "./dist/shared_liquidity_manager/*/index.js"
   },
   "license": "BSL-1.0",
