@@ -52,6 +52,82 @@ async function provideTreasuryLiquidity(
     .rpc();
 }
 
+// A liquidatable DAO: initialized with the given spending-limit config, the
+// vault's sweep-destination ATAs created, and payer-owned spot liquidity
+async function initializeLiquidationDao(
+  context: TestContext,
+  {
+    baseMint,
+    quoteMint,
+    initialSpendingLimit,
+  }: {
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    initialSpendingLimit: {
+      amountPerMonth: BN;
+      members: PublicKey[];
+    } | null;
+  },
+) {
+  const nonce = new BN(Math.floor(Math.random() * 1000000));
+
+  await context.futarchy
+    .initializeDaoIx({
+      baseMint,
+      quoteMint,
+      params: {
+        secondsPerProposal: 60 * 60 * 24 * 3,
+        twapStartDelaySeconds: 60 * 60 * 24,
+        twapInitialObservation: THOUSAND_BUCK_PRICE,
+        twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(10),
+        minQuoteFutarchicLiquidity: new BN(10_000),
+        minBaseFutarchicLiquidity: new BN(10_000),
+        passThresholdBps: 300,
+        nonce,
+        initialSpendingLimit,
+        baseToStake: new BN(0),
+        teamSponsoredPassThresholdBps: 300,
+        teamAddress: context.payer.publicKey,
+      },
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ])
+    .rpc();
+
+  const [dao] = getDaoAddr({ nonce, daoCreator: context.payer.publicKey });
+
+  const storedDao = await context.futarchy.getDao(dao);
+  const vault: PublicKey = storedDao.squadsMultisigVault;
+
+  const [ammPosition] = PublicKey.findProgramAddressSync(
+    [Buffer.from("amm_position"), dao.toBuffer(), vault.toBuffer()],
+    FUTARCHY_V0_6_PROGRAM_ID,
+  );
+
+  // The sweep destination: the vault's ATAs
+  await context.createTokenAccount(baseMint, vault);
+  await context.createTokenAccount(quoteMint, vault);
+
+  await context.futarchy
+    .provideLiquidityIx({
+      dao,
+      baseMint,
+      quoteMint,
+      quoteAmount: new BN(100_000 * 1_000_000), // 100,000 USDC
+      maxBaseAmount: new BN(100 * 1_000_000), // 100 META
+      minLiquidity: new BN(0),
+      positionAuthority: context.payer.publicKey,
+      liquidityProvider: context.payer.publicKey,
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ])
+    .rpc();
+
+  return { dao, vault, ammPosition };
+}
+
 export default function suite() {
   let META: PublicKey,
     USDC: PublicKey,
@@ -79,70 +155,17 @@ export default function suite() {
       500_000 * 1_000_000,
     );
 
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
-
-    await this.futarchy
-      .initializeDaoIx({
-        baseMint: META,
-        quoteMint: USDC,
-        params: {
-          secondsPerProposal: 60 * 60 * 24 * 3,
-          twapStartDelaySeconds: 60 * 60 * 24,
-          twapInitialObservation: THOUSAND_BUCK_PRICE,
-          // 10% per update: TWAPs converge to actual prices fast enough that
-          // a pumped pass market clears +25% even on a repeat run, where the
-          // fail market starts at an already-appreciated spot price
-          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(10),
-          minQuoteFutarchicLiquidity: new BN(10_000),
-          minBaseFutarchicLiquidity: new BN(10_000),
-          passThresholdBps: 300,
-          nonce,
-          initialSpendingLimit: {
-            amountPerMonth: new BN(10_000_000_000), // 10,000 USDC
-            members: [this.payer.publicKey],
-          },
-          baseToStake: new BN(0),
-          teamSponsoredPassThresholdBps: 300,
-          teamAddress: this.payer.publicKey,
-        },
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-      ])
-      .rpc();
-
-    [dao] = getDaoAddr({ nonce, daoCreator: this.payer.publicKey });
-
-    const storedDao = await this.futarchy.getDao(dao);
-    vault = storedDao.squadsMultisigVault;
-
-    [ammPosition] = PublicKey.findProgramAddressSync(
-      [Buffer.from("amm_position"), dao.toBuffer(), vault.toBuffer()],
-      FUTARCHY_V0_6_PROGRAM_ID,
-    );
-
-    // The sweep destination: the vault's ATAs
-    await this.createTokenAccount(META, vault);
-    await this.createTokenAccount(USDC, vault);
-
-    await this.futarchy
-      .provideLiquidityIx({
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        quoteAmount: new BN(100_000 * 1_000_000), // 100,000 USDC
-        maxBaseAmount: new BN(100 * 1_000_000), // 100 META
-        minLiquidity: new BN(0),
-        positionAuthority: this.payer.publicKey,
-        liquidityProvider: this.payer.publicKey,
-      })
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-      ])
-      .rpc();
+    ({ dao, vault, ammPosition } = await initializeLiquidationDao(this, {
+      baseMint: META,
+      quoteMint: USDC,
+      initialSpendingLimit: {
+        amountPerMonth: new BN(10_000_000_000), // 10,000 USDC
+        members: [this.payer.publicKey],
+      },
+    }));
   });
 
-  it("zeroes the record and sweeps the treasury position after finalize installs the liquidator", async function () {
+  it("refuses the sweep until the limit is synced, then sweeps the treasury position", async function () {
     await provideTreasuryLiquidity(this, {
       dao,
       vault,
@@ -175,13 +198,31 @@ export default function suite() {
       cranks: 50,
     });
 
-    // The expected sweep, computed from the live pre-execution reserves
+    // finalize installed the liquidator and zeroed the record; the payload
+    // owes only the sweep
     const preDao = await this.futarchy.getDao(dao);
-    // finalize already installed the liquidator; the payload owes only the
-    // record zeroing and the sweep
     assert.ok(preDao.liquidator.equals(liquidator));
-    assert.isNotNull(preDao.initialSpendingLimit);
-    assert.isFalse(preDao.spendingLimitDirty);
+    assert.isNull(preDao.initialSpendingLimit);
+    assert.isTrue(preDao.spendingLimitDirty);
+
+    // While the Squads-side limit is still live, the sweep refuses — otherwise
+    // a limit member could spend the swept estate out of the vault in the same
+    // transaction as the execution
+    try {
+      await executeVaultTransaction(this, dao, squadsTransaction);
+      assert.fail("Should have failed with SpendingLimitNotSynced");
+    } catch (e) {
+      // The error surfaces through the Squads CPI: SpendingLimitNotSynced (0x17b1 = 6065)
+      assert(
+        e.toString().includes("SpendingLimitNotSynced") ||
+          e.toString().includes("0x17b1"),
+        `Expected SpendingLimitNotSynced error, got: ${e}`,
+      );
+    }
+
+    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
+
+    // The expected sweep, computed from the live pre-execution reserves
     const preSpot = preDao.amm.state.spot.spot;
     const prePosition =
       await this.futarchy.futarchy.account.ammPosition.fetch(ammPosition);
@@ -195,13 +236,17 @@ export default function suite() {
     const preVaultQuote = await this.getTokenBalance(USDC, vault);
 
     // Executing the baked payload is the byte-level proof that the baked
-    // instruction matches the deployed apply_liquidation
-    await executeVaultTransaction(this, dao, squadsTransaction);
+    // instruction matches the deployed apply_liquidation. The
+    // compute-unit-price instruction makes this transaction's hash differ from
+    // the refused attempt's, preventing duplicate-processing errors.
+    await executeVaultTransaction(this, dao, squadsTransaction, [
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+    ]);
 
     const storedDao = await this.futarchy.getDao(dao);
     assert.ok(storedDao.liquidator.equals(liquidator));
     assert.isNull(storedDao.initialSpendingLimit);
-    assert.isTrue(storedDao.spendingLimitDirty);
+    assert.isFalse(storedDao.spendingLimitDirty);
 
     const postPosition =
       await this.futarchy.futarchy.account.ammPosition.fetch(ammPosition);
@@ -358,6 +403,7 @@ export default function suite() {
       .rpc()
       .then(callbacks[0], callbacks[1]);
 
+    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
     await executeVaultTransaction(this, dao, a.squadsTransaction);
 
     const storedDao = await this.futarchy.getDao(dao);
@@ -393,12 +439,13 @@ export default function suite() {
     const preDao = await this.futarchy.getDao(dao);
     const preSpot = preDao.amm.state.spot.spot;
 
+    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
     await executeVaultTransaction(this, dao, squadsTransaction);
 
     const storedDao = await this.futarchy.getDao(dao);
     assert.ok(storedDao.liquidator.equals(liquidator));
     assert.isNull(storedDao.initialSpendingLimit);
-    assert.isTrue(storedDao.spendingLimitDirty);
+    assert.isFalse(storedDao.spendingLimitDirty);
 
     // Nothing to sweep, nothing swept
     assert.equal((await this.getTokenBalance(META, vault)).toString(), "0");
@@ -460,6 +507,7 @@ export default function suite() {
       executable: false,
     });
 
+    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
     await executeVaultTransaction(this, dao, squadsTransaction);
 
     const storedDao = await this.futarchy.getDao(dao);
@@ -548,15 +596,62 @@ export default function suite() {
       .rpc()
       .then(callbacks[0], callbacks[1]);
 
+    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
     await executeVaultTransaction(this, dao, squadsTransaction);
 
     storedDao = await this.futarchy.getDao(dao);
     assert.ok(storedDao.liquidator.equals(liquidator));
     assert.isNull(storedDao.initialSpendingLimit);
-    assert.isTrue(storedDao.spendingLimitDirty);
+    assert.isFalse(storedDao.spendingLimitDirty);
 
     const postPosition =
       await this.futarchy.futarchy.account.ammPosition.fetch(ammPosition);
     assert.equal(postPosition.liquidity.toString(), "0");
+  });
+
+  it("liquidates without a sync when the DAO never had a spending limit", async function () {
+    const noLimit = await initializeLiquidationDao(this, {
+      baseMint: META,
+      quoteMint: USDC,
+      initialSpendingLimit: null,
+    });
+
+    const liquidator = Keypair.generate().publicKey;
+    const { proposal, squadsProposal, squadsTransaction } =
+      await this.futarchy.initializeHostileLiquidateProposal({
+        dao: noLimit.dao,
+        liquidator,
+      });
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao: noLimit.dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc();
+
+    await passProposal(this, {
+      dao: noLimit.dao,
+      proposal,
+      baseMint: META,
+      quoteMint: USDC,
+      cranks: 50,
+    });
+
+    // A clean None record means no live limit exists, so finalize leaves the
+    // flag clear and the payload executes with no sync required
+    const preDao = await this.futarchy.getDao(noLimit.dao);
+    assert.isNull(preDao.initialSpendingLimit);
+    assert.isFalse(preDao.spendingLimitDirty);
+
+    await executeVaultTransaction(this, noLimit.dao, squadsTransaction);
+
+    const storedDao = await this.futarchy.getDao(noLimit.dao);
+    assert.ok(storedDao.liquidator.equals(liquidator));
+    assert.isNull(storedDao.initialSpendingLimit);
+    assert.isFalse(storedDao.spendingLimitDirty);
   });
 }

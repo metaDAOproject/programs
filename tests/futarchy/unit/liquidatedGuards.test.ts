@@ -30,7 +30,7 @@ import { TestContext } from "../../main.test.js";
 // - finalize_proposal: the liquidator is written by finalize itself, while no
 //   other market can be live, and launch refuses from then on — so a
 //   liquidated DAO never has a market left to finalize (the packed
-//   finalize + execute + sync flow is pinned by liquidationEndToEnd.test.ts)
+//   finalize + sync + execute flow is pinned by liquidationEndToEnd.test.ts)
 // - the liquidator path: liquidatorPath.test.ts runs the estate cycle
 // - collect_meteora_damm_fees: reads no liquidation state (its own suite
 //   covers the mechanics; setup needs a full launchpad DAMM pool)
@@ -187,6 +187,7 @@ export default function suite() {
       cranks: 50,
     });
 
+    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
     await executeVaultTransaction(this, dao, squadsTransaction);
 
     const liquidatedDao = await this.futarchy.getDao(dao);
@@ -498,17 +499,23 @@ export default function suite() {
     }
   });
 
-  it("allows sync_spending_limit, which removes the Squads limit without recreating", async function () {
+  it("holds no live spending limit: the pre-sweep sync removed it, and a re-sync refuses", async function () {
     const [spendingLimitPda] = getSpendingLimitAddr({ dao });
-    assert.isNotNull(await this.banksClient.getAccount(spendingLimitPda));
-
-    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
-
     assert.isNull(await this.banksClient.getAccount(spendingLimitPda));
 
     const storedDao = await this.futarchy.getDao(dao);
     assert.isNull(storedDao.initialSpendingLimit);
     assert.isFalse(storedDao.spendingLimitDirty);
+
+    const callbacks = expectError(
+      "SpendingLimitNotDirty",
+      "re-sync should refuse once the flag is consumed",
+    );
+
+    await this.futarchy
+      .syncSpendingLimitIx({ dao })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("allows withdraw_liquidity", async function () {

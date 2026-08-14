@@ -73,6 +73,14 @@ impl ApplyLiquidation<'_> {
             FutarchyError::InvalidLiquidator
         );
 
+        // finalize_proposal dirtied the record if a spending limit existed, so
+        // a sync must run before the sweep. Otherwise a still-live limit member
+        // could spend the swept estate.
+        require!(
+            !self.dao.spending_limit_dirty,
+            FutarchyError::SpendingLimitNotSynced
+        );
+
         Ok(())
     }
 
@@ -95,11 +103,6 @@ impl ApplyLiquidation<'_> {
             return err!(FutarchyError::InvalidProposalKind);
         };
         let liquidator = *liquidator;
-
-        // Zero the record; the next sync removes the Squads-side limit, so
-        // the outgoing team's pull rights end.
-        dao.initial_spending_limit = None;
-        dao.spending_limit_dirty = true;
 
         // Sweep the treasury's own AMM position pro-rata into the vault's
         // token accounts. Third-party positions are untouched — they exit on

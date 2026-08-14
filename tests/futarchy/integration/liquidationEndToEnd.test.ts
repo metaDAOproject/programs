@@ -33,7 +33,7 @@ import {
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
-// The no-window path: finalize + execute + sync land as one
+// The no-window path: finalize + sync + execute land as one
 // transaction, then the liquidated DAO runs as an estate — liquidator-gated
 // enqueue, permissionless approve, ordinary Squads execution — while
 // third-party LPs exit on their own schedule.
@@ -161,8 +161,11 @@ export default function suite() {
       cranks: 50,
     });
 
-    // finalize + execute + sync packed in ONE transaction: the DAO never
-    // exists in a passed-but-not-liquidated state
+    // finalize + sync + execute packed in ONE transaction: the DAO never
+    // exists in a passed-but-not-liquidated state, and this is the only order
+    // that lands — the sweep refuses until the sync has removed the
+    // Squads-side limit, so the estate can never sit in the vault while the
+    // outgoing team's pull rights are live
     const vaultTransaction =
       await multisig.accounts.VaultTransaction.fromAccountAddress(
         this.squadsConnection,
@@ -177,6 +180,7 @@ export default function suite() {
           quoteMint: USDC,
         })
         .instruction(),
+      await this.futarchy.syncSpendingLimitIx({ dao }).instruction(),
       (
         await multisig.instructions.vaultTransactionExecute({
           connection: this.squadsConnection,
@@ -185,7 +189,6 @@ export default function suite() {
           member: PERMISSIONLESS_ACCOUNT.publicKey,
         })
       ).instruction,
-      await this.futarchy.syncSpendingLimitIx({ dao }).instruction(),
     ];
 
     const lut = await createLookupTableForTransaction(

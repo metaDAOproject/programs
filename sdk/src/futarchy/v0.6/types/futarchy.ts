@@ -5171,6 +5171,11 @@ export type Futarchy = {
       name: "InvalidSpendingLimitAccount";
       msg: "Spending limit account is not the canonical spending-limit PDA";
     },
+    {
+      code: 6065;
+      name: "SpendingLimitNotSynced";
+      msg: "The spending limit must be synced away before the estate can be swept";
+    },
   ];
 };
 
@@ -10346,6 +10351,11 @@ export const IDL: Futarchy = {
       code: 6064,
       name: "InvalidSpendingLimitAccount",
       msg: "Spending limit account is not the canonical spending-limit PDA",
+    },
+    {
+      code: 6065,
+      name: "SpendingLimitNotSynced",
+      msg: "The spending limit must be synced away before the estate can be swept",
     },
   ],
 };

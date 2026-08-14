@@ -178,6 +178,13 @@ impl FinalizeProposal<'_> {
         if new_proposal_state == ProposalState::Passed {
             if let ProposalAction::HostileLiquidate { liquidator } = &proposal.action {
                 dao.liquidator = Some(*liquidator);
+
+                // The spending limit must be zeroed so that the estate can be swept.
+                // Otherwise a still-live limit member could drain the estate.
+                if dao.initial_spending_limit.is_some() {
+                    dao.initial_spending_limit = None;
+                    dao.spending_limit_dirty = true;
+                }
             }
         }
 

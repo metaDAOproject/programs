@@ -198,6 +198,7 @@ export async function executeVaultTransaction(
   context: TestContext,
   dao: PublicKey,
   squadsTransaction: PublicKey,
+  preInstructions: TransactionInstruction[] = [],
 ) {
   const vaultTransaction =
     await multisig.accounts.VaultTransaction.fromAccountAddress(
@@ -212,7 +213,7 @@ export async function executeVaultTransaction(
     member: PERMISSIONLESS_ACCOUNT.publicKey,
   });
 
-  const tx = new Transaction().add(instruction);
+  const tx = new Transaction().add(...preInstructions, instruction);
   [tx.recentBlockhash] = await context.banksClient.getLatestBlockhash();
   tx.feePayer = context.payer.publicKey;
   tx.sign(context.payer, PERMISSIONLESS_ACCOUNT);

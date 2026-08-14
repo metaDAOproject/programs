@@ -290,9 +290,7 @@ export default function suite() {
       "1000000000",
     );
     assert.deepEqual(
-      migrated.initialSpendingLimit.members.map((m: PublicKey) =>
-        m.toBase58(),
-      ),
+      migrated.initialSpendingLimit.members.map((m: PublicKey) => m.toBase58()),
       [this.payer.publicKey.toBase58()],
     );
     assert.isFalse(migrated.spendingLimitDirty);

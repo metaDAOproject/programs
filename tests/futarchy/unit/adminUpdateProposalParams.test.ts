@@ -437,7 +437,7 @@ export default function suite() {
   });
 
   it("refuses on a liquidated DAO", async function () {
-    // `apply_liquidation` is the only writer of `dao.liquidator`, and reaching
+    // `finalize_proposal` is the only writer of `dao.liquidator`, and reaching
     // it takes a full hostile-liquidate market.
     await rewriteAccount(this, dao, "dao", (decoded) => {
       decoded.liquidator = Keypair.generate().publicKey;

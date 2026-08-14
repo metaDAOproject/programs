@@ -139,6 +139,7 @@ export default function suite() {
       cranks: 50,
     });
 
+    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
     await executeVaultTransaction(this, dao, squadsTransaction);
 
     // The liquidator pays rent for the enqueued approval account

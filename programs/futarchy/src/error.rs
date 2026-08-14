@@ -134,4 +134,6 @@ pub enum FutarchyError {
     UnexpectedLaunchAccounts,
     #[msg("Spending limit account is not the canonical spending-limit PDA")]
     InvalidSpendingLimitAccount,
+    #[msg("The spending limit must be synced")]
+    SpendingLimitNotSynced,
 }
