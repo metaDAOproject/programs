@@ -57,6 +57,7 @@ v06-collect-meteora-damm-fees = "yarn run tsx scripts/v0.6/collectMeteoraDammFee
 v06-return-funds = "yarn run tsx scripts/v0.6/returnFunds.ts"
 v06-dump-daos = "yarn run tsx scripts/v0.6/dumpDaos.ts"
 v06-migrate-daos = "yarn run tsx scripts/v0.6/migrateDaos.ts"
+v06-sponsor-proposal = "yarn run tsx scripts/v0.6/sponsorProposal.ts"
 v07-collect-meteora-damm-fees = "yarn run tsx scripts/v0.7/collectMeteoraDammFees.ts"
 v07-launch-template = "yarn run tsx scripts/v0.7/launchTemplate.ts"
 v07-start-launch = "yarn run tsx scripts/v0.7/startLaunch.ts"
