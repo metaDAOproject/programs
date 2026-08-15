@@ -41,13 +41,22 @@ impl ResizeProposal<'_> {
 
         require_keys_eq!(old_proposal_data.dao, dao.key());
 
-        // The one and only read of the vestigial per-DAO threshold fields:
-        // live markets keep the rules they were created and staked under.
-        let pass_threshold_bps = if old_proposal_data.is_team_sponsored {
-            dao.team_sponsored_pass_threshold_bps
-        } else {
-            dao.pass_threshold_bps as i16
-        };
+        let action = ProposalAction::ExecuteArbitrary;
+
+        // Draft proposals take the kind's catalog params like any new proposal.
+        // Launched proposals keep the rules they were launched under.
+        let (pass_threshold_bps, duration_in_seconds) =
+            if matches!(old_proposal_data.state, ProposalState::Draft { .. }) {
+                let params = action.params();
+                (params.pass_threshold_bps, params.duration_seconds)
+            } else {
+                let pass_threshold_bps = if old_proposal_data.is_team_sponsored {
+                    dao.team_sponsored_pass_threshold_bps
+                } else {
+                    dao.pass_threshold_bps as i16
+                };
+                (pass_threshold_bps, old_proposal_data.duration_in_seconds)
+            };
 
         let new_proposal_data = Proposal {
             number: old_proposal_data.number,
@@ -59,7 +68,7 @@ impl ResizeProposal<'_> {
             dao: old_proposal_data.dao,
             pda_bump: old_proposal_data.pda_bump,
             question: old_proposal_data.question,
-            duration_in_seconds: old_proposal_data.duration_in_seconds,
+            duration_in_seconds,
             squads_proposal: old_proposal_data.squads_proposal,
             pass_base_mint: old_proposal_data.pass_base_mint,
             pass_quote_mint: old_proposal_data.pass_quote_mint,
@@ -68,7 +77,7 @@ impl ResizeProposal<'_> {
             is_team_sponsored: old_proposal_data.is_team_sponsored,
             pass_threshold_bps,
             council_can_block: true,
-            action: ProposalAction::ExecuteArbitrary,
+            action,
         };
 
         proposal.realloc(AFTER_REALLOC_SIZE, true)?;
