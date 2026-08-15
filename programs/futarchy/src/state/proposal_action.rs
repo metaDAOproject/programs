@@ -32,6 +32,9 @@ pub enum SpendingLimitAction {
 pub enum ProposalAction {
     LargeSpend {
         amount: u64,
+        /// The team the baked transfer pays, snapshotted at create. Launch
+        /// requires it to still be the DAO's team.
+        team_address: Pubkey,
     },
     MintTokens {
         amount: u64,
@@ -140,6 +143,10 @@ impl ProposalAction {
             ProposalAction::BuybackToken { quote_amount, .. } => {
                 verify_buyback_treasury_cap(*quote_amount, dao, accounts)
             }
+            ProposalAction::LargeSpend {
+                amount,
+                team_address,
+            } => verify_large_spend_launch(*amount, *team_address, dao, accounts),
             _ => {
                 require_eq!(
                     accounts.len(),
@@ -150,6 +157,44 @@ impl ProposalAction {
             }
         }
     }
+}
+
+/// The large-spend launch gate: no extra accounts, and the create-time checks
+/// re-run against current state.
+fn verify_large_spend_launch(
+    amount: u64,
+    team_address: Pubkey,
+    dao: &Dao,
+    accounts: &[AccountInfo],
+) -> Result<()> {
+    require_eq!(accounts.len(), 0, FutarchyError::UnexpectedLaunchAccounts);
+
+    verify_large_spend_cap(amount, dao)?;
+
+    require_keys_eq!(
+        team_address,
+        dao.team_address,
+        FutarchyError::StaleTeamAddress
+    );
+
+    Ok(())
+}
+
+/// The three-month spending cap, checked against the DAO's current record.
+/// Run at both create and launch.
+pub fn verify_large_spend_cap(amount: u64, dao: &Dao) -> Result<()> {
+    let record = dao
+        .initial_spending_limit
+        .as_ref()
+        .ok_or(FutarchyError::NoSpendingLimit)?;
+
+    require_gte!(
+        record.amount_per_month.saturating_mul(3),
+        amount,
+        FutarchyError::SpendCapExceeded
+    );
+
+    Ok(())
 }
 
 /// The 25% treasury cap, measured from the supplied account list. Launch is

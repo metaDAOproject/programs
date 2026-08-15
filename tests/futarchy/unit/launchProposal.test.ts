@@ -11,7 +11,11 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError } from "../../utils.js";
+import {
+  executeVaultTransaction,
+  expectError,
+  forceApproveSquadsProposal,
+} from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 
@@ -631,6 +635,201 @@ export default function suite() {
 
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.pending);
+  });
+
+  it("fails to launch a sponsored large_spend after a team change", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal, squadsProposal } =
+      await this.futarchy.initializeLargeSpendProposal({
+        dao,
+        amount: new BN(10_000),
+      });
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    // Replace the team while the sponsored draft is still unlaunched
+    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: Keypair.generate().publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+    await forceApproveSquadsProposal(this, takeover.squadsProposal);
+    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
+
+    const callbacks = expectError(
+      "StaleTeamAddress",
+      "launched a large spend paying the previous team",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("fails to launch a sponsored large_spend after the limit drops below its amount", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    // Exactly the three-month cap, so any reduction puts it over
+    const { proposal, squadsProposal } =
+      await this.futarchy.initializeLargeSpendProposal({
+        dao,
+        amount: spendingLimit.muln(3),
+      });
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    const change = await this.futarchy.initializeSpendingLimitChangeProposal({
+      dao,
+      config: {
+        amountPerMonth: spendingLimit.divn(10),
+        members: [this.payer.publicKey],
+      },
+    });
+    await forceApproveSquadsProposal(this, change.squadsProposal);
+    await executeVaultTransaction(this, dao, change.squadsTransaction);
+
+    const callbacks = expectError(
+      "SpendCapExceeded",
+      "launched a large spend above the reduced cap",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("fails to launch a sponsored large_spend after the limit is removed", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal, squadsProposal } =
+      await this.futarchy.initializeLargeSpendProposal({
+        dao,
+        amount: new BN(10_000),
+      });
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    const removal = await this.futarchy.initializeSpendingLimitChangeProposal({
+      dao,
+      config: null,
+    });
+    await forceApproveSquadsProposal(this, removal.squadsProposal);
+    await executeVaultTransaction(this, dao, removal.squadsTransaction);
+
+    const callbacks = expectError(
+      "NoSpendingLimit",
+      "launched a large spend with no spending limit",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("fails to launch an unsponsored spending_limit_change, launches once sponsored", async function () {

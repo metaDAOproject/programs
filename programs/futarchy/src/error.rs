@@ -136,4 +136,6 @@ pub enum FutarchyError {
     InvalidSpendingLimitAccount,
     #[msg("The spending limit must be synced")]
     SpendingLimitNotSynced,
+    #[msg("The DAO's team has changed since this draft was created")]
+    StaleTeamAddress,
 }

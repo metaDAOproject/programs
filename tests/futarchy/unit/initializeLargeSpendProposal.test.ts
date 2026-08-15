@@ -114,6 +114,9 @@ export default function suite() {
       storedProposal.action.largeSpend.amount.toString(),
       amount.toString(),
     );
+    assert.ok(
+      storedProposal.action.largeSpend.teamAddress.equals(this.payer.publicKey),
+    );
     assert.equal(storedProposal.durationInSeconds, 129_600);
     assert.equal(storedProposal.passThresholdBps, -1000);
     assert.isTrue(storedProposal.councilCanBlock);

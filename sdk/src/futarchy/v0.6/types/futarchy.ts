@@ -3685,6 +3685,14 @@ export type Futarchy = {
                 name: "amount";
                 type: "u64";
               },
+              {
+                name: "teamAddress";
+                docs: [
+                  "The team the baked transfer pays, snapshotted at create. Launch",
+                  "requires it to still be the DAO's team.",
+                ];
+                type: "publicKey";
+              },
             ];
           },
           {
@@ -5174,7 +5182,12 @@ export type Futarchy = {
     {
       code: 6065;
       name: "SpendingLimitNotSynced";
-      msg: "The spending limit must be synced away before the estate can be swept";
+      msg: "The spending limit must be synced";
+    },
+    {
+      code: 6066;
+      name: "StaleTeamAddress";
+      msg: "The DAO's team has changed since this draft was created";
     },
   ];
 };
@@ -8866,6 +8879,14 @@ export const IDL: Futarchy = {
                 name: "amount",
                 type: "u64",
               },
+              {
+                name: "teamAddress",
+                docs: [
+                  "The team the baked transfer pays, snapshotted at create. Launch",
+                  "requires it to still be the DAO's team.",
+                ],
+                type: "publicKey",
+              },
             ],
           },
           {
@@ -10355,7 +10376,12 @@ export const IDL: Futarchy = {
     {
       code: 6065,
       name: "SpendingLimitNotSynced",
-      msg: "The spending limit must be synced away before the estate can be swept",
+      msg: "The spending limit must be synced",
+    },
+    {
+      code: 6066,
+      name: "StaleTeamAddress",
+      msg: "The DAO's team has changed since this draft was created",
     },
   ],
 };
