@@ -81,6 +81,63 @@ export async function setupBasicDao({
   return dao;
 }
 
+export type OldDaoLayoutOverrides = {
+  optimisticProposal?: {
+    squadsProposal: PublicKey;
+    enqueuedTimestamp: typeof BN.prototype;
+  } | null;
+  isOptimisticGovernanceEnabled?: boolean;
+  initialSpendingLimit?: {
+    amountPerMonth: typeof BN.prototype;
+    members: PublicKey[];
+  } | null;
+};
+
+// Rewrites a real (new-layout) Dao account to the pre-migration on-chain layout.
+export async function makeOldDaoLayout(
+  ctx: TestContext,
+  dao: PublicKey,
+  overrides: OldDaoLayoutOverrides = {},
+  opts: { lamports?: number; residue?: Buffer } = {},
+): Promise<{ AFTER: number; BEFORE: number }> {
+  const raw = await ctx.banksClient.getAccount(dao);
+  const AFTER = raw.data.length;
+  // 58 bytes: liquidator (Option<Pubkey>) + last_failed_takeover_at (i64)
+  // + last_failed_liquidation_at (i64) + spending_limit_dirty (bool)
+  // + last_buyback_finalized_at (i64)
+  const BEFORE = AFTER - 58;
+
+  const disc = Buffer.from(raw.data.slice(0, 8));
+  const coder = ctx.futarchy.futarchy.account.dao.coder.accounts;
+  const decoded = coder.decode("dao", Buffer.from(raw.data));
+
+  if (overrides.optimisticProposal !== undefined)
+    decoded.optimisticProposal = overrides.optimisticProposal;
+  if (overrides.isOptimisticGovernanceEnabled !== undefined)
+    decoded.isOptimisticGovernanceEnabled =
+      overrides.isOptimisticGovernanceEnabled;
+  if (overrides.initialSpendingLimit !== undefined)
+    decoded.initialSpendingLimit = overrides.initialSpendingLimit;
+
+  // Encode as oldDao and truncate to the pre-migration size.
+  const body = await coder.encode("oldDao", decoded);
+  const buf = Buffer.alloc(BEFORE);
+  disc.copy(buf, 0);
+  body.subarray(8).copy(buf, 8);
+  if (opts.residue !== undefined) {
+    assert.isAtMost(body.length + opts.residue.length, BEFORE);
+    opts.residue.copy(buf, body.length);
+  }
+
+  ctx.context.setAccount(dao, {
+    ...raw,
+    data: buf,
+    ...(opts.lamports !== undefined ? { lamports: opts.lamports } : {}),
+  });
+
+  return { AFTER, BEFORE };
+}
+
 // Pumps the pass market with a one-shot conditional-quote buy, then cranks
 // the TWAPs `cranks` times, 20,000s apart. The defaults clear every kind's
 // threshold (including HostileLiquidate's +25%) for the standard test market

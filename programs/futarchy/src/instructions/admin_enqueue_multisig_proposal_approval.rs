@@ -62,6 +62,9 @@ pub struct AdminEnqueueMultisigProposalApproval<'info> {
 
 impl AdminEnqueueMultisigProposalApproval<'_> {
     pub fn validate(&self, _args: &AdminEnqueueMultisigProposalApprovalArgs) -> Result<()> {
+        // Ensure the DAO is migrated before reading `liquidator`.
+        Dao::assert_migrated(&self.dao.to_account_info())?;
+
         // On a liquidated DAO the liquidator replaces the admin id as the
         // required signer. Enqueueing is the only capability the liquidator
         // gains: the approve leg stays permissionless and execution is

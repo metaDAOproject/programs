@@ -69,6 +69,9 @@ impl FinalizeProposal<'_> {
             FutarchyError::AccountNotMigrated
         );
 
+        // Ensure the DAO is migrated.
+        Dao::assert_migrated(&self.dao.to_account_info())?;
+
         let clock = Clock::get()?;
 
         require_gte!(

@@ -76,6 +76,9 @@ impl AdminCancelProposal<'_> {
             FutarchyError::AccountNotMigrated
         );
 
+        // Ensure the DAO is migrated.
+        Dao::assert_migrated(&self.dao.to_account_info())?;
+
         // Unblockable proposals are censorship-proof once live: nobody, including
         // the council, can cancel them. Reads the create-time snapshot so a
         // live proposal keeps the flag it launched with.

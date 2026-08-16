@@ -15,7 +15,7 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import BN from "bn.js";
-import { expectError, setupBasicDao } from "../../utils.js";
+import { expectError, makeOldDaoLayout, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -174,6 +174,31 @@ export default function suite() {
     const callbacks = expectError(
       "AccountNotMigrated",
       "finalized an un-migrated legacy proposal",
+    );
+
+    await this.futarchy
+      .finalizeProposalIxV2({
+        squadsProposal: squadsProposalPda,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a legacy-sized DAO that has not been migrated", async function () {
+    // Shrink only the DAO to the pre-migration allocation; the proposal keeps
+    // its migrated size so its own guard passes.
+    await makeOldDaoLayout(this, dao);
+
+    const crafted = await this.futarchy.getDao(dao);
+    assert.exists(crafted.amm.state.futarchy);
+    assert.isNull(crafted.liquidator);
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "finalized a proposal on an un-migrated legacy DAO",
     );
 
     await this.futarchy

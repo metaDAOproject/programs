@@ -7,69 +7,9 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setupBasicDao } from "../../utils.js";
+import { expectError, makeOldDaoLayout, setupBasicDao } from "../../utils.js";
 import { TestContext } from "../../main.test.js";
 import { assert } from "chai";
-
-type OldLayoutOverrides = {
-  optimisticProposal?: {
-    squadsProposal: PublicKey;
-    enqueuedTimestamp: BN;
-  } | null;
-  isOptimisticGovernanceEnabled?: boolean;
-  initialSpendingLimit?: {
-    amountPerMonth: typeof BN.prototype;
-    members: PublicKey[];
-  } | null;
-};
-
-// Rewrites a real (new-layout) Dao account to the pre-migration on-chain layout
-// by re-encoding its body as the `oldDao` IDL type (dropping the appended
-// `liquidator`, failure timestamps, and `spending_limit_dirty`). Truncation does
-// NOT work for Dao: its Option slack would leave the fields' bytes in place.
-// Optional overrides let a test pin the optimistic fields without driving the
-// (now deleted) optimistic instructions.
-async function makeOldLayout(
-  ctx: TestContext,
-  dao: PublicKey,
-  overrides: OldLayoutOverrides = {},
-  opts: { lamports?: number } = {},
-): Promise<{ AFTER: number; BEFORE: number }> {
-  const raw = await ctx.banksClient.getAccount(dao);
-  const AFTER = raw.data.length;
-  // 58 bytes: liquidator (Option<Pubkey>) + last_failed_takeover_at (i64)
-  // + last_failed_liquidation_at (i64) + spending_limit_dirty (bool)
-  // + last_buyback_finalized_at (i64)
-  const BEFORE = AFTER - 58;
-
-  const disc = Buffer.from(raw.data.slice(0, 8));
-  const coder = ctx.futarchy.futarchy.account.dao.coder.accounts;
-  const decoded = coder.decode("dao", Buffer.from(raw.data));
-
-  if (overrides.optimisticProposal !== undefined)
-    decoded.optimisticProposal = overrides.optimisticProposal;
-  if (overrides.isOptimisticGovernanceEnabled !== undefined)
-    decoded.isOptimisticGovernanceEnabled =
-      overrides.isOptimisticGovernanceEnabled;
-  if (overrides.initialSpendingLimit !== undefined)
-    decoded.initialSpendingLimit = overrides.initialSpendingLimit;
-
-  // Encode as oldDao (mainnet layout, ending at is_optimistic_governance_enabled);
-  // drop its discriminator and reattach the real Dao discriminator at the
-  // pre-migration size.
-  const body = await coder.encode("oldDao", decoded);
-  const buf = Buffer.alloc(BEFORE);
-  disc.copy(buf, 0);
-  body.subarray(8).copy(buf, 8);
-
-  ctx.context.setAccount(dao, {
-    ...raw,
-    data: buf,
-    ...(opts.lamports !== undefined ? { lamports: opts.lamports } : {}),
-  });
-
-  return { AFTER, BEFORE };
-}
 
 // Byte offsets into a Squads SpendingLimit account's data:
 // disc(8) multisig(32) create_key(32) vault_index(1) mint(32) amount(8)
@@ -145,7 +85,7 @@ export default function suite() {
     assert.isFalse(original.spendingLimitDirty);
     assert.equal(original.lastBuybackFinalizedAt.toString(), "0");
 
-    const { AFTER, BEFORE } = await makeOldLayout(this, dao);
+    const { AFTER, BEFORE } = await makeOldDaoLayout(this, dao);
 
     const short = await this.banksClient.getAccount(dao);
     assert.equal(short.data.length, BEFORE);
@@ -181,7 +121,7 @@ export default function suite() {
 
   it("clears an in-flight optimistic proposal and carries the governance flag", async function () {
     const fakeSquadsProposal = Keypair.generate().publicKey;
-    await makeOldLayout(this, dao, {
+    await makeOldDaoLayout(this, dao, {
       isOptimisticGovernanceEnabled: true,
       optimisticProposal: {
         squadsProposal: fakeSquadsProposal,
@@ -230,7 +170,7 @@ export default function suite() {
 
     // Shrink to old layout AND drop lamports to the old rent-exempt minimum so
     // the realloc forces a top-up transfer.
-    await makeOldLayout(this, dao, {}, { lamports: Number(rentBefore) });
+    await makeOldDaoLayout(this, dao, {}, { lamports: Number(rentBefore) });
 
     // Dedicated crank payer (not the fee payer) so its balance change isolates
     // the top-up transfer from transaction fees.
@@ -275,7 +215,7 @@ export default function suite() {
 
     // The legacy field claims 5,000/month even though the live limit is
     // 1,000 — the divergence pre-upgrade governance could have created.
-    await makeOldLayout(this, limitDao, {
+    await makeOldDaoLayout(this, limitDao, {
       initialSpendingLimit: {
         amountPerMonth: new BN(5_000_000_000),
         members: [Keypair.generate().publicKey],
@@ -299,7 +239,7 @@ export default function suite() {
   it("migrates a stale legacy value as none when no live limit exists", async function () {
     // The beforeEach DAO never created a Squads limit, but the legacy field
     // claims one exists.
-    await makeOldLayout(this, dao, {
+    await makeOldDaoLayout(this, dao, {
       initialSpendingLimit: {
         amountPerMonth: new BN(1_000_000_000),
         members: [this.payer.publicKey],
@@ -328,7 +268,7 @@ export default function suite() {
     });
 
     const patched = await patchLiveSpendingLimit(ctx, limitDao, mutate);
-    await makeOldLayout(ctx, limitDao);
+    await makeOldDaoLayout(ctx, limitDao);
 
     await ctx.futarchy.resizeDaoIx({ dao: limitDao }).rpc();
 
@@ -381,7 +321,7 @@ export default function suite() {
   });
 
   it("throws when passed a non-canonical spending-limit account", async function () {
-    await makeOldLayout(this, dao);
+    await makeOldDaoLayout(this, dao);
 
     const callbacks = expectError(
       "InvalidSpendingLimitAccount",

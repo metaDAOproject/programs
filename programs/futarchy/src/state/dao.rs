@@ -100,6 +100,19 @@ pub struct InitialSpendingLimit {
 }
 
 impl Dao {
+    /// A migrated `Dao` account is exactly this long.
+    pub const MIGRATED_SIZE: usize = Dao::INIT_SPACE + 8;
+
+    /// Errors unless `resize_dao` has migrated the account.
+    pub fn assert_migrated(account: &AccountInfo) -> Result<()> {
+        require_eq!(
+            account.data_len(),
+            Dao::MIGRATED_SIZE,
+            FutarchyError::AccountNotMigrated
+        );
+        Ok(())
+    }
+
     pub fn invariant(&self) -> Result<()> {
         require_gte!(
             self.seconds_per_proposal,

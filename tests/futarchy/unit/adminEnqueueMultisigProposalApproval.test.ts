@@ -1,11 +1,13 @@
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
+  Keypair,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionMessage,
 } from "@solana/web3.js";
-import { expectError } from "../../utils.js";
+import { expectError, makeOldDaoLayout } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import { createMemoInstruction } from "@solana/spl-memo";
@@ -132,6 +134,65 @@ export default function suite() {
       );
     assert.equal(enqueued.dao.toBase58(), dao.toBase58());
     assert.equal(enqueued.transactionIndex.toString(), "1");
+  });
+
+  it("rejects a legacy-sized DAO whose residue decodes as a liquidator", async function () {
+    const daoAccount = await this.futarchy.getDao(dao);
+    const { proposalPda } = await createSquadsVaultTxAndProposal(
+      this,
+      daoAccount.squadsMultisig,
+      1n,
+    );
+
+    // The attacker pays rent for the enqueued approval account
+    const attacker = Keypair.generate();
+    const fundTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: attacker.publicKey,
+        lamports: 1_000_000_000,
+      }),
+    );
+    fundTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    fundTx.feePayer = this.payer.publicKey;
+    fundTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundTx);
+
+    // Shrink the DAO to the pre-migration allocation and plant, immediately
+    // after its Spot-layout body, the bytes a legacy DAO carries there once a
+    // finalized proposal has collapsed its AMM from Futarchy back to Spot:
+    // `Some(attacker)` where the new layout reads `liquidator`, then zeros for
+    // the two timestamps, the dirty flag, and the buyback timestamp.
+    const residue = Buffer.concat([
+      Buffer.from([1]),
+      attacker.publicKey.toBuffer(),
+      Buffer.alloc(25),
+    ]);
+    await makeOldDaoLayout(this, dao, {}, { residue });
+
+    // The account still decodes — with the attacker as the liquidator
+    // authority — so only the size guard stands between them and enqueueing.
+    const crafted = await this.futarchy.getDao(dao);
+    assert.equal(crafted.liquidator.toBase58(), attacker.publicKey.toBase58());
+    assert.exists(crafted.amm.state.spot);
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "enqueued on an un-migrated legacy DAO",
+    );
+
+    await this.futarchy.futarchy.methods
+      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
+      .accounts({
+        dao,
+        admin: attacker.publicKey,
+        squadsMultisig: daoAccount.squadsMultisig,
+        squadsMultisigProposal: proposalPda,
+        enqueuedApproval: deriveEnqueuedApprovalPda(this, dao, 1n),
+      })
+      .signers([attacker])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("should fail with PoolNotInSpotState when a futarchy proposal is active", async function () {

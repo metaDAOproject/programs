@@ -25,7 +25,7 @@ impl ResizeDao<'_> {
         let is_discriminator_correct = dao.try_borrow_data().unwrap()[..8] == Dao::discriminator();
         require_eq!(is_discriminator_correct, true);
 
-        const AFTER_REALLOC_SIZE: usize = Dao::INIT_SPACE + 8;
+        const AFTER_REALLOC_SIZE: usize = Dao::MIGRATED_SIZE;
         // 58 bytes: 33 (Option<Pubkey> liquidator) + 8 (i64) + 8 (i64) + 1 (bool) + 8 (i64)
         const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 58;
 
