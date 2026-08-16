@@ -199,6 +199,9 @@ export async function executeVaultTransaction(
   dao: PublicKey,
   squadsTransaction: PublicKey,
   preInstructions: TransactionInstruction[] = [],
+  // For payloads whose inner message names signers beyond the vault PDA
+  // (e.g. a gated_invoke caller) — Squads requires them on the execute
+  extraSigners: Keypair[] = [],
 ) {
   const vaultTransaction =
     await multisig.accounts.VaultTransaction.fromAccountAddress(
@@ -216,7 +219,7 @@ export async function executeVaultTransaction(
   const tx = new Transaction().add(...preInstructions, instruction);
   [tx.recentBlockhash] = await context.banksClient.getLatestBlockhash();
   tx.feePayer = context.payer.publicKey;
-  tx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
+  tx.sign(context.payer, PERMISSIONLESS_ACCOUNT, ...extraSigners);
   await context.banksClient.processTransaction(tx);
 }
 

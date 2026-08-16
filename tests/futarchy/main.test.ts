@@ -1,6 +1,7 @@
 import futarchyAmm from "./integration/futarchyAmm.test.js";
 import takeoverEndToEnd from "./integration/takeoverEndToEnd.test.js";
 import liquidationEndToEnd from "./integration/liquidationEndToEnd.test.js";
+import gatedLiquidationUnwind from "./integration/gatedLiquidationUnwind.test.js";
 import largeSpendEndToEnd from "./integration/largeSpendEndToEnd.test.js";
 import cooldownRoundTrip from "./integration/cooldownRoundTrip.test.js";
 
@@ -17,7 +18,6 @@ import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
 import setSpendingLimit from "./unit/setSpendingLimit.test.js";
 import syncSpendingLimit from "./unit/syncSpendingLimit.test.js";
-import applyLiquidation from "./unit/applyLiquidation.test.js";
 import liquidatorPath from "./unit/liquidatorPath.test.js";
 import liquidatedGuards from "./unit/liquidatedGuards.test.js";
 
@@ -96,7 +96,6 @@ export default function suite() {
   describe("#update_dao", updateDao);
   describe("#set_spending_limit", setSpendingLimit);
   describe("#sync_spending_limit", syncSpendingLimit);
-  describe("#apply_liquidation", applyLiquidation);
   describe("liquidator path", liquidatorPath);
   describe("liquidated guards", liquidatedGuards);
 
@@ -127,6 +126,7 @@ export default function suite() {
   describe("futarchy amm", futarchyAmm);
   describe("integration: takeover end to end", takeoverEndToEnd);
   describe("integration: liquidation end to end", liquidationEndToEnd);
+  describe("integration: gated liquidation unwind", gatedLiquidationUnwind);
   describe("integration: large spend end to end", largeSpendEndToEnd);
   describe("integration: cooldown round-trip", cooldownRoundTrip);
 }

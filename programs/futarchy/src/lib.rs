@@ -168,11 +168,6 @@ pub mod futarchy {
         SyncSpendingLimit::handle(ctx)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn apply_liquidation(ctx: Context<ApplyLiquidation>) -> Result<()> {
-        ApplyLiquidation::handle(ctx)
-    }
-
     pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
         ResizeDao::handle(ctx)
     }

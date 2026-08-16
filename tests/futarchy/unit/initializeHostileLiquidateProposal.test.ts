@@ -1,19 +1,10 @@
-import {
-  FUTARCHY_V0_6_PROGRAM_ID,
-  getDaoAddr,
-  getEventAuthorityAddr,
-  PriceMath,
-} from "@metadaoproject/programs";
+import { getDaoAddr, PriceMath } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
   TransactionInstruction,
 } from "@solana/web3.js";
-import {
-  getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
 import BN from "bn.js";
 import { assert } from "chai";
 import { assertVaultTransactionPayload } from "../../utils.js";
@@ -59,7 +50,7 @@ export default function suite() {
     [dao] = getDaoAddr({ nonce, daoCreator: this.payer.publicKey });
   });
 
-  it("bakes an apply_liquidation whose accounts are exactly the derived set, plus an IP-transfer memo", async function () {
+  it("bakes the IP-transfer memo into the Squads payload", async function () {
     const liquidator = Keypair.generate().publicKey;
 
     const { proposal, squadsProposal, squadsTransaction } =
@@ -68,32 +59,9 @@ export default function suite() {
         liquidator,
       });
 
-    const storedDao = await this.futarchy.getDao(dao);
-    const vault = storedDao.squadsMultisigVault;
-
-    const [eventAuthority] = getEventAuthorityAddr(FUTARCHY_V0_6_PROGRAM_ID);
-    const [ammPosition] = PublicKey.findProgramAddressSync(
-      [Buffer.from("amm_position"), dao.toBuffer(), vault.toBuffer()],
-      FUTARCHY_V0_6_PROGRAM_ID,
-    );
-
-    const expectedApplyLiquidationIx = await this.futarchy.futarchy.methods
-      .applyLiquidation()
-      .accounts({
-        proposal,
-        dao,
-        squadsMultisigVault: vault,
-        ammPosition,
-        ammBaseVault: storedDao.amm.ammBaseVault,
-        ammQuoteVault: storedDao.amm.ammQuoteVault,
-        vaultBaseAccount: getAssociatedTokenAddressSync(META, vault, true),
-        vaultQuoteAccount: getAssociatedTokenAddressSync(USDC, vault, true),
-        tokenProgram: TOKEN_PROGRAM_ID,
-        eventAuthority,
-        program: FUTARCHY_V0_6_PROGRAM_ID,
-      })
-      .instruction();
-
+    // The payload is ceremony: a memo touches no accounts, so the immutable
+    // Squads transaction cannot fail on any DAO configuration. The state flip
+    // happens at finalize; the liquidator unwinds through the estate cycle.
     const expectedMemoIx = new TransactionInstruction({
       programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
       keys: [],
@@ -104,7 +72,6 @@ export default function suite() {
     });
 
     await assertVaultTransactionPayload(this, dao, squadsTransaction, [
-      expectedApplyLiquidationIx,
       expectedMemoIx,
     ]);
 

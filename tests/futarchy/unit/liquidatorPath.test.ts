@@ -93,8 +93,6 @@ export default function suite() {
     vault = storedDao.squadsMultisigVault;
     squadsMultisig = storedDao.squadsMultisig;
 
-    // The baked apply_liquidation payload requires the vault's ATAs to exist
-    await this.createTokenAccount(META, vault);
     await this.createTokenAccount(USDC, vault);
 
     await this.futarchy

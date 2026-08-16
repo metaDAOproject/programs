@@ -1313,79 +1313,6 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "applyLiquidation";
-      accounts: [
-        {
-          name: "proposal";
-          isMut: false;
-          isSigner: false;
-          docs: [
-            "The linked liquidation proposal, baked into the payload at create.",
-          ];
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigVault";
-          isMut: false;
-          isSigner: true;
-          docs: [
-            "The vault's signature is only obtainable through a Squads vault",
-            "transaction execution, so the caller is a passed proposal's payload.",
-          ];
-        },
-        {
-          name: "ammPosition";
-          isMut: true;
-          isSigner: false;
-          docs: [
-            "seeds, but whether the account exists at execution is unknowable at",
-            "create, so it is parsed manually — a passed liquidation must never",
-            "brick on treasury shape.",
-          ];
-        },
-        {
-          name: "ammBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "vaultBaseAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "vaultQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
       name: "resizeDao";
       accounts: [
         {
@@ -4808,50 +4735,6 @@ export type Futarchy = {
         },
       ];
     },
-    {
-      name: "ApplyLiquidationEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "dao";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "proposal";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "liquidator";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "baseSwept";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "quoteSwept";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "postAmmState";
-          type: {
-            defined: "FutarchyAmm";
-          };
-          index: false;
-        },
-      ];
-    },
   ];
   errors: [
     {
@@ -5181,11 +5064,6 @@ export type Futarchy = {
     },
     {
       code: 6065;
-      name: "SpendingLimitNotSynced";
-      msg: "The spending limit must be synced";
-    },
-    {
-      code: 6066;
       name: "StaleTeamAddress";
       msg: "The DAO's team has changed since this draft was created";
     },
@@ -6490,79 +6368,6 @@ export const IDL: Futarchy = {
         },
         {
           name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "applyLiquidation",
-      accounts: [
-        {
-          name: "proposal",
-          isMut: false,
-          isSigner: false,
-          docs: [
-            "The linked liquidation proposal, baked into the payload at create.",
-          ],
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigVault",
-          isMut: false,
-          isSigner: true,
-          docs: [
-            "The vault's signature is only obtainable through a Squads vault",
-            "transaction execution, so the caller is a passed proposal's payload.",
-          ],
-        },
-        {
-          name: "ammPosition",
-          isMut: true,
-          isSigner: false,
-          docs: [
-            "seeds, but whether the account exists at execution is unknowable at",
-            "create, so it is parsed manually — a passed liquidation must never",
-            "brick on treasury shape.",
-          ],
-        },
-        {
-          name: "ammBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultBaseAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -10002,50 +9807,6 @@ export const IDL: Futarchy = {
         },
       ],
     },
-    {
-      name: "ApplyLiquidationEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "dao",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "proposal",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "liquidator",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "baseSwept",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "quoteSwept",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "postAmmState",
-          type: {
-            defined: "FutarchyAmm",
-          },
-          index: false,
-        },
-      ],
-    },
   ],
   errors: [
     {
@@ -10375,11 +10136,6 @@ export const IDL: Futarchy = {
     },
     {
       code: 6065,
-      name: "SpendingLimitNotSynced",
-      msg: "The spending limit must be synced",
-    },
-    {
-      code: 6066,
       name: "StaleTeamAddress",
       msg: "The DAO's team has changed since this draft was created",
     },

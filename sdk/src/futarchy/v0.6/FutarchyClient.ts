@@ -1222,9 +1222,9 @@ export class FutarchyClient {
       .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
-  // The payload is one apply_liquidation call whose accounts — including this
-  // proposal's own not-yet-created PDA — the program bakes by derivation from
-  // the next transaction index. The liquidator is stored in `action`.
+  // The payload is the IP-transfer memo alone — finalize_proposal performs the
+  // state flip, and the liquidator (stored in `action`) unwinds the treasury
+  // position afterward through the estate cycle.
   async initializeHostileLiquidateProposal({
     dao,
     liquidator,
