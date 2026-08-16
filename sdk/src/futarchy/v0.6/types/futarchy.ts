@@ -5067,6 +5067,11 @@ export type Futarchy = {
       name: "StaleTeamAddress";
       msg: "The DAO's team has changed since this draft was created";
     },
+    {
+      code: 6066;
+      name: "AccountNotMigrated";
+      msg: "Account is not migrated to latest layout";
+    },
   ];
 };
 
@@ -10138,6 +10143,11 @@ export const IDL: Futarchy = {
       code: 6065,
       name: "StaleTeamAddress",
       msg: "The DAO's team has changed since this draft was created",
+    },
+    {
+      code: 6066,
+      name: "AccountNotMigrated",
+      msg: "Account is not migrated to latest layout",
     },
   ],
 };

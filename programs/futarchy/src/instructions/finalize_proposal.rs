@@ -62,6 +62,13 @@ pub struct FinalizeProposal<'info> {
 
 impl FinalizeProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        // Ensure the proposal is migrated.
+        require_eq!(
+            self.proposal.to_account_info().data_len(),
+            Proposal::INIT_SPACE + 8,
+            FutarchyError::AccountNotMigrated
+        );
+
         let clock = Clock::get()?;
 
         require_gte!(

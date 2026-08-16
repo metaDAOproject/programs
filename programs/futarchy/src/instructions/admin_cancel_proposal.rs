@@ -69,6 +69,13 @@ pub struct AdminCancelProposal<'info> {
 
 impl AdminCancelProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        // Ensure the proposal is migrated.
+        require_eq!(
+            self.proposal.to_account_info().data_len(),
+            Proposal::INIT_SPACE + 8,
+            FutarchyError::AccountNotMigrated
+        );
+
         // Unblockable proposals are censorship-proof once live: nobody, including
         // the council, can cancel them. Reads the create-time snapshot so a
         // live proposal keeps the flag it launched with.

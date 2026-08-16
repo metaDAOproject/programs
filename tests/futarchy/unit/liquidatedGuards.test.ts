@@ -615,7 +615,7 @@ export default function suite() {
     );
   });
 
-  // dao.liquidator is written by finalize itself, so the DAO is bricked 
+  // dao.liquidator is written by finalize itself, so the DAO is bricked
   // the moment the market resolves. The ceremonial payload is never executed
   // here — none of these guards depend on it.
   describe("liquidation marker set by finalize", function () {

@@ -136,4 +136,6 @@ pub enum FutarchyError {
     InvalidSpendingLimitAccount,
     #[msg("The DAO's team has changed since this draft was created")]
     StaleTeamAddress,
+    #[msg("Account is not migrated to latest layout")]
+    AccountNotMigrated,
 }
