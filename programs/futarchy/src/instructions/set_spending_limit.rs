@@ -24,11 +24,7 @@ impl SetSpendingLimit<'_> {
         require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
 
         if let Some(config) = &args.config {
-            require_gte!(
-                MAX_SPENDING_LIMIT_MEMBERS,
-                config.members.len(),
-                FutarchyError::TooManySpendingLimitMembers
-            );
+            config.validate()?;
         }
 
         Ok(())

@@ -99,6 +99,36 @@ pub struct InitialSpendingLimit {
     pub members: Vec<Pubkey>,
 }
 
+impl InitialSpendingLimit {
+    /// Rejects any record that the Squads spending-limit invariant would refuse
+    /// to create, so every stored record can be projected by `sync_spending_limit`.
+    pub fn validate(&self) -> Result<()> {
+        require_neq!(
+            self.amount_per_month,
+            0,
+            FutarchyError::InvalidSpendingLimitAmount
+        );
+
+        require!(
+            !self.members.is_empty(),
+            FutarchyError::EmptySpendingLimitMembers
+        );
+
+        require_gte!(
+            MAX_SPENDING_LIMIT_MEMBERS,
+            self.members.len(),
+            FutarchyError::TooManySpendingLimitMembers
+        );
+
+        let mut sorted_members = self.members.clone();
+        sorted_members.sort();
+        let has_duplicates = sorted_members.windows(2).any(|win| win[0] == win[1]);
+        require!(!has_duplicates, FutarchyError::DuplicateSpendingLimitMember);
+
+        Ok(())
+    }
+}
+
 impl Dao {
     /// A migrated `Dao` account is exactly this long.
     pub const MIGRATED_SIZE: usize = Dao::INIT_SPACE + 8;

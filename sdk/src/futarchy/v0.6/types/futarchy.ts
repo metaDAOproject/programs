@@ -5072,6 +5072,21 @@ export type Futarchy = {
       name: "AccountNotMigrated";
       msg: "Account is not migrated to latest layout";
     },
+    {
+      code: 6067;
+      name: "InvalidSpendingLimitAmount";
+      msg: "A spending limit's monthly amount must be non-zero";
+    },
+    {
+      code: 6068;
+      name: "EmptySpendingLimitMembers";
+      msg: "A spending limit must have at least one member";
+    },
+    {
+      code: 6069;
+      name: "DuplicateSpendingLimitMember";
+      msg: "A spending limit's members must be unique";
+    },
   ];
 };
 
@@ -10148,6 +10163,21 @@ export const IDL: Futarchy = {
       code: 6066,
       name: "AccountNotMigrated",
       msg: "Account is not migrated to latest layout",
+    },
+    {
+      code: 6067,
+      name: "InvalidSpendingLimitAmount",
+      msg: "A spending limit's monthly amount must be non-zero",
+    },
+    {
+      code: 6068,
+      name: "EmptySpendingLimitMembers",
+      msg: "A spending limit must have at least one member",
+    },
+    {
+      code: 6069,
+      name: "DuplicateSpendingLimitMember",
+      msg: "A spending limit's members must be unique",
     },
   ],
 };

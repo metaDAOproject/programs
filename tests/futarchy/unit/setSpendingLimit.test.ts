@@ -109,6 +109,33 @@ async function executeSetSpendingLimitViaVault(
   await context.banksClient.processTransaction(executeTx);
 }
 
+// A rejected set_spending_limit surfaces through the Squads execute CPI as a
+// raw transaction error, so match on the error name or its hex code and then
+// confirm the record and dirty flag were left untouched.
+async function assertSetSpendingLimitRejected(
+  context: TestContext,
+  dao: PublicKey,
+  config: { amountPerMonth: BN; members: PublicKey[] },
+  errorName: string,
+  errorHex: string,
+) {
+  await executeSetSpendingLimitViaVault(context, dao, config).then(
+    () => assert.fail(`set_spending_limit should have thrown ${errorName}`),
+    (e) =>
+      assert(
+        e.toString().includes(errorName) || e.toString().includes(errorHex),
+        `Expected ${errorName} error, got: ${e}`,
+      ),
+  );
+
+  const daoAccount = await context.futarchy.getDao(dao);
+  assert.equal(
+    daoAccount.initialSpendingLimit.amountPerMonth.toString(),
+    "10000000000",
+  );
+  assert.isFalse(daoAccount.spendingLimitDirty);
+}
+
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
 
@@ -213,26 +240,57 @@ export default function suite() {
       () => Keypair.generate().publicKey,
     );
 
-    try {
-      await executeSetSpendingLimitViaVault(this, dao, {
+    await assertSetSpendingLimitRejected(
+      this,
+      dao,
+      {
         amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
         members: elevenMembers,
-      });
-      assert.fail("Should have failed with TooManySpendingLimitMembers");
-    } catch (e) {
-      // The error surfaces through the Squads CPI: TooManySpendingLimitMembers (0x17a4 = 6052)
-      assert(
-        e.toString().includes("TooManySpendingLimitMembers") ||
-          e.toString().includes("0x17a4"),
-        `Expected TooManySpendingLimitMembers error, got: ${e}`,
-      );
-    }
-
-    const daoAccount = await this.futarchy.getDao(dao);
-    assert.equal(
-      daoAccount.initialSpendingLimit.amountPerMonth.toString(),
-      "10000000000",
+      },
+      "TooManySpendingLimitMembers",
+      "0x17a4", // 6052
     );
-    assert.isFalse(daoAccount.spendingLimitDirty);
+  });
+
+  it("throws when the config's monthly amount is zero", async function () {
+    await assertSetSpendingLimitRejected(
+      this,
+      dao,
+      {
+        amountPerMonth: new BN(0),
+        members: [Keypair.generate().publicKey],
+      },
+      "InvalidSpendingLimitAmount",
+      "0x17b3", // 6067
+    );
+  });
+
+  it("throws when the config has no members", async function () {
+    await assertSetSpendingLimitRejected(
+      this,
+      dao,
+      {
+        amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+        members: [],
+      },
+      "EmptySpendingLimitMembers",
+      "0x17b4", // 6068
+    );
+  });
+
+  it("throws when the config has duplicate members", async function () {
+    const member = Keypair.generate().publicKey;
+
+    await assertSetSpendingLimitRejected(
+      this,
+      dao,
+      {
+        amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+        // Non-adjacent so the check must sort before comparing neighbours
+        members: [member, Keypair.generate().publicKey, member],
+      },
+      "DuplicateSpendingLimitMember",
+      "0x17b5", // 6069
+    );
   });
 }

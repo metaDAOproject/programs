@@ -20,11 +20,7 @@ impl InitializeHostileTakeoverProposal<'_> {
         self.typed_initialize_accounts.validate()?;
 
         if let SpendingLimitAction::Set(config) = &args.spending_limit_action {
-            require_gte!(
-                MAX_SPENDING_LIMIT_MEMBERS,
-                config.members.len(),
-                FutarchyError::TooManySpendingLimitMembers
-            );
+            config.validate()?;
         }
 
         Ok(())

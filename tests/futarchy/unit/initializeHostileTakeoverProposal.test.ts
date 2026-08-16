@@ -257,4 +257,70 @@ export default function suite() {
       })
       .then(...callbacks);
   });
+
+  it("throws error when a Set action's monthly amount is zero", async function () {
+    const callbacks = expectError(
+      "InvalidSpendingLimitAmount",
+      "created a hostile takeover proposal with a zero monthly amount",
+    );
+    await this.futarchy
+      .initializeHostileTakeoverProposal({
+        dao,
+        newTeamAddress: Keypair.generate().publicKey,
+        spendingLimitAction: {
+          set: {
+            0: {
+              amountPerMonth: new BN(0),
+              members: [Keypair.generate().publicKey],
+            },
+          },
+        },
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when a Set action has no members", async function () {
+    const callbacks = expectError(
+      "EmptySpendingLimitMembers",
+      "created a hostile takeover proposal with no members",
+    );
+    await this.futarchy
+      .initializeHostileTakeoverProposal({
+        dao,
+        newTeamAddress: Keypair.generate().publicKey,
+        spendingLimitAction: {
+          set: {
+            0: {
+              amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+              members: [],
+            },
+          },
+        },
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when a Set action has duplicate members", async function () {
+    const member = Keypair.generate().publicKey;
+
+    const callbacks = expectError(
+      "DuplicateSpendingLimitMember",
+      "created a hostile takeover proposal with duplicate members",
+    );
+    await this.futarchy
+      .initializeHostileTakeoverProposal({
+        dao,
+        newTeamAddress: Keypair.generate().publicKey,
+        spendingLimitAction: {
+          set: {
+            0: {
+              amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+              // Non-adjacent so the check must sort before comparing neighbours
+              members: [member, Keypair.generate().publicKey, member],
+            },
+          },
+        },
+      })
+      .then(...callbacks);
+  });
 }

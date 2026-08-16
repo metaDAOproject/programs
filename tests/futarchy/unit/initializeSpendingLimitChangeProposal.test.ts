@@ -136,6 +136,57 @@ export default function suite() {
       .then(...callbacks);
   });
 
+  it("throws error when the config's monthly amount is zero", async function () {
+    const callbacks = expectError(
+      "InvalidSpendingLimitAmount",
+      "created a spending limit change proposal with a zero monthly amount",
+    );
+    await this.futarchy
+      .initializeSpendingLimitChangeProposal({
+        dao,
+        config: {
+          amountPerMonth: new BN(0),
+          members: [Keypair.generate().publicKey],
+        },
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when the config has no members", async function () {
+    const callbacks = expectError(
+      "EmptySpendingLimitMembers",
+      "created a spending limit change proposal with no members",
+    );
+    await this.futarchy
+      .initializeSpendingLimitChangeProposal({
+        dao,
+        config: {
+          amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+          members: [],
+        },
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when the config has duplicate members", async function () {
+    const member = Keypair.generate().publicKey;
+
+    const callbacks = expectError(
+      "DuplicateSpendingLimitMember",
+      "created a spending limit change proposal with duplicate members",
+    );
+    await this.futarchy
+      .initializeSpendingLimitChangeProposal({
+        dao,
+        config: {
+          amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+          // Non-adjacent so the check must sort before comparing neighbours
+          members: [member, Keypair.generate().publicKey, member],
+        },
+      })
+      .then(...callbacks);
+  });
+
   it("the executed and synced end state matches the declaration", async function () {
     const config = {
       amountPerMonth: new BN(25_000_000_000), // 25,000 USDC

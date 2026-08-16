@@ -138,4 +138,10 @@ pub enum FutarchyError {
     StaleTeamAddress,
     #[msg("Account is not migrated to latest layout")]
     AccountNotMigrated,
+    #[msg("A spending limit's monthly amount must be non-zero")]
+    InvalidSpendingLimitAmount,
+    #[msg("A spending limit must have at least one member")]
+    EmptySpendingLimitMembers,
+    #[msg("A spending limit's members must be unique")]
+    DuplicateSpendingLimitMember,
 }
