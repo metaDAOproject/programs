@@ -48,6 +48,21 @@ pub struct Proposal {
     pub action: ProposalAction,
 }
 
+impl Proposal {
+    /// A migrated `Proposal` account is exactly this long.
+    pub const MIGRATED_SIZE: usize = Proposal::INIT_SPACE + 8;
+
+    /// Errors unless `resize_proposal` has migrated the account.
+    pub fn assert_migrated(account: &AccountInfo) -> Result<()> {
+        require_eq!(
+            account.data_len(),
+            Proposal::MIGRATED_SIZE,
+            FutarchyError::AccountNotMigrated
+        );
+        Ok(())
+    }
+}
+
 #[account]
 #[derive(InitSpace)]
 pub struct OldProposal {

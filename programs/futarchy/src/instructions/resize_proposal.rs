@@ -25,7 +25,7 @@ impl ResizeProposal<'_> {
             proposal.try_borrow_data().unwrap()[..8] == Proposal::discriminator();
         require_eq!(is_discriminator_correct, true);
 
-        const AFTER_REALLOC_SIZE: usize = Proposal::INIT_SPACE + 8;
+        const AFTER_REALLOC_SIZE: usize = Proposal::MIGRATED_SIZE;
         // 369 bytes: 2 (i16 pass_threshold_bps) + 1 (bool council_can_block)
         // + 366 (ProposalAction)
         const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 369;
