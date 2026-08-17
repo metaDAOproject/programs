@@ -42,10 +42,6 @@ export default function suite() {
     draftSquadsProposal: PublicKey,
     liquidationProposal: PublicKey;
 
-  // A single liquidated DAO serves every case: blocked instructions are pure
-  // refusals, and the allowed ones each touch disjoint state (the sync flag,
-  // the LP position, the stake, the fee balances), so one `before` avoids
-  // re-running the whole market flow per test.
   before(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
     USDC = await this.createMint(this.payer.publicKey, 6);
@@ -366,24 +362,6 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  it("refuses spot_swap", async function () {
-    const callbacks = expectError(
-      "DaoLiquidated",
-      "spot_swap should refuse on a liquidated DAO",
-    );
-
-    await this.futarchy
-      .spotSwapIx({
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        swapType: "buy",
-        inputAmount: new BN(1_000_000),
-      })
-      .rpc()
-      .then(callbacks[0], callbacks[1]);
-  });
-
   it("refuses conditional_swap", async function () {
     const callbacks = expectError(
       "DaoLiquidated",
@@ -512,6 +490,30 @@ export default function suite() {
       .syncSpendingLimitIx({ dao })
       .rpc()
       .then(callbacks[0], callbacks[1]);
+  });
+
+  // Runs before the LP exit below: a swap needs the pool still funded.
+  it("allows spot_swap", async function () {
+    const preSpot = (await this.futarchy.getDao(dao)).amm.state.spot.spot;
+    const preBase = await this.getTokenBalance(META, this.payer.publicKey);
+
+    await this.futarchy
+      .spotSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        swapType: "buy",
+        inputAmount: new BN(500 * 1_000_000),
+      })
+      .rpc();
+
+    assert.isTrue(
+      (await this.getTokenBalance(META, this.payer.publicKey)) > preBase,
+    );
+
+    const postSpot = (await this.futarchy.getDao(dao)).amm.state.spot.spot;
+    assert.isTrue(postSpot.quoteReserves.gt(preSpot.quoteReserves));
+    assert.isTrue(postSpot.baseReserves.lt(preSpot.baseReserves));
   });
 
   it("allows withdraw_liquidity", async function () {
