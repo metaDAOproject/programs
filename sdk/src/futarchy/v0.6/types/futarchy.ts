@@ -2914,8 +2914,8 @@ export type Futarchy = {
             type: "u64";
           },
           {
-            name: "quoteAmountPerCycle";
-            type: "u64";
+            name: "cycleCount";
+            type: "u32";
           },
           {
             name: "cycleFrequencySeconds";
@@ -3684,8 +3684,9 @@ export type Futarchy = {
                 type: "u64";
               },
               {
-                name: "quoteAmountPerCycle";
-                type: "u64";
+                name: "cycleCount";
+                docs: ["Orders the total is split across. At least 2."];
+                type: "u32";
               },
               {
                 name: "cycleFrequencySeconds";
@@ -5025,7 +5026,7 @@ export type Futarchy = {
     {
       code: 6057;
       name: "InvalidBuybackAmount";
-      msg: "The total must be an exact multiple of the non-zero per-cycle amount, at least twice over";
+      msg: "Buyback total must be non-zero";
     },
     {
       code: 6058;
@@ -5086,6 +5087,11 @@ export type Futarchy = {
       code: 6069;
       name: "DuplicateSpendingLimitMember";
       msg: "A spending limit's members must be unique";
+    },
+    {
+      code: 6070;
+      name: "InvalidBuybackCycleCount";
+      msg: "A buyback must run at least two cycles";
     },
   ];
 };
@@ -8006,8 +8012,8 @@ export const IDL: Futarchy = {
             type: "u64",
           },
           {
-            name: "quoteAmountPerCycle",
-            type: "u64",
+            name: "cycleCount",
+            type: "u32",
           },
           {
             name: "cycleFrequencySeconds",
@@ -8776,8 +8782,9 @@ export const IDL: Futarchy = {
                 type: "u64",
               },
               {
-                name: "quoteAmountPerCycle",
-                type: "u64",
+                name: "cycleCount",
+                docs: ["Orders the total is split across. At least 2."],
+                type: "u32",
               },
               {
                 name: "cycleFrequencySeconds",
@@ -10117,7 +10124,7 @@ export const IDL: Futarchy = {
     {
       code: 6057,
       name: "InvalidBuybackAmount",
-      msg: "The total must be an exact multiple of the non-zero per-cycle amount, at least twice over",
+      msg: "Buyback total must be non-zero",
     },
     {
       code: 6058,
@@ -10178,6 +10185,11 @@ export const IDL: Futarchy = {
       code: 6069,
       name: "DuplicateSpendingLimitMember",
       msg: "A spending limit's members must be unique",
+    },
+    {
+      code: 6070,
+      name: "InvalidBuybackCycleCount",
+      msg: "A buyback must run at least two cycles",
     },
   ],
 };

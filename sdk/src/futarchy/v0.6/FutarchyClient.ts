@@ -1287,7 +1287,7 @@ export class FutarchyClient {
   async initializeBuybackTokenProposal({
     dao,
     quoteAmount,
-    quoteAmountPerCycle,
+    cycleCount,
     cycleFrequencySeconds,
     startDelaySeconds,
     minPrice = null,
@@ -1295,7 +1295,7 @@ export class FutarchyClient {
   }: {
     dao: PublicKey;
     quoteAmount: BN;
-    quoteAmountPerCycle: BN;
+    cycleCount: number;
     cycleFrequencySeconds: number;
     startDelaySeconds: number;
     minPrice?: BN | null;
@@ -1313,7 +1313,7 @@ export class FutarchyClient {
           baseMint: storedDao.baseMint,
           quoteMint: storedDao.quoteMint,
           quoteAmount,
-          quoteAmountPerCycle,
+          cycleCount,
           cycleFrequencySeconds,
           startDelaySeconds,
           minPrice,
@@ -1328,7 +1328,7 @@ export class FutarchyClient {
     baseMint,
     quoteMint,
     quoteAmount,
-    quoteAmountPerCycle,
+    cycleCount,
     cycleFrequencySeconds,
     startDelaySeconds,
     minPrice = null,
@@ -1341,7 +1341,7 @@ export class FutarchyClient {
     baseMint: PublicKey;
     quoteMint: PublicKey;
     quoteAmount: BN;
-    quoteAmountPerCycle: BN;
+    cycleCount: number;
     cycleFrequencySeconds: number;
     startDelaySeconds: number;
     minPrice?: BN | null;
@@ -1353,7 +1353,7 @@ export class FutarchyClient {
     return this.futarchy.methods
       .initializeBuybackTokenProposal({
         quoteAmount,
-        quoteAmountPerCycle,
+        cycleCount,
         cycleFrequencySeconds,
         startDelaySeconds,
         minPrice,

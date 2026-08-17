@@ -118,7 +118,7 @@ pub enum FutarchyError {
     EmptyProposalParamsUpdate,
     #[msg("Buyback amount exceeds 25% of the treasury")]
     BuybackCapExceeded,
-    #[msg("The total must be an exact multiple of the non-zero per-cycle amount, at least twice over")]
+    #[msg("Buyback total must be non-zero")]
     InvalidBuybackAmount,
     #[msg("Cycle frequency must be between 60 seconds and 1 year")]
     InvalidBuybackCycleFrequency,
@@ -144,4 +144,6 @@ pub enum FutarchyError {
     EmptySpendingLimitMembers,
     #[msg("A spending limit's members must be unique")]
     DuplicateSpendingLimitMember,
+    #[msg("A buyback must run at least two cycles")]
+    InvalidBuybackCycleCount,
 }

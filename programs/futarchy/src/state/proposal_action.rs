@@ -55,7 +55,8 @@ pub enum ProposalAction {
     BuybackToken {
         /// Total quote to deploy. Capped at 25% of the treasury.
         quote_amount: u64,
-        quote_amount_per_cycle: u64,
+        /// Orders the total is split across. At least 2.
+        cycle_count: u32,
         /// Seconds between orders.
         cycle_frequency_seconds: u32,
         /// Seconds after execution before the first order. 0 = immediately.
