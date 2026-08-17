@@ -265,11 +265,14 @@ fn verify_buyback_treasury_cap<'info>(
                 dao.squads_multisig_vault,
                 FutarchyError::InvalidTreasuryAccount
             );
-            // The quote a withdrawal would deliver right now.
+            // The quote a withdrawal would deliver, with the pool valued at
+            // its rate-limited observation: `min(quote, base × observation)`
             if dao.amm.total_liquidity > 0 {
-                treasury_quote += spot
-                    .get_quote_withdrawable(position.liquidity, dao.amm.total_liquidity)
-                    as u128;
+                let quote_at_observation = (spot.base_reserves as u128)
+                    .saturating_mul(spot.oracle.last_observation)
+                    / PRICE_SCALE;
+                let quote_reserves = (spot.quote_reserves as u128).min(quote_at_observation);
+                treasury_quote += position.liquidity * quote_reserves / dao.amm.total_liquidity;
             }
         } else {
             return err!(FutarchyError::InvalidTreasuryAccount);
