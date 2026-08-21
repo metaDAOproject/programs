@@ -1227,10 +1227,10 @@ export class FutarchyClient {
   // position afterward through the estate cycle.
   async initializeHostileLiquidateProposal({
     dao,
-    liquidator,
+    liquidator = METADAO_MULTISIG_VAULT,
   }: {
     dao: PublicKey;
-    liquidator: PublicKey;
+    liquidator?: PublicKey;
   }): Promise<{
     proposal: PublicKey;
     squadsProposal: PublicKey;
@@ -1253,7 +1253,7 @@ export class FutarchyClient {
     dao,
     baseMint,
     quoteMint,
-    liquidator,
+    liquidator = METADAO_MULTISIG_VAULT,
     transactionIndex,
     proposer = this.provider.publicKey,
     payer = this.provider.publicKey,
@@ -1261,7 +1261,7 @@ export class FutarchyClient {
     dao: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
-    liquidator: PublicKey;
+    liquidator?: PublicKey;
     transactionIndex: bigint;
     proposer?: PublicKey;
     payer?: PublicKey;

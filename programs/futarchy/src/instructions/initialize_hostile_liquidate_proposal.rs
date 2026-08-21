@@ -1,5 +1,12 @@
 use super::*;
 
+pub mod metadao_multisig_vault {
+    use anchor_lang::prelude::declare_id;
+
+    // MetaDAO operations multisig vault
+    declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeHostileLiquidateProposalArgs {
     pub liquidator: Pubkey,
@@ -12,7 +19,17 @@ pub struct InitializeHostileLiquidateProposal<'info> {
 }
 
 impl InitializeHostileLiquidateProposal<'_> {
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self, args: &InitializeHostileLiquidateProposalArgs) -> Result<()> {
+        // Only the MetaDAO operations multisig vault can be named liquidator in production.
+        #[cfg(feature = "production")]
+        require_keys_eq!(
+            args.liquidator,
+            metadao_multisig_vault::ID,
+            FutarchyError::InvalidLiquidator
+        );
+        #[cfg(not(feature = "production"))]
+        let _ = args;
+
         self.typed_initialize_accounts.validate()
     }
 

@@ -106,7 +106,7 @@ pub mod futarchy {
         InitializeHostileTakeoverProposal::handle(ctx, args)
     }
 
-    #[access_control(ctx.accounts.validate())]
+    #[access_control(ctx.accounts.validate(&args))]
     pub fn initialize_hostile_liquidate_proposal(
         ctx: Context<InitializeHostileLiquidateProposal>,
         args: InitializeHostileLiquidateProposalArgs,
