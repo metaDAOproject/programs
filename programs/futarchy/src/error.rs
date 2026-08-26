@@ -146,4 +146,6 @@ pub enum FutarchyError {
     DuplicateSpendingLimitMember,
     #[msg("A buyback must run at least two cycles")]
     InvalidBuybackCycleCount,
+    #[msg("Invalid team address")]
+    InvalidTeamAddress,
 }

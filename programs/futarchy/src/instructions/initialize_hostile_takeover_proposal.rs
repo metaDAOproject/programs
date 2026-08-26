@@ -19,6 +19,12 @@ impl InitializeHostileTakeoverProposal<'_> {
     pub fn validate(&self, args: &InitializeHostileTakeoverProposalArgs) -> Result<()> {
         self.typed_initialize_accounts.validate()?;
 
+        require_keys_neq!(
+            args.new_team_address,
+            self.typed_initialize_accounts.dao.team_address,
+            FutarchyError::InvalidTeamAddress
+        );
+
         if let SpendingLimitAction::Set(config) = &args.spending_limit_action {
             config.validate()?;
         }

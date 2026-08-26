@@ -323,4 +323,18 @@ export default function suite() {
       })
       .then(...callbacks);
   });
+
+  it("throws error when the new team address is the current team", async function () {
+    const callbacks = expectError(
+      "InvalidTeamAddress",
+      "created a hostile takeover proposal targeting the current team",
+    );
+    await this.futarchy
+      .initializeHostileTakeoverProposal({
+        dao,
+        newTeamAddress: this.payer.publicKey,
+        spendingLimitAction: { keep: {} },
+      })
+      .then(...callbacks);
+  });
 }

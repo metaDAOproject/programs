@@ -5093,6 +5093,11 @@ export type Futarchy = {
       name: "InvalidBuybackCycleCount";
       msg: "A buyback must run at least two cycles";
     },
+    {
+      code: 6071;
+      name: "InvalidTeamAddress";
+      msg: "Invalid team address";
+    },
   ];
 };
 
@@ -10190,6 +10195,11 @@ export const IDL: Futarchy = {
       code: 6070,
       name: "InvalidBuybackCycleCount",
       msg: "A buyback must run at least two cycles",
+    },
+    {
+      code: 6071,
+      name: "InvalidTeamAddress",
+      msg: "Invalid team address",
     },
   ],
 };
