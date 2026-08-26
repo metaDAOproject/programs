@@ -3,13 +3,23 @@ use super::*;
 pub const DAY_SECONDS: u32 = 24 * 60 * 60;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub enum TeamSponsorshipPolicy {
+    /// Must be team-sponsored to launch.
+    Required,
+    /// May be team-sponsored. Sponsorship waives the stake.
+    Optional,
+    /// Cannot be team-sponsored.
+    Forbidden,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
 pub struct InstructionParams {
     pub duration_seconds: u32,
     /// Signed: a negative threshold lets a proposal pass even when the pass
     /// price is below the fail price.
     pub pass_threshold_bps: i16,
-    /// Launch condition: the proposal must be team-sponsored to launch.
-    pub requires_team_sponsorship: bool,
+    /// Sponsorship policy
+    pub team_sponsorship_policy: TeamSponsorshipPolicy,
     pub council_can_block: bool,
     /// Cooldown checked at launch. 0 = none.
     pub cooldown_seconds: u32,
@@ -77,7 +87,7 @@ impl ProposalAction {
             ProposalAction::LargeSpend { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 3 / 2, // 1.5 days
                 pass_threshold_bps: -1000,
-                requires_team_sponsorship: true,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Required,
                 council_can_block: true,
                 cooldown_seconds: 0,
                 twap_start_delay_seconds: DAY_SECONDS / 2,
@@ -85,7 +95,7 @@ impl ProposalAction {
             ProposalAction::MintTokens { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 5,
                 pass_threshold_bps: 500,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Optional,
                 council_can_block: true,
                 cooldown_seconds: 0,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -93,7 +103,7 @@ impl ProposalAction {
             ProposalAction::SpendingLimitChange { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 5,
                 pass_threshold_bps: 500,
-                requires_team_sponsorship: true,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Required,
                 council_can_block: true,
                 cooldown_seconds: 0,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -101,7 +111,7 @@ impl ProposalAction {
             ProposalAction::ExecuteArbitrary => InstructionParams {
                 duration_seconds: DAY_SECONDS * 10,
                 pass_threshold_bps: 1000,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Optional,
                 council_can_block: true,
                 cooldown_seconds: 0,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -109,7 +119,7 @@ impl ProposalAction {
             ProposalAction::HostileTakeover { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 20,
                 pass_threshold_bps: 1000,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Forbidden,
                 council_can_block: true,
                 cooldown_seconds: DAY_SECONDS * 20,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -117,7 +127,7 @@ impl ProposalAction {
             ProposalAction::HostileLiquidate { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 10,
                 pass_threshold_bps: 2500,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Forbidden,
                 council_can_block: true,
                 cooldown_seconds: DAY_SECONDS * 10,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -125,7 +135,7 @@ impl ProposalAction {
             ProposalAction::BuybackToken { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 10,
                 pass_threshold_bps: 1000,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Optional,
                 council_can_block: true,
                 cooldown_seconds: DAY_SECONDS * 90,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -149,11 +159,7 @@ impl ProposalAction {
                 team_address,
             } => verify_large_spend_launch(*amount, *team_address, dao, accounts),
             _ => {
-                require_eq!(
-                    accounts.len(),
-                    0,
-                    FutarchyError::UnexpectedLaunchAccounts
-                );
+                require_eq!(accounts.len(), 0, FutarchyError::UnexpectedLaunchAccounts);
                 Ok(())
             }
         }

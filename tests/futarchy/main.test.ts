@@ -14,6 +14,7 @@ import initializeHostileTakeoverProposal from "./unit/initializeHostileTakeoverP
 import initializeHostileLiquidateProposal from "./unit/initializeHostileLiquidateProposal.test.js";
 import initializeBuybackTokenProposal from "./unit/initializeBuybackTokenProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
+import sponsorProposal from "./unit/sponsorProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
 import setSpendingLimit from "./unit/setSpendingLimit.test.js";
@@ -92,6 +93,7 @@ export default function suite() {
     initializeBuybackTokenProposal,
   );
   describe("#launch_proposal", launchProposal);
+  describe("#sponsor_proposal", sponsorProposal);
   describe("#finalize_proposal", finalizeProposal);
   describe("#update_dao", updateDao);
   describe("#set_spending_limit", setSpendingLimit);

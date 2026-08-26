@@ -17,6 +17,12 @@ impl SponsorProposal<'_> {
             FutarchyError::ProposalNotInDraftState
         );
 
+        require!(
+            self.proposal.action.params().team_sponsorship_policy
+                != TeamSponsorshipPolicy::Forbidden,
+            FutarchyError::TeamSponsorshipForbidden
+        );
+
         require_neq!(
             self.proposal.is_team_sponsored,
             true,

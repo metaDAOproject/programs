@@ -148,4 +148,6 @@ pub enum FutarchyError {
     InvalidBuybackCycleCount,
     #[msg("Invalid team address")]
     InvalidTeamAddress,
+    #[msg("This proposal kind cannot be team-sponsored")]
+    TeamSponsorshipForbidden,
 }

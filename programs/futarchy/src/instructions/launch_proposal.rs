@@ -63,7 +63,7 @@ impl<'info> LaunchProposal<'info> {
         // drafts can't bypass them
         let params = self.proposal.action.params();
 
-        if params.requires_team_sponsorship {
+        if params.team_sponsorship_policy == TeamSponsorshipPolicy::Required {
             require!(
                 self.proposal.is_team_sponsored,
                 FutarchyError::ProposalNotTeamSponsored

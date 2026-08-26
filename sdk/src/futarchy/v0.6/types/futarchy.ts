@@ -3462,11 +3462,11 @@ export type Futarchy = {
             type: "i16";
           },
           {
-            name: "requiresTeamSponsorship";
-            docs: [
-              "Launch condition: the proposal must be team-sponsored to launch.",
-            ];
-            type: "bool";
+            name: "teamSponsorshipPolicy";
+            docs: ["Sponsorship policy"];
+            type: {
+              defined: "TeamSponsorshipPolicy";
+            };
           },
           {
             name: "councilCanBlock";
@@ -3568,6 +3568,23 @@ export type Futarchy = {
           },
           {
             name: "Quote";
+          },
+        ];
+      };
+    },
+    {
+      name: "TeamSponsorshipPolicy";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Required";
+          },
+          {
+            name: "Optional";
+          },
+          {
+            name: "Forbidden";
           },
         ];
       };
@@ -5097,6 +5114,11 @@ export type Futarchy = {
       code: 6071;
       name: "InvalidTeamAddress";
       msg: "Invalid team address";
+    },
+    {
+      code: 6072;
+      name: "TeamSponsorshipForbidden";
+      msg: "This proposal kind cannot be team-sponsored";
     },
   ];
 };
@@ -8565,11 +8587,11 @@ export const IDL: Futarchy = {
             type: "i16",
           },
           {
-            name: "requiresTeamSponsorship",
-            docs: [
-              "Launch condition: the proposal must be team-sponsored to launch.",
-            ],
-            type: "bool",
+            name: "teamSponsorshipPolicy",
+            docs: ["Sponsorship policy"],
+            type: {
+              defined: "TeamSponsorshipPolicy",
+            },
           },
           {
             name: "councilCanBlock",
@@ -8671,6 +8693,23 @@ export const IDL: Futarchy = {
           },
           {
             name: "Quote",
+          },
+        ],
+      },
+    },
+    {
+      name: "TeamSponsorshipPolicy",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Required",
+          },
+          {
+            name: "Optional",
+          },
+          {
+            name: "Forbidden",
           },
         ],
       },
@@ -10200,6 +10239,11 @@ export const IDL: Futarchy = {
       code: 6071,
       name: "InvalidTeamAddress",
       msg: "Invalid team address",
+    },
+    {
+      code: 6072,
+      name: "TeamSponsorshipForbidden",
+      msg: "This proposal kind cannot be team-sponsored",
     },
   ],
 };
