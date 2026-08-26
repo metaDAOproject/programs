@@ -106,8 +106,6 @@ pub enum FutarchyError {
     SpendingLimitNotDirty,
     #[msg("Wrong proposal kind for this instruction")]
     InvalidProposalKind,
-    #[msg("This DAO has already been liquidated")]
-    AlreadyLiquidated,
     #[msg("A spending limit can have at most 10 members")]
     TooManySpendingLimitMembers,
     #[msg("Invalid liquidator")]

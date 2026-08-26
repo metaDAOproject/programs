@@ -5012,111 +5012,106 @@ export type Futarchy = {
     },
     {
       code: 6051;
-      name: "AlreadyLiquidated";
-      msg: "This DAO has already been liquidated";
-    },
-    {
-      code: 6052;
       name: "TooManySpendingLimitMembers";
       msg: "A spending limit can have at most 10 members";
     },
     {
-      code: 6053;
+      code: 6052;
       name: "InvalidLiquidator";
       msg: "Invalid liquidator";
     },
     {
-      code: 6054;
+      code: 6053;
       name: "InvalidProposalPassThreshold";
       msg: "Pass threshold must be between -99.99% and 99.99%";
     },
     {
-      code: 6055;
+      code: 6054;
       name: "EmptyProposalParamsUpdate";
       msg: "A proposal params update must set at least one field";
     },
     {
-      code: 6056;
+      code: 6055;
       name: "BuybackCapExceeded";
       msg: "Buyback amount exceeds 25% of the treasury";
     },
     {
-      code: 6057;
+      code: 6056;
       name: "InvalidBuybackAmount";
       msg: "Buyback total must be non-zero";
     },
     {
-      code: 6058;
+      code: 6057;
       name: "InvalidBuybackCycleFrequency";
       msg: "Cycle frequency must be between 60 seconds and 1 year";
     },
     {
-      code: 6059;
+      code: 6058;
       name: "InvalidBuybackStartDelay";
       msg: "Start delay must be at most 30 days";
     },
     {
-      code: 6060;
+      code: 6059;
       name: "InvalidBuybackPriceBand";
       msg: "min_price must be no greater than max_price";
     },
     {
-      code: 6061;
+      code: 6060;
       name: "InvalidTreasuryAccount";
       msg: "A treasury account is neither a vault-owned quote account nor the treasury's AMM position";
     },
     {
-      code: 6062;
+      code: 6061;
       name: "TreasuryAccountsNotSorted";
       msg: "Treasury accounts must be in strictly ascending key order";
     },
     {
-      code: 6063;
+      code: 6062;
       name: "UnexpectedLaunchAccounts";
       msg: "This proposal kind's launch takes no extra accounts";
     },
     {
-      code: 6064;
+      code: 6063;
       name: "InvalidSpendingLimitAccount";
       msg: "Spending limit account is not the canonical spending-limit PDA";
     },
     {
-      code: 6065;
+      code: 6064;
       name: "StaleTeamAddress";
       msg: "The DAO's team has changed since this draft was created";
     },
     {
-      code: 6066;
+      code: 6065;
       name: "AccountNotMigrated";
       msg: "Account is not migrated to latest layout";
     },
     {
-      code: 6067;
+      code: 6066;
       name: "InvalidSpendingLimitAmount";
       msg: "A spending limit's monthly amount must be non-zero";
     },
     {
-      code: 6068;
+      code: 6067;
       name: "EmptySpendingLimitMembers";
       msg: "A spending limit must have at least one member";
     },
     {
-      code: 6069;
+      code: 6068;
       name: "DuplicateSpendingLimitMember";
       msg: "A spending limit's members must be unique";
     },
     {
-      code: 6070;
+      code: 6069;
       name: "InvalidBuybackCycleCount";
       msg: "A buyback must run at least two cycles";
     },
     {
-      code: 6071;
+      code: 6070;
       name: "InvalidTeamAddress";
       msg: "Invalid team address";
     },
     {
-      code: 6072;
+      code: 6071;
       name: "TeamSponsorshipForbidden";
       msg: "This proposal kind cannot be team-sponsored";
     },
@@ -10137,111 +10132,106 @@ export const IDL: Futarchy = {
     },
     {
       code: 6051,
-      name: "AlreadyLiquidated",
-      msg: "This DAO has already been liquidated",
-    },
-    {
-      code: 6052,
       name: "TooManySpendingLimitMembers",
       msg: "A spending limit can have at most 10 members",
     },
     {
-      code: 6053,
+      code: 6052,
       name: "InvalidLiquidator",
       msg: "Invalid liquidator",
     },
     {
-      code: 6054,
+      code: 6053,
       name: "InvalidProposalPassThreshold",
       msg: "Pass threshold must be between -99.99% and 99.99%",
     },
     {
-      code: 6055,
+      code: 6054,
       name: "EmptyProposalParamsUpdate",
       msg: "A proposal params update must set at least one field",
     },
     {
-      code: 6056,
+      code: 6055,
       name: "BuybackCapExceeded",
       msg: "Buyback amount exceeds 25% of the treasury",
     },
     {
-      code: 6057,
+      code: 6056,
       name: "InvalidBuybackAmount",
       msg: "Buyback total must be non-zero",
     },
     {
-      code: 6058,
+      code: 6057,
       name: "InvalidBuybackCycleFrequency",
       msg: "Cycle frequency must be between 60 seconds and 1 year",
     },
     {
-      code: 6059,
+      code: 6058,
       name: "InvalidBuybackStartDelay",
       msg: "Start delay must be at most 30 days",
     },
     {
-      code: 6060,
+      code: 6059,
       name: "InvalidBuybackPriceBand",
       msg: "min_price must be no greater than max_price",
     },
     {
-      code: 6061,
+      code: 6060,
       name: "InvalidTreasuryAccount",
       msg: "A treasury account is neither a vault-owned quote account nor the treasury's AMM position",
     },
     {
-      code: 6062,
+      code: 6061,
       name: "TreasuryAccountsNotSorted",
       msg: "Treasury accounts must be in strictly ascending key order",
     },
     {
-      code: 6063,
+      code: 6062,
       name: "UnexpectedLaunchAccounts",
       msg: "This proposal kind's launch takes no extra accounts",
     },
     {
-      code: 6064,
+      code: 6063,
       name: "InvalidSpendingLimitAccount",
       msg: "Spending limit account is not the canonical spending-limit PDA",
     },
     {
-      code: 6065,
+      code: 6064,
       name: "StaleTeamAddress",
       msg: "The DAO's team has changed since this draft was created",
     },
     {
-      code: 6066,
+      code: 6065,
       name: "AccountNotMigrated",
       msg: "Account is not migrated to latest layout",
     },
     {
-      code: 6067,
+      code: 6066,
       name: "InvalidSpendingLimitAmount",
       msg: "A spending limit's monthly amount must be non-zero",
     },
     {
-      code: 6068,
+      code: 6067,
       name: "EmptySpendingLimitMembers",
       msg: "A spending limit must have at least one member",
     },
     {
-      code: 6069,
+      code: 6068,
       name: "DuplicateSpendingLimitMember",
       msg: "A spending limit's members must be unique",
     },
     {
-      code: 6070,
+      code: 6069,
       name: "InvalidBuybackCycleCount",
       msg: "A buyback must run at least two cycles",
     },
     {
-      code: 6071,
+      code: 6070,
       name: "InvalidTeamAddress",
       msg: "Invalid team address",
     },
     {
-      code: 6072,
+      code: 6071,
       name: "TeamSponsorshipForbidden",
       msg: "This proposal kind cannot be team-sponsored",
     },

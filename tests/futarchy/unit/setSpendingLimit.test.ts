@@ -248,7 +248,7 @@ export default function suite() {
         members: elevenMembers,
       },
       "TooManySpendingLimitMembers",
-      "0x17a4", // 6052
+      "0x17a3", // 6051
     );
   });
 
@@ -261,7 +261,7 @@ export default function suite() {
         members: [Keypair.generate().publicKey],
       },
       "InvalidSpendingLimitAmount",
-      "0x17b3", // 6067
+      "0x17b2", // 6066
     );
   });
 
@@ -274,7 +274,7 @@ export default function suite() {
         members: [],
       },
       "EmptySpendingLimitMembers",
-      "0x17b4", // 6068
+      "0x17b3", // 6067
     );
   });
 
@@ -290,7 +290,7 @@ export default function suite() {
         members: [member, Keypair.generate().publicKey, member],
       },
       "DuplicateSpendingLimitMember",
-      "0x17b5", // 6069
+      "0x17b4", // 6068
     );
   });
 }
