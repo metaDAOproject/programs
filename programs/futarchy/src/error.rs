@@ -124,7 +124,9 @@ pub enum FutarchyError {
     InvalidBuybackStartDelay,
     #[msg("min_price must be no greater than max_price")]
     InvalidBuybackPriceBand,
-    #[msg("A treasury account is neither a vault-owned quote account nor the treasury's AMM position")]
+    #[msg(
+        "A treasury account is neither a vault-owned quote account nor the treasury's AMM position"
+    )]
     InvalidTreasuryAccount,
     #[msg("Treasury accounts must be in strictly ascending key order")]
     TreasuryAccountsNotSorted,

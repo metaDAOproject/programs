@@ -52,7 +52,7 @@ impl ResizeDao<'_> {
             FutarchyError::InvalidSpendingLimitAccount
         );
 
-        // The record must reflect the live Squads account because of the 
+        // The record must reflect the live Squads account because of the
         // LargeSpend authorization cap.
         let live_spending_limit = Self::live_canonical_spending_limit(
             &ctx.accounts.spending_limit,
