@@ -12,6 +12,8 @@ pub struct SponsorProposal<'info> {
 
 impl SponsorProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
             FutarchyError::ProposalNotInDraftState

@@ -362,6 +362,21 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
+  it("refuses sponsor_proposal", async function () {
+    const callbacks = expectError(
+      "DaoLiquidated",
+      "sponsor_proposal should refuse on a liquidated DAO",
+    );
+
+    await this.futarchy
+      .sponsorProposalIx({ proposal: draftProposal, dao })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    const storedProposal = await this.futarchy.getProposal(draftProposal);
+    assert.isFalse(storedProposal.isTeamSponsored);
+  });
+
   it("refuses conditional_swap", async function () {
     const callbacks = expectError(
       "DaoLiquidated",
