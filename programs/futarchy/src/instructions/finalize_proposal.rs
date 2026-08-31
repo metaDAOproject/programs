@@ -179,6 +179,7 @@ impl FinalizeProposal<'_> {
         }
 
         // In case of a hostile liquidation, set the liquidator immediately.
+        // This write can only occur once, as a liquidated DAO can't start another proposal.
         if new_proposal_state == ProposalState::Passed {
             if let ProposalAction::HostileLiquidate { liquidator } = &proposal.action {
                 dao.liquidator = Some(*liquidator);
