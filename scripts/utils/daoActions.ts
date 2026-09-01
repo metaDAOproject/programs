@@ -1,4 +1,5 @@
 import { AnchorProvider } from "@coral-xyz/anchor";
+import * as multisig from "@sqds/multisig";
 import BN from "bn.js";
 import {
   Keypair,
@@ -30,7 +31,8 @@ export type DaoActionContext = {
   futarchy: FutarchyClient;
   dao: PublicKey;
   daoMultisig: PublicKey;
-  // The signer of the vault transaction's inner instructions
+  // The signer of the vault transaction's inner instructions, unless an
+  // instruction is signed by the DAO itself (see removeSpendingLimit)
   daoMultisigVault: PublicKey;
   payer: PublicKey;
 };
@@ -41,6 +43,11 @@ export type DaoAction = {
   // Payer-funded instructions sent up front, so the vault transaction can't
   // fail at execution time (e.g. creating token accounts)
   setupInstructions?: TransactionInstruction[];
+  // Set when the DAO itself signs any of the instructions. Only
+  // admin_execute_multisig_proposal signs for the DAO, so the proposal has to
+  // be executed with adminExecuteMultisigProposal.ts rather than
+  // permissionlessly.
+  requiresAdminExecution?: boolean;
 };
 
 export type DaoActionBuilder = (ctx: DaoActionContext) => Promise<DaoAction>;
@@ -260,12 +267,51 @@ export const transferToken =
     };
   };
 
+// Removes the DAO's spending limit, returning its rent to the vault. The DAO
+// is its multisig's config authority, so the DAO signs this rather than the
+// vault, which makes the proposal admin-execute only.
+export const removeSpendingLimit =
+  (): DaoActionBuilder =>
+  async ({ provider, dao, daoMultisig, daoMultisigVault }) => {
+    const [spendingLimit] = multisig.getSpendingLimitPda({
+      multisigPda: daoMultisig,
+      createKey: dao,
+    });
+    const spendingLimitAccount =
+      await multisig.accounts.SpendingLimit.fromAccountAddress(
+        provider.connection,
+        spendingLimit,
+      );
+
+    console.log("Spending limit:", spendingLimit.toBase58());
+    console.log(
+      `  ${spendingLimitAccount.amount.toString()} of ${spendingLimitAccount.mint.toBase58()} per ${multisig.types.Period[spendingLimitAccount.period]}`,
+    );
+    console.log(
+      "  members:",
+      spendingLimitAccount.members.map((m) => m.toBase58()).join(", "),
+    );
+
+    return {
+      instructions: [
+        multisig.instructions.multisigRemoveSpendingLimit({
+          multisigPda: daoMultisig,
+          configAuthority: dao,
+          spendingLimit,
+          rentCollector: daoMultisigVault,
+        }),
+      ],
+      requiresAdminExecution: true,
+    };
+  };
+
 /**
  * Runs the action builders and routes their instructions through the admin
  * approval system. On top of buildAdminApprovalTransactions' result, returns
  * `setupTransaction` - a payer-funded transaction with the actions' setup
  * instructions (null if none), to be signed by the payer and sent before the
- * others.
+ * others - and `requiresAdminExecution`, set when any action needs the DAO
+ * proposal executed through admin_execute_multisig_proposal.
  */
 export const buildDaoActionTransactions = async ({
   provider,
@@ -306,6 +352,10 @@ export const buildDaoActionTransactions = async ({
     throw new Error("No instructions to enqueue - add at least one action");
   }
 
+  const requiresAdminExecution = built.some(
+    (action) => action.requiresAdminExecution,
+  );
+
   let setupTransaction: Transaction | null = null;
   if (setupInstructions.length > 0) {
     setupTransaction = new Transaction().add(...setupInstructions);
@@ -317,6 +367,7 @@ export const buildDaoActionTransactions = async ({
 
   return {
     setupTransaction,
+    requiresAdminExecution,
     ...(await buildAdminApprovalTransactions({
       provider,
       futarchy,
@@ -367,7 +418,8 @@ export const signAndSendDaoActionTransactions = async ({
   payer: Keypair;
   transactions: Awaited<ReturnType<typeof buildDaoActionTransactions>>;
 }) => {
-  const { setupTransaction, buildDaoTransaction } = transactions;
+  const { setupTransaction, requiresAdminExecution, buildDaoTransaction } =
+    transactions;
 
   let setupSignature: string | null = null;
   if (setupTransaction) {
@@ -484,6 +536,15 @@ export const signAndSendDaoActionTransactions = async ({
   console.log(
     "Go ahead and approve + execute the enqueue approval through Squads.",
   );
+  if (requiresAdminExecution) {
+    console.log(
+      "The DAO signs some of the enqueued instructions, so the permissionless execute can't run this proposal. Once the enqueue approval executes, run adminExecuteMultisigProposal.ts with the admin key.",
+    );
+  } else {
+    console.log(
+      "Then approve + execute the DAO proposal with executeMultisigProposalApproval.ts.",
+    );
+  }
 
   return { setupSignature, daoSignature, metadaoSignature };
 };

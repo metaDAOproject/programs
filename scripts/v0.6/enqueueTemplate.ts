@@ -5,6 +5,7 @@ import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import { MAINNET_USDC } from "@metadaoproject/programs";
 import {
   buildDaoActionTransactions,
+  removeSpendingLimit,
   signAndSendDaoActionTransactions,
   transferToken,
   updateDao,
@@ -14,14 +15,15 @@ import {
 // Template for enqueueing DAO vault actions through the admin approval system.
 // Copy it, set the constants, and compose the actions below. Once the ops
 // multisig approves + executes the enqueue, approve + execute the DAO proposal
-// with executeMultisigProposalApproval.ts.
+// with executeMultisigProposalApproval.ts - or adminExecuteMultisigProposal.ts
+// when an action is signed by the DAO itself, like removeSpendingLimit.
 
 ///////////////
 // Constants //
 ///////////////
 
 // The DAO whose vault should execute the actions
-const DAO = new PublicKey("DAO_PUBKEY");
+const DAO = new PublicKey("3D854kknnQhu9xVaRNV154oZ9oN2WF3tXsq3LDu7fFMn");
 
 ////////////////
 // Operations //
@@ -44,7 +46,13 @@ async function main() {
     actions: [
       // Compose the actions the DAO's vault should execute, e.g.:
       //
-      // updateDao({ teamAddress: new PublicKey("...") }),
+      updateDao({
+        baseToStake: new BN(1_500_000).mul(new BN(10 ** 6)),
+        passThresholdBps: 300,
+        teamSponsoredPassThresholdBps: -300,
+        minBaseFutarchicLiquidity: new BN(1),
+        minQuoteFutarchicLiquidity: new BN(1),
+      }),
       //
       // withdrawLiquidity({ fractionBps: 5_000, slippageBps: 2_000 }),
       //
@@ -53,6 +61,8 @@ async function main() {
       //   recipient: new PublicKey("..."),
       //   amount: new BN(1_000).mul(new BN(10 ** 6)),
       // }),
+      //
+      // removeSpendingLimit(),
     ],
   });
 
