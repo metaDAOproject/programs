@@ -57,6 +57,7 @@ import {
 } from "./types/v0.6.1-futarchy.js";
 import {
   getDaoAddr,
+  getEnqueuedMultisigProposalApprovalAddr,
   getEnqueuedMultisigProposalCancellationAddr,
   getProposalAddr,
   getProposalAddrV2,
@@ -1717,10 +1718,61 @@ export class FutarchyClient {
       });
   }
 
-  // Leg 1 of the cancellation set: the admin (or the liquidator on a
-  // liquidated DAO) records the intent to cancel the Squads proposal at
-  // `transactionIndex`. No Squads CPI happens here, so a Squads vault can be
-  // the signer.
+  adminEnqueueMultisigProposalApprovalIx({
+    dao,
+    transactionIndex,
+    admin = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    admin?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedApproval] = getEnqueuedMultisigProposalApprovalAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods
+      .adminEnqueueMultisigProposalApproval({
+        transactionIndex: new BN(transactionIndex.toString()),
+      })
+      .accounts({
+        dao,
+        admin,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedApproval,
+      });
+  }
+
+  executeMultisigProposalApprovalIx({
+    dao,
+    transactionIndex,
+    rentReceiver = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    rentReceiver?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedApproval] = getEnqueuedMultisigProposalApprovalAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods.executeMultisigProposalApproval().accounts({
+      dao,
+      rentReceiver,
+      squadsMultisig,
+      squadsMultisigProposal: squadsProposal,
+      enqueuedApproval,
+      squadsMultisigProgram: SQUADS_PROGRAM_ID,
+    });
+  }
+
   adminEnqueueMultisigProposalCancellationIx({
     dao,
     transactionIndex,
@@ -1750,9 +1802,6 @@ export class FutarchyClient {
       });
   }
 
-  // Leg 2 of the cancellation set, permissionless: casts the DAO PDA's cancel
-  // vote on the enqueued Squads proposal and closes the enqueued record to
-  // `rentReceiver`.
   executeMultisigProposalCancellationIx({
     dao,
     transactionIndex,

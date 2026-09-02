@@ -26,7 +26,6 @@ import * as multisig from "@sqds/multisig";
 import { executeVaultTransaction, passProposal } from "../../utils.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
-const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
 // The lazy-unwind path: finalize bricks the DAO (liquidator written, limit
 // zeroed), the payload is ceremony (memo only), and the treasury position
@@ -88,7 +87,6 @@ export default function suite() {
 
     const storedDaoBefore = await this.futarchy.getDao(dao);
     const vault = storedDaoBefore.squadsMultisigVault;
-    const multisigPda = storedDaoBefore.squadsMultisig;
 
     // The unwind destination: the vault's ATAs
     await this.createTokenAccount(META, vault);
@@ -212,44 +210,20 @@ export default function suite() {
       createTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
       await this.banksClient.processTransaction(createTx);
 
-      const {
-        squadsProposal: estateSquadsProposal,
-        squadsTransaction: estateSquadsTransaction,
-      } = getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+      const { squadsTransaction: estateSquadsTransaction } =
+        getProposalAddrsForTransactionIndex({ dao, transactionIndex });
 
-      const [enqueuedApproval] = PublicKey.findProgramAddressSync(
-        [
-          SEED_ENQUEUED_APPROVAL,
-          dao.toBuffer(),
-          new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
-        ],
-        this.futarchy.futarchy.programId,
-      );
-
-      await this.futarchy.futarchy.methods
-        .adminEnqueueMultisigProposalApproval({
-          transactionIndex: new BN(transactionIndex.toString()),
-        })
-        .accounts({
+      await this.futarchy
+        .adminEnqueueMultisigProposalApprovalIx({
           dao,
+          transactionIndex,
           admin: liquidator.publicKey,
-          squadsMultisig: multisigPda,
-          squadsMultisigProposal: estateSquadsProposal,
-          enqueuedApproval,
         })
         .signers([liquidator])
         .rpc();
 
-      await this.futarchy.futarchy.methods
-        .executeMultisigProposalApproval()
-        .accounts({
-          dao,
-          rentReceiver: this.payer.publicKey,
-          squadsMultisig: multisigPda,
-          squadsMultisigProposal: estateSquadsProposal,
-          enqueuedApproval,
-          squadsMultisigProgram: multisig.PROGRAM_ID,
-        })
+      await this.futarchy
+        .executeMultisigProposalApprovalIx({ dao, transactionIndex })
         .rpc();
 
       await executeVaultTransaction(this, dao, estateSquadsTransaction);

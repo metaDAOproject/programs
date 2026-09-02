@@ -13,6 +13,7 @@ import {
 } from "@solana/spl-token";
 import {
   getDaoAddr,
+  getEnqueuedMultisigProposalApprovalAddr,
   getProposalAddrsForTransactionIndex,
   PERMISSIONLESS_ACCOUNT,
 } from "@metadaoproject/programs";
@@ -24,14 +25,11 @@ import {
   THOUSAND_BUCK_PRICE,
 } from "../../utils.js";
 
-const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
-
 export default function suite() {
   let META: PublicKey,
     USDC: PublicKey,
     dao: PublicKey,
     vault: PublicKey,
-    squadsMultisig: PublicKey,
     liquidator: Keypair;
 
   // The estate cycle starts from a genuinely liquidated DAO: a hostile
@@ -91,7 +89,6 @@ export default function suite() {
 
     const storedDao = await this.futarchy.getDao(dao);
     vault = storedDao.squadsMultisigVault;
-    squadsMultisig = storedDao.squadsMultisig;
 
     await this.createTokenAccount(USDC, vault);
 
@@ -177,28 +174,13 @@ export default function suite() {
     return getProposalAddrsForTransactionIndex({ dao, transactionIndex });
   };
 
-  const deriveEnqueuedApprovalPda = (
-    context: any,
-    transactionIndex: bigint,
-  ): PublicKey => {
-    const [pda] = PublicKey.findProgramAddressSync(
-      [
-        SEED_ENQUEUED_APPROVAL,
-        dao.toBuffer(),
-        new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
-      ],
-      context.futarchy.futarchy.programId,
-    );
-    return pda;
-  };
-
   it("refuses a non-liquidator enqueue once the DAO is liquidated", async function () {
     const recipient = Keypair.generate().publicKey;
     const recipientAta = await this.createTokenAccount(USDC, recipient);
     const vaultUsdcAta = getAssociatedTokenAddressSync(USDC, vault, true);
 
     // The liquidation payload was transaction 1; the estate starts at 2
-    const { squadsProposal } = await createEstateProposal(this, 2n, [
+    await createEstateProposal(this, 2n, [
       createTransferInstruction(
         vaultUsdcAta,
         recipientAta,
@@ -212,16 +194,8 @@ export default function suite() {
       "enqueue by a non-liquidator should fail on a liquidated DAO",
     );
 
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(2) })
-      .accounts({
-        dao,
-        admin: this.payer.publicKey,
-        squadsMultisig,
-        squadsMultisigProposal: squadsProposal,
-        enqueuedApproval: deriveEnqueuedApprovalPda(this, 2n),
-      })
-      .signers([this.payer])
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex: 2n })
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -244,16 +218,16 @@ export default function suite() {
       ],
     );
 
-    const enqueuedApprovalPda = deriveEnqueuedApprovalPda(this, 2n);
+    const enqueuedApprovalPda = getEnqueuedMultisigProposalApprovalAddr({
+      dao,
+      transactionIndex: 2n,
+    })[0];
 
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(2) })
-      .accounts({
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({
         dao,
+        transactionIndex: 2n,
         admin: liquidator.publicKey,
-        squadsMultisig,
-        squadsMultisigProposal: squadsProposal,
-        enqueuedApproval: enqueuedApprovalPda,
       })
       .signers([liquidator])
       .rpc();
@@ -267,17 +241,8 @@ export default function suite() {
 
     // The middle leg stays permissionless: any signer cranks the DAO PDA's
     // approve vote, which meets the threshold of 1 on its own
-    await this.futarchy.futarchy.methods
-      .executeMultisigProposalApproval()
-      .accounts({
-        dao,
-        rentReceiver: this.payer.publicKey,
-        squadsMultisig,
-        squadsMultisigProposal: squadsProposal,
-        enqueuedApproval: enqueuedApprovalPda,
-        squadsMultisigProgram: multisig.PROGRAM_ID,
-      })
-      .signers([this.payer])
+    await this.futarchy
+      .executeMultisigProposalApprovalIx({ dao, transactionIndex: 2n })
       .rpc();
 
     let storedSquadsProposal =

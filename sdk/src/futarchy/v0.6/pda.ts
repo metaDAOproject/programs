@@ -82,9 +82,25 @@ export const getProposalAddrsForTransactionIndex = ({
   };
 };
 
-// The futarchy PDA that records an admin's or liquidator's intent to cancel
-// the Squads proposal at `transactionIndex`, consumed and closed by
-// `execute_multisig_proposal_cancellation`.
+export const getEnqueuedMultisigProposalApprovalAddr = ({
+  dao,
+  transactionIndex,
+  programId = FUTARCHY_V0_6_PROGRAM_ID,
+}: {
+  dao: PublicKey;
+  transactionIndex: bigint;
+  programId?: PublicKey;
+}): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("enqueued_approval"),
+      dao.toBuffer(),
+      new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
+    ],
+    programId,
+  );
+};
+
 export const getEnqueuedMultisigProposalCancellationAddr = ({
   dao,
   transactionIndex,

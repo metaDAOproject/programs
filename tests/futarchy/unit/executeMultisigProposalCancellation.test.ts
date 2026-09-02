@@ -12,9 +12,6 @@ import {
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import { createMemoInstruction } from "@solana/spl-memo";
-import BN from "bn.js";
-
-const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
 export default function suite() {
   let META: PublicKey,
@@ -117,40 +114,18 @@ export default function suite() {
         transactionIndex: configTransactionIndex,
       });
 
-    const [configEnqueuedApproval] = PublicKey.findProgramAddressSync(
-      [
-        SEED_ENQUEUED_APPROVAL,
-        dao.toBuffer(),
-        new BN(configTransactionIndex.toString()).toArrayLike(Buffer, "le", 8),
-      ],
-      context.futarchy.futarchy.programId,
-    );
-
-    await context.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({
-        transactionIndex: new BN(configTransactionIndex.toString()),
-      })
-      .accounts({
+    await context.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({
         dao,
-        admin: context.payer.publicKey,
-        squadsMultisig,
-        squadsMultisigProposal: configProposal,
-        enqueuedApproval: configEnqueuedApproval,
+        transactionIndex: configTransactionIndex,
       })
-      .signers([context.payer])
       .rpc();
 
-    await context.futarchy.futarchy.methods
-      .executeMultisigProposalApproval()
-      .accounts({
+    await context.futarchy
+      .executeMultisigProposalApprovalIx({
         dao,
-        rentReceiver: context.payer.publicKey,
-        squadsMultisig,
-        squadsMultisigProposal: configProposal,
-        enqueuedApproval: configEnqueuedApproval,
-        squadsMultisigProgram: multisig.PROGRAM_ID,
+        transactionIndex: configTransactionIndex,
       })
-      .signers([context.payer])
       .rpc();
 
     const configTransactionAccount =

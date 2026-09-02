@@ -32,7 +32,6 @@ import {
 } from "../../gatedMint/utils.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
-const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
 export default function suite() {
   it("liquidates a gated DAO with a frozen AMM base vault and unwinds via gated_invoke", async function () {
@@ -97,7 +96,6 @@ export default function suite() {
 
     const storedDaoBefore = await this.futarchy.getDao(dao);
     const vault = storedDaoBefore.squadsMultisigVault;
-    const multisigPda = storedDaoBefore.squadsMultisig;
 
     // The unwind destination: the vault's ATAs
     const vaultBaseAta = await this.createTokenAccount(GATED, vault);
@@ -266,42 +264,20 @@ export default function suite() {
     estateCreateTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
     await this.banksClient.processTransaction(estateCreateTx);
 
-    const {
-      squadsProposal: estateSquadsProposal,
-      squadsTransaction: estateSquadsTransaction,
-    } = getProposalAddrsForTransactionIndex({ dao, transactionIndex: 2n });
+    const { squadsTransaction: estateSquadsTransaction } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex: 2n });
 
-    const [enqueuedApproval] = PublicKey.findProgramAddressSync(
-      [
-        SEED_ENQUEUED_APPROVAL,
-        dao.toBuffer(),
-        new BN(2).toArrayLike(Buffer, "le", 8),
-      ],
-      this.futarchy.futarchy.programId,
-    );
-
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(2) })
-      .accounts({
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({
         dao,
+        transactionIndex: 2n,
         admin: liquidator.publicKey,
-        squadsMultisig: multisigPda,
-        squadsMultisigProposal: estateSquadsProposal,
-        enqueuedApproval,
       })
       .signers([liquidator])
       .rpc();
 
-    await this.futarchy.futarchy.methods
-      .executeMultisigProposalApproval()
-      .accounts({
-        dao,
-        rentReceiver: this.payer.publicKey,
-        squadsMultisig: multisigPda,
-        squadsMultisigProposal: estateSquadsProposal,
-        enqueuedApproval,
-        squadsMultisigProgram: multisig.PROGRAM_ID,
-      })
+    await this.futarchy
+      .executeMultisigProposalApprovalIx({ dao, transactionIndex: 2n })
       .rpc();
 
     // The whitelisted caller co-signs the execution alongside the Squads
@@ -489,42 +465,20 @@ export default function suite() {
     estateCreateTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
     await this.banksClient.processTransaction(estateCreateTx);
 
-    const {
-      squadsProposal: estateSquadsProposal,
-      squadsTransaction: estateSquadsTransaction,
-    } = getProposalAddrsForTransactionIndex({ dao, transactionIndex: 2n });
+    const { squadsTransaction: estateSquadsTransaction } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex: 2n });
 
-    const [enqueuedApproval] = PublicKey.findProgramAddressSync(
-      [
-        SEED_ENQUEUED_APPROVAL,
-        dao.toBuffer(),
-        new BN(2).toArrayLike(Buffer, "le", 8),
-      ],
-      this.futarchy.futarchy.programId,
-    );
-
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(2) })
-      .accounts({
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({
         dao,
+        transactionIndex: 2n,
         admin: liquidator.publicKey,
-        squadsMultisig: multisigPda,
-        squadsMultisigProposal: estateSquadsProposal,
-        enqueuedApproval,
       })
       .signers([liquidator])
       .rpc();
 
-    await this.futarchy.futarchy.methods
-      .executeMultisigProposalApproval()
-      .accounts({
-        dao,
-        rentReceiver: this.payer.publicKey,
-        squadsMultisig: multisigPda,
-        squadsMultisigProposal: estateSquadsProposal,
-        enqueuedApproval,
-        squadsMultisigProgram: multisig.PROGRAM_ID,
-      })
+    await this.futarchy
+      .executeMultisigProposalApprovalIx({ dao, transactionIndex: 2n })
       .rpc();
 
     await executeVaultTransaction(this, dao, estateSquadsTransaction);

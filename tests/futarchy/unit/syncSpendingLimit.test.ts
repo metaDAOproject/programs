@@ -19,7 +19,6 @@ import { TestContext } from "../../main.test.js";
 const { Period } = multisig.types;
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
-const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
 async function initializeTestDao(
   context: TestContext,
@@ -90,43 +89,12 @@ async function executeSetSpendingLimitViaVault(
   createTx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
   await context.banksClient.processTransaction(createTx);
 
-  const [squadsProposal] = multisig.getProposalPda({
-    multisigPda,
-    transactionIndex,
-  });
-
-  const [enqueuedApproval] = PublicKey.findProgramAddressSync(
-    [
-      SEED_ENQUEUED_APPROVAL,
-      dao.toBuffer(),
-      new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
-    ],
-    context.futarchy.futarchy.programId,
-  );
-
-  await context.futarchy.futarchy.methods
-    .adminEnqueueMultisigProposalApproval({
-      transactionIndex: new BN(transactionIndex.toString()),
-    })
-    .accounts({
-      dao,
-      admin: context.payer.publicKey,
-      squadsMultisig: multisigPda,
-      squadsMultisigProposal: squadsProposal,
-      enqueuedApproval,
-    })
+  await context.futarchy
+    .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex })
     .rpc();
 
-  await context.futarchy.futarchy.methods
-    .executeMultisigProposalApproval()
-    .accounts({
-      dao,
-      rentReceiver: context.payer.publicKey,
-      squadsMultisig: multisigPda,
-      squadsMultisigProposal: squadsProposal,
-      enqueuedApproval,
-      squadsMultisigProgram: multisig.PROGRAM_ID,
-    })
+  await context.futarchy
+    .executeMultisigProposalApprovalIx({ dao, transactionIndex })
     .rpc();
 
   // Execute as a top-level Squads instruction so the vault PDA signs the
