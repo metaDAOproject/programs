@@ -2014,6 +2014,85 @@ export type Futarchy = {
       args: [];
     },
     {
+      name: "adminEnqueueMultisigProposalCancellation";
+      accounts: [
+        {
+          name: "dao";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "enqueuedCancellation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "AdminEnqueueMultisigProposalCancellationArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "executeMultisigProposalCancellation";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "rentReceiver";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "enqueuedCancellation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "adminExecuteMultisigProposal";
       accounts: [
         {
@@ -2636,6 +2715,26 @@ export type Futarchy = {
       };
     },
     {
+      name: "enqueuedMultisigProposalCancellation";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "transactionIndex";
+            type: "u64";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
       name: "proposal";
       type: {
         kind: "struct";
@@ -2853,6 +2952,18 @@ export type Futarchy = {
     },
     {
       name: "AdminEnqueueMultisigProposalApprovalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "transactionIndex";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "AdminEnqueueMultisigProposalCancellationArgs";
       type: {
         kind: "struct";
         fields: [
@@ -5116,6 +5227,11 @@ export type Futarchy = {
       name: "TeamSponsorshipForbidden";
       msg: "This proposal kind cannot be team-sponsored";
     },
+    {
+      code: 6072;
+      name: "SquadsProposalNotApproved";
+      msg: "Squads proposal must be in Approved status to be cancelled";
+    },
   ];
 };
 
@@ -7135,6 +7251,85 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
+      name: "adminEnqueueMultisigProposalCancellation",
+      accounts: [
+        {
+          name: "dao",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "enqueuedCancellation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "AdminEnqueueMultisigProposalCancellationArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "executeMultisigProposalCancellation",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "rentReceiver",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "enqueuedCancellation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "adminExecuteMultisigProposal",
       accounts: [
         {
@@ -7757,6 +7952,26 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "enqueuedMultisigProposalCancellation",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "transactionIndex",
+            type: "u64",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
       name: "proposal",
       type: {
         kind: "struct",
@@ -7974,6 +8189,18 @@ export const IDL: Futarchy = {
     },
     {
       name: "AdminEnqueueMultisigProposalApprovalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "transactionIndex",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "AdminEnqueueMultisigProposalCancellationArgs",
       type: {
         kind: "struct",
         fields: [
@@ -10236,6 +10463,11 @@ export const IDL: Futarchy = {
       code: 6071,
       name: "TeamSponsorshipForbidden",
       msg: "This proposal kind cannot be team-sponsored",
+    },
+    {
+      code: 6072,
+      name: "SquadsProposalNotApproved",
+      msg: "Squads proposal must be in Approved status to be cancelled",
     },
   ],
 };

@@ -1,5 +1,6 @@
-import { BN, utils } from "@coral-xyz/anchor";
+import { utils } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
 
 import { FUTARCHY_V0_6_PROGRAM_ID } from "../../constants.js";
@@ -79,6 +80,28 @@ export const getProposalAddrsForTransactionIndex = ({
     squadsProposal,
     proposal,
   };
+};
+
+// The futarchy PDA that records an admin's or liquidator's intent to cancel
+// the Squads proposal at `transactionIndex`, consumed and closed by
+// `execute_multisig_proposal_cancellation`.
+export const getEnqueuedMultisigProposalCancellationAddr = ({
+  dao,
+  transactionIndex,
+  programId = FUTARCHY_V0_6_PROGRAM_ID,
+}: {
+  dao: PublicKey;
+  transactionIndex: bigint;
+  programId?: PublicKey;
+}): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("enqueued_cancellation"),
+      dao.toBuffer(),
+      new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
+    ],
+    programId,
+  );
 };
 
 // The Squads spending-limit PDA — `create_key` is always the DAO, so the

@@ -235,6 +235,21 @@ pub mod futarchy {
         ExecuteMultisigProposalApproval::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn admin_enqueue_multisig_proposal_cancellation(
+        ctx: Context<AdminEnqueueMultisigProposalCancellation>,
+        args: AdminEnqueueMultisigProposalCancellationArgs,
+    ) -> Result<()> {
+        AdminEnqueueMultisigProposalCancellation::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn execute_multisig_proposal_cancellation(
+        ctx: Context<ExecuteMultisigProposalCancellation>,
+    ) -> Result<()> {
+        ExecuteMultisigProposalCancellation::handle(ctx)
+    }
+
     #[access_control(ctx.accounts.validate())]
     pub fn admin_execute_multisig_proposal<'c: 'info, 'info>(
         ctx: Context<'_, '_, 'c, 'info, AdminExecuteMultisigProposal<'info>>,

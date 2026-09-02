@@ -150,4 +150,6 @@ pub enum FutarchyError {
     InvalidTeamAddress,
     #[msg("This proposal kind cannot be team-sponsored")]
     TeamSponsorshipForbidden,
+    #[msg("Squads proposal must be in Approved status to be cancelled")]
+    SquadsProposalNotApproved,
 }

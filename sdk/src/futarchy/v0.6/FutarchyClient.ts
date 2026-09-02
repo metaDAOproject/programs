@@ -57,6 +57,7 @@ import {
 } from "./types/v0.6.1-futarchy.js";
 import {
   getDaoAddr,
+  getEnqueuedMultisigProposalCancellationAddr,
   getProposalAddr,
   getProposalAddrV2,
   getProposalAddrsForTransactionIndex,
@@ -1713,6 +1714,70 @@ export class FutarchyClient {
         dao,
         proposal,
         admin,
+      });
+  }
+
+  // Leg 1 of the cancellation set: the admin (or the liquidator on a
+  // liquidated DAO) records the intent to cancel the Squads proposal at
+  // `transactionIndex`. No Squads CPI happens here, so a Squads vault can be
+  // the signer.
+  adminEnqueueMultisigProposalCancellationIx({
+    dao,
+    transactionIndex,
+    admin = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    admin?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedCancellation] = getEnqueuedMultisigProposalCancellationAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods
+      .adminEnqueueMultisigProposalCancellation({
+        transactionIndex: new BN(transactionIndex.toString()),
+      })
+      .accounts({
+        dao,
+        admin,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedCancellation,
+      });
+  }
+
+  // Leg 2 of the cancellation set, permissionless: casts the DAO PDA's cancel
+  // vote on the enqueued Squads proposal and closes the enqueued record to
+  // `rentReceiver`.
+  executeMultisigProposalCancellationIx({
+    dao,
+    transactionIndex,
+    rentReceiver = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    rentReceiver?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedCancellation] = getEnqueuedMultisigProposalCancellationAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods
+      .executeMultisigProposalCancellation()
+      .accounts({
+        dao,
+        rentReceiver,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedCancellation,
+        squadsMultisigProgram: SQUADS_PROGRAM_ID,
       });
   }
 
