@@ -39,7 +39,8 @@ pub struct Proposal {
     pub pass_quote_mint: Pubkey,
     pub fail_base_mint: Pubkey,
     pub fail_quote_mint: Pubkey,
-    pub is_team_sponsored: bool,
+    /// The team that last sponsored the proposal. `None` = never sponsored.
+    pub sponsored_by: Option<Pubkey>,
     /// Snapshot of the kind's threshold at create.
     pub pass_threshold_bps: i16,
     /// Snapshot of the kind's blockable flag at create.
@@ -49,6 +50,11 @@ pub struct Proposal {
 }
 
 impl Proposal {
+    /// Whether the sponsorship is by the DAO's current team.
+    pub fn is_sponsored_by(&self, team_address: Pubkey) -> bool {
+        self.sponsored_by == Some(team_address)
+    }
+
     /// A migrated `Proposal` account is exactly this long.
     pub const MIGRATED_SIZE: usize = Proposal::INIT_SPACE + 8;
 

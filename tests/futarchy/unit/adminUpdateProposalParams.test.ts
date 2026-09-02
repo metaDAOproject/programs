@@ -231,7 +231,10 @@ export default function suite() {
       .rpc();
 
     const after = await this.futarchy.getProposal(proposal);
-    assert.isTrue(after.isTeamSponsored);
+    assert.equal(
+      after.sponsoredBy?.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
     assert.equal(after.durationInSeconds, DAY_SECONDS * 2);
     assert.equal(after.passThresholdBps, 200);
   });
@@ -250,7 +253,10 @@ export default function suite() {
     await this.futarchy.sponsorProposalIx({ proposal, dao }).rpc();
 
     const after = await this.futarchy.getProposal(proposal);
-    assert.isTrue(after.isTeamSponsored);
+    assert.equal(
+      after.sponsoredBy?.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
     assert.equal(after.durationInSeconds, DAY_SECONDS * 2);
     assert.equal(after.passThresholdBps, 200);
   });

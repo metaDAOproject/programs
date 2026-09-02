@@ -26,9 +26,10 @@ impl ResizeProposal<'_> {
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Proposal::MIGRATED_SIZE;
-        // 369 bytes: 2 (i16 pass_threshold_bps) + 1 (bool council_can_block)
+        // 401 bytes: 32 (Option<Pubkey> sponsored_by replacing the bool)
+        // + 2 (i16 pass_threshold_bps) + 1 (bool council_can_block)
         // + 366 (ProposalAction)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 369;
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 401;
 
         if proposal.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -58,6 +59,14 @@ impl ResizeProposal<'_> {
                 (pass_threshold_bps, old_proposal_data.duration_in_seconds)
             };
 
+        // A legacy sponsorship was signed by the team of its day, which is
+        // still the DAO's team. Before this migration, we never had a team change.
+        let sponsored_by = if old_proposal_data.is_team_sponsored {
+            Some(dao.team_address)
+        } else {
+            None
+        };
+
         let new_proposal_data = Proposal {
             number: old_proposal_data.number,
             proposer: old_proposal_data.proposer,
@@ -74,7 +83,7 @@ impl ResizeProposal<'_> {
             pass_quote_mint: old_proposal_data.pass_quote_mint,
             fail_base_mint: old_proposal_data.fail_base_mint,
             fail_quote_mint: old_proposal_data.fail_quote_mint,
-            is_team_sponsored: old_proposal_data.is_team_sponsored,
+            sponsored_by,
             pass_threshold_bps,
             council_can_block: true,
             action,

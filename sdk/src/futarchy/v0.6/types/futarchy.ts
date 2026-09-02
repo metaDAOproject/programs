@@ -2701,8 +2701,14 @@ export type Futarchy = {
             type: "publicKey";
           },
           {
-            name: "isTeamSponsored";
-            type: "bool";
+            name: "sponsoredBy";
+            docs: [
+              "The team that last sponsored the draft. Counts only while it is still",
+              "the DAO's team. `None` = never sponsored.",
+            ];
+            type: {
+              option: "publicKey";
+            };
           },
           {
             name: "passThresholdBps";
@@ -7821,8 +7827,14 @@ export const IDL: Futarchy = {
             type: "publicKey",
           },
           {
-            name: "isTeamSponsored",
-            type: "bool",
+            name: "sponsoredBy",
+            docs: [
+              "The team that last sponsored the draft. Counts only while it is still",
+              "the DAO's team. `None` = never sponsored.",
+            ],
+            type: {
+              option: "publicKey",
+            },
           },
           {
             name: "passThresholdBps",

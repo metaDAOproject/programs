@@ -374,7 +374,7 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
 
     const storedProposal = await this.futarchy.getProposal(draftProposal);
-    assert.isFalse(storedProposal.isTeamSponsored);
+    assert.isNull(storedProposal.sponsoredBy);
   });
 
   it("refuses conditional_swap", async function () {

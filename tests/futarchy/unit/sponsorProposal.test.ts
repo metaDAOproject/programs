@@ -10,7 +10,11 @@ import {
 } from "@solana/spl-token";
 import BN from "bn.js";
 import { assert } from "chai";
-import { expectError } from "../../utils.js";
+import {
+  executeVaultTransaction,
+  expectError,
+  forceApproveSquadsProposal,
+} from "../../utils.js";
 import { TestContext } from "../../main.test.js";
 
 export default function suite() {
@@ -80,7 +84,7 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
-    assert.isFalse(storedProposal.isTeamSponsored);
+    assert.isNull(storedProposal.sponsoredBy);
   });
 
   it("rejects a hostile liquidate draft", async function () {
@@ -99,7 +103,7 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
-    assert.isFalse(storedProposal.isTeamSponsored);
+    assert.isNull(storedProposal.sponsoredBy);
   });
 
   it("sponsors a mint tokens draft", async function () {
@@ -108,7 +112,10 @@ export default function suite() {
     await this.futarchy.sponsorProposalIx({ proposal, dao }).rpc();
 
     const storedProposal = await this.futarchy.getProposal(proposal);
-    assert.isTrue(storedProposal.isTeamSponsored);
+    assert.equal(
+      storedProposal.sponsoredBy?.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
   });
 
   it("rejects a second sponsorship", async function () {
@@ -129,6 +136,63 @@ export default function suite() {
       ])
       .rpc()
       .then(callbacks[0], callbacks[1]);
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.equal(
+      storedProposal.sponsoredBy?.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
+  });
+
+  it("records the new team after a team change", async function () {
+    const { proposal } = await createMintTokensDraft(this);
+
+    await this.futarchy.sponsorProposalIx({ proposal, dao }).rpc();
+
+    const newTeam = Keypair.generate();
+    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: newTeam.publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+    await forceApproveSquadsProposal(this, takeover.squadsProposal);
+    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
+
+    await this.futarchy
+      .sponsorProposalIx({ proposal, dao, teamAddress: newTeam.publicKey })
+      .signers([newTeam])
+      .rpc();
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.equal(
+      storedProposal.sponsoredBy?.toBase58(),
+      newTeam.publicKey.toBase58(),
+    );
+  });
+
+  it("rejects the previous team after a team change", async function () {
+    const { proposal } = await createMintTokensDraft(this);
+
+    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: Keypair.generate().publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+    await forceApproveSquadsProposal(this, takeover.squadsProposal);
+    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
+
+    const callbacks = expectError(
+      "ConstraintHasOne",
+      "sponsored with the previous team",
+    );
+
+    await this.futarchy
+      .sponsorProposalIx({ proposal, dao })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.isNull(storedProposal.sponsoredBy);
   });
 
   it("rejects a launched proposal", async function () {
@@ -171,7 +235,7 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
-    assert.isFalse(storedProposal.isTeamSponsored);
+    assert.isNull(storedProposal.sponsoredBy);
   });
 
   it("rejects a signer that is not the team", async function () {
@@ -190,6 +254,6 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
-    assert.isFalse(storedProposal.isTeamSponsored);
+    assert.isNull(storedProposal.sponsoredBy);
   });
 }

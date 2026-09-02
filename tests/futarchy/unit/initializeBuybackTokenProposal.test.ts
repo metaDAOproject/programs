@@ -255,7 +255,7 @@ export default function suite() {
     assert.ok(storedProposal.dao.equals(dao));
     assert.ok(storedProposal.squadsProposal.equals(squadsProposal));
     assert.exists(storedProposal.state.draft);
-    assert.isFalse(storedProposal.isTeamSponsored);
+    assert.isNull(storedProposal.sponsoredBy);
   });
 
   it("formats a banded mandate's prices into the memo", async function () {

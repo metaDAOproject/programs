@@ -194,7 +194,7 @@ export default function suite() {
 
     const { proposal, squadsProposal } = await initializeProposal(this, dao);
 
-    // Sponsor the proposal (makes is_team_sponsored = true)
+    // Sponsor the proposal (sets sponsored_by to the team)
     await this.futarchy
       .sponsorProposalIx({
         proposal,
@@ -637,7 +637,7 @@ export default function suite() {
     assert.exists(storedProposal.state.pending);
   });
 
-  it("fails to launch a sponsored large_spend after a team change", async function () {
+  it("fails to launch a large_spend paying the previous team even after the new team sponsors it", async function () {
     const dao = await createDaoWithStakeThreshold(
       this,
       META,
@@ -677,17 +677,18 @@ export default function suite() {
       .rpc();
 
     // Replace the team while the sponsored draft is still unlaunched
+    const newTeam = Keypair.generate();
     const takeover = await this.futarchy.initializeHostileTakeoverProposal({
       dao,
-      newTeamAddress: Keypair.generate().publicKey,
+      newTeamAddress: newTeam.publicKey,
       spendingLimitAction: { keep: {} },
     });
     await forceApproveSquadsProposal(this, takeover.squadsProposal);
     await executeVaultTransaction(this, dao, takeover.squadsTransaction);
 
-    const callbacks = expectError(
-      "StaleTeamAddress",
-      "launched a large spend paying the previous team",
+    const staleSponsorCallbacks = expectError(
+      "ProposalNotTeamSponsored",
+      "launched a large spend sponsored by the previous team",
     );
 
     await this.futarchy
@@ -699,7 +700,33 @@ export default function suite() {
         squadsProposal,
       })
       .rpc()
-      .then(callbacks[0], callbacks[1]);
+      .then(staleSponsorCallbacks[0], staleSponsorCallbacks[1]);
+
+    await this.futarchy
+      .sponsorProposalIx({ proposal, dao, teamAddress: newTeam.publicKey })
+      .signers([newTeam])
+      .rpc();
+
+    const stalePayeeCallbacks = expectError(
+      "StaleTeamAddress",
+      "launched a large spend paying the previous team",
+    );
+
+    // The compute unit price makes this transaction's hash differ from the
+    // first launch attempt, so it isn't rejected as already processed
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
+      .rpc()
+      .then(stalePayeeCallbacks[0], stalePayeeCallbacks[1]);
   });
 
   it("fails to launch a sponsored large_spend after the limit drops below its amount", async function () {
@@ -890,6 +917,189 @@ export default function suite() {
       })
       .rpc();
 
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
+      .rpc();
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.exists(storedProposal.state.pending);
+  });
+
+  it("fails to launch a spending_limit_change sponsored by the previous team, launches once the new team sponsors it", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal, squadsProposal } =
+      await this.futarchy.initializeSpendingLimitChangeProposal({
+        dao,
+        config: {
+          amountPerMonth: new BN(20_000),
+          members: [Keypair.generate().publicKey],
+        },
+      });
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    const newTeam = Keypair.generate();
+    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: newTeam.publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+    await forceApproveSquadsProposal(this, takeover.squadsProposal);
+    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
+
+    const callbacks = expectError(
+      "ProposalNotTeamSponsored",
+      "launched a spending limit change sponsored by the previous team",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    await this.futarchy
+      .sponsorProposalIx({ proposal, dao, teamAddress: newTeam.publicKey })
+      .signers([newTeam])
+      .rpc();
+
+    // The compute unit price makes this transaction's hash differ from the
+    // first launch attempt, so it isn't rejected as already processed
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
+      .rpc();
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.exists(storedProposal.state.pending);
+    assert.equal(
+      storedProposal.sponsoredBy?.toBase58(),
+      newTeam.publicKey.toBase58(),
+    );
+  });
+
+  it("requires the stake once a sponsorship goes stale", async function () {
+    const stakeThreshold = new BN(100 * 10 ** 6);
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      stakeThreshold,
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal,
+        dao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: Keypair.generate().publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+    await forceApproveSquadsProposal(this, takeover.squadsProposal);
+    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
+
+    const callbacks = expectError(
+      "InsufficientStakeToLaunch",
+      "launched on a stale sponsorship with no stake",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    await this.futarchy
+      .stakeToProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        amount: stakeThreshold,
+      })
+      .rpc();
+
+    // The compute unit price makes this transaction's hash differ from the
+    // first launch attempt, so it isn't rejected as already processed
     await this.futarchy
       .launchProposalIx({
         proposal,

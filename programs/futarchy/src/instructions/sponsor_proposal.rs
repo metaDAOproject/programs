@@ -25,9 +25,9 @@ impl SponsorProposal<'_> {
             FutarchyError::TeamSponsorshipForbidden
         );
 
-        require_neq!(
-            self.proposal.is_team_sponsored,
-            true,
+        // A previous team's sponsorship can be replaced, the current team's can't be repeated.
+        require!(
+            !self.proposal.is_sponsored_by(self.dao.team_address),
             FutarchyError::ProposalAlreadySponsored
         );
 
@@ -43,7 +43,7 @@ impl SponsorProposal<'_> {
             program: _,
         } = ctx.accounts;
 
-        proposal.is_team_sponsored = true;
+        proposal.sponsored_by = Some(team_address.key());
 
         dao.seq_num += 1;
 

@@ -13,7 +13,8 @@ import { assert } from "chai";
 
 // Rewrites a real (new-layout) Proposal account to the pre-migration on-chain
 // layout by re-encoding its body as the `oldProposal` IDL type (dropping the
-// appended `pass_threshold_bps`, `council_can_block`, and `action`). The
+// appended `pass_threshold_bps`, `council_can_block`, and `action`, and
+// collapsing `sponsored_by` back to the `is_team_sponsored` bit). The
 // optional overrides let a test pin `is_team_sponsored`, the state, or the
 // duration without driving the sponsor/launch flows.
 async function makeOldLayout(
@@ -27,16 +28,15 @@ async function makeOldLayout(
 ): Promise<{ AFTER: number; BEFORE: number }> {
   const raw = await ctx.banksClient.getAccount(proposal);
   const AFTER = raw.data.length;
-  // 369 bytes: pass_threshold_bps (i16) + council_can_block (bool)
-  // + action (ProposalAction)
-  const BEFORE = AFTER - 369;
+  // 401 bytes: sponsored_by (Option<Pubkey>) in place of is_team_sponsored (bool)
+  // + pass_threshold_bps (i16) + council_can_block (bool) + action (ProposalAction)
+  const BEFORE = AFTER - 401;
 
   const disc = Buffer.from(raw.data.slice(0, 8));
   const coder = ctx.futarchy.futarchy.account.proposal.coder.accounts;
   const decoded = coder.decode("proposal", Buffer.from(raw.data));
 
-  if (overrides.isTeamSponsored !== undefined)
-    decoded.isTeamSponsored = overrides.isTeamSponsored;
+  decoded.isTeamSponsored = overrides.isTeamSponsored ?? false;
   if (overrides.state !== undefined) decoded.state = overrides.state;
   if (overrides.durationInSeconds !== undefined)
     decoded.durationInSeconds = overrides.durationInSeconds;
@@ -123,7 +123,7 @@ export default function suite() {
 
   it("migrates an old draft to the kind's catalog params, preserving every other field", async function () {
     const original = await this.futarchy.getProposal(proposal);
-    assert.isFalse(original.isTeamSponsored);
+    assert.isNull(original.sponsoredBy);
     assert.equal(original.passThresholdBps, 1000);
     assert.equal(original.durationInSeconds, 60 * 60 * 24 * 10);
 
@@ -185,7 +185,10 @@ export default function suite() {
       .rpc();
 
     const migrated = await this.futarchy.getProposal(proposal);
-    assert.isTrue(migrated.isTeamSponsored);
+    assert.equal(
+      migrated.sponsoredBy?.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
     assert.equal(migrated.passThresholdBps, 1000);
   });
 
@@ -222,7 +225,10 @@ export default function suite() {
       .rpc();
 
     const migrated = await this.futarchy.getProposal(proposal);
-    assert.isTrue(migrated.isTeamSponsored);
+    assert.equal(
+      migrated.sponsoredBy?.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
     assert.equal(migrated.passThresholdBps, -100);
   });
 
