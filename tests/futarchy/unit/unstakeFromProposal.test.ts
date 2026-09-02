@@ -76,7 +76,6 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
-          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();

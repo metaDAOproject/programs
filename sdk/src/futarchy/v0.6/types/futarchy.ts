@@ -2416,6 +2416,7 @@ export type Futarchy = {
           },
           {
             name: "optimisticProposal";
+            docs: ["Deprecated in favor of typed proposals"];
             type: {
               option: {
                 defined: "OptimisticProposal";
@@ -2424,6 +2425,7 @@ export type Futarchy = {
           },
           {
             name: "isOptimisticGovernanceEnabled";
+            docs: ["Deprecated in favor of typed proposals"];
             type: "bool";
           },
           {
@@ -2703,8 +2705,7 @@ export type Futarchy = {
           {
             name: "sponsoredBy";
             docs: [
-              "The team that last sponsored the draft. Counts only while it is still",
-              "the DAO's team. `None` = never sponsored.",
+              "The team that last sponsored the proposal. `None` = never sponsored.",
             ];
             type: {
               option: "publicKey";
@@ -3240,12 +3241,6 @@ export type Futarchy = {
             name: "teamAddress";
             type: {
               option: "publicKey";
-            };
-          },
-          {
-            name: "isOptimisticGovernanceEnabled";
-            type: {
-              option: "bool";
             };
           },
         ];
@@ -7542,6 +7537,7 @@ export const IDL: Futarchy = {
           },
           {
             name: "optimisticProposal",
+            docs: ["Deprecated in favor of typed proposals"],
             type: {
               option: {
                 defined: "OptimisticProposal",
@@ -7550,6 +7546,7 @@ export const IDL: Futarchy = {
           },
           {
             name: "isOptimisticGovernanceEnabled",
+            docs: ["Deprecated in favor of typed proposals"],
             type: "bool",
           },
           {
@@ -7829,8 +7826,7 @@ export const IDL: Futarchy = {
           {
             name: "sponsoredBy",
             docs: [
-              "The team that last sponsored the draft. Counts only while it is still",
-              "the DAO's team. `None` = never sponsored.",
+              "The team that last sponsored the proposal. `None` = never sponsored.",
             ],
             type: {
               option: "publicKey",
@@ -8366,12 +8362,6 @@ export const IDL: Futarchy = {
             name: "teamAddress",
             type: {
               option: "publicKey",
-            },
-          },
-          {
-            name: "isOptimisticGovernanceEnabled",
-            type: {
-              option: "bool",
             },
           },
         ],

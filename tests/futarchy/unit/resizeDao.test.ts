@@ -119,7 +119,7 @@ export default function suite() {
     assert.equal(after2.data.length, AFTER);
   });
 
-  it("clears an in-flight optimistic proposal and carries the governance flag", async function () {
+  it("clears an in-flight optimistic proposal and disables the governance flag", async function () {
     const fakeSquadsProposal = Keypair.generate().publicKey;
     await makeOldDaoLayout(this, dao, {
       isOptimisticGovernanceEnabled: true,
@@ -133,9 +133,9 @@ export default function suite() {
 
     const migrated = await this.futarchy.getDao(dao);
     // The optimistic machinery is gone: in-flight spends are cleared, not
-    // carried into a state nothing can finalize.
+    // carried into a state nothing can finalize, and the flag is reset.
     assert.isNull(migrated.optimisticProposal);
-    assert.isTrue(migrated.isOptimisticGovernanceEnabled);
+    assert.isFalse(migrated.isOptimisticGovernanceEnabled);
     assert.isNull(migrated.liquidator);
     assert.equal(migrated.lastFailedTakeoverAt.toString(), "0");
     assert.equal(migrated.lastFailedLiquidationAt.toString(), "0");

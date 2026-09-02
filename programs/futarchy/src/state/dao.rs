@@ -67,7 +67,9 @@ pub struct Dao {
     /// Can be negative to allow for team-sponsored proposals to pass by default.
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
+    /// Deprecated in favor of typed proposals
     pub optimistic_proposal: Option<OptimisticProposal>,
+    /// Deprecated in favor of typed proposals
     pub is_optimistic_governance_enabled: bool,
     /// `Some` means the DAO has been liquidated, and holds who runs the estate.
     /// Set once by `finalize_proposal` the moment a hostile liquidation

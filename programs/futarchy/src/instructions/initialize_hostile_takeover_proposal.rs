@@ -59,7 +59,6 @@ impl InitializeHostileTakeoverProposal<'_> {
                     base_to_stake: None,
                     team_sponsored_pass_threshold_bps: None,
                     team_address: Some(args.new_team_address),
-                    is_optimistic_governance_enabled: None,
                 },
             }
             .data(),

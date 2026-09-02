@@ -83,9 +83,10 @@ impl ResizeDao<'_> {
             team_sponsored_pass_threshold_bps: old_dao_data.team_sponsored_pass_threshold_bps,
             team_address: old_dao_data.team_address,
             // The optimistic execution machinery is gone; any in-flight
-            // optimistic spend is cleared rather than carried over.
+            // optimistic spend is cleared rather than carried over, and the
+            // governance flag is explicitly reset to false.
             optimistic_proposal: None,
-            is_optimistic_governance_enabled: old_dao_data.is_optimistic_governance_enabled,
+            is_optimistic_governance_enabled: false,
             liquidator: None,
             last_failed_takeover_at: 0,
             last_failed_liquidation_at: 0,
