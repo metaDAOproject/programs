@@ -298,7 +298,7 @@ External programs required for tests. These are pre-compiled `.so` files in `tes
 
 **"blockstore error"**: `rm -rf .anchor/test-ledger test-ledger`
 
-**Module resolution errors**: `cd sdk && yarn build-local && cd .. && yarn install --force`
+**Module resolution errors**: `cd sdk && yarn build-local` (the root `node_modules` entry is a symlink to `sdk/`, so no root reinstall is needed)
 
 **Tests timeout**: Increase `startup_wait` in `Anchor.toml`
 

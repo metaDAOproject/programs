@@ -4,22 +4,13 @@ A collection of scripts to interact with various parts of the futarchy protocol
 
 ## Setup
 
-It's best to use these scripts with the latest build of the SDK.
-
-To do this, run the following commands, starting in the root dir of the repository:
+The scripts import `@metadaoproject/programs` from the root `node_modules`, where it is a symlink to `sdk/`, so they always run against your local SDK build. No linking is needed. From the root of the repository:
 
 ```sh
-cd sdk # Move into the repository dir
-
-yarn
-yarn build
-yarn link
-
-cd .. # Move back into the root dir
-yarn link @metadaoproject/futarchy # Link to your local build of the futarchy sdk
+./rebuild.sh
 ```
 
-Afterwards, you can run the scripts as you see fit.
+This builds the programs, installs and builds the SDK, and installs the root dependencies. See [Development Setup](../README.md#development-setup) in the main README for toolchain prerequisites. If the programs are already built and you only changed SDK code, `cd sdk && yarn build-local` is enough.
 
 ## Launchpad
 
