@@ -38,11 +38,12 @@ export const createSquadsVaultTxAndProposal = async (
   transactionIndex: bigint,
   transactionMessage: TransactionMessage,
   payer: PublicKey,
+  creator: PublicKey = PERMISSIONLESS_ACCOUNT.publicKey,
 ) => {
   const vaultTxCreateIx = multisig.instructions.vaultTransactionCreate({
     multisigPda: squadsMultisig,
     transactionIndex: transactionIndex,
-    creator: PERMISSIONLESS_ACCOUNT.publicKey,
+    creator,
     rentPayer: payer,
     vaultIndex: 0,
     ephemeralSigners: 0,
@@ -52,7 +53,7 @@ export const createSquadsVaultTxAndProposal = async (
   const proposalCreateIx = multisig.instructions.proposalCreate({
     multisigPda: squadsMultisig,
     transactionIndex: transactionIndex,
-    creator: PERMISSIONLESS_ACCOUNT.publicKey,
+    creator,
     rentPayer: payer,
     isDraft: false,
   });

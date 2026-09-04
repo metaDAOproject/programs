@@ -191,6 +191,38 @@ export default function suite() {
     assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
   });
 
+  it("doesn't allow an initial spending limit with a zero monthly amount", async function () {
+    const callbacks = expectError(
+      "InvalidSpendingLimitAmount",
+      "DAO initialized despite a zero monthly spending limit",
+    );
+
+    await this.futarchy
+      .initializeDaoIx({
+        baseMint: META,
+        quoteMint: USDC,
+        params: {
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(1),
+          minBaseFutarchicLiquidity: new BN(1000),
+          baseToStake: new BN(1000),
+          passThresholdBps: 300,
+          nonce: new BN(421),
+          initialSpendingLimit: {
+            amountPerMonth: new BN(0),
+            members: [Keypair.generate().publicKey],
+          },
+          teamSponsoredPassThresholdBps: 123,
+          teamAddress: this.payer.publicKey,
+        },
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   it("doesn't allow DAOs with identical base and quote mints", async function () {
     const SAME_MINT = await this.createMint(this.payer.publicKey, 6);
 

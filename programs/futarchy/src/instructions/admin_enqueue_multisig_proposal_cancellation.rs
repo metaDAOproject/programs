@@ -3,17 +3,18 @@ use super::*;
 mod admin {
     use anchor_lang::prelude::declare_id;
 
+    // MetaDAO ops multisig — the same signer as the approval enqueue
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
-pub struct AdminEnqueueMultisigProposalApprovalArgs {
+pub struct AdminEnqueueMultisigProposalCancellationArgs {
     pub transaction_index: u64,
 }
 
 #[derive(Accounts)]
-#[instruction(args: AdminEnqueueMultisigProposalApprovalArgs)]
-pub struct AdminEnqueueMultisigProposalApproval<'info> {
+#[instruction(args: AdminEnqueueMultisigProposalCancellationArgs)]
+pub struct AdminEnqueueMultisigProposalCancellation<'info> {
     #[account(has_one = squads_multisig)]
     pub dao: Account<'info, Dao>,
 
@@ -47,28 +48,27 @@ pub struct AdminEnqueueMultisigProposalApproval<'info> {
     #[account(
         init,
         payer = admin,
-        space = 8 + EnqueuedMultisigProposalApproval::INIT_SPACE,
+        space = 8 + EnqueuedMultisigProposalCancellation::INIT_SPACE,
         seeds = [
-            SEED_ENQUEUED_MULTISIG_PROPOSAL_APPROVAL,
+            SEED_ENQUEUED_MULTISIG_PROPOSAL_CANCELLATION,
             dao.key().as_ref(),
             args.transaction_index.to_le_bytes().as_ref(),
         ],
         bump,
     )]
-    pub enqueued_approval: Account<'info, EnqueuedMultisigProposalApproval>,
+    pub enqueued_cancellation: Account<'info, EnqueuedMultisigProposalCancellation>,
 
     pub system_program: Program<'info, System>,
 }
 
-impl AdminEnqueueMultisigProposalApproval<'_> {
-    pub fn validate(&self, _args: &AdminEnqueueMultisigProposalApprovalArgs) -> Result<()> {
+impl AdminEnqueueMultisigProposalCancellation<'_> {
+    pub fn validate(&self, _args: &AdminEnqueueMultisigProposalCancellationArgs) -> Result<()> {
         // Ensure the DAO is migrated before reading `liquidator`.
         Dao::assert_migrated(&self.dao.to_account_info())?;
 
         // On a liquidated DAO the liquidator replaces the admin id as the
         // required signer. Enqueueing is the only capability the liquidator
-        // gains: the approve leg stays permissionless and execution is
-        // ordinary top-level Squads execution.
+        // gains: the cancel leg stays permissionless.
         match self.dao.liquidator {
             Some(liquidator) => {
                 require_keys_eq!(
@@ -83,15 +83,9 @@ impl AdminEnqueueMultisigProposalApproval<'_> {
             }
         }
 
-        if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
-            return Err(FutarchyError::PoolNotInSpotState.into());
-        }
-
-        validate_squads_proposal(
+        validate_squads_proposal_for_cancellation(
             &self.squads_multisig_proposal,
-            &self.squads_multisig,
             &self.dao.squads_multisig,
-            &self.dao.key(),
         )?;
 
         Ok(())
@@ -99,42 +93,32 @@ impl AdminEnqueueMultisigProposalApproval<'_> {
 
     pub fn handle(
         ctx: Context<Self>,
-        args: AdminEnqueueMultisigProposalApprovalArgs,
+        args: AdminEnqueueMultisigProposalCancellationArgs,
     ) -> Result<()> {
-        let enqueued = &mut ctx.accounts.enqueued_approval;
+        let enqueued = &mut ctx.accounts.enqueued_cancellation;
 
         enqueued.dao = ctx.accounts.dao.key();
         enqueued.transaction_index = args.transaction_index;
-        enqueued.pda_bump = ctx.bumps.enqueued_approval;
+        enqueued.pda_bump = ctx.bumps.enqueued_cancellation;
 
         Ok(())
     }
 }
 
-pub fn validate_squads_proposal(
+/// A cancellation targets an `Approved` proposal. Squads permits cancelling a
+/// stale proposal, so there is no stale-index check here.
+pub fn validate_squads_proposal_for_cancellation(
     squads_proposal: &squads_multisig_program::Proposal,
-    squads_multisig: &squads_multisig_program::Multisig,
     dao_multisig_key: &Pubkey,
-    dao_key: &Pubkey,
 ) -> Result<()> {
     require_keys_eq!(squads_proposal.multisig, *dao_multisig_key);
 
-    match squads_proposal.status {
-        squads_multisig_program::ProposalStatus::Active { timestamp: _ } => {}
-        _ => {
-            msg!("squads proposal status: {:?}", squads_proposal.status);
-            return Err(FutarchyError::InvalidSquadsProposalStatus.into());
-        }
-    }
-
-    require_gt!(
-        squads_proposal.transaction_index,
-        squads_multisig.stale_transaction_index
-    );
-
     require!(
-        !squads_proposal.approved.contains(dao_key),
-        FutarchyError::InvalidSquadsProposalStatus
+        matches!(
+            squads_proposal.status,
+            squads_multisig_program::ProposalStatus::Approved { .. }
+        ),
+        FutarchyError::SquadsProposalNotApproved
     );
 
     Ok(())

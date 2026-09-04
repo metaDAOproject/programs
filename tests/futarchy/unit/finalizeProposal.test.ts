@@ -15,7 +15,7 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import BN from "bn.js";
-import { expectError, setupBasicDao } from "../../utils.js";
+import { expectError, makeOldDaoLayout, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -23,7 +23,11 @@ const { Permissions, Permission } = multisig.types;
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
 export default function suite() {
-  let META: PublicKey, USDC: PublicKey, dao: PublicKey, proposal: PublicKey;
+  let META: PublicKey,
+    USDC: PublicKey,
+    dao: PublicKey,
+    proposal: PublicKey,
+    squadsProposalPda: PublicKey;
 
   beforeEach(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
@@ -79,7 +83,6 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
-          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();
@@ -108,7 +111,7 @@ export default function suite() {
       rentPayer: this.payer.publicKey,
     });
 
-    const [squadsProposalPda] = multisig.getProposalPda({
+    [squadsProposalPda] = multisig.getProposalPda({
       multisigPda,
       transactionIndex: 1n,
     });
@@ -143,6 +146,68 @@ export default function suite() {
 
     await this.futarchy
       .finalizeProposal(proposal)
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a legacy-sized proposal that has not been migrated", async function () {
+    // Shrink the live proposal to the pre-migration allocation: the 8-byte
+    // discriminator plus the 339-byte Pending body, then 8 bytes standing in
+    // for the residue a legacy account carries past its Pending body. The
+    // residue decodes as pass_threshold_bps = -3151, council_can_block =
+    // false, action = ExecuteArbitrary — a well-formed new-layout read, so
+    // only the size guard stands between it and finalization.
+    const raw = await this.banksClient.getAccount(proposal);
+    const legacy = Buffer.concat([
+      Buffer.from(raw.data.subarray(0, 347)),
+      Buffer.from([0xb1, 0xf3, 0x00, 0x03, 0xf0, 0x37, 0xa2, 0x00]),
+    ]);
+    assert.equal(legacy.length, 355);
+    this.context.setAccount(proposal, { ...raw, data: legacy });
+
+    const crafted = await this.futarchy.getProposal(proposal);
+    assert.exists(crafted.state.pending);
+    assert.equal(crafted.passThresholdBps, -3151);
+    assert.isFalse(crafted.councilCanBlock);
+    assert.isDefined(crafted.action.executeArbitrary);
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "finalized an un-migrated legacy proposal",
+    );
+
+    await this.futarchy
+      .finalizeProposalIxV2({
+        squadsProposal: squadsProposalPda,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a legacy-sized DAO that has not been migrated", async function () {
+    // Shrink only the DAO to the pre-migration allocation; the proposal keeps
+    // its migrated size so its own guard passes.
+    await makeOldDaoLayout(this, dao);
+
+    const crafted = await this.futarchy.getDao(dao);
+    assert.exists(crafted.amm.state.futarchy);
+    assert.isNull(crafted.liquidator);
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "finalized a proposal on an un-migrated legacy DAO",
+    );
+
+    await this.futarchy
+      .finalizeProposalIxV2({
+        squadsProposal: squadsProposalPda,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+      })
+      .rpc()
       .then(callbacks[0], callbacks[1]);
   });
 
@@ -544,7 +609,6 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
-          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();

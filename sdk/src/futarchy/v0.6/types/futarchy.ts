@@ -1313,85 +1313,21 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "applyLiquidation";
-      accounts: [
-        {
-          name: "proposal";
-          isMut: false;
-          isSigner: false;
-          docs: [
-            "The linked liquidation proposal, baked into the payload at create.",
-          ];
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigVault";
-          isMut: false;
-          isSigner: true;
-          docs: [
-            "The vault's signature is only obtainable through a Squads vault",
-            "transaction execution, so the caller is a passed proposal's payload.",
-          ];
-        },
-        {
-          name: "ammPosition";
-          isMut: true;
-          isSigner: false;
-          docs: [
-            "seeds, but whether the account exists at execution is unknowable at",
-            "create, so it is parsed manually — a passed liquidation must never",
-            "brick on treasury shape.",
-          ];
-        },
-        {
-          name: "ammBaseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "ammQuoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "vaultBaseAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "vaultQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
       name: "resizeDao";
       accounts: [
         {
           name: "dao";
           isMut: true;
           isSigner: false;
+        },
+        {
+          name: "spendingLimit";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "spending-limit PDA (`create_key` is always the DAO); read-only and may",
+            "not exist",
+          ];
         },
         {
           name: "payer";
@@ -2078,6 +2014,85 @@ export type Futarchy = {
       args: [];
     },
     {
+      name: "adminEnqueueMultisigProposalCancellation";
+      accounts: [
+        {
+          name: "dao";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "enqueuedCancellation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "AdminEnqueueMultisigProposalCancellationArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "executeMultisigProposalCancellation";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "rentReceiver";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "enqueuedCancellation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "adminExecuteMultisigProposal";
       accounts: [
         {
@@ -2480,6 +2495,7 @@ export type Futarchy = {
           },
           {
             name: "optimisticProposal";
+            docs: ["Deprecated in favor of typed proposals"];
             type: {
               option: {
                 defined: "OptimisticProposal";
@@ -2488,13 +2504,15 @@ export type Futarchy = {
           },
           {
             name: "isOptimisticGovernanceEnabled";
+            docs: ["Deprecated in favor of typed proposals"];
             type: "bool";
           },
           {
             name: "liquidator";
             docs: [
               "`Some` means the DAO has been liquidated, and holds who runs the estate.",
-              "Set once by `apply_liquidation`, never cleared.",
+              "Set once by `finalize_proposal` the moment a hostile liquidation",
+              "passes, never cleared.",
             ];
             type: {
               option: "publicKey";
@@ -2697,6 +2715,26 @@ export type Futarchy = {
       };
     },
     {
+      name: "enqueuedMultisigProposalCancellation";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "transactionIndex";
+            type: "u64";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
       name: "proposal";
       type: {
         kind: "struct";
@@ -2764,8 +2802,13 @@ export type Futarchy = {
             type: "publicKey";
           },
           {
-            name: "isTeamSponsored";
-            type: "bool";
+            name: "sponsoredBy";
+            docs: [
+              "The team that last sponsored the proposal. `None` = never sponsored.",
+            ];
+            type: {
+              option: "publicKey";
+            };
           },
           {
             name: "passThresholdBps";
@@ -2920,6 +2963,18 @@ export type Futarchy = {
       };
     },
     {
+      name: "AdminEnqueueMultisigProposalCancellationArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "transactionIndex";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
       name: "AdminUpdateProposalParamsArgs";
       type: {
         kind: "struct";
@@ -2977,8 +3032,8 @@ export type Futarchy = {
             type: "u64";
           },
           {
-            name: "quoteAmountPerCycle";
-            type: "u64";
+            name: "cycleCount";
+            type: "u32";
           },
           {
             name: "cycleFrequencySeconds";
@@ -3299,12 +3354,6 @@ export type Futarchy = {
               option: "publicKey";
             };
           },
-          {
-            name: "isOptimisticGovernanceEnabled";
-            type: {
-              option: "bool";
-            };
-          },
         ];
       };
     },
@@ -3525,11 +3574,11 @@ export type Futarchy = {
             type: "i16";
           },
           {
-            name: "requiresTeamSponsorship";
-            docs: [
-              "Launch condition: the proposal must be team-sponsored to launch.",
-            ];
-            type: "bool";
+            name: "teamSponsorshipPolicy";
+            docs: ["Sponsorship policy"];
+            type: {
+              defined: "TeamSponsorshipPolicy";
+            };
           },
           {
             name: "councilCanBlock";
@@ -3636,6 +3685,23 @@ export type Futarchy = {
       };
     },
     {
+      name: "TeamSponsorshipPolicy";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Required";
+          },
+          {
+            name: "Optional";
+          },
+          {
+            name: "Forbidden";
+          },
+        ];
+      };
+    },
+    {
       name: "SpendingLimitAction";
       docs: ["What a hostile takeover declares for the spending limit."];
       type: {
@@ -3674,6 +3740,14 @@ export type Futarchy = {
               {
                 name: "amount";
                 type: "u64";
+              },
+              {
+                name: "teamAddress";
+                docs: [
+                  "The team the baked transfer pays, snapshotted at create. Launch",
+                  "requires it to still be the DAO's team.",
+                ];
+                type: "publicKey";
               },
             ];
           },
@@ -3739,8 +3813,9 @@ export type Futarchy = {
                 type: "u64";
               },
               {
-                name: "quoteAmountPerCycle";
-                type: "u64";
+                name: "cycleCount";
+                docs: ["Orders the total is split across. At least 2."];
+                type: "u32";
               },
               {
                 name: "cycleFrequencySeconds";
@@ -4790,50 +4865,6 @@ export type Futarchy = {
         },
       ];
     },
-    {
-      name: "ApplyLiquidationEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "dao";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "proposal";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "liquidator";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "baseSwept";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "quoteSwept";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "postAmmState";
-          type: {
-            defined: "FutarchyAmm";
-          };
-          index: false;
-        },
-      ];
-    },
   ];
   errors: [
     {
@@ -5093,68 +5124,113 @@ export type Futarchy = {
     },
     {
       code: 6051;
-      name: "AlreadyLiquidated";
-      msg: "This DAO has already been liquidated";
-    },
-    {
-      code: 6052;
       name: "TooManySpendingLimitMembers";
       msg: "A spending limit can have at most 10 members";
     },
     {
-      code: 6053;
+      code: 6052;
       name: "InvalidLiquidator";
       msg: "Invalid liquidator";
     },
     {
-      code: 6054;
+      code: 6053;
       name: "InvalidProposalPassThreshold";
       msg: "Pass threshold must be between -99.99% and 99.99%";
     },
     {
-      code: 6055;
+      code: 6054;
       name: "EmptyProposalParamsUpdate";
       msg: "A proposal params update must set at least one field";
     },
     {
-      code: 6056;
+      code: 6055;
       name: "BuybackCapExceeded";
       msg: "Buyback amount exceeds 25% of the treasury";
     },
     {
-      code: 6057;
+      code: 6056;
       name: "InvalidBuybackAmount";
-      msg: "The total must be an exact multiple of the non-zero per-cycle amount, at least twice over";
+      msg: "Buyback total must be non-zero";
     },
     {
-      code: 6058;
+      code: 6057;
       name: "InvalidBuybackCycleFrequency";
       msg: "Cycle frequency must be between 60 seconds and 1 year";
     },
     {
-      code: 6059;
+      code: 6058;
       name: "InvalidBuybackStartDelay";
       msg: "Start delay must be at most 30 days";
     },
     {
-      code: 6060;
+      code: 6059;
       name: "InvalidBuybackPriceBand";
       msg: "min_price must be no greater than max_price";
     },
     {
-      code: 6061;
+      code: 6060;
       name: "InvalidTreasuryAccount";
       msg: "A treasury account is neither a vault-owned quote account nor the treasury's AMM position";
     },
     {
-      code: 6062;
+      code: 6061;
       name: "TreasuryAccountsNotSorted";
       msg: "Treasury accounts must be in strictly ascending key order";
     },
     {
-      code: 6063;
+      code: 6062;
       name: "UnexpectedLaunchAccounts";
       msg: "This proposal kind's launch takes no extra accounts";
+    },
+    {
+      code: 6063;
+      name: "InvalidSpendingLimitAccount";
+      msg: "Spending limit account is not the canonical spending-limit PDA";
+    },
+    {
+      code: 6064;
+      name: "StaleTeamAddress";
+      msg: "The DAO's team has changed since this draft was created";
+    },
+    {
+      code: 6065;
+      name: "AccountNotMigrated";
+      msg: "Account is not migrated to latest layout";
+    },
+    {
+      code: 6066;
+      name: "InvalidSpendingLimitAmount";
+      msg: "A spending limit's monthly amount must be non-zero";
+    },
+    {
+      code: 6067;
+      name: "EmptySpendingLimitMembers";
+      msg: "A spending limit must have at least one member";
+    },
+    {
+      code: 6068;
+      name: "DuplicateSpendingLimitMember";
+      msg: "A spending limit's members must be unique";
+    },
+    {
+      code: 6069;
+      name: "InvalidBuybackCycleCount";
+      msg: "A buyback must run at least two cycles";
+    },
+    {
+      code: 6070;
+      name: "InvalidTeamAddress";
+      msg: "Invalid team address";
+    },
+    {
+      code: 6071;
+      name: "TeamSponsorshipForbidden";
+      msg: "This proposal kind cannot be team-sponsored";
+    },
+    {
+      code: 6072;
+      name: "SquadsProposalNotApproved";
+      msg: "Squads proposal must be in Approved status to be cancelled";
     },
   ];
 };
@@ -6474,85 +6550,21 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
-      name: "applyLiquidation",
-      accounts: [
-        {
-          name: "proposal",
-          isMut: false,
-          isSigner: false,
-          docs: [
-            "The linked liquidation proposal, baked into the payload at create.",
-          ],
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigVault",
-          isMut: false,
-          isSigner: true,
-          docs: [
-            "The vault's signature is only obtainable through a Squads vault",
-            "transaction execution, so the caller is a passed proposal's payload.",
-          ],
-        },
-        {
-          name: "ammPosition",
-          isMut: true,
-          isSigner: false,
-          docs: [
-            "seeds, but whether the account exists at execution is unknowable at",
-            "create, so it is parsed manually — a passed liquidation must never",
-            "brick on treasury shape.",
-          ],
-        },
-        {
-          name: "ammBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "ammQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultBaseAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "resizeDao",
       accounts: [
         {
           name: "dao",
           isMut: true,
           isSigner: false,
+        },
+        {
+          name: "spendingLimit",
+          isMut: false,
+          isSigner: false,
+          docs: [
+            "spending-limit PDA (`create_key` is always the DAO); read-only and may",
+            "not exist",
+          ],
         },
         {
           name: "payer",
@@ -7239,6 +7251,85 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
+      name: "adminEnqueueMultisigProposalCancellation",
+      accounts: [
+        {
+          name: "dao",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "enqueuedCancellation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "AdminEnqueueMultisigProposalCancellationArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "executeMultisigProposalCancellation",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "rentReceiver",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "enqueuedCancellation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "adminExecuteMultisigProposal",
       accounts: [
         {
@@ -7641,6 +7732,7 @@ export const IDL: Futarchy = {
           },
           {
             name: "optimisticProposal",
+            docs: ["Deprecated in favor of typed proposals"],
             type: {
               option: {
                 defined: "OptimisticProposal",
@@ -7649,13 +7741,15 @@ export const IDL: Futarchy = {
           },
           {
             name: "isOptimisticGovernanceEnabled",
+            docs: ["Deprecated in favor of typed proposals"],
             type: "bool",
           },
           {
             name: "liquidator",
             docs: [
               "`Some` means the DAO has been liquidated, and holds who runs the estate.",
-              "Set once by `apply_liquidation`, never cleared.",
+              "Set once by `finalize_proposal` the moment a hostile liquidation",
+              "passes, never cleared.",
             ],
             type: {
               option: "publicKey",
@@ -7858,6 +7952,26 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "enqueuedMultisigProposalCancellation",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "transactionIndex",
+            type: "u64",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
       name: "proposal",
       type: {
         kind: "struct",
@@ -7925,8 +8039,13 @@ export const IDL: Futarchy = {
             type: "publicKey",
           },
           {
-            name: "isTeamSponsored",
-            type: "bool",
+            name: "sponsoredBy",
+            docs: [
+              "The team that last sponsored the proposal. `None` = never sponsored.",
+            ],
+            type: {
+              option: "publicKey",
+            },
           },
           {
             name: "passThresholdBps",
@@ -8081,6 +8200,18 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "AdminEnqueueMultisigProposalCancellationArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "transactionIndex",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "AdminUpdateProposalParamsArgs",
       type: {
         kind: "struct",
@@ -8138,8 +8269,8 @@ export const IDL: Futarchy = {
             type: "u64",
           },
           {
-            name: "quoteAmountPerCycle",
-            type: "u64",
+            name: "cycleCount",
+            type: "u32",
           },
           {
             name: "cycleFrequencySeconds",
@@ -8460,12 +8591,6 @@ export const IDL: Futarchy = {
               option: "publicKey",
             },
           },
-          {
-            name: "isOptimisticGovernanceEnabled",
-            type: {
-              option: "bool",
-            },
-          },
         ],
       },
     },
@@ -8686,11 +8811,11 @@ export const IDL: Futarchy = {
             type: "i16",
           },
           {
-            name: "requiresTeamSponsorship",
-            docs: [
-              "Launch condition: the proposal must be team-sponsored to launch.",
-            ],
-            type: "bool",
+            name: "teamSponsorshipPolicy",
+            docs: ["Sponsorship policy"],
+            type: {
+              defined: "TeamSponsorshipPolicy",
+            },
           },
           {
             name: "councilCanBlock",
@@ -8797,6 +8922,23 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "TeamSponsorshipPolicy",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Required",
+          },
+          {
+            name: "Optional",
+          },
+          {
+            name: "Forbidden",
+          },
+        ],
+      },
+    },
+    {
       name: "SpendingLimitAction",
       docs: ["What a hostile takeover declares for the spending limit."],
       type: {
@@ -8835,6 +8977,14 @@ export const IDL: Futarchy = {
               {
                 name: "amount",
                 type: "u64",
+              },
+              {
+                name: "teamAddress",
+                docs: [
+                  "The team the baked transfer pays, snapshotted at create. Launch",
+                  "requires it to still be the DAO's team.",
+                ],
+                type: "publicKey",
               },
             ],
           },
@@ -8900,8 +9050,9 @@ export const IDL: Futarchy = {
                 type: "u64",
               },
               {
-                name: "quoteAmountPerCycle",
-                type: "u64",
+                name: "cycleCount",
+                docs: ["Orders the total is split across. At least 2."],
+                type: "u32",
               },
               {
                 name: "cycleFrequencySeconds",
@@ -9951,50 +10102,6 @@ export const IDL: Futarchy = {
         },
       ],
     },
-    {
-      name: "ApplyLiquidationEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "dao",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "proposal",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "liquidator",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "baseSwept",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "quoteSwept",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "postAmmState",
-          type: {
-            defined: "FutarchyAmm",
-          },
-          index: false,
-        },
-      ],
-    },
   ],
   errors: [
     {
@@ -10254,68 +10361,113 @@ export const IDL: Futarchy = {
     },
     {
       code: 6051,
-      name: "AlreadyLiquidated",
-      msg: "This DAO has already been liquidated",
-    },
-    {
-      code: 6052,
       name: "TooManySpendingLimitMembers",
       msg: "A spending limit can have at most 10 members",
     },
     {
-      code: 6053,
+      code: 6052,
       name: "InvalidLiquidator",
       msg: "Invalid liquidator",
     },
     {
-      code: 6054,
+      code: 6053,
       name: "InvalidProposalPassThreshold",
       msg: "Pass threshold must be between -99.99% and 99.99%",
     },
     {
-      code: 6055,
+      code: 6054,
       name: "EmptyProposalParamsUpdate",
       msg: "A proposal params update must set at least one field",
     },
     {
-      code: 6056,
+      code: 6055,
       name: "BuybackCapExceeded",
       msg: "Buyback amount exceeds 25% of the treasury",
     },
     {
-      code: 6057,
+      code: 6056,
       name: "InvalidBuybackAmount",
-      msg: "The total must be an exact multiple of the non-zero per-cycle amount, at least twice over",
+      msg: "Buyback total must be non-zero",
     },
     {
-      code: 6058,
+      code: 6057,
       name: "InvalidBuybackCycleFrequency",
       msg: "Cycle frequency must be between 60 seconds and 1 year",
     },
     {
-      code: 6059,
+      code: 6058,
       name: "InvalidBuybackStartDelay",
       msg: "Start delay must be at most 30 days",
     },
     {
-      code: 6060,
+      code: 6059,
       name: "InvalidBuybackPriceBand",
       msg: "min_price must be no greater than max_price",
     },
     {
-      code: 6061,
+      code: 6060,
       name: "InvalidTreasuryAccount",
       msg: "A treasury account is neither a vault-owned quote account nor the treasury's AMM position",
     },
     {
-      code: 6062,
+      code: 6061,
       name: "TreasuryAccountsNotSorted",
       msg: "Treasury accounts must be in strictly ascending key order",
     },
     {
-      code: 6063,
+      code: 6062,
       name: "UnexpectedLaunchAccounts",
       msg: "This proposal kind's launch takes no extra accounts",
+    },
+    {
+      code: 6063,
+      name: "InvalidSpendingLimitAccount",
+      msg: "Spending limit account is not the canonical spending-limit PDA",
+    },
+    {
+      code: 6064,
+      name: "StaleTeamAddress",
+      msg: "The DAO's team has changed since this draft was created",
+    },
+    {
+      code: 6065,
+      name: "AccountNotMigrated",
+      msg: "Account is not migrated to latest layout",
+    },
+    {
+      code: 6066,
+      name: "InvalidSpendingLimitAmount",
+      msg: "A spending limit's monthly amount must be non-zero",
+    },
+    {
+      code: 6067,
+      name: "EmptySpendingLimitMembers",
+      msg: "A spending limit must have at least one member",
+    },
+    {
+      code: 6068,
+      name: "DuplicateSpendingLimitMember",
+      msg: "A spending limit's members must be unique",
+    },
+    {
+      code: 6069,
+      name: "InvalidBuybackCycleCount",
+      msg: "A buyback must run at least two cycles",
+    },
+    {
+      code: 6070,
+      name: "InvalidTeamAddress",
+      msg: "Invalid team address",
+    },
+    {
+      code: 6071,
+      name: "TeamSponsorshipForbidden",
+      msg: "This proposal kind cannot be team-sponsored",
+    },
+    {
+      code: 6072,
+      name: "SquadsProposalNotApproved",
+      msg: "Squads proposal must be in Approved status to be cancelled",
     },
   ],
 };

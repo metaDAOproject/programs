@@ -262,14 +262,3 @@ pub struct SyncSpendingLimitEvent {
     /// `None` = no limit (removed or never existed).
     pub config: Option<InitialSpendingLimit>,
 }
-
-#[event]
-pub struct ApplyLiquidationEvent {
-    pub common: CommonFields,
-    pub dao: Pubkey,
-    pub proposal: Pubkey,
-    pub liquidator: Pubkey,
-    pub base_swept: u64,
-    pub quote_swept: u64,
-    pub post_amm_state: FutarchyAmm,
-}

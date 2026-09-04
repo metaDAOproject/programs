@@ -19,12 +19,14 @@ impl InitializeHostileTakeoverProposal<'_> {
     pub fn validate(&self, args: &InitializeHostileTakeoverProposalArgs) -> Result<()> {
         self.typed_initialize_accounts.validate()?;
 
+        require_keys_neq!(
+            args.new_team_address,
+            self.typed_initialize_accounts.dao.team_address,
+            FutarchyError::InvalidTeamAddress
+        );
+
         if let SpendingLimitAction::Set(config) = &args.spending_limit_action {
-            require_gte!(
-                MAX_SPENDING_LIMIT_MEMBERS,
-                config.members.len(),
-                FutarchyError::TooManySpendingLimitMembers
-            );
+            config.validate()?;
         }
 
         Ok(())
@@ -57,7 +59,6 @@ impl InitializeHostileTakeoverProposal<'_> {
                     base_to_stake: None,
                     team_sponsored_pass_threshold_bps: None,
                     team_address: Some(args.new_team_address),
-                    is_optimistic_governance_enabled: None,
                 },
             }
             .data(),

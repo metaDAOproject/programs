@@ -67,10 +67,13 @@ pub struct Dao {
     /// Can be negative to allow for team-sponsored proposals to pass by default.
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
+    /// Deprecated in favor of typed proposals
     pub optimistic_proposal: Option<OptimisticProposal>,
+    /// Deprecated in favor of typed proposals
     pub is_optimistic_governance_enabled: bool,
     /// `Some` means the DAO has been liquidated, and holds who runs the estate.
-    /// Set once by `apply_liquidation`, never cleared.
+    /// Set once by `finalize_proposal` the moment a hostile liquidation
+    /// passes, never cleared.
     pub liquidator: Option<Pubkey>,
     /// Unix time of the last failed hostile takeover. 0 = never.
     pub last_failed_takeover_at: i64,
@@ -98,7 +101,50 @@ pub struct InitialSpendingLimit {
     pub members: Vec<Pubkey>,
 }
 
+impl InitialSpendingLimit {
+    /// Rejects any record that the Squads spending-limit invariant would refuse
+    /// to create, so every stored record can be projected by `sync_spending_limit`.
+    pub fn validate(&self) -> Result<()> {
+        require_neq!(
+            self.amount_per_month,
+            0,
+            FutarchyError::InvalidSpendingLimitAmount
+        );
+
+        require!(
+            !self.members.is_empty(),
+            FutarchyError::EmptySpendingLimitMembers
+        );
+
+        require_gte!(
+            MAX_SPENDING_LIMIT_MEMBERS,
+            self.members.len(),
+            FutarchyError::TooManySpendingLimitMembers
+        );
+
+        let mut sorted_members = self.members.clone();
+        sorted_members.sort();
+        let has_duplicates = sorted_members.windows(2).any(|win| win[0] == win[1]);
+        require!(!has_duplicates, FutarchyError::DuplicateSpendingLimitMember);
+
+        Ok(())
+    }
+}
+
 impl Dao {
+    /// A migrated `Dao` account is exactly this long.
+    pub const MIGRATED_SIZE: usize = Dao::INIT_SPACE + 8;
+
+    /// Errors unless `resize_dao` has migrated the account.
+    pub fn assert_migrated(account: &AccountInfo) -> Result<()> {
+        require_eq!(
+            account.data_len(),
+            Dao::MIGRATED_SIZE,
+            FutarchyError::AccountNotMigrated
+        );
+        Ok(())
+    }
+
     pub fn invariant(&self) -> Result<()> {
         require_gte!(
             self.seconds_per_proposal,

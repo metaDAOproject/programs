@@ -69,6 +69,10 @@ pub struct AdminCancelProposal<'info> {
 
 impl AdminCancelProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        // Ensure the proposal and DAO are migrated.
+        Proposal::assert_migrated(&self.proposal.to_account_info())?;
+        Dao::assert_migrated(&self.dao.to_account_info())?;
+
         // Unblockable proposals are censorship-proof once live: nobody, including
         // the council, can cancel them. Reads the create-time snapshot so a
         // live proposal keeps the flag it launched with.

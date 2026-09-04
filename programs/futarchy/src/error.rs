@@ -106,8 +106,6 @@ pub enum FutarchyError {
     SpendingLimitNotDirty,
     #[msg("Wrong proposal kind for this instruction")]
     InvalidProposalKind,
-    #[msg("This DAO has already been liquidated")]
-    AlreadyLiquidated,
     #[msg("A spending limit can have at most 10 members")]
     TooManySpendingLimitMembers,
     #[msg("Invalid liquidator")]
@@ -118,7 +116,7 @@ pub enum FutarchyError {
     EmptyProposalParamsUpdate,
     #[msg("Buyback amount exceeds 25% of the treasury")]
     BuybackCapExceeded,
-    #[msg("The total must be an exact multiple of the non-zero per-cycle amount, at least twice over")]
+    #[msg("Buyback total must be non-zero")]
     InvalidBuybackAmount,
     #[msg("Cycle frequency must be between 60 seconds and 1 year")]
     InvalidBuybackCycleFrequency,
@@ -126,10 +124,32 @@ pub enum FutarchyError {
     InvalidBuybackStartDelay,
     #[msg("min_price must be no greater than max_price")]
     InvalidBuybackPriceBand,
-    #[msg("A treasury account is neither a vault-owned quote account nor the treasury's AMM position")]
+    #[msg(
+        "A treasury account is neither a vault-owned quote account nor the treasury's AMM position"
+    )]
     InvalidTreasuryAccount,
     #[msg("Treasury accounts must be in strictly ascending key order")]
     TreasuryAccountsNotSorted,
     #[msg("This proposal kind's launch takes no extra accounts")]
     UnexpectedLaunchAccounts,
+    #[msg("Spending limit account is not the canonical spending-limit PDA")]
+    InvalidSpendingLimitAccount,
+    #[msg("The DAO's team has changed since this draft was created")]
+    StaleTeamAddress,
+    #[msg("Account is not migrated to latest layout")]
+    AccountNotMigrated,
+    #[msg("A spending limit's monthly amount must be non-zero")]
+    InvalidSpendingLimitAmount,
+    #[msg("A spending limit must have at least one member")]
+    EmptySpendingLimitMembers,
+    #[msg("A spending limit's members must be unique")]
+    DuplicateSpendingLimitMember,
+    #[msg("A buyback must run at least two cycles")]
+    InvalidBuybackCycleCount,
+    #[msg("Invalid team address")]
+    InvalidTeamAddress,
+    #[msg("This proposal kind cannot be team-sponsored")]
+    TeamSponsorshipForbidden,
+    #[msg("Squads proposal must be in Approved status to be cancelled")]
+    SquadsProposalNotApproved,
 }

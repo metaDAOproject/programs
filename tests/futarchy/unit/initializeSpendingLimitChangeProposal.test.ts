@@ -78,7 +78,7 @@ export default function suite() {
     assert.ok(storedProposal.proposer.equals(this.payer.publicKey));
     assert.ok(storedProposal.squadsProposal.equals(squadsProposal));
     assert.exists(storedProposal.state.draft);
-    assert.isFalse(storedProposal.isTeamSponsored);
+    assert.isNull(storedProposal.sponsoredBy);
 
     assert.equal(
       storedProposal.action.spendingLimitChange.config.amountPerMonth.toString(),
@@ -131,6 +131,57 @@ export default function suite() {
         config: {
           amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
           members: elevenMembers,
+        },
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when the config's monthly amount is zero", async function () {
+    const callbacks = expectError(
+      "InvalidSpendingLimitAmount",
+      "created a spending limit change proposal with a zero monthly amount",
+    );
+    await this.futarchy
+      .initializeSpendingLimitChangeProposal({
+        dao,
+        config: {
+          amountPerMonth: new BN(0),
+          members: [Keypair.generate().publicKey],
+        },
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when the config has no members", async function () {
+    const callbacks = expectError(
+      "EmptySpendingLimitMembers",
+      "created a spending limit change proposal with no members",
+    );
+    await this.futarchy
+      .initializeSpendingLimitChangeProposal({
+        dao,
+        config: {
+          amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+          members: [],
+        },
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when the config has duplicate members", async function () {
+    const member = Keypair.generate().publicKey;
+
+    const callbacks = expectError(
+      "DuplicateSpendingLimitMember",
+      "created a spending limit change proposal with duplicate members",
+    );
+    await this.futarchy
+      .initializeSpendingLimitChangeProposal({
+        dao,
+        config: {
+          amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+          // Non-adjacent so the check must sort before comparing neighbours
+          members: [member, Keypair.generate().publicKey, member],
         },
       })
       .then(...callbacks);

@@ -1,6 +1,8 @@
 import futarchyAmm from "./integration/futarchyAmm.test.js";
 import takeoverEndToEnd from "./integration/takeoverEndToEnd.test.js";
 import liquidationEndToEnd from "./integration/liquidationEndToEnd.test.js";
+import cancelApprovedPayloadAfterLiquidation from "./integration/cancelApprovedPayloadAfterLiquidation.test.js";
+import gatedLiquidationUnwind from "./integration/gatedLiquidationUnwind.test.js";
 import largeSpendEndToEnd from "./integration/largeSpendEndToEnd.test.js";
 import cooldownRoundTrip from "./integration/cooldownRoundTrip.test.js";
 
@@ -13,11 +15,11 @@ import initializeHostileTakeoverProposal from "./unit/initializeHostileTakeoverP
 import initializeHostileLiquidateProposal from "./unit/initializeHostileLiquidateProposal.test.js";
 import initializeBuybackTokenProposal from "./unit/initializeBuybackTokenProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
+import sponsorProposal from "./unit/sponsorProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
 import setSpendingLimit from "./unit/setSpendingLimit.test.js";
 import syncSpendingLimit from "./unit/syncSpendingLimit.test.js";
-import applyLiquidation from "./unit/applyLiquidation.test.js";
 import liquidatorPath from "./unit/liquidatorPath.test.js";
 import liquidatedGuards from "./unit/liquidatedGuards.test.js";
 
@@ -30,6 +32,8 @@ import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 
 import adminEnqueueMultisigProposalApproval from "./unit/adminEnqueueMultisigProposalApproval.test.js";
 import executeMultisigProposalApproval from "./unit/executeMultisigProposalApproval.test.js";
+import adminEnqueueMultisigProposalCancellation from "./unit/adminEnqueueMultisigProposalCancellation.test.js";
+import executeMultisigProposalCancellation from "./unit/executeMultisigProposalCancellation.test.js";
 import adminExecuteMultisigProposal from "./unit/adminExecuteMultisigProposal.test.js";
 import adminCancelProposal from "./unit/adminCancelProposal.test.js";
 import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
@@ -92,11 +96,11 @@ export default function suite() {
     initializeBuybackTokenProposal,
   );
   describe("#launch_proposal", launchProposal);
+  describe("#sponsor_proposal", sponsorProposal);
   describe("#finalize_proposal", finalizeProposal);
   describe("#update_dao", updateDao);
   describe("#set_spending_limit", setSpendingLimit);
   describe("#sync_spending_limit", syncSpendingLimit);
-  describe("#apply_liquidation", applyLiquidation);
   describe("liquidator path", liquidatorPath);
   describe("liquidated guards", liquidatedGuards);
 
@@ -115,6 +119,14 @@ export default function suite() {
     "#execute_multisig_proposal_approval",
     executeMultisigProposalApproval,
   );
+  describe(
+    "#admin_enqueue_multisig_proposal_cancellation",
+    adminEnqueueMultisigProposalCancellation,
+  );
+  describe(
+    "#execute_multisig_proposal_cancellation",
+    executeMultisigProposalCancellation,
+  );
   describe("#admin_execute_multisig_proposal", adminExecuteMultisigProposal);
   describe("#admin_cancel_proposal", adminCancelProposal);
   describe("#admin_remove_proposal", adminRemoveProposal);
@@ -127,6 +139,11 @@ export default function suite() {
   describe("futarchy amm", futarchyAmm);
   describe("integration: takeover end to end", takeoverEndToEnd);
   describe("integration: liquidation end to end", liquidationEndToEnd);
+  describe(
+    "integration: cancel approved payload after liquidation",
+    cancelApprovedPayloadAfterLiquidation,
+  );
+  describe("integration: gated liquidation unwind", gatedLiquidationUnwind);
   describe("integration: large spend end to end", largeSpendEndToEnd);
   describe("integration: cooldown round-trip", cooldownRoundTrip);
 }
