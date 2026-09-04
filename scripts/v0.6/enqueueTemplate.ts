@@ -23,7 +23,7 @@ import {
 ///////////////
 
 // The DAO whose vault should execute the actions
-const DAO = new PublicKey("3D854kknnQhu9xVaRNV154oZ9oN2WF3tXsq3LDu7fFMn");
+const DAO = new PublicKey("DAO_ADDRESS");
 
 ////////////////
 // Operations //
