@@ -74,6 +74,8 @@ pub struct ConditionalSwap<'info> {
 
 impl ConditionalSwap<'_> {
     pub fn validate(&self, params: &ConditionalSwapParams) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
         require_neq!(params.market, Market::Spot);
 
         require_gte!(

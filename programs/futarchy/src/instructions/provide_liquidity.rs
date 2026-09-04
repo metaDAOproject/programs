@@ -59,6 +59,12 @@ pub struct ProvideLiquidity<'info> {
 }
 
 impl ProvideLiquidity<'_> {
+    pub fn validate(&self) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, params: ProvideLiquidityParams) -> Result<()> {
         let Self {
             dao,

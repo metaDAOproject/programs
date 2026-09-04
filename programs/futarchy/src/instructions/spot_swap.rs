@@ -43,6 +43,12 @@ pub struct SpotSwap<'info> {
 }
 
 impl SpotSwap<'_> {
+    pub fn validate(&self) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
+        Ok(())
+    }
+
     pub fn handle(ctx: Context<Self>, params: SpotSwapParams) -> Result<()> {
         let SpotSwapParams {
             swap_type,

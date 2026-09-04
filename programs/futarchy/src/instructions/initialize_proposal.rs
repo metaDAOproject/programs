@@ -37,18 +37,7 @@ pub struct InitializeProposal<'info> {
 
 impl InitializeProposal<'_> {
     pub fn validate(&self) -> Result<()> {
-        // If we're trying to challenge an optimistic proposal that has already passed due to age, we should error
-        // In the case of an already-optimistically-passed proposal, the optimistic proposal can be cleared
-        // from the DAO state by finalizing the optimistic proposal (finalize_optimistic_proposal)
-        if let Some(ref optimistic_proposal) = self.dao.optimistic_proposal {
-            if optimistic_proposal.squads_proposal == self.squads_proposal.key() {
-                require_gt!(
-                    optimistic_proposal.enqueued_timestamp + self.dao.seconds_per_proposal as i64,
-                    Clock::get()?.unix_timestamp,
-                    FutarchyError::OptimisticProposalAlreadyPassed
-                );
-            }
-        }
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
 
         require_eq!(
             self.question.num_outcomes(),
@@ -98,6 +87,9 @@ impl InitializeProposal<'_> {
 
         dao.proposal_count += 1;
 
+        let action = ProposalAction::ExecuteArbitrary;
+        let params = action.params();
+
         proposal.set_inner(Proposal {
             number: dao.proposal_count,
             squads_proposal: squads_proposal.key(),
@@ -109,12 +101,15 @@ impl InitializeProposal<'_> {
             dao: dao.key(),
             pda_bump: ctx.bumps.proposal,
             question: question.key(),
-            duration_in_seconds: dao.seconds_per_proposal,
+            duration_in_seconds: params.duration_seconds,
             pass_base_mint: base_vault.conditional_token_mints[1],
             fail_base_mint: base_vault.conditional_token_mints[0],
             pass_quote_mint: quote_vault.conditional_token_mints[1],
             fail_quote_mint: quote_vault.conditional_token_mints[0],
             is_team_sponsored: false,
+            pass_threshold_bps: params.pass_threshold_bps,
+            council_can_block: params.council_can_block,
+            action,
         });
 
         dao.seq_num += 1;
@@ -133,6 +128,7 @@ impl InitializeProposal<'_> {
             squads_proposal: squads_proposal.key(),
             squads_multisig: dao.squads_multisig,
             squads_multisig_vault: dao.squads_multisig_vault,
+            action: proposal.action.clone(),
         });
 
         Ok(())

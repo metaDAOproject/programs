@@ -1,27 +1,42 @@
 import futarchyAmm from "./integration/futarchyAmm.test.js";
+import takeoverEndToEnd from "./integration/takeoverEndToEnd.test.js";
+import liquidationEndToEnd from "./integration/liquidationEndToEnd.test.js";
+import largeSpendEndToEnd from "./integration/largeSpendEndToEnd.test.js";
+import cooldownRoundTrip from "./integration/cooldownRoundTrip.test.js";
 
 import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
+import initializeLargeSpendProposal from "./unit/initializeLargeSpendProposal.test.js";
+import initializeMintTokensProposal from "./unit/initializeMintTokensProposal.test.js";
+import initializeSpendingLimitChangeProposal from "./unit/initializeSpendingLimitChangeProposal.test.js";
+import initializeHostileTakeoverProposal from "./unit/initializeHostileTakeoverProposal.test.js";
+import initializeHostileLiquidateProposal from "./unit/initializeHostileLiquidateProposal.test.js";
+import initializeBuybackTokenProposal from "./unit/initializeBuybackTokenProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
+import setSpendingLimit from "./unit/setSpendingLimit.test.js";
+import syncSpendingLimit from "./unit/syncSpendingLimit.test.js";
+import applyLiquidation from "./unit/applyLiquidation.test.js";
+import liquidatorPath from "./unit/liquidatorPath.test.js";
+import liquidatedGuards from "./unit/liquidatedGuards.test.js";
 
 import collectFees from "./unit/collectFees.test.js";
 import conditionalSwap from "./unit/conditionalSwap.test.js";
 import provideLiquidity from "./unit/provideLiquidity.test.js";
-
-import executeSpendingLimitChange from "./unit/executeSpendingLimitChange.test.js";
+import withdrawLiquidity from "./unit/withdrawLiquidity.test.js";
 
 import collectMeteoraDammFees from "./unit/collectMeteoraDammFees.test.js";
 
-import initiateVaultSpendOptimisticProposal from "./unit/initiateVaultSpendOptimisticProposal.test.js";
-import finalizeOptimisticProposal from "./unit/finalizeOptimisticProposal.test.js";
 import adminEnqueueMultisigProposalApproval from "./unit/adminEnqueueMultisigProposalApproval.test.js";
 import executeMultisigProposalApproval from "./unit/executeMultisigProposalApproval.test.js";
 import adminExecuteMultisigProposal from "./unit/adminExecuteMultisigProposal.test.js";
 import adminCancelProposal from "./unit/adminCancelProposal.test.js";
 import adminRemoveProposal from "./unit/adminRemoveProposal.test.js";
+import adminUpdateProposalParams from "./unit/adminUpdateProposalParams.test.js";
 import unstakeFromProposal from "./unit/unstakeFromProposal.test.js";
+import resizeDao from "./unit/resizeDao.test.js";
+import resizeProposal from "./unit/resizeProposal.test.js";
 
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -58,22 +73,40 @@ export default function suite() {
   });
   describe("#initialize_dao", initializeDao);
   describe("#initialize_proposal", initializeProposal);
+  describe("#initialize_large_spend_proposal", initializeLargeSpendProposal);
+  describe("#initialize_mint_tokens_proposal", initializeMintTokensProposal);
+  describe(
+    "#initialize_spending_limit_change_proposal",
+    initializeSpendingLimitChangeProposal,
+  );
+  describe(
+    "#initialize_hostile_takeover_proposal",
+    initializeHostileTakeoverProposal,
+  );
+  describe(
+    "#initialize_hostile_liquidate_proposal",
+    initializeHostileLiquidateProposal,
+  );
+  describe(
+    "#initialize_buyback_token_proposal",
+    initializeBuybackTokenProposal,
+  );
   describe("#launch_proposal", launchProposal);
   describe("#finalize_proposal", finalizeProposal);
   describe("#update_dao", updateDao);
+  describe("#set_spending_limit", setSpendingLimit);
+  describe("#sync_spending_limit", syncSpendingLimit);
+  describe("#apply_liquidation", applyLiquidation);
+  describe("liquidator path", liquidatorPath);
+  describe("liquidated guards", liquidatedGuards);
 
   describe("#collect_fees", collectFees);
   describe("#conditional_swap", conditionalSwap);
   describe("#provide_liquidity", provideLiquidity);
-  describe("#execute_spending_limit_change", executeSpendingLimitChange);
+  describe("#withdraw_liquidity", withdrawLiquidity);
 
   describe("#collect_meteora_damm_fees", collectMeteoraDammFees);
 
-  describe(
-    "#initiate_vault_spend_optimistic_proposal",
-    initiateVaultSpendOptimisticProposal,
-  );
-  describe("#finalize_optimistic_proposal", finalizeOptimisticProposal);
   describe(
     "#admin_enqueue_multisig_proposal_approval",
     adminEnqueueMultisigProposalApproval,
@@ -85,8 +118,15 @@ export default function suite() {
   describe("#admin_execute_multisig_proposal", adminExecuteMultisigProposal);
   describe("#admin_cancel_proposal", adminCancelProposal);
   describe("#admin_remove_proposal", adminRemoveProposal);
+  describe("#admin_update_proposal_params", adminUpdateProposalParams);
   describe("#unstake_from_proposal", unstakeFromProposal);
+  describe("#resize_dao", resizeDao);
+  describe("#resize_proposal", resizeProposal);
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);
+  describe("integration: takeover end to end", takeoverEndToEnd);
+  describe("integration: liquidation end to end", liquidationEndToEnd);
+  describe("integration: large spend end to end", largeSpendEndToEnd);
+  describe("integration: cooldown round-trip", cooldownRoundTrip);
 }
