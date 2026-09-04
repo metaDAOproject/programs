@@ -90,4 +90,6 @@ pub enum FutarchyError {
     InvalidSpendingLimitMint,
     #[msg("No active optimistic proposal")]
     NoActiveOptimisticProposal,
+    #[msg("Address lookup tables referenced by the vault transaction must be frozen")]
+    UnfrozenAddressLookupTable,
 }

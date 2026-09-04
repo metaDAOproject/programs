@@ -124,6 +124,11 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "squadsVaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "dao";
           isMut: true;
           isSigner: false;
@@ -387,6 +392,11 @@ export type Futarchy = {
         },
         {
           name: "squadsProposal";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsVaultTransaction";
           isMut: false;
           isSigner: false;
         },
@@ -3801,6 +3811,11 @@ export type Futarchy = {
       name: "NoActiveOptimisticProposal";
       msg: "No active optimistic proposal";
     },
+    {
+      code: 6043;
+      name: "UnfrozenAddressLookupTable";
+      msg: "Address lookup tables referenced by the vault transaction must be frozen";
+    },
   ];
 };
 
@@ -3926,6 +3941,11 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsVaultTransaction",
           isMut: false,
           isSigner: false,
         },
@@ -4193,6 +4213,11 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsProposal",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsVaultTransaction",
           isMut: false,
           isSigner: false,
         },
@@ -7606,6 +7631,11 @@ export const IDL: Futarchy = {
       code: 6042,
       name: "NoActiveOptimisticProposal",
       msg: "No active optimistic proposal",
+    },
+    {
+      code: 6043,
+      name: "UnfrozenAddressLookupTable",
+      msg: "Address lookup tables referenced by the vault transaction must be frozen",
     },
   ],
 };
