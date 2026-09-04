@@ -3,12 +3,14 @@ import {
   LaunchpadClient,
   getLaunchAddr,
 } from "@metadaoproject/programs/launchpad/v0.7";
-import { ComputeBudgetProgram, PublicKey, Transaction } from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { TOKEN_SEED } from "./constants.js";
 
 const provider = anchor.AnchorProvider.env();
-const payer = provider.wallet["payer"];
+const payer = (
+  provider.wallet as anchor.Wallet & { payer: anchor.web3.Keypair }
+).payer;
 
 const LAUNCH_AUTHORITY = payer.publicKey;
 
@@ -31,36 +33,10 @@ export const start = async () => {
     })
     .instruction();
 
-  // Build transaction without compute budget first
-  const tx = new Transaction().add(startLaunchIx);
-
   const { blockhash } = await provider.connection.getLatestBlockhash();
-  tx.recentBlockhash = blockhash;
-  tx.feePayer = payer.publicKey;
 
-  // Simulate transaction to get compute units used
-  tx.sign(payer);
-  const simulation = await provider.connection.simulateTransaction(tx);
-
-  if (simulation.value.err) {
-    console.error("Transaction simulation failed:", simulation.value.err);
-    throw new Error(
-      `Simulation failed: ${JSON.stringify(simulation.value.err)}`,
-    );
-  }
-
-  const computeUnitsUsed = simulation.value.unitsConsumed || 200_000;
-  // Add 20% buffer to the compute units
-  const computeUnitsWithBuffer = Math.floor(computeUnitsUsed * 1.2);
-
-  console.log(`Simulated compute units: ${computeUnitsUsed}`);
-  console.log(`Setting compute unit limit: ${computeUnitsWithBuffer}`);
-
-  // Rebuild transaction with compute budget
-  const finalTx = new Transaction().add(
-    ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnitsWithBuffer }),
-    startLaunchIx,
-  );
+  // Build transaction
+  const finalTx = new Transaction().add(startLaunchIx);
 
   finalTx.recentBlockhash = blockhash;
   finalTx.feePayer = payer.publicKey;

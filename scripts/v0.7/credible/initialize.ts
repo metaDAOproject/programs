@@ -8,7 +8,8 @@ import {
   ComputeBudgetProgram,
   PublicKey,
   SystemProgram,
-  Transaction,
+  TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import BN from "bn.js";
 import * as token from "@solana/spl-token";
@@ -29,7 +30,9 @@ import {
 } from "./constants.js";
 
 const provider = anchor.AnchorProvider.env();
-const payer = provider.wallet["payer"];
+const payer = (
+  provider.wallet as anchor.Wallet & { payer: anchor.web3.Keypair }
+).payer;
 
 const LAUNCH_AUTHORITY = payer.publicKey;
 
@@ -96,20 +99,20 @@ export const launch = async () => {
     })
     .instruction();
 
-  // Build transaction without compute budget first
-  const tx = new Transaction().add(
-    createTokenAccountIx,
-    initializeMintIx,
-    launchIx,
-  );
-
+  const ixs = [createTokenAccountIx, initializeMintIx, launchIx];
   const { blockhash } = await provider.connection.getLatestBlockhash();
-  tx.recentBlockhash = blockhash;
-  tx.feePayer = payer.publicKey;
 
-  // Simulate transaction to get compute units used
-  tx.sign(payer);
-  const simulation = await provider.connection.simulateTransaction(tx);
+  // Simulate without compute budget to get units consumed
+  const messageV0 = new TransactionMessage({
+    instructions: ixs,
+    payerKey: payer.publicKey,
+    recentBlockhash: blockhash,
+  }).compileToV0Message();
+  const simulationTx = new VersionedTransaction(messageV0);
+  simulationTx.sign([payer]);
+
+  const simulation =
+    await provider.connection.simulateTransaction(simulationTx);
 
   if (simulation.value.err) {
     console.error("Transaction simulation failed:", simulation.value.err);
@@ -119,30 +122,30 @@ export const launch = async () => {
   }
 
   const computeUnitsUsed = simulation.value.unitsConsumed || 200_000;
-  // Add 20% buffer to the compute units
   const computeUnitsWithBuffer = Math.floor(computeUnitsUsed * 1.2);
 
   console.log(`Simulated compute units: ${computeUnitsUsed}`);
   console.log(`Setting compute unit limit: ${computeUnitsWithBuffer}`);
 
-  // Rebuild transaction with compute budget
-  const finalTx = new Transaction().add(
-    ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnitsWithBuffer }),
-    createTokenAccountIx,
-    initializeMintIx,
-    launchIx,
-  );
-
-  finalTx.recentBlockhash = blockhash;
-  finalTx.feePayer = payer.publicKey;
-  finalTx.sign(payer);
+  const finalMessageV0 = new TransactionMessage({
+    instructions: [
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: computeUnitsWithBuffer,
+      }),
+      ...ixs,
+    ],
+    payerKey: payer.publicKey,
+    recentBlockhash: blockhash,
+  }).compileToV0Message();
+  const finalTx = new VersionedTransaction(finalMessageV0);
+  finalTx.sign([payer]);
 
   const txHash = await provider.connection.sendRawTransaction(
     finalTx.serialize(),
   );
   await provider.connection.confirmTransaction(txHash, "confirmed");
 
-  console.log("Launch initialized", txHash);
+  console.log("Credible launch initialized", txHash);
 };
 
 launch().catch(console.error);

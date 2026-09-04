@@ -1,6 +1,7 @@
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
+import * as anchor from "@coral-xyz/anchor";
 
 // Returns the multisig, spending limit and 0th vault pda for a given dao address
 export const getSquadsPdasFromDao = async (
@@ -31,6 +32,18 @@ export const getSquadsPdasFromDao = async (
     spendingLimitPda,
     vaultPda,
   };
+};
+
+export const getSquadsTxIndex = async (
+  squadsMultisig: PublicKey,
+  provider: anchor.AnchorProvider,
+) => {
+  const multisigAccountInfo =
+    await multisig.accounts.Multisig.fromAccountAddress(
+      provider.connection, // TODO: Review if we want to instead offer connection class...
+      squadsMultisig,
+    );
+  return Number(multisigAccountInfo.transactionIndex);
 };
 
 export const createSquadsVaultTxAndProposal = async (

@@ -8,7 +8,9 @@ import * as token from "@solana/spl-token";
 import { TOKEN_SEED } from "./constants.js";
 
 const provider = anchor.AnchorProvider.env();
-const payer = provider.wallet["payer"];
+const payer = (
+  provider.wallet as anchor.Wallet & { payer: anchor.web3.Keypair }
+).payer;
 
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
@@ -37,27 +39,9 @@ export const end = async () => {
 
   // Simulate transaction to get compute units used
   tx.sign(payer);
-  const simulation = await provider.connection.simulateTransaction(tx);
-
-  if (simulation.value.err) {
-    console.error("Transaction simulation failed:", simulation.value.err);
-    throw new Error(
-      `Simulation failed: ${JSON.stringify(simulation.value.err)}`,
-    );
-  }
-
-  const computeUnitsUsed = simulation.value.unitsConsumed || 200_000;
-  // Add 20% buffer to the compute units
-  const computeUnitsWithBuffer = Math.floor(computeUnitsUsed * 1.2);
-
-  console.log(`Simulated compute units: ${computeUnitsUsed}`);
-  console.log(`Setting compute unit limit: ${computeUnitsWithBuffer}`);
 
   // Rebuild transaction with compute budget
-  const finalTx = new Transaction().add(
-    ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnitsWithBuffer }),
-    closeLaunchIx,
-  );
+  const finalTx = new Transaction().add(closeLaunchIx);
 
   finalTx.recentBlockhash = blockhash;
   finalTx.feePayer = payer.publicKey;
