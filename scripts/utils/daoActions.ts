@@ -10,13 +10,28 @@ import {
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
+import {
+  DAMM_V2_POOL_AUTHORITY,
+  LAUNCHPAD_V0_6_PROGRAM_ID,
+  LAUNCHPAD_V0_7_PROGRAM_ID,
+  LAUNCHPAD_V0_8_PROGRAM_ID,
+  PERMISSIONLESS_ACCOUNT,
+} from "@metadaoproject/programs";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   createTransferInstruction,
+  getAccount,
   getAssociatedTokenAddressSync,
+  TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { createMemoInstruction } from "@solana/spl-memo";
+import {
+  CpAmm,
+  derivePositionAddress,
+  derivePositionNftAccount,
+  getTokenProgram,
+} from "@meteora-ag/cp-amm-sdk";
 import {
   FutarchyClient,
   UpdateDaoParams,
@@ -25,6 +40,15 @@ import { buildAdminApprovalTransactions } from "./adminApproval.js";
 import { getSquadsPdasFromDao } from "./squads.js";
 
 const SEED_AMM_POSITION = Buffer.from("amm_position");
+const SEED_POSITION_NFT_MINT = Buffer.from("position_nft_mint");
+
+// Launchpad versions that create a DAO's Meteora position at launch, all
+// seeding its NFT mint from the base mint
+const LAUNCHPAD_PROGRAM_IDS = [
+  LAUNCHPAD_V0_6_PROGRAM_ID,
+  LAUNCHPAD_V0_7_PROGRAM_ID,
+  LAUNCHPAD_V0_8_PROGRAM_ID,
+];
 
 export type DaoActionContext = {
   provider: AnchorProvider;
@@ -214,6 +238,172 @@ export const withdrawLiquidity = ({
   };
 };
 
+// Withdraws all unlocked liquidity from the Meteora DAMM v2 position the
+// launchpad created for the DAO into the vault's token accounts. The min
+// amounts are set `slippageBps` below what the position is worth right now,
+// so pool changes between now and execution beyond that tolerance fail the
+// withdrawal instead of silently accepting a worse outcome.
+export const withdrawMeteoraLiquidity = ({
+  slippageBps,
+}: {
+  slippageBps: number;
+}): DaoActionBuilder => {
+  if (
+    !Number.isInteger(slippageBps) ||
+    slippageBps < 0 ||
+    slippageBps > 10_000
+  ) {
+    throw new Error(
+      `slippageBps must be an integer between 0 and 10000, got ${slippageBps}`,
+    );
+  }
+
+  return async ({ provider, futarchy, dao, daoMultisigVault, payer }) => {
+    const daoAccount = await futarchy.getDao(dao);
+    const cpAmm = new CpAmm(provider.connection);
+
+    // Any launchpad version may have launched the DAO, so use whichever
+    // version's position exists
+    const candidates = LAUNCHPAD_PROGRAM_IDS.map((launchpadProgramId) => {
+      const [positionNftMint] = PublicKey.findProgramAddressSync(
+        [SEED_POSITION_NFT_MINT, daoAccount.baseMint.toBuffer()],
+        launchpadProgramId,
+      );
+      return {
+        positionNftMint,
+        position: derivePositionAddress(positionNftMint),
+      };
+    });
+    const positionStates = await cpAmm._program.account.position.fetchMultiple(
+      candidates.map((candidate) => candidate.position),
+    );
+    const foundIndex = positionStates.findIndex((state) => state !== null);
+    if (foundIndex === -1) {
+      throw new Error(
+        "No launchpad-created Meteora position found for this DAO",
+      );
+    }
+    const { positionNftMint, position } = candidates[foundIndex];
+    const positionState = positionStates[foundIndex]!;
+    const positionNftAccount = derivePositionNftAccount(positionNftMint);
+
+    // The vault signs the withdrawal as the position owner, so it must hold
+    // the position NFT
+    const positionNft = await getAccount(
+      provider.connection,
+      positionNftAccount,
+      undefined,
+      TOKEN_2022_PROGRAM_ID,
+    );
+    if (!positionNft.owner.equals(daoMultisigVault)) {
+      throw new Error(
+        `Position NFT is owned by ${positionNft.owner.toBase58()}, not the DAO's vault`,
+      );
+    }
+
+    const liquidity = positionState.unlockedLiquidity;
+    if (liquidity.isZero()) {
+      throw new Error("The position has no unlocked liquidity to withdraw");
+    }
+
+    const poolState = await cpAmm.fetchPoolState(positionState.pool);
+
+    // Same math as the program's remove_all_liquidity
+    const { outAmountA, outAmountB } = cpAmm.getWithdrawQuote({
+      liquidityDelta: liquidity,
+      sqrtPrice: poolState.sqrtPrice,
+      minSqrtPrice: poolState.sqrtMinPrice,
+      maxSqrtPrice: poolState.sqrtMaxPrice,
+    });
+    const tokenAAmountThreshold = outAmountA
+      .muln(10_000 - slippageBps)
+      .divn(10_000);
+    const tokenBAmountThreshold = outAmountB
+      .muln(10_000 - slippageBps)
+      .divn(10_000);
+
+    const tokenAProgram = getTokenProgram(poolState.tokenAFlag);
+    const tokenBProgram = getTokenProgram(poolState.tokenBFlag);
+    const vaultTokenAAccount = getAssociatedTokenAddressSync(
+      poolState.tokenAMint,
+      daoMultisigVault,
+      true,
+      tokenAProgram,
+    );
+    const vaultTokenBAccount = getAssociatedTokenAddressSync(
+      poolState.tokenBMint,
+      daoMultisigVault,
+      true,
+      tokenBProgram,
+    );
+
+    console.log("Meteora pool:", positionState.pool.toBase58());
+    console.log("Meteora position:", position.toBase58());
+    console.log("Unlocked liquidity:", liquidity.toString());
+    console.log(
+      "Vested liquidity (stays):",
+      positionState.vestedLiquidity.toString(),
+    );
+    console.log(
+      "Permanently locked liquidity (stays):",
+      positionState.permanentLockedLiquidity.toString(),
+    );
+    console.log("Token A mint:", poolState.tokenAMint.toBase58());
+    console.log("Token B mint:", poolState.tokenBMint.toBase58());
+    console.log("Expected token A out:", outAmountA.toString());
+    console.log("Expected token B out:", outAmountB.toString());
+    console.log("Min token A amount:", tokenAAmountThreshold.toString());
+    console.log("Min token B amount:", tokenBAmountThreshold.toString());
+
+    const removeAllLiquidityIx = await cpAmm._program.methods
+      .removeAllLiquidity(tokenAAmountThreshold, tokenBAmountThreshold)
+      .accountsPartial({
+        poolAuthority: DAMM_V2_POOL_AUTHORITY,
+        pool: positionState.pool,
+        position,
+        positionNftAccount,
+        owner: daoMultisigVault,
+        tokenAAccount: vaultTokenAAccount,
+        tokenBAccount: vaultTokenBAccount,
+        tokenAMint: poolState.tokenAMint,
+        tokenBMint: poolState.tokenBMint,
+        tokenAVault: poolState.tokenAVault,
+        tokenBVault: poolState.tokenBVault,
+        tokenAProgram,
+        tokenBProgram,
+      })
+      .instruction();
+
+    return {
+      instructions: [removeAllLiquidityIx],
+      setupInstructions: [
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          vaultTokenAAccount,
+          daoMultisigVault,
+          poolState.tokenAMint,
+          tokenAProgram,
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          vaultTokenBAccount,
+          daoMultisigVault,
+          poolState.tokenBMint,
+          tokenBProgram,
+        ),
+      ],
+    };
+  };
+};
+
+// Logs the text on-chain when the vault transaction executes, with the vault
+// as a verified signer
+export const memo =
+  (text: string): DaoActionBuilder =>
+  async ({ daoMultisigVault }) => ({
+    instructions: [createMemoInstruction(text, [daoMultisigVault])],
+  });
+
 // Transfers tokens from the vault's associated token account to the recipient
 export const transferToken =
   ({
@@ -306,14 +496,14 @@ export const removeSpendingLimit =
   };
 
 /**
- * Runs the action builders and routes their instructions through the admin
- * approval system. On top of buildAdminApprovalTransactions' result, returns
- * `setupTransaction` - a payer-funded transaction with the actions' setup
- * instructions (null if none), to be signed by the payer and sent before the
- * others - and `requiresAdminExecution`, set when any action needs the DAO
- * proposal executed through admin_execute_multisig_proposal.
+ * Runs the action builders against the DAO's squads accounts. Returns the
+ * instructions the DAO's vault should execute, `setupTransaction` - a
+ * payer-funded transaction with the actions' setup instructions (null if
+ * none), to be signed by the payer and sent before anything else - and
+ * `requiresAdminExecution`, set when any action needs the DAO proposal
+ * executed through admin_execute_multisig_proposal.
  */
-export const buildDaoActionTransactions = async ({
+export const buildDaoActions = async ({
   provider,
   futarchy,
   dao,
@@ -349,7 +539,7 @@ export const buildDaoActionTransactions = async ({
   const instructions = built.flatMap((action) => action.instructions);
 
   if (instructions.length === 0) {
-    throw new Error("No instructions to enqueue - add at least one action");
+    throw new Error("No instructions - add at least one action");
   }
 
   const requiresAdminExecution = built.some(
@@ -366,6 +556,36 @@ export const buildDaoActionTransactions = async ({
   }
 
   return {
+    daoMultisig,
+    daoMultisigVault,
+    instructions,
+    setupTransaction,
+    requiresAdminExecution,
+  };
+};
+
+/**
+ * Runs the action builders and routes their instructions through the admin
+ * approval system. Returns buildDaoActions' `setupTransaction` and
+ * `requiresAdminExecution` on top of buildAdminApprovalTransactions' result.
+ */
+export const buildDaoActionTransactions = async ({
+  provider,
+  futarchy,
+  dao,
+  payer,
+  actions,
+}: {
+  provider: AnchorProvider;
+  futarchy: FutarchyClient;
+  dao: PublicKey;
+  payer: PublicKey;
+  actions: DaoActionBuilder[];
+}) => {
+  const { instructions, setupTransaction, requiresAdminExecution } =
+    await buildDaoActions({ provider, futarchy, dao, payer, actions });
+
+  return {
     setupTransaction,
     requiresAdminExecution,
     ...(await buildAdminApprovalTransactions({
@@ -380,7 +600,7 @@ export const buildDaoActionTransactions = async ({
 
 // Sends a signed transaction, throwing if it isn't confirmed or lands with an
 // error
-const sendAndConfirm = async (
+export const sendAndConfirm = async (
   provider: AnchorProvider,
   transaction: Transaction,
 ) => {
