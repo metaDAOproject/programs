@@ -1,11 +1,13 @@
 import { AnchorProvider } from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
 import { sha256 } from "@noble/hashes/sha256";
+import bs58 from "bs58";
 import {
   ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
+  SendTransactionError,
   Transaction,
   TransactionMessage,
 } from "@solana/web3.js";
@@ -19,7 +21,10 @@ import {
   DaoActionBuilder,
   sendAndConfirm,
 } from "./daoActions.js";
-import { createSquadsVaultTxAndProposal } from "./squads.js";
+import {
+  createSquadsVaultTxAndProposal,
+  getSquadsPdasFromDao,
+} from "./squads.js";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -27,38 +32,47 @@ const accountExists = async (connection: Connection, account: PublicKey) =>
   (await connection.getAccountInfo(account, "confirmed")) !== null;
 
 /**
- * Signs and sends a transaction that creates `createdAccounts`, confirming it
- * at the confirmed commitment, and skips it when they all exist already. A
- * failed attempt is retried with a freshly built transaction: a load balanced
- * RPC can run preflight on a node that hasn't yet seen the transaction that
- * created an account this one reads, and a confirmation timeout doesn't rule
- * out the transaction landing - the existence check at the start of the next
- * attempt catches that.
+ * Signs and sends a transaction, confirming it at the confirmed commitment.
+ * A failed attempt is retried with a freshly built transaction: a load
+ * balanced RPC can run preflight on a node that hasn't yet seen the
+ * transaction that created an account this one reads, and a transaction that
+ * expires unconfirmed can never land, so rebuilding it is safe.
+ *
+ * `createdAccounts` are accounts only this flow creates (PDAs of its own
+ * proposal); when they all exist the transaction is skipped, so an attempt
+ * that landed without being confirmed isn't repeated. Leave it out for
+ * accounts anyone could create at the same address, like squads transactions
+ * at a transaction index - there, only a confirmed signature counts as
+ * success.
  */
 const sendCreateTransaction = async ({
   provider,
   payer,
+  signers = [],
   name,
-  createdAccounts,
+  createdAccounts = [],
   buildTransaction,
   attempts = 5,
 }: {
   provider: AnchorProvider;
   payer: Keypair;
+  signers?: Keypair[];
   name: string;
-  createdAccounts: PublicKey[];
+  createdAccounts?: PublicKey[];
   buildTransaction: () => Promise<Transaction>;
   attempts?: number;
 }) => {
   for (let attempt = 1; attempt <= attempts; attempt++) {
-    const existing = await Promise.all(
-      createdAccounts.map((account) =>
-        accountExists(provider.connection, account),
-      ),
-    );
-    if (existing.every(Boolean)) {
-      console.log(`${name} already exists - skipping`);
-      return null;
+    if (createdAccounts.length > 0) {
+      const existing = await Promise.all(
+        createdAccounts.map((account) =>
+          accountExists(provider.connection, account),
+        ),
+      );
+      if (existing.every(Boolean)) {
+        console.log(`${name} already exists - skipping`);
+        return null;
+      }
     }
 
     try {
@@ -67,12 +81,25 @@ const sendCreateTransaction = async ({
         await provider.connection.getLatestBlockhash("confirmed");
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = payer.publicKey;
-      transaction.sign(payer);
+      transaction.sign(payer, ...signers);
 
-      const signature = await provider.connection.sendRawTransaction(
-        transaction.serialize(),
-        { preflightCommitment: "confirmed" },
-      );
+      let signature: string;
+      try {
+        signature = await provider.connection.sendRawTransaction(
+          transaction.serialize(),
+          { preflightCommitment: "confirmed" },
+        );
+      } catch (error) {
+        // The node rejected the transaction, so nothing was broadcast
+        if (error instanceof SendTransactionError) {
+          throw error;
+        }
+        // Anything else (e.g. a transport error) may have happened after the
+        // transaction was forwarded, so confirm it by signature: it either
+        // lands or expires, and only then is rebuilding it safe
+        signature = bs58.encode(transaction.signature!);
+      }
+
       const status = await provider.connection.confirmTransaction(
         { signature, blockhash, lastValidBlockHeight },
         "confirmed",
@@ -205,12 +232,103 @@ export const initializeFutarchyProposal = async ({
 };
 
 /**
+ * Thrown by createFutarchyProposal when its squads proposal was created but
+ * initializing the futarchy proposal for it failed. Carries the squads
+ * proposal to resume from - re-running with `resumeSquadsProposal` set to it
+ * finishes the initialization instead of creating a second squads proposal.
+ */
+export class FutarchyProposalInitializationError extends Error {
+  constructor(
+    readonly squadsProposal: PublicKey,
+    readonly squadsVaultTransaction: PublicKey,
+    readonly transactionIndex: bigint,
+    readonly cause: unknown,
+  ) {
+    super(
+      `Squads proposal ${squadsProposal.toBase58()} (transaction index ${transactionIndex}) was created, but initializing its futarchy proposal failed: ${
+        cause instanceof Error ? cause.message : cause
+      }. Don't re-run as is - that creates a second squads proposal with the same instructions. Re-run with resumeSquadsProposal set to ${squadsProposal.toBase58()} to finish initializing this one.`,
+    );
+    this.name = "FutarchyProposalInitializationError";
+  }
+}
+
+/**
+ * Finishes a createFutarchyProposal run that failed after its squads proposal
+ * was created: checks the squads proposal is on the DAO's multisig and still
+ * active, then initializes the futarchy proposal for it, skipping the
+ * accounts that already exist. The actions aren't rebuilt - the instructions
+ * put up for vote are the ones the squads transaction already holds.
+ */
+const resumeFutarchyProposal = async ({
+  provider,
+  futarchy,
+  dao,
+  payer,
+  squadsProposal,
+}: {
+  provider: AnchorProvider;
+  futarchy: FutarchyClient;
+  dao: PublicKey;
+  payer: Keypair;
+  squadsProposal: PublicKey;
+}) => {
+  const { multisigPda: daoMultisig } = await getSquadsPdasFromDao(dao);
+
+  const squadsProposalAccount =
+    await multisig.accounts.Proposal.fromAccountAddress(
+      provider.connection,
+      squadsProposal,
+    );
+
+  if (!squadsProposalAccount.multisig.equals(daoMultisig)) {
+    throw new Error(
+      `Squads proposal ${squadsProposal.toBase58()} belongs to multisig ${squadsProposalAccount.multisig.toBase58()}, not the DAO's (${daoMultisig.toBase58()})`,
+    );
+  }
+  if (squadsProposalAccount.status.__kind !== "Active") {
+    throw new Error(
+      `Squads proposal ${squadsProposal.toBase58()} is ${squadsProposalAccount.status.__kind}, not Active - there's nothing to resume`,
+    );
+  }
+
+  const transactionIndex = BigInt(
+    squadsProposalAccount.transactionIndex.toString(),
+  );
+  const [squadsVaultTransaction] = multisig.getTransactionPda({
+    multisigPda: daoMultisig,
+    index: transactionIndex,
+  });
+
+  console.log("Resuming squads proposal:", squadsProposal.toBase58());
+  console.log("Squads transaction index:", transactionIndex.toString());
+  console.log("Squads transaction:", squadsVaultTransaction.toBase58());
+
+  const proposal = await initializeFutarchyProposal({
+    provider,
+    futarchy,
+    dao,
+    squadsProposal,
+    payer,
+  });
+
+  return { proposal, squadsProposal, squadsVaultTransaction, transactionIndex };
+};
+
+/**
  * Runs the action builders and puts their instructions up for a futarchy
  * vote: sends the payer-funded setup transaction (if any), creates the squads
  * vault transaction + proposal holding the instructions on the DAO's
  * multisig, then initializes the futarchy proposal in draft state. Stake base
  * tokens to the proposal - or have the team sponsor it - and launch it to
  * start the vote.
+ *
+ * If initialization fails after the squads proposal was created, a
+ * FutarchyProposalInitializationError carrying the squads proposal is thrown.
+ * Re-run with `resumeSquadsProposal` set to it to finish the initialization;
+ * the actions are ignored then, since the instructions are already on-chain.
+ * Any other error means no squads proposal was confirmed, so the run can be
+ * repeated as is.
  *
  * A passed proposal is executed permissionlessly, so actions the DAO itself
  * signs (requiresAdminExecution) can't go through here - route those through
@@ -222,13 +340,25 @@ export const createFutarchyProposal = async ({
   dao,
   payer,
   actions,
+  resumeSquadsProposal,
 }: {
   provider: AnchorProvider;
   futarchy: FutarchyClient;
   dao: PublicKey;
   payer: Keypair;
   actions: DaoActionBuilder[];
+  resumeSquadsProposal?: PublicKey;
 }) => {
+  if (resumeSquadsProposal) {
+    return resumeFutarchyProposal({
+      provider,
+      futarchy,
+      dao,
+      payer,
+      squadsProposal: resumeSquadsProposal,
+    });
+  }
+
   const {
     daoMultisig,
     daoMultisigVault,
@@ -258,7 +388,10 @@ export const createFutarchyProposal = async ({
     console.log("Transaction signature:", setupSignature);
   }
 
-  // Read only now so the DAO multisig's transaction index is fresh
+  // Read only now so the DAO multisig's transaction index is fresh. It stays
+  // pinned across retries: an attempt that expired can't land anymore, and if
+  // another proposal took the index meanwhile the retries fail on it instead
+  // of adopting it.
   const daoMultisigAccount =
     await multisig.accounts.Multisig.fromAccountAddress(
       provider.connection,
@@ -290,32 +423,43 @@ export const createFutarchyProposal = async ({
     transactionIndex,
   });
 
-  const squadsTransaction = new Transaction().add(
-    vaultTxCreateIx,
-    proposalCreateIx,
-  );
-  squadsTransaction.recentBlockhash = (
-    await provider.connection.getLatestBlockhash()
-  ).blockhash;
-  squadsTransaction.feePayer = payer.publicKey;
-  squadsTransaction.sign(payer, PERMISSIONLESS_ACCOUNT);
+  try {
+    await sendCreateTransaction({
+      provider,
+      payer,
+      signers: [PERMISSIONLESS_ACCOUNT],
+      name: "Squads transaction and proposal",
+      buildTransaction: async () =>
+        new Transaction().add(vaultTxCreateIx, proposalCreateIx),
+    });
+  } catch (error) {
+    console.error(
+      "Creating the squads transaction and proposal failed. No squads proposal was confirmed, so the run can be repeated as is.",
+    );
+    throw error;
+  }
 
-  const squadsSignature = await sendAndConfirm(provider, squadsTransaction);
-
-  console.log("Squads transaction created!");
-  console.log("Transaction signature:", squadsSignature);
   console.log("Squads transaction index:", transactionIndex.toString());
   console.log("Squads transaction:", squadsVaultTransaction.toBase58());
   console.log("Squads proposal:", squadsProposal.toBase58());
 
-  // Resumable - if this fails partway through, re-run initializeFutarchyProposal
-  const proposal = await initializeFutarchyProposal({
-    provider,
-    futarchy,
-    dao,
-    squadsProposal,
-    payer,
-  });
+  let proposal: PublicKey;
+  try {
+    proposal = await initializeFutarchyProposal({
+      provider,
+      futarchy,
+      dao,
+      squadsProposal,
+      payer,
+    });
+  } catch (error) {
+    throw new FutarchyProposalInitializationError(
+      squadsProposal,
+      squadsVaultTransaction,
+      transactionIndex,
+      error,
+    );
+  }
 
   return { proposal, squadsProposal, squadsVaultTransaction, transactionIndex };
 };
