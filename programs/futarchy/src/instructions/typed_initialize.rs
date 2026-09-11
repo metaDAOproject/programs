@@ -59,6 +59,12 @@ impl TypedInitializeAccounts<'_> {
     pub fn validate(&self) -> Result<()> {
         require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
 
+        // The catalog is opt-in per DAO.
+        require!(
+            self.dao.typed_proposals_enabled,
+            FutarchyError::TypedProposalsDisabled
+        );
+
         require_eq!(
             self.question.num_outcomes(),
             2,
