@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::MAX_TRANCHES;
+use crate::{PriceBasedPerformancePackageError, MAX_TRANCHES};
 
 /// Starting at `byte_offset` in `oracle_account`, this program expects to read:
 /// - 16 bytes for the aggregator, stored as a little endian u128
@@ -80,6 +80,96 @@ pub struct PerformancePackage {
     pub seq_num: u64,
     /// The vault that stores the tokens
     pub performance_package_token_vault: Pubkey,
+    /// Appended in 0.6.1; `None` means uncapped, and so do expired limits
+    pub withdrawal_policy: Option<WithdrawalPolicy>,
+}
+
+impl PerformancePackage {
+    /// Account size since 0.6.1 (582 bytes)
+    pub const SIZE: usize = 8 + Self::INIT_SPACE;
+    /// Account size before 0.6.1 (520 bytes)
+    pub const OLD_SIZE: usize = 8 + OldPerformancePackage::INIT_SPACE;
+
+    /// Ensure the package has been resized to the current layout.
+    pub fn assert_migrated(info: &AccountInfo) -> Result<()> {
+        require_eq!(
+            info.data_len(),
+            Self::SIZE,
+            PriceBasedPerformancePackageError::AccountNotMigrated
+        );
+        Ok(())
+    }
+}
+
+/// The 0.6.0 layout, decoded by the resize before an account is migrated
+#[derive(AnchorSerialize, AnchorDeserialize, InitSpace)]
+pub struct OldPerformancePackage {
+    #[max_len(MAX_TRANCHES)]
+    pub tranches: Vec<StoredTranche>,
+    pub total_token_amount: u64,
+    pub already_unlocked_amount: u64,
+    pub min_unlock_timestamp: i64,
+    pub oracle_config: OracleConfig,
+    pub twap_length_seconds: u32,
+    pub recipient: Pubkey,
+    pub state: PerformancePackageState,
+    pub create_key: Pubkey,
+    pub pda_bump: u8,
+    pub performance_package_authority: Pubkey,
+    pub token_mint: Pubkey,
+    pub seq_num: u64,
+    pub performance_package_token_vault: Pubkey,
+}
+
+/// The agreed limits together with the usage they are enforced against
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub struct WithdrawalPolicy {
+    pub limits: WithdrawalLimits,
+    pub usage: WindowUsage,
+}
+
+/// Usage in the window the last withdrawal fell in
+#[derive(
+    AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace, Default,
+)]
+pub struct WindowUsage {
+    /// `(now - limits.start_timestamp) / limits.window_seconds` at the last withdrawal
+    pub window_index: i64,
+    pub tokens_used: u64,
+    pub quote_used: u64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub struct WithdrawalLimits {
+    /// Anchor for window boundaries; set by the program when limits take effect or `window_seconds` changes
+    pub start_timestamp: i64,
+    /// Caps apply while `now < end_timestamp`
+    pub end_timestamp: i64,
+    /// Duration of the window in seconds
+    pub window_seconds: u32,
+    /// Max base tokens withdrawn per window
+    pub max_tokens_per_window: u64,
+    /// Max quote value withdrawn per window, in quote atoms
+    pub max_quote_per_window: u64,
+    /// Which withdrawal routes the recipient may use while the caps are active
+    pub withdrawal_mode: WithdrawalMode,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub enum WithdrawalMode {
+    Tokens,
+    Sell,
+    Both,
+}
+
+impl WithdrawalMode {
+    pub fn allows_tokens(&self) -> bool {
+        matches!(self, WithdrawalMode::Tokens | WithdrawalMode::Both)
+    }
+
+    pub fn allows_sell(&self) -> bool {
+        matches!(self, WithdrawalMode::Sell | WithdrawalMode::Both)
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]

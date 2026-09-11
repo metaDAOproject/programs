@@ -163,6 +163,7 @@ impl InitializePerformancePackage<'_> {
             already_unlocked_amount: 0,
             performance_package_token_vault: performance_package_token_vault.key(),
             seq_num: 0,
+            withdrawal_policy: None,
         });
 
         emit_cpi!(PerformancePackageInitialized {

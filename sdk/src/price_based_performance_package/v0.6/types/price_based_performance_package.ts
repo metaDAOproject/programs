@@ -1,5 +1,5 @@
 export type PriceBasedPerformancePackage = {
-  version: "0.6.0";
+  version: "0.6.1";
   name: "price_based_performance_package";
   constants: [
     {
@@ -435,6 +435,17 @@ export type PriceBasedPerformancePackage = {
             docs: ["The vault that stores the tokens"];
             type: "publicKey";
           },
+          {
+            name: "withdrawalPolicy";
+            docs: [
+              "Appended in 0.6.1; `None` means uncapped, and so do expired limits",
+            ];
+            type: {
+              option: {
+                defined: "WithdrawalPolicy";
+              };
+            };
+          },
         ];
       };
     },
@@ -639,6 +650,188 @@ export type PriceBasedPerformancePackage = {
           {
             name: "isUnlocked";
             type: "bool";
+          },
+        ];
+      };
+    },
+    {
+      name: "OldPerformancePackage";
+      docs: [
+        "The 0.6.0 layout, decoded by the resize before an account is migrated",
+      ];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "tranches";
+            type: {
+              vec: {
+                defined: "StoredTranche";
+              };
+            };
+          },
+          {
+            name: "totalTokenAmount";
+            type: "u64";
+          },
+          {
+            name: "alreadyUnlockedAmount";
+            type: "u64";
+          },
+          {
+            name: "minUnlockTimestamp";
+            type: "i64";
+          },
+          {
+            name: "oracleConfig";
+            type: {
+              defined: "OracleConfig";
+            };
+          },
+          {
+            name: "twapLengthSeconds";
+            type: "u32";
+          },
+          {
+            name: "recipient";
+            type: "publicKey";
+          },
+          {
+            name: "state";
+            type: {
+              defined: "PerformancePackageState";
+            };
+          },
+          {
+            name: "createKey";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "performancePackageAuthority";
+            type: "publicKey";
+          },
+          {
+            name: "tokenMint";
+            type: "publicKey";
+          },
+          {
+            name: "seqNum";
+            type: "u64";
+          },
+          {
+            name: "performancePackageTokenVault";
+            type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "WithdrawalPolicy";
+      docs: [
+        "The agreed limits together with the usage they are enforced against",
+      ];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "limits";
+            type: {
+              defined: "WithdrawalLimits";
+            };
+          },
+          {
+            name: "usage";
+            type: {
+              defined: "WindowUsage";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "WindowUsage";
+      docs: ["Usage in the window the last withdrawal fell in"];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "windowIndex";
+            docs: [
+              "`(now - limits.start_timestamp) / limits.window_seconds` at the last withdrawal",
+            ];
+            type: "i64";
+          },
+          {
+            name: "tokensUsed";
+            type: "u64";
+          },
+          {
+            name: "quoteUsed";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "WithdrawalLimits";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "startTimestamp";
+            docs: [
+              "Anchor for window boundaries; set by the program when limits take effect or `window_seconds` changes",
+            ];
+            type: "i64";
+          },
+          {
+            name: "endTimestamp";
+            docs: ["Caps apply while `now < end_timestamp`"];
+            type: "i64";
+          },
+          {
+            name: "windowSeconds";
+            type: "u32";
+          },
+          {
+            name: "maxTokensPerWindow";
+            docs: ["Max base tokens withdrawn per window"];
+            type: "u64";
+          },
+          {
+            name: "maxQuotePerWindow";
+            docs: ["Max quote value withdrawn per window, in quote atoms"];
+            type: "u64";
+          },
+          {
+            name: "withdrawalMode";
+            docs: [
+              "Which withdrawal routes the recipient may use while the caps are active",
+            ];
+            type: {
+              defined: "WithdrawalMode";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "WithdrawalMode";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Tokens";
+          },
+          {
+            name: "Sell";
+          },
+          {
+            name: "Both";
           },
         ];
       };
@@ -966,11 +1159,51 @@ export type PriceBasedPerformancePackage = {
       name: "RecipientAuthorityMustDiffer";
       msg: "Recipient and performance package authority must be different keys";
     },
+    {
+      code: 6016;
+      name: "InvalidWithdrawalLimits";
+      msg: "Withdrawal limits must have non-zero caps, a future end, and a window of at least one second";
+    },
+    {
+      code: 6017;
+      name: "InsufficientWithdrawableBalance";
+      msg: "Amount exceeds the withdrawable balance";
+    },
+    {
+      code: 6018;
+      name: "TokenWindowLimitExceeded";
+      msg: "Token cap for the current window exceeded";
+    },
+    {
+      code: 6019;
+      name: "QuoteWindowLimitExceeded";
+      msg: "Quote cap for the current window exceeded";
+    },
+    {
+      code: 6020;
+      name: "InvalidPriceObservation";
+      msg: "Oracle price observation is missing or zero";
+    },
+    {
+      code: 6021;
+      name: "WithdrawTokensDisabled";
+      msg: "Token withdrawals are disabled by the withdrawal mode";
+    },
+    {
+      code: 6022;
+      name: "WithdrawViaSellDisabled";
+      msg: "Sell withdrawals are disabled by the withdrawal mode";
+    },
+    {
+      code: 6023;
+      name: "AccountNotMigrated";
+      msg: "Performance package has not been resized to the current layout";
+    },
   ];
 };
 
 export const IDL: PriceBasedPerformancePackage = {
-  version: "0.6.0",
+  version: "0.6.1",
   name: "price_based_performance_package",
   constants: [
     {
@@ -1406,6 +1639,17 @@ export const IDL: PriceBasedPerformancePackage = {
             docs: ["The vault that stores the tokens"],
             type: "publicKey",
           },
+          {
+            name: "withdrawalPolicy",
+            docs: [
+              "Appended in 0.6.1; `None` means uncapped, and so do expired limits",
+            ],
+            type: {
+              option: {
+                defined: "WithdrawalPolicy",
+              },
+            },
+          },
         ],
       },
     },
@@ -1610,6 +1854,188 @@ export const IDL: PriceBasedPerformancePackage = {
           {
             name: "isUnlocked",
             type: "bool",
+          },
+        ],
+      },
+    },
+    {
+      name: "OldPerformancePackage",
+      docs: [
+        "The 0.6.0 layout, decoded by the resize before an account is migrated",
+      ],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "tranches",
+            type: {
+              vec: {
+                defined: "StoredTranche",
+              },
+            },
+          },
+          {
+            name: "totalTokenAmount",
+            type: "u64",
+          },
+          {
+            name: "alreadyUnlockedAmount",
+            type: "u64",
+          },
+          {
+            name: "minUnlockTimestamp",
+            type: "i64",
+          },
+          {
+            name: "oracleConfig",
+            type: {
+              defined: "OracleConfig",
+            },
+          },
+          {
+            name: "twapLengthSeconds",
+            type: "u32",
+          },
+          {
+            name: "recipient",
+            type: "publicKey",
+          },
+          {
+            name: "state",
+            type: {
+              defined: "PerformancePackageState",
+            },
+          },
+          {
+            name: "createKey",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "performancePackageAuthority",
+            type: "publicKey",
+          },
+          {
+            name: "tokenMint",
+            type: "publicKey",
+          },
+          {
+            name: "seqNum",
+            type: "u64",
+          },
+          {
+            name: "performancePackageTokenVault",
+            type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawalPolicy",
+      docs: [
+        "The agreed limits together with the usage they are enforced against",
+      ],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "limits",
+            type: {
+              defined: "WithdrawalLimits",
+            },
+          },
+          {
+            name: "usage",
+            type: {
+              defined: "WindowUsage",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "WindowUsage",
+      docs: ["Usage in the window the last withdrawal fell in"],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "windowIndex",
+            docs: [
+              "`(now - limits.start_timestamp) / limits.window_seconds` at the last withdrawal",
+            ],
+            type: "i64",
+          },
+          {
+            name: "tokensUsed",
+            type: "u64",
+          },
+          {
+            name: "quoteUsed",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawalLimits",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "startTimestamp",
+            docs: [
+              "Anchor for window boundaries; set by the program when limits take effect or `window_seconds` changes",
+            ],
+            type: "i64",
+          },
+          {
+            name: "endTimestamp",
+            docs: ["Caps apply while `now < end_timestamp`"],
+            type: "i64",
+          },
+          {
+            name: "windowSeconds",
+            type: "u32",
+          },
+          {
+            name: "maxTokensPerWindow",
+            docs: ["Max base tokens withdrawn per window"],
+            type: "u64",
+          },
+          {
+            name: "maxQuotePerWindow",
+            docs: ["Max quote value withdrawn per window, in quote atoms"],
+            type: "u64",
+          },
+          {
+            name: "withdrawalMode",
+            docs: [
+              "Which withdrawal routes the recipient may use while the caps are active",
+            ],
+            type: {
+              defined: "WithdrawalMode",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawalMode",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Tokens",
+          },
+          {
+            name: "Sell",
+          },
+          {
+            name: "Both",
           },
         ],
       },
@@ -1936,6 +2362,46 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6015,
       name: "RecipientAuthorityMustDiffer",
       msg: "Recipient and performance package authority must be different keys",
+    },
+    {
+      code: 6016,
+      name: "InvalidWithdrawalLimits",
+      msg: "Withdrawal limits must have non-zero caps, a future end, and a window of at least one second",
+    },
+    {
+      code: 6017,
+      name: "InsufficientWithdrawableBalance",
+      msg: "Amount exceeds the withdrawable balance",
+    },
+    {
+      code: 6018,
+      name: "TokenWindowLimitExceeded",
+      msg: "Token cap for the current window exceeded",
+    },
+    {
+      code: 6019,
+      name: "QuoteWindowLimitExceeded",
+      msg: "Quote cap for the current window exceeded",
+    },
+    {
+      code: 6020,
+      name: "InvalidPriceObservation",
+      msg: "Oracle price observation is missing or zero",
+    },
+    {
+      code: 6021,
+      name: "WithdrawTokensDisabled",
+      msg: "Token withdrawals are disabled by the withdrawal mode",
+    },
+    {
+      code: 6022,
+      name: "WithdrawViaSellDisabled",
+      msg: "Sell withdrawals are disabled by the withdrawal mode",
+    },
+    {
+      code: 6023,
+      name: "AccountNotMigrated",
+      msg: "Performance package has not been resized to the current layout",
     },
   ],
 };
