@@ -1,4 +1,5 @@
 import initializePerformancePackage from "./unit/initializePerformancePackage.test.js";
+import initializePerformancePackageWithLimits from "./unit/initializePerformancePackageWithLimits.test.js";
 import startUnlock from "./unit/startUnlock.test.js";
 import completeUnlock from "./unit/completeUnlock.test.js";
 import withdrawTokens from "./unit/withdrawTokens.test.js";
@@ -10,6 +11,10 @@ import resizePerformancePackage from "./unit/resizePerformancePackage.test.js";
 
 export default function suite() {
   describe("#initialize_performance_package", initializePerformancePackage);
+  describe(
+    "#initialize_performance_package_with_limits",
+    initializePerformancePackageWithLimits,
+  );
   describe("#start_unlock", startUnlock);
   describe("#complete_unlock", completeUnlock);
   describe("#withdraw_tokens", withdrawTokens);

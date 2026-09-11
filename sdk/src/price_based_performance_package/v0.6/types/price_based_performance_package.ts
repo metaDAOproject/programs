@@ -90,6 +90,84 @@ export type PriceBasedPerformancePackage = {
       ];
     },
     {
+      name: "initializePerformancePackageWithLimits";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "createKey";
+          isMut: false;
+          isSigner: true;
+          docs: ["Used to derive the PDA"];
+        },
+        {
+          name: "tokenMint";
+          isMut: false;
+          isSigner: false;
+          docs: ["The mint of the tokens to be locked"];
+        },
+        {
+          name: "grantorTokenAccount";
+          isMut: true;
+          isSigner: false;
+          docs: ["The token account containing the tokens to be locked"];
+        },
+        {
+          name: "grantor";
+          isMut: false;
+          isSigner: true;
+          docs: ["The authority of the token account"];
+        },
+        {
+          name: "performancePackageTokenVault";
+          isMut: true;
+          isSigner: false;
+          docs: ["The locker's token account where tokens will be stored"];
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "InitializePerformancePackageWithLimitsParams";
+          };
+        },
+      ];
+    },
+    {
       name: "startUnlock";
       accounts: [
         {
@@ -631,6 +709,28 @@ export type PriceBasedPerformancePackage = {
       };
     },
     {
+      name: "InitializePerformancePackageWithLimitsParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "base";
+            type: {
+              defined: "InitializePerformancePackageParams";
+            };
+          },
+          {
+            name: "limits";
+            type: {
+              option: {
+                defined: "LimitsParams";
+              };
+            };
+          },
+        ];
+      };
+    },
+    {
       name: "InitializePerformancePackageParams";
       type: {
         kind: "struct";
@@ -928,6 +1028,39 @@ export type PriceBasedPerformancePackage = {
             docs: [
               "Which withdrawal routes the recipient may use while the caps are active",
             ];
+            type: {
+              defined: "WithdrawalMode";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "LimitsParams";
+      docs: [
+        "What the two parties agree on; the program supplies `start_timestamp`",
+      ];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "endTimestamp";
+            type: "i64";
+          },
+          {
+            name: "windowSeconds";
+            type: "u32";
+          },
+          {
+            name: "maxTokensPerWindow";
+            type: "u64";
+          },
+          {
+            name: "maxQuotePerWindow";
+            type: "u64";
+          },
+          {
+            name: "withdrawalMode";
             type: {
               defined: "WithdrawalMode";
             };
@@ -1441,6 +1574,84 @@ export const IDL: PriceBasedPerformancePackage = {
           name: "params",
           type: {
             defined: "InitializePerformancePackageParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "initializePerformancePackageWithLimits",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "createKey",
+          isMut: false,
+          isSigner: true,
+          docs: ["Used to derive the PDA"],
+        },
+        {
+          name: "tokenMint",
+          isMut: false,
+          isSigner: false,
+          docs: ["The mint of the tokens to be locked"],
+        },
+        {
+          name: "grantorTokenAccount",
+          isMut: true,
+          isSigner: false,
+          docs: ["The token account containing the tokens to be locked"],
+        },
+        {
+          name: "grantor",
+          isMut: false,
+          isSigner: true,
+          docs: ["The authority of the token account"],
+        },
+        {
+          name: "performancePackageTokenVault",
+          isMut: true,
+          isSigner: false,
+          docs: ["The locker's token account where tokens will be stored"],
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "InitializePerformancePackageWithLimitsParams",
           },
         },
       ],
@@ -1987,6 +2198,28 @@ export const IDL: PriceBasedPerformancePackage = {
       },
     },
     {
+      name: "InitializePerformancePackageWithLimitsParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "base",
+            type: {
+              defined: "InitializePerformancePackageParams",
+            },
+          },
+          {
+            name: "limits",
+            type: {
+              option: {
+                defined: "LimitsParams",
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
       name: "InitializePerformancePackageParams",
       type: {
         kind: "struct",
@@ -2284,6 +2517,39 @@ export const IDL: PriceBasedPerformancePackage = {
             docs: [
               "Which withdrawal routes the recipient may use while the caps are active",
             ],
+            type: {
+              defined: "WithdrawalMode",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "LimitsParams",
+      docs: [
+        "What the two parties agree on; the program supplies `start_timestamp`",
+      ],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "endTimestamp",
+            type: "i64",
+          },
+          {
+            name: "windowSeconds",
+            type: "u32",
+          },
+          {
+            name: "maxTokensPerWindow",
+            type: "u64",
+          },
+          {
+            name: "maxQuotePerWindow",
+            type: "u64",
+          },
+          {
+            name: "withdrawalMode",
             type: {
               defined: "WithdrawalMode",
             },

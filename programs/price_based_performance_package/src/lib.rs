@@ -47,6 +47,14 @@ pub mod price_based_performance_package {
         InitializePerformancePackage::handle(ctx, params)
     }
 
+    #[access_control(ctx.accounts.validate_with_limits(&params))]
+    pub fn initialize_performance_package_with_limits(
+        ctx: Context<InitializePerformancePackage>,
+        params: InitializePerformancePackageWithLimitsParams,
+    ) -> Result<()> {
+        InitializePerformancePackage::handle_with_limits(ctx, params)
+    }
+
     #[access_control(ctx.accounts.validate())]
     pub fn start_unlock(ctx: Context<StartUnlock>) -> Result<()> {
         StartUnlock::handle(ctx)

@@ -19,7 +19,10 @@ import BN from "bn.js";
 // import { OracleConfig } from "./types/index.js";
 import { getChangeRequestAddr, getPerformancePackageAddr } from "./pda.js";
 import { getEventAuthorityAddr } from "../../pda.js";
-import { InitializePerformancePackageParams } from "./types/index.js";
+import {
+  InitializePerformancePackageParams,
+  InitializePerformancePackageWithLimitsParams,
+} from "./types/index.js";
 
 export type CreatePriceBasedPerformancePackageClientParams = {
   provider: AnchorProvider;
@@ -66,31 +69,54 @@ export class PriceBasedPerformancePackageClient {
     grantor: PublicKey;
     grantorTokenAccount?: PublicKey;
   }) {
-    const performancePackage = getPerformancePackageAddr({
-      createKey: params.createKey,
-    })[0];
-
-    const grantorTokenAccount =
-      params.grantorTokenAccount ??
-      getAssociatedTokenAddressSync(params.tokenMint, params.grantor, true);
-
     return this.program.methods
       .initializePerformancePackage(params.params)
-      .accounts({
+      .accounts(this.initializePerformancePackageAccounts(params));
+  }
+
+  public initializePerformancePackageWithLimitsIx(params: {
+    params: InitializePerformancePackageWithLimitsParams;
+    createKey: PublicKey;
+    tokenMint: PublicKey;
+    grantor: PublicKey;
+    grantorTokenAccount?: PublicKey;
+  }) {
+    return this.program.methods
+      .initializePerformancePackageWithLimits(params.params)
+      .accounts(this.initializePerformancePackageAccounts(params));
+  }
+
+  // Both initialisers share one accounts struct.
+  private initializePerformancePackageAccounts({
+    createKey,
+    tokenMint,
+    grantor,
+    grantorTokenAccount,
+  }: {
+    createKey: PublicKey;
+    tokenMint: PublicKey;
+    grantor: PublicKey;
+    grantorTokenAccount?: PublicKey;
+  }) {
+    const performancePackage = getPerformancePackageAddr({ createKey })[0];
+
+    return {
+      performancePackage,
+      createKey,
+      tokenMint,
+      grantorTokenAccount:
+        grantorTokenAccount ??
+        getAssociatedTokenAddressSync(tokenMint, grantor, true),
+      performancePackageTokenVault: getAssociatedTokenAddressSync(
+        tokenMint,
         performancePackage,
-        createKey: params.createKey,
-        tokenMint: params.tokenMint,
-        grantorTokenAccount,
-        performancePackageTokenVault: getAssociatedTokenAddressSync(
-          params.tokenMint,
-          performancePackage,
-          true,
-        ),
-        grantor: params.grantor,
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      });
+        true,
+      ),
+      grantor,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    };
   }
 
   public startUnlockIx(params: {

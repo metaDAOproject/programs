@@ -140,6 +140,16 @@ pub struct WithdrawalPolicy {
     pub usage: WindowUsage,
 }
 
+impl WithdrawalPolicy {
+    /// Fresh limits with nothing withdrawn yet
+    pub fn new(limits: WithdrawalLimits) -> Self {
+        Self {
+            limits,
+            usage: WindowUsage::default(),
+        }
+    }
+}
+
 /// Usage in the window the last withdrawal fell in
 #[derive(
     AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace, Default,
@@ -181,6 +191,56 @@ impl WithdrawalMode {
 
     pub fn allows_sell(&self) -> bool {
         matches!(self, WithdrawalMode::Sell | WithdrawalMode::Both)
+    }
+}
+
+/// What the two parties agree on; the program supplies `start_timestamp`
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub struct LimitsParams {
+    pub end_timestamp: i64,
+    pub window_seconds: u32,
+    pub max_tokens_per_window: u64,
+    pub max_quote_per_window: u64,
+    pub withdrawal_mode: WithdrawalMode,
+}
+
+impl LimitsParams {
+    /// Ensure the caps are non-zero, the end is ahead of `now`, and the window is at least one second.
+    pub fn validate(&self, now: i64) -> Result<()> {
+        require_gt!(
+            self.max_tokens_per_window,
+            0,
+            PriceBasedPerformancePackageError::InvalidWithdrawalLimits
+        );
+        require_gt!(
+            self.max_quote_per_window,
+            0,
+            PriceBasedPerformancePackageError::InvalidWithdrawalLimits
+        );
+        require_gt!(
+            self.end_timestamp,
+            now,
+            PriceBasedPerformancePackageError::InvalidWithdrawalLimits
+        );
+        require_gte!(
+            self.window_seconds,
+            1,
+            PriceBasedPerformancePackageError::InvalidWithdrawalLimits
+        );
+
+        Ok(())
+    }
+
+    /// Anchor the window boundaries at `start_timestamp`.
+    pub fn into_limits(self, start_timestamp: i64) -> WithdrawalLimits {
+        WithdrawalLimits {
+            start_timestamp,
+            end_timestamp: self.end_timestamp,
+            window_seconds: self.window_seconds,
+            max_tokens_per_window: self.max_tokens_per_window,
+            max_quote_per_window: self.max_quote_per_window,
+            withdrawal_mode: self.withdrawal_mode,
+        }
     }
 }
 

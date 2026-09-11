@@ -19,6 +19,16 @@ export type WithdrawalPolicy =
   IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawalPolicy"];
 export type CappedWithdrawal =
   IdlTypes<PriceBasedPerformancePackageProgram>["CappedWithdrawal"];
+export type WithdrawalLimits =
+  IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawalLimits"];
+export type WindowUsage =
+  IdlTypes<PriceBasedPerformancePackageProgram>["WindowUsage"];
+export type WithdrawalMode =
+  IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawalMode"];
+export type LimitsParams =
+  IdlTypes<PriceBasedPerformancePackageProgram>["LimitsParams"];
+export type InitializePerformancePackageWithLimitsParams =
+  IdlTypes<PriceBasedPerformancePackageProgram>["InitializePerformancePackageWithLimitsParams"];
 
 export type PerformancePackageInitializedEvent =
   IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageInitialized"];
