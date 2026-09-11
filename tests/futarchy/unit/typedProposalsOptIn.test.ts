@@ -20,6 +20,15 @@ const PASS_THRESHOLD_BPS = 300;
 const TEAM_SPONSORED_PASS_THRESHOLD_BPS = -300;
 const BASE_TO_STAKE = new BN(100_000_000); // 100 tokens
 
+const CATALOG_DURATION_SECONDS = 60 * 60 * 24 * 10;
+const CATALOG_PASS_THRESHOLD_BPS = 1000;
+
+const memoIx = new TransactionInstruction({
+  programId: MEMO_PROGRAM_ID,
+  keys: [],
+  data: Buffer.from("arbitrary", "utf8"),
+});
+
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
 
@@ -71,12 +80,6 @@ export default function suite() {
   });
 
   it("still creates a plain proposal while off", async function () {
-    const memoIx = new TransactionInstruction({
-      programId: MEMO_PROGRAM_ID,
-      keys: [],
-      data: Buffer.from("arbitrary", "utf8"),
-    });
-
     const { proposal } = await this.initializeProposal({
       dao,
       instructions: [memoIx],
@@ -85,6 +88,32 @@ export default function suite() {
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.draft);
     assert.exists(storedProposal.action.executeArbitrary);
+  });
+
+  describe("preview", function () {
+    it("a plain draft previews the DAO's own duration and threshold while off", async function () {
+      const { proposal } = await this.initializeProposal({
+        dao,
+        instructions: [memoIx],
+      });
+
+      const storedProposal = await this.futarchy.getProposal(proposal);
+      assert.equal(storedProposal.durationInSeconds, SECONDS_PER_PROPOSAL);
+      assert.equal(storedProposal.passThresholdBps, PASS_THRESHOLD_BPS);
+    });
+
+    it("a plain draft previews the catalog's duration and threshold while on", async function () {
+      await setTypedProposalsEnabled(this, dao, true);
+
+      const { proposal } = await this.initializeProposal({
+        dao,
+        instructions: [memoIx],
+      });
+
+      const storedProposal = await this.futarchy.getProposal(proposal);
+      assert.equal(storedProposal.durationInSeconds, CATALOG_DURATION_SECONDS);
+      assert.equal(storedProposal.passThresholdBps, CATALOG_PASS_THRESHOLD_BPS);
+    });
   });
 
   it("refuses to launch a typed draft after the switch is flipped off underneath it", async function () {

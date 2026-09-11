@@ -88,7 +88,8 @@ impl InitializeProposal<'_> {
         dao.proposal_count += 1;
 
         let action = ProposalAction::ExecuteArbitrary;
-        let params = action.params();
+        // A preview: launch writes the terms from the configuration in force later.
+        let params = action.params_for(dao, false);
 
         proposal.set_inner(Proposal {
             number: dao.proposal_count,
