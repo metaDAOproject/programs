@@ -37,6 +37,8 @@ pub struct ProposeChange<'info> {
 
 impl<'info> ProposeChange<'info> {
     pub fn validate(&self, params: &ProposeChangeParams) -> Result<()> {
+        PerformancePackage::assert_migrated(&self.performance_package.to_account_info())?;
+
         if self.proposer.key() != self.performance_package.recipient
             && self.proposer.key() != self.performance_package.performance_package_authority
         {

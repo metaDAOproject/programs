@@ -24,6 +24,8 @@ pub struct ExecuteChange<'info> {
 
 impl<'info> ExecuteChange<'info> {
     pub fn validate(&self) -> Result<()> {
+        PerformancePackage::assert_migrated(&self.performance_package.to_account_info())?;
+
         if self.change_request.proposer_type == ProposerType::Recipient {
             // If recipient proposed, locker authority must execute
             require_keys_eq!(

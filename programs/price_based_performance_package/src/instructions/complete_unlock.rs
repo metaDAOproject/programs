@@ -48,6 +48,8 @@ pub struct CompleteUnlock<'info> {
 
 impl CompleteUnlock<'_> {
     pub fn validate(&self) -> Result<()> {
+        PerformancePackage::assert_migrated(&self.performance_package.to_account_info())?;
+
         if !matches!(
             self.performance_package.state,
             PerformancePackageState::Unlocking { .. }

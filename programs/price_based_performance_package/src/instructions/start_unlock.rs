@@ -18,6 +18,8 @@ pub struct StartUnlock<'info> {
 
 impl StartUnlock<'_> {
     pub fn validate(&self) -> Result<()> {
+        PerformancePackage::assert_migrated(&self.performance_package.to_account_info())?;
+
         require_eq!(
             self.performance_package.state,
             PerformancePackageState::Locked,

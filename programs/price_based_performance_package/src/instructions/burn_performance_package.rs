@@ -42,6 +42,8 @@ pub struct BurnPerformancePackage<'info> {
 
 impl BurnPerformancePackage<'_> {
     pub fn validate(&self) -> Result<()> {
+        PerformancePackage::assert_migrated(&self.performance_package.to_account_info())?;
+
         #[cfg(feature = "production")]
         require_keys_eq!(
             self.admin.key(),

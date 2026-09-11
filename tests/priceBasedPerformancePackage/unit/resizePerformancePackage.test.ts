@@ -3,6 +3,7 @@ import {
   Keypair,
   Transaction,
   SystemProgram,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import { assert } from "chai";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
@@ -231,5 +232,219 @@ export default function () {
         performancePackage,
       );
     assert.isNull(storedPerformancePackage.withdrawalPolicy);
+  });
+
+  // Writes a 24-byte mock oracle: aggregator u128 at 0, last updated timestamp i64 at 16.
+  async function setOracle(ctx: Mocha.Context, aggregator: bigint) {
+    const data = Buffer.alloc(24);
+    data.writeBigUInt64LE(aggregator, 0);
+    data.writeBigInt64LE(
+      BigInt((await ctx.banksClient.getClock()).unixTimestamp),
+      16,
+    );
+    ctx.context.setAccount(oracleAccount.publicKey, {
+      executable: false,
+      owner: SystemProgram.programId,
+      lamports: 1_000_000_000,
+      data,
+    });
+  }
+
+  // Runs the instruction against a truncated package, expects AccountNotMigrated,
+  // then resizes the package and runs the same instruction again.
+  async function assertGatedUntilResized(
+    ctx: Mocha.Context,
+    buildIx: () => any,
+    signers: Keypair[] = [],
+  ) {
+    await writeOldLayoutPackage(ctx, performancePackage);
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "ran an instruction against a truncated package",
+    );
+    await buildIx().signers(signers).rpc().then(callbacks[0], callbacks[1]);
+
+    await ctx.priceBasedPerformancePackage
+      .resizePerformancePackageIx({
+        performancePackage,
+        payer: ctx.payer.publicKey,
+      })
+      .rpc();
+
+    await buildIx()
+      .preInstructions([
+        // A different compute-unit price makes the transaction hash unique so the
+        // retry is not rejected as already processed.
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
+      .signers(signers)
+      .rpc();
+  }
+
+  it("gates start_unlock until the package is resized", async function () {
+    await this.advanceBySeconds(2);
+    await setOracle(this, BigInt(1e12));
+
+    await assertGatedUntilResized(
+      this,
+      () =>
+        this.priceBasedPerformancePackage.startUnlockIx({
+          performancePackage,
+          oracleAccount: oracleAccount.publicKey,
+          recipient: recipient.publicKey,
+        }),
+      [recipient],
+    );
+
+    const after =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
+    assert.isDefined(after.state.unlocking);
+  });
+
+  it("gates complete_unlock until the package is resized", async function () {
+    await this.advanceBySeconds(2);
+    await setOracle(this, BigInt(1e12));
+    await this.priceBasedPerformancePackage
+      .startUnlockIx({
+        performancePackage,
+        oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
+      })
+      .signers([recipient])
+      .rpc();
+
+    await this.advanceBySeconds(86_400);
+    await setOracle(this, BigInt(2 * 86_400 + 1) * BigInt(1e12));
+
+    await assertGatedUntilResized(this, () =>
+      this.priceBasedPerformancePackage.completeUnlockIx({
+        performancePackage,
+        oracleAccount: oracleAccount.publicKey,
+        tokenMint,
+        tokenRecipient: recipient.publicKey,
+      }),
+    );
+
+    assert.equal(
+      await this.getTokenBalance(tokenMint, recipient.publicKey),
+      BigInt(200 * 10 ** 6),
+    );
+  });
+
+  it("gates propose_change until the package is resized", async function () {
+    const newRecipient = Keypair.generate();
+    const pdaNonce = 1;
+
+    await assertGatedUntilResized(
+      this,
+      () =>
+        this.priceBasedPerformancePackage.proposeChangeIx({
+          performancePackage,
+          proposer: recipient.publicKey,
+          params: {
+            changeType: {
+              recipient: { newRecipient: newRecipient.publicKey },
+            },
+            pdaNonce,
+          },
+        }),
+      [recipient],
+    );
+
+    const changeRequest =
+      await this.priceBasedPerformancePackage.getChangeRequest(
+        this.priceBasedPerformancePackage.getChangeRequestAddress(
+          performancePackage,
+          recipient.publicKey,
+          pdaNonce,
+        ),
+      );
+    assert.equal(
+      changeRequest.performancePackage.toString(),
+      performancePackage.toString(),
+    );
+  });
+
+  it("gates execute_change until the package is resized", async function () {
+    const newRecipient = Keypair.generate();
+    const pdaNonce = 1;
+    await this.priceBasedPerformancePackage
+      .proposeChangeIx({
+        performancePackage,
+        proposer: recipient.publicKey,
+        params: {
+          changeType: {
+            recipient: { newRecipient: newRecipient.publicKey },
+          },
+          pdaNonce,
+        },
+      })
+      .signers([recipient])
+      .rpc();
+    const changeRequest =
+      this.priceBasedPerformancePackage.getChangeRequestAddress(
+        performancePackage,
+        recipient.publicKey,
+        pdaNonce,
+      );
+
+    await assertGatedUntilResized(this, () =>
+      this.priceBasedPerformancePackage.executeChangeIx({
+        performancePackage,
+        changeRequest,
+        executor: this.payer.publicKey,
+      }),
+    );
+
+    const after =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
+    assert.equal(after.recipient.toString(), newRecipient.publicKey.toString());
+    assert.isNull(await this.banksClient.getAccount(changeRequest));
+  });
+
+  it("gates change_performance_package_authority until the package is resized", async function () {
+    const newAuthority = Keypair.generate();
+
+    await assertGatedUntilResized(this, () =>
+      this.priceBasedPerformancePackage.changePerformancePackageAuthorityIx({
+        performancePackage,
+        currentAuthority: this.payer.publicKey,
+        newPerformancePackageAuthority: newAuthority.publicKey,
+      }),
+    );
+
+    const after =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
+    assert.equal(
+      after.performancePackageAuthority.toString(),
+      newAuthority.publicKey.toString(),
+    );
+  });
+
+  it("gates burn_performance_package until the package is resized", async function () {
+    await assertGatedUntilResized(this, () =>
+      this.priceBasedPerformancePackage.program.methods
+        .burnPerformancePackage()
+        .accounts({
+          performancePackage,
+          performancePackageTokenVault: getAssociatedTokenAddressSync(
+            tokenMint,
+            performancePackage,
+            true,
+          ),
+          tokenMint,
+          spillAccount: this.payer.publicKey,
+          admin: this.payer.publicKey,
+        }),
+    );
+
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
   });
 }
