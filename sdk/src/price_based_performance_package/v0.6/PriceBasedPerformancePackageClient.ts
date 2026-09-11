@@ -201,6 +201,41 @@ export class PriceBasedPerformancePackageClient {
       });
   }
 
+  public burnPerformancePackageIx({
+    performancePackage,
+    tokenMint,
+    recipient,
+    admin = this.provider.publicKey,
+    spillAccount = admin,
+  }: {
+    performancePackage: PublicKey;
+    tokenMint: PublicKey;
+    recipient: PublicKey;
+    admin?: PublicKey;
+    spillAccount?: PublicKey;
+  }) {
+    return this.program.methods.burnPerformancePackage().accounts({
+      performancePackage,
+      performancePackageTokenVault: getAssociatedTokenAddressSync(
+        tokenMint,
+        performancePackage,
+        true,
+      ),
+      recipient,
+      recipientTokenAccount: getAssociatedTokenAddressSync(
+        tokenMint,
+        recipient,
+        true,
+      ),
+      admin,
+      spillAccount,
+      tokenMint,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    });
+  }
+
   public resizePerformancePackageIx(params: {
     performancePackage: PublicKey;
     payer: PublicKey;

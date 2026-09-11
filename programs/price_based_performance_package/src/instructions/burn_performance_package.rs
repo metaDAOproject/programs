@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{self, Burn, Mint, Token, TokenAccount},
+};
 
 use super::*;
 
@@ -15,6 +18,7 @@ pub struct BurnPerformancePackage<'info> {
     #[account(
         mut,
         close = spill_account,
+        has_one = recipient,
         has_one = token_mint,
         has_one = performance_package_token_vault
     )]
@@ -27,6 +31,18 @@ pub struct BurnPerformancePackage<'info> {
     )]
     pub performance_package_token_vault: Box<Account<'info, TokenAccount>>,
 
+    /// CHECK: Pinned to the package's recipient by `has_one`
+    pub recipient: UncheckedAccount<'info>,
+
+    /// The recipient's ATA that receives the unlocked balance - created if needed
+    #[account(
+        init_if_needed,
+        payer = admin,
+        associated_token::mint = token_mint,
+        associated_token::authority = recipient
+    )]
+    pub recipient_token_account: Box<Account<'info, TokenAccount>>,
+
     #[account(mut)]
     pub admin: Signer<'info>,
 
@@ -35,9 +51,11 @@ pub struct BurnPerformancePackage<'info> {
     pub spill_account: UncheckedAccount<'info>,
 
     #[account(mut, address = performance_package.token_mint)]
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
+    pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl BurnPerformancePackage<'_> {
@@ -55,7 +73,24 @@ impl BurnPerformancePackage<'_> {
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let performance_package = &ctx.accounts.performance_package;
+        let Self {
+            performance_package,
+            performance_package_token_vault,
+            recipient: _,
+            recipient_token_account,
+            admin: _,
+            spill_account: _,
+            token_mint,
+            system_program: _,
+            token_program,
+            associated_token_program: _,
+        } = ctx.accounts;
+
+        let vault_amount = performance_package_token_vault.amount;
+        let withdrawable = performance_package.withdrawable(vault_amount)?;
+        let locked = vault_amount
+            .checked_sub(withdrawable)
+            .ok_or(PriceBasedPerformancePackageError::InvariantViolated)?;
 
         let seeds = &[
             b"performance_package",
@@ -64,22 +99,34 @@ impl BurnPerformancePackage<'_> {
         ];
         let signer = &[&seeds[..]];
 
-        // Burn any remaining tokens in the performance package token vault
-        if ctx.accounts.performance_package_token_vault.amount > 0 {
-            token::burn(
+        // Hand the recipient what is already unlocked before burning the rest
+        if withdrawable > 0 {
+            token::transfer(
                 CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    Burn {
-                        mint: ctx.accounts.token_mint.to_account_info(),
-                        from: ctx
-                            .accounts
-                            .performance_package_token_vault
-                            .to_account_info(),
+                    token_program.to_account_info(),
+                    token::Transfer {
+                        from: performance_package_token_vault.to_account_info(),
+                        to: recipient_token_account.to_account_info(),
                         authority: performance_package.to_account_info(),
                     },
                     signer,
                 ),
-                ctx.accounts.performance_package_token_vault.amount,
+                withdrawable,
+            )?;
+        }
+
+        if locked > 0 {
+            token::burn(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    Burn {
+                        mint: token_mint.to_account_info(),
+                        from: performance_package_token_vault.to_account_info(),
+                        authority: performance_package.to_account_info(),
+                    },
+                    signer,
+                ),
+                locked,
             )?;
         }
 

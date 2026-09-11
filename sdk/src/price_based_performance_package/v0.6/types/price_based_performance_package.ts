@@ -276,6 +276,19 @@ export type PriceBasedPerformancePackage = {
           isSigner: false;
         },
         {
+          name: "recipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "recipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The recipient's ATA that receives the unlocked balance - created if needed",
+          ];
+        },
+        {
           name: "admin";
           isMut: true;
           isSigner: true;
@@ -291,7 +304,17 @@ export type PriceBasedPerformancePackage = {
           isSigner: false;
         },
         {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -1609,6 +1632,19 @@ export const IDL: PriceBasedPerformancePackage = {
           isSigner: false,
         },
         {
+          name: "recipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "recipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The recipient's ATA that receives the unlocked balance - created if needed",
+          ],
+        },
+        {
           name: "admin",
           isMut: true,
           isSigner: true,
@@ -1624,7 +1660,17 @@ export const IDL: PriceBasedPerformancePackage = {
           isSigner: false,
         },
         {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },

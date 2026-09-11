@@ -473,19 +473,12 @@ export default function () {
 
   it("gates burn_performance_package until the package is resized", async function () {
     await assertGatedUntilResized(this, () =>
-      this.priceBasedPerformancePackage.program.methods
-        .burnPerformancePackage()
-        .accounts({
-          performancePackage,
-          performancePackageTokenVault: getAssociatedTokenAddressSync(
-            tokenMint,
-            performancePackage,
-            true,
-          ),
-          tokenMint,
-          spillAccount: this.payer.publicKey,
-          admin: this.payer.publicKey,
-        }),
+      this.priceBasedPerformancePackage.burnPerformancePackageIx({
+        performancePackage,
+        tokenMint,
+        recipient: recipient.publicKey,
+        admin: this.payer.publicKey,
+      }),
     );
 
     assert.isNull(await this.banksClient.getAccount(performancePackage));
