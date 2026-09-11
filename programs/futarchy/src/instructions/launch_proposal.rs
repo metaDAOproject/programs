@@ -64,6 +64,15 @@ impl<'info> LaunchProposal<'info> {
 
         // Kind gates, checked at launch rather than create so that pre-created
         // drafts can't bypass them
+
+        // Typed kinds need the DAO typed proposals enabled.
+        if !matches!(self.proposal.action, ProposalAction::ExecuteArbitrary) {
+            require!(
+                self.dao.typed_proposals_enabled,
+                FutarchyError::TypedProposalsDisabled
+            );
+        }
+
         let params = self.proposal.action.params();
 
         if params.team_sponsorship_policy == TeamSponsorshipPolicy::Required {

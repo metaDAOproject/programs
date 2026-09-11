@@ -32,14 +32,22 @@ export async function setupBasicDao({
   context,
   baseMint,
   quoteMint,
+  secondsPerProposal = 60 * 60 * 24 * 3,
+  twapStartDelaySeconds = 60 * 60 * 24,
+  passThresholdBps = 300,
   teamSponsoredPassThresholdBps = 300,
+  baseToStake = new BN(0),
   teamAddress,
   initialSpendingLimit = null,
 }: {
   context: TestContext;
   baseMint: PublicKey;
   quoteMint: PublicKey;
+  secondsPerProposal?: number;
+  twapStartDelaySeconds?: number;
+  passThresholdBps?: number;
   teamSponsoredPassThresholdBps?: number;
+  baseToStake?: typeof BN.prototype;
   teamAddress?: PublicKey;
   initialSpendingLimit?: {
     amountPerMonth: typeof BN.prototype;
@@ -53,16 +61,16 @@ export async function setupBasicDao({
       baseMint,
       quoteMint,
       params: {
-        secondsPerProposal: 60 * 60 * 24 * 3,
-        twapStartDelaySeconds: 60 * 60 * 24,
+        secondsPerProposal,
+        twapStartDelaySeconds,
         twapInitialObservation: THOUSAND_BUCK_PRICE,
         twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
         minQuoteFutarchicLiquidity: new BN(10_000),
         minBaseFutarchicLiquidity: new BN(10_000),
-        passThresholdBps: 300,
+        passThresholdBps,
         nonce,
         initialSpendingLimit,
-        baseToStake: new BN(0),
+        baseToStake,
         teamSponsoredPassThresholdBps,
         teamAddress: teamAddress || context.payer.publicKey,
       },
