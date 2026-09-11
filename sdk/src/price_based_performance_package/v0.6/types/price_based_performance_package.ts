@@ -135,52 +135,6 @@ export type PriceBasedPerformancePackage = {
           isSigner: false;
         },
         {
-          name: "performancePackageTokenVault";
-          isMut: true;
-          isSigner: false;
-          docs: ["The token account where locked tokens are stored"];
-        },
-        {
-          name: "tokenMint";
-          isMut: false;
-          isSigner: false;
-          docs: ["The token mint - validated via has_one constraint on locker"];
-        },
-        {
-          name: "recipientTokenAccount";
-          isMut: true;
-          isSigner: false;
-          docs: [
-            "The recipient's ATA where tokens will be sent - created if needed",
-          ];
-        },
-        {
-          name: "tokenRecipient";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-          docs: ["Payer for creating the ATA if needed"];
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "eventAuthority";
           isMut: false;
           isSigner: false;
@@ -365,6 +319,85 @@ export type PriceBasedPerformancePackage = {
       ];
       args: [];
     },
+    {
+      name: "withdrawTokens";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "oracleAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "performancePackageTokenVault";
+          isMut: true;
+          isSigner: false;
+          docs: ["The token account where locked tokens are stored"];
+        },
+        {
+          name: "tokenMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "recipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The recipient's ATA where tokens will be sent - created if needed",
+          ];
+        },
+        {
+          name: "recipient";
+          isMut: false;
+          isSigner: true;
+          docs: ["Only the recipient can withdraw"];
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+          docs: ["Payer for creating the ATA if needed"];
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "WithdrawTokensParams";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -537,6 +570,32 @@ export type PriceBasedPerformancePackage = {
       };
     },
     {
+      name: "CappedWithdrawal";
+      docs: ["Present on a withdrawal that ran under active limits"];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "price";
+            docs: ["The observation the withdrawal was valued at"];
+            type: "u128";
+          },
+          {
+            name: "quoteValue";
+            docs: ["`amount` valued at that observation, in quote atoms"];
+            type: "u64";
+          },
+          {
+            name: "usage";
+            docs: ["Window usage after this withdrawal"];
+            type: {
+              defined: "WindowUsage";
+            };
+          },
+        ];
+      };
+    },
+    {
       name: "ChangePerformancePackageAuthorityParams";
       type: {
         kind: "struct";
@@ -600,6 +659,18 @@ export type PriceBasedPerformancePackage = {
           {
             name: "pdaNonce";
             type: "u32";
+          },
+        ];
+      };
+    },
+    {
+      name: "WithdrawTokensParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
+            type: "u64";
           },
         ];
       };
@@ -1005,6 +1076,42 @@ export type PriceBasedPerformancePackage = {
       ];
     },
     {
+      name: "TokensWithdrawn";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "recipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "capped";
+          type: {
+            option: {
+              defined: "CappedWithdrawal";
+            };
+          };
+          index: false;
+        },
+      ];
+    },
+    {
       name: "ChangeProposed";
       fields: [
         {
@@ -1361,52 +1468,6 @@ export const IDL: PriceBasedPerformancePackage = {
           isSigner: false,
         },
         {
-          name: "performancePackageTokenVault",
-          isMut: true,
-          isSigner: false,
-          docs: ["The token account where locked tokens are stored"],
-        },
-        {
-          name: "tokenMint",
-          isMut: false,
-          isSigner: false,
-          docs: ["The token mint - validated via has_one constraint on locker"],
-        },
-        {
-          name: "recipientTokenAccount",
-          isMut: true,
-          isSigner: false,
-          docs: [
-            "The recipient's ATA where tokens will be sent - created if needed",
-          ],
-        },
-        {
-          name: "tokenRecipient",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-          docs: ["Payer for creating the ATA if needed"],
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "eventAuthority",
           isMut: false,
           isSigner: false,
@@ -1591,6 +1652,85 @@ export const IDL: PriceBasedPerformancePackage = {
       ],
       args: [],
     },
+    {
+      name: "withdrawTokens",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "oracleAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "performancePackageTokenVault",
+          isMut: true,
+          isSigner: false,
+          docs: ["The token account where locked tokens are stored"],
+        },
+        {
+          name: "tokenMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "recipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The recipient's ATA where tokens will be sent - created if needed",
+          ],
+        },
+        {
+          name: "recipient",
+          isMut: false,
+          isSigner: true,
+          docs: ["Only the recipient can withdraw"],
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+          docs: ["Payer for creating the ATA if needed"],
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "WithdrawTokensParams",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -1763,6 +1903,32 @@ export const IDL: PriceBasedPerformancePackage = {
       },
     },
     {
+      name: "CappedWithdrawal",
+      docs: ["Present on a withdrawal that ran under active limits"],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "price",
+            docs: ["The observation the withdrawal was valued at"],
+            type: "u128",
+          },
+          {
+            name: "quoteValue",
+            docs: ["`amount` valued at that observation, in quote atoms"],
+            type: "u64",
+          },
+          {
+            name: "usage",
+            docs: ["Window usage after this withdrawal"],
+            type: {
+              defined: "WindowUsage",
+            },
+          },
+        ],
+      },
+    },
+    {
       name: "ChangePerformancePackageAuthorityParams",
       type: {
         kind: "struct",
@@ -1826,6 +1992,18 @@ export const IDL: PriceBasedPerformancePackage = {
           {
             name: "pdaNonce",
             type: "u32",
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawTokensParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
+            type: "u64",
           },
         ],
       },
@@ -2226,6 +2404,42 @@ export const IDL: PriceBasedPerformancePackage = {
         {
           name: "twapPrice",
           type: "u128",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "TokensWithdrawn",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "recipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "capped",
+          type: {
+            option: {
+              defined: "CappedWithdrawal",
+            },
+          },
           index: false,
         },
       ],

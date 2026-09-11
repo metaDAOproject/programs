@@ -1,4 +1,4 @@
-use crate::ChangeType;
+use crate::{ChangeType, WindowUsage};
 use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -41,6 +41,27 @@ pub struct UnlockCompleted {
     pub token_amount: u64,
     pub recipient: Pubkey,
     pub twap_price: u128,
+}
+
+/// Present on a withdrawal that ran under active limits
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
+pub struct CappedWithdrawal {
+    /// The observation the withdrawal was valued at
+    pub price: u128,
+    /// `amount` valued at that observation, in quote atoms
+    pub quote_value: u64,
+    /// Window usage after this withdrawal
+    pub usage: WindowUsage,
+}
+
+#[event]
+pub struct TokensWithdrawn {
+    pub common: CommonFields,
+    pub performance_package: Pubkey,
+    pub recipient: Pubkey,
+    pub amount: u64,
+    /// `None` when no limits were active
+    pub capped: Option<CappedWithdrawal>,
 }
 
 #[event]

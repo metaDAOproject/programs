@@ -84,4 +84,12 @@ pub mod price_based_performance_package {
     pub fn resize_performance_package(ctx: Context<ResizePerformancePackage>) -> Result<()> {
         ResizePerformancePackage::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn withdraw_tokens(
+        ctx: Context<WithdrawTokens>,
+        params: WithdrawTokensParams,
+    ) -> Result<()> {
+        WithdrawTokens::handle(ctx, params)
+    }
 }

@@ -108,24 +108,44 @@ export class PriceBasedPerformancePackageClient {
   public completeUnlockIx(params: {
     performancePackage: PublicKey;
     oracleAccount: PublicKey;
-    tokenMint: PublicKey;
-    tokenRecipient: PublicKey;
   }) {
     return this.program.methods.completeUnlock().accounts({
       performancePackage: params.performancePackage,
       oracleAccount: params.oracleAccount,
+    });
+  }
+
+  public withdrawTokensIx({
+    performancePackage,
+    oracleAccount,
+    tokenMint,
+    recipient,
+    amount,
+    payer = this.provider.publicKey,
+  }: {
+    performancePackage: PublicKey;
+    oracleAccount: PublicKey;
+    tokenMint: PublicKey;
+    recipient: PublicKey;
+    amount: BN;
+    payer?: PublicKey;
+  }) {
+    return this.program.methods.withdrawTokens({ amount }).accounts({
+      performancePackage,
+      oracleAccount,
       performancePackageTokenVault: getAssociatedTokenAddressSync(
-        params.tokenMint,
-        params.performancePackage,
+        tokenMint,
+        performancePackage,
         true,
       ),
-      tokenMint: params.tokenMint,
+      tokenMint,
       recipientTokenAccount: getAssociatedTokenAddressSync(
-        params.tokenMint,
-        params.tokenRecipient,
+        tokenMint,
+        recipient,
         true,
       ),
-      tokenRecipient: params.tokenRecipient,
+      recipient,
+      payer,
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,

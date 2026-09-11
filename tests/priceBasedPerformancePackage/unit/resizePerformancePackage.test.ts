@@ -6,6 +6,7 @@ import {
   ComputeBudgetProgram,
 } from "@solana/web3.js";
 import { assert } from "chai";
+import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { expectError } from "../../utils.js";
 import { writeOldLayoutPackage } from "../utils.js";
@@ -323,9 +324,51 @@ export default function () {
       this.priceBasedPerformancePackage.completeUnlockIx({
         performancePackage,
         oracleAccount: oracleAccount.publicKey,
-        tokenMint,
-        tokenRecipient: recipient.publicKey,
       }),
+    );
+
+    const after =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
+    assert.equal(
+      after.alreadyUnlockedAmount.toString(),
+      (200 * 10 ** 6).toString(),
+    );
+  });
+
+  it("gates withdraw_tokens until the package is resized", async function () {
+    await this.advanceBySeconds(2);
+    await setOracle(this, BigInt(1e12));
+    await this.priceBasedPerformancePackage
+      .startUnlockIx({
+        performancePackage,
+        oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
+      })
+      .signers([recipient])
+      .rpc();
+
+    await this.advanceBySeconds(86_400);
+    await setOracle(this, BigInt(2 * 86_400 + 1) * BigInt(1e12));
+    await this.priceBasedPerformancePackage
+      .completeUnlockIx({
+        performancePackage,
+        oracleAccount: oracleAccount.publicKey,
+      })
+      .rpc();
+
+    await assertGatedUntilResized(
+      this,
+      () =>
+        this.priceBasedPerformancePackage.withdrawTokensIx({
+          performancePackage,
+          oracleAccount: oracleAccount.publicKey,
+          tokenMint,
+          recipient: recipient.publicKey,
+          amount: new BN(200 * 10 ** 6),
+        }),
+      [recipient],
     );
 
     assert.equal(

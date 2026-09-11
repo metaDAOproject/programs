@@ -8,6 +8,7 @@ pub mod initialize_performance_package;
 pub mod propose_change;
 pub mod resize_performance_package;
 pub mod start_unlock;
+pub mod withdraw_tokens;
 
 pub use burn_performance_package::*;
 pub use change_performance_package_authority::*;
@@ -17,3 +18,4 @@ pub use initialize_performance_package::*;
 pub use propose_change::*;
 pub use resize_performance_package::*;
 pub use start_unlock::*;
+pub use withdraw_tokens::*;

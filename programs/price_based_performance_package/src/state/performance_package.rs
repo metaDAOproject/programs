@@ -99,6 +99,18 @@ impl PerformancePackage {
         );
         Ok(())
     }
+
+    /// Everything in the vault that is not still locked, "donations" included.
+    pub fn withdrawable(&self, vault_amount: u64) -> Result<u64> {
+        let locked = self
+            .total_token_amount
+            .checked_sub(self.already_unlocked_amount)
+            .ok_or(PriceBasedPerformancePackageError::InvariantViolated)?;
+        let withdrawable = vault_amount
+            .checked_sub(locked)
+            .ok_or(PriceBasedPerformancePackageError::InvariantViolated)?;
+        Ok(withdrawable)
+    }
 }
 
 /// The 0.6.0 layout, decoded by the resize before an account is migrated
