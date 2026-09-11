@@ -3361,6 +3361,16 @@ export type Futarchy = {
               option: "publicKey";
             };
           },
+          {
+            name: "typedProposalsEnabled";
+            docs: [
+              "`Some(true)` turns the catalog on for this DAO. `None` leaves the",
+              "switch as it is. `Some(false)` is refused: there is no way to turn it off.",
+            ];
+            type: {
+              option: "bool";
+            };
+          },
         ];
       };
     },
@@ -4121,6 +4131,11 @@ export type Futarchy = {
         },
         {
           name: "isOptimisticGovernanceEnabled";
+          type: "bool";
+          index: false;
+        },
+        {
+          name: "typedProposalsEnabled";
           type: "bool";
           index: false;
         },
@@ -5243,6 +5258,16 @@ export type Futarchy = {
       code: 6072;
       name: "SquadsProposalNotApproved";
       msg: "Squads proposal must be in Approved status to be cancelled";
+    },
+    {
+      code: 6073;
+      name: "TypedProposalsDisabled";
+      msg: "This DAO has not opted into typed proposals";
+    },
+    {
+      code: 6074;
+      name: "TypedProposalsCannotBeDisabled";
+      msg: "Typed proposals cannot be disabled";
     },
   ];
 };
@@ -8610,6 +8635,16 @@ export const IDL: Futarchy = {
               option: "publicKey",
             },
           },
+          {
+            name: "typedProposalsEnabled",
+            docs: [
+              "`Some(true)` turns the catalog on for this DAO. `None` leaves the",
+              "switch as it is. `Some(false)` is refused: there is no way to turn it off.",
+            ],
+            type: {
+              option: "bool",
+            },
+          },
         ],
       },
     },
@@ -9370,6 +9405,11 @@ export const IDL: Futarchy = {
         },
         {
           name: "isOptimisticGovernanceEnabled",
+          type: "bool",
+          index: false,
+        },
+        {
+          name: "typedProposalsEnabled",
           type: "bool",
           index: false,
         },
@@ -10492,6 +10532,16 @@ export const IDL: Futarchy = {
       code: 6072,
       name: "SquadsProposalNotApproved",
       msg: "Squads proposal must be in Approved status to be cancelled",
+    },
+    {
+      code: 6073,
+      name: "TypedProposalsDisabled",
+      msg: "This DAO has not opted into typed proposals",
+    },
+    {
+      code: 6074,
+      name: "TypedProposalsCannotBeDisabled",
+      msg: "Typed proposals cannot be disabled",
     },
   ],
 };

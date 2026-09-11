@@ -71,6 +71,7 @@ pub struct UpdateDaoEvent {
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
     pub is_optimistic_governance_enabled: bool,
+    pub typed_proposals_enabled: bool,
 }
 
 #[event]

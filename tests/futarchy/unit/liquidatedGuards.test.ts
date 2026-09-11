@@ -434,6 +434,7 @@ export default function suite() {
           baseToStake: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();

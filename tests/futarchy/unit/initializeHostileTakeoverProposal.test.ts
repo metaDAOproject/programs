@@ -75,6 +75,7 @@ export default function suite() {
           baseToStake: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: newTeamAddress,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();

@@ -11,6 +11,7 @@ import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
 import { assert } from "chai";
 import { expectError, passProposal, setupBasicDao } from "../../utils.js";
+import { rewriteAccount } from "../utils.js";
 import { TestContext } from "../../main.test.js";
 
 // ExecuteArbitrary's catalog parameters, and the start delay the duration
@@ -71,26 +72,6 @@ async function createArbitraryProposal(
     proposal: await ctx.futarchy.initializeProposal(dao, squadsProposal),
     squadsProposal,
   };
-}
-
-// Re-encodes an account in place, padded back to its allocated length. The two
-// callers below both need state no instruction on the branch can produce.
-async function rewriteAccount(
-  ctx: TestContext,
-  address: PublicKey,
-  name: "proposal" | "dao",
-  mutate: (decoded: any) => void,
-) {
-  const raw = await ctx.banksClient.getAccount(address);
-  const coder = ctx.futarchy.futarchy.account[name].coder.accounts;
-  const decoded = coder.decode(name, Buffer.from(raw.data));
-
-  mutate(decoded);
-
-  const buf = Buffer.alloc(raw.data.length);
-  (await coder.encode(name, decoded)).copy(buf, 0);
-
-  ctx.context.setAccount(address, { ...raw, data: buf });
 }
 
 export default function suite() {
