@@ -82,6 +82,7 @@ impl UpdateDao<'_> {
             last_failed_liquidation_at: dao.last_failed_liquidation_at,
             spending_limit_dirty: dao.spending_limit_dirty,
             last_buyback_finalized_at: dao.last_buyback_finalized_at,
+            typed_proposals_enabled: dao.typed_proposals_enabled,
         });
 
         dao.seq_num += 1;

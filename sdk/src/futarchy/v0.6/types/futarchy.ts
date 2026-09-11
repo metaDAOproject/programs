@@ -2543,6 +2543,13 @@ export type Futarchy = {
             docs: ["Unix time of the last buyback finalization. 0 = never."];
             type: "i64";
           },
+          {
+            name: "typedProposalsEnabled";
+            docs: [
+              "Whether the DAO runs on the mini-instructions catalog. Never turns off.",
+            ];
+            type: "bool";
+          },
         ];
       };
     },
@@ -4038,6 +4045,11 @@ export type Futarchy = {
         {
           name: "teamAddress";
           type: "publicKey";
+          index: false;
+        },
+        {
+          name: "typedProposalsEnabled";
+          type: "bool";
           index: false;
         },
       ];
@@ -7780,6 +7792,13 @@ export const IDL: Futarchy = {
             docs: ["Unix time of the last buyback finalization. 0 = never."],
             type: "i64",
           },
+          {
+            name: "typedProposalsEnabled",
+            docs: [
+              "Whether the DAO runs on the mini-instructions catalog. Never turns off.",
+            ],
+            type: "bool",
+          },
         ],
       },
     },
@@ -9275,6 +9294,11 @@ export const IDL: Futarchy = {
         {
           name: "teamAddress",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "typedProposalsEnabled",
+          type: "bool",
           index: false,
         },
       ],

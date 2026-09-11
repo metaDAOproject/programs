@@ -225,6 +225,7 @@ impl InitializeDao<'_> {
             last_failed_liquidation_at: 0,
             spending_limit_dirty: false,
             last_buyback_finalized_at: 0,
+            typed_proposals_enabled: true,
         });
 
         dao.invariant()?;
@@ -250,6 +251,7 @@ impl InitializeDao<'_> {
             squads_multisig_vault: dao.squads_multisig_vault,
             team_sponsored_pass_threshold_bps: dao.team_sponsored_pass_threshold_bps,
             team_address: dao.team_address,
+            typed_proposals_enabled: dao.typed_proposals_enabled,
         });
 
         Ok(())

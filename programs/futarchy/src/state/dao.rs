@@ -84,6 +84,8 @@ pub struct Dao {
     pub spending_limit_dirty: bool,
     /// Unix time of the last buyback finalization. 0 = never.
     pub last_buyback_finalized_at: i64,
+    /// Whether the DAO runs on the mini-instructions catalog. Never turns off.
+    pub typed_proposals_enabled: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]

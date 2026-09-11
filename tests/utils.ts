@@ -102,10 +102,10 @@ export async function makeOldDaoLayout(
 ): Promise<{ AFTER: number; BEFORE: number }> {
   const raw = await ctx.banksClient.getAccount(dao);
   const AFTER = raw.data.length;
-  // 58 bytes: liquidator (Option<Pubkey>) + last_failed_takeover_at (i64)
+  // 59 bytes: liquidator (Option<Pubkey>) + last_failed_takeover_at (i64)
   // + last_failed_liquidation_at (i64) + spending_limit_dirty (bool)
-  // + last_buyback_finalized_at (i64)
-  const BEFORE = AFTER - 58;
+  // + last_buyback_finalized_at (i64) + typed_proposals_enabled (bool)
+  const BEFORE = AFTER - 59;
 
   const disc = Buffer.from(raw.data.slice(0, 8));
   const coder = ctx.futarchy.futarchy.account.dao.coder.accounts;

@@ -77,13 +77,15 @@ export default function suite() {
 
   it("migrates an old DAO with the new fields defaulted, preserving every other field", async function () {
     const original = await this.futarchy.getDao(dao);
-    // The migration defaults must match a freshly-initialized DAO, so the
-    // whole account can round-trip equal below.
+    // The migration defaults match a freshly-initialized DAO except for the
+    // switch, so everything else can round-trip equal below.
     assert.isNull(original.liquidator);
     assert.equal(original.lastFailedTakeoverAt.toString(), "0");
     assert.equal(original.lastFailedLiquidationAt.toString(), "0");
     assert.isFalse(original.spendingLimitDirty);
     assert.equal(original.lastBuybackFinalizedAt.toString(), "0");
+    // True only because the DAO was freshly initialized.
+    assert.isTrue(original.typedProposalsEnabled);
 
     const { AFTER, BEFORE } = await makeOldDaoLayout(this, dao);
 
@@ -101,9 +103,10 @@ export default function suite() {
     assert.equal(migrated.lastFailedLiquidationAt.toString(), "0");
     assert.isFalse(migrated.spendingLimitDirty);
     assert.equal(migrated.lastBuybackFinalizedAt.toString(), "0");
+    assert.isFalse(migrated.typedProposalsEnabled);
 
     assert.deepEqual(
-      JSON.parse(JSON.stringify(migrated)),
+      JSON.parse(JSON.stringify({ ...migrated, typedProposalsEnabled: true })),
       JSON.parse(JSON.stringify(original)),
     );
 
@@ -141,6 +144,7 @@ export default function suite() {
     assert.equal(migrated.lastFailedLiquidationAt.toString(), "0");
     assert.isFalse(migrated.spendingLimitDirty);
     assert.equal(migrated.lastBuybackFinalizedAt.toString(), "0");
+    assert.isFalse(migrated.typedProposalsEnabled);
   });
 
   it("is a no-op on an already-new-layout DAO", async function () {
@@ -163,7 +167,7 @@ export default function suite() {
     const rent = await this.banksClient.getRent();
     const raw0 = await this.banksClient.getAccount(dao);
     const AFTER = raw0.data.length;
-    const BEFORE = AFTER - 58;
+    const BEFORE = AFTER - 59;
     const rentBefore = rent.minimumBalance(BigInt(BEFORE));
     const rentAfter = rent.minimumBalance(BigInt(AFTER));
     const delta = rentAfter - rentBefore;
