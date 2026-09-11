@@ -181,6 +181,17 @@ export class PriceBasedPerformancePackageClient {
       });
   }
 
+  public resizePerformancePackageIx(params: {
+    performancePackage: PublicKey;
+    payer: PublicKey;
+  }) {
+    return this.program.methods.resizePerformancePackage().accounts({
+      performancePackage: params.performancePackage,
+      payer: params.payer,
+      systemProgram: SystemProgram.programId,
+    });
+  }
+
   public async getPerformancePackage(performancePackageAddress: PublicKey) {
     return await this.program.account.performancePackage.fetch(
       performancePackageAddress,

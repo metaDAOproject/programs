@@ -344,6 +344,27 @@ export type PriceBasedPerformancePackage = {
       ];
       args: [];
     },
+    {
+      name: "resizePerformancePackage";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
   ];
   accounts: [
     {
@@ -795,6 +816,7 @@ export type PriceBasedPerformancePackage = {
           },
           {
             name: "windowSeconds";
+            docs: ["Duration of the window in seconds"];
             type: "u32";
           },
           {
@@ -1548,6 +1570,27 @@ export const IDL: PriceBasedPerformancePackage = {
       ],
       args: [],
     },
+    {
+      name: "resizePerformancePackage",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -1999,6 +2042,7 @@ export const IDL: PriceBasedPerformancePackage = {
           },
           {
             name: "windowSeconds",
+            docs: ["Duration of the window in seconds"],
             type: "u32",
           },
           {

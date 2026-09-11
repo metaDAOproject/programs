@@ -6,6 +6,7 @@ pub mod complete_unlock;
 pub mod execute_change;
 pub mod initialize_performance_package;
 pub mod propose_change;
+pub mod resize_performance_package;
 pub mod start_unlock;
 
 pub use burn_performance_package::*;
@@ -14,4 +15,5 @@ pub use complete_unlock::*;
 pub use execute_change::*;
 pub use initialize_performance_package::*;
 pub use propose_change::*;
+pub use resize_performance_package::*;
 pub use start_unlock::*;
