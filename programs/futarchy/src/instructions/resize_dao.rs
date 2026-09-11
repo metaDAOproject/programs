@@ -76,8 +76,9 @@ impl ResizeDao<'_> {
             twap_max_observation_change_per_update: old_dao_data
                 .twap_max_observation_change_per_update,
             twap_start_delay_seconds: old_dao_data.twap_start_delay_seconds,
-            min_quote_futarchic_liquidity: old_dao_data.min_quote_futarchic_liquidity,
-            min_base_futarchic_liquidity: old_dao_data.min_base_futarchic_liquidity,
+            // A zero minimum fails `Dao::invariant`; 1 is the launchpads' value.
+            min_quote_futarchic_liquidity: old_dao_data.min_quote_futarchic_liquidity.max(1),
+            min_base_futarchic_liquidity: old_dao_data.min_base_futarchic_liquidity.max(1),
             base_to_stake: old_dao_data.base_to_stake,
             seq_num: old_dao_data.seq_num,
             initial_spending_limit: live_spending_limit,

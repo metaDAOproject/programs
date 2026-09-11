@@ -147,6 +147,19 @@ export default function suite() {
     assert.isFalse(migrated.typedProposalsEnabled);
   });
 
+  it("lifts a zero minimum liquidity to 1", async function () {
+    await makeOldDaoLayout(this, dao, {
+      minQuoteFutarchicLiquidity: new BN(0),
+      minBaseFutarchicLiquidity: new BN(0),
+    });
+
+    await this.futarchy.resizeDaoIx({ dao }).rpc();
+
+    const migrated = await this.futarchy.getDao(dao);
+    assert.equal(migrated.minQuoteFutarchicLiquidity.toString(), "1");
+    assert.equal(migrated.minBaseFutarchicLiquidity.toString(), "1");
+  });
+
   it("is a no-op on an already-new-layout DAO", async function () {
     const before = await this.futarchy.getDao(dao);
     const beforeRaw = await this.banksClient.getAccount(dao);
