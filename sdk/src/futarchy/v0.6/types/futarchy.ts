@@ -2786,6 +2786,10 @@ export type Futarchy = {
           },
           {
             name: "durationInSeconds";
+            docs: [
+              "The duration finalize reads. A preview at create; written at launch from",
+              "the configuration in force unless `params_overridden`.",
+            ];
             type: "u32";
           },
           {
@@ -2819,7 +2823,10 @@ export type Futarchy = {
           },
           {
             name: "passThresholdBps";
-            docs: ["Snapshot of the kind's threshold at create."];
+            docs: [
+              "The threshold finalize reads. A preview at create; written at launch from",
+              "the configuration in force unless `params_overridden`.",
+            ];
             type: "i16";
           },
           {
@@ -2833,6 +2840,14 @@ export type Futarchy = {
             type: {
               defined: "ProposalAction";
             };
+          },
+          {
+            name: "paramsOverridden";
+            docs: [
+              "Set by `admin_update_proposal_params`. Launch then leaves the duration",
+              "and threshold alone.",
+            ];
+            type: "bool";
           },
         ];
       };
@@ -8060,6 +8075,10 @@ export const IDL: Futarchy = {
           },
           {
             name: "durationInSeconds",
+            docs: [
+              "The duration finalize reads. A preview at create; written at launch from",
+              "the configuration in force unless `params_overridden`.",
+            ],
             type: "u32",
           },
           {
@@ -8093,7 +8112,10 @@ export const IDL: Futarchy = {
           },
           {
             name: "passThresholdBps",
-            docs: ["Snapshot of the kind's threshold at create."],
+            docs: [
+              "The threshold finalize reads. A preview at create; written at launch from",
+              "the configuration in force unless `params_overridden`.",
+            ],
             type: "i16",
           },
           {
@@ -8107,6 +8129,14 @@ export const IDL: Futarchy = {
             type: {
               defined: "ProposalAction",
             },
+          },
+          {
+            name: "paramsOverridden",
+            docs: [
+              "Set by `admin_update_proposal_params`. Launch then leaves the duration",
+              "and threshold alone.",
+            ],
+            type: "bool",
           },
         ],
       },

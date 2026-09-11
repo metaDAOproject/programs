@@ -22,6 +22,7 @@ const BASE_TO_STAKE = new BN(100_000_000); // 100 tokens
 
 const CATALOG_DURATION_SECONDS = 60 * 60 * 24 * 10;
 const CATALOG_PASS_THRESHOLD_BPS = 1000;
+const CATALOG_TWAP_START_DELAY_SECONDS = 60 * 60 * 24;
 
 const memoIx = new TransactionInstruction({
   programId: MEMO_PROGRAM_ID,
@@ -113,6 +114,49 @@ export default function suite() {
       const storedProposal = await this.futarchy.getProposal(proposal);
       assert.equal(storedProposal.durationInSeconds, CATALOG_DURATION_SECONDS);
       assert.equal(storedProposal.passThresholdBps, CATALOG_PASS_THRESHOLD_BPS);
+    });
+  });
+
+  describe("admin tuning", function () {
+    it("accepts a duration above the DAO's warm-up but below the catalog's while off", async function () {
+      const { proposal } = await this.initializeProposal({
+        dao,
+        instructions: [memoIx],
+      });
+
+      const durationInSeconds =
+        (TWAP_START_DELAY_SECONDS + CATALOG_TWAP_START_DELAY_SECONDS) / 2;
+      await this.futarchy
+        .adminUpdateProposalParamsIx({ proposal, dao, durationInSeconds })
+        .rpc();
+
+      const storedProposal = await this.futarchy.getProposal(proposal);
+      assert.equal(storedProposal.durationInSeconds, durationInSeconds);
+      assert.isTrue(storedProposal.paramsOverridden);
+    });
+
+    it("refuses a duration equal to the DAO's warm-up while off", async function () {
+      const { proposal } = await this.initializeProposal({
+        dao,
+        instructions: [memoIx],
+      });
+
+      const callbacks = expectError(
+        "ProposalDurationTooShort",
+        "tuned a duration equal to the DAO's warm-up",
+      );
+      await this.futarchy
+        .adminUpdateProposalParamsIx({
+          proposal,
+          dao,
+          durationInSeconds: TWAP_START_DELAY_SECONDS,
+        })
+        .rpc()
+        .then(...callbacks);
+
+      const storedProposal = await this.futarchy.getProposal(proposal);
+      assert.equal(storedProposal.durationInSeconds, SECONDS_PER_PROPOSAL);
+      assert.isFalse(storedProposal.paramsOverridden);
     });
   });
 

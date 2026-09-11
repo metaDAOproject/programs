@@ -345,7 +345,7 @@ export default function suite() {
     const raw = await this.banksClient.getAccount(proposal);
     const legacy = Buffer.concat([
       Buffer.from(raw.data.subarray(0, 347)),
-      Buffer.from([0xb1, 0xf3, 0x00, 0x03, 0xf0, 0x37, 0xa2, 0x00]),
+      Buffer.from([0xb1, 0xf3, 0x00, 0x03, 0x00, 0x37, 0xa2, 0x00]),
     ]);
     assert.equal(legacy.length, 355);
     this.context.setAccount(proposal, { ...raw, data: legacy });

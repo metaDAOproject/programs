@@ -41,12 +41,14 @@ pub struct Proposal {
     pub fail_quote_mint: Pubkey,
     /// The team that last sponsored the proposal. `None` = never sponsored.
     pub sponsored_by: Option<Pubkey>,
-    /// Snapshot of the kind's threshold at create.
     pub pass_threshold_bps: i16,
     /// Snapshot of the kind's blockable flag at create.
     pub council_can_block: bool,
     /// The typed action parameters.
     pub action: ProposalAction,
+    /// Set by `admin_update_proposal_params`. `launch_proposal` then leaves the 
+    /// duration and threshold alone.
+    pub params_overridden: bool,
 }
 
 impl Proposal {

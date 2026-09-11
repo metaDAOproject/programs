@@ -13,10 +13,11 @@ import { assert } from "chai";
 
 // Rewrites a real (new-layout) Proposal account to the pre-migration on-chain
 // layout by re-encoding its body as the `oldProposal` IDL type (dropping the
-// appended `pass_threshold_bps`, `council_can_block`, and `action`, and
-// collapsing `sponsored_by` back to the `is_team_sponsored` bit). The
-// optional overrides let a test pin `is_team_sponsored`, the state, or the
-// duration without driving the sponsor/launch flows.
+// appended `pass_threshold_bps`, `council_can_block`, `action` and
+// `params_overridden`, and collapsing `sponsored_by` back to the
+// `is_team_sponsored` bit). The optional overrides let a test pin
+// `is_team_sponsored`, the state, or the duration without driving the
+// sponsor/launch flows.
 async function makeOldLayout(
   ctx: TestContext,
   proposal: PublicKey,
@@ -28,9 +29,10 @@ async function makeOldLayout(
 ): Promise<{ AFTER: number; BEFORE: number }> {
   const raw = await ctx.banksClient.getAccount(proposal);
   const AFTER = raw.data.length;
-  // 401 bytes: sponsored_by (Option<Pubkey>) in place of is_team_sponsored (bool)
+  // 402 bytes: sponsored_by (Option<Pubkey>) in place of is_team_sponsored (bool)
   // + pass_threshold_bps (i16) + council_can_block (bool) + action (ProposalAction)
-  const BEFORE = AFTER - 401;
+  // + params_overridden (bool)
+  const BEFORE = AFTER - 402;
 
   const disc = Buffer.from(raw.data.slice(0, 8));
   const coder = ctx.futarchy.futarchy.account.proposal.coder.accounts;
@@ -146,6 +148,7 @@ export default function suite() {
     const migrated = await this.futarchy.getProposal(proposal);
     assert.isDefined(migrated.action.executeArbitrary);
     assert.isTrue(migrated.councilCanBlock);
+    assert.isFalse(migrated.paramsOverridden);
     // The kind constants, not the vestigial per-DAO threshold (300) or the
     // legacy duration: a draft has no live market, so the permissionless
     // crank's timing must not decide the rules it finalizes under.
@@ -190,6 +193,7 @@ export default function suite() {
       this.payer.publicKey.toBase58(),
     );
     assert.equal(migrated.passThresholdBps, 1000);
+    assert.isFalse(migrated.paramsOverridden);
   });
 
   it("snapshots the DAO threshold and preserves the duration for a launched proposal", async function () {
@@ -211,6 +215,7 @@ export default function suite() {
     assert.equal(migrated.durationInSeconds, 3600);
     assert.isDefined(migrated.action.executeArbitrary);
     assert.isTrue(migrated.councilCanBlock);
+    assert.isFalse(migrated.paramsOverridden);
   });
 
   it("snapshots the team-sponsored threshold for a launched team-sponsored proposal", async function () {
@@ -230,6 +235,7 @@ export default function suite() {
       this.payer.publicKey.toBase58(),
     );
     assert.equal(migrated.passThresholdBps, -100);
+    assert.isFalse(migrated.paramsOverridden);
   });
 
   it("is a no-op on an already-new-layout proposal", async function () {
@@ -259,6 +265,9 @@ export default function suite() {
       .accounts({ proposal, dao, payer: this.payer.publicKey })
       .rpc();
 
+    const migrated = await this.futarchy.getProposal(proposal);
+    assert.isFalse(migrated.paramsOverridden);
+
     // Migrated drafts land on the catalog params, and stay `ExecuteArbitrary`
     // drafts — so the per-proposal admin lever must still apply to them.
     await this.futarchy
@@ -273,6 +282,7 @@ export default function suite() {
     const retuned = await this.futarchy.getProposal(proposal);
     assert.equal(retuned.durationInSeconds, 60 * 60 * 24 * 2);
     assert.equal(retuned.passThresholdBps, 500);
+    assert.isTrue(retuned.paramsOverridden);
   });
 
   it("rejects a DAO that is not the proposal's", async function () {

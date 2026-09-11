@@ -156,6 +156,7 @@ impl TypedInitializeAccounts<'_> {
             pass_threshold_bps: params.pass_threshold_bps,
             council_can_block: params.council_can_block,
             action,
+            params_overridden: false,
         };
         self.proposal.set_inner(proposal);
 

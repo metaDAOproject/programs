@@ -155,12 +155,13 @@ export default function suite() {
     // discriminator plus the 339-byte Pending body, then 8 bytes standing in
     // for the residue a legacy account carries past its Pending body. The
     // residue decodes as pass_threshold_bps = -3151, council_can_block =
-    // false, action = ExecuteArbitrary — a well-formed new-layout read, so
-    // only the size guard stands between it and finalization.
+    // false, action = ExecuteArbitrary, params_overridden = false — a
+    // well-formed new-layout read, so only the size guard stands between it
+    // and finalization.
     const raw = await this.banksClient.getAccount(proposal);
     const legacy = Buffer.concat([
       Buffer.from(raw.data.subarray(0, 347)),
-      Buffer.from([0xb1, 0xf3, 0x00, 0x03, 0xf0, 0x37, 0xa2, 0x00]),
+      Buffer.from([0xb1, 0xf3, 0x00, 0x03, 0x00, 0x37, 0xa2, 0x00]),
     ]);
     assert.equal(legacy.length, 355);
     this.context.setAccount(proposal, { ...raw, data: legacy });
@@ -170,6 +171,7 @@ export default function suite() {
     assert.equal(crafted.passThresholdBps, -3151);
     assert.isFalse(crafted.councilCanBlock);
     assert.isDefined(crafted.action.executeArbitrary);
+    assert.isFalse(crafted.paramsOverridden);
 
     const callbacks = expectError(
       "AccountNotMigrated",

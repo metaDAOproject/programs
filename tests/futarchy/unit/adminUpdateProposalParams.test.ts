@@ -132,6 +132,7 @@ export default function suite() {
     const before = await this.futarchy.getProposal(proposal);
     assert.equal(before.durationInSeconds, ARBITRARY_DURATION_SECONDS);
     assert.equal(before.passThresholdBps, ARBITRARY_PASS_THRESHOLD_BPS);
+    assert.isFalse(before.paramsOverridden);
 
     await this.futarchy
       .adminUpdateProposalParamsIx({
@@ -145,6 +146,7 @@ export default function suite() {
     const after = await this.futarchy.getProposal(proposal);
     assert.equal(after.durationInSeconds, DAY_SECONDS * 2);
     assert.equal(after.passThresholdBps, 200);
+    assert.isTrue(after.paramsOverridden);
   });
 
   it("leaves the threshold alone when only the duration is set", async function () {

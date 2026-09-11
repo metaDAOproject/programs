@@ -26,10 +26,10 @@ impl ResizeProposal<'_> {
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Proposal::MIGRATED_SIZE;
-        // 401 bytes: 32 (Option<Pubkey> sponsored_by replacing the bool)
+        // 402 bytes: 32 (Option<Pubkey> sponsored_by replacing the bool)
         // + 2 (i16 pass_threshold_bps) + 1 (bool council_can_block)
-        // + 366 (ProposalAction)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 401;
+        // + 366 (ProposalAction) + 1 (bool params_overridden)
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 402;
 
         if proposal.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -87,6 +87,7 @@ impl ResizeProposal<'_> {
             pass_threshold_bps,
             council_can_block: true,
             action,
+            params_overridden: false,
         };
 
         proposal.realloc(AFTER_REALLOC_SIZE, true)?;
