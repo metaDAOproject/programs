@@ -118,6 +118,9 @@ pub struct LaunchProposalEvent {
     pub timestamp_enqueued: i64,
     pub total_staked: u64,
     pub post_amm_state: FutarchyAmm,
+    /// The terms the market opened with, as written by launch.
+    pub duration_in_seconds: u32,
+    pub pass_threshold_bps: i16,
 }
 
 #[event]

@@ -1,5 +1,6 @@
 import { assert } from "chai";
-import { PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
 import {
   PERMISSIONLESS_ACCOUNT,
@@ -9,6 +10,7 @@ import { TestContext } from "../main.test.js";
 import {
   executeVaultTransaction,
   forceApproveSquadsProposal,
+  setupBasicDao,
 } from "../utils.js";
 
 // Re-encodes an account in place, padded back to its allocated length, for
@@ -31,8 +33,8 @@ export async function rewriteAccount(
   ctx.context.setAccount(address, { ...raw, data: buf });
 }
 
-// Puts the DAO's typed-proposals switch in the given state. No instruction
-// turns it off, so tests that need an off DAO rewrite the account.
+// Sets the DAO's `typed_proposals_enabled`. No instruction turns typed
+// proposals off, so tests that need them off rewrite the account.
 export async function setTypedProposalsEnabled(
   ctx: TestContext,
   dao: PublicKey,
@@ -41,6 +43,48 @@ export async function setTypedProposalsEnabled(
   await rewriteAccount(ctx, dao, "dao", (decoded) => {
     decoded.typedProposalsEnabled = enabled;
   });
+}
+
+// Terms for a DAO with typed proposals off; every one differs from the
+// catalog's 10 days, +10% and 1-day warm-up.
+export const TYPED_PROPOSALS_OFF_DAO_TERMS = {
+  secondsPerProposal: 60 * 60 * 24 * 2,
+  twapStartDelaySeconds: 60 * 60 * 12,
+  passThresholdBps: 300,
+  teamSponsoredPassThresholdBps: -300,
+  baseToStake: new BN(100_000_000), // 100 tokens at 6 decimals
+};
+
+// A DAO on `TYPED_PROPOSALS_OFF_DAO_TERMS` with a 100,000-quote spot market and typed
+// proposals switched off.
+export async function setupTypedProposalsOffDao(
+  ctx: TestContext,
+  baseMint: PublicKey,
+  quoteMint: PublicKey,
+): Promise<PublicKey> {
+  const dao = await setupBasicDao({
+    context: ctx,
+    baseMint,
+    quoteMint,
+    ...TYPED_PROPOSALS_OFF_DAO_TERMS,
+  });
+
+  await ctx.futarchy
+    .provideLiquidityIx({
+      dao,
+      baseMint,
+      quoteMint,
+      quoteAmount: new BN(100_000 * 1_000_000),
+      maxBaseAmount: new BN(100_000 * 1_000_000),
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+    ])
+    .rpc();
+
+  await setTypedProposalsEnabled(ctx, dao, false);
+
+  return dao;
 }
 
 const EMPTY_UPDATE_DAO_PARAMS: UpdateDaoParams = {

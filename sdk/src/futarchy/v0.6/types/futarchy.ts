@@ -2786,10 +2786,6 @@ export type Futarchy = {
           },
           {
             name: "durationInSeconds";
-            docs: [
-              "The duration finalize reads. A preview at create; written at launch from",
-              "the configuration in force unless `params_overridden`.",
-            ];
             type: "u32";
           },
           {
@@ -2823,10 +2819,6 @@ export type Futarchy = {
           },
           {
             name: "passThresholdBps";
-            docs: [
-              "The threshold finalize reads. A preview at create; written at launch from",
-              "the configuration in force unless `params_overridden`.",
-            ];
             type: "i16";
           },
           {
@@ -2844,8 +2836,8 @@ export type Futarchy = {
           {
             name: "paramsOverridden";
             docs: [
-              "Set by `admin_update_proposal_params`. Launch then leaves the duration",
-              "and threshold alone.",
+              "Set by `admin_update_proposal_params`. `launch_proposal` then leaves the",
+              "duration and threshold alone.",
             ];
             type: "bool";
           },
@@ -3379,8 +3371,8 @@ export type Futarchy = {
           {
             name: "typedProposalsEnabled";
             docs: [
-              "`Some(true)` turns the catalog on for this DAO. `None` leaves the",
-              "switch as it is. `Some(false)` is refused: there is no way to turn it off.",
+              "`Some(true)` turns typed proposals on for this DAO. `None` leaves them",
+              "as they are. `Some(false)` is refused: there is no way to turn them off.",
             ];
             type: {
               option: "bool";
@@ -4334,6 +4326,16 @@ export type Futarchy = {
           type: {
             defined: "FutarchyAmm";
           };
+          index: false;
+        },
+        {
+          name: "durationInSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "passThresholdBps";
+          type: "i16";
           index: false;
         },
       ];
@@ -8075,10 +8077,6 @@ export const IDL: Futarchy = {
           },
           {
             name: "durationInSeconds",
-            docs: [
-              "The duration finalize reads. A preview at create; written at launch from",
-              "the configuration in force unless `params_overridden`.",
-            ],
             type: "u32",
           },
           {
@@ -8112,10 +8110,6 @@ export const IDL: Futarchy = {
           },
           {
             name: "passThresholdBps",
-            docs: [
-              "The threshold finalize reads. A preview at create; written at launch from",
-              "the configuration in force unless `params_overridden`.",
-            ],
             type: "i16",
           },
           {
@@ -8133,8 +8127,8 @@ export const IDL: Futarchy = {
           {
             name: "paramsOverridden",
             docs: [
-              "Set by `admin_update_proposal_params`. Launch then leaves the duration",
-              "and threshold alone.",
+              "Set by `admin_update_proposal_params`. `launch_proposal` then leaves the",
+              "duration and threshold alone.",
             ],
             type: "bool",
           },
@@ -8668,8 +8662,8 @@ export const IDL: Futarchy = {
           {
             name: "typedProposalsEnabled",
             docs: [
-              "`Some(true)` turns the catalog on for this DAO. `None` leaves the",
-              "switch as it is. `Some(false)` is refused: there is no way to turn it off.",
+              "`Some(true)` turns typed proposals on for this DAO. `None` leaves them",
+              "as they are. `Some(false)` is refused: there is no way to turn them off.",
             ],
             type: {
               option: "bool",
@@ -9623,6 +9617,16 @@ export const IDL: Futarchy = {
           type: {
             defined: "FutarchyAmm",
           },
+          index: false,
+        },
+        {
+          name: "durationInSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "passThresholdBps",
+          type: "i16",
           index: false,
         },
       ],

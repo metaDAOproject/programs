@@ -12,8 +12,8 @@ pub struct UpdateDaoParams {
     pub base_to_stake: Option<u64>,
     pub team_sponsored_pass_threshold_bps: Option<i16>,
     pub team_address: Option<Pubkey>,
-    /// `Some(true)` turns the catalog on for this DAO. `None` leaves the
-    /// switch as it is. `Some(false)` is refused: there is no way to turn it off.
+    /// `Some(true)` turns typed proposals on for this DAO. `None` leaves them
+    /// as they are. `Some(false)` is refused: there is no way to turn them off.
     pub typed_proposals_enabled: Option<bool>,
 }
 
@@ -34,7 +34,7 @@ impl UpdateDao<'_> {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
 
-        // The switch only turns on.
+        // Typed proposals only turn on.
         require!(
             dao_params.typed_proposals_enabled != Some(false),
             FutarchyError::TypedProposalsCannotBeDisabled

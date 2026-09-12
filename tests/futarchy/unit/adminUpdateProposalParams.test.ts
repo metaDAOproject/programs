@@ -266,8 +266,17 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  it("rejects a launched proposal", async function () {
+  it("keeps the tuned values through launch and rejects a launched proposal", async function () {
     await provideLiquidity(this);
+
+    await this.futarchy
+      .adminUpdateProposalParamsIx({
+        proposal,
+        dao,
+        durationInSeconds: DAY_SECONDS * 2,
+        passThresholdBps: 200,
+      })
+      .rpc();
 
     await this.futarchy
       .launchProposalIx({
@@ -279,6 +288,11 @@ export default function suite() {
       })
       .rpc();
 
+    const launched = await this.futarchy.getProposal(proposal);
+    assert.exists(launched.state.pending);
+    assert.equal(launched.durationInSeconds, DAY_SECONDS * 2);
+    assert.equal(launched.passThresholdBps, 200);
+
     const callbacks = expectError(
       "ProposalNotInDraftState",
       "should not retune a live market",
@@ -288,7 +302,7 @@ export default function suite() {
       .adminUpdateProposalParamsIx({
         proposal,
         dao,
-        durationInSeconds: DAY_SECONDS * 2,
+        durationInSeconds: DAY_SECONDS * 3,
       })
       .rpc()
       .then(callbacks[0], callbacks[1]);

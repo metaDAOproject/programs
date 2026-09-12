@@ -77,8 +77,8 @@ export default function suite() {
 
   it("migrates an old DAO with the new fields defaulted, preserving every other field", async function () {
     const original = await this.futarchy.getDao(dao);
-    // The migration defaults match a freshly-initialized DAO except for the
-    // switch, so everything else can round-trip equal below.
+    // The migration defaults match a freshly-initialized DAO except for
+    // `typedProposalsEnabled`, so everything else can round-trip equal below.
     assert.isNull(original.liquidator);
     assert.equal(original.lastFailedTakeoverAt.toString(), "0");
     assert.equal(original.lastFailedLiquidationAt.toString(), "0");

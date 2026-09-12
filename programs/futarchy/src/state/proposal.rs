@@ -57,6 +57,23 @@ impl Proposal {
         self.sponsored_by == Some(team_address)
     }
 
+    /// The parameters this proposal launches under.
+    pub fn launch_params(&self, dao: &Dao) -> InstructionParams {
+        let params = self
+            .action
+            .params_for(dao, self.is_sponsored_by(dao.team_address));
+
+        if !self.params_overridden {
+            return params;
+        }
+
+        InstructionParams {
+            duration_seconds: self.duration_in_seconds,
+            pass_threshold_bps: self.pass_threshold_bps,
+            ..params
+        }
+    }
+
     /// A migrated `Proposal` account is exactly this long.
     pub const MIGRATED_SIZE: usize = Proposal::INIT_SPACE + 8;
 
