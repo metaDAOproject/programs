@@ -87,7 +87,7 @@ export async function setupTypedProposalsOffDao(
   return dao;
 }
 
-const EMPTY_UPDATE_DAO_PARAMS: UpdateDaoParams = {
+export const EMPTY_UPDATE_DAO_PARAMS: UpdateDaoParams = {
   passThresholdBps: null,
   secondsPerProposal: null,
   twapInitialObservation: null,

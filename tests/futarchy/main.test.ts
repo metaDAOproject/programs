@@ -5,6 +5,7 @@ import cancelApprovedPayloadAfterLiquidation from "./integration/cancelApprovedP
 import gatedLiquidationUnwind from "./integration/gatedLiquidationUnwind.test.js";
 import largeSpendEndToEnd from "./integration/largeSpendEndToEnd.test.js";
 import cooldownRoundTrip from "./integration/cooldownRoundTrip.test.js";
+import typedProposalsOptInEndToEnd from "./integration/typedProposalsOptInEndToEnd.test.js";
 
 import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
@@ -148,4 +149,8 @@ export default function suite() {
   describe("integration: gated liquidation unwind", gatedLiquidationUnwind);
   describe("integration: large spend end to end", largeSpendEndToEnd);
   describe("integration: cooldown round-trip", cooldownRoundTrip);
+  describe(
+    "integration: typed proposals opt-in end to end",
+    typedProposalsOptInEndToEnd,
+  );
 }
