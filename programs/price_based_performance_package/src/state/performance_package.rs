@@ -2,10 +2,14 @@ use anchor_lang::prelude::*;
 
 use crate::{PriceBasedPerformancePackageError, MAX_TRANCHES};
 
-/// Starting at `byte_offset` in `oracle_account`, this program expects to read:
+/// Starting at `byte_offset` in `oracle_account`, the unlock instructions read:
 /// - 16 bytes for the aggregator, stored as a little endian u128
-/// - 8 bytes for the slot that the aggregator was last updated, stored as a
-///   little endian u64
+/// - 8 bytes for the timestamp that the aggregator was last updated, stored as
+///   a little endian i64
+///
+/// While withdrawal limits are active, `oracle_account` must also be a futarchy
+/// `Dao`: the withdraw instructions value withdrawals from its spot pool, at the
+/// higher of the pool's damped observation and its reserve price.
 ///
 /// The aggregator should be a weighted sum of prices, where the weight is the
 /// number of seconds between prices. Here's an example:
@@ -111,6 +115,13 @@ impl PerformancePackage {
             .ok_or(PriceBasedPerformancePackageError::InvariantViolated)?;
         Ok(withdrawable)
     }
+
+    /// The policy whose limits are still in force at `now`, if any.
+    pub fn active_policy(&mut self, now: i64) -> Option<&mut WithdrawalPolicy> {
+        self.withdrawal_policy
+            .as_mut()
+            .filter(|policy| now < policy.limits.end_timestamp)
+    }
 }
 
 /// The 0.6.0 layout, decoded by the resize before an account is migrated
@@ -147,6 +158,60 @@ impl WithdrawalPolicy {
             limits,
             usage: WindowUsage::default(),
         }
+    }
+
+    /// Reset the counters if `now` falls in a later window than the last withdrawal.
+    pub fn roll_if_new_window(&mut self, now: i64) {
+        let window_index =
+            (now - self.limits.start_timestamp) / self.limits.window_seconds as i64;
+
+        if window_index != self.usage.window_index {
+            self.usage = WindowUsage {
+                window_index,
+                tokens_used: 0,
+                quote_used: 0,
+            };
+        }
+    }
+
+    /// Ensure `amount` more base tokens fit under the window's token cap.
+    pub fn assert_tokens_fit(&self, amount: u64) -> Result<()> {
+        let tokens_used = self
+            .usage
+            .tokens_used
+            .checked_add(amount)
+            .ok_or(PriceBasedPerformancePackageError::TokenWindowLimitExceeded)?;
+
+        require_gte!(
+            self.limits.max_tokens_per_window,
+            tokens_used,
+            PriceBasedPerformancePackageError::TokenWindowLimitExceeded
+        );
+
+        Ok(())
+    }
+
+    /// Ensure `quote_value` more quote atoms fit under the window's quote cap.
+    pub fn assert_quote_fits(&self, quote_value: u64) -> Result<()> {
+        let quote_used = self
+            .usage
+            .quote_used
+            .checked_add(quote_value)
+            .ok_or(PriceBasedPerformancePackageError::QuoteWindowLimitExceeded)?;
+
+        require_gte!(
+            self.limits.max_quote_per_window,
+            quote_used,
+            PriceBasedPerformancePackageError::QuoteWindowLimitExceeded
+        );
+
+        Ok(())
+    }
+
+    /// Count a withdrawal that passed both cap checks against the window.
+    pub fn record_withdrawal(&mut self, amount: u64, quote_value: u64) {
+        self.usage.tokens_used += amount;
+        self.usage.quote_used += quote_value;
     }
 }
 

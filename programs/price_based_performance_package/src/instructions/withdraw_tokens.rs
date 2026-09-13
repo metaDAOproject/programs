@@ -22,7 +22,7 @@ pub struct WithdrawTokens<'info> {
     )]
     pub performance_package: Box<Account<'info, PerformancePackage>>,
 
-    /// CHECK: Only read while a withdrawal policy is active
+    /// CHECK: Read as a futarchy `Dao` only while a withdrawal policy is active
     #[account(address = performance_package.oracle_config.oracle_account)]
     pub oracle_account: UncheckedAccount<'info>,
 
@@ -65,7 +65,7 @@ impl WithdrawTokens<'_> {
     pub fn handle(ctx: Context<Self>, params: WithdrawTokensParams) -> Result<()> {
         let Self {
             performance_package,
-            oracle_account: _,
+            oracle_account,
             performance_package_token_vault,
             token_mint: _,
             recipient_token_account,
@@ -79,6 +79,7 @@ impl WithdrawTokens<'_> {
         } = ctx.accounts;
 
         let clock = Clock::get()?;
+        let now = clock.unix_timestamp;
         let WithdrawTokensParams { amount } = params;
 
         let withdrawable =
@@ -88,6 +89,33 @@ impl WithdrawTokens<'_> {
             amount,
             PriceBasedPerformancePackageError::InsufficientWithdrawableBalance
         );
+
+        let capped_withdrawal = match performance_package.active_policy(now) {
+            Some(policy) => {
+                require!(
+                    policy.limits.withdrawal_mode.allows_tokens(),
+                    PriceBasedPerformancePackageError::WithdrawTokensDisabled
+                );
+
+                policy.roll_if_new_window(now);
+                policy.assert_tokens_fit(amount)?;
+
+                let dao = read_dao(oracle_account)?;
+                let price = valuation_price(&dao)?;
+                let quote_value = quote_value_at_price(amount, price)?;
+                policy.assert_quote_fits(quote_value)?;
+
+                policy.record_withdrawal(amount, quote_value);
+
+                Some(CappedWithdrawal {
+                    price,
+                    quote_value,
+                    usage: policy.usage,
+                })
+            }
+            // No active policy means no limits were active, so no capped withdrawal
+            None => None,
+        };
 
         let seeds = &[
             b"performance_package",
@@ -116,7 +144,7 @@ impl WithdrawTokens<'_> {
             performance_package: performance_package.key(),
             recipient: recipient.key(),
             amount,
-            capped: None,
+            capped: capped_withdrawal,
         });
 
         Ok(())

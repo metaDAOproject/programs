@@ -46,9 +46,9 @@ pub struct UnlockCompleted {
 /// Present on a withdrawal that ran under active limits
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
 pub struct CappedWithdrawal {
-    /// The observation the withdrawal was valued at
+    /// The price the withdrawal was valued at: the higher of the spot pool's observation and its reserve price
     pub price: u128,
-    /// `amount` valued at that observation, in quote atoms
+    /// `amount` valued at that price, in quote atoms
     pub quote_value: u64,
     /// Window usage after this withdrawal
     pub usage: WindowUsage,

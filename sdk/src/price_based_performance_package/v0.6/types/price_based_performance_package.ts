@@ -9,6 +9,11 @@ export type PriceBasedPerformancePackage = {
       };
       value: "10";
     },
+    {
+      name: "PRICE_SCALE";
+      type: "u128";
+      value: "1_000_000_000_000";
+    },
   ];
   instructions: [
     {
@@ -678,12 +683,14 @@ export type PriceBasedPerformancePackage = {
         fields: [
           {
             name: "price";
-            docs: ["The observation the withdrawal was valued at"];
+            docs: [
+              "The price the withdrawal was valued at: the higher of the spot pool's observation and its reserve price",
+            ];
             type: "u128";
           },
           {
             name: "quoteValue";
-            docs: ["`amount` valued at that observation, in quote atoms"];
+            docs: ["`amount` valued at that price, in quote atoms"];
             type: "u64";
           },
           {
@@ -801,10 +808,14 @@ export type PriceBasedPerformancePackage = {
     {
       name: "OracleConfig";
       docs: [
-        "Starting at `byte_offset` in `oracle_account`, this program expects to read:",
+        "Starting at `byte_offset` in `oracle_account`, the unlock instructions read:",
         "- 16 bytes for the aggregator, stored as a little endian u128",
-        "- 8 bytes for the slot that the aggregator was last updated, stored as a",
-        "little endian u64",
+        "- 8 bytes for the timestamp that the aggregator was last updated, stored as",
+        "a little endian i64",
+        "",
+        "While withdrawal limits are active, `oracle_account` must also be a futarchy",
+        "`Dao`: the withdraw instructions value withdrawals from its spot pool, at the",
+        "higher of the pool's damped observation and its reserve price.",
         "",
         "The aggregator should be a weighted sum of prices, where the weight is the",
         "number of seconds between prices. Here's an example:",
@@ -1498,6 +1509,11 @@ export const IDL: PriceBasedPerformancePackage = {
       },
       value: "10",
     },
+    {
+      name: "PRICE_SCALE",
+      type: "u128",
+      value: "1_000_000_000_000",
+    },
   ],
   instructions: [
     {
@@ -2167,12 +2183,14 @@ export const IDL: PriceBasedPerformancePackage = {
         fields: [
           {
             name: "price",
-            docs: ["The observation the withdrawal was valued at"],
+            docs: [
+              "The price the withdrawal was valued at: the higher of the spot pool's observation and its reserve price",
+            ],
             type: "u128",
           },
           {
             name: "quoteValue",
-            docs: ["`amount` valued at that observation, in quote atoms"],
+            docs: ["`amount` valued at that price, in quote atoms"],
             type: "u64",
           },
           {
@@ -2290,10 +2308,14 @@ export const IDL: PriceBasedPerformancePackage = {
     {
       name: "OracleConfig",
       docs: [
-        "Starting at `byte_offset` in `oracle_account`, this program expects to read:",
+        "Starting at `byte_offset` in `oracle_account`, the unlock instructions read:",
         "- 16 bytes for the aggregator, stored as a little endian u128",
-        "- 8 bytes for the slot that the aggregator was last updated, stored as a",
-        "little endian u64",
+        "- 8 bytes for the timestamp that the aggregator was last updated, stored as",
+        "a little endian i64",
+        "",
+        "While withdrawal limits are active, `oracle_account` must also be a futarchy",
+        "`Dao`: the withdraw instructions value withdrawals from its spot pool, at the",
+        "higher of the pool's damped observation and its reserve price.",
         "",
         "The aggregator should be a weighted sum of prices, where the weight is the",
         "number of seconds between prices. Here's an example:",

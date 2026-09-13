@@ -1566,6 +1566,7 @@ version = "0.6.1"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "futarchy",
  "solana-security-txt",
 ]
 

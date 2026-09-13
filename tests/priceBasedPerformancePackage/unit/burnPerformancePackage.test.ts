@@ -8,10 +8,13 @@ import { assert } from "chai";
 import BN from "bn.js";
 import { getMint } from "spl-token-bankrun";
 import { ACCOUNT_SIZE, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { runUnlockCycle } from "../utils.js";
+import { expectError } from "../../utils.js";
+import { runUnlockCycle, setDaoOracle, setupPackageOnDao } from "../utils.js";
 
 const TRANCHE_AMOUNT = 100 * 10 ** 6;
 const TOTAL_AMOUNT = 2 * TRANCHE_AMOUNT;
+const THIRTY_DAYS = 30 * 24 * 60 * 60;
+const ONE_YEAR = 365 * 24 * 60 * 60;
 
 export default function () {
   let tokenMint: PublicKey;
@@ -19,13 +22,13 @@ export default function () {
   let admin: Keypair;
   let spillAccount: Keypair;
   let performancePackage: PublicKey;
-  let oracleAccount: Keypair;
+  let oracle: PublicKey;
 
   beforeEach(async function () {
     recipient = Keypair.generate();
     admin = Keypair.generate();
     spillAccount = Keypair.generate();
-    oracleAccount = Keypair.generate();
+    oracle = Keypair.generate().publicKey;
 
     const fundTx = new Transaction().add(
       SystemProgram.transfer({
@@ -48,7 +51,7 @@ export default function () {
 
     performancePackage = await this.setupBasicPerformancePackage({
       tokenMint,
-      oracleAccount: oracleAccount.publicKey,
+      oracleAccount: oracle,
       recipient: recipient.publicKey,
     });
 
@@ -57,12 +60,17 @@ export default function () {
   });
 
   // Unlocks every tranche with a threshold at or below `twapPrice`.
-  async function unlockTranches(ctx: Mocha.Context, twapPrice: bigint) {
+  async function unlockTranches(
+    ctx: Mocha.Context,
+    twapPrice: bigint,
+    writeOracle?: (values: { aggregator: bigint }) => Promise<void>,
+  ) {
     await runUnlockCycle(ctx, {
       performancePackage,
-      oracleAccount: oracleAccount.publicKey,
+      oracleAccount: oracle,
       recipient,
       twapPrice,
+      writeOracle,
     });
   }
 
@@ -74,6 +82,18 @@ export default function () {
       admin: admin.publicKey,
       spillAccount: spillAccount.publicKey,
     });
+  }
+
+  function withdrawIx(ctx: Mocha.Context, amount: number) {
+    return ctx.priceBasedPerformancePackage
+      .withdrawTokensIx({
+        performancePackage,
+        oracleAccount: oracle,
+        tokenMint,
+        recipient: recipient.publicKey,
+        amount: new BN(amount),
+      })
+      .signers([recipient]);
   }
 
   async function mintSupply(ctx: Mocha.Context): Promise<bigint> {
@@ -123,16 +143,7 @@ export default function () {
 
   it("transfers and burns nothing when everything is unlocked and already withdrawn", async function () {
     await unlockTranches(this, BigInt(2e12));
-    await this.priceBasedPerformancePackage
-      .withdrawTokensIx({
-        performancePackage,
-        oracleAccount: oracleAccount.publicKey,
-        tokenMint,
-        recipient: recipient.publicKey,
-        amount: new BN(TOTAL_AMOUNT),
-      })
-      .signers([recipient])
-      .rpc();
+    await withdrawIx(this, TOTAL_AMOUNT).rpc();
     assert.equal(await this.getTokenBalance(tokenMint, performancePackage), 0n);
 
     const supplyBefore = await mintSupply(this);
@@ -144,6 +155,60 @@ export default function () {
       BigInt(TOTAL_AMOUNT),
     );
     assert.equal(await mintSupply(this), supplyBefore);
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+  });
+
+  it("pays the whole withdrawable balance when the window's token cap is used up", async function () {
+    tokenMint = await this.createMint(this.payer.publicKey, 6);
+    const quoteMint = await this.createMint(this.payer.publicKey, 6);
+    await this.mintTo(
+      tokenMint,
+      this.payer.publicKey,
+      this.payer,
+      TOTAL_AMOUNT,
+    );
+    const now = Number((await this.banksClient.getClock()).unixTimestamp);
+    ({ dao: oracle, performancePackage } = await setupPackageOnDao(this, {
+      tokenMint,
+      quoteMint,
+      recipient: recipient.publicKey,
+      limits: {
+        endTimestamp: new BN(now + ONE_YEAR),
+        windowSeconds: THIRTY_DAYS,
+        maxTokensPerWindow: new BN(TRANCHE_AMOUNT / 2),
+        maxQuotePerWindow: new BN(1_000 * 10 ** 6),
+        withdrawalMode: { both: {} },
+      },
+    }));
+    await this.advanceBySeconds(2);
+    await unlockTranches(this, BigInt(1e12), (values) =>
+      setDaoOracle(this, oracle, values),
+    );
+    await setDaoOracle(this, oracle, {
+      lastObservation: BigInt(1e12),
+      reserves: { base: 1_000_000n * 10n ** 6n, quote: 1_000_000n * 10n ** 6n },
+    });
+
+    await withdrawIx(this, TRANCHE_AMOUNT / 2).rpc();
+    const callbacks = expectError(
+      "TokenWindowLimitExceeded",
+      "withdrew past the window's token cap",
+    );
+    await withdrawIx(this, 1).rpc().then(callbacks[0], callbacks[1]);
+
+    const supplyBefore = await mintSupply(this);
+
+    await burnIx(this).signers([admin]).rpc();
+
+    assert.equal(
+      await this.getTokenBalance(tokenMint, recipient.publicKey),
+      BigInt(TRANCHE_AMOUNT),
+    );
+    assert.equal(await this.getTokenBalance(tokenMint, performancePackage), 0n);
+    assert.equal(
+      supplyBefore - (await mintSupply(this)),
+      BigInt(TOTAL_AMOUNT - TRANCHE_AMOUNT),
+    );
     assert.isNull(await this.banksClient.getAccount(performancePackage));
   });
 
