@@ -44,11 +44,10 @@ impl ResizeProposal<'_> {
 
         let action = ProposalAction::ExecuteArbitrary;
 
-        // Draft proposals take the kind's catalog params like any new proposal.
-        // Launched proposals keep the rules they were launched under.
+        // Drafts preview what launch would write today; launched proposals keep their rules.
         let (pass_threshold_bps, duration_in_seconds) =
             if matches!(old_proposal_data.state, ProposalState::Draft { .. }) {
-                let params = action.params();
+                let params = action.params_for(dao, old_proposal_data.is_team_sponsored);
                 (params.pass_threshold_bps, params.duration_seconds)
             } else {
                 let pass_threshold_bps = if old_proposal_data.is_team_sponsored {

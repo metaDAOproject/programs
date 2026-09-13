@@ -8,6 +8,7 @@ import {
 } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import { expectError, setupBasicDao } from "../../utils.js";
+import { setTypedProposalsEnabled } from "../utils.js";
 import { TestContext } from "../../main.test.js";
 import { assert } from "chai";
 
@@ -194,6 +195,49 @@ export default function suite() {
     );
     assert.equal(migrated.passThresholdBps, 1000);
     assert.isFalse(migrated.paramsOverridden);
+  });
+
+  describe("with typed proposals off", function () {
+    beforeEach(async function () {
+      await setTypedProposalsEnabled(this, dao, false);
+    });
+
+    it("migrates a draft to a preview of the DAO's own duration and threshold", async function () {
+      await makeOldLayout(this, proposal, { durationInSeconds: 3600 });
+
+      await this.futarchy.futarchy.methods
+        .resizeProposal()
+        .accounts({ proposal, dao, payer: this.payer.publicKey })
+        .rpc();
+
+      const migrated = await this.futarchy.getProposal(proposal);
+      assert.isDefined(migrated.state.draft);
+      assert.isNull(migrated.sponsoredBy);
+      assert.equal(migrated.durationInSeconds, 60 * 60 * 24 * 3);
+      assert.equal(migrated.passThresholdBps, 300);
+      assert.isFalse(migrated.paramsOverridden);
+    });
+
+    it("migrates a team-sponsored draft to a preview of the team-sponsored threshold", async function () {
+      await makeOldLayout(this, proposal, {
+        isTeamSponsored: true,
+        durationInSeconds: 3600,
+      });
+
+      await this.futarchy.futarchy.methods
+        .resizeProposal()
+        .accounts({ proposal, dao, payer: this.payer.publicKey })
+        .rpc();
+
+      const migrated = await this.futarchy.getProposal(proposal);
+      assert.equal(
+        migrated.sponsoredBy?.toBase58(),
+        this.payer.publicKey.toBase58(),
+      );
+      assert.equal(migrated.durationInSeconds, 60 * 60 * 24 * 3);
+      assert.equal(migrated.passThresholdBps, -100);
+      assert.isFalse(migrated.paramsOverridden);
+    });
   });
 
   it("snapshots the DAO threshold and preserves the duration for a launched proposal", async function () {
