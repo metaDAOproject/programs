@@ -22,6 +22,7 @@ import { getEventAuthorityAddr } from "../../pda.js";
 import {
   InitializePerformancePackageParams,
   InitializePerformancePackageWithLimitsParams,
+  PerformancePackage,
 } from "./types/index.js";
 
 export type CreatePriceBasedPerformancePackageClientParams = {
@@ -273,7 +274,9 @@ export class PriceBasedPerformancePackageClient {
     });
   }
 
-  public async getPerformancePackage(performancePackageAddress: PublicKey) {
+  public async getPerformancePackage(
+    performancePackageAddress: PublicKey,
+  ): Promise<PerformancePackage> {
     return await this.program.account.performancePackage.fetch(
       performancePackageAddress,
     );

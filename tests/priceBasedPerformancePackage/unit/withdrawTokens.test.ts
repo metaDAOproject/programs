@@ -9,6 +9,10 @@ import { assert } from "chai";
 import BN from "bn.js";
 import { ACCOUNT_SIZE, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { LimitsParams, Tranche } from "@metadaoproject/programs";
+import {
+  getActiveWithdrawalPolicy,
+  getMaxTokenWithdrawal,
+} from "@metadaoproject/programs/price_based_performance_package/v0.6/withdrawalLimits";
 import { expectError } from "../../utils.js";
 import {
   runUnlockCycle,
@@ -79,6 +83,26 @@ export default function () {
     return ctx.priceBasedPerformancePackage.getPerformancePackage(
       performancePackage,
     );
+  }
+
+  // The SDK's maximum token withdrawal at the current clock. The Dao is only
+  // fetched while limits are active, as the program only reads it then.
+  async function maxWithdrawal(ctx: Mocha.Context) {
+    const stored = await storedPackage(ctx);
+    const now = Number((await ctx.banksClient.getClock()).unixTimestamp);
+    const vaultAmount = new BN(
+      (await ctx.getTokenBalance(tokenMint, performancePackage)).toString(),
+    );
+    const dao = getActiveWithdrawalPolicy(stored, now)
+      ? await ctx.futarchy.getDao(oracle)
+      : undefined;
+
+    return getMaxTokenWithdrawal({
+      performancePackage: stored,
+      vaultAmount,
+      now,
+      dao,
+    }).toString();
   }
 
   describe("without limits", function () {
@@ -158,6 +182,7 @@ export default function () {
 
     it("delivers part of the balance and then the rest", async function () {
       await unlockFirstTranche(this);
+      assert.equal(await maxWithdrawal(this), TRANCHE_AMOUNT.toString());
 
       await withdrawTokensIx(this, 40 * 10 ** 6)
         .signers([recipient])
@@ -166,6 +191,7 @@ export default function () {
         await this.getTokenBalance(tokenMint, recipient.publicKey),
         BigInt(40 * 10 ** 6),
       );
+      assert.equal(await maxWithdrawal(this), (60 * 10 ** 6).toString());
 
       await withdrawTokensIx(this, 60 * 10 ** 6)
         .signers([recipient])
@@ -178,6 +204,7 @@ export default function () {
         await this.getTokenBalance(tokenMint, performancePackage),
         BigInt(TOTAL_AMOUNT - TRANCHE_AMOUNT),
       );
+      assert.equal(await maxWithdrawal(this), "0");
     });
 
     it("rejects one atom more than the withdrawable balance", async function () {
@@ -389,6 +416,7 @@ export default function () {
         },
       });
       await setMockOracle(this, oracle, { aggregator: 0n });
+      assert.equal(await maxWithdrawal(this), CAPPED_TRANCHE_AMOUNT.toString());
 
       await withdraw(this, CAPPED_TRANCHE_AMOUNT);
 
@@ -406,6 +434,7 @@ export default function () {
     it("delivers 645,000 tokens valued at the observation", async function () {
       await setupCappedPackage(this);
       const seqNumBefore = (await storedPackage(this)).seqNum.toNumber();
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
 
       await withdraw(this, TOKEN_CAP);
 
@@ -426,11 +455,13 @@ export default function () {
         (await storedPackage(this)).seqNum.toNumber(),
         seqNumBefore + 1,
       );
+      assert.equal(await maxWithdrawal(this), "0");
     });
 
     it("rejects one atom over the token cap in the same window", async function () {
       await setupCappedPackage(this);
       await withdraw(this, TOKEN_CAP);
+      assert.equal(await maxWithdrawal(this), "0");
 
       await expectWithdrawError(
         this,
@@ -451,6 +482,7 @@ export default function () {
       await withdraw(this, TOKEN_CAP);
 
       await this.advanceBySeconds(THIRTY_DAYS);
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
       await withdraw(this, TOKEN_CAP);
 
       assert.equal(
@@ -468,6 +500,7 @@ export default function () {
       await setupCappedPackage(this, {
         reserves: { base: ONE_MILLION_TOKENS, quote: 465_000_000_000n },
       });
+      assert.equal(await maxWithdrawal(this), "215053763440");
 
       await withdraw(this, 215_053_763_440);
       assert.deepEqual(await usage(this), {
@@ -475,6 +508,7 @@ export default function () {
         tokensUsed: "215053763440",
         quoteUsed: QUOTE_CAP.toString(),
       });
+      assert.equal(await maxWithdrawal(this), "0");
 
       await expectWithdrawError(
         this,
@@ -498,6 +532,7 @@ export default function () {
       await setupCappedPackage(this, {
         reserves: { base: 0n, quote: 1_000_000n },
       });
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
 
       await withdraw(this, TOKEN_CAP);
 
@@ -507,9 +542,13 @@ export default function () {
     it("shares the window's counters across withdrawals", async function () {
       await setupCappedPackage(this);
 
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
       await withdraw(this, 200_000 * 10 ** 6);
+      assert.equal(await maxWithdrawal(this), (445_000 * 10 ** 6).toString());
       await withdraw(this, 200_000 * 10 ** 6);
+      assert.equal(await maxWithdrawal(this), (245_000 * 10 ** 6).toString());
       await withdraw(this, 245_000 * 10 ** 6);
+      assert.equal(await maxWithdrawal(this), "0");
 
       // Each withdrawal's value is rounded up on its own
       assert.deepEqual(await usage(this), {
@@ -530,10 +569,13 @@ export default function () {
       await setupCappedPackage(this);
 
       await advanceTo(this, startTimestamp + THIRTY_DAYS - 1);
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
       await withdraw(this, TOKEN_CAP);
       assert.equal((await usage(this)).windowIndex, "0");
+      assert.equal(await maxWithdrawal(this), "0");
 
       await this.advanceBySeconds(2);
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
       await withdraw(this, TOKEN_CAP);
 
       assert.equal(
@@ -560,6 +602,7 @@ export default function () {
       await setupCappedPackage(this, {
         limits: { withdrawalMode: { sell: {} } },
       });
+      assert.equal(await maxWithdrawal(this), "0");
 
       await expectWithdrawError(
         this,
@@ -577,6 +620,7 @@ export default function () {
 
       for (const withdrawalMode of modes) {
         await setupCappedPackage(this, { limits: { withdrawalMode } });
+        assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
 
         await withdraw(this, TOKEN_CAP);
 
@@ -586,6 +630,13 @@ export default function () {
 
     it("rejects a zero observation even with a reserve price", async function () {
       await setupCappedPackage(this, { observation: 0n });
+      await maxWithdrawal(this).then(
+        () =>
+          assert.fail(
+            "computed a maximum withdrawal against a zero observation",
+          ),
+        (error: Error) => assert.include(error.message, "no price observation"),
+      );
 
       await expectWithdrawError(
         this,
@@ -611,6 +662,7 @@ export default function () {
       await setupCappedPackage(this, { limits: { windowSeconds: ONE_HOUR } });
       const now = Number((await this.banksClient.getClock()).unixTimestamp);
       const windowIndex = Math.floor((now - startTimestamp) / ONE_HOUR);
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
 
       await withdraw(this, TOKEN_CAP);
       assert.deepEqual(await usage(this), {
@@ -618,6 +670,7 @@ export default function () {
         tokensUsed: TOKEN_CAP.toString(),
         quoteUsed: TOKEN_CAP_QUOTE_VALUE,
       });
+      assert.equal(await maxWithdrawal(this), "0");
       await expectWithdrawError(
         this,
         1,
@@ -626,6 +679,7 @@ export default function () {
       );
 
       await this.advanceBySeconds(ONE_HOUR);
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
       await withdraw(this, TOKEN_CAP);
       assert.deepEqual(await usage(this), {
         windowIndex: (windowIndex + 1).toString(),
@@ -636,6 +690,7 @@ export default function () {
 
     it("rejects a quote value that does not fit in a u64", async function () {
       await setupCappedPackage(this, { observation: 10n ** 26n });
+      assert.equal(await maxWithdrawal(this), "0");
 
       await expectWithdrawError(
         this,
@@ -653,6 +708,7 @@ export default function () {
           { priceThreshold: new BN(2e12), tokenAmount: new BN(trancheAmount) },
         ],
       });
+      assert.equal(await maxWithdrawal(this), trancheAmount.toString());
 
       await expectWithdrawError(
         this,
@@ -667,6 +723,7 @@ export default function () {
         tokensUsed: trancheAmount.toString(),
         quoteUsed: "7275239188",
       });
+      assert.equal(await maxWithdrawal(this), "0");
     });
   });
 }
