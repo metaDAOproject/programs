@@ -27,6 +27,7 @@ import {
   InitializePerformancePackageParams,
   InitializePerformancePackageWithLimitsParams,
   PerformancePackage,
+  ProposeChangeParams,
 } from "./types/index.js";
 
 export type CreatePriceBasedPerformancePackageClientParams = {
@@ -243,10 +244,7 @@ export class PriceBasedPerformancePackageClient {
   }
 
   public proposeChangeIx(params: {
-    params: {
-      changeType: any;
-      pdaNonce: number;
-    };
+    params: ProposeChangeParams;
     performancePackage: PublicKey;
     proposer: PublicKey;
   }) {

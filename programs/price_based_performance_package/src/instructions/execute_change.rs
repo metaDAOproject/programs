@@ -72,6 +72,8 @@ impl<'info> ExecuteChange<'info> {
             return Err(PriceBasedPerformancePackageError::InvalidPerformancePackageState.into());
         }
 
+        let clock = Clock::get()?;
+
         // Apply the change based on type
         match &change_request.change_type {
             ChangeType::Oracle { new_oracle_config } => {
@@ -80,11 +82,17 @@ impl<'info> ExecuteChange<'info> {
             ChangeType::Recipient { new_recipient } => {
                 performance_package.recipient = *new_recipient;
             }
+            ChangeType::UnlockTerms {
+                min_unlock_timestamp,
+                limits,
+            } => {
+                performance_package.min_unlock_timestamp = *min_unlock_timestamp;
+                performance_package.replace_withdrawal_policy(*limits, clock.unix_timestamp);
+            }
         }
 
         performance_package.seq_num += 1;
         // Emit event
-        let clock = Clock::get()?;
         emit_cpi!(ChangeExecuted {
             common: CommonFields::new(&clock, performance_package.seq_num),
             performance_package: performance_package.key(),

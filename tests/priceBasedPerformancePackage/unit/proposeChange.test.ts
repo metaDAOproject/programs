@@ -6,7 +6,14 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import BN from "bn.js";
+import { LimitsParams } from "@metadaoproject/programs";
 import { expectError } from "../../utils.js";
+import { setMockOracle } from "../utils.js";
+
+const THIRTY_DAYS = 30 * 24 * 60 * 60;
+const ONE_YEAR = 365 * 24 * 60 * 60;
+const INVALID_LIMITS_MESSAGE =
+  "Withdrawal limits must have non-zero caps, a future end, and a window of at least one second";
 
 export default function () {
   let createKey: Keypair;
@@ -257,5 +264,198 @@ export default function () {
       newOracleAccount.publicKey.toString(),
     );
     assert.equal(changeRequest.changeType.oracle.newOracleConfig.byteOffset, 8);
+  });
+
+  describe("with UnlockTerms", function () {
+    type UnlockTerms = { minUnlockTimestamp: BN; limits: LimitsParams | null };
+    let now: number;
+    let limits: LimitsParams;
+
+    beforeEach(async function () {
+      now = Number((await this.banksClient.getClock()).unixTimestamp);
+      limits = {
+        endTimestamp: new BN(now + ONE_YEAR),
+        windowSeconds: THIRTY_DAYS,
+        maxTokensPerWindow: new BN(50 * 10 ** 6),
+        maxQuotePerWindow: new BN(1_000 * 10 ** 6),
+        withdrawalMode: { both: {} },
+      };
+    });
+
+    // Builds the proposal under a fresh nonce. The authority (the payer)
+    // proposes unless a signer is given.
+    function proposeIx(
+      ctx: Mocha.Context,
+      terms: UnlockTerms,
+      proposer: Keypair | null = null,
+    ) {
+      const proposerKey = proposer?.publicKey ?? ctx.payer.publicKey;
+      const pdaNonce = Math.floor(Math.random() * 1_000_000);
+      const builder = ctx.priceBasedPerformancePackage
+        .proposeChangeIx({
+          params: { changeType: { unlockTerms: terms }, pdaNonce },
+          performancePackage,
+          proposer: proposerKey,
+        })
+        .signers(proposer ? [proposer] : []);
+      const changeRequest =
+        ctx.priceBasedPerformancePackage.getChangeRequestAddress(
+          performancePackage,
+          proposerKey,
+          pdaNonce,
+        );
+      return { builder, changeRequest };
+    }
+
+    // Plain JSON, so BNs and keys compare by value.
+    function asJson(value: unknown) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    async function expectInvalidLimits(
+      ctx: Mocha.Context,
+      override: Partial<LimitsParams>,
+    ) {
+      const callbacks = expectError(
+        "InvalidWithdrawalLimits",
+        INVALID_LIMITS_MESSAGE,
+      );
+
+      await proposeIx(ctx, {
+        minUnlockTimestamp: new BN(now),
+        limits: { ...limits, ...override },
+      })
+        .builder.rpc()
+        .then(callbacks[0], callbacks[1]);
+    }
+
+    it("stores the recipient's proposal", async function () {
+      const terms = { minUnlockTimestamp: new BN(now), limits };
+      const { builder, changeRequest } = proposeIx(this, terms, recipient);
+      await builder.rpc();
+
+      const stored =
+        await this.priceBasedPerformancePackage.getChangeRequest(changeRequest);
+      assert.isDefined(stored.proposerType.recipient);
+      assert.equal(
+        stored.performancePackage.toString(),
+        performancePackage.toString(),
+      );
+      assert.deepEqual(
+        asJson(stored.changeType),
+        asJson({ unlockTerms: terms }),
+      );
+    });
+
+    it("stores the authority's proposal", async function () {
+      const terms = { minUnlockTimestamp: new BN(now + THIRTY_DAYS), limits };
+      const { builder, changeRequest } = proposeIx(this, terms);
+      await builder.rpc();
+
+      const stored =
+        await this.priceBasedPerformancePackage.getChangeRequest(changeRequest);
+      assert.isDefined(stored.proposerType.authority);
+      assert.deepEqual(
+        asJson(stored.changeType),
+        asJson({ unlockTerms: terms }),
+      );
+    });
+
+    it("is allowed while the package is unlocking, unlike an oracle change", async function () {
+      await this.advanceBySeconds(2);
+      await setMockOracle(this, oracleAccount.publicKey, {
+        aggregator: 1_000_000n,
+      });
+      await this.priceBasedPerformancePackage
+        .startUnlockIx({
+          performancePackage,
+          oracleAccount: oracleAccount.publicKey,
+          recipient: recipient.publicKey,
+        })
+        .signers([recipient])
+        .rpc();
+
+      const { builder, changeRequest } = proposeIx(
+        this,
+        { minUnlockTimestamp: new BN(now), limits },
+        recipient,
+      );
+      await builder.rpc();
+
+      const stored =
+        await this.priceBasedPerformancePackage.getChangeRequest(changeRequest);
+      assert.isDefined(stored.changeType.unlockTerms);
+
+      const callbacks = expectError(
+        "InvalidPerformancePackageState",
+        "proposed an oracle change while unlocking",
+      );
+      await this.priceBasedPerformancePackage
+        .proposeChangeIx({
+          params: {
+            changeType: {
+              oracle: {
+                newOracleConfig: {
+                  oracleAccount: Keypair.generate().publicKey,
+                  byteOffset: 0,
+                },
+              },
+            },
+            pdaNonce: Math.floor(Math.random() * 1_000_000),
+          },
+          performancePackage,
+          proposer: recipient.publicKey,
+        })
+        .signers([recipient])
+        .rpc()
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("rejects a zero token cap", async function () {
+      await expectInvalidLimits(this, { maxTokensPerWindow: new BN(0) });
+    });
+
+    it("rejects a zero quote cap", async function () {
+      await expectInvalidLimits(this, { maxQuotePerWindow: new BN(0) });
+    });
+
+    it("rejects an end timestamp at or before now", async function () {
+      await expectInvalidLimits(this, { endTimestamp: new BN(now) });
+    });
+
+    it("rejects a window of zero seconds", async function () {
+      await expectInvalidLimits(this, { windowSeconds: 0 });
+    });
+
+    it("allows no limits and a cliff in the past", async function () {
+      const terms = {
+        minUnlockTimestamp: new BN(now - ONE_YEAR),
+        limits: null,
+      };
+      const { builder, changeRequest } = proposeIx(this, terms);
+      await builder.rpc();
+
+      const stored =
+        await this.priceBasedPerformancePackage.getChangeRequest(changeRequest);
+      assert.deepEqual(
+        asJson(stored.changeType),
+        asJson({ unlockTerms: terms }),
+      );
+    });
+
+    it("rejects a third party", async function () {
+      const callbacks = expectError(
+        "UnauthorizedChangeRequest",
+        "an outsider proposed unlock terms",
+      );
+
+      await proposeIx(
+        this,
+        { minUnlockTimestamp: new BN(now), limits },
+        Keypair.generate(),
+      )
+        .builder.rpc()
+        .then(callbacks[0], callbacks[1]);
+    });
   });
 }

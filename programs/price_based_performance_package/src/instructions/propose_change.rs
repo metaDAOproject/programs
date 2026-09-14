@@ -56,6 +56,15 @@ impl<'info> ProposeChange<'info> {
             return Err(PriceBasedPerformancePackageError::InvalidPerformancePackageState.into());
         }
 
+        // Ensure proposed limits are valid; the cliff itself may be any time, past or future.
+        if let ChangeType::UnlockTerms {
+            limits: Some(limits),
+            ..
+        } = &params.change_type
+        {
+            limits.validate(Clock::get()?.unix_timestamp)?;
+        }
+
         Ok(())
     }
 

@@ -31,6 +31,10 @@ export type LimitsParams =
   IdlTypes<PriceBasedPerformancePackageProgram>["LimitsParams"];
 export type InitializePerformancePackageWithLimitsParams =
   IdlTypes<PriceBasedPerformancePackageProgram>["InitializePerformancePackageWithLimitsParams"];
+export type ChangeType =
+  IdlTypes<PriceBasedPerformancePackageProgram>["ChangeType"];
+export type ProposeChangeParams =
+  IdlTypes<PriceBasedPerformancePackageProgram>["ProposeChangeParams"];
 
 export type PerformancePackageInitializedEvent =
   IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageInitialized"];

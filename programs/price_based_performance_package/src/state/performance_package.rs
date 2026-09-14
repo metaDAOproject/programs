@@ -122,6 +122,30 @@ impl PerformancePackage {
             .as_mut()
             .filter(|policy| now < policy.limits.end_timestamp)
     }
+
+    /// Replace the withdrawal policy as a whole. `None` removes it.
+    pub fn replace_withdrawal_policy(&mut self, limits: Option<LimitsParams>, now: i64) {
+        let current = self.withdrawal_policy;
+
+        self.withdrawal_policy = limits.map(|new_limits| match current {
+            // If the window size is the same, keep the same window and usage
+            Some(current) if current.limits.window_seconds == new_limits.window_seconds => {
+                WithdrawalPolicy {
+                    limits: new_limits.into_limits(current.limits.start_timestamp),
+                    usage: current.usage,
+                }
+            }
+            // If the window size is different, start a new window NOW and keep the current usage
+            Some(current) => WithdrawalPolicy {
+                limits: new_limits.into_limits(now),
+                usage: WindowUsage {
+                    window_index: 0,
+                    ..current.usage
+                },
+            },
+            None => WithdrawalPolicy::new(new_limits.into_limits(now)),
+        });
+    }
 }
 
 /// The 0.6.0 layout, decoded by the resize before an account is migrated
@@ -343,6 +367,11 @@ pub enum ChangeType {
     Oracle { new_oracle_config: OracleConfig },
     /// Change the token recipient
     Recipient { new_recipient: Pubkey },
+    /// Change the unlock cliff and the withdrawal limits together; `None` limits means uncapped
+    UnlockTerms {
+        min_unlock_timestamp: i64,
+        limits: Option<LimitsParams>,
+    },
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]

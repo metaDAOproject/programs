@@ -3,6 +3,7 @@ import {
   Keypair,
   PublicKey,
   SystemProgram,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import BN from "bn.js";
 import { LimitsParams, Tranche } from "@metadaoproject/programs";
@@ -200,4 +201,159 @@ export async function runUnlockCycle(
     .completeUnlockIx({ performancePackage, oracleAccount })
     .preInstructions([uniqueTxIx])
     .rpc();
+}
+
+// The sellable package: two tranches of 2,580,000 tokens on a Dao whose pool
+// opens at $0.0728 per token. The first tranche unlocks against the Dao's TWAP
+// and the second stays locked.
+export const SELLABLE_TRANCHE_AMOUNT = 2_580_000 * 10 ** 6;
+const SELLABLE_FIRST_THRESHOLD = new BN(5e10);
+const SELLABLE_LOCKED_THRESHOLD = new BN(2e12);
+const SELLABLE_POOL_BASE = 10_000_000 * 10 ** 6;
+const SELLABLE_POOL_QUOTE = 728_000 * 10 ** 6;
+// Kept by the payer for oracle-stamping buys
+const PAYER_RESERVE = 1_000 * 10 ** 6;
+const ORACLE_STAMP_BUY = 1 * 10 ** 6;
+const ONE_DAY = 24 * 60 * 60;
+
+let uniqueTxCount = 0;
+
+// A distinct compute-unit price gives otherwise identical transactions
+// different hashes, so a repeat is not rejected as already processed.
+export function uniqueTxIx(): TransactionInstruction {
+  uniqueTxCount += 1;
+  return ComputeBudgetProgram.setComputeUnitPrice({
+    microLamports: uniqueTxCount,
+  });
+}
+
+// A small buy from the payer, which moves the Dao oracle's last updated
+// timestamp to now.
+export async function stampDaoOracle(
+  ctx: Mocha.Context,
+  {
+    dao,
+    tokenMint,
+    quoteMint,
+  }: { dao: PublicKey; tokenMint: PublicKey; quoteMint: PublicKey },
+): Promise<void> {
+  await ctx.futarchy
+    .spotSwapIx({
+      dao,
+      baseMint: tokenMint,
+      quoteMint,
+      swapType: "buy",
+      inputAmount: new BN(ORACLE_STAMP_BUY),
+    })
+    .preInstructions([uniqueTxIx()])
+    .rpc();
+}
+
+// Unlocks the first tranche off the Dao's own TWAP: the oracle is stamped
+// right before start_unlock and again one TWAP length later for
+// complete_unlock.
+export async function unlockFirstTrancheOnDao(
+  ctx: Mocha.Context,
+  {
+    performancePackage,
+    dao,
+    tokenMint,
+    quoteMint,
+    recipient,
+  }: {
+    performancePackage: PublicKey;
+    dao: PublicKey;
+    tokenMint: PublicKey;
+    quoteMint: PublicKey;
+    recipient: Keypair;
+  },
+): Promise<void> {
+  await stampDaoOracle(ctx, { dao, tokenMint, quoteMint });
+  await ctx.priceBasedPerformancePackage
+    .startUnlockIx({
+      performancePackage,
+      oracleAccount: dao,
+      recipient: recipient.publicKey,
+    })
+    .preInstructions([uniqueTxIx()])
+    .signers([recipient])
+    .rpc();
+
+  const { twapLengthSeconds } =
+    await ctx.priceBasedPerformancePackage.getPerformancePackage(
+      performancePackage,
+    );
+  await ctx.advanceBySeconds(twapLengthSeconds);
+  await stampDaoOracle(ctx, { dao, tokenMint, quoteMint });
+  await ctx.priceBasedPerformancePackage
+    .completeUnlockIx({ performancePackage, oracleAccount: dao })
+    .preInstructions([uniqueTxIx()])
+    .rpc();
+}
+
+// Creates fresh mints, a Dao with a seeded pool and a package on it holding
+// two tranches of SELLABLE_TRANCHE_AMOUNT, then unlocks the first tranche.
+// Without `limits` the package is uncapped.
+export async function setupSellablePackage(
+  ctx: Mocha.Context,
+  { recipient, limits }: { recipient: Keypair; limits?: LimitsParams },
+): Promise<{
+  tokenMint: PublicKey;
+  quoteMint: PublicKey;
+  dao: PublicKey;
+  performancePackage: PublicKey;
+}> {
+  const tokenMint = await ctx.createMint(ctx.payer.publicKey, 6);
+  const quoteMint = await ctx.createMint(ctx.payer.publicKey, 6);
+  await ctx.mintTo(
+    tokenMint,
+    ctx.payer.publicKey,
+    ctx.payer,
+    SELLABLE_POOL_BASE + 2 * SELLABLE_TRANCHE_AMOUNT + PAYER_RESERVE,
+  );
+  await ctx.mintTo(
+    quoteMint,
+    ctx.payer.publicKey,
+    ctx.payer,
+    SELLABLE_POOL_QUOTE + PAYER_RESERVE,
+  );
+
+  const { dao, performancePackage } = await setupPackageOnDao(ctx, {
+    tokenMint,
+    quoteMint,
+    recipient: recipient.publicKey,
+    tranches: [
+      {
+        priceThreshold: SELLABLE_FIRST_THRESHOLD,
+        tokenAmount: new BN(SELLABLE_TRANCHE_AMOUNT),
+      },
+      {
+        priceThreshold: SELLABLE_LOCKED_THRESHOLD,
+        tokenAmount: new BN(SELLABLE_TRANCHE_AMOUNT),
+      },
+    ],
+    limits,
+  });
+
+  await ctx.futarchy
+    .provideLiquidityIx({
+      dao,
+      baseMint: tokenMint,
+      quoteMint,
+      quoteAmount: new BN(SELLABLE_POOL_QUOTE),
+      maxBaseAmount: new BN(SELLABLE_POOL_BASE),
+    })
+    .rpc();
+
+  // The Dao's TWAP only starts recording after its one-day start delay
+  await ctx.advanceBySeconds(ONE_DAY + 1);
+  await unlockFirstTrancheOnDao(ctx, {
+    performancePackage,
+    dao,
+    tokenMint,
+    quoteMint,
+    recipient,
+  });
+
+  return { tokenMint, quoteMint, dao, performancePackage };
 }

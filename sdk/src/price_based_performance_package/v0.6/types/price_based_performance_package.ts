@@ -551,16 +551,14 @@ export type PriceBasedPerformancePackage = {
           isMut: true;
           isSigner: false;
           docs: [
-            "The package's quote ATA that receives the proceeds before they are forwarded - created if needed",
+            "The package's quote ATA that receives the proceeds before they are forwarded",
           ];
         },
         {
           name: "recipientQuoteAccount";
           isMut: true;
           isSigner: false;
-          docs: [
-            "The recipient's quote ATA where the proceeds are sent - created if needed",
-          ];
+          docs: ["The recipient's quote ATA where the proceeds are sent"];
         },
         {
           name: "recipient";
@@ -1275,6 +1273,23 @@ export type PriceBasedPerformancePackage = {
               {
                 name: "newRecipient";
                 type: "publicKey";
+              },
+            ];
+          },
+          {
+            name: "UnlockTerms";
+            fields: [
+              {
+                name: "minUnlockTimestamp";
+                type: "i64";
+              },
+              {
+                name: "limits";
+                type: {
+                  option: {
+                    defined: "LimitsParams";
+                  };
+                };
               },
             ];
           },
@@ -2228,16 +2243,14 @@ export const IDL: PriceBasedPerformancePackage = {
           isMut: true,
           isSigner: false,
           docs: [
-            "The package's quote ATA that receives the proceeds before they are forwarded - created if needed",
+            "The package's quote ATA that receives the proceeds before they are forwarded",
           ],
         },
         {
           name: "recipientQuoteAccount",
           isMut: true,
           isSigner: false,
-          docs: [
-            "The recipient's quote ATA where the proceeds are sent - created if needed",
-          ],
+          docs: ["The recipient's quote ATA where the proceeds are sent"],
         },
         {
           name: "recipient",
@@ -2952,6 +2965,23 @@ export const IDL: PriceBasedPerformancePackage = {
               {
                 name: "newRecipient",
                 type: "publicKey",
+              },
+            ],
+          },
+          {
+            name: "UnlockTerms",
+            fields: [
+              {
+                name: "minUnlockTimestamp",
+                type: "i64",
+              },
+              {
+                name: "limits",
+                type: {
+                  option: {
+                    defined: "LimitsParams",
+                  },
+                },
               },
             ],
           },
