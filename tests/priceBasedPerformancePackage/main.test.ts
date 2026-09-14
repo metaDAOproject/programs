@@ -9,6 +9,7 @@ import changePerformancePackageAuthority from "./unit/changePerformancePackageAu
 import executeChange from "./unit/executeChange.test.js";
 import burnPerformancePackage from "./unit/burnPerformancePackage.test.js";
 import resizePerformancePackage from "./unit/resizePerformancePackage.test.js";
+import legacyPackageToCappedWithdrawals from "./integration/legacyPackageToCappedWithdrawals.test.js";
 
 export default function suite() {
   describe("#initialize_performance_package", initializePerformancePackage);
@@ -28,4 +29,8 @@ export default function suite() {
   describe("#execute_change", executeChange);
   describe("#burn_performance_package", burnPerformancePackage);
   describe("#resize_performance_package", resizePerformancePackage);
+  describe(
+    "legacy package to capped withdrawals",
+    legacyPackageToCappedWithdrawals,
+  );
 }
