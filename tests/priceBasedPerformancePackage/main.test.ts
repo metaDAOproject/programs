@@ -3,6 +3,7 @@ import initializePerformancePackageWithLimits from "./unit/initializePerformance
 import startUnlock from "./unit/startUnlock.test.js";
 import completeUnlock from "./unit/completeUnlock.test.js";
 import withdrawTokens from "./unit/withdrawTokens.test.js";
+import withdrawViaSell from "./unit/withdrawViaSell.test.js";
 import proposeChange from "./unit/proposeChange.test.js";
 import changePerformancePackageAuthority from "./unit/changePerformancePackageAuthority.test.js";
 import executeChange from "./unit/executeChange.test.js";
@@ -18,6 +19,7 @@ export default function suite() {
   describe("#start_unlock", startUnlock);
   describe("#complete_unlock", completeUnlock);
   describe("#withdraw_tokens", withdrawTokens);
+  describe("#withdraw_via_sell", withdrawViaSell);
   describe("#propose_change", proposeChange);
   describe(
     "#change_performance_package_authority",

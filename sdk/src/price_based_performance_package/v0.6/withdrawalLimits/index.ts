@@ -14,6 +14,11 @@ import type {
 
 const PRICE_SCALE = new BN(10).pow(new BN(12));
 
+// Futarchy's spot swap fees, in basis points
+const MAX_BPS = new BN(10_000);
+const PROTOCOL_TAKER_FEE_BPS = new BN(50);
+const LP_TAKER_FEE_BPS = new BN(0);
+
 type SpotPool = IdlTypes<FutarchyProgram>["Pool"];
 
 // Anchor's decoded Dao type drops the pool struct nested in the PoolState enum, so it is retyped here.
@@ -132,4 +137,21 @@ export function getMaxTokenWithdrawal({
     new BN(0),
     BN.min(withdrawable, BN.min(tokensRoom, tokensForQuoteRoom)),
   );
+}
+
+/** The quote atoms the Dao's spot pool pays for `amount` base atoms at its current reserves: the protocol taker fee comes off the input, then the constant-product swap. Exact while the pool is in its spot state and no other swap lands first. */
+export function getSellProceedsEstimate(dao: Dao, amount: BN): BN {
+  const pool = getSpotPool(dao);
+
+  const inputAfterProtocolFee = amount
+    .mul(MAX_BPS.sub(PROTOCOL_TAKER_FEE_BPS))
+    .div(MAX_BPS);
+  const inputAfterLpFee = inputAfterProtocolFee.mul(
+    MAX_BPS.sub(LP_TAKER_FEE_BPS),
+  );
+
+  const numerator = inputAfterLpFee.mul(pool.quoteReserves);
+  const denominator = pool.baseReserves.mul(MAX_BPS).add(inputAfterLpFee);
+
+  return numerator.div(denominator);
 }

@@ -65,6 +65,18 @@ pub struct TokensWithdrawn {
 }
 
 #[event]
+pub struct TokensSold {
+    pub common: CommonFields,
+    pub performance_package: Pubkey,
+    pub recipient: Pubkey,
+    pub amount: u64,
+    pub quote_received: u64,
+    pub min_quote_out: u64,
+    /// Window usage after this sale; `None` when no limits were active
+    pub capped: Option<WindowUsage>,
+}
+
+#[event]
 pub struct ChangeProposed {
     pub common: CommonFields,
     pub locker: Pubkey,

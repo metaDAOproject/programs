@@ -15,6 +15,8 @@ export type OracleConfig =
 export type Tranche = IdlTypes<PriceBasedPerformancePackageProgram>["Tranche"];
 export type WithdrawTokensParams =
   IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawTokensParams"];
+export type WithdrawViaSellParams =
+  IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawViaSellParams"];
 export type WithdrawalPolicy =
   IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawalPolicy"];
 export type CappedWithdrawal =
@@ -38,6 +40,8 @@ export type UnlockCompletedEvent =
   IdlEvents<PriceBasedPerformancePackageProgram>["UnlockCompleted"];
 export type TokensWithdrawnEvent =
   IdlEvents<PriceBasedPerformancePackageProgram>["TokensWithdrawn"];
+export type TokensSoldEvent =
+  IdlEvents<PriceBasedPerformancePackageProgram>["TokensSold"];
 export type ChangeProposedEvent =
   IdlEvents<PriceBasedPerformancePackageProgram>["ChangeProposed"];
 export type ChangeExecutedEvent =
@@ -49,6 +53,7 @@ export type PriceBasedPerformancePackageEvent =
   | UnlockStartedEvent
   | UnlockCompletedEvent
   | TokensWithdrawnEvent
+  | TokensSoldEvent
   | ChangeProposedEvent
   | ChangeExecutedEvent
   | PerformancePackageAuthorityChangedEvent;

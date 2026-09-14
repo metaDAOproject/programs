@@ -100,4 +100,12 @@ pub mod price_based_performance_package {
     ) -> Result<()> {
         WithdrawTokens::handle(ctx, params)
     }
+
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn withdraw_via_sell(
+        ctx: Context<WithdrawViaSell>,
+        params: WithdrawViaSellParams,
+    ) -> Result<()> {
+        WithdrawViaSell::handle(ctx, params)
+    }
 }

@@ -1,5 +1,6 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import {
+  ComputeBudgetProgram,
   PublicKey,
   Transaction,
   TransactionInstruction,
@@ -14,7 +15,10 @@ import {
   PriceBasedPerformancePackage,
   IDL as PriceBasedPerformancePackageIDL,
 } from "./types/price_based_performance_package.js";
-import { PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID } from "../../constants.js";
+import {
+  FUTARCHY_V0_6_PROGRAM_ID,
+  PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
+} from "../../constants.js";
 import BN from "bn.js";
 // import { OracleConfig } from "./types/index.js";
 import { getChangeRequestAddr, getPerformancePackageAddr } from "./pda.js";
@@ -177,6 +181,65 @@ export class PriceBasedPerformancePackageClient {
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     });
+  }
+
+  // The Dao is the package's oracle account; futarchy's AMM vaults are the Dao's ATAs.
+  public withdrawViaSellIx({
+    performancePackage,
+    dao,
+    tokenMint,
+    quoteMint,
+    recipient,
+    amount,
+    minQuoteOut,
+    payer = this.provider.publicKey,
+  }: {
+    performancePackage: PublicKey;
+    dao: PublicKey;
+    tokenMint: PublicKey;
+    quoteMint: PublicKey;
+    recipient: PublicKey;
+    amount: BN;
+    minQuoteOut: BN;
+    payer?: PublicKey;
+  }) {
+    return this.program.methods
+      .withdrawViaSell({ amount, minQuoteOut })
+      .accounts({
+        performancePackage,
+        dao,
+        performancePackageTokenVault: getAssociatedTokenAddressSync(
+          tokenMint,
+          performancePackage,
+          true,
+        ),
+        tokenMint,
+        quoteMint,
+        ammBaseVault: getAssociatedTokenAddressSync(tokenMint, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
+        packageQuoteAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          performancePackage,
+          true,
+        ),
+        recipientQuoteAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          recipient,
+          true,
+        ),
+        recipient,
+        payer,
+        futarchyProgram: FUTARCHY_V0_6_PROGRAM_ID,
+        futarchyEventAuthority: getEventAuthorityAddr(
+          FUTARCHY_V0_6_PROGRAM_ID,
+        )[0],
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ]);
   }
 
   public proposeChangeIx(params: {

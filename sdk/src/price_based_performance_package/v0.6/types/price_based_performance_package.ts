@@ -504,6 +504,121 @@ export type PriceBasedPerformancePackage = {
         },
       ];
     },
+    {
+      name: "withdrawViaSell";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+          docs: ["The futarchy Dao whose spot pool buys the tokens"];
+        },
+        {
+          name: "performancePackageTokenVault";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The token account where locked tokens are stored; the sale is paid out of it",
+          ];
+        },
+        {
+          name: "tokenMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "ammBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "packageQuoteAccount";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The package's quote ATA that receives the proceeds before they are forwarded - created if needed",
+          ];
+        },
+        {
+          name: "recipientQuoteAccount";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The recipient's quote ATA where the proceeds are sent - created if needed",
+          ];
+        },
+        {
+          name: "recipient";
+          isMut: false;
+          isSigner: true;
+          docs: ["Only the recipient can withdraw"];
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+          docs: ["Payer for creating the ATAs if needed"];
+        },
+        {
+          name: "futarchyProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "futarchyEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "WithdrawViaSellParams";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -800,6 +915,22 @@ export type PriceBasedPerformancePackage = {
         fields: [
           {
             name: "amount";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "WithdrawViaSellParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
+            type: "u64";
+          },
+          {
+            name: "minQuoteOut";
             type: "u64";
           },
         ];
@@ -1272,6 +1403,52 @@ export type PriceBasedPerformancePackage = {
           type: {
             option: {
               defined: "CappedWithdrawal";
+            };
+          };
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "TokensSold";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "recipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "quoteReceived";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "minQuoteOut";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "capped";
+          type: {
+            option: {
+              defined: "WindowUsage";
             };
           };
           index: false;
@@ -2004,6 +2181,121 @@ export const IDL: PriceBasedPerformancePackage = {
         },
       ],
     },
+    {
+      name: "withdrawViaSell",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+          docs: ["The futarchy Dao whose spot pool buys the tokens"],
+        },
+        {
+          name: "performancePackageTokenVault",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The token account where locked tokens are stored; the sale is paid out of it",
+          ],
+        },
+        {
+          name: "tokenMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "ammBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "packageQuoteAccount",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The package's quote ATA that receives the proceeds before they are forwarded - created if needed",
+          ],
+        },
+        {
+          name: "recipientQuoteAccount",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The recipient's quote ATA where the proceeds are sent - created if needed",
+          ],
+        },
+        {
+          name: "recipient",
+          isMut: false,
+          isSigner: true,
+          docs: ["Only the recipient can withdraw"],
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+          docs: ["Payer for creating the ATAs if needed"],
+        },
+        {
+          name: "futarchyProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "futarchyEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "WithdrawViaSellParams",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -2300,6 +2592,22 @@ export const IDL: PriceBasedPerformancePackage = {
         fields: [
           {
             name: "amount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawViaSellParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
+            type: "u64",
+          },
+          {
+            name: "minQuoteOut",
             type: "u64",
           },
         ],
@@ -2772,6 +3080,52 @@ export const IDL: PriceBasedPerformancePackage = {
           type: {
             option: {
               defined: "CappedWithdrawal",
+            },
+          },
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "TokensSold",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "recipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "quoteReceived",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "minQuoteOut",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "capped",
+          type: {
+            option: {
+              defined: "WindowUsage",
             },
           },
           index: false,
