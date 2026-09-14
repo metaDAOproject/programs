@@ -1,7 +1,7 @@
 # Futarchy Fuzz Test
 
 This directory contains the Wake.sol stateful fuzz test for the Futarchy
-program at commit `05f8a5c8efc22f4cf157e313d6d768475526a004`. It has 29
+program at commit `658c342c2f1ea11917d5fed10539d078e9e1a3b7`. It has 29
 instruction-level happy paths, 29 unhappy paths, two support flows, and twelve
 global invariants. Each instruction wrapper also checks its
 own postconditions or atomic rollback behavior.
@@ -46,8 +46,8 @@ tests/fixtures/squads-program-config
 python -m pytest -q -s fuzz/futarchy/test_fuzz.py
 ```
 
-Use `FUTARCHY_FUZZ_SEQUENCES` and `FUTARCHY_FUZZ_FLOWS` to change the number of
-sequences and flows for local or pipeline runs.
+Use `FUZZ_SEQUENCES` and `FUZZ_FLOWS` to change the number of sequences and
+flows for local or pipeline runs.
 
 The test prints a base seed. Reproduce that run with:
 
