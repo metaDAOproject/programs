@@ -1,4 +1,5 @@
 import futarchyAmm from "./integration/futarchyAmm.test.js";
+import gatedProposalSettlement from "./integration/gatedProposalSettlement.test.js";
 
 import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
@@ -89,4 +90,5 @@ export default function suite() {
   // describe("full proposal", fullProposal);
   // describe("proposal with a squads batch tx", proposalBatchTx);
   describe("futarchy amm", futarchyAmm);
+  describe("integration: gated proposal settlement", gatedProposalSettlement);
 }
