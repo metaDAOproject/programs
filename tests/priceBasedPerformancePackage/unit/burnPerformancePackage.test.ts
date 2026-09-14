@@ -13,6 +13,7 @@ import { runUnlockCycle, setDaoOracle, setupPackageOnDao } from "../utils.js";
 
 const TRANCHE_AMOUNT = 100 * 10 ** 6;
 const TOTAL_AMOUNT = 2 * TRANCHE_AMOUNT;
+const STRAY_QUOTE_AMOUNT = 500 * 10 ** 6;
 const THIRTY_DAYS = 30 * 24 * 60 * 60;
 const ONE_YEAR = 365 * 24 * 60 * 60;
 
@@ -74,14 +75,30 @@ export default function () {
     });
   }
 
-  function burnIx(ctx: Mocha.Context) {
+  function burnIx(
+    ctx: Mocha.Context,
+    quoteSweep: { quoteMint?: PublicKey; quoteDestination?: PublicKey } = {},
+  ) {
     return ctx.priceBasedPerformancePackage.burnPerformancePackageIx({
       performancePackage,
       tokenMint,
       recipient: recipient.publicKey,
       admin: admin.publicKey,
       spillAccount: spillAccount.publicKey,
+      ...quoteSweep,
     });
+  }
+
+  function vaultAddress() {
+    return getAssociatedTokenAddressSync(tokenMint, performancePackage, true);
+  }
+
+  async function lamportsOf(ctx: Mocha.Context, accounts: PublicKey[]) {
+    let total = 0n;
+    for (const account of accounts) {
+      total += BigInt((await ctx.banksClient.getAccount(account)).lamports);
+    }
+    return total;
   }
 
   function withdrawIx(ctx: Mocha.Context, amount: number) {
@@ -104,9 +121,10 @@ export default function () {
     await unlockTranches(this, BigInt(1e12));
 
     const supplyBefore = await mintSupply(this);
-    const packageLamports = (
-      await this.banksClient.getAccount(performancePackage)
-    ).lamports;
+    const closedLamports = await lamportsOf(this, [
+      performancePackage,
+      vaultAddress(),
+    ]);
 
     await burnIx(this).signers([admin]).rpc();
 
@@ -114,16 +132,16 @@ export default function () {
       await this.getTokenBalance(tokenMint, recipient.publicKey),
       BigInt(TRANCHE_AMOUNT),
     );
-    assert.equal(await this.getTokenBalance(tokenMint, performancePackage), 0n);
     assert.equal(
       supplyBefore - (await mintSupply(this)),
       BigInt(TOTAL_AMOUNT - TRANCHE_AMOUNT),
     );
 
     assert.isNull(await this.banksClient.getAccount(performancePackage));
+    assert.isNull(await this.banksClient.getAccount(vaultAddress()));
     assert.equal(
       await this.banksClient.getBalance(spillAccount.publicKey),
-      BigInt(packageLamports),
+      closedLamports,
     );
   });
 
@@ -156,6 +174,7 @@ export default function () {
     );
     assert.equal(await mintSupply(this), supplyBefore);
     assert.isNull(await this.banksClient.getAccount(performancePackage));
+    assert.isNull(await this.banksClient.getAccount(vaultAddress()));
   });
 
   it("pays the whole withdrawable balance when the window's token cap is used up", async function () {
@@ -235,5 +254,101 @@ export default function () {
       adminBefore - (await this.banksClient.getBalance(admin.publicKey)),
       rent.minimumBalance(BigInt(ACCOUNT_SIZE)),
     );
+  });
+
+  it("sweeps the quote account to the destination and closes it along with the vault", async function () {
+    const quoteMint = await this.createMint(this.payer.publicKey, 6);
+    await this.mintTo(
+      quoteMint,
+      performancePackage,
+      this.payer,
+      STRAY_QUOTE_AMOUNT,
+    );
+    const destinationOwner = Keypair.generate().publicKey;
+    const quoteDestination = await this.createTokenAccount(
+      quoteMint,
+      destinationOwner,
+    );
+    const packageQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
+      performancePackage,
+      true,
+    );
+    const closedLamports = await lamportsOf(this, [
+      performancePackage,
+      vaultAddress(),
+      packageQuoteAccount,
+    ]);
+
+    await burnIx(this, { quoteMint, quoteDestination }).signers([admin]).rpc();
+
+    assert.equal(
+      await this.getTokenBalance(quoteMint, destinationOwner),
+      BigInt(STRAY_QUOTE_AMOUNT),
+    );
+    assert.isNull(await this.banksClient.getAccount(packageQuoteAccount));
+    assert.isNull(await this.banksClient.getAccount(vaultAddress()));
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+    assert.equal(
+      await this.banksClient.getBalance(spillAccount.publicKey),
+      closedLamports,
+    );
+  });
+
+  it("closes an empty quote account", async function () {
+    const quoteMint = await this.createMint(this.payer.publicKey, 6);
+    const packageQuoteAccount = await this.createTokenAccount(
+      quoteMint,
+      performancePackage,
+    );
+    const destinationOwner = Keypair.generate().publicKey;
+    const quoteDestination = await this.createTokenAccount(
+      quoteMint,
+      destinationOwner,
+    );
+
+    await burnIx(this, { quoteMint, quoteDestination }).signers([admin]).rpc();
+
+    assert.equal(await this.getTokenBalance(quoteMint, destinationOwner), 0n);
+    assert.isNull(await this.banksClient.getAccount(packageQuoteAccount));
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+  });
+
+  it("rejects the package's token mint as the quote mint", async function () {
+    const quoteDestination = await this.createTokenAccount(
+      tokenMint,
+      Keypair.generate().publicKey,
+    );
+
+    const callbacks = expectError(
+      "InvalidQuoteMint",
+      "swept the vault as a quote account",
+    );
+    await burnIx(this, { quoteMint: tokenMint, quoteDestination })
+      .signers([admin])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    assert.isNotNull(await this.banksClient.getAccount(performancePackage));
+    assert.equal(
+      await this.getTokenBalance(tokenMint, performancePackage),
+      BigInt(TOTAL_AMOUNT),
+    );
+  });
+
+  it("rejects a quote account without a destination", async function () {
+    const quoteMint = await this.createMint(this.payer.publicKey, 6);
+    await this.createTokenAccount(quoteMint, performancePackage);
+
+    const callbacks = expectError(
+      "QuoteSweepAccountsIncomplete",
+      "burned with the quote account but no destination",
+    );
+    await burnIx(this, { quoteMint })
+      .signers([admin])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    assert.isNotNull(await this.banksClient.getAccount(performancePackage));
   });
 }

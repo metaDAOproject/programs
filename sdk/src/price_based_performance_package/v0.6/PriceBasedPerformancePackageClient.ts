@@ -295,12 +295,17 @@ export class PriceBasedPerformancePackageClient {
     recipient,
     admin = this.provider.publicKey,
     spillAccount = admin,
+    quoteMint,
+    quoteDestination,
   }: {
     performancePackage: PublicKey;
     tokenMint: PublicKey;
     recipient: PublicKey;
     admin?: PublicKey;
     spillAccount?: PublicKey;
+    /** Pass both to sweep the package's quote ATA into `quoteDestination` and close it */
+    quoteMint?: PublicKey;
+    quoteDestination?: PublicKey;
   }) {
     return this.program.methods.burnPerformancePackage().accounts({
       performancePackage,
@@ -318,6 +323,11 @@ export class PriceBasedPerformancePackageClient {
       admin,
       spillAccount,
       tokenMint,
+      quoteMint: quoteMint ?? null,
+      packageQuoteAccount: quoteMint
+        ? getAssociatedTokenAddressSync(quoteMint, performancePackage, true)
+        : null,
+      quoteDestination: quoteDestination ?? null,
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,

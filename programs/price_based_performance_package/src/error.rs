@@ -50,4 +50,8 @@ pub enum PriceBasedPerformancePackageError {
     WithdrawViaSellDisabled,
     #[msg("Performance package has not been resized to the current layout")]
     AccountNotMigrated,
+    #[msg("Quote mint must differ from the package's token mint")]
+    InvalidQuoteMint,
+    #[msg("The package's quote account and the quote destination must be passed together")]
+    QuoteSweepAccountsIncomplete,
 }

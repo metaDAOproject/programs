@@ -357,6 +357,9 @@ export type PriceBasedPerformancePackage = {
           name: "performancePackageTokenVault";
           isMut: true;
           isSigner: false;
+          docs: [
+            "Emptied by the payout and the burn, then closed to the spill account",
+          ];
         },
         {
           name: "recipient";
@@ -385,6 +388,31 @@ export type PriceBasedPerformancePackage = {
           name: "tokenMint";
           isMut: true;
           isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
+          docs: [
+            "The mint of the package's quote ATA; any mint other than the package's token mint",
+          ];
+        },
+        {
+          name: "packageQuoteAccount";
+          isMut: true;
+          isSigner: false;
+          isOptional: true;
+          docs: [
+            "The package's quote ATA, swept into `quote_destination` and closed when passed",
+          ];
+        },
+        {
+          name: "quoteDestination";
+          isMut: true;
+          isSigner: false;
+          isOptional: true;
+          docs: ["Where the quote balance goes, chosen by the admin"];
         },
         {
           name: "systemProgram";
@@ -1687,6 +1715,16 @@ export type PriceBasedPerformancePackage = {
       name: "AccountNotMigrated";
       msg: "Performance package has not been resized to the current layout";
     },
+    {
+      code: 6024;
+      name: "InvalidQuoteMint";
+      msg: "Quote mint must differ from the package's token mint";
+    },
+    {
+      code: 6025;
+      name: "QuoteSweepAccountsIncomplete";
+      msg: "The package's quote account and the quote destination must be passed together";
+    },
   ];
 };
 
@@ -2049,6 +2087,9 @@ export const IDL: PriceBasedPerformancePackage = {
           name: "performancePackageTokenVault",
           isMut: true,
           isSigner: false,
+          docs: [
+            "Emptied by the payout and the burn, then closed to the spill account",
+          ],
         },
         {
           name: "recipient",
@@ -2077,6 +2118,31 @@ export const IDL: PriceBasedPerformancePackage = {
           name: "tokenMint",
           isMut: true,
           isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
+          docs: [
+            "The mint of the package's quote ATA; any mint other than the package's token mint",
+          ],
+        },
+        {
+          name: "packageQuoteAccount",
+          isMut: true,
+          isSigner: false,
+          isOptional: true,
+          docs: [
+            "The package's quote ATA, swept into `quote_destination` and closed when passed",
+          ],
+        },
+        {
+          name: "quoteDestination",
+          isMut: true,
+          isSigner: false,
+          isOptional: true,
+          docs: ["Where the quote balance goes, chosen by the admin"],
         },
         {
           name: "systemProgram",
@@ -3378,6 +3444,16 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6023,
       name: "AccountNotMigrated",
       msg: "Performance package has not been resized to the current layout",
+    },
+    {
+      code: 6024,
+      name: "InvalidQuoteMint",
+      msg: "Quote mint must differ from the package's token mint",
+    },
+    {
+      code: 6025,
+      name: "QuoteSweepAccountsIncomplete",
+      msg: "The package's quote account and the quote destination must be passed together",
     },
   ],
 };
