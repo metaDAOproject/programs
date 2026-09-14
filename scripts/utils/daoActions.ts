@@ -35,6 +35,10 @@ import {
   FutarchyClient,
   UpdateDaoParams,
 } from "@metadaoproject/programs/futarchy/v0.6";
+import {
+  LimitsParams,
+  PriceBasedPerformancePackageClient,
+} from "@metadaoproject/programs/price_based_performance_package";
 import { buildAdminApprovalTransactions } from "./adminApproval.js";
 import { getSquadsPdasFromDao, probeSquadsVaultTransaction } from "./squads.js";
 
@@ -491,6 +495,78 @@ export const removeSpendingLimit =
         }),
       ],
       requiresAdminExecution: true,
+    };
+  };
+
+// Proposes new unlock terms for a performance package whose authority is the
+// DAO's vault: a new cliff, and per-window withdrawal limits or none. The vault
+// is the proposer and pays the change request's rent, so it needs a little
+// SOL. The package's recipient executes the change with executeChange.ts.
+export const proposePerformancePackageUnlockTerms =
+  ({
+    performancePackage,
+    minUnlockTimestamp,
+    limits,
+    pdaNonce,
+  }: {
+    performancePackage: PublicKey;
+    minUnlockTimestamp: BN;
+    limits: LimitsParams | null;
+    pdaNonce: number;
+  }): DaoActionBuilder =>
+  async ({ provider, daoMultisigVault }) => {
+    const priceBasedPerformancePackage =
+      PriceBasedPerformancePackageClient.createClient({ provider });
+
+    const performancePackageAccount =
+      await priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
+    if (
+      !performancePackageAccount.performancePackageAuthority.equals(
+        daoMultisigVault,
+      )
+    ) {
+      throw new Error(
+        `Performance package ${performancePackage.toBase58()} has authority ${performancePackageAccount.performancePackageAuthority.toBase58()}, not the DAO's vault`,
+      );
+    }
+
+    // The proposal fails at execution if the change request already exists
+    const changeRequest = priceBasedPerformancePackage.getChangeRequestAddress(
+      performancePackage,
+      daoMultisigVault,
+      pdaNonce,
+    );
+    if ((await provider.connection.getAccountInfo(changeRequest)) !== null) {
+      throw new Error(
+        `Change request ${changeRequest.toBase58()} already exists - use another pdaNonce`,
+      );
+    }
+
+    console.log("Performance package:", performancePackage.toBase58());
+    console.log("Recipient:", performancePackageAccount.recipient.toBase58());
+    console.log(
+      "Current min unlock timestamp:",
+      performancePackageAccount.minUnlockTimestamp.toString(),
+    );
+    console.log("Change request:", changeRequest.toBase58());
+
+    return {
+      instructions: [
+        await priceBasedPerformancePackage
+          .proposeChangeIx({
+            params: {
+              changeType: { unlockTerms: { minUnlockTimestamp, limits } },
+              pdaNonce,
+            },
+            performancePackage,
+            proposer: daoMultisigVault,
+          })
+          // The vault pays the rent; otherwise the payer defaults to the wallet
+          .accounts({ payer: daoMultisigVault })
+          .instruction(),
+      ],
     };
   };
 

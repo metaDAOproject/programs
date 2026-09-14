@@ -44,19 +44,18 @@ export const burnPerformancePackage = async () => {
       metadaoSquadsMultisig,
     );
 
-  // Prepare transaction message
-  const burnPerformancePackageIx =
-    await priceBasedPerformancePackage.program.methods
-      .burnPerformancePackage()
-      .accounts({
-        performancePackage,
-        performancePackageTokenVault:
-          performancePackageAccount.performancePackageTokenVault,
-        tokenMint: performancePackageAccount.tokenMint,
-        admin: metadaoSquadsMultisigVault,
-        spillAccount: payer.publicKey,
-      })
-      .instruction();
+  // Prepare transaction message. The recipient is paid what is already
+  // unlocked before the rest burns; the vault creates its token account if
+  // it is missing.
+  const burnPerformancePackageIx = await priceBasedPerformancePackage
+    .burnPerformancePackageIx({
+      performancePackage,
+      tokenMint: performancePackageAccount.tokenMint,
+      recipient: performancePackageAccount.recipient,
+      admin: metadaoSquadsMultisigVault,
+      spillAccount: payer.publicKey,
+    })
+    .instruction();
 
   const transactionMessage = new TransactionMessage({
     instructions: [burnPerformancePackageIx],
