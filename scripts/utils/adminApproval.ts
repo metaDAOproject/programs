@@ -39,6 +39,10 @@ const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
  * consumed by someone else's proposal while previous transactions in the flow
  * confirm, making vaultTransactionCreate fail.
  *
+ * Each result also carries the instructions its squads transaction holds
+ * (`daoInstructions`, `metadaoInstructions`), for probing whether it landed
+ * with probeSquadsVaultTransaction.
+ *
  * Once the operational multisig approves + executes its transaction, the DAO
  * proposal can be approved + executed permissionlessly via
  * executeMultisigProposalApproval.
@@ -181,6 +185,7 @@ export const buildAdminApprovalTransactions = async ({
         metadaoTransactionIndex,
         metadaoVaultTransactionPda,
         metadaoProposalPda,
+        metadaoInstructions: [enqueueApprovalIx],
       };
     };
 
@@ -190,6 +195,7 @@ export const buildAdminApprovalTransactions = async ({
       daoVaultTransactionPda,
       daoProposalPda,
       enqueuedApprovalPda,
+      daoInstructions: instructions,
       buildMetadaoTransaction,
     };
   };
