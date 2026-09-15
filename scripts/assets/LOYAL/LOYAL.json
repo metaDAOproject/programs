@@ -1,6 +1,15 @@
 {
   "name": "Loyal",
   "symbol": "LOYAL",
-  "description": "Loyal is a Solana-based private decentralized intelligence protocol. It enables full data ownership, auditable and decentralized compute and complete censorship resistance.",
-  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/LOYAL/LOYAL.png"
+  "description": "Loyal is self-custodial agentic finance on Solana. Agents make DeFi safer and simpler to use, and you keep your keys and the final say. Open source and governed by MetaDAO futarchy, with the treasury in a DAO-controlled multisig and protocol fees flowing back to it.",
+  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/LOYAL/LOYAL.png",
+  "external_url": "https://askloyal.com",
+  "extensions": {
+    "website": "https://askloyal.com",
+    "app": "https://app.askloyal.com",
+    "docs": "https://docs.askloyal.com",
+    "twitter": "https://x.com/loyal_hq",
+    "telegram": "https://t.me/loyal_tgchat",
+    "github": "https://github.com/loyal-labs"
+  }
 }

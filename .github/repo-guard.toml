@@ -72,7 +72,10 @@ package_min_age_days = 14
 [actions.sha_allowlist]
 "metadaoproject/anchor-test" = ["876dde6990e0a3d22e1cf1c702b4e4c64aa47d15"]               # v2.3
 "metadaoproject/anchor-verifiable-build" = ["6d8fc1999ea4b7ff701e8b166903b398741e1c50"] # v0.4
-"metadaoproject/setup-anchor" = ["7d1e9699eb18c33ba5f32f6a9952f0e90515996a"]             # v3.2
+"metadaoproject/setup-anchor" = [
+  "7d1e9699eb18c33ba5f32f6a9952f0e90515996a",                                            # v3.2
+  "aeeb5505f3fd3d52a1080d14863c6aa428c9fdf9",                                            # v3.4
+]
 "nick-fields/retry" = [
   "ce71cc2ab81d554ebbe88c79ab5975992d79ba08",                                            # v3
   "14672906e672a08bd6eeb15720e9ed3ce869cdd4",                                            # v2
@@ -82,6 +85,8 @@ package_min_age_days = 14
 "EndBug/add-and-commit" = ["a94899bca583c204427a224a7af87c02f9b325d5"]                   # v9.1.4
 "peter-evans/find-comment" = ["3eae4d37986fb5a8592848f6a574fdf654e61f9e"]               # v3
 "peter-evans/create-or-update-comment" = ["71345be0265236311c031f5c7866368bd1eff043"]   # v4
+"actions-rs/toolchain" = ["16499b5e05bf2e26879000db0c1d13f7e13fa3af"]                    # v1.0.7
+"Swatinem/rust-cache" = ["6323deb102c322ba6fcbdcafc7e3dddab59af2b6"]                     # v2.9.2
 
 [sensitive_diff]
 # Files where any change should be surfaced for security review even if no

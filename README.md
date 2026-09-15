@@ -125,38 +125,23 @@ Reload your shell configuration:
 source ~/.zshrc  # or source ~/.bash_profile
 ```
 
-#### 7. Install Dependencies
+#### 7. Build Programs and Install Dependencies
 
-Install root project dependencies:
-
-```bash
-yarn install
-```
-
-Install SDK dependencies and build:
+Build all programs, install and build the SDK, install the root dependencies, and lint in one step:
 
 ```bash
-cd sdk
-yarn install
-yarn build-local
-cd ..
+./rebuild.sh
 ```
 
-#### 8. Build Programs
+Re-run `./rebuild.sh` after changing program or SDK code so tests run against your latest changes.
 
-Build all Solana programs:
+To build a single program on its own:
 
 ```bash
-anchor build
+anchor build -p futarchy
 ```
 
-Or build a specific program:
-
-```bash
-anchor build -p programs
-```
-
-#### 9. Run Tests
+#### 8. Run Tests
 
 Run all tests:
 
@@ -184,13 +169,12 @@ Then run `anchor test` again.
 
 #### "Cannot find module" errors
 
-If you see module resolution errors, rebuild the SDK:
+If you see module resolution errors, rebuild the SDK. The root `node_modules` entry for `@metadaoproject/programs` is a symlink to `sdk/`, so no root reinstall is needed:
 
 ```bash
 cd sdk
 yarn build-local
 cd ..
-yarn install --force
 ```
 
 #### Tests timeout or validator doesn't start

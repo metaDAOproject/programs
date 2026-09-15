@@ -28,7 +28,7 @@
     "@inquirer/prompts": "7.9.0",
     "@ledgerhq/hw-app-solana": "7.10.4",
     "@ledgerhq/hw-transport-node-hid": "6.33.4",
-    "@metadaoproject/programs": "./sdk",
+    "@metadaoproject/programs": "link:./sdk",
     "@metaplex-foundation/mpl-token-metadata": "3.4.0",
     "@metaplex-foundation/umi": "0.9.2",
     "@metaplex-foundation/umi-bundle-defaults": "0.9.2",

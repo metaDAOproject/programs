@@ -40,17 +40,19 @@ jobs:
           node-version: '20.18.0'
           cache: 'yarn'
 
-      - name: Verify root yarn.lock is up to date
-        id: yarn_root
-        continue-on-error: true
-        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive
-
+      # sdk first: the root install links `link:./sdk` and needs sdk/node_modules to exist.
       - name: Verify sdk yarn.lock is up to date
         id: yarn_sdk
         continue-on-error: true
         run: |
           cd sdk
           yarn install --frozen-lockfile --ignore-scripts --non-interactive
+
+      - name: Verify root yarn.lock is up to date
+        id: yarn_root
+        continue-on-error: true
+        if: steps.yarn_sdk.outcome == 'success'
+        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive
 
       - name: Run repository guard checks
         id: guard
@@ -83,24 +85,26 @@ jobs:
               echo "  - Out of sync with the workspace manifests. Run \`cargo update --workspace\` (or rebuild) and commit the updated \`Cargo.lock\`."
             fi
 
-            if [ "$YARN_ROOT_OUTCOME" = "success" ]; then
-              echo "- yarn.lock (root): pass"
-            else
-              echo "- yarn.lock (root): fail"
-              echo "  - Root \`yarn.lock\` is out of date. Run \`yarn install\` at the repo root and commit the result."
-            fi
-
             if [ "$YARN_SDK_OUTCOME" = "success" ]; then
               echo "- yarn.lock (sdk): pass"
             else
               echo "- yarn.lock (sdk): fail"
-              echo "  - \`sdk/yarn.lock\` is out of date. Run \`yarn install\` in \`sdk/\` and commit the result."
+              echo "  - \`yarn install --frozen-lockfile\` failed in \`sdk/\`. Usually \`sdk/yarn.lock\` is out of date: run \`yarn install\` in \`sdk/\` and commit the result. See the step log for the actual error."
+            fi
+
+            if [ "$YARN_ROOT_OUTCOME" = "success" ]; then
+              echo "- yarn.lock (root): pass"
+            elif [ "$YARN_ROOT_OUTCOME" = "skipped" ]; then
+              echo "- yarn.lock (root): skipped (sdk install failed - fix that first)"
+            else
+              echo "- yarn.lock (root): fail"
+              echo "  - \`yarn install --frozen-lockfile\` failed at the repo root. Usually the root \`yarn.lock\` is out of date: run \`yarn install\` at the repo root and commit the result. See the step log for the actual error."
             fi
 
             if [ "$GUARD_OUTCOME" = "success" ]; then
               echo "- Repo guard: pass"
             elif [ "$GUARD_OUTCOME" = "skipped" ]; then
-              echo "- Repo guard: skipped (root yarn install failed - fix that first)"
+              echo "- Repo guard: skipped (yarn install failed - fix that first)"
             else
               if [ "$EMERGENCY_BYPASS" = "true" ]; then
                 echo "- Repo guard: bypassed with \`emergency-override\`"
@@ -117,21 +121,29 @@ jobs:
             fi
           } > body.md
 
+          # Render the same content on the run's Summary page - visible on
+          # fork PRs too, where the comment steps below are skipped.
+          cat body.md >> "$GITHUB_STEP_SUMMARY"
+
           {
             echo "body<<EOF"
             cat body.md
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      # Fork PRs get a read-only GITHUB_TOKEN, so the comment steps would 403.
+      # Skip them there - the "Fail if any check failed" step still gates.
       - name: Find existing comment
         uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3
         id: find
+        if: github.event.pull_request.head.repo.full_name == github.repository
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body-includes: "<!-- repository-guard -->"
 
       - name: Create or update PR comment
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4
+        if: github.event.pull_request.head.repo.full_name == github.repository
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-id: ${{ steps.find.outputs.comment-id }}
@@ -153,11 +165,13 @@ jobs:
           if [ "$CARGO_OUTCOME" != "success" ]; then
             failed+=("Cargo.lock out of sync - run \`cargo update --workspace\` (or rebuild) and commit")
           fi
-          if [ "$YARN_ROOT_OUTCOME" != "success" ]; then
-            failed+=("root yarn.lock out of date - run \`yarn install\` at repo root and commit")
-          fi
           if [ "$YARN_SDK_OUTCOME" != "success" ]; then
-            failed+=("sdk yarn.lock out of date - run \`yarn install\` in \`sdk/\` and commit")
+            failed+=("sdk yarn install failed - usually \`sdk/yarn.lock\` is out of date: run \`yarn install\` in \`sdk/\` and commit")
+          fi
+          if [ "$YARN_ROOT_OUTCOME" = "skipped" ]; then
+            failed+=("root yarn.lock check skipped - fix the sdk install first")
+          elif [ "$YARN_ROOT_OUTCOME" != "success" ]; then
+            failed+=("root yarn install failed - usually root \`yarn.lock\` is out of date: run \`yarn install\` at repo root and commit")
           fi
 
           # The guard itself (exact-version, age, action-pinning, toolchain

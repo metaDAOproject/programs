@@ -663,9 +663,14 @@ export class FutarchyClient {
     payer?: PublicKey;
   }): { tx: Transaction; squadsProposal: PublicKey } {
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
 
+    // The vault must be the payerKey, otherwise the payer has to co-sign every execution.
     const transactionMessage = new TransactionMessage({
-      payerKey: payer,
+      payerKey: squadsMultisigVault,
       recentBlockhash: "", // this doesn't get used
       instructions,
     });

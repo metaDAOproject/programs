@@ -933,15 +933,9 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-6.17.0.tgz#370840b915a0b44fc867fc4e6afc68d26a2055dd"
   integrity sha512-yra33g5q/AU7+PwAws+GaVpQGUuxnDREjVBnviJjcaJLVKuLzI4pnj8Bd3nY3fypM5k1yZEYKEXfUuGFUjP2+w==
 
-"@metadaoproject/programs@./sdk":
-  version "0.1.1-alpha.0"
-  dependencies:
-    "@coral-xyz/anchor" "0.29.0"
-    "@noble/hashes" "1.8.0"
-    "@solana/spl-token" "0.3.11"
-    "@solana/web3.js" "1.98.4"
-    "@sqds/multisig" "2.1.4"
-    bn.js "5.2.2"
+"@metadaoproject/programs@link:./sdk":
+  version "0.0.0"
+  uid ""
 
 "@metaplex-foundation/beet-solana@0.4.0":
   version "0.4.0"
