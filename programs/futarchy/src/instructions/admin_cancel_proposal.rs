@@ -69,6 +69,14 @@ pub struct AdminCancelProposal<'info> {
 
 impl AdminCancelProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        // Unblockable proposals are censorship-proof once live: nobody, including
+        // the council, can cancel them. Reads the create-time snapshot so a
+        // live proposal keeps the flag it launched with.
+        require!(
+            self.proposal.council_can_block,
+            FutarchyError::InvalidProposalKind
+        );
+
         #[cfg(feature = "production")]
         require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
 

@@ -1,4 +1,5 @@
 import {
+  ComputeBudgetProgram,
   PublicKey,
   Keypair,
   Transaction,
@@ -89,6 +90,9 @@ export async function whitelistUser(
   authority: Keypair,
   user: PublicKey,
   payer: Keypair,
+  // Pass when repeating an identical call (e.g. re-adding a removed user) so
+  // the transaction signature is unique within the blockhash window
+  computeUnitPrice?: number,
 ): Promise<PublicKey> {
   const providerKey = gatedMintClient.provider.publicKey;
   const signers: Keypair[] = [];
@@ -109,6 +113,15 @@ export async function whitelistUser(
       user,
       payer: payer.publicKey,
     })
+    .postInstructions(
+      computeUnitPrice
+        ? [
+            ComputeBudgetProgram.setComputeUnitPrice({
+              microLamports: computeUnitPrice,
+            }),
+          ]
+        : [],
+    )
     .signers(signers)
     .rpc();
 

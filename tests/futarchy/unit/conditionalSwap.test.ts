@@ -244,7 +244,7 @@ export default function suite() {
       .splitTokensIx(question, baseVault, META, new BN(5 * 10 ** 6), 2)
       .rpc();
 
-    this.advanceBySeconds(60 * 60 * 24 * 3);
+    this.advanceBySeconds(60 * 60 * 24 * 11);
 
     await this.futarchy
       .spotSwapIx({

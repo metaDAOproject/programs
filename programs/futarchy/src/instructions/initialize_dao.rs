@@ -223,6 +223,11 @@ impl InitializeDao<'_> {
             team_address,
             optimistic_proposal: None,
             is_optimistic_governance_enabled: false,
+            liquidator: None,
+            last_failed_takeover_at: 0,
+            last_failed_liquidation_at: 0,
+            spending_limit_dirty: false,
+            last_buyback_finalized_at: 0,
         });
 
         dao.invariant()?;

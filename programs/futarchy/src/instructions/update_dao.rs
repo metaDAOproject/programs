@@ -25,14 +25,11 @@ pub struct UpdateDao<'info> {
 
 impl UpdateDao<'_> {
     pub fn validate(&self) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
         // Prevent parameter updates during active futarchy markets
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());
-        }
-
-        // Prevent updates to DAO parameters if an optimistic proposal is enqueued
-        if self.dao.optimistic_proposal.is_some() {
-            return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
         }
 
         Ok(())
@@ -83,6 +80,11 @@ impl UpdateDao<'_> {
             is_optimistic_governance_enabled: dao_params
                 .is_optimistic_governance_enabled
                 .unwrap_or(dao.is_optimistic_governance_enabled),
+            liquidator: dao.liquidator,
+            last_failed_takeover_at: dao.last_failed_takeover_at,
+            last_failed_liquidation_at: dao.last_failed_liquidation_at,
+            spending_limit_dirty: dao.spending_limit_dirty,
+            last_buyback_finalized_at: dao.last_buyback_finalized_at,
         });
 
         dao.seq_num += 1;

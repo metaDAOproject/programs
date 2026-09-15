@@ -42,6 +42,8 @@ pub struct StakeToProposal<'info> {
 
 impl StakeToProposal<'_> {
     pub fn validate(&self, params: &StakeToProposalParams) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
             FutarchyError::ProposalNotInDraftState

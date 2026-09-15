@@ -17,7 +17,6 @@ import {
   sha256,
 } from "@metadaoproject/programs";
 import BN from "bn.js";
-import { setOptimisticGovernanceEnabled } from "../../utils.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 
@@ -187,7 +186,7 @@ export default function suite() {
       .splitTokensIx(question, baseVault, META, new BN(1000_000_000), 2)
       .rpc();
     await this.conditionalVault
-      .splitTokensIx(question, quoteVault, USDC, new BN(1000_000_000), 2)
+      .splitTokensIx(question, quoteVault, USDC, new BN(6_000_000_000), 2)
       .rpc();
 
     // Launch proposal A to put DAO in Futarchy state
@@ -205,8 +204,9 @@ export default function suite() {
     let daoState = await this.futarchy.getDao(dao);
     assert.isDefined(daoState.amm.state.futarchy);
 
-    // Step 3: Trade on pass market to make proposal A pass
-    // Using conditionalSwapIx which handles all the AMM interaction
+    // Step 3: Trade on pass market to make proposal A pass. 5,000 USDC into
+    // ~50,000 USDC reserves moves the pass price ~20%, clearing the
+    // proposal's +10% snapshot threshold.
     await this.futarchy
       .conditionalSwapIx({
         dao,
@@ -215,7 +215,7 @@ export default function suite() {
         proposal: proposalA,
         market: "pass",
         swapType: "buy",
-        inputAmount: new BN(900_000_000),
+        inputAmount: new BN(5_000_000_000),
         minOutputAmount: new BN(0),
       })
       .rpc();
@@ -384,210 +384,6 @@ export default function suite() {
         e.toString().includes("PoolNotInSpotState") ||
           e.toString().includes("0x178a"),
         `Expected PoolNotInSpotState error, got: ${e}`,
-      );
-    }
-  });
-
-  it("should fail updateDao execution when DAO has an active optimistic proposal", async function () {
-    const daoAccount = await this.futarchy.getDao(dao);
-
-    // Step 1: Create updateDao squads vault transaction (index 1)
-    const updateDaoIx = await this.futarchy
-      .updateDaoIx({
-        dao,
-        params: {
-          passThresholdBps: 500,
-          secondsPerProposal: null,
-          twapInitialObservation: null,
-          twapMaxObservationChangePerUpdate: null,
-          minQuoteFutarchicLiquidity: null,
-          minBaseFutarchicLiquidity: null,
-          baseToStake: null,
-          teamSponsoredPassThresholdBps: null,
-          teamAddress: null,
-          twapStartDelaySeconds: null,
-          isOptimisticGovernanceEnabled: null,
-        },
-      })
-      .instruction();
-
-    const updateDaoMessage = new TransactionMessage({
-      payerKey: daoAccount.squadsMultisigVault,
-      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-      instructions: [updateDaoIx],
-    });
-
-    const vaultTxCreateIx = multisig.instructions.vaultTransactionCreate({
-      multisigPda: daoAccount.squadsMultisig,
-      transactionIndex: 1n,
-      creator: PERMISSIONLESS_ACCOUNT.publicKey,
-      rentPayer: this.payer.publicKey,
-      vaultIndex: 0,
-      ephemeralSigners: 0,
-      transactionMessage: updateDaoMessage,
-    });
-
-    const squadsProposalCreateIx = multisig.instructions.proposalCreate({
-      multisigPda: daoAccount.squadsMultisig,
-      transactionIndex: 1n,
-      creator: PERMISSIONLESS_ACCOUNT.publicKey,
-      rentPayer: this.payer.publicKey,
-    });
-
-    const [squadsProposalPda] = multisig.getProposalPda({
-      multisigPda: daoAccount.squadsMultisig,
-      transactionIndex: 1n,
-    });
-
-    const createSquadsTx = new Transaction().add(
-      vaultTxCreateIx,
-      squadsProposalCreateIx,
-    );
-    createSquadsTx.recentBlockhash = (
-      await this.banksClient.getLatestBlockhash()
-    )[0];
-    createSquadsTx.feePayer = this.payer.publicKey;
-    createSquadsTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
-
-    await this.banksClient.processTransaction(createSquadsTx);
-
-    // Step 2: Create futarchy proposal A linked to updateDao squads proposal
-    let [proposalA] = getProposalAddrV2({ squadsProposal: squadsProposalPda });
-
-    await this.conditionalVault.initializeQuestion(
-      sha256(`Will ${proposalA} pass?/FAIL/PASS`),
-      proposalA,
-      2,
-    );
-
-    const { question, baseVault, quoteVault } = this.futarchy.getProposalPdas(
-      proposalA,
-      META,
-      USDC,
-      dao,
-    );
-
-    await this.conditionalVault
-      .initializeVaultIx(question, META, 2)
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          this.conditionalVault.initializeVaultIx(question, USDC, 2),
-        ),
-      )
-      .rpc();
-
-    await this.futarchy
-      .initializeProposalIx(squadsProposalPda, dao, META, USDC, question)
-      .preInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
-      ])
-      .rpc();
-
-    // Split tokens before launching proposal
-    await this.conditionalVault
-      .splitTokensIx(question, baseVault, META, new BN(1000_000_000), 2)
-      .rpc();
-    await this.conditionalVault
-      .splitTokensIx(question, quoteVault, USDC, new BN(1000_000_000), 2)
-      .rpc();
-
-    // Launch proposal A to put DAO in Futarchy state
-    await this.futarchy
-      .launchProposalIx({
-        proposal: proposalA,
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        squadsProposal: squadsProposalPda,
-      })
-      .rpc();
-
-    // Step 3: Trade on pass market to make proposal A pass
-    await this.futarchy
-      .conditionalSwapIx({
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        proposal: proposalA,
-        market: "pass",
-        swapType: "buy",
-        inputAmount: new BN(900_000_000),
-        minOutputAmount: new BN(0),
-      })
-      .rpc();
-
-    // Crank TWAP over time by doing small swaps
-    for (let i = 0; i < 100; i++) {
-      await this.advanceBySeconds(20_000);
-
-      await this.futarchy
-        .conditionalSwapIx({
-          dao,
-          baseMint: META,
-          quoteMint: USDC,
-          proposal: proposalA,
-          market: "pass",
-          swapType: "buy",
-          inputAmount: new BN(10),
-          minOutputAmount: new BN(0),
-          payer: this.payer.publicKey,
-        })
-        .preInstructions([
-          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
-        ])
-        .rpc();
-    }
-
-    // Step 4: Finalize proposal A - DAO returns to Spot state
-    await this.futarchy.finalizeProposal(proposalA);
-
-    // Verify DAO is in Spot state
-    let daoState = await this.futarchy.getDao(dao);
-    assert.isDefined(daoState.amm.state.spot);
-
-    // Step 5: Enqueue an optimistic proposal
-    await setOptimisticGovernanceEnabled(this, dao, true);
-
-    await this.futarchy
-      .initiateVaultSpendOptimisticProposalIx({
-        dao,
-        quoteMint: USDC,
-        amount: new BN(1000),
-        recipient: this.payer.publicKey,
-        transactionIndex: 2n,
-      })
-      .signers([this.payer, PERMISSIONLESS_ACCOUNT])
-      .rpc();
-
-    // Verify optimistic proposal is set
-    const updatedDao = await this.futarchy.getDao(dao);
-    assert.exists(updatedDao.optimisticProposal);
-
-    // Step 6: Try to execute updateDao - should fail with ActiveOptimisticProposalAlreadyEnqueued
-    const txExecuteIx = await multisig.instructions.vaultTransactionExecute({
-      connection: this.squadsConnection,
-      multisigPda: daoAccount.squadsMultisig,
-      transactionIndex: 1n,
-      member: PERMISSIONLESS_ACCOUNT.publicKey,
-    });
-
-    const txExecute = new Transaction().add(txExecuteIx.instruction);
-    txExecute.recentBlockhash = (
-      await this.banksClient.getLatestBlockhash()
-    )[0];
-    txExecute.feePayer = this.payer.publicKey;
-    txExecute.sign(this.payer, PERMISSIONLESS_ACCOUNT);
-
-    try {
-      await this.banksClient.processTransaction(txExecute);
-      assert.fail(
-        "Should have failed with ActiveOptimisticProposalAlreadyEnqueued",
-      );
-    } catch (e) {
-      assert(
-        e.toString().includes("ActiveOptimisticProposalAlreadyEnqueued") ||
-          e.toString().includes("0x1797"),
-        `Expected ActiveOptimisticProposalAlreadyEnqueued error, got: ${e}`,
       );
     }
   });
