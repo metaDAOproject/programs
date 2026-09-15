@@ -1,17 +1,9 @@
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
-import {
-  ComputeBudgetProgram,
-  PublicKey,
-  Transaction,
-  TransactionMessage,
-} from "@solana/web3.js";
+import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
 import { expectError, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import { createMemoInstruction } from "@solana/spl-memo";
-import BN from "bn.js";
-
-const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
@@ -111,40 +103,14 @@ export default function suite() {
         programId: multisig.PROGRAM_ID,
       });
 
-    const [enqueuedApprovalPda] = PublicKey.findProgramAddressSync(
-      [
-        SEED_ENQUEUED_APPROVAL,
-        dao.toBuffer(),
-        new BN(1).toArrayLike(Buffer, "le", 8),
-      ],
-      this.futarchy.futarchy.programId,
-    );
-
     // First enqueue an approval (admin-gated)
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
-      .accounts({
-        dao: dao,
-        admin: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: squadsProposalPda,
-        enqueuedApproval: enqueuedApprovalPda,
-      })
-      .signers([this.payer])
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
       .rpc();
 
     // Then execute the approval (permissionless)
-    await this.futarchy.futarchy.methods
-      .executeMultisigProposalApproval()
-      .accounts({
-        dao: dao,
-        rentReceiver: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: squadsProposalPda,
-        enqueuedApproval: enqueuedApprovalPda,
-        squadsMultisigProgram: multisig.PROGRAM_ID,
-      })
-      .signers([this.payer])
+    await this.futarchy
+      .executeMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
       .rpc();
 
     // Then execute

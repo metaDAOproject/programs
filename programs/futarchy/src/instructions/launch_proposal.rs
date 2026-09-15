@@ -48,8 +48,11 @@ impl<'info> LaunchProposal<'info> {
 
         require_keys_eq!(self.proposal.dao, self.dao.key());
 
+        // A sponsorship only counts while the sponsor is still the DAO's team.
+        let is_team_sponsored = self.proposal.is_sponsored_by(self.dao.team_address);
+
         // If the proposal is not team sponsored, check if sufficient stake has been accumulated
-        if !self.proposal.is_team_sponsored {
+        if !is_team_sponsored {
             if let ProposalState::Draft { amount_staked } = self.proposal.state {
                 require_gte!(
                     amount_staked,
@@ -63,11 +66,8 @@ impl<'info> LaunchProposal<'info> {
         // drafts can't bypass them
         let params = self.proposal.action.params();
 
-        if params.requires_team_sponsorship {
-            require!(
-                self.proposal.is_team_sponsored,
-                FutarchyError::ProposalNotTeamSponsored
-            );
+        if params.team_sponsorship_policy == TeamSponsorshipPolicy::Required {
+            require!(is_team_sponsored, FutarchyError::ProposalNotTeamSponsored);
         }
 
         // A market that doesn't outlive its start delay reaches its nominal end

@@ -106,7 +106,7 @@ pub mod futarchy {
         InitializeHostileTakeoverProposal::handle(ctx, args)
     }
 
-    #[access_control(ctx.accounts.validate())]
+    #[access_control(ctx.accounts.validate(&args))]
     pub fn initialize_hostile_liquidate_proposal(
         ctx: Context<InitializeHostileLiquidateProposal>,
         args: InitializeHostileLiquidateProposalArgs,
@@ -168,11 +168,6 @@ pub mod futarchy {
         SyncSpendingLimit::handle(ctx)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn apply_liquidation(ctx: Context<ApplyLiquidation>) -> Result<()> {
-        ApplyLiquidation::handle(ctx)
-    }
-
     pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
         ResizeDao::handle(ctx)
     }
@@ -183,7 +178,6 @@ pub mod futarchy {
 
     // AMM instructions
 
-    #[access_control(ctx.accounts.validate())]
     pub fn spot_swap(ctx: Context<SpotSwap>, params: SpotSwapParams) -> Result<()> {
         SpotSwap::handle(ctx, params)
     }
@@ -239,6 +233,21 @@ pub mod futarchy {
         ctx: Context<ExecuteMultisigProposalApproval>,
     ) -> Result<()> {
         ExecuteMultisigProposalApproval::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn admin_enqueue_multisig_proposal_cancellation(
+        ctx: Context<AdminEnqueueMultisigProposalCancellation>,
+        args: AdminEnqueueMultisigProposalCancellationArgs,
+    ) -> Result<()> {
+        AdminEnqueueMultisigProposalCancellation::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn execute_multisig_proposal_cancellation(
+        ctx: Context<ExecuteMultisigProposalCancellation>,
+    ) -> Result<()> {
+        ExecuteMultisigProposalCancellation::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate())]

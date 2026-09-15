@@ -147,10 +147,7 @@ impl InitializeDao<'_> {
         )?;
 
         if let Some(initial_spending_limit) = initial_spending_limit.clone() {
-            require_gte!(
-                MAX_SPENDING_LIMIT_MEMBERS,
-                initial_spending_limit.members.len()
-            );
+            initial_spending_limit.validate()?;
 
             squads_multisig_program::cpi::multisig_add_spending_limit(
                 CpiContext::new_with_signer(

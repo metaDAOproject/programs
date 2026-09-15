@@ -3,13 +3,23 @@ use super::*;
 pub const DAY_SECONDS: u32 = 24 * 60 * 60;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub enum TeamSponsorshipPolicy {
+    /// Must be team-sponsored to launch.
+    Required,
+    /// May be team-sponsored. Sponsorship waives the stake.
+    Optional,
+    /// Cannot be team-sponsored.
+    Forbidden,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
 pub struct InstructionParams {
     pub duration_seconds: u32,
     /// Signed: a negative threshold lets a proposal pass even when the pass
     /// price is below the fail price.
     pub pass_threshold_bps: i16,
-    /// Launch condition: the proposal must be team-sponsored to launch.
-    pub requires_team_sponsorship: bool,
+    /// Sponsorship policy
+    pub team_sponsorship_policy: TeamSponsorshipPolicy,
     pub council_can_block: bool,
     /// Cooldown checked at launch. 0 = none.
     pub cooldown_seconds: u32,
@@ -32,6 +42,9 @@ pub enum SpendingLimitAction {
 pub enum ProposalAction {
     LargeSpend {
         amount: u64,
+        /// The team the baked transfer pays, snapshotted at create. Launch
+        /// requires it to still be the DAO's team.
+        team_address: Pubkey,
     },
     MintTokens {
         amount: u64,
@@ -52,7 +65,8 @@ pub enum ProposalAction {
     BuybackToken {
         /// Total quote to deploy. Capped at 25% of the treasury.
         quote_amount: u64,
-        quote_amount_per_cycle: u64,
+        /// Orders the total is split across. At least 2.
+        cycle_count: u32,
         /// Seconds between orders.
         cycle_frequency_seconds: u32,
         /// Seconds after execution before the first order. 0 = immediately.
@@ -73,7 +87,7 @@ impl ProposalAction {
             ProposalAction::LargeSpend { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 3 / 2, // 1.5 days
                 pass_threshold_bps: -1000,
-                requires_team_sponsorship: true,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Required,
                 council_can_block: true,
                 cooldown_seconds: 0,
                 twap_start_delay_seconds: DAY_SECONDS / 2,
@@ -81,7 +95,7 @@ impl ProposalAction {
             ProposalAction::MintTokens { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 5,
                 pass_threshold_bps: 500,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Optional,
                 council_can_block: true,
                 cooldown_seconds: 0,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -89,7 +103,7 @@ impl ProposalAction {
             ProposalAction::SpendingLimitChange { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 5,
                 pass_threshold_bps: 500,
-                requires_team_sponsorship: true,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Required,
                 council_can_block: true,
                 cooldown_seconds: 0,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -97,7 +111,7 @@ impl ProposalAction {
             ProposalAction::ExecuteArbitrary => InstructionParams {
                 duration_seconds: DAY_SECONDS * 10,
                 pass_threshold_bps: 1000,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Optional,
                 council_can_block: true,
                 cooldown_seconds: 0,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -105,7 +119,7 @@ impl ProposalAction {
             ProposalAction::HostileTakeover { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 20,
                 pass_threshold_bps: 1000,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Forbidden,
                 council_can_block: true,
                 cooldown_seconds: DAY_SECONDS * 20,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -113,7 +127,7 @@ impl ProposalAction {
             ProposalAction::HostileLiquidate { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 10,
                 pass_threshold_bps: 2500,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Forbidden,
                 council_can_block: true,
                 cooldown_seconds: DAY_SECONDS * 10,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -121,7 +135,7 @@ impl ProposalAction {
             ProposalAction::BuybackToken { .. } => InstructionParams {
                 duration_seconds: DAY_SECONDS * 10,
                 pass_threshold_bps: 1000,
-                requires_team_sponsorship: false,
+                team_sponsorship_policy: TeamSponsorshipPolicy::Optional,
                 council_can_block: true,
                 cooldown_seconds: DAY_SECONDS * 90,
                 twap_start_delay_seconds: DAY_SECONDS,
@@ -140,16 +154,54 @@ impl ProposalAction {
             ProposalAction::BuybackToken { quote_amount, .. } => {
                 verify_buyback_treasury_cap(*quote_amount, dao, accounts)
             }
+            ProposalAction::LargeSpend {
+                amount,
+                team_address,
+            } => verify_large_spend_launch(*amount, *team_address, dao, accounts),
             _ => {
-                require_eq!(
-                    accounts.len(),
-                    0,
-                    FutarchyError::UnexpectedLaunchAccounts
-                );
+                require_eq!(accounts.len(), 0, FutarchyError::UnexpectedLaunchAccounts);
                 Ok(())
             }
         }
     }
+}
+
+/// The large-spend launch gate: no extra accounts, and the create-time checks
+/// re-run against current state.
+fn verify_large_spend_launch(
+    amount: u64,
+    team_address: Pubkey,
+    dao: &Dao,
+    accounts: &[AccountInfo],
+) -> Result<()> {
+    require_eq!(accounts.len(), 0, FutarchyError::UnexpectedLaunchAccounts);
+
+    verify_large_spend_cap(amount, dao)?;
+
+    require_keys_eq!(
+        team_address,
+        dao.team_address,
+        FutarchyError::StaleTeamAddress
+    );
+
+    Ok(())
+}
+
+/// The three-month spending cap, checked against the DAO's current record.
+/// Run at both create and launch.
+pub fn verify_large_spend_cap(amount: u64, dao: &Dao) -> Result<()> {
+    let record = dao
+        .initial_spending_limit
+        .as_ref()
+        .ok_or(FutarchyError::NoSpendingLimit)?;
+
+    require_gte!(
+        record.amount_per_month.saturating_mul(3),
+        amount,
+        FutarchyError::SpendCapExceeded
+    );
+
+    Ok(())
 }
 
 /// The 25% treasury cap, measured from the supplied account list. Launch is
@@ -220,11 +272,14 @@ fn verify_buyback_treasury_cap<'info>(
                 dao.squads_multisig_vault,
                 FutarchyError::InvalidTreasuryAccount
             );
-            // The quote a withdrawal would deliver right now.
+            // The quote a withdrawal would deliver, with the pool valued at
+            // its rate-limited observation: `min(quote, base × observation)`
             if dao.amm.total_liquidity > 0 {
-                treasury_quote += spot
-                    .get_quote_withdrawable(position.liquidity, dao.amm.total_liquidity)
-                    as u128;
+                let quote_at_observation = (spot.base_reserves as u128)
+                    .saturating_mul(spot.oracle.last_observation)
+                    / PRICE_SCALE;
+                let quote_reserves = (spot.quote_reserves as u128).min(quote_at_observation);
+                treasury_quote += position.liquidity * quote_reserves / dao.amm.total_liquidity;
             }
         } else {
             return err!(FutarchyError::InvalidTreasuryAccount);

@@ -20,11 +20,7 @@ impl InitializeSpendingLimitChangeProposal<'_> {
         self.typed_initialize_accounts.validate()?;
 
         if let Some(config) = &args.config {
-            require_gte!(
-                MAX_SPENDING_LIMIT_MEMBERS,
-                config.members.len(),
-                FutarchyError::TooManySpendingLimitMembers
-            );
+            config.validate()?;
         }
 
         Ok(())

@@ -25,10 +25,11 @@ impl ResizeProposal<'_> {
             proposal.try_borrow_data().unwrap()[..8] == Proposal::discriminator();
         require_eq!(is_discriminator_correct, true);
 
-        const AFTER_REALLOC_SIZE: usize = Proposal::INIT_SPACE + 8;
-        // 369 bytes: 2 (i16 pass_threshold_bps) + 1 (bool council_can_block)
+        const AFTER_REALLOC_SIZE: usize = Proposal::MIGRATED_SIZE;
+        // 401 bytes: 32 (Option<Pubkey> sponsored_by replacing the bool)
+        // + 2 (i16 pass_threshold_bps) + 1 (bool council_can_block)
         // + 366 (ProposalAction)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 369;
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 401;
 
         if proposal.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -41,12 +42,29 @@ impl ResizeProposal<'_> {
 
         require_keys_eq!(old_proposal_data.dao, dao.key());
 
-        // The one and only read of the vestigial per-DAO threshold fields:
-        // live markets keep the rules they were created and staked under.
-        let pass_threshold_bps = if old_proposal_data.is_team_sponsored {
-            dao.team_sponsored_pass_threshold_bps
+        let action = ProposalAction::ExecuteArbitrary;
+
+        // Draft proposals take the kind's catalog params like any new proposal.
+        // Launched proposals keep the rules they were launched under.
+        let (pass_threshold_bps, duration_in_seconds) =
+            if matches!(old_proposal_data.state, ProposalState::Draft { .. }) {
+                let params = action.params();
+                (params.pass_threshold_bps, params.duration_seconds)
+            } else {
+                let pass_threshold_bps = if old_proposal_data.is_team_sponsored {
+                    dao.team_sponsored_pass_threshold_bps
+                } else {
+                    dao.pass_threshold_bps as i16
+                };
+                (pass_threshold_bps, old_proposal_data.duration_in_seconds)
+            };
+
+        // A legacy sponsorship was signed by the team of its day, which is
+        // still the DAO's team. Before this migration, we never had a team change.
+        let sponsored_by = if old_proposal_data.is_team_sponsored {
+            Some(dao.team_address)
         } else {
-            dao.pass_threshold_bps as i16
+            None
         };
 
         let new_proposal_data = Proposal {
@@ -59,16 +77,16 @@ impl ResizeProposal<'_> {
             dao: old_proposal_data.dao,
             pda_bump: old_proposal_data.pda_bump,
             question: old_proposal_data.question,
-            duration_in_seconds: old_proposal_data.duration_in_seconds,
+            duration_in_seconds,
             squads_proposal: old_proposal_data.squads_proposal,
             pass_base_mint: old_proposal_data.pass_base_mint,
             pass_quote_mint: old_proposal_data.pass_quote_mint,
             fail_base_mint: old_proposal_data.fail_base_mint,
             fail_quote_mint: old_proposal_data.fail_quote_mint,
-            is_team_sponsored: old_proposal_data.is_team_sponsored,
+            sponsored_by,
             pass_threshold_bps,
             council_can_block: true,
-            action: ProposalAction::ExecuteArbitrary,
+            action,
         };
 
         proposal.realloc(AFTER_REALLOC_SIZE, true)?;

@@ -231,7 +231,10 @@ export default function suite() {
       .rpc();
 
     const after = await this.futarchy.getProposal(proposal);
-    assert.isTrue(after.isTeamSponsored);
+    assert.equal(
+      after.sponsoredBy?.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
     assert.equal(after.durationInSeconds, DAY_SECONDS * 2);
     assert.equal(after.passThresholdBps, 200);
   });
@@ -250,7 +253,10 @@ export default function suite() {
     await this.futarchy.sponsorProposalIx({ proposal, dao }).rpc();
 
     const after = await this.futarchy.getProposal(proposal);
-    assert.isTrue(after.isTeamSponsored);
+    assert.equal(
+      after.sponsoredBy?.toBase58(),
+      this.payer.publicKey.toBase58(),
+    );
     assert.equal(after.durationInSeconds, DAY_SECONDS * 2);
     assert.equal(after.passThresholdBps, 200);
   });
@@ -437,7 +443,7 @@ export default function suite() {
   });
 
   it("refuses on a liquidated DAO", async function () {
-    // `apply_liquidation` is the only writer of `dao.liquidator`, and reaching
+    // `finalize_proposal` is the only writer of `dao.liquidator`, and reaching
     // it takes a full hostile-liquidate market.
     await rewriteAccount(this, dao, "dao", (decoded) => {
       decoded.liquidator = Keypair.generate().publicKey;

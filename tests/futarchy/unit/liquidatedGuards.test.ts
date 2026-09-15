@@ -27,10 +27,10 @@ import { TestContext } from "../../main.test.js";
 
 // Every blocked instruction refuses on a liquidated DAO; every allowed one
 // still works. Not covered here because a liquidated DAO can't reach them:
-// - finalize_proposal: a market can never be live once the DAO is liquidated
-//   (launch is guarded and apply_liquidation requires a spot pool), so the
-//   gap-market interleaving it exists for is pinned by the packed
-//   finalize + execute + sync case in applyLiquidation.test.ts
+// - finalize_proposal: the liquidator is written by finalize itself, while no
+//   other market can be live, and launch refuses from then on — so a
+//   liquidated DAO never has a market left to finalize (the
+//   finalize → sync → unwind flow is pinned by liquidationEndToEnd.test.ts)
 // - the liquidator path: liquidatorPath.test.ts runs the estate cycle
 // - collect_meteora_damm_fees: reads no liquidation state (its own suite
 //   covers the mechanics; setup needs a full launchpad DAMM pool)
@@ -38,15 +38,10 @@ export default function suite() {
   let META: PublicKey,
     USDC: PublicKey,
     dao: PublicKey,
-    vault: PublicKey,
     draftProposal: PublicKey,
     draftSquadsProposal: PublicKey,
     liquidationProposal: PublicKey;
 
-  // A single liquidated DAO serves every case: blocked instructions are pure
-  // refusals, and the allowed ones each touch disjoint state (the sync flag,
-  // the LP position, the stake, the fee balances), so one `before` avoids
-  // re-running the whole market flow per test.
   before(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
     USDC = await this.createMint(this.payer.publicKey, 6);
@@ -99,13 +94,6 @@ export default function suite() {
       .rpc();
 
     [dao] = getDaoAddr({ nonce, daoCreator: this.payer.publicKey });
-
-    const storedDao = await this.futarchy.getDao(dao);
-    vault = storedDao.squadsMultisigVault;
-
-    // The baked apply_liquidation payload requires the vault's ATAs to exist
-    await this.createTokenAccount(META, vault);
-    await this.createTokenAccount(USDC, vault);
 
     // Destination ATAs for the post-liquidation collect_fees case
     await this.createTokenAccount(META, METADAO_MULTISIG_VAULT);
@@ -187,6 +175,7 @@ export default function suite() {
       cranks: 50,
     });
 
+    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
     await executeVaultTransaction(this, dao, squadsTransaction);
 
     const liquidatedDao = await this.futarchy.getDao(dao);
@@ -198,8 +187,9 @@ export default function suite() {
   const createSquadsVaultTx = async function (
     context: TestContext,
     instructions: any[],
+    targetDao: PublicKey = dao,
   ) {
-    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const multisigPda = multisig.getMultisigPda({ createKey: targetDao })[0];
     const multisigAccount = await multisig.accounts.Multisig.fromAccountAddress(
       context.squadsConnection,
       multisigPda,
@@ -208,7 +198,7 @@ export default function suite() {
       BigInt(multisigAccount.transactionIndex.toString()) + 1n;
 
     const { tx } = context.futarchy.squadsProposalCreateTx({
-      dao,
+      dao: targetDao,
       instructions,
       transactionIndex,
     });
@@ -217,7 +207,10 @@ export default function suite() {
     tx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
     await context.banksClient.processTransaction(tx);
 
-    return getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    return getProposalAddrsForTransactionIndex({
+      dao: targetDao,
+      transactionIndex,
+    });
   };
 
   it("refuses initialize_proposal", async function () {
@@ -369,22 +362,19 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  it("refuses spot_swap", async function () {
+  it("refuses sponsor_proposal", async function () {
     const callbacks = expectError(
       "DaoLiquidated",
-      "spot_swap should refuse on a liquidated DAO",
+      "sponsor_proposal should refuse on a liquidated DAO",
     );
 
     await this.futarchy
-      .spotSwapIx({
-        dao,
-        baseMint: META,
-        quoteMint: USDC,
-        swapType: "buy",
-        inputAmount: new BN(1_000_000),
-      })
+      .sponsorProposalIx({ proposal: draftProposal, dao })
       .rpc()
       .then(callbacks[0], callbacks[1]);
+
+    const storedProposal = await this.futarchy.getProposal(draftProposal);
+    assert.isNull(storedProposal.sponsoredBy);
   });
 
   it("refuses conditional_swap", async function () {
@@ -444,7 +434,6 @@ export default function suite() {
           baseToStake: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
-          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();
@@ -498,17 +487,47 @@ export default function suite() {
     }
   });
 
-  it("allows sync_spending_limit, which removes the Squads limit without recreating", async function () {
+  it("holds no live spending limit: the pre-sweep sync removed it, and a re-sync refuses", async function () {
     const [spendingLimitPda] = getSpendingLimitAddr({ dao });
-    assert.isNotNull(await this.banksClient.getAccount(spendingLimitPda));
-
-    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
-
     assert.isNull(await this.banksClient.getAccount(spendingLimitPda));
 
     const storedDao = await this.futarchy.getDao(dao);
     assert.isNull(storedDao.initialSpendingLimit);
     assert.isFalse(storedDao.spendingLimitDirty);
+
+    const callbacks = expectError(
+      "SpendingLimitNotDirty",
+      "re-sync should refuse once the flag is consumed",
+    );
+
+    await this.futarchy
+      .syncSpendingLimitIx({ dao })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  // Runs before the LP exit below: a swap needs the pool still funded.
+  it("allows spot_swap", async function () {
+    const preSpot = (await this.futarchy.getDao(dao)).amm.state.spot.spot;
+    const preBase = await this.getTokenBalance(META, this.payer.publicKey);
+
+    await this.futarchy
+      .spotSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        swapType: "buy",
+        inputAmount: new BN(500 * 1_000_000),
+      })
+      .rpc();
+
+    assert.isTrue(
+      (await this.getTokenBalance(META, this.payer.publicKey)) > preBase,
+    );
+
+    const postSpot = (await this.futarchy.getDao(dao)).amm.state.spot.spot;
+    assert.isTrue(postSpot.quoteReserves.gt(preSpot.quoteReserves));
+    assert.isTrue(postSpot.baseReserves.lt(preSpot.baseReserves));
   });
 
   it("allows withdraw_liquidity", async function () {
@@ -610,5 +629,180 @@ export default function suite() {
       postDao.amm.state.spot.spot.quoteProtocolFeeBalance.toString(),
       "0",
     );
+  });
+
+  // dao.liquidator is written by finalize itself, so the DAO is bricked
+  // the moment the market resolves. The ceremonial payload is never executed
+  // here — none of these guards depend on it.
+  describe("liquidation marker set by finalize", function () {
+    let base: PublicKey,
+      quote: PublicKey,
+      reservedDao: PublicKey,
+      liquidatorA: PublicKey,
+      rivalLiquidation: { proposal: PublicKey; squadsProposal: PublicKey },
+      stagedDraft: { proposal: PublicKey; squadsProposal: PublicKey };
+
+    before(async function () {
+      base = await this.createMint(this.payer.publicKey, 6);
+      quote = await this.createMint(this.payer.publicKey, 6);
+
+      await this.createTokenAccount(base, this.payer.publicKey);
+      await this.createTokenAccount(quote, this.payer.publicKey);
+
+      await this.mintTo(
+        base,
+        this.payer.publicKey,
+        this.payer,
+        1_000 * 1_000_000,
+      );
+      await this.mintTo(
+        quote,
+        this.payer.publicKey,
+        this.payer,
+        500_000 * 1_000_000,
+      );
+
+      const nonce = new BN(Math.floor(Math.random() * 1000000));
+
+      await this.futarchy
+        .initializeDaoIx({
+          baseMint: base,
+          quoteMint: quote,
+          params: {
+            secondsPerProposal: 60 * 60 * 24 * 3,
+            twapStartDelaySeconds: 60 * 60 * 24,
+            twapInitialObservation: THOUSAND_BUCK_PRICE,
+            twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(10),
+            minQuoteFutarchicLiquidity: new BN(10_000),
+            minBaseFutarchicLiquidity: new BN(10_000),
+            passThresholdBps: 300,
+            nonce,
+            initialSpendingLimit: null,
+            baseToStake: new BN(0),
+            teamSponsoredPassThresholdBps: 300,
+            teamAddress: this.payer.publicKey,
+          },
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+        ])
+        .rpc();
+
+      [reservedDao] = getDaoAddr({ nonce, daoCreator: this.payer.publicKey });
+
+      await this.futarchy
+        .provideLiquidityIx({
+          dao: reservedDao,
+          baseMint: base,
+          quoteMint: quote,
+          quoteAmount: new BN(100_000 * 1_000_000), // 100,000 USDC
+          maxBaseAmount: new BN(100 * 1_000_000), // 100 META
+          minLiquidity: new BN(0),
+          positionAuthority: this.payer.publicKey,
+          liquidityProvider: this.payer.publicKey,
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+        ])
+        .rpc();
+
+      liquidatorA = Keypair.generate().publicKey;
+
+      // Everything is staged while the DAO is still healthy: the winning
+      // liquidation, a rival liquidation, and an ordinary draft
+      const winner = await this.futarchy.initializeHostileLiquidateProposal({
+        dao: reservedDao,
+        liquidator: liquidatorA,
+      });
+      rivalLiquidation = await this.futarchy.initializeHostileLiquidateProposal(
+        {
+          dao: reservedDao,
+          liquidator: Keypair.generate().publicKey,
+        },
+      );
+
+      const { squadsProposal: stagedSquadsProposal } =
+        await createSquadsVaultTx(
+          this,
+          [
+            {
+              programId: MEMO_PROGRAM_ID,
+              keys: [],
+              data: Buffer.from("gap proposal"),
+            },
+          ],
+          reservedDao,
+        );
+      stagedDraft = {
+        proposal: await this.futarchy.initializeProposal(
+          reservedDao,
+          stagedSquadsProposal,
+        ),
+        squadsProposal: stagedSquadsProposal,
+      };
+
+      await this.futarchy
+        .launchProposalIx({
+          proposal: winner.proposal,
+          dao: reservedDao,
+          baseMint: base,
+          quoteMint: quote,
+          squadsProposal: winner.squadsProposal,
+        })
+        .rpc();
+
+      await passProposal(this, {
+        dao: reservedDao,
+        proposal: winner.proposal,
+        baseMint: base,
+        quoteMint: quote,
+        cranks: 50,
+      });
+    });
+
+    it("writes the liquidator at finalize, before the payload ever executes", async function () {
+      const storedDao = await this.futarchy.getDao(reservedDao);
+      assert.ok(storedDao.liquidator.equals(liquidatorA));
+    });
+
+    it("refuses to launch a second liquidation once the first has passed", async function () {
+      const callbacks = expectError(
+        "DaoLiquidated",
+        "launched a liquidation after another had already passed",
+      );
+
+      await this.futarchy
+        .launchProposalIx({
+          proposal: rivalLiquidation.proposal,
+          dao: reservedDao,
+          baseMint: base,
+          quoteMint: quote,
+          squadsProposal: rivalLiquidation.squadsProposal,
+        })
+        .rpc()
+        .then(callbacks[0], callbacks[1]);
+
+      // First writer wins: only one liquidation record ever holds the DAO
+      const storedDao = await this.futarchy.getDao(reservedDao);
+      assert.ok(storedDao.liquidator.equals(liquidatorA));
+    });
+
+    it("refuses to launch a pre-staged draft in the finalize→execute gap", async function () {
+      const callbacks = expectError(
+        "DaoLiquidated",
+        "launched a blocker in the finalize→execute gap",
+      );
+
+      await this.futarchy
+        .launchProposalIx({
+          proposal: stagedDraft.proposal,
+          dao: reservedDao,
+          baseMint: base,
+          quoteMint: quote,
+          squadsProposal: stagedDraft.squadsProposal,
+        })
+        .rpc()
+        .then(callbacks[0], callbacks[1]);
+    });
   });
 }

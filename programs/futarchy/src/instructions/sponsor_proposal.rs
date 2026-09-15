@@ -12,14 +12,22 @@ pub struct SponsorProposal<'info> {
 
 impl SponsorProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
             FutarchyError::ProposalNotInDraftState
         );
 
-        require_neq!(
-            self.proposal.is_team_sponsored,
-            true,
+        require!(
+            self.proposal.action.params().team_sponsorship_policy
+                != TeamSponsorshipPolicy::Forbidden,
+            FutarchyError::TeamSponsorshipForbidden
+        );
+
+        // A previous team's sponsorship can be replaced, the current team's can't be repeated.
+        require!(
+            !self.proposal.is_sponsored_by(self.dao.team_address),
             FutarchyError::ProposalAlreadySponsored
         );
 
@@ -35,7 +43,7 @@ impl SponsorProposal<'_> {
             program: _,
         } = ctx.accounts;
 
-        proposal.is_team_sponsored = true;
+        proposal.sponsored_by = Some(team_address.key());
 
         dao.seq_num += 1;
 
