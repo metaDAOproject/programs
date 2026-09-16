@@ -95,6 +95,8 @@ impl AdminUpdateProposalParams<'_> {
         }
 
         // `launch_proposal` keeps these values instead of writing its own.
+        // It is assumed that a change to the proposal params applies to both,
+        // even when only one is changed.
         proposal.params_overridden = true;
 
         dao.seq_num += 1;
