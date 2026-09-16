@@ -7,7 +7,13 @@ import {
 import { assert } from "chai";
 import BN from "bn.js";
 import { getMint } from "spl-token-bankrun";
-import { ACCOUNT_SIZE, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {
+  ACCOUNT_SIZE,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import { QuoteSweep } from "@metadaoproject/programs";
 import { expectError } from "../../utils.js";
 import { runUnlockCycle, setDaoOracle, setupPackageOnDao } from "../utils.js";
 
@@ -75,17 +81,14 @@ export default function () {
     });
   }
 
-  function burnIx(
-    ctx: Mocha.Context,
-    quoteSweep: { quoteMint?: PublicKey; quoteDestination?: PublicKey } = {},
-  ) {
+  function burnIx(ctx: Mocha.Context, quoteSweep?: QuoteSweep) {
     return ctx.priceBasedPerformancePackage.burnPerformancePackageIx({
       performancePackage,
       tokenMint,
       recipient: recipient.publicKey,
       admin: admin.publicKey,
       spillAccount: spillAccount.publicKey,
-      ...quoteSweep,
+      quoteSweep,
     });
   }
 
@@ -338,13 +341,36 @@ export default function () {
 
   it("rejects a quote account without a destination", async function () {
     const quoteMint = await this.createMint(this.payer.publicKey, 6);
-    await this.createTokenAccount(quoteMint, performancePackage);
+    const packageQuoteAccount = await this.createTokenAccount(
+      quoteMint,
+      performancePackage,
+    );
 
     const callbacks = expectError(
       "QuoteSweepAccountsIncomplete",
       "burned with the quote account but no destination",
     );
-    await burnIx(this, { quoteMint })
+    // The SDK only builds the sweep as a pair, so the accounts are assembled by hand
+    await this.priceBasedPerformancePackage.program.methods
+      .burnPerformancePackage()
+      .accounts({
+        performancePackage,
+        performancePackageTokenVault: vaultAddress(),
+        recipient: recipient.publicKey,
+        recipientTokenAccount: getAssociatedTokenAddressSync(
+          tokenMint,
+          recipient.publicKey,
+        ),
+        admin: admin.publicKey,
+        spillAccount: spillAccount.publicKey,
+        tokenMint,
+        quoteMint,
+        packageQuoteAccount,
+        quoteDestination: null,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      })
       .signers([admin])
       .rpc()
       .then(callbacks[0], callbacks[1]);

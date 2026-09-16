@@ -4,15 +4,15 @@ import {
   PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
   PriceBasedPerformancePackageClient,
   METADAO_MULTISIG_VAULT,
+  QuoteSweep,
 } from "@metadaoproject/programs";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
 
 // Set the performance package address before running the script
 const performancePackage = new PublicKey("");
-// Set both when the package's quote ATA exists (it does once the recipient has
+// Set when the package's quote ATA exists (it does once the recipient has
 // sold): its balance is swept into `quoteDestination` and the ATA is closed
-const quoteMint: PublicKey | undefined = undefined;
-const quoteDestination: PublicKey | undefined = undefined;
+const quoteSweep: QuoteSweep | undefined = undefined;
 
 const provider = anchor.AnchorProvider.env();
 
@@ -55,8 +55,7 @@ export const burnPerformancePackage = async () => {
       recipient: performancePackageAccount.recipient,
       admin: metadaoSquadsMultisigVault,
       spillAccount: payer.publicKey,
-      quoteMint,
-      quoteDestination,
+      quoteSweep,
     })
     .instruction();
 

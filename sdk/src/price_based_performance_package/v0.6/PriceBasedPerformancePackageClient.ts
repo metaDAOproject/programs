@@ -35,6 +35,12 @@ export type CreatePriceBasedPerformancePackageClientParams = {
   priceBasedTokenLockProgramId?: PublicKey;
 };
 
+/** Burning sweeps the package's ATA for `quoteMint` into `quoteDestination` and closes it */
+export type QuoteSweep = {
+  quoteMint: PublicKey;
+  quoteDestination: PublicKey;
+};
+
 export class PriceBasedPerformancePackageClient {
   public readonly provider: AnchorProvider;
   public readonly program: Program<PriceBasedPerformancePackage>;
@@ -295,17 +301,14 @@ export class PriceBasedPerformancePackageClient {
     recipient,
     admin = this.provider.publicKey,
     spillAccount = admin,
-    quoteMint,
-    quoteDestination,
+    quoteSweep,
   }: {
     performancePackage: PublicKey;
     tokenMint: PublicKey;
     recipient: PublicKey;
     admin?: PublicKey;
     spillAccount?: PublicKey;
-    /** Pass both to sweep the package's quote ATA into `quoteDestination` and close it */
-    quoteMint?: PublicKey;
-    quoteDestination?: PublicKey;
+    quoteSweep?: QuoteSweep;
   }) {
     return this.program.methods.burnPerformancePackage().accounts({
       performancePackage,
@@ -323,11 +326,15 @@ export class PriceBasedPerformancePackageClient {
       admin,
       spillAccount,
       tokenMint,
-      quoteMint: quoteMint ?? null,
-      packageQuoteAccount: quoteMint
-        ? getAssociatedTokenAddressSync(quoteMint, performancePackage, true)
+      quoteMint: quoteSweep?.quoteMint ?? null,
+      packageQuoteAccount: quoteSweep
+        ? getAssociatedTokenAddressSync(
+            quoteSweep.quoteMint,
+            performancePackage,
+            true,
+          )
         : null,
-      quoteDestination: quoteDestination ?? null,
+      quoteDestination: quoteSweep?.quoteDestination ?? null,
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
