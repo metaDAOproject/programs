@@ -1,0 +1,14 @@
+{
+  "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq": {
+    "schema_version": "1.1.0",
+    "program_address": "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq",
+    "program_name": "futarchy",
+    "module": "futarchy",
+    "source_root": "target/idl",
+    "idl_path": "target/wake-idl/FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq.json",
+    "idl_sha256": "05e0ea3e8509ef4a7c1508f4f6448f21ed62ae726224631aff5807ddc48b98f1",
+    "anchor_version": "0.6.2",
+    "generator_version": "wake-sol gen 0.2.0",
+    "generated_at": "2026-09-10T14:06:14Z"
+  }
+}

@@ -33,6 +33,7 @@ local_dev_solana_version = "1.17.34"
 [toolchain.workflow_solana_cli]
 ".github/workflows/anchor-test.yaml" = "1.17.31"
 ".github/workflows/generate-verifiable-builds.yaml" = "1.17.31"
+".github/workflows/futarchy-fuzz.yaml" = "1.17.34"
 ".github/workflows/deploy-buffer.yaml" = "1.17.16"
 ".github/workflows/verify-build.yaml" = "1.17.16"
 
