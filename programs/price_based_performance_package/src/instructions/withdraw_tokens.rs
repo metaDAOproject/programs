@@ -67,7 +67,7 @@ impl WithdrawTokens<'_> {
             performance_package,
             oracle_account,
             performance_package_token_vault,
-            token_mint: _,
+            token_mint,
             recipient_token_account,
             recipient,
             payer: _,
@@ -100,7 +100,7 @@ impl WithdrawTokens<'_> {
                 policy.roll_if_new_window(now);
                 policy.assert_tokens_fit(amount)?;
 
-                let dao = read_dao(oracle_account)?;
+                let dao = read_dao(oracle_account, &token_mint.key())?;
                 let price = valuation_price(&dao)?;
                 let quote_value = quote_value_at_price(amount, price)?;
                 policy.assert_quote_fits(quote_value)?;

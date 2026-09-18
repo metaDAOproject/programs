@@ -1725,6 +1725,11 @@ export type PriceBasedPerformancePackage = {
       name: "QuoteSweepAccountsIncomplete";
       msg: "The package's quote account and the quote destination must be passed together";
     },
+    {
+      code: 6026;
+      name: "OracleMintMismatch";
+      msg: "Oracle Dao's base mint must be the package's token mint";
+    },
   ];
 };
 
@@ -3454,6 +3459,11 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6025,
       name: "QuoteSweepAccountsIncomplete",
       msg: "The package's quote account and the quote destination must be passed together",
+    },
+    {
+      code: 6026,
+      name: "OracleMintMismatch",
+      msg: "Oracle Dao's base mint must be the package's token mint",
     },
   ],
 };

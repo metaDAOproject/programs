@@ -125,6 +125,9 @@ export function getMaxTokenWithdrawal({
   if (dao === undefined) {
     throw new Error("a Dao is needed to value withdrawals under active limits");
   }
+  if (!dao.baseMint.equals(performancePackage.tokenMint)) {
+    throw new Error("the Dao's base mint is not the package's token mint");
+  }
 
   const usage = getEffectiveWindowUsage(policy, now);
   const tokensRoom = maxTokensPerWindow.sub(usage.tokensUsed);

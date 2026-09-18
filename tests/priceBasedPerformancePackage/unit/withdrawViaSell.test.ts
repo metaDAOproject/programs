@@ -504,7 +504,7 @@ export default function () {
     });
 
     const callbacks = expectError(
-      "ConstraintRaw",
+      "OracleMintMismatch",
       "sold through a Dao on another token",
     );
     await sellIx(this, 1, { oracle: otherDao })

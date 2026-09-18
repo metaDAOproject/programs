@@ -54,4 +54,6 @@ pub enum PriceBasedPerformancePackageError {
     InvalidQuoteMint,
     #[msg("The package's quote account and the quote destination must be passed together")]
     QuoteSweepAccountsIncomplete,
+    #[msg("Oracle Dao's base mint must be the package's token mint")]
+    OracleMintMismatch,
 }

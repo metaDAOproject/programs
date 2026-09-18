@@ -658,6 +658,57 @@ export default function () {
       );
     });
 
+    it("rejects an oracle Dao whose base mint is another token", async function () {
+      tokenMint = await this.createMint(this.payer.publicKey, 6);
+      await this.mintTo(
+        tokenMint,
+        this.payer.publicKey,
+        this.payer,
+        TOTAL_AMOUNT,
+      );
+      const otherMint = await this.createMint(this.payer.publicKey, 6);
+      const quoteMint = await this.createMint(this.payer.publicKey, 6);
+      oracle = await this.setupBasicDao({ baseMint: otherMint, quoteMint });
+      const now = Number((await this.banksClient.getClock()).unixTimestamp);
+      performancePackage = await this.setupBasicPerformancePackage({
+        tokenMint,
+        oracleAccount: oracle,
+        byteOffset: 9,
+        recipient: recipient.publicKey,
+        limits: {
+          endTimestamp: new BN(now + ONE_YEAR),
+          windowSeconds: THIRTY_DAYS,
+          maxTokensPerWindow: new BN(TOKEN_CAP),
+          maxQuotePerWindow: new BN(QUOTE_CAP),
+          withdrawalMode: { both: {} },
+        },
+      });
+      // Tokens donated to the vault are withdrawable without an unlock
+      await this.mintTo(tokenMint, performancePackage, this.payer, TOKEN_CAP);
+
+      await maxWithdrawal(this).then(
+        () => assert.fail("computed a maximum against another token's Dao"),
+        (error: Error) =>
+          assert.include(error.message, "not the package's token mint"),
+      );
+
+      await expectWithdrawError(
+        this,
+        1,
+        "OracleMintMismatch",
+        "withdrew against another token's Dao",
+      );
+      assert.deepEqual(await usage(this), {
+        windowIndex: "0",
+        tokensUsed: "0",
+        quoteUsed: "0",
+      });
+      assert.equal(
+        (await this.getTokenBalance(tokenMint, performancePackage)).toString(),
+        (TOTAL_AMOUNT + TOKEN_CAP).toString(),
+      );
+    });
+
     it("rolls a one-hour window every hour", async function () {
       await setupCappedPackage(this, { limits: { windowSeconds: ONE_HOUR } });
       const now = Number((await this.banksClient.getClock()).unixTimestamp);

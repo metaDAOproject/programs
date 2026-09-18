@@ -28,7 +28,7 @@ pub struct WithdrawViaSell<'info> {
     #[account(
         mut,
         address = performance_package.oracle_config.oracle_account,
-        constraint = dao.base_mint == token_mint.key()
+        constraint = dao.base_mint == token_mint.key() @ PriceBasedPerformancePackageError::OracleMintMismatch
     )]
     pub dao: Box<Account<'info, Dao>>,
 

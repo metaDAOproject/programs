@@ -4,15 +4,22 @@ use futarchy::{Dao, Pool, PoolState};
 
 use crate::{PriceBasedPerformancePackageError, PRICE_SCALE};
 
-/// Read the oracle account as the futarchy `Dao` whose spot pool prices withdrawals.
-pub fn read_dao(oracle: &AccountInfo) -> Result<Dao> {
+/// Read the oracle account as the futarchy `Dao` whose spot pool prices withdrawals of `token_mint`.
+pub fn read_dao(oracle: &AccountInfo, token_mint: &Pubkey) -> Result<Dao> {
     if oracle.owner != &Dao::owner() {
         return Err(Error::from(ErrorCode::AccountOwnedByWrongProgram)
             .with_pubkeys((*oracle.owner, Dao::owner())));
     }
 
     let data = oracle.try_borrow_data()?;
-    Dao::try_deserialize(&mut &data[..])
+    let dao = Dao::try_deserialize(&mut &data[..])?;
+    require_keys_eq!(
+        dao.base_mint,
+        *token_mint,
+        PriceBasedPerformancePackageError::OracleMintMismatch
+    );
+
+    Ok(dao)
 }
 
 /// The higher of the spot pool's damped observation and its reserve price.
