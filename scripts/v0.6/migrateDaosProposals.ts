@@ -7,7 +7,10 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
+import {
+  FutarchyClient,
+  getSpendingLimitAddr,
+} from "@metadaoproject/programs/futarchy/v0.6";
 import dotenv from "dotenv";
 import bs58 from "bs58";
 
@@ -39,7 +42,9 @@ async function main() {
   const daoDiscriminator = getDiscriminator("Dao");
   const proposalDiscriminator = getDiscriminator("Proposal");
 
-  const daoBatchSize = 15;
+  // resize_dao now also references the DAO's spending limit, two unique
+  // account keys per instruction, so the same cap as proposals applies.
+  const daoBatchSize = 10;
   // Each resize_proposal also references the proposal's dao, so the worst
   // case is two unique account keys per instruction; 10 keeps the batch under
   // the transaction size limit.
@@ -87,6 +92,7 @@ async function main() {
           .resizeDao()
           .accounts({
             dao: pubkey,
+            spendingLimit: getSpendingLimitAddr({ dao: pubkey })[0],
             payer: payer.publicKey,
           })
           .instruction();

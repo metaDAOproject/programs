@@ -5,6 +5,7 @@ import cancelApprovedPayloadAfterLiquidation from "./integration/cancelApprovedP
 import gatedLiquidationUnwind from "./integration/gatedLiquidationUnwind.test.js";
 import largeSpendEndToEnd from "./integration/largeSpendEndToEnd.test.js";
 import cooldownRoundTrip from "./integration/cooldownRoundTrip.test.js";
+import typedProposalsOptInEndToEnd from "./integration/typedProposalsOptInEndToEnd.test.js";
 
 import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
@@ -15,6 +16,7 @@ import initializeHostileTakeoverProposal from "./unit/initializeHostileTakeoverP
 import initializeHostileLiquidateProposal from "./unit/initializeHostileLiquidateProposal.test.js";
 import initializeBuybackTokenProposal from "./unit/initializeBuybackTokenProposal.test.js";
 import launchProposal from "./unit/launchProposal.test.js";
+import typedProposalsOptIn from "./unit/typedProposalsOptIn.test.js";
 import sponsorProposal from "./unit/sponsorProposal.test.js";
 import finalizeProposal from "./unit/finalizeProposal.test.js";
 import updateDao from "./unit/updateDao.test.js";
@@ -96,6 +98,7 @@ export default function suite() {
     initializeBuybackTokenProposal,
   );
   describe("#launch_proposal", launchProposal);
+  describe("typed proposals opt-in", typedProposalsOptIn);
   describe("#sponsor_proposal", sponsorProposal);
   describe("#finalize_proposal", finalizeProposal);
   describe("#update_dao", updateDao);
@@ -146,4 +149,8 @@ export default function suite() {
   describe("integration: gated liquidation unwind", gatedLiquidationUnwind);
   describe("integration: large spend end to end", largeSpendEndToEnd);
   describe("integration: cooldown round-trip", cooldownRoundTrip);
+  describe(
+    "integration: typed proposals opt-in end to end",
+    typedProposalsOptInEndToEnd,
+  );
 }

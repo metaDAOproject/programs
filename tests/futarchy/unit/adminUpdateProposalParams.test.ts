@@ -11,6 +11,7 @@ import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
 import { assert } from "chai";
 import { expectError, passProposal, setupBasicDao } from "../../utils.js";
+import { rewriteAccount } from "../utils.js";
 import { TestContext } from "../../main.test.js";
 
 // ExecuteArbitrary's catalog parameters, and the start delay the duration
@@ -73,26 +74,6 @@ async function createArbitraryProposal(
   };
 }
 
-// Re-encodes an account in place, padded back to its allocated length. The two
-// callers below both need state no instruction on the branch can produce.
-async function rewriteAccount(
-  ctx: TestContext,
-  address: PublicKey,
-  name: "proposal" | "dao",
-  mutate: (decoded: any) => void,
-) {
-  const raw = await ctx.banksClient.getAccount(address);
-  const coder = ctx.futarchy.futarchy.account[name].coder.accounts;
-  const decoded = coder.decode(name, Buffer.from(raw.data));
-
-  mutate(decoded);
-
-  const buf = Buffer.alloc(raw.data.length);
-  (await coder.encode(name, decoded)).copy(buf, 0);
-
-  ctx.context.setAccount(address, { ...raw, data: buf });
-}
-
 export default function suite() {
   let META: PublicKey,
     USDC: PublicKey,
@@ -151,6 +132,7 @@ export default function suite() {
     const before = await this.futarchy.getProposal(proposal);
     assert.equal(before.durationInSeconds, ARBITRARY_DURATION_SECONDS);
     assert.equal(before.passThresholdBps, ARBITRARY_PASS_THRESHOLD_BPS);
+    assert.isFalse(before.paramsOverridden);
 
     await this.futarchy
       .adminUpdateProposalParamsIx({
@@ -164,6 +146,7 @@ export default function suite() {
     const after = await this.futarchy.getProposal(proposal);
     assert.equal(after.durationInSeconds, DAY_SECONDS * 2);
     assert.equal(after.passThresholdBps, 200);
+    assert.isTrue(after.paramsOverridden);
   });
 
   it("leaves the threshold alone when only the duration is set", async function () {
@@ -283,8 +266,17 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
-  it("rejects a launched proposal", async function () {
+  it("keeps the tuned values through launch and rejects a launched proposal", async function () {
     await provideLiquidity(this);
+
+    await this.futarchy
+      .adminUpdateProposalParamsIx({
+        proposal,
+        dao,
+        durationInSeconds: DAY_SECONDS * 2,
+        passThresholdBps: 200,
+      })
+      .rpc();
 
     await this.futarchy
       .launchProposalIx({
@@ -296,6 +288,11 @@ export default function suite() {
       })
       .rpc();
 
+    const launched = await this.futarchy.getProposal(proposal);
+    assert.exists(launched.state.pending);
+    assert.equal(launched.durationInSeconds, DAY_SECONDS * 2);
+    assert.equal(launched.passThresholdBps, 200);
+
     const callbacks = expectError(
       "ProposalNotInDraftState",
       "should not retune a live market",
@@ -305,7 +302,7 @@ export default function suite() {
       .adminUpdateProposalParamsIx({
         proposal,
         dao,
-        durationInSeconds: DAY_SECONDS * 2,
+        durationInSeconds: DAY_SECONDS * 3,
       })
       .rpc()
       .then(callbacks[0], callbacks[1]);

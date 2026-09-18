@@ -64,7 +64,16 @@ impl<'info> LaunchProposal<'info> {
 
         // Kind gates, checked at launch rather than create so that pre-created
         // drafts can't bypass them
-        let params = self.proposal.action.params();
+
+        // Typed kinds need the DAO typed proposals enabled.
+        if !matches!(self.proposal.action, ProposalAction::ExecuteArbitrary) {
+            require!(
+                self.dao.typed_proposals_enabled,
+                FutarchyError::TypedProposalsDisabled
+            );
+        }
+
+        let params = self.proposal.launch_params(&self.dao);
 
         if params.team_sponsorship_policy == TeamSponsorshipPolicy::Required {
             require!(is_team_sponsored, FutarchyError::ProposalNotTeamSponsored);
@@ -74,7 +83,7 @@ impl<'info> LaunchProposal<'info> {
         // with an empty aggregator, and `MarketsTooYoung` blocks finalize.
         // Strict, because finalize needs the last update past that boundary.
         require_gt!(
-            self.proposal.duration_in_seconds,
+            params.duration_seconds,
             params.twap_start_delay_seconds,
             FutarchyError::ProposalDurationTooShort
         );
@@ -176,8 +185,10 @@ impl<'info> LaunchProposal<'info> {
 
         let clock = Clock::get()?;
 
-        // Per-kind, not per-DAO: `dao.twap_start_delay_seconds` is vestigial.
-        let twap_start_delay_seconds = proposal.action.params().twap_start_delay_seconds;
+        // Write the terms in force now; the draft only carried a preview.
+        let params = proposal.launch_params(dao);
+        proposal.duration_in_seconds = params.duration_seconds;
+        proposal.pass_threshold_bps = params.pass_threshold_bps;
 
         dao.amm.state = PoolState::Futarchy {
             spot,
@@ -190,7 +201,7 @@ impl<'info> LaunchProposal<'info> {
                     clock.unix_timestamp,
                     dao.twap_initial_observation,
                     dao.twap_max_observation_change_per_update,
-                    twap_start_delay_seconds,
+                    params.twap_start_delay_seconds,
                 ),
             },
             fail: Pool {
@@ -202,7 +213,7 @@ impl<'info> LaunchProposal<'info> {
                     clock.unix_timestamp,
                     dao.twap_initial_observation,
                     dao.twap_max_observation_change_per_update,
-                    twap_start_delay_seconds,
+                    params.twap_start_delay_seconds,
                 ),
             },
         };
@@ -220,6 +231,8 @@ impl<'info> LaunchProposal<'info> {
             timestamp_enqueued: proposal.timestamp_enqueued,
             total_staked,
             post_amm_state: dao.amm.clone(),
+            duration_in_seconds: proposal.duration_in_seconds,
+            pass_threshold_bps: proposal.pass_threshold_bps,
         });
 
         Ok(())

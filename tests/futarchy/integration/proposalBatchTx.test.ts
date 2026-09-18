@@ -86,6 +86,7 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
           minBaseFutarchicLiquidity: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -100,6 +101,7 @@ export default function suite() {
           twapMaxObservationChangePerUpdate: null,
           minQuoteFutarchicLiquidity: null,
           minBaseFutarchicLiquidity: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();

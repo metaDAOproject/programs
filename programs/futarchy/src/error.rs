@@ -152,4 +152,8 @@ pub enum FutarchyError {
     TeamSponsorshipForbidden,
     #[msg("Squads proposal must be in Approved status to be cancelled")]
     SquadsProposalNotApproved,
+    #[msg("This DAO has not opted into typed proposals")]
+    TypedProposalsDisabled,
+    #[msg("Typed proposals cannot be disabled")]
+    TypedProposalsCannotBeDisabled,
 }

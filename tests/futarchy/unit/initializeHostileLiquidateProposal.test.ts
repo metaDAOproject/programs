@@ -7,7 +7,8 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import { assert } from "chai";
-import { assertVaultTransactionPayload } from "../../utils.js";
+import { assertVaultTransactionPayload, expectError } from "../../utils.js";
+import { setTypedProposalsEnabled } from "../utils.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
@@ -94,5 +95,20 @@ export default function suite() {
 
     const updatedDao = await this.futarchy.getDao(dao);
     assert.equal(updatedDao.proposalCount, 1);
+  });
+
+  it("throws error when the DAO has typed proposals off", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+
+    const callbacks = expectError(
+      "TypedProposalsDisabled",
+      "created a hostile liquidate proposal on a DAO with typed proposals off",
+    );
+    await this.futarchy
+      .initializeHostileLiquidateProposal({
+        dao,
+        liquidator: Keypair.generate().publicKey,
+      })
+      .then(...callbacks);
   });
 }

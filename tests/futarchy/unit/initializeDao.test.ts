@@ -78,6 +78,7 @@ export default function suite() {
 
     assert.isNull(storedDao.optimisticProposal);
     assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
+    assert.isTrue(storedDao.typedProposalsEnabled);
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
@@ -189,6 +190,7 @@ export default function suite() {
     assert.equal(storedDao.teamSponsoredPassThresholdBps, 123);
     assert.isNull(storedDao.optimisticProposal);
     assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
+    assert.isTrue(storedDao.typedProposalsEnabled);
   });
 
   it("doesn't allow an initial spending limit with a zero monthly amount", async function () {

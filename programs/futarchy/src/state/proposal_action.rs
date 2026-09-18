@@ -143,6 +143,30 @@ impl ProposalAction {
         }
     }
 
+    /// The parameters a proposal of this kind runs under for `dao`. Plain
+    /// proposals of a DAO that has not opted in run under the DAO's own
+    /// configuration, where sponsorship by the current team selects the
+    /// team-sponsored threshold; everything else is the catalog.
+    pub fn params_for(&self, dao: &Dao, is_team_sponsored: bool) -> InstructionParams {
+        let follows_dao_config =
+            matches!(self, ProposalAction::ExecuteArbitrary) && !dao.typed_proposals_enabled;
+        
+        if !follows_dao_config {
+            return self.params();
+        }
+
+        InstructionParams {
+            duration_seconds: dao.seconds_per_proposal,
+            pass_threshold_bps: if is_team_sponsored {
+                dao.team_sponsored_pass_threshold_bps
+            } else {
+                dao.pass_threshold_bps as i16
+            },
+            twap_start_delay_seconds: dao.twap_start_delay_seconds,
+            ..self.params()
+        }
+    }
+
     /// Per-kind launch gates over caller-supplied accounts, hooked in by
     /// `launch_proposal`. Kinds with no account gate require an empty list.
     pub fn verify_launch_accounts<'info>(

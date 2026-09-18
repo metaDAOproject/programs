@@ -384,6 +384,7 @@ export default async function suite() {
           minBaseFutarchicLiquidity: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();

@@ -85,7 +85,7 @@ const EMPTY_UPDATE_DAO_PARAMS: UpdateDaoParams = {
   baseToStake: null,
   teamSponsoredPassThresholdBps: null,
   teamAddress: null,
-  isOptimisticGovernanceEnabled: null,
+  typedProposalsEnabled: null,
 };
 
 // Updates the given DAO config fields, leaving the omitted ones unchanged

@@ -12,6 +12,9 @@ pub struct UpdateDaoParams {
     pub base_to_stake: Option<u64>,
     pub team_sponsored_pass_threshold_bps: Option<i16>,
     pub team_address: Option<Pubkey>,
+    /// `Some(true)` turns typed proposals on for this DAO. `None` leaves them
+    /// as they are. `Some(false)` is refused: there is no way to turn them off.
+    pub typed_proposals_enabled: Option<bool>,
 }
 
 #[derive(Accounts)]
@@ -23,13 +26,19 @@ pub struct UpdateDao<'info> {
 }
 
 impl UpdateDao<'_> {
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self, dao_params: &UpdateDaoParams) -> Result<()> {
         require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
 
         // Prevent parameter updates during active futarchy markets
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
+
+        // Typed proposals only turn on.
+        require!(
+            dao_params.typed_proposals_enabled != Some(false),
+            FutarchyError::TypedProposalsCannotBeDisabled
+        );
 
         Ok(())
     }
@@ -82,6 +91,9 @@ impl UpdateDao<'_> {
             last_failed_liquidation_at: dao.last_failed_liquidation_at,
             spending_limit_dirty: dao.spending_limit_dirty,
             last_buyback_finalized_at: dao.last_buyback_finalized_at,
+            typed_proposals_enabled: dao_params
+                .typed_proposals_enabled
+                .unwrap_or(dao.typed_proposals_enabled),
         });
 
         dao.seq_num += 1;
@@ -103,6 +115,7 @@ impl UpdateDao<'_> {
             team_sponsored_pass_threshold_bps: dao.team_sponsored_pass_threshold_bps,
             team_address: dao.team_address,
             is_optimistic_governance_enabled: dao.is_optimistic_governance_enabled,
+            typed_proposals_enabled: dao.typed_proposals_enabled,
         });
 
         Ok(())

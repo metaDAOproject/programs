@@ -17,6 +17,12 @@ import {
   sha256,
 } from "@metadaoproject/programs";
 import BN from "bn.js";
+import {
+  expectVaultExecutionError,
+  rewriteAccount,
+  setTypedProposalsEnabled,
+  updateDaoViaVault,
+} from "../utils.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 
@@ -104,6 +110,7 @@ export default function suite() {
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
           twapStartDelaySeconds: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -385,5 +392,96 @@ export default function suite() {
         `Expected PoolNotInSpotState error, got: ${e}`,
       );
     }
+  });
+
+  it("turns typed proposals on for a DAO that has them off", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+    const before = await this.futarchy.getDao(dao);
+    assert.isFalse(before.typedProposalsEnabled);
+
+    await updateDaoViaVault(this, dao, { typedProposalsEnabled: true });
+
+    const after = await this.futarchy.getDao(dao);
+    assert.isTrue(after.typedProposalsEnabled);
+    assert.equal(after.seqNum.toString(), before.seqNum.addn(1).toString());
+    assert.deepEqual(
+      JSON.parse(
+        JSON.stringify({
+          ...after,
+          typedProposalsEnabled: false,
+          seqNum: before.seqNum,
+        }),
+      ),
+      JSON.parse(JSON.stringify(before)),
+    );
+  });
+
+  it("keeps typed proposals on when asked to turn them on again", async function () {
+    const before = await this.futarchy.getDao(dao);
+    assert.isTrue(before.typedProposalsEnabled);
+
+    await updateDaoViaVault(this, dao, { typedProposalsEnabled: true });
+
+    const after = await this.futarchy.getDao(dao);
+    assert.isTrue(after.typedProposalsEnabled);
+    assert.equal(after.seqNum.toString(), before.seqNum.addn(1).toString());
+  });
+
+  it("refuses to turn typed proposals off on a DAO that has them off", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectVaultExecutionError(
+      this,
+      updateDaoViaVault(this, dao, {
+        typedProposalsEnabled: false,
+        passThresholdBps: 500,
+      }),
+      "TypedProposalsCannotBeDisabled",
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+
+  it("refuses to turn typed proposals off on a DAO that has them on", async function () {
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectVaultExecutionError(
+      this,
+      updateDaoViaVault(this, dao, {
+        typedProposalsEnabled: false,
+        passThresholdBps: 500,
+      }),
+      "TypedProposalsCannotBeDisabled",
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+
+  it("cannot opt in on a configuration that fails the invariant without fixing it in the same call", async function () {
+    await rewriteAccount(this, dao, "dao", (decoded) => {
+      decoded.typedProposalsEnabled = false;
+      decoded.minQuoteFutarchicLiquidity = new BN(0);
+    });
+
+    await expectVaultExecutionError(
+      this,
+      updateDaoViaVault(this, dao, { typedProposalsEnabled: true }),
+      "InsufficientLiquidity",
+    );
+
+    let daoAccount = await this.futarchy.getDao(dao);
+    assert.isFalse(daoAccount.typedProposalsEnabled);
+
+    await updateDaoViaVault(this, dao, {
+      typedProposalsEnabled: true,
+      minQuoteFutarchicLiquidity: new BN(1),
+    });
+
+    daoAccount = await this.futarchy.getDao(dao);
+    assert.isTrue(daoAccount.typedProposalsEnabled);
+    assert.equal(daoAccount.minQuoteFutarchicLiquidity.toString(), "1");
   });
 }

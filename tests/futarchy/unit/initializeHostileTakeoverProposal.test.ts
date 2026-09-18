@@ -13,6 +13,7 @@ import {
   expectError,
   forceApproveSquadsProposal,
 } from "../../utils.js";
+import { setTypedProposalsEnabled } from "../utils.js";
 import { TestContext } from "../../main.test.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
@@ -75,6 +76,7 @@ export default function suite() {
           baseToStake: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: newTeamAddress,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -332,6 +334,22 @@ export default function suite() {
       .initializeHostileTakeoverProposal({
         dao,
         newTeamAddress: this.payer.publicKey,
+        spendingLimitAction: { keep: {} },
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when the DAO has typed proposals off", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+
+    const callbacks = expectError(
+      "TypedProposalsDisabled",
+      "created a hostile takeover proposal on a DAO with typed proposals off",
+    );
+    await this.futarchy
+      .initializeHostileTakeoverProposal({
+        dao,
+        newTeamAddress: Keypair.generate().publicKey,
         spendingLimitAction: { keep: {} },
       })
       .then(...callbacks);

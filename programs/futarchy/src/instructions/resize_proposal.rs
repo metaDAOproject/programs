@@ -26,10 +26,10 @@ impl ResizeProposal<'_> {
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Proposal::MIGRATED_SIZE;
-        // 401 bytes: 32 (Option<Pubkey> sponsored_by replacing the bool)
+        // 402 bytes: 32 (Option<Pubkey> sponsored_by replacing the bool)
         // + 2 (i16 pass_threshold_bps) + 1 (bool council_can_block)
-        // + 366 (ProposalAction)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 401;
+        // + 366 (ProposalAction) + 1 (bool params_overridden)
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 402;
 
         if proposal.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -44,11 +44,10 @@ impl ResizeProposal<'_> {
 
         let action = ProposalAction::ExecuteArbitrary;
 
-        // Draft proposals take the kind's catalog params like any new proposal.
-        // Launched proposals keep the rules they were launched under.
+        // Drafts preview what launch would write today; launched proposals keep their rules.
         let (pass_threshold_bps, duration_in_seconds) =
             if matches!(old_proposal_data.state, ProposalState::Draft { .. }) {
-                let params = action.params();
+                let params = action.params_for(dao, old_proposal_data.is_team_sponsored);
                 (params.pass_threshold_bps, params.duration_seconds)
             } else {
                 let pass_threshold_bps = if old_proposal_data.is_team_sponsored {
@@ -87,6 +86,7 @@ impl ResizeProposal<'_> {
             pass_threshold_bps,
             council_can_block: true,
             action,
+            params_overridden: false,
         };
 
         proposal.realloc(AFTER_REALLOC_SIZE, true)?;

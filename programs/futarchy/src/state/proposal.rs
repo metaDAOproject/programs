@@ -41,18 +41,37 @@ pub struct Proposal {
     pub fail_quote_mint: Pubkey,
     /// The team that last sponsored the proposal. `None` = never sponsored.
     pub sponsored_by: Option<Pubkey>,
-    /// Snapshot of the kind's threshold at create.
     pub pass_threshold_bps: i16,
     /// Snapshot of the kind's blockable flag at create.
     pub council_can_block: bool,
     /// The typed action parameters.
     pub action: ProposalAction,
+    /// Set by `admin_update_proposal_params`. `launch_proposal` then leaves the 
+    /// duration and threshold alone.
+    pub params_overridden: bool,
 }
 
 impl Proposal {
     /// Whether the sponsorship is by the DAO's current team.
     pub fn is_sponsored_by(&self, team_address: Pubkey) -> bool {
         self.sponsored_by == Some(team_address)
+    }
+
+    /// The parameters this proposal launches under.
+    pub fn launch_params(&self, dao: &Dao) -> InstructionParams {
+        let params = self
+            .action
+            .params_for(dao, self.is_sponsored_by(dao.team_address));
+
+        if !self.params_overridden {
+            return params;
+        }
+
+        InstructionParams {
+            duration_seconds: self.duration_in_seconds,
+            pass_threshold_bps: self.pass_threshold_bps,
+            ..params
+        }
     }
 
     /// A migrated `Proposal` account is exactly this long.
