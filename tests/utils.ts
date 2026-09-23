@@ -11,6 +11,7 @@ import {
 } from "@solana/web3.js";
 import { TestContext } from "./main.test.js";
 import { getDaoAddr, PriceMath } from "@metadaoproject/programs";
+import * as multisig from "@sqds/multisig";
 
 export const TEN_SECONDS_IN_SLOTS = 25n;
 export const ONE_MINUTE_IN_SLOTS = TEN_SECONDS_IN_SLOTS * 6n;
@@ -86,6 +87,69 @@ export async function setOptimisticGovernanceEnabled(
   const daoBanksAccount = await context.banksClient.getAccount(dao);
   daoBanksAccount.data.set(daoAccountBuffer, 0);
   context.context.setAccount(dao, daoBanksAccount);
+}
+
+// Writes an address lookup table account directly: the bincode-serialized
+// ProgramState::LookupTable(LookupTableMeta) header padded to 56 bytes, followed by the
+// raw table addresses. authority === null makes the table frozen.
+export function setLookupTableAccount(
+  context: TestContext,
+  address: PublicKey,
+  authority: PublicKey | null,
+  addresses: PublicKey[],
+) {
+  const meta = Buffer.alloc(56);
+  meta.writeUInt32LE(1, 0);
+  meta.writeBigUInt64LE(0xffffffffffffffffn, 4);
+  meta.writeBigUInt64LE(0n, 12);
+  meta.writeUInt8(0, 20);
+  if (authority !== null) {
+    meta.writeUInt8(1, 21);
+    authority.toBuffer().copy(meta, 22);
+  }
+
+  context.context.setAccount(address, {
+    lamports: 1_000_000_000,
+    data: Buffer.concat([meta, ...addresses.map((a) => a.toBuffer())]),
+    owner: AddressLookupTableProgram.programId,
+    executable: false,
+  });
+}
+
+// The Squads SDK only compiles lookups from real on-chain tables, so tests rewrite a
+// stored vault transaction message directly to reference arbitrary tables and indexes.
+export async function addLookupsToVaultTransaction(
+  context: TestContext,
+  squadsVaultTransaction: PublicKey,
+  lookups: {
+    accountKey: PublicKey;
+    writableIndexes: number[];
+    readonlyIndexes: number[];
+  }[],
+) {
+  const vtAccount = await multisig.accounts.VaultTransaction.fromAccountAddress(
+    context.squadsConnection,
+    squadsVaultTransaction,
+  );
+
+  const modifiedVt = multisig.accounts.VaultTransaction.fromArgs({
+    ...vtAccount,
+    message: {
+      ...vtAccount.message,
+      addressTableLookups: lookups.map((lookup) => ({
+        accountKey: lookup.accountKey,
+        writableIndexes: Uint8Array.from(lookup.writableIndexes),
+        readonlyIndexes: Uint8Array.from(lookup.readonlyIndexes),
+      })),
+    },
+  });
+  const [serialized] = modifiedVt.serialize();
+
+  const vtBanksAccount = await context.banksClient.getAccount(
+    squadsVaultTransaction,
+  );
+  vtBanksAccount.data = serialized;
+  context.context.setAccount(squadsVaultTransaction, vtBanksAccount);
 }
 
 /**

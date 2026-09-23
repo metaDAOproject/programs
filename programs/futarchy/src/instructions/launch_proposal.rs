@@ -31,13 +31,24 @@ pub struct LaunchProposal<'info> {
     pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
     #[account(owner = squads_multisig_program::ID)]
     pub squads_proposal: Account<'info, squads_multisig_program::Proposal>,
+    #[account(
+        seeds = [
+            squads_multisig_program::SEED_PREFIX,
+            squads_multisig.key().as_ref(),
+            squads_multisig_program::SEED_TRANSACTION,
+            squads_proposal.transaction_index.to_le_bytes().as_ref(),
+        ],
+        bump,
+        seeds::program = squads_multisig_program::ID,
+    )]
+    pub squads_vault_transaction: Box<Account<'info, squads_multisig_program::VaultTransaction>>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
-impl LaunchProposal<'_> {
-    pub fn validate(&self) -> Result<()> {
+impl<'info, 'c: 'info> LaunchProposal<'info> {
+    pub fn validate(&self, remaining_accounts: &[AccountInfo<'info>]) -> Result<()> {
         msg!("proposal state: {:?}", self.proposal.state);
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
@@ -91,10 +102,14 @@ impl LaunchProposal<'_> {
             self.squads_multisig.stale_transaction_index
         );
 
+        // Any address lookup table the vault transaction references must be frozen, so the
+        // addresses the market evaluates can't change between approval and execution.
+        validate_address_lookup_tables(&self.squads_vault_transaction.message, remaining_accounts)?;
+
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>) -> Result<()> {
+    pub fn handle(ctx: Context<'_, '_, 'c, 'info, Self>) -> Result<()> {
         let Self {
             proposal,
             dao,
@@ -114,6 +129,7 @@ impl LaunchProposal<'_> {
             amm_fail_quote_vault: _,
             squads_multisig: _,
             squads_proposal: _,
+            squads_vault_transaction: _,
             system_program: _,
             token_program: _,
             associated_token_program: _,

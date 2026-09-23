@@ -69,8 +69,10 @@ pub mod futarchy {
         InitializeDao::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn initialize_proposal(ctx: Context<InitializeProposal>) -> Result<()> {
+    #[access_control(ctx.accounts.validate(ctx.remaining_accounts))]
+    pub fn initialize_proposal<'c: 'info, 'info>(
+        ctx: Context<'_, '_, 'c, 'info, InitializeProposal<'info>>,
+    ) -> Result<()> {
         InitializeProposal::handle(ctx)
     }
 
@@ -90,8 +92,10 @@ pub mod futarchy {
         UnstakeFromProposal::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn launch_proposal(ctx: Context<LaunchProposal>) -> Result<()> {
+    #[access_control(ctx.accounts.validate(ctx.remaining_accounts))]
+    pub fn launch_proposal<'c: 'info, 'info>(
+        ctx: Context<'_, '_, 'c, 'info, LaunchProposal<'info>>,
+    ) -> Result<()> {
         LaunchProposal::handle(ctx)
     }
 

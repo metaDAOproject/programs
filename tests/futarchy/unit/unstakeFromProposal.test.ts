@@ -165,6 +165,9 @@ export default function suite() {
       })
       .rpc();
 
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda);
+
     await this.futarchy
       .launchProposalIx({
         proposal,
@@ -172,6 +175,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsVaultTransaction,
       })
       .rpc();
 
@@ -210,6 +214,9 @@ export default function suite() {
       })
       .rpc();
 
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda);
+
     await this.futarchy
       .launchProposalIx({
         proposal,
@@ -217,6 +224,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsVaultTransaction,
       })
       .rpc();
 
@@ -258,6 +266,9 @@ export default function suite() {
     // Use .instruction() for launch so we don't pull in its own
     // ComputeBudget preInstruction — Solana rejects transactions with
     // duplicate compute-budget instructions.
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda);
+
     const launchIx = await this.futarchy
       .launchProposalIx({
         proposal,
@@ -265,6 +276,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsVaultTransaction,
       })
       .instruction();
 

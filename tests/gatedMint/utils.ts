@@ -1,4 +1,5 @@
 import {
+  ComputeBudgetProgram,
   PublicKey,
   Keypair,
   Transaction,
@@ -83,6 +84,8 @@ export async function setupGatedMint(
   return { mint, gatedMintConfig, admin };
 }
 
+let whitelistTxNonce = 0;
+
 export async function whitelistUser(
   gatedMintClient: GatedMintClient,
   mint: PublicKey,
@@ -109,6 +112,11 @@ export async function whitelistUser(
       user,
       payer: payer.publicKey,
     })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: whitelistTxNonce++,
+      }),
+    ])
     .signers(signers)
     .rpc();
 
