@@ -8,6 +8,7 @@ Programs for unruggable capital formation and market-driven governance.
 
 | program           | tag  | program ID                                   |
 | ----------------- | ---- | -------------------------------------------- |
+| relaunch          | v0.1.0 | vaMpdXN2P3Z5v8y6GtAU5NzCUjxtphnRVpvqu37Spik |
 | gated_mint        | v0.1.0 | GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA |
 | launchpad         | v0.8.0 | moonDJUoHteKkGATejA5bdJVwJ6V6Dg74gyqyJTx73n |
 | launchpad         | v0.7.0 | moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM |

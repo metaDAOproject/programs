@@ -33,7 +33,7 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
 
-    await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+    await this.mintTo(META, this.payer.publicKey, this.payer, 100 * 10 ** 9, 1);
     await this.mintTo(
       USDC,
       this.payer.publicKey,

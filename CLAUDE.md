@@ -191,20 +191,20 @@ Tests use `solana-bankrun` for deterministic testing without external RPC:
 - `advanceBySlots()` - Simulate time progression
 - Time constants: `TEN_SECONDS_IN_SLOTS`, `ONE_MINUTE_IN_SLOTS`, `HOUR_IN_SLOTS`, `DAY_IN_SLOTS`
 
-**Getting unique transaction signatures:** When testing error cases that call the same instruction multiple times (e.g., verifying an action fails after state changes), add a `ComputeBudgetProgram.setComputeUnitLimit()` instruction with incrementing values to produce different transaction signatures:
+**Getting unique transaction signatures:** When testing error cases that call the same instruction multiple times (e.g., verifying an action fails after state changes), add a `ComputeBudgetProgram.setComputeUnitPrice()` instruction to make the transaction hash unique, so the retry isn't rejected as a duplicate of the earlier byte-identical transaction:
 
 ```typescript
-// First call (200_000), second call (200_001), etc.
+// If the same call site needs several unique retries, increment microLamports (1, 2, ...).
 await client
   .someIx({ ... })
   .postInstructions([
-    ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
   ])
   .signers([signer])
   .rpc();
 ```
 
-Do NOT use `advanceBySlots()` for this purpose - it changes the clock which may affect time-dependent tests.
+Do NOT use `setComputeUnitLimit()` for this — reserve it for genuinely raising a transaction's compute budget. Do NOT use `advanceBySlots()` either - it changes the clock which may affect time-dependent tests.
 
 **Isolating tests during development:** When writing or editing tests, ALWAYS add `.only` to the `describe`/`it` block you're working on before running. This keeps feedback fast and output clean. Once your changes pass, remove `.only` and run the full suite (`anchor test --skip-build`) to confirm nothing else broke.
 

@@ -1,4 +1,4 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { assert } from "chai";
 import { mintTo } from "spl-token-bankrun";
@@ -191,8 +191,21 @@ export default function suite() {
       .rpc();
     assert.isNull(await this.banksClient.getAccount(addr));
 
-    // The PDA was freed, so the same user can be whitelisted again.
-    await whitelistUser(gatedMintClient, mint, admin, user, this.payer);
+    // The PDA was freed, so the same user can be whitelisted again. The
+    // compute-unit-limit instruction makes the transaction hash unique so
+    // the re-add isn't rejected as a duplicate of the first add.
+    await gatedMintClient
+      .addWhitelistedUserIx({
+        mint,
+        authority: admin.publicKey,
+        user,
+        payer: this.payer.publicKey,
+      })
+      .postInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
+      ])
+      .signers([admin])
+      .rpc();
     assert.isNotNull(await this.banksClient.getAccount(addr));
   });
 

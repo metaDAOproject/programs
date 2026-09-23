@@ -8,6 +8,7 @@ export * from "./liquidation/index.js";
 export * from "./mint_governor/index.js";
 export * from "./performance_package_v2/index.js";
 export * from "./price_based_performance_package/index.js";
+export * from "./relaunch/index.js";
 
 // Shared exports
 export * from "./utils.js";
