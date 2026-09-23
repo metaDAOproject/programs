@@ -8,9 +8,13 @@ import {
   toWeb3JsPublicKey,
 } from "@metaplex-foundation/umi-web3js-adapters";
 import * as token from "@solana/spl-token";
-import { BankrunProvider } from "anchor-bankrun";
+import { LiteSVMProvider } from "../litesvm/index.js";
 import { assert } from "chai";
-import { BanksClient, ProgramTestContext, startAnchor } from "solana-bankrun";
+import {
+  BanksClient,
+  ProgramTestContext,
+  startAnchor,
+} from "../litesvm/index.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -18,7 +22,7 @@ import {
   getMint,
   mintTo,
   transfer,
-} from "spl-token-bankrun";
+} from "../litesvm/index.js";
 
 const { PublicKey, Keypair } = web3;
 
@@ -90,7 +94,7 @@ describe("conditional_vault", async function () {
       [],
     );
     banksClient = context.banksClient;
-    provider = new BankrunProvider(context);
+    provider = new LiteSVMProvider(context);
     anchor.setProvider(provider);
 
     umi = createUmi(anchor.AnchorProvider.env().connection);
@@ -363,7 +367,7 @@ describe("conditional_vault", async function () {
       ).then((acc) => acc.amount);
 
       assert.isTrue(balanceAfter > balanceBefore);
-      assert.equal(balanceAfter - balanceBefore, 600);
+      assert.equal(balanceAfter - balanceBefore, 600n);
     });
   });
 

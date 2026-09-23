@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Clock, ProgramTestContext } from "solana-bankrun";
+import { Clock, ProgramTestContext } from "./litesvm/index.js";
 import { BN } from "bn.js";
 import {
   AddressLookupTableAccount,

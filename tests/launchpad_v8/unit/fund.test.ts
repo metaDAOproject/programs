@@ -5,7 +5,7 @@ import {
   getFundingRecordAddr,
 } from "@metadaoproject/programs/launchpad/v0.8";
 import { MAINNET_USDC } from "@metadaoproject/programs";
-import { getAccount } from "spl-token-bankrun";
+import { getAccount } from "../../litesvm/index.js";
 import { BN } from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { initializeMintWithSeeds } from "../utils.js";

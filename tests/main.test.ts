@@ -15,8 +15,8 @@ import {
   Clock,
   ProgramTestContext,
   startAnchor,
-} from "solana-bankrun";
-import { BankrunProvider } from "anchor-bankrun";
+} from "./litesvm/index.js";
+import { LiteSVMProvider } from "./litesvm/index.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
   FutarchyClient,
@@ -64,7 +64,7 @@ import {
   transfer,
   getMint,
   mintToOverride,
-} from "spl-token-bankrun";
+} from "./litesvm/index.js";
 import * as token from "@solana/spl-token";
 import { assert } from "chai";
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
@@ -254,7 +254,7 @@ before(async function () {
     ],
   );
   this.banksClient = this.context.banksClient;
-  const provider = new BankrunProvider(this.context);
+  const provider = new LiteSVMProvider(this.context);
   anchor.setProvider(provider);
 
   this.conditionalVault = ConditionalVaultClient.createClient({

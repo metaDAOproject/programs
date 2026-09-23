@@ -46,7 +46,7 @@ sdk/                         # TypeScript client library (@metadaoproject/progra
 │   └── index.ts            #   Re-exports the latest version
 └── package.json
 
-tests/                       # TypeScript tests (bankrun + mocha)
+tests/                       # TypeScript tests (LiteSVM + mocha)
 ├── conditionalVault/       # Unit + integration tests per program
 ├── futarchy/
 ├── launchpad/
@@ -185,13 +185,13 @@ Always append new error variants to the **end** of `#[error_code]` enums. Anchor
 2. Update client methods in the corresponding SDK module at the program's current version (e.g. `sdk/src/futarchy/v0.6/`, `sdk/src/launchpad/v0.7/`)
 3. Add unit tests in `tests/[program]/unit/`
 
-### Testing with Bankrun
-Tests use `solana-bankrun` for deterministic testing without external RPC:
+### Testing with LiteSVM
+Tests run in-process on LiteSVM through the facade in `tests/litesvm/` (a bankrun-shaped `BanksClient` / `ProgramTestContext` / provider), with no external RPC:
 - `setupBasicDao()` - Create a test DAO with mints
 - `advanceBySlots()` - Simulate time progression
 - Time constants: `TEN_SECONDS_IN_SLOTS`, `ONE_MINUTE_IN_SLOTS`, `HOUR_IN_SLOTS`, `DAY_IN_SLOTS`
 
-**Getting unique transaction signatures:** When testing error cases that call the same instruction multiple times (e.g., verifying an action fails after state changes), add a `ComputeBudgetProgram.setComputeUnitLimit()` instruction with incrementing values to produce different transaction signatures:
+**Getting unique transaction signatures:** The LiteSVM facade rotates the blockhash after every processed transaction, so repeated identical instructions get distinct signatures and this is no longer required. Existing tests still carry the older convention of adding a `ComputeBudgetProgram.setComputeUnitLimit()` instruction with incrementing values:
 
 ```typescript
 // First call (200_000), second call (200_001), etc.

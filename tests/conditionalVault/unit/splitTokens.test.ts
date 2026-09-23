@@ -1,7 +1,7 @@
 import { sha256, ConditionalVaultClient } from "@metadaoproject/programs";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { getMint } from "spl-token-bankrun";
+import { getMint } from "../../litesvm/index.js";
 import * as token from "@solana/spl-token";
 import { expectError } from "../../utils.js";
 import { BN } from "bn.js";

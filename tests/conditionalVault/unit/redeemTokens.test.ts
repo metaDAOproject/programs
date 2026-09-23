@@ -6,7 +6,7 @@ import {
   createMint,
   getAccount,
   mintTo,
-} from "spl-token-bankrun";
+} from "../../litesvm/index.js";
 import * as token from "@solana/spl-token";
 import { BN } from "bn.js";
 
@@ -100,7 +100,7 @@ export default function suite() {
     ).then((acc) => acc.amount);
 
     assert.isTrue(balanceAfter > balanceBefore);
-    assert.equal(balanceAfter - balanceBefore, 1000);
+    assert.equal(balanceAfter - balanceBefore, 1000n);
 
     const updatedVault = await vaultClient.fetchVault(vault);
     assert.equal(updatedVault.seqNum.toString(), "2");
@@ -137,7 +137,7 @@ export default function suite() {
     // console.log('balanceAfter', balanceAfter);
 
     assert.isTrue(balanceAfter > balanceBefore);
-    assert.equal(balanceAfter - balanceBefore, 1000);
+    assert.equal(balanceAfter - balanceBefore, 1000n);
 
     let updatedVault = await vaultClient.fetchVault(vault);
     assert.equal(updatedVault.seqNum.toString(), "2");
@@ -154,7 +154,7 @@ export default function suite() {
     // console.log('balanceAfter', balanceAfter);
 
     assert.isTrue(balanceAfter > balanceBefore);
-    assert.equal(balanceAfter - balanceBefore, 1000);
+    assert.equal(balanceAfter - balanceBefore, 1000n);
 
     updatedVault = await vaultClient.fetchVault(vault);
     assert.equal(updatedVault.seqNum.toString(), "3");
@@ -185,7 +185,7 @@ export default function suite() {
     ).then((acc) => acc.amount);
 
     assert.isTrue(balanceAfter > balanceBefore);
-    assert.isTrue(balanceAfter - balanceBefore == 1000);
+    assert.isTrue(balanceAfter - balanceBefore == 1000n);
 
     // console.log('balanceAfter', balanceAfter);
 

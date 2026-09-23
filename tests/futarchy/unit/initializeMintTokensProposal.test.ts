@@ -11,7 +11,7 @@ import {
   getMintAuthorityAddr,
   MintGovernorClient,
 } from "@metadaoproject/programs";
-import { BankrunProvider } from "anchor-bankrun";
+import { LiteSVMProvider } from "../../litesvm/index.js";
 import { initializeMintGovernorWithDefaults } from "../../mintGovernor/utils.js";
 import {
   assertVaultTransactionPayload,
@@ -49,7 +49,7 @@ export default function suite() {
 
   before(async function () {
     mintGovernorClient = MintGovernorClient.createClient({
-      provider: new BankrunProvider(this.context) as any,
+      provider: new LiteSVMProvider(this.context) as any,
     });
   });
 

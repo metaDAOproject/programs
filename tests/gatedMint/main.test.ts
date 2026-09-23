@@ -6,11 +6,11 @@ import gatedInvoke from "./unit/gatedInvoke.test.js";
 import disableGating from "./unit/disableGating.test.js";
 import thawAccount from "./unit/thawAccount.test.js";
 import { GatedMintClient } from "@metadaoproject/programs";
-import { BankrunProvider } from "anchor-bankrun";
+import { LiteSVMProvider } from "../litesvm/index.js";
 
 export default function suite() {
   before(async function () {
-    const provider = new BankrunProvider(this.context);
+    const provider = new LiteSVMProvider(this.context);
     this.gatedMint = GatedMintClient.createClient({
       provider: provider as any,
     });
