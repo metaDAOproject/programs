@@ -160,6 +160,8 @@ export const createDao = async () => {
         secondsPerProposal,
         teamSponsoredPassThresholdBps: TEAM_SPONSORED_PASS_THRESHOLD_BPS,
         teamAddress: TEAM_ADDRESS,
+        baseToSupermajority: new BN(0),
+        isProposalValidationEnabled: true,
       },
     })
     .rpc();

@@ -13,6 +13,8 @@ pub struct UpdateDaoParams {
     pub team_sponsored_pass_threshold_bps: Option<i16>,
     pub team_address: Option<Pubkey>,
     pub is_optimistic_governance_enabled: Option<bool>,
+    pub base_to_supermajority: Option<u64>,
+    pub is_proposal_validation_enabled: Option<bool>,
 }
 
 #[derive(Accounts)]
@@ -83,6 +85,12 @@ impl UpdateDao<'_> {
             is_optimistic_governance_enabled: dao_params
                 .is_optimistic_governance_enabled
                 .unwrap_or(dao.is_optimistic_governance_enabled),
+            base_to_supermajority: dao_params
+                .base_to_supermajority
+                .unwrap_or(dao.base_to_supermajority),
+            is_proposal_validation_enabled: dao_params
+                .is_proposal_validation_enabled
+                .unwrap_or(dao.is_proposal_validation_enabled),
         });
 
         dao.seq_num += 1;
@@ -104,6 +112,8 @@ impl UpdateDao<'_> {
             team_sponsored_pass_threshold_bps: dao.team_sponsored_pass_threshold_bps,
             team_address: dao.team_address,
             is_optimistic_governance_enabled: dao.is_optimistic_governance_enabled,
+            base_to_supermajority: dao.base_to_supermajority,
+            is_proposal_validation_enabled: dao.is_proposal_validation_enabled,
         });
 
         Ok(())

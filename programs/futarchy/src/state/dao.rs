@@ -66,6 +66,13 @@ pub struct Dao {
     pub team_address: Pubkey,
     pub optimistic_proposal: Option<OptimisticProposal>,
     pub is_optimistic_governance_enabled: bool,
+    /// Absolute base-token stake at which a proposal launches on supermajority
+    /// stake alone. `0` disables the supermajority path for this DAO.
+    pub base_to_supermajority: u64,
+    /// When enabled, `launch_proposal` enforces the stricter validation gate
+    /// (>= 2 of 3 approval points, or the supermajority path). When disabled,
+    /// the DAO uses the legacy gate
+    pub is_proposal_validation_enabled: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
@@ -133,6 +140,14 @@ impl Dao {
             FutarchyError::InvalidMaxObservationChange
         );
 
+        // The supermajority bar (`base_to_supermajority`) substitutes overwhelming
+        // stake for human review, so it must never be *easier* than the ordinary
+        // token-holder point. `0` disables it.
+        require!(
+            self.base_to_supermajority == 0 || self.base_to_supermajority >= self.base_to_stake,
+            FutarchyError::InvalidSupermajorityThreshold
+        );
+
         Ok(())
     }
 }
@@ -191,4 +206,6 @@ pub struct OldDao {
     /// Can be negative to allow for team-sponsored proposals to pass by default.
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
+    pub optimistic_proposal: Option<OptimisticProposal>,
+    pub is_optimistic_governance_enabled: bool,
 }

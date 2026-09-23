@@ -5,7 +5,7 @@ import {
 } from "@metadaoproject/programs";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError } from "../../utils.js";
+import { expectError, nextDaoNonce } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission, Period } = multisig.types;
@@ -21,6 +21,7 @@ export default function suite() {
   });
 
   it("should initialize a DAO", async function () {
+    const nonce = nextDaoNonce();
     await this.futarchy
       .initializeDaoIx({
         baseMint: META,
@@ -33,11 +34,13 @@ export default function suite() {
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
           baseToStake: new BN(1000),
+          baseToSupermajority: new BN(5000),
           passThresholdBps: 300,
-          nonce: new BN(1337),
+          nonce,
           initialSpendingLimit: null,
           teamAddress: this.payer.publicKey,
           teamSponsoredPassThresholdBps: 123,
+          isProposalValidationEnabled: true,
         },
       })
       .preInstructions([
@@ -46,7 +49,7 @@ export default function suite() {
       .rpc();
 
     const [dao, daoBump] = getDaoAddr({
-      nonce: new BN(1337),
+      nonce,
       daoCreator: this.payer.publicKey,
     });
 
@@ -57,7 +60,7 @@ export default function suite() {
     assert.equal(storedDao.pdaBump, daoBump);
     assert.equal(storedDao.proposalCount, 0);
 
-    assert.equal(storedDao.nonce.toString(), "1337");
+    assert.equal(storedDao.nonce.toString(), nonce.toString());
     assert.equal(storedDao.secondsPerProposal, 60 * 60 * 24 * 3);
     assert.equal(storedDao.twapStartDelaySeconds, 60 * 60 * 24);
     assert.equal(
@@ -76,8 +79,11 @@ export default function suite() {
     assert.isTrue(storedDao.teamAddress.equals(this.payer.publicKey));
     assert.equal(storedDao.teamSponsoredPassThresholdBps, 123);
 
+    assert.equal(storedDao.baseToSupermajority.toString(), "5000");
+
     assert.isNull(storedDao.optimisticProposal);
     assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
+    assert.isTrue(storedDao.isProposalValidationEnabled);
 
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
@@ -119,6 +125,7 @@ export default function suite() {
 
   it("should initialize a DAO with an initial spending limit", async function () {
     const spender = Keypair.generate();
+    const nonce = nextDaoNonce();
 
     await this.futarchy
       .initializeDaoIx({
@@ -132,8 +139,10 @@ export default function suite() {
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
           baseToStake: new BN(1000),
+          baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
           passThresholdBps: 300,
-          nonce: new BN(420),
+          nonce,
           initialSpendingLimit: {
             // 10k per month burn
             amountPerMonth: new BN(10_000 * 10 ** 6),
@@ -146,7 +155,7 @@ export default function suite() {
       .rpc();
 
     const [dao] = getDaoAddr({
-      nonce: new BN(420),
+      nonce,
       daoCreator: this.payer.publicKey,
     });
 
@@ -189,6 +198,7 @@ export default function suite() {
     assert.equal(storedDao.teamSponsoredPassThresholdBps, 123);
     assert.isNull(storedDao.optimisticProposal);
     assert.isFalse(storedDao.isOptimisticGovernanceEnabled);
+    assert.isFalse(storedDao.isProposalValidationEnabled);
   });
 
   it("doesn't allow DAOs with identical base and quote mints", async function () {
@@ -211,9 +221,11 @@ export default function suite() {
           minQuoteFutarchicLiquidity: new BN(1),
           minBaseFutarchicLiquidity: new BN(1000),
           passThresholdBps: 300,
-          nonce: new BN(9999),
+          nonce: nextDaoNonce(),
           initialSpendingLimit: null,
           baseToStake: new BN(1000),
+          baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
           teamSponsoredPassThresholdBps: 1500,
           teamAddress: this.payer.publicKey,
         },
@@ -240,11 +252,44 @@ export default function suite() {
           minBaseFutarchicLiquidity: new BN(5000),
           passThresholdBps: 300,
           secondsPerProposal: 5000,
-          nonce: new BN(1338),
+          nonce: nextDaoNonce(),
           initialSpendingLimit: null,
           baseToStake: new BN(1000),
+          baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
           teamSponsoredPassThresholdBps: 123,
           teamAddress: this.payer.publicKey,
+        },
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("doesn't allow base_to_supermajority between 0 and base_to_stake", async function () {
+    const callbacks = expectError(
+      "InvalidSupermajorityThreshold",
+      "DAO initialized despite base_to_supermajority being below base_to_stake",
+    );
+
+    await this.futarchy
+      .initializeDaoIx({
+        baseMint: META,
+        quoteMint: USDC,
+        params: {
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(1),
+          minBaseFutarchicLiquidity: new BN(1000),
+          baseToStake: new BN(1000),
+          baseToSupermajority: new BN(999),
+          isProposalValidationEnabled: false,
+          passThresholdBps: 300,
+          nonce: nextDaoNonce(),
+          initialSpendingLimit: null,
+          teamAddress: this.payer.publicKey,
+          teamSponsoredPassThresholdBps: 123,
         },
       })
       .rpc()

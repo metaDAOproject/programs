@@ -115,6 +115,7 @@ impl InitializeProposal<'_> {
             pass_quote_mint: quote_vault.conditional_token_mints[1],
             fail_quote_mint: quote_vault.conditional_token_mints[0],
             is_team_sponsored: false,
+            is_metadao_approved: false,
         });
 
         dao.seq_num += 1;

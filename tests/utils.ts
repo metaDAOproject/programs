@@ -20,6 +20,15 @@ export const DAY_IN_SLOTS = HOUR_IN_SLOTS * 24n;
 export const toBN = (val: bigint): typeof BN.prototype =>
   new BN(val.toString());
 
+// Monotonic DAO-nonce allocator. The DAO PDA is [SEED_DAO, daoCreator, nonce] and
+// every test shares the same creator (the provider wallet), so the nonce space is
+// global across the whole suite. A single shared counter guarantees uniqueness;
+// random nonces collided (birthday bound) and intermittently failed init with the
+// System program's "account already in use" (0x0). Mirrors `mintToTxNonce`.
+let daoNonceCounter = 1;
+export const nextDaoNonce = (): typeof BN.prototype =>
+  new BN(daoNonceCounter++);
+
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
 export async function setupBasicDao({
@@ -28,14 +37,16 @@ export async function setupBasicDao({
   quoteMint,
   teamSponsoredPassThresholdBps = 300,
   teamAddress,
+  isProposalValidationEnabled = false,
 }: {
   context: TestContext;
   baseMint: PublicKey;
   quoteMint: PublicKey;
   teamSponsoredPassThresholdBps?: number;
   teamAddress?: PublicKey;
+  isProposalValidationEnabled?: boolean;
 }) {
-  const nonce = new BN(Math.floor(Math.random() * 1000000));
+  const nonce = nextDaoNonce();
 
   await context.futarchy
     .initializeDaoIx({
@@ -54,6 +65,8 @@ export async function setupBasicDao({
         baseToStake: new BN(0),
         teamSponsoredPassThresholdBps,
         teamAddress: teamAddress || context.payer.publicKey,
+        baseToSupermajority: new BN(0),
+        isProposalValidationEnabled,
       },
       provideLiquidity: true,
     })
@@ -77,6 +90,24 @@ export async function setOptimisticGovernanceEnabled(
 ): Promise<void> {
   const daoAccount = await context.futarchy.getDao(dao);
   daoAccount.isOptimisticGovernanceEnabled = enabled;
+  const daoAccountBuffer =
+    await context.futarchy.futarchy.account.dao.coder.accounts.encode(
+      "dao",
+      daoAccount,
+    );
+
+  const daoBanksAccount = await context.banksClient.getAccount(dao);
+  daoBanksAccount.data.set(daoAccountBuffer, 0);
+  context.context.setAccount(dao, daoBanksAccount);
+}
+
+export async function setProposalValidationEnabled(
+  context: TestContext,
+  dao: PublicKey,
+  enabled: boolean,
+): Promise<void> {
+  const daoAccount = await context.futarchy.getDao(dao);
+  daoAccount.isProposalValidationEnabled = enabled;
   const daoAccountBuffer =
     await context.futarchy.futarchy.account.dao.coder.accounts.encode(
       "dao",

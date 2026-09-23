@@ -430,6 +430,8 @@ export default async function suite() {
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
           isOptimisticGovernanceEnabled: true,
+          baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
@@ -504,6 +506,8 @@ export default async function suite() {
         amount: stakeAmount,
       })
       .rpc();
+
+    await this.futarchy.approveProposalIx({ proposal, dao }).rpc();
 
     // Launch the proposal first
     await this.futarchy

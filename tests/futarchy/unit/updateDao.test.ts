@@ -17,9 +17,139 @@ import {
   sha256,
 } from "@metadaoproject/programs";
 import BN from "bn.js";
-import { setOptimisticGovernanceEnabled } from "../../utils.js";
+import { setOptimisticGovernanceEnabled, nextDaoNonce } from "../../utils.js";
+import { TestContext } from "../../main.test.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
+
+// Builds an UpdateDaoParams object with every field defaulting to null
+// (no-op), overriding only the fields under test.
+function withNulls(overrides: {
+  baseToStake?: BN | null;
+  baseToSupermajority?: BN | null;
+  isProposalValidationEnabled?: boolean | null;
+}) {
+  return {
+    passThresholdBps: null,
+    secondsPerProposal: null,
+    twapInitialObservation: null,
+    twapMaxObservationChangePerUpdate: null,
+    twapStartDelaySeconds: null,
+    minQuoteFutarchicLiquidity: null,
+    minBaseFutarchicLiquidity: null,
+    baseToStake: null,
+    teamSponsoredPassThresholdBps: null,
+    teamAddress: null,
+    isOptimisticGovernanceEnabled: null,
+    baseToSupermajority: null,
+    isProposalValidationEnabled: null,
+    ...overrides,
+  };
+}
+
+// update_dao must be signed by the DAO's Squads vault, whose only Vote member is
+// the DAO PDA. So a standalone update_dao is driven by: create the vault tx +
+// proposal, approve it through the futarchy admin path (enqueue -> execute the
+// approval, which votes via the DAO PDA), then execute the vault tx as a
+// SEPARATE top-level transaction. The execute is kept top-level (not via
+// admin_execute_multisig_proposal) because update_dao CPIs back into futarchy,
+// and futarchy -> squads -> futarchy would trip the Solana reentrancy guard.
+async function executeUpdateDao(
+  ctx: TestContext,
+  dao: PublicKey,
+  overrides: {
+    baseToStake?: BN | null;
+    baseToSupermajority?: BN | null;
+    isProposalValidationEnabled?: boolean | null;
+  },
+  transactionIndex: bigint,
+) {
+  const daoAccount = await ctx.futarchy.getDao(dao);
+
+  const updateIx = await ctx.futarchy
+    .updateDaoIx({ dao, params: withNulls(overrides) })
+    .instruction();
+
+  const message = new TransactionMessage({
+    payerKey: daoAccount.squadsMultisigVault,
+    recentBlockhash: (await ctx.banksClient.getLatestBlockhash())[0],
+    instructions: [updateIx],
+  });
+
+  const vaultTxCreateIx = multisig.instructions.vaultTransactionCreate({
+    multisigPda: daoAccount.squadsMultisig,
+    transactionIndex,
+    creator: PERMISSIONLESS_ACCOUNT.publicKey,
+    rentPayer: ctx.payer.publicKey,
+    vaultIndex: 0,
+    ephemeralSigners: 0,
+    transactionMessage: message,
+  });
+  const proposalCreateIx = multisig.instructions.proposalCreate({
+    multisigPda: daoAccount.squadsMultisig,
+    transactionIndex,
+    creator: PERMISSIONLESS_ACCOUNT.publicKey,
+    rentPayer: ctx.payer.publicKey,
+  });
+
+  const createTx = new Transaction().add(vaultTxCreateIx, proposalCreateIx);
+  createTx.recentBlockhash = (await ctx.banksClient.getLatestBlockhash())[0];
+  createTx.feePayer = ctx.payer.publicKey;
+  createTx.sign(ctx.payer, PERMISSIONLESS_ACCOUNT);
+  await ctx.banksClient.processTransaction(createTx);
+
+  const [squadsProposalPda] = multisig.getProposalPda({
+    multisigPda: daoAccount.squadsMultisig,
+    transactionIndex,
+  });
+  const [enqueuedApprovalPda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("enqueued_approval"),
+      dao.toBuffer(),
+      new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
+    ],
+    ctx.futarchy.futarchy.programId,
+  );
+
+  await ctx.futarchy.futarchy.methods
+    .adminEnqueueMultisigProposalApproval({
+      transactionIndex: new BN(transactionIndex.toString()),
+    })
+    .accounts({
+      dao,
+      admin: ctx.payer.publicKey,
+      squadsMultisig: daoAccount.squadsMultisig,
+      squadsMultisigProposal: squadsProposalPda,
+      enqueuedApproval: enqueuedApprovalPda,
+    })
+    .signers([ctx.payer])
+    .rpc();
+
+  await ctx.futarchy.futarchy.methods
+    .executeMultisigProposalApproval()
+    .accounts({
+      dao,
+      rentReceiver: ctx.payer.publicKey,
+      squadsMultisig: daoAccount.squadsMultisig,
+      squadsMultisigProposal: squadsProposalPda,
+      enqueuedApproval: enqueuedApprovalPda,
+      squadsMultisigProgram: multisig.PROGRAM_ID,
+    })
+    .signers([ctx.payer])
+    .rpc();
+
+  const execIx = await multisig.instructions.vaultTransactionExecute({
+    connection: ctx.squadsConnection,
+    multisigPda: daoAccount.squadsMultisig,
+    transactionIndex,
+    member: PERMISSIONLESS_ACCOUNT.publicKey,
+  });
+  const execTx = new Transaction().add(execIx.instruction);
+  execTx.recentBlockhash = (await ctx.banksClient.getLatestBlockhash())[0];
+  execTx.feePayer = ctx.payer.publicKey;
+  execTx.sign(ctx.payer, PERMISSIONLESS_ACCOUNT);
+  await ctx.banksClient.processTransaction(execTx);
+}
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
@@ -31,7 +161,7 @@ export default function suite() {
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.mintTo(META, this.payer.publicKey, this.payer, 10_000 * 10 ** 9);
 
-    const nonce = new BN(Math.floor(Math.random() * 1000000));
+    const nonce = nextDaoNonce();
 
     await this.futarchy
       .initializeDaoIx({
@@ -51,6 +181,8 @@ export default function suite() {
             members: [this.payer.publicKey],
           },
           baseToStake: new BN(0),
+          baseToSupermajority: new BN(0),
+          isProposalValidationEnabled: false,
           teamSponsoredPassThresholdBps: 0,
           teamAddress: this.payer.publicKey,
         },
@@ -106,6 +238,8 @@ export default function suite() {
           teamAddress: null,
           twapStartDelaySeconds: null,
           isOptimisticGovernanceEnabled: null,
+          baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
@@ -407,6 +541,8 @@ export default function suite() {
           teamAddress: null,
           twapStartDelaySeconds: null,
           isOptimisticGovernanceEnabled: null,
+          baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
@@ -590,5 +726,117 @@ export default function suite() {
         `Expected ActiveOptimisticProposalAlreadyEnqueued error, got: ${e}`,
       );
     }
+  });
+
+  it("sets base_to_supermajority, enabling the supermajority path", async function () {
+    const before = await this.futarchy.getDao(dao);
+    assert.equal(before.baseToSupermajority.toNumber(), 0);
+
+    await executeUpdateDao(
+      this,
+      dao,
+      { baseToSupermajority: new BN(1_000_000) },
+      1n,
+    );
+
+    const after = await this.futarchy.getDao(dao);
+    assert.equal(after.baseToSupermajority.toString(), "1000000");
+    // seq_num is bumped immediately before emit_cpi!(UpdateDaoEvent), so the
+    // increment is the observable proof that the event-emitting path ran
+    // (bankrun exposes neither inner instructions nor emit_cpi! payloads).
+    assert.equal(after.seqNum.toNumber(), before.seqNum.toNumber() + 1);
+  });
+
+  it("rejects base_to_supermajority below base_to_stake", async function () {
+    // base_to_stake and base_to_supermajority are set in a single update; the
+    // invariant is checked after set_inner applies all fields, so 999 < 1000 fails.
+    try {
+      await executeUpdateDao(
+        this,
+        dao,
+        { baseToStake: new BN(1000), baseToSupermajority: new BN(999) },
+        1n,
+      );
+      assert.fail("update_dao should have been rejected");
+    } catch (e) {
+      assert(
+        e.toString().includes("InvalidSupermajorityThreshold") ||
+          e.toString().includes("0x179d"),
+        `Expected InvalidSupermajorityThreshold error, got: ${e}`,
+      );
+    }
+
+    // The rejected update left the DAO untouched.
+    const after = await this.futarchy.getDao(dao);
+    assert.equal(after.baseToStake.toNumber(), 0);
+    assert.equal(after.baseToSupermajority.toNumber(), 0);
+  });
+
+  it("accepts base_to_supermajority equal to, above, or disabling the supermajority", async function () {
+    // == base_to_stake (equality is benign)
+    await executeUpdateDao(
+      this,
+      dao,
+      { baseToStake: new BN(1000), baseToSupermajority: new BN(1000) },
+      1n,
+    );
+    let after = await this.futarchy.getDao(dao);
+    assert.equal(after.baseToStake.toNumber(), 1000);
+    assert.equal(after.baseToSupermajority.toNumber(), 1000);
+
+    // > base_to_stake
+    await executeUpdateDao(
+      this,
+      dao,
+      { baseToSupermajority: new BN(2000) },
+      2n,
+    );
+    after = await this.futarchy.getDao(dao);
+    assert.equal(after.baseToSupermajority.toNumber(), 2000);
+
+    // 0 disables the supermajority path regardless of the (positive) base_to_stake floor.
+    await executeUpdateDao(this, dao, { baseToSupermajority: new BN(0) }, 3n);
+    after = await this.futarchy.getDao(dao);
+    assert.equal(after.baseToSupermajority.toNumber(), 0);
+    assert.equal(after.baseToStake.toNumber(), 1000);
+  });
+
+  it("accepts raising base_to_stake and base_to_supermajority together", async function () {
+    await executeUpdateDao(
+      this,
+      dao,
+      {
+        baseToStake: new BN(2_000_000),
+        baseToSupermajority: new BN(2_500_000),
+      },
+      1n,
+    );
+
+    const after = await this.futarchy.getDao(dao);
+    assert.equal(after.baseToStake.toString(), "2000000");
+    assert.equal(after.baseToSupermajority.toString(), "2500000");
+  });
+
+  it("toggles is_proposal_validation_enabled on and off", async function () {
+    const before = await this.futarchy.getDao(dao);
+    assert.isFalse(before.isProposalValidationEnabled);
+
+    await executeUpdateDao(
+      this,
+      dao,
+      { isProposalValidationEnabled: true },
+      1n,
+    );
+    const enabled = await this.futarchy.getDao(dao);
+    assert.isTrue(enabled.isProposalValidationEnabled);
+
+    await executeUpdateDao(
+      this,
+      dao,
+      { isProposalValidationEnabled: false },
+      2n,
+    );
+    const disabled = await this.futarchy.getDao(dao);
+    assert.isFalse(disabled.isProposalValidationEnabled);
   });
 }

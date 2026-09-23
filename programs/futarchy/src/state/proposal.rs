@@ -36,4 +36,26 @@ pub struct Proposal {
     pub fail_base_mint: Pubkey,
     pub fail_quote_mint: Pubkey,
     pub is_team_sponsored: bool,
+    pub is_metadao_approved: bool,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct OldProposal {
+    pub number: u32,
+    pub proposer: Pubkey,
+    pub timestamp_enqueued: i64,
+    pub state: ProposalState,
+    pub base_vault: Pubkey,
+    pub quote_vault: Pubkey,
+    pub dao: Pubkey,
+    pub pda_bump: u8,
+    pub question: Pubkey,
+    pub duration_in_seconds: u32,
+    pub squads_proposal: Pubkey,
+    pub pass_base_mint: Pubkey,
+    pub pass_quote_mint: Pubkey,
+    pub fail_base_mint: Pubkey,
+    pub fail_quote_mint: Pubkey,
+    pub is_team_sponsored: bool,
 }

@@ -51,6 +51,8 @@ export default function suite() {
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
           isOptimisticGovernanceEnabled: null,
+          baseToSupermajority: null,
+          isProposalValidationEnabled: null,
         },
       })
       .instruction();
