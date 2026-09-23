@@ -34,4 +34,26 @@ pub enum PriceBasedPerformancePackageError {
     TotalTokenAmountOverflow,
     #[msg("Recipient and performance package authority must be different keys")]
     RecipientAuthorityMustDiffer,
+    #[msg("Withdrawal limits must have non-zero caps, a future end, and a window of at least one second")]
+    InvalidWithdrawalLimits,
+    #[msg("Amount exceeds the withdrawable balance")]
+    InsufficientWithdrawableBalance,
+    #[msg("Token cap for the current window exceeded")]
+    TokenWindowLimitExceeded,
+    #[msg("Quote cap for the current window exceeded")]
+    QuoteWindowLimitExceeded,
+    #[msg("Oracle price observation is missing or zero")]
+    InvalidPriceObservation,
+    #[msg("Token withdrawals are disabled by the withdrawal mode")]
+    WithdrawTokensDisabled,
+    #[msg("Sell withdrawals are disabled by the withdrawal mode")]
+    WithdrawViaSellDisabled,
+    #[msg("Performance package has not been resized to the current layout")]
+    AccountNotMigrated,
+    #[msg("Quote mint must differ from the package's token mint")]
+    InvalidQuoteMint,
+    #[msg("The package's quote account and the quote destination must be passed together")]
+    QuoteSweepAccountsIncomplete,
+    #[msg("Oracle Dao's base mint must be the package's token mint")]
+    OracleMintMismatch,
 }

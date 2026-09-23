@@ -1,5 +1,5 @@
 export type PriceBasedPerformancePackage = {
-  version: "0.6.0";
+  version: "0.6.1";
   name: "price_based_performance_package";
   constants: [
     {
@@ -8,6 +8,11 @@ export type PriceBasedPerformancePackage = {
         defined: "usize";
       };
       value: "10";
+    },
+    {
+      name: "PRICE_SCALE";
+      type: "u128";
+      value: "1_000_000_000_000";
     },
   ];
   instructions: [
@@ -90,6 +95,84 @@ export type PriceBasedPerformancePackage = {
       ];
     },
     {
+      name: "initializePerformancePackageWithLimits";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "createKey";
+          isMut: false;
+          isSigner: true;
+          docs: ["Used to derive the PDA"];
+        },
+        {
+          name: "tokenMint";
+          isMut: false;
+          isSigner: false;
+          docs: ["The mint of the tokens to be locked"];
+        },
+        {
+          name: "grantorTokenAccount";
+          isMut: true;
+          isSigner: false;
+          docs: ["The token account containing the tokens to be locked"];
+        },
+        {
+          name: "grantor";
+          isMut: false;
+          isSigner: true;
+          docs: ["The authority of the token account"];
+        },
+        {
+          name: "performancePackageTokenVault";
+          isMut: true;
+          isSigner: false;
+          docs: ["The locker's token account where tokens will be stored"];
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "InitializePerformancePackageWithLimitsParams";
+          };
+        },
+      ];
+    },
+    {
       name: "startUnlock";
       accounts: [
         {
@@ -131,52 +214,6 @@ export type PriceBasedPerformancePackage = {
         },
         {
           name: "oracleAccount";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "performancePackageTokenVault";
-          isMut: true;
-          isSigner: false;
-          docs: ["The token account where locked tokens are stored"];
-        },
-        {
-          name: "tokenMint";
-          isMut: false;
-          isSigner: false;
-          docs: ["The token mint - validated via has_one constraint on locker"];
-        },
-        {
-          name: "recipientTokenAccount";
-          isMut: true;
-          isSigner: false;
-          docs: [
-            "The recipient's ATA where tokens will be sent - created if needed",
-          ];
-        },
-        {
-          name: "tokenRecipient";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-          docs: ["Payer for creating the ATA if needed"];
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -320,6 +357,22 @@ export type PriceBasedPerformancePackage = {
           name: "performancePackageTokenVault";
           isMut: true;
           isSigner: false;
+          docs: [
+            "Emptied by the payout and the burn, then closed to the spill account",
+          ];
+        },
+        {
+          name: "recipient";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "recipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The recipient's ATA that receives the unlocked balance - created if needed",
+          ];
         },
         {
           name: "admin";
@@ -337,12 +390,260 @@ export type PriceBasedPerformancePackage = {
           isSigner: false;
         },
         {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
+          docs: [
+            "The mint of the package's quote ATA; any mint other than the package's token mint",
+          ];
+        },
+        {
+          name: "packageQuoteAccount";
+          isMut: true;
+          isSigner: false;
+          isOptional: true;
+          docs: [
+            "The package's quote ATA, swept into `quote_destination` and closed when passed",
+          ];
+        },
+        {
+          name: "quoteDestination";
+          isMut: true;
+          isSigner: false;
+          isOptional: true;
+          docs: ["Where the quote balance goes, chosen by the admin"];
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
       ];
       args: [];
+    },
+    {
+      name: "resizePerformancePackage";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "withdrawTokens";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "oracleAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "performancePackageTokenVault";
+          isMut: true;
+          isSigner: false;
+          docs: ["The token account where locked tokens are stored"];
+        },
+        {
+          name: "tokenMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "recipientTokenAccount";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The recipient's ATA where tokens will be sent - created if needed",
+          ];
+        },
+        {
+          name: "recipient";
+          isMut: false;
+          isSigner: true;
+          docs: ["Only the recipient can withdraw"];
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+          docs: ["Payer for creating the ATA if needed"];
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "WithdrawTokensParams";
+          };
+        },
+      ];
+    },
+    {
+      name: "withdrawViaSell";
+      accounts: [
+        {
+          name: "performancePackage";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+          docs: ["The futarchy Dao whose spot pool buys the tokens"];
+        },
+        {
+          name: "performancePackageTokenVault";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The token account where locked tokens are stored; the sale is paid out of it",
+          ];
+        },
+        {
+          name: "tokenMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "ammBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "ammQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "packageQuoteAccount";
+          isMut: true;
+          isSigner: false;
+          docs: [
+            "The package's quote ATA that receives the proceeds before they are forwarded",
+          ];
+        },
+        {
+          name: "recipientQuoteAccount";
+          isMut: true;
+          isSigner: false;
+          docs: ["The recipient's quote ATA where the proceeds are sent"];
+        },
+        {
+          name: "recipient";
+          isMut: false;
+          isSigner: true;
+          docs: ["Only the recipient can withdraw"];
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+          docs: ["Payer for creating the ATAs if needed"];
+        },
+        {
+          name: "futarchyProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "futarchyEventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "WithdrawViaSellParams";
+          };
+        },
+      ];
     },
   ];
   accounts: [
@@ -435,6 +736,17 @@ export type PriceBasedPerformancePackage = {
             docs: ["The vault that stores the tokens"];
             type: "publicKey";
           },
+          {
+            name: "withdrawalPolicy";
+            docs: [
+              "Appended in 0.6.1; `None` means uncapped, and so do expired limits",
+            ];
+            type: {
+              option: {
+                defined: "WithdrawalPolicy";
+              };
+            };
+          },
         ];
       };
     },
@@ -505,6 +817,34 @@ export type PriceBasedPerformancePackage = {
       };
     },
     {
+      name: "CappedWithdrawal";
+      docs: ["Present on a withdrawal that ran under active limits"];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "price";
+            docs: [
+              "The price the withdrawal was valued at: the higher of the spot pool's observation and its reserve price",
+            ];
+            type: "u128";
+          },
+          {
+            name: "quoteValue";
+            docs: ["`amount` valued at that price, in quote atoms"];
+            type: "u64";
+          },
+          {
+            name: "usage";
+            docs: ["Window usage after this withdrawal"];
+            type: {
+              defined: "WindowUsage";
+            };
+          },
+        ];
+      };
+    },
+    {
       name: "ChangePerformancePackageAuthorityParams";
       type: {
         kind: "struct";
@@ -512,6 +852,28 @@ export type PriceBasedPerformancePackage = {
           {
             name: "newPerformancePackageAuthority";
             type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializePerformancePackageWithLimitsParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "base";
+            type: {
+              defined: "InitializePerformancePackageParams";
+            };
+          },
+          {
+            name: "limits";
+            type: {
+              option: {
+                defined: "LimitsParams";
+              };
+            };
           },
         ];
       };
@@ -573,12 +935,44 @@ export type PriceBasedPerformancePackage = {
       };
     },
     {
+      name: "WithdrawTokensParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "WithdrawViaSellParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
+            type: "u64";
+          },
+          {
+            name: "minQuoteOut";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
       name: "OracleConfig";
       docs: [
-        "Starting at `byte_offset` in `oracle_account`, this program expects to read:",
+        "Starting at `byte_offset` in `oracle_account`, the unlock instructions read:",
         "- 16 bytes for the aggregator, stored as a little endian u128",
-        "- 8 bytes for the slot that the aggregator was last updated, stored as a",
-        "little endian u64",
+        "- 8 bytes for the timestamp that the aggregator was last updated, stored as",
+        "a little endian i64",
+        "",
+        "While withdrawal limits are active, `oracle_account` must also be a futarchy",
+        "`Dao`: the withdraw instructions value withdrawals from its spot pool, at the",
+        "higher of the pool's damped observation and its reserve price.",
         "",
         "The aggregator should be a weighted sum of prices, where the weight is the",
         "number of seconds between prices. Here's an example:",
@@ -644,6 +1038,222 @@ export type PriceBasedPerformancePackage = {
       };
     },
     {
+      name: "OldPerformancePackage";
+      docs: [
+        "The 0.6.0 layout, decoded by the resize before an account is migrated",
+      ];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "tranches";
+            type: {
+              vec: {
+                defined: "StoredTranche";
+              };
+            };
+          },
+          {
+            name: "totalTokenAmount";
+            type: "u64";
+          },
+          {
+            name: "alreadyUnlockedAmount";
+            type: "u64";
+          },
+          {
+            name: "minUnlockTimestamp";
+            type: "i64";
+          },
+          {
+            name: "oracleConfig";
+            type: {
+              defined: "OracleConfig";
+            };
+          },
+          {
+            name: "twapLengthSeconds";
+            type: "u32";
+          },
+          {
+            name: "recipient";
+            type: "publicKey";
+          },
+          {
+            name: "state";
+            type: {
+              defined: "PerformancePackageState";
+            };
+          },
+          {
+            name: "createKey";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "performancePackageAuthority";
+            type: "publicKey";
+          },
+          {
+            name: "tokenMint";
+            type: "publicKey";
+          },
+          {
+            name: "seqNum";
+            type: "u64";
+          },
+          {
+            name: "performancePackageTokenVault";
+            type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "WithdrawalPolicy";
+      docs: [
+        "The agreed limits together with the usage they are enforced against",
+      ];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "limits";
+            type: {
+              defined: "WithdrawalLimits";
+            };
+          },
+          {
+            name: "usage";
+            type: {
+              defined: "WindowUsage";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "WindowUsage";
+      docs: ["Usage in the window the last withdrawal fell in"];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "windowIndex";
+            docs: [
+              "`(now - limits.start_timestamp) / limits.window_seconds` at the last withdrawal",
+            ];
+            type: "i64";
+          },
+          {
+            name: "tokensUsed";
+            type: "u64";
+          },
+          {
+            name: "quoteUsed";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "WithdrawalLimits";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "startTimestamp";
+            docs: [
+              "Anchor for window boundaries; set by the program when limits take effect or `window_seconds` changes",
+            ];
+            type: "i64";
+          },
+          {
+            name: "endTimestamp";
+            docs: ["Caps apply while `now < end_timestamp`"];
+            type: "i64";
+          },
+          {
+            name: "windowSeconds";
+            docs: ["Duration of the window in seconds"];
+            type: "u32";
+          },
+          {
+            name: "maxTokensPerWindow";
+            docs: ["Max base tokens withdrawn per window"];
+            type: "u64";
+          },
+          {
+            name: "maxQuotePerWindow";
+            docs: ["Max quote value withdrawn per window, in quote atoms"];
+            type: "u64";
+          },
+          {
+            name: "withdrawalMode";
+            docs: [
+              "Which withdrawal routes the recipient may use while the caps are active",
+            ];
+            type: {
+              defined: "WithdrawalMode";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "LimitsParams";
+      docs: [
+        "What the two parties agree on; the program supplies `start_timestamp`",
+      ];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "endTimestamp";
+            type: "i64";
+          },
+          {
+            name: "windowSeconds";
+            type: "u32";
+          },
+          {
+            name: "maxTokensPerWindow";
+            type: "u64";
+          },
+          {
+            name: "maxQuotePerWindow";
+            type: "u64";
+          },
+          {
+            name: "withdrawalMode";
+            type: {
+              defined: "WithdrawalMode";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "WithdrawalMode";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Tokens";
+          },
+          {
+            name: "Sell";
+          },
+          {
+            name: "Both";
+          },
+        ];
+      };
+    },
+    {
       name: "PerformancePackageState";
       type: {
         kind: "enum";
@@ -691,6 +1301,23 @@ export type PriceBasedPerformancePackage = {
               {
                 name: "newRecipient";
                 type: "publicKey";
+              },
+            ];
+          },
+          {
+            name: "UnlockTerms";
+            fields: [
+              {
+                name: "minUnlockTimestamp";
+                type: "i64";
+              },
+              {
+                name: "limits";
+                type: {
+                  option: {
+                    defined: "LimitsParams";
+                  };
+                };
               },
             ];
           },
@@ -785,6 +1412,88 @@ export type PriceBasedPerformancePackage = {
         {
           name: "twapPrice";
           type: "u128";
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "TokensWithdrawn";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "recipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "capped";
+          type: {
+            option: {
+              defined: "CappedWithdrawal";
+            };
+          };
+          index: false;
+        },
+      ];
+    },
+    {
+      name: "TokensSold";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "performancePackage";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "recipient";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "quoteReceived";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "minQuoteOut";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "capped";
+          type: {
+            option: {
+              defined: "WindowUsage";
+            };
+          };
           index: false;
         },
       ];
@@ -966,11 +1675,66 @@ export type PriceBasedPerformancePackage = {
       name: "RecipientAuthorityMustDiffer";
       msg: "Recipient and performance package authority must be different keys";
     },
+    {
+      code: 6016;
+      name: "InvalidWithdrawalLimits";
+      msg: "Withdrawal limits must have non-zero caps, a future end, and a window of at least one second";
+    },
+    {
+      code: 6017;
+      name: "InsufficientWithdrawableBalance";
+      msg: "Amount exceeds the withdrawable balance";
+    },
+    {
+      code: 6018;
+      name: "TokenWindowLimitExceeded";
+      msg: "Token cap for the current window exceeded";
+    },
+    {
+      code: 6019;
+      name: "QuoteWindowLimitExceeded";
+      msg: "Quote cap for the current window exceeded";
+    },
+    {
+      code: 6020;
+      name: "InvalidPriceObservation";
+      msg: "Oracle price observation is missing or zero";
+    },
+    {
+      code: 6021;
+      name: "WithdrawTokensDisabled";
+      msg: "Token withdrawals are disabled by the withdrawal mode";
+    },
+    {
+      code: 6022;
+      name: "WithdrawViaSellDisabled";
+      msg: "Sell withdrawals are disabled by the withdrawal mode";
+    },
+    {
+      code: 6023;
+      name: "AccountNotMigrated";
+      msg: "Performance package has not been resized to the current layout";
+    },
+    {
+      code: 6024;
+      name: "InvalidQuoteMint";
+      msg: "Quote mint must differ from the package's token mint";
+    },
+    {
+      code: 6025;
+      name: "QuoteSweepAccountsIncomplete";
+      msg: "The package's quote account and the quote destination must be passed together";
+    },
+    {
+      code: 6026;
+      name: "OracleMintMismatch";
+      msg: "Oracle Dao's base mint must be the package's token mint";
+    },
   ];
 };
 
 export const IDL: PriceBasedPerformancePackage = {
-  version: "0.6.0",
+  version: "0.6.1",
   name: "price_based_performance_package",
   constants: [
     {
@@ -979,6 +1743,11 @@ export const IDL: PriceBasedPerformancePackage = {
         defined: "usize",
       },
       value: "10",
+    },
+    {
+      name: "PRICE_SCALE",
+      type: "u128",
+      value: "1_000_000_000_000",
     },
   ],
   instructions: [
@@ -1061,6 +1830,84 @@ export const IDL: PriceBasedPerformancePackage = {
       ],
     },
     {
+      name: "initializePerformancePackageWithLimits",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "createKey",
+          isMut: false,
+          isSigner: true,
+          docs: ["Used to derive the PDA"],
+        },
+        {
+          name: "tokenMint",
+          isMut: false,
+          isSigner: false,
+          docs: ["The mint of the tokens to be locked"],
+        },
+        {
+          name: "grantorTokenAccount",
+          isMut: true,
+          isSigner: false,
+          docs: ["The token account containing the tokens to be locked"],
+        },
+        {
+          name: "grantor",
+          isMut: false,
+          isSigner: true,
+          docs: ["The authority of the token account"],
+        },
+        {
+          name: "performancePackageTokenVault",
+          isMut: true,
+          isSigner: false,
+          docs: ["The locker's token account where tokens will be stored"],
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "InitializePerformancePackageWithLimitsParams",
+          },
+        },
+      ],
+    },
+    {
       name: "startUnlock",
       accounts: [
         {
@@ -1102,52 +1949,6 @@ export const IDL: PriceBasedPerformancePackage = {
         },
         {
           name: "oracleAccount",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "performancePackageTokenVault",
-          isMut: true,
-          isSigner: false,
-          docs: ["The token account where locked tokens are stored"],
-        },
-        {
-          name: "tokenMint",
-          isMut: false,
-          isSigner: false,
-          docs: ["The token mint - validated via has_one constraint on locker"],
-        },
-        {
-          name: "recipientTokenAccount",
-          isMut: true,
-          isSigner: false,
-          docs: [
-            "The recipient's ATA where tokens will be sent - created if needed",
-          ],
-        },
-        {
-          name: "tokenRecipient",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-          docs: ["Payer for creating the ATA if needed"],
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1291,6 +2092,22 @@ export const IDL: PriceBasedPerformancePackage = {
           name: "performancePackageTokenVault",
           isMut: true,
           isSigner: false,
+          docs: [
+            "Emptied by the payout and the burn, then closed to the spill account",
+          ],
+        },
+        {
+          name: "recipient",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "recipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The recipient's ATA that receives the unlocked balance - created if needed",
+          ],
         },
         {
           name: "admin",
@@ -1308,12 +2125,260 @@ export const IDL: PriceBasedPerformancePackage = {
           isSigner: false,
         },
         {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
+          docs: [
+            "The mint of the package's quote ATA; any mint other than the package's token mint",
+          ],
+        },
+        {
+          name: "packageQuoteAccount",
+          isMut: true,
+          isSigner: false,
+          isOptional: true,
+          docs: [
+            "The package's quote ATA, swept into `quote_destination` and closed when passed",
+          ],
+        },
+        {
+          name: "quoteDestination",
+          isMut: true,
+          isSigner: false,
+          isOptional: true,
+          docs: ["Where the quote balance goes, chosen by the admin"],
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
       ],
       args: [],
+    },
+    {
+      name: "resizePerformancePackage",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "withdrawTokens",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "oracleAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "performancePackageTokenVault",
+          isMut: true,
+          isSigner: false,
+          docs: ["The token account where locked tokens are stored"],
+        },
+        {
+          name: "tokenMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "recipientTokenAccount",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The recipient's ATA where tokens will be sent - created if needed",
+          ],
+        },
+        {
+          name: "recipient",
+          isMut: false,
+          isSigner: true,
+          docs: ["Only the recipient can withdraw"],
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+          docs: ["Payer for creating the ATA if needed"],
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "WithdrawTokensParams",
+          },
+        },
+      ],
+    },
+    {
+      name: "withdrawViaSell",
+      accounts: [
+        {
+          name: "performancePackage",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+          docs: ["The futarchy Dao whose spot pool buys the tokens"],
+        },
+        {
+          name: "performancePackageTokenVault",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The token account where locked tokens are stored; the sale is paid out of it",
+          ],
+        },
+        {
+          name: "tokenMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "ammBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "ammQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "packageQuoteAccount",
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "The package's quote ATA that receives the proceeds before they are forwarded",
+          ],
+        },
+        {
+          name: "recipientQuoteAccount",
+          isMut: true,
+          isSigner: false,
+          docs: ["The recipient's quote ATA where the proceeds are sent"],
+        },
+        {
+          name: "recipient",
+          isMut: false,
+          isSigner: true,
+          docs: ["Only the recipient can withdraw"],
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+          docs: ["Payer for creating the ATAs if needed"],
+        },
+        {
+          name: "futarchyProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "futarchyEventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "WithdrawViaSellParams",
+          },
+        },
+      ],
     },
   ],
   accounts: [
@@ -1406,6 +2471,17 @@ export const IDL: PriceBasedPerformancePackage = {
             docs: ["The vault that stores the tokens"],
             type: "publicKey",
           },
+          {
+            name: "withdrawalPolicy",
+            docs: [
+              "Appended in 0.6.1; `None` means uncapped, and so do expired limits",
+            ],
+            type: {
+              option: {
+                defined: "WithdrawalPolicy",
+              },
+            },
+          },
         ],
       },
     },
@@ -1476,6 +2552,34 @@ export const IDL: PriceBasedPerformancePackage = {
       },
     },
     {
+      name: "CappedWithdrawal",
+      docs: ["Present on a withdrawal that ran under active limits"],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "price",
+            docs: [
+              "The price the withdrawal was valued at: the higher of the spot pool's observation and its reserve price",
+            ],
+            type: "u128",
+          },
+          {
+            name: "quoteValue",
+            docs: ["`amount` valued at that price, in quote atoms"],
+            type: "u64",
+          },
+          {
+            name: "usage",
+            docs: ["Window usage after this withdrawal"],
+            type: {
+              defined: "WindowUsage",
+            },
+          },
+        ],
+      },
+    },
+    {
       name: "ChangePerformancePackageAuthorityParams",
       type: {
         kind: "struct",
@@ -1483,6 +2587,28 @@ export const IDL: PriceBasedPerformancePackage = {
           {
             name: "newPerformancePackageAuthority",
             type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializePerformancePackageWithLimitsParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "base",
+            type: {
+              defined: "InitializePerformancePackageParams",
+            },
+          },
+          {
+            name: "limits",
+            type: {
+              option: {
+                defined: "LimitsParams",
+              },
+            },
           },
         ],
       },
@@ -1544,12 +2670,44 @@ export const IDL: PriceBasedPerformancePackage = {
       },
     },
     {
+      name: "WithdrawTokensParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawViaSellParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
+            type: "u64",
+          },
+          {
+            name: "minQuoteOut",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "OracleConfig",
       docs: [
-        "Starting at `byte_offset` in `oracle_account`, this program expects to read:",
+        "Starting at `byte_offset` in `oracle_account`, the unlock instructions read:",
         "- 16 bytes for the aggregator, stored as a little endian u128",
-        "- 8 bytes for the slot that the aggregator was last updated, stored as a",
-        "little endian u64",
+        "- 8 bytes for the timestamp that the aggregator was last updated, stored as",
+        "a little endian i64",
+        "",
+        "While withdrawal limits are active, `oracle_account` must also be a futarchy",
+        "`Dao`: the withdraw instructions value withdrawals from its spot pool, at the",
+        "higher of the pool's damped observation and its reserve price.",
         "",
         "The aggregator should be a weighted sum of prices, where the weight is the",
         "number of seconds between prices. Here's an example:",
@@ -1615,6 +2773,222 @@ export const IDL: PriceBasedPerformancePackage = {
       },
     },
     {
+      name: "OldPerformancePackage",
+      docs: [
+        "The 0.6.0 layout, decoded by the resize before an account is migrated",
+      ],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "tranches",
+            type: {
+              vec: {
+                defined: "StoredTranche",
+              },
+            },
+          },
+          {
+            name: "totalTokenAmount",
+            type: "u64",
+          },
+          {
+            name: "alreadyUnlockedAmount",
+            type: "u64",
+          },
+          {
+            name: "minUnlockTimestamp",
+            type: "i64",
+          },
+          {
+            name: "oracleConfig",
+            type: {
+              defined: "OracleConfig",
+            },
+          },
+          {
+            name: "twapLengthSeconds",
+            type: "u32",
+          },
+          {
+            name: "recipient",
+            type: "publicKey",
+          },
+          {
+            name: "state",
+            type: {
+              defined: "PerformancePackageState",
+            },
+          },
+          {
+            name: "createKey",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "performancePackageAuthority",
+            type: "publicKey",
+          },
+          {
+            name: "tokenMint",
+            type: "publicKey",
+          },
+          {
+            name: "seqNum",
+            type: "u64",
+          },
+          {
+            name: "performancePackageTokenVault",
+            type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawalPolicy",
+      docs: [
+        "The agreed limits together with the usage they are enforced against",
+      ],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "limits",
+            type: {
+              defined: "WithdrawalLimits",
+            },
+          },
+          {
+            name: "usage",
+            type: {
+              defined: "WindowUsage",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "WindowUsage",
+      docs: ["Usage in the window the last withdrawal fell in"],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "windowIndex",
+            docs: [
+              "`(now - limits.start_timestamp) / limits.window_seconds` at the last withdrawal",
+            ],
+            type: "i64",
+          },
+          {
+            name: "tokensUsed",
+            type: "u64",
+          },
+          {
+            name: "quoteUsed",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawalLimits",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "startTimestamp",
+            docs: [
+              "Anchor for window boundaries; set by the program when limits take effect or `window_seconds` changes",
+            ],
+            type: "i64",
+          },
+          {
+            name: "endTimestamp",
+            docs: ["Caps apply while `now < end_timestamp`"],
+            type: "i64",
+          },
+          {
+            name: "windowSeconds",
+            docs: ["Duration of the window in seconds"],
+            type: "u32",
+          },
+          {
+            name: "maxTokensPerWindow",
+            docs: ["Max base tokens withdrawn per window"],
+            type: "u64",
+          },
+          {
+            name: "maxQuotePerWindow",
+            docs: ["Max quote value withdrawn per window, in quote atoms"],
+            type: "u64",
+          },
+          {
+            name: "withdrawalMode",
+            docs: [
+              "Which withdrawal routes the recipient may use while the caps are active",
+            ],
+            type: {
+              defined: "WithdrawalMode",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "LimitsParams",
+      docs: [
+        "What the two parties agree on; the program supplies `start_timestamp`",
+      ],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "endTimestamp",
+            type: "i64",
+          },
+          {
+            name: "windowSeconds",
+            type: "u32",
+          },
+          {
+            name: "maxTokensPerWindow",
+            type: "u64",
+          },
+          {
+            name: "maxQuotePerWindow",
+            type: "u64",
+          },
+          {
+            name: "withdrawalMode",
+            type: {
+              defined: "WithdrawalMode",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "WithdrawalMode",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Tokens",
+          },
+          {
+            name: "Sell",
+          },
+          {
+            name: "Both",
+          },
+        ],
+      },
+    },
+    {
       name: "PerformancePackageState",
       type: {
         kind: "enum",
@@ -1662,6 +3036,23 @@ export const IDL: PriceBasedPerformancePackage = {
               {
                 name: "newRecipient",
                 type: "publicKey",
+              },
+            ],
+          },
+          {
+            name: "UnlockTerms",
+            fields: [
+              {
+                name: "minUnlockTimestamp",
+                type: "i64",
+              },
+              {
+                name: "limits",
+                type: {
+                  option: {
+                    defined: "LimitsParams",
+                  },
+                },
               },
             ],
           },
@@ -1756,6 +3147,88 @@ export const IDL: PriceBasedPerformancePackage = {
         {
           name: "twapPrice",
           type: "u128",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "TokensWithdrawn",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "recipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "capped",
+          type: {
+            option: {
+              defined: "CappedWithdrawal",
+            },
+          },
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "TokensSold",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "performancePackage",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "recipient",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "quoteReceived",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "minQuoteOut",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "capped",
+          type: {
+            option: {
+              defined: "WindowUsage",
+            },
+          },
           index: false,
         },
       ],
@@ -1936,6 +3409,61 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6015,
       name: "RecipientAuthorityMustDiffer",
       msg: "Recipient and performance package authority must be different keys",
+    },
+    {
+      code: 6016,
+      name: "InvalidWithdrawalLimits",
+      msg: "Withdrawal limits must have non-zero caps, a future end, and a window of at least one second",
+    },
+    {
+      code: 6017,
+      name: "InsufficientWithdrawableBalance",
+      msg: "Amount exceeds the withdrawable balance",
+    },
+    {
+      code: 6018,
+      name: "TokenWindowLimitExceeded",
+      msg: "Token cap for the current window exceeded",
+    },
+    {
+      code: 6019,
+      name: "QuoteWindowLimitExceeded",
+      msg: "Quote cap for the current window exceeded",
+    },
+    {
+      code: 6020,
+      name: "InvalidPriceObservation",
+      msg: "Oracle price observation is missing or zero",
+    },
+    {
+      code: 6021,
+      name: "WithdrawTokensDisabled",
+      msg: "Token withdrawals are disabled by the withdrawal mode",
+    },
+    {
+      code: 6022,
+      name: "WithdrawViaSellDisabled",
+      msg: "Sell withdrawals are disabled by the withdrawal mode",
+    },
+    {
+      code: 6023,
+      name: "AccountNotMigrated",
+      msg: "Performance package has not been resized to the current layout",
+    },
+    {
+      code: 6024,
+      name: "InvalidQuoteMint",
+      msg: "Quote mint must differ from the package's token mint",
+    },
+    {
+      code: 6025,
+      name: "QuoteSweepAccountsIncomplete",
+      msg: "The package's quote account and the quote destination must be passed together",
+    },
+    {
+      code: 6026,
+      name: "OracleMintMismatch",
+      msg: "Oracle Dao's base mint must be the package's token mint",
     },
   ],
 };

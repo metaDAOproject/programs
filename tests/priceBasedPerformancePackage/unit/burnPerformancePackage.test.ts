@@ -5,150 +5,376 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import { assert } from "chai";
-import { mintTo, getAccount } from "spl-token-bankrun";
 import BN from "bn.js";
-import { getPerformancePackageAddr, Tranche } from "@metadaoproject/programs";
+import { getMint } from "spl-token-bankrun";
+import {
+  ACCOUNT_SIZE,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import { QuoteSweep } from "@metadaoproject/programs";
 import { expectError } from "../../utils.js";
-import { getAssociatedTokenAddress } from "@solana/spl-token";
+import { runUnlockCycle, setDaoOracle, setupPackageOnDao } from "../utils.js";
+
+const TRANCHE_AMOUNT = 100 * 10 ** 6;
+const TOTAL_AMOUNT = 2 * TRANCHE_AMOUNT;
+const STRAY_QUOTE_AMOUNT = 500 * 10 ** 6;
+const THIRTY_DAYS = 30 * 24 * 60 * 60;
+const ONE_YEAR = 365 * 24 * 60 * 60;
 
 export default function () {
-  let createKey: Keypair;
   let tokenMint: PublicKey;
-  let tokenAuthority: Keypair;
-  let tokenAccount: PublicKey;
   let recipient: Keypair;
+  let admin: Keypair;
+  let spillAccount: Keypair;
   let performancePackage: PublicKey;
-  let oracleAccount: Keypair;
+  let oracle: PublicKey;
 
   beforeEach(async function () {
-    // Create test accounts
-    createKey = Keypair.generate();
-    tokenAuthority = Keypair.generate();
     recipient = Keypair.generate();
-    oracleAccount = Keypair.generate();
+    admin = Keypair.generate();
+    spillAccount = Keypair.generate();
+    oracle = Keypair.generate().publicKey;
 
-    // Fund accounts with SOL using SystemProgram
-    const fundingTx = new Transaction().add(
+    const fundTx = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: this.payer.publicKey,
-        toPubkey: createKey.publicKey,
-        lamports: 1000000000, // 1 SOL
-      }),
-      SystemProgram.transfer({
-        fromPubkey: this.payer.publicKey,
-        toPubkey: tokenAuthority.publicKey,
-        lamports: 1000000000, // 1 SOL
-      }),
-      SystemProgram.transfer({
-        fromPubkey: this.payer.publicKey,
-        toPubkey: recipient.publicKey,
-        lamports: 1000000000, // 1 SOL
+        toPubkey: admin.publicKey,
+        lamports: 1_000_000_000,
       }),
     );
-    fundingTx.recentBlockhash = (
-      await this.context.banksClient.getLatestBlockhash()
-    )[0];
-    fundingTx.sign(this.payer);
-    await this.banksClient.processTransaction(fundingTx);
+    fundTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    fundTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundTx);
 
-    // Create token mint
-    tokenMint = await this.createMint(tokenAuthority.publicKey, 6);
-
-    // Create token account
-    tokenAccount = await this.createTokenAccount(
+    tokenMint = await this.createMint(this.payer.publicKey, 6);
+    await this.mintTo(
       tokenMint,
-      tokenAuthority.publicKey,
-    );
-
-    // Mint some tokens to the token account
-    await mintTo(
-      this.context.banksClient,
+      this.payer.publicKey,
       this.payer,
-      tokenMint,
-      tokenAccount,
-      tokenAuthority,
-      1000000,
+      TOTAL_AMOUNT,
     );
 
-    performancePackage = getPerformancePackageAddr({
-      createKey: createKey.publicKey,
-    })[0];
+    performancePackage = await this.setupBasicPerformancePackage({
+      tokenMint,
+      oracleAccount: oracle,
+      recipient: recipient.publicKey,
+    });
 
-    let tranches: Tranche[] = [
-      {
-        priceThreshold: new BN(1000000),
-        tokenAmount: new BN(100000),
-      },
-      {
-        priceThreshold: new BN(2000000),
-        tokenAmount: new BN(200000),
-      },
-    ];
-    const params = {
-      tranches,
-      grantee: recipient.publicKey,
-      performancePackageAuthority: this.payer.publicKey,
-      minUnlockTimestamp: new BN(
-        Number((await this.context.banksClient.getClock()).unixTimestamp) +
-          3600,
-      ), // 1 hour from now
-      oracleConfig: {
-        oracleAccount: oracleAccount.publicKey,
-        byteOffset: 0,
-      },
-      twapLengthSeconds: 86_400, // 1 day
-      tokenRecipient: recipient.publicKey,
-    };
-
-    const tx = await this.priceBasedPerformancePackage
-      .initializePerformancePackageIx({
-        params,
-        createKey: createKey.publicKey,
-        tokenMint,
-        grantorTokenAccount: tokenAccount,
-        grantor: tokenAuthority.publicKey,
-      })
-      .transaction();
-
-    tx.recentBlockhash = (
-      await this.context.banksClient.getLatestBlockhash()
-    )[0];
-    tx.sign(createKey, this.payer, tokenAuthority);
-    await this.banksClient.processTransaction(tx);
+    // Move past the one-second cliff
+    await this.advanceBySeconds(2);
   });
 
-  it("should burn a performance package successfully", async function () {
-    const performancePackageTokenVault = await getAssociatedTokenAddress(
+  // Unlocks every tranche with a threshold at or below `twapPrice`.
+  async function unlockTranches(
+    ctx: Mocha.Context,
+    twapPrice: bigint,
+    writeOracle?: (values: { aggregator: bigint }) => Promise<void>,
+  ) {
+    await runUnlockCycle(ctx, {
+      performancePackage,
+      oracleAccount: oracle,
+      recipient,
+      twapPrice,
+      writeOracle,
+    });
+  }
+
+  function burnIx(ctx: Mocha.Context, quoteSweep?: QuoteSweep) {
+    return ctx.priceBasedPerformancePackage.burnPerformancePackageIx({
+      performancePackage,
       tokenMint,
+      recipient: recipient.publicKey,
+      admin: admin.publicKey,
+      spillAccount: spillAccount.publicKey,
+      quoteSweep,
+    });
+  }
+
+  function vaultAddress() {
+    return getAssociatedTokenAddressSync(tokenMint, performancePackage, true);
+  }
+
+  async function lamportsOf(ctx: Mocha.Context, accounts: PublicKey[]) {
+    let total = 0n;
+    for (const account of accounts) {
+      total += BigInt((await ctx.banksClient.getAccount(account)).lamports);
+    }
+    return total;
+  }
+
+  function withdrawIx(ctx: Mocha.Context, amount: number) {
+    return ctx.priceBasedPerformancePackage
+      .withdrawTokensIx({
+        performancePackage,
+        oracleAccount: oracle,
+        tokenMint,
+        recipient: recipient.publicKey,
+        amount: new BN(amount),
+      })
+      .signers([recipient]);
+  }
+
+  async function mintSupply(ctx: Mocha.Context): Promise<bigint> {
+    return (await getMint(ctx.banksClient, tokenMint)).supply;
+  }
+
+  it("pays out the unlocked balance, burns the locked remainder and closes the package to the spill account", async function () {
+    await unlockTranches(this, BigInt(1e12));
+
+    const supplyBefore = await mintSupply(this);
+    const closedLamports = await lamportsOf(this, [
+      performancePackage,
+      vaultAddress(),
+    ]);
+
+    await burnIx(this).signers([admin]).rpc();
+
+    assert.equal(
+      await this.getTokenBalance(tokenMint, recipient.publicKey),
+      BigInt(TRANCHE_AMOUNT),
+    );
+    assert.equal(
+      supplyBefore - (await mintSupply(this)),
+      BigInt(TOTAL_AMOUNT - TRANCHE_AMOUNT),
+    );
+
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+    assert.isNull(await this.banksClient.getAccount(vaultAddress()));
+    assert.equal(
+      await this.banksClient.getBalance(spillAccount.publicKey),
+      closedLamports,
+    );
+  });
+
+  it("burns the whole vault when nothing is unlocked", async function () {
+    const supplyBefore = await mintSupply(this);
+
+    await burnIx(this).signers([admin]).rpc();
+
+    assert.equal(
+      await this.getTokenBalance(tokenMint, recipient.publicKey),
+      0n,
+    );
+    assert.equal(await this.getTokenBalance(tokenMint, performancePackage), 0n);
+    assert.equal(supplyBefore - (await mintSupply(this)), BigInt(TOTAL_AMOUNT));
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+  });
+
+  it("transfers and burns nothing when everything is unlocked and already withdrawn", async function () {
+    await unlockTranches(this, BigInt(2e12));
+    await withdrawIx(this, TOTAL_AMOUNT).rpc();
+    assert.equal(await this.getTokenBalance(tokenMint, performancePackage), 0n);
+
+    const supplyBefore = await mintSupply(this);
+
+    await burnIx(this).signers([admin]).rpc();
+
+    assert.equal(
+      await this.getTokenBalance(tokenMint, recipient.publicKey),
+      BigInt(TOTAL_AMOUNT),
+    );
+    assert.equal(await mintSupply(this), supplyBefore);
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+    assert.isNull(await this.banksClient.getAccount(vaultAddress()));
+  });
+
+  it("pays the whole withdrawable balance when the window's token cap is used up", async function () {
+    tokenMint = await this.createMint(this.payer.publicKey, 6);
+    const quoteMint = await this.createMint(this.payer.publicKey, 6);
+    await this.mintTo(
+      tokenMint,
+      this.payer.publicKey,
+      this.payer,
+      TOTAL_AMOUNT,
+    );
+    const now = Number((await this.banksClient.getClock()).unixTimestamp);
+    ({ dao: oracle, performancePackage } = await setupPackageOnDao(this, {
+      tokenMint,
+      quoteMint,
+      recipient: recipient.publicKey,
+      limits: {
+        endTimestamp: new BN(now + ONE_YEAR),
+        windowSeconds: THIRTY_DAYS,
+        maxTokensPerWindow: new BN(TRANCHE_AMOUNT / 2),
+        maxQuotePerWindow: new BN(1_000 * 10 ** 6),
+        withdrawalMode: { both: {} },
+      },
+    }));
+    await this.advanceBySeconds(2);
+    await unlockTranches(this, BigInt(1e12), (values) =>
+      setDaoOracle(this, oracle, values),
+    );
+    await setDaoOracle(this, oracle, {
+      lastObservation: BigInt(1e12),
+      reserves: { base: 1_000_000n * 10n ** 6n, quote: 1_000_000n * 10n ** 6n },
+    });
+
+    await withdrawIx(this, TRANCHE_AMOUNT / 2).rpc();
+    const callbacks = expectError(
+      "TokenWindowLimitExceeded",
+      "withdrew past the window's token cap",
+    );
+    await withdrawIx(this, 1).rpc().then(callbacks[0], callbacks[1]);
+
+    const supplyBefore = await mintSupply(this);
+
+    await burnIx(this).signers([admin]).rpc();
+
+    assert.equal(
+      await this.getTokenBalance(tokenMint, recipient.publicKey),
+      BigInt(TRANCHE_AMOUNT),
+    );
+    assert.equal(await this.getTokenBalance(tokenMint, performancePackage), 0n);
+    assert.equal(
+      supplyBefore - (await mintSupply(this)),
+      BigInt(TOTAL_AMOUNT - TRANCHE_AMOUNT),
+    );
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+  });
+
+  it("creates a missing recipient ATA at the admin's expense", async function () {
+    await unlockTranches(this, BigInt(1e12));
+
+    const recipientTokenAccount = getAssociatedTokenAddressSync(
+      tokenMint,
+      recipient.publicKey,
+    );
+    assert.isNull(await this.banksClient.getAccount(recipientTokenAccount));
+    const adminBefore = await this.banksClient.getBalance(admin.publicKey);
+
+    await burnIx(this).signers([admin]).rpc();
+
+    assert.isNotNull(await this.banksClient.getAccount(recipientTokenAccount));
+    assert.equal(
+      await this.getTokenBalance(tokenMint, recipient.publicKey),
+      BigInt(TRANCHE_AMOUNT),
+    );
+
+    const rent = await this.banksClient.getRent();
+    assert.equal(
+      adminBefore - (await this.banksClient.getBalance(admin.publicKey)),
+      rent.minimumBalance(BigInt(ACCOUNT_SIZE)),
+    );
+  });
+
+  it("sweeps the quote account to the destination and closes it along with the vault", async function () {
+    const quoteMint = await this.createMint(this.payer.publicKey, 6);
+    await this.mintTo(
+      quoteMint,
+      performancePackage,
+      this.payer,
+      STRAY_QUOTE_AMOUNT,
+    );
+    const destinationOwner = Keypair.generate().publicKey;
+    const quoteDestination = await this.createTokenAccount(
+      quoteMint,
+      destinationOwner,
+    );
+    const packageQuoteAccount = getAssociatedTokenAddressSync(
+      quoteMint,
       performancePackage,
       true,
     );
+    const closedLamports = await lamportsOf(this, [
+      performancePackage,
+      vaultAddress(),
+      packageQuoteAccount,
+    ]);
 
-    // Confirm that the performance package and token vault accounts are not closed... yet
-    let performancePackageAccount =
-      await this.banksClient.getAccount(performancePackage);
-    assert.isNotNull(performancePackageAccount);
+    await burnIx(this, { quoteMint, quoteDestination }).signers([admin]).rpc();
 
-    let performancePackageTokenVaultAccount = await this.banksClient.getAccount(
-      performancePackageTokenVault,
+    assert.equal(
+      await this.getTokenBalance(quoteMint, destinationOwner),
+      BigInt(STRAY_QUOTE_AMOUNT),
     );
-    assert.isNotNull(performancePackageTokenVaultAccount);
+    assert.isNull(await this.banksClient.getAccount(packageQuoteAccount));
+    assert.isNull(await this.banksClient.getAccount(vaultAddress()));
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+    assert.equal(
+      await this.banksClient.getBalance(spillAccount.publicKey),
+      closedLamports,
+    );
+  });
 
-    // Burn the performance package
+  it("closes an empty quote account", async function () {
+    const quoteMint = await this.createMint(this.payer.publicKey, 6);
+    const packageQuoteAccount = await this.createTokenAccount(
+      quoteMint,
+      performancePackage,
+    );
+    const destinationOwner = Keypair.generate().publicKey;
+    const quoteDestination = await this.createTokenAccount(
+      quoteMint,
+      destinationOwner,
+    );
+
+    await burnIx(this, { quoteMint, quoteDestination }).signers([admin]).rpc();
+
+    assert.equal(await this.getTokenBalance(quoteMint, destinationOwner), 0n);
+    assert.isNull(await this.banksClient.getAccount(packageQuoteAccount));
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+  });
+
+  it("rejects the package's token mint as the quote mint", async function () {
+    const quoteDestination = await this.createTokenAccount(
+      tokenMint,
+      Keypair.generate().publicKey,
+    );
+
+    const callbacks = expectError(
+      "InvalidQuoteMint",
+      "swept the vault as a quote account",
+    );
+    await burnIx(this, { quoteMint: tokenMint, quoteDestination })
+      .signers([admin])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    assert.isNotNull(await this.banksClient.getAccount(performancePackage));
+    assert.equal(
+      await this.getTokenBalance(tokenMint, performancePackage),
+      BigInt(TOTAL_AMOUNT),
+    );
+  });
+
+  it("rejects a quote account without a destination", async function () {
+    const quoteMint = await this.createMint(this.payer.publicKey, 6);
+    const packageQuoteAccount = await this.createTokenAccount(
+      quoteMint,
+      performancePackage,
+    );
+
+    const callbacks = expectError(
+      "QuoteSweepAccountsIncomplete",
+      "burned with the quote account but no destination",
+    );
+    // The SDK only builds the sweep as a pair, so the accounts are assembled by hand
     await this.priceBasedPerformancePackage.program.methods
       .burnPerformancePackage()
       .accounts({
         performancePackage,
-        performancePackageTokenVault,
+        performancePackageTokenVault: vaultAddress(),
+        recipient: recipient.publicKey,
+        recipientTokenAccount: getAssociatedTokenAddressSync(
+          tokenMint,
+          recipient.publicKey,
+        ),
+        admin: admin.publicKey,
+        spillAccount: spillAccount.publicKey,
         tokenMint,
-        spillAccount: this.payer.publicKey,
-        admin: this.payer.publicKey, // This should be the MetaDAO operational multisig vault in production
+        quoteMint,
+        packageQuoteAccount,
+        quoteDestination: null,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       })
-      .rpc();
+      .signers([admin])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
 
-    // Confirm that the performance package account is closed
-    performancePackageAccount =
-      await this.banksClient.getAccount(performancePackage);
-    assert.isNull(performancePackageAccount);
+    assert.isNotNull(await this.banksClient.getAccount(performancePackage));
   });
 }

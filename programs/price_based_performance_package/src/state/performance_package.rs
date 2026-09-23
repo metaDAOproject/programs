@@ -1,11 +1,15 @@
 use anchor_lang::prelude::*;
 
-use crate::MAX_TRANCHES;
+use crate::{PriceBasedPerformancePackageError, MAX_TRANCHES};
 
-/// Starting at `byte_offset` in `oracle_account`, this program expects to read:
+/// Starting at `byte_offset` in `oracle_account`, the unlock instructions read:
 /// - 16 bytes for the aggregator, stored as a little endian u128
-/// - 8 bytes for the slot that the aggregator was last updated, stored as a
-///   little endian u64
+/// - 8 bytes for the timestamp that the aggregator was last updated, stored as
+///   a little endian i64
+///
+/// While withdrawal limits are active, `oracle_account` must also be a futarchy
+/// `Dao`: the withdraw instructions value withdrawals from its spot pool, at the
+/// higher of the pool's damped observation and its reserve price.
 ///
 /// The aggregator should be a weighted sum of prices, where the weight is the
 /// number of seconds between prices. Here's an example:
@@ -80,6 +84,253 @@ pub struct PerformancePackage {
     pub seq_num: u64,
     /// The vault that stores the tokens
     pub performance_package_token_vault: Pubkey,
+    /// Appended in 0.6.1; `None` means uncapped, and so do expired limits
+    pub withdrawal_policy: Option<WithdrawalPolicy>,
+}
+
+impl PerformancePackage {
+    /// Account size since 0.6.1 (582 bytes)
+    pub const SIZE: usize = 8 + Self::INIT_SPACE;
+    /// Account size before 0.6.1 (520 bytes)
+    pub const OLD_SIZE: usize = 8 + OldPerformancePackage::INIT_SPACE;
+
+    /// Ensure the package has been resized to the current layout.
+    pub fn assert_migrated(info: &AccountInfo) -> Result<()> {
+        require_eq!(
+            info.data_len(),
+            Self::SIZE,
+            PriceBasedPerformancePackageError::AccountNotMigrated
+        );
+        Ok(())
+    }
+
+    /// Everything in the vault that is not still locked, "donations" included.
+    pub fn withdrawable(&self, vault_amount: u64) -> Result<u64> {
+        let locked = self
+            .total_token_amount
+            .checked_sub(self.already_unlocked_amount)
+            .ok_or(PriceBasedPerformancePackageError::InvariantViolated)?;
+        let withdrawable = vault_amount
+            .checked_sub(locked)
+            .ok_or(PriceBasedPerformancePackageError::InvariantViolated)?;
+        Ok(withdrawable)
+    }
+
+    /// The policy whose limits are still in force at `now`, if any.
+    pub fn active_policy(&mut self, now: i64) -> Option<&mut WithdrawalPolicy> {
+        self.withdrawal_policy
+            .as_mut()
+            .filter(|policy| now < policy.limits.end_timestamp)
+    }
+
+    /// Replace the withdrawal policy as a whole. `None` removes it.
+    pub fn replace_withdrawal_policy(&mut self, limits: Option<LimitsParams>, now: i64) {
+        let current = self.withdrawal_policy;
+
+        self.withdrawal_policy = limits.map(|new_limits| match current {
+            // If the window size is the same, keep the same window and usage
+            Some(current) if current.limits.window_seconds == new_limits.window_seconds => {
+                WithdrawalPolicy {
+                    limits: new_limits.into_limits(current.limits.start_timestamp),
+                    usage: current.usage,
+                }
+            }
+            // If the window size is different, start a new window NOW and keep the current usage
+            Some(current) => WithdrawalPolicy {
+                limits: new_limits.into_limits(now),
+                usage: WindowUsage {
+                    window_index: 0,
+                    ..current.usage
+                },
+            },
+            None => WithdrawalPolicy::new(new_limits.into_limits(now)),
+        });
+    }
+}
+
+/// The 0.6.0 layout, decoded by the resize before an account is migrated
+#[derive(AnchorSerialize, AnchorDeserialize, InitSpace)]
+pub struct OldPerformancePackage {
+    #[max_len(MAX_TRANCHES)]
+    pub tranches: Vec<StoredTranche>,
+    pub total_token_amount: u64,
+    pub already_unlocked_amount: u64,
+    pub min_unlock_timestamp: i64,
+    pub oracle_config: OracleConfig,
+    pub twap_length_seconds: u32,
+    pub recipient: Pubkey,
+    pub state: PerformancePackageState,
+    pub create_key: Pubkey,
+    pub pda_bump: u8,
+    pub performance_package_authority: Pubkey,
+    pub token_mint: Pubkey,
+    pub seq_num: u64,
+    pub performance_package_token_vault: Pubkey,
+}
+
+/// The agreed limits together with the usage they are enforced against
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub struct WithdrawalPolicy {
+    pub limits: WithdrawalLimits,
+    pub usage: WindowUsage,
+}
+
+impl WithdrawalPolicy {
+    /// Fresh limits with nothing withdrawn yet
+    pub fn new(limits: WithdrawalLimits) -> Self {
+        Self {
+            limits,
+            usage: WindowUsage::default(),
+        }
+    }
+
+    /// Reset the counters if `now` falls in a later window than the last withdrawal.
+    pub fn roll_if_new_window(&mut self, now: i64) {
+        let window_index =
+            (now - self.limits.start_timestamp) / self.limits.window_seconds as i64;
+
+        if window_index != self.usage.window_index {
+            self.usage = WindowUsage {
+                window_index,
+                tokens_used: 0,
+                quote_used: 0,
+            };
+        }
+    }
+
+    /// Ensure `amount` more base tokens fit under the window's token cap.
+    pub fn assert_tokens_fit(&self, amount: u64) -> Result<()> {
+        let tokens_used = self
+            .usage
+            .tokens_used
+            .checked_add(amount)
+            .ok_or(PriceBasedPerformancePackageError::TokenWindowLimitExceeded)?;
+
+        require_gte!(
+            self.limits.max_tokens_per_window,
+            tokens_used,
+            PriceBasedPerformancePackageError::TokenWindowLimitExceeded
+        );
+
+        Ok(())
+    }
+
+    /// Ensure `quote_value` more quote atoms fit under the window's quote cap.
+    pub fn assert_quote_fits(&self, quote_value: u64) -> Result<()> {
+        let quote_used = self
+            .usage
+            .quote_used
+            .checked_add(quote_value)
+            .ok_or(PriceBasedPerformancePackageError::QuoteWindowLimitExceeded)?;
+
+        require_gte!(
+            self.limits.max_quote_per_window,
+            quote_used,
+            PriceBasedPerformancePackageError::QuoteWindowLimitExceeded
+        );
+
+        Ok(())
+    }
+
+    /// Count a withdrawal that passed both cap checks against the window.
+    pub fn record_withdrawal(&mut self, amount: u64, quote_value: u64) {
+        self.usage.tokens_used += amount;
+        self.usage.quote_used += quote_value;
+    }
+}
+
+/// Usage in the window the last withdrawal fell in
+#[derive(
+    AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace, Default,
+)]
+pub struct WindowUsage {
+    /// `(now - limits.start_timestamp) / limits.window_seconds` at the last withdrawal
+    pub window_index: i64,
+    pub tokens_used: u64,
+    pub quote_used: u64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub struct WithdrawalLimits {
+    /// Anchor for window boundaries; set by the program when limits take effect or `window_seconds` changes
+    pub start_timestamp: i64,
+    /// Caps apply while `now < end_timestamp`
+    pub end_timestamp: i64,
+    /// Duration of the window in seconds
+    pub window_seconds: u32,
+    /// Max base tokens withdrawn per window
+    pub max_tokens_per_window: u64,
+    /// Max quote value withdrawn per window, in quote atoms
+    pub max_quote_per_window: u64,
+    /// Which withdrawal routes the recipient may use while the caps are active
+    pub withdrawal_mode: WithdrawalMode,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub enum WithdrawalMode {
+    Tokens,
+    Sell,
+    Both,
+}
+
+impl WithdrawalMode {
+    pub fn allows_tokens(&self) -> bool {
+        matches!(self, WithdrawalMode::Tokens | WithdrawalMode::Both)
+    }
+
+    pub fn allows_sell(&self) -> bool {
+        matches!(self, WithdrawalMode::Sell | WithdrawalMode::Both)
+    }
+}
+
+/// What the two parties agree on; the program supplies `start_timestamp`
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub struct LimitsParams {
+    pub end_timestamp: i64,
+    pub window_seconds: u32,
+    pub max_tokens_per_window: u64,
+    pub max_quote_per_window: u64,
+    pub withdrawal_mode: WithdrawalMode,
+}
+
+impl LimitsParams {
+    /// Ensure the caps are non-zero, the end is ahead of `now`, and the window is at least one second.
+    pub fn validate(&self, now: i64) -> Result<()> {
+        require_gt!(
+            self.max_tokens_per_window,
+            0,
+            PriceBasedPerformancePackageError::InvalidWithdrawalLimits
+        );
+        require_gt!(
+            self.max_quote_per_window,
+            0,
+            PriceBasedPerformancePackageError::InvalidWithdrawalLimits
+        );
+        require_gt!(
+            self.end_timestamp,
+            now,
+            PriceBasedPerformancePackageError::InvalidWithdrawalLimits
+        );
+        require_gte!(
+            self.window_seconds,
+            1,
+            PriceBasedPerformancePackageError::InvalidWithdrawalLimits
+        );
+
+        Ok(())
+    }
+
+    /// Anchor the window boundaries at `start_timestamp`.
+    pub fn into_limits(self, start_timestamp: i64) -> WithdrawalLimits {
+        WithdrawalLimits {
+            start_timestamp,
+            end_timestamp: self.end_timestamp,
+            window_seconds: self.window_seconds,
+            max_tokens_per_window: self.max_tokens_per_window,
+            max_quote_per_window: self.max_quote_per_window,
+            withdrawal_mode: self.withdrawal_mode,
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq, Eq, InitSpace)]
@@ -116,6 +367,11 @@ pub enum ChangeType {
     Oracle { new_oracle_config: OracleConfig },
     /// Change the token recipient
     Recipient { new_recipient: Pubkey },
+    /// Change the unlock cliff and the withdrawal limits together; `None` limits means uncapped
+    UnlockTerms {
+        min_unlock_timestamp: i64,
+        limits: Option<LimitsParams>,
+    },
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
