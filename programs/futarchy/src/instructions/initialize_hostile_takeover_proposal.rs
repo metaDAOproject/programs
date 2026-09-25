@@ -17,6 +17,11 @@ pub struct InitializeHostileTakeoverProposal<'info> {
 
 impl InitializeHostileTakeoverProposal<'_> {
     pub fn validate(&self, args: &InitializeHostileTakeoverProposalArgs) -> Result<()> {
+        // Hostile takeovers are switched off in production for now.
+        if cfg!(feature = "production") {
+            return err!(FutarchyError::InvalidProposalKind);
+        }
+
         self.typed_initialize_accounts.validate()?;
 
         require_keys_neq!(
