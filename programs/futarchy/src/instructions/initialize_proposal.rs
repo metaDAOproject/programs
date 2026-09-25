@@ -13,6 +13,17 @@ pub struct InitializeProposal<'info> {
     pub proposal: Box<Account<'info, Proposal>>,
     pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
     pub squads_multisig: Box<Account<'info, squads_multisig_program::Multisig>>,
+    #[account(
+        seeds = [
+            squads_multisig_program::SEED_PREFIX,
+            squads_multisig.key().as_ref(),
+            squads_multisig_program::SEED_TRANSACTION,
+            squads_proposal.transaction_index.to_le_bytes().as_ref(),
+        ],
+        bump,
+        seeds::program = squads_multisig_program::ID,
+    )]
+    pub squads_vault_transaction: Box<Account<'info, squads_multisig_program::VaultTransaction>>,
     #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(
@@ -35,8 +46,8 @@ pub struct InitializeProposal<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl InitializeProposal<'_> {
-    pub fn validate(&self) -> Result<()> {
+impl<'info> InitializeProposal<'info> {
+    pub fn validate(&self, remaining_accounts: &'info [AccountInfo<'info>]) -> Result<()> {
         require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
 
         require_eq!(
@@ -61,6 +72,10 @@ impl InitializeProposal<'_> {
             self.squads_multisig.stale_transaction_index
         );
 
+        // Every lookup table the payload resolves through must be frozen, so
+        // the accounts the market prices are the ones that execute.
+        validate_address_lookup_tables(&self.squads_vault_transaction.message, remaining_accounts)?;
+
         // Should never be the case because the oracle is the proposal account, and you can't re-initialize a proposal
         assert!(!self.question.is_resolved());
 
@@ -75,6 +90,7 @@ impl InitializeProposal<'_> {
             proposal,
             squads_proposal,
             squads_multisig: _,
+            squads_vault_transaction: _,
             dao,
             proposer,
             payer: _,

@@ -40,6 +40,7 @@ export default function suite() {
     dao: PublicKey,
     draftProposal: PublicKey,
     draftSquadsProposal: PublicKey,
+    draftSquadsTransaction: PublicKey,
     liquidationProposal: PublicKey;
 
   before(async function () {
@@ -129,7 +130,10 @@ export default function suite() {
 
     // A pre-liquidation draft with stake: staking more must refuse afterward,
     // unstaking must still work
-    ({ squadsProposal: draftSquadsProposal } = await createSquadsVaultTx(this, [
+    ({
+      squadsProposal: draftSquadsProposal,
+      squadsTransaction: draftSquadsTransaction,
+    } = await createSquadsVaultTx(this, [
       {
         programId: MEMO_PROGRAM_ID,
         keys: [],
@@ -357,6 +361,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: draftSquadsProposal,
+        squadsTransaction: draftSquadsTransaction,
       })
       .rpc()
       .then(callbacks[0], callbacks[1]);
@@ -641,7 +646,11 @@ export default function suite() {
       reservedDao: PublicKey,
       liquidatorA: PublicKey,
       rivalLiquidation: { proposal: PublicKey; squadsProposal: PublicKey },
-      stagedDraft: { proposal: PublicKey; squadsProposal: PublicKey };
+      stagedDraft: {
+        proposal: PublicKey;
+        squadsProposal: PublicKey;
+        squadsTransaction: PublicKey;
+      };
 
     before(async function () {
       base = await this.createMint(this.payer.publicKey, 6);
@@ -722,24 +731,27 @@ export default function suite() {
         },
       );
 
-      const { squadsProposal: stagedSquadsProposal } =
-        await createSquadsVaultTx(
-          this,
-          [
-            {
-              programId: MEMO_PROGRAM_ID,
-              keys: [],
-              data: Buffer.from("gap proposal"),
-            },
-          ],
-          reservedDao,
-        );
+      const {
+        squadsProposal: stagedSquadsProposal,
+        squadsTransaction: stagedSquadsTransaction,
+      } = await createSquadsVaultTx(
+        this,
+        [
+          {
+            programId: MEMO_PROGRAM_ID,
+            keys: [],
+            data: Buffer.from("gap proposal"),
+          },
+        ],
+        reservedDao,
+      );
       stagedDraft = {
         proposal: await this.futarchy.initializeProposal(
           reservedDao,
           stagedSquadsProposal,
         ),
         squadsProposal: stagedSquadsProposal,
+        squadsTransaction: stagedSquadsTransaction,
       };
 
       await this.futarchy
@@ -801,6 +813,7 @@ export default function suite() {
           baseMint: base,
           quoteMint: quote,
           squadsProposal: stagedDraft.squadsProposal,
+          squadsTransaction: stagedDraft.squadsTransaction,
         })
         .rpc()
         .then(callbacks[0], callbacks[1]);

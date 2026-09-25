@@ -469,6 +469,10 @@ export default async function suite() {
       multisigPda,
       transactionIndex: 1n,
     });
+    const [squadsTransactionPda] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
+    });
 
     // Create the squads proposal first
     const squadsTx = new Transaction().add(vaultTxCreate, proposalCreateIx);
@@ -513,6 +517,7 @@ export default async function suite() {
         baseMint: META,
         quoteMint: MAINNET_USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
 

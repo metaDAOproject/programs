@@ -118,9 +118,11 @@ impl<'info> LaunchProposal<'info> {
             self.squads_multisig.stale_transaction_index
         );
 
-        self.proposal
-            .action
-            .verify_launch_accounts(&self.dao, remaining_accounts)?;
+        self.proposal.action.verify_launch_accounts(
+            &self.dao,
+            self.squads_proposal.transaction_index,
+            remaining_accounts,
+        )?;
 
         Ok(())
     }

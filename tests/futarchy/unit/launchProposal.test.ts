@@ -12,9 +12,11 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 import {
+  addLookupsToVaultTransaction,
   executeVaultTransaction,
   expectError,
   forceApproveSquadsProposal,
+  setLookupTableAccount,
 } from "../../utils.js";
 import {
   TYPED_PROPOSALS_OFF_DAO_TERMS,
@@ -115,12 +117,12 @@ export default function suite() {
   }
 
   /**
-   * Helper function to initialize a proposal for a DAO
+   * Helper function to create a Squads proposal, with its vault transaction, for a DAO
    */
-  async function initializeProposal(
+  async function createSquadsProposal(
     context: any,
     dao: PublicKey,
-  ): Promise<{ proposal: PublicKey; squadsProposal: PublicKey }> {
+  ): Promise<{ squadsProposal: PublicKey; squadsTransaction: PublicKey }> {
     const updateDaoIx = await context.futarchy
       .updateDaoIx({
         dao,
@@ -168,6 +170,10 @@ export default function suite() {
       multisigPda,
       transactionIndex: 1n,
     });
+    const [squadsTransaction] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
+    });
 
     const tx = new Transaction().add(vaultTxCreate, proposalCreateIx);
     tx.recentBlockhash = (await context.banksClient.getLatestBlockhash())[0];
@@ -176,12 +182,31 @@ export default function suite() {
 
     await context.banksClient.processTransaction(tx);
 
+    return { squadsProposal, squadsTransaction };
+  }
+
+  /**
+   * Helper function to initialize a proposal for a DAO
+   */
+  async function initializeProposal(
+    context: any,
+    dao: PublicKey,
+  ): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    const { squadsProposal, squadsTransaction } = await createSquadsProposal(
+      context,
+      dao,
+    );
+
     const proposal = await context.futarchy.initializeProposal(
       dao,
       squadsProposal,
     );
 
-    return { proposal, squadsProposal };
+    return { proposal, squadsProposal, squadsTransaction };
   }
 
   it("succeeds for team-sponsored proposal regardless of stake", async function () {
@@ -212,7 +237,8 @@ export default function suite() {
       ])
       .rpc();
 
-    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+    const { proposal, squadsProposal, squadsTransaction } =
+      await initializeProposal(this, dao);
 
     // Sponsor the proposal (sets sponsored_by to the team)
     await this.futarchy
@@ -231,6 +257,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc();
 
@@ -269,7 +296,8 @@ export default function suite() {
       ])
       .rpc();
 
-    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+    const { proposal, squadsProposal, squadsTransaction } =
+      await initializeProposal(this, dao);
 
     // Stake more than threshold
     const stakeAmount = new BN(200 * 10 ** 6); // 200 tokens (> 100 threshold)
@@ -290,6 +318,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc();
 
@@ -327,7 +356,8 @@ export default function suite() {
       ])
       .rpc();
 
-    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+    const { proposal, squadsProposal, squadsTransaction } =
+      await initializeProposal(this, dao);
 
     // Stake exactly the threshold amount
     await this.futarchy
@@ -347,6 +377,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc();
 
@@ -384,7 +415,8 @@ export default function suite() {
       ])
       .rpc();
 
-    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+    const { proposal, squadsProposal, squadsTransaction } =
+      await initializeProposal(this, dao);
 
     // Sponsor the proposal
     await this.futarchy
@@ -408,6 +440,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc();
 
@@ -447,7 +480,8 @@ export default function suite() {
     const storedDaoBefore = await this.futarchy.getDao(dao);
     assert.equal(storedDaoBefore.twapStartDelaySeconds, 108_000);
 
-    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+    const { proposal, squadsProposal, squadsTransaction } =
+      await initializeProposal(this, dao);
 
     await this.futarchy
       .sponsorProposalIx({
@@ -464,6 +498,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc();
 
@@ -554,7 +589,8 @@ export default function suite() {
       ])
       .rpc();
 
-    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+    const { proposal, squadsProposal, squadsTransaction } =
+      await initializeProposal(this, dao);
 
     // Stake less than threshold
     const insufficientStake = new BN(50 * 10 ** 6); // 50 tokens (< 100 threshold)
@@ -580,6 +616,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc()
       .then(callbacks[0], callbacks[1]);
@@ -1075,7 +1112,8 @@ export default function suite() {
       ])
       .rpc();
 
-    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+    const { proposal, squadsProposal, squadsTransaction } =
+      await initializeProposal(this, dao);
 
     await this.futarchy
       .sponsorProposalIx({
@@ -1105,6 +1143,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc()
       .then(callbacks[0], callbacks[1]);
@@ -1127,6 +1166,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .postInstructions([
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
@@ -1305,15 +1345,200 @@ export default function suite() {
       .then(callbacks[0], callbacks[1]);
   });
 
+  it("rejects launching a generic proposal without its vault transaction", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+    const { proposal, squadsProposal } = await initializeProposal(this, dao);
+
+    const callbacks = expectError(
+      "InvalidSquadsVaultTransaction",
+      "launched a generic proposal without its vault transaction",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects extra launch accounts on a typed proposal", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: Keypair.generate().publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+
+    const callbacks = expectError(
+      "UnexpectedLaunchAccounts",
+      "launched a typed proposal with its vault transaction as an extra account",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: takeover.proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal: takeover.squadsProposal,
+        squadsTransaction: takeover.squadsTransaction,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects an unfrozen lookup table at launch on an already-initialized proposal", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { squadsProposal, squadsTransaction } = await createSquadsProposal(
+      this,
+      dao,
+    );
+    const proposal = await this.futarchy.initializeProposal(
+      dao,
+      squadsProposal,
+    );
+
+    // A draft that predates this check: the lookup appears in the stored
+    // message only after initialize_proposal ran without seeing it
+    const lookupTable = Keypair.generate().publicKey;
+    setLookupTableAccount(this, lookupTable, this.payer.publicKey, [
+      Keypair.generate().publicKey,
+    ]);
+    await addLookupsToVaultTransaction(this, squadsTransaction, [
+      { accountKey: lookupTable, writableIndexes: [0], readonlyIndexes: [] },
+    ]);
+
+    const callbacks = expectError(
+      "UnfrozenAddressLookupTable",
+      "launched a proposal whose payload resolves through an unfrozen lookup table",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+        squadsTransaction,
+        lookupTables: [lookupTable],
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("launches a proposal whose payload resolves through a frozen, in-bounds lookup table", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { squadsProposal, squadsTransaction } = await createSquadsProposal(
+      this,
+      dao,
+    );
+
+    const lookupTable = Keypair.generate().publicKey;
+    setLookupTableAccount(this, lookupTable, null, [
+      Keypair.generate().publicKey,
+      Keypair.generate().publicKey,
+    ]);
+    await addLookupsToVaultTransaction(this, squadsTransaction, [
+      { accountKey: lookupTable, writableIndexes: [0], readonlyIndexes: [1] },
+    ]);
+
+    const proposal = await this.futarchy.initializeProposal(
+      dao,
+      squadsProposal,
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+        squadsTransaction,
+        lookupTables: [lookupTable],
+      })
+      .rpc();
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.exists(storedProposal.state.pending);
+  });
+
   // Launch writes a proposal's duration and threshold from whatever applies at
   // that moment: the DAO's own terms for a plain proposal while typed
   // proposals are off, the catalog otherwise.
   describe("terms at launch", function () {
-    let proposal: PublicKey, squadsProposal: PublicKey;
+    let proposal: PublicKey,
+      squadsProposal: PublicKey,
+      squadsTransaction: PublicKey;
 
     beforeEach(async function () {
       dao = await setupTypedProposalsOffDao(this, META, USDC);
-      ({ proposal, squadsProposal } = await initializeProposal(this, dao));
+      ({ proposal, squadsProposal, squadsTransaction } =
+        await initializeProposal(this, dao));
     });
 
     const launch = (ctx: TestContext) =>
@@ -1323,6 +1548,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       });
 
     const stake = async (ctx: TestContext) => {

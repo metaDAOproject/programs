@@ -156,4 +156,10 @@ pub enum FutarchyError {
     TypedProposalsDisabled,
     #[msg("Typed proposals cannot be disabled")]
     TypedProposalsCannotBeDisabled,
+    #[msg("Address lookup tables referenced by the vault transaction must be frozen")]
+    UnfrozenAddressLookupTable,
+    #[msg("Lookup table accounts must match the vault transaction's address table lookups")]
+    InvalidAddressLookupTable,
+    #[msg("Expected the proposal's Squads vault transaction as the first launch account")]
+    InvalidSquadsVaultTransaction,
 }

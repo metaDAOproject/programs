@@ -18,7 +18,8 @@ export default function suite() {
     USDC: PublicKey,
     dao: PublicKey,
     proposal: PublicKey,
-    squadsProposalPda: PublicKey;
+    squadsProposalPda: PublicKey,
+    squadsTransactionPda: PublicKey;
 
   beforeEach(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
@@ -109,6 +110,10 @@ export default function suite() {
       multisigPda,
       transactionIndex: 1n,
     });
+    [squadsTransactionPda] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
+    });
 
     const tx = new Transaction().add(vaultTxCreate, proposalCreateIx);
     tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
@@ -172,6 +177,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
 
@@ -217,6 +223,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
 
@@ -265,6 +272,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .instruction();
 

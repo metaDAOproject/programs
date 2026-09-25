@@ -174,9 +174,13 @@ impl ProposalAction {
     pub fn verify_launch_accounts<'info>(
         &self,
         dao: &Account<'info, Dao>,
+        squads_transaction_index: u64,
         accounts: &'info [AccountInfo<'info>],
     ) -> Result<()> {
         match self {
+            ProposalAction::ExecuteArbitrary => {
+                verify_execute_arbitrary_launch(dao, squads_transaction_index, accounts)
+            }
             ProposalAction::BuybackToken { quote_amount, .. } => {
                 verify_buyback_treasury_cap(*quote_amount, dao, accounts)
             }
@@ -193,6 +197,39 @@ impl ProposalAction {
             }
         }
     }
+}
+
+/// The execute-arbitrary launch gate: the proposal's Squads vault transaction
+/// followed by every lookup table its message references, which must be
+/// frozen. Only this kind carries a caller-built payload; typed kinds compile
+/// theirs on-chain. Repeated at launch for drafts created before this check.
+fn verify_execute_arbitrary_launch<'info>(
+    dao: &Dao,
+    squads_transaction_index: u64,
+    accounts: &'info [AccountInfo<'info>],
+) -> Result<()> {
+    let Some((vault_transaction_account, lookup_table_accounts)) = accounts.split_first() else {
+        return err!(FutarchyError::InvalidSquadsVaultTransaction);
+    };
+
+    let (vault_transaction_pda, _) = Pubkey::find_program_address(
+        &[
+            squads_multisig_program::SEED_PREFIX,
+            dao.squads_multisig.as_ref(),
+            squads_multisig_program::SEED_TRANSACTION,
+            &squads_transaction_index.to_le_bytes(),
+        ],
+        &squads_multisig_program::ID,
+    );
+    require_keys_eq!(
+        vault_transaction_account.key(),
+        vault_transaction_pda,
+        FutarchyError::InvalidSquadsVaultTransaction
+    );
+    let vault_transaction =
+        Account::<squads_multisig_program::VaultTransaction>::try_from(vault_transaction_account)?;
+
+    validate_address_lookup_tables(&vault_transaction.message, lookup_table_accounts)
 }
 
 /// The large-spend launch gate: no extra accounts, and the create-time checks

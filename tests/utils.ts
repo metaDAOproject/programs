@@ -500,3 +500,66 @@ export const advanceBySlots = async (
     ),
   );
 };
+
+// Writes an address lookup table account directly: the bincode-serialized
+// ProgramState::LookupTable(LookupTableMeta) header padded to 56 bytes, then the
+// raw addresses. A null authority makes the table frozen.
+export function setLookupTableAccount(
+  context: TestContext,
+  address: PublicKey,
+  authority: PublicKey | null,
+  addresses: PublicKey[],
+) {
+  const meta = Buffer.alloc(56);
+  meta.writeUInt32LE(1, 0);
+  meta.writeBigUInt64LE(0xffffffffffffffffn, 4);
+  meta.writeBigUInt64LE(0n, 12);
+  meta.writeUInt8(0, 20);
+  if (authority !== null) {
+    meta.writeUInt8(1, 21);
+    authority.toBuffer().copy(meta, 22);
+  }
+
+  context.context.setAccount(address, {
+    lamports: 1_000_000_000,
+    data: Buffer.concat([meta, ...addresses.map((a) => a.toBuffer())]),
+    owner: AddressLookupTableProgram.programId,
+    executable: false,
+  });
+}
+
+// The Squads SDK only compiles lookups from real on-chain tables, so tests
+// rewrite a stored vault transaction message to reference arbitrary tables
+// and indexes.
+export async function addLookupsToVaultTransaction(
+  context: TestContext,
+  squadsTransaction: PublicKey,
+  lookups: {
+    accountKey: PublicKey;
+    writableIndexes: number[];
+    readonlyIndexes: number[];
+  }[],
+) {
+  const vaultTransaction =
+    await multisig.accounts.VaultTransaction.fromAccountAddress(
+      context.squadsConnection,
+      squadsTransaction,
+    );
+
+  const modified = multisig.accounts.VaultTransaction.fromArgs({
+    ...vaultTransaction,
+    message: {
+      ...vaultTransaction.message,
+      addressTableLookups: lookups.map((lookup) => ({
+        accountKey: lookup.accountKey,
+        writableIndexes: Uint8Array.from(lookup.writableIndexes),
+        readonlyIndexes: Uint8Array.from(lookup.readonlyIndexes),
+      })),
+    },
+  });
+  const [serialized] = modified.serialize();
+
+  const stored = await context.banksClient.getAccount(squadsTransaction);
+  stored.data = serialized;
+  context.context.setAccount(squadsTransaction, stored);
+}

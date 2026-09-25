@@ -207,6 +207,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: optIn.squadsProposal,
+        squadsTransaction: optIn.squadsTransaction,
       })
       .rpc();
 
@@ -300,6 +301,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: leftover.squadsProposal,
+        squadsTransaction: leftover.squadsTransaction,
       })
       .rpc();
 
@@ -344,6 +346,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: fresh.squadsProposal,
+        squadsTransaction: fresh.squadsTransaction,
       })
       .rpc();
 

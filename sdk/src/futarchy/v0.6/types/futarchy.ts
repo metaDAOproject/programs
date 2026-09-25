@@ -124,6 +124,11 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "squadsVaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "dao";
           isMut: true;
           isSigner: false;
@@ -5290,6 +5295,21 @@ export type Futarchy = {
       name: "TypedProposalsCannotBeDisabled";
       msg: "Typed proposals cannot be disabled";
     },
+    {
+      code: 6075;
+      name: "UnfrozenAddressLookupTable";
+      msg: "Address lookup tables referenced by the vault transaction must be frozen";
+    },
+    {
+      code: 6076;
+      name: "InvalidAddressLookupTable";
+      msg: "Lookup table accounts must match the vault transaction's address table lookups";
+    },
+    {
+      code: 6077;
+      name: "InvalidSquadsVaultTransaction";
+      msg: "Expected the proposal's Squads vault transaction as the first launch account";
+    },
   ];
 };
 
@@ -5415,6 +5435,11 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsVaultTransaction",
           isMut: false,
           isSigner: false,
         },
@@ -10584,6 +10609,21 @@ export const IDL: Futarchy = {
       code: 6074,
       name: "TypedProposalsCannotBeDisabled",
       msg: "Typed proposals cannot be disabled",
+    },
+    {
+      code: 6075,
+      name: "UnfrozenAddressLookupTable",
+      msg: "Address lookup tables referenced by the vault transaction must be frozen",
+    },
+    {
+      code: 6076,
+      name: "InvalidAddressLookupTable",
+      msg: "Lookup table accounts must match the vault transaction's address table lookups",
+    },
+    {
+      code: 6077,
+      name: "InvalidSquadsVaultTransaction",
+      msg: "Expected the proposal's Squads vault transaction as the first launch account",
     },
   ],
 };

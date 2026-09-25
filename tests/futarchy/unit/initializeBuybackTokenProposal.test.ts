@@ -786,14 +786,15 @@ export default function suite() {
       keys: [],
       data: Buffer.from("arbitrary", "utf8"),
     });
-    const { proposal, squadsProposal } = await this.initializeProposal({
-      dao,
-      instructions: [memoIx],
-    });
+    const { proposal, squadsProposal, squadsTransaction } =
+      await this.initializeProposal({
+        dao,
+        instructions: [memoIx],
+      });
 
     const callbacks = expectError(
-      "UnexpectedLaunchAccounts",
-      "launched a non-buyback proposal with a treasury list",
+      "InvalidAddressLookupTable",
+      "launched a generic proposal with a treasury list",
     );
 
     await this.futarchy
@@ -803,6 +804,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
         treasuryAccounts: [vaultQuoteAccount],
       })
       .rpc()

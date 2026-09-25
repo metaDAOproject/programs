@@ -5,11 +5,18 @@ import {
 } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
+  Keypair,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
+import {
+  addLookupsToVaultTransaction,
+  expectError,
+  setLookupTableAccount,
+} from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -71,6 +78,60 @@ export default function suite() {
       daoCreator: this.payer.publicKey,
     });
   });
+
+  async function createSquadsProposal(
+    context: any,
+    daoKey: PublicKey,
+  ): Promise<{ squadsProposal: PublicKey; squadsTransaction: PublicKey }> {
+    const multisigPda = multisig.getMultisigPda({ createKey: daoKey })[0];
+
+    const transactionMessage = new TransactionMessage({
+      payerKey: context.payer.publicKey,
+      recentBlockhash: (await context.banksClient.getLatestBlockhash())[0],
+      instructions: [
+        SystemProgram.transfer({
+          fromPubkey: context.payer.publicKey,
+          toPubkey: context.payer.publicKey,
+          lamports: 1,
+        }),
+      ],
+    });
+
+    const tx = new Transaction().add(
+      multisig.instructions.vaultTransactionCreate({
+        multisigPda,
+        transactionIndex: 1n,
+        creator: PERMISSIONLESS_ACCOUNT.publicKey,
+        rentPayer: context.payer.publicKey,
+        vaultIndex: 0,
+        ephemeralSigners: 0,
+        transactionMessage,
+      }),
+      multisig.instructions.proposalCreate({
+        multisigPda,
+        transactionIndex: 1n,
+        creator: PERMISSIONLESS_ACCOUNT.publicKey,
+        rentPayer: context.payer.publicKey,
+      }),
+    );
+
+    tx.recentBlockhash = (await context.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = context.payer.publicKey;
+    tx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
+
+    await context.banksClient.processTransaction(tx);
+
+    const [squadsProposal] = multisig.getProposalPda({
+      multisigPda,
+      transactionIndex: 1n,
+    });
+    const [squadsTransaction] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
+    });
+
+    return { squadsProposal, squadsTransaction };
+  }
 
   it("should initialize a proposal", async function () {
     // Create a simple instruction for the proposal
@@ -166,5 +227,53 @@ export default function suite() {
     // Verify the DAO proposal count was incremented
     const storedDao = await this.futarchy.getDao(dao);
     assert.equal(storedDao.proposalCount, 1);
+  });
+
+  it("rejects a vault transaction referencing an unfrozen lookup table", async function () {
+    const { squadsProposal, squadsTransaction } = await createSquadsProposal(
+      this,
+      dao,
+    );
+
+    const lookupTable = Keypair.generate().publicKey;
+    setLookupTableAccount(this, lookupTable, this.payer.publicKey, [
+      Keypair.generate().publicKey,
+    ]);
+    await addLookupsToVaultTransaction(this, squadsTransaction, [
+      { accountKey: lookupTable, writableIndexes: [0], readonlyIndexes: [] },
+    ]);
+
+    const callbacks = expectError(
+      "UnfrozenAddressLookupTable",
+      "initialized a proposal whose payload resolves through an unfrozen lookup table",
+    );
+
+    await this.futarchy
+      .initializeProposal(dao, squadsProposal)
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a frozen lookup table when the message references an index it doesn't hold", async function () {
+    const { squadsProposal, squadsTransaction } = await createSquadsProposal(
+      this,
+      dao,
+    );
+
+    const lookupTable = Keypair.generate().publicKey;
+    setLookupTableAccount(this, lookupTable, null, [
+      Keypair.generate().publicKey,
+    ]);
+    await addLookupsToVaultTransaction(this, squadsTransaction, [
+      { accountKey: lookupTable, writableIndexes: [0], readonlyIndexes: [5] },
+    ]);
+
+    const callbacks = expectError(
+      "InvalidAddressLookupTable",
+      "initialized a proposal with a lookup index past the end of its table",
+    );
+
+    await this.futarchy
+      .initializeProposal(dao, squadsProposal)
+      .then(callbacks[0], callbacks[1]);
   });
 }

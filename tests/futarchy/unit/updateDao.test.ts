@@ -142,6 +142,10 @@ export default function suite() {
       multisigPda: daoAccount.squadsMultisig,
       transactionIndex: 1n,
     });
+    const [squadsTransactionPda] = multisig.getTransactionPda({
+      multisigPda: daoAccount.squadsMultisig,
+      index: 1n,
+    });
 
     const createSquadsTx = new Transaction().add(
       vaultTxCreateIx,
@@ -181,7 +185,14 @@ export default function suite() {
       .rpc();
 
     await this.futarchy
-      .initializeProposalIx(squadsProposalPda, dao, META, USDC, question)
+      .initializeProposalIx(
+        squadsProposalPda,
+        dao,
+        META,
+        USDC,
+        question,
+        squadsTransactionPda,
+      )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
@@ -203,6 +214,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
 
@@ -295,6 +307,10 @@ export default function suite() {
       multisigPda: daoAccount.squadsMultisig,
       transactionIndex: 2n,
     });
+    const [squadsTransactionPda2] = multisig.getTransactionPda({
+      multisigPda: daoAccount.squadsMultisig,
+      index: 2n,
+    });
 
     const createSquadsTx2 = new Transaction().add(
       vaultTxCreateIx2,
@@ -344,6 +360,7 @@ export default function suite() {
         META,
         USDC,
         proposalBPdas.question,
+        squadsTransactionPda2,
       )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
@@ -358,6 +375,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda2,
+        squadsTransaction: squadsTransactionPda2,
       })
       .rpc();
 

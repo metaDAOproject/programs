@@ -25,7 +25,11 @@ const ARBITRARY_PASS_THRESHOLD_BPS = 1000;
 async function createArbitraryProposal(
   ctx: TestContext,
   dao: PublicKey,
-): Promise<{ proposal: PublicKey; squadsProposal: PublicKey }> {
+): Promise<{
+  proposal: PublicKey;
+  squadsProposal: PublicKey;
+  squadsTransaction: PublicKey;
+}> {
   const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
 
   const message = new TransactionMessage({
@@ -61,6 +65,10 @@ async function createArbitraryProposal(
     multisigPda,
     transactionIndex: 1n,
   });
+  const [squadsTransaction] = multisig.getTransactionPda({
+    multisigPda,
+    index: 1n,
+  });
 
   const tx = new Transaction().add(vaultTxCreate, proposalCreateIx);
   tx.recentBlockhash = (await ctx.banksClient.getLatestBlockhash())[0];
@@ -71,6 +79,7 @@ async function createArbitraryProposal(
   return {
     proposal: await ctx.futarchy.initializeProposal(dao, squadsProposal),
     squadsProposal,
+    squadsTransaction,
   };
 }
 
@@ -79,7 +88,8 @@ export default function suite() {
     USDC: PublicKey,
     dao: PublicKey,
     proposal: PublicKey,
-    squadsProposal: PublicKey;
+    squadsProposal: PublicKey,
+    squadsTransaction: PublicKey;
 
   beforeEach(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
@@ -106,7 +116,8 @@ export default function suite() {
       },
     });
 
-    ({ proposal, squadsProposal } = await createArbitraryProposal(this, dao));
+    ({ proposal, squadsProposal, squadsTransaction } =
+      await createArbitraryProposal(this, dao));
   });
 
   // The market a launch needs; only the launching cases pay for it.
@@ -285,6 +296,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc();
 
