@@ -3809,6 +3809,10 @@ export type Futarchy = {
             fields: [
               {
                 name: "newTeamAddress";
+                docs: [
+                  "The team to install. Launch requires it to still differ from the",
+                  "DAO's team.",
+                ];
                 type: "publicKey";
               },
               {
@@ -9100,6 +9104,10 @@ export const IDL: Futarchy = {
             fields: [
               {
                 name: "newTeamAddress",
+                docs: [
+                  "The team to install. Launch requires it to still differ from the",
+                  "DAO's team.",
+                ],
                 type: "publicKey",
               },
               {

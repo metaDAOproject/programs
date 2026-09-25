@@ -1240,6 +1240,71 @@ export default function suite() {
     assert.exists(storedProposal.state.pending);
   });
 
+  it("fails to launch a hostile takeover whose target is already the team", async function () {
+    const dao = await createDaoWithStakeThreshold(
+      this,
+      META,
+      USDC,
+      new BN(0),
+      this.payer,
+    );
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100_000 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const newTeam = Keypair.generate();
+    const stale = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: newTeam.publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+
+    // Install the same team through another takeover while the draft is
+    // still unlaunched
+    const installed = await this.futarchy.initializeHostileTakeoverProposal({
+      dao,
+      newTeamAddress: newTeam.publicKey,
+      spendingLimitAction: { keep: {} },
+    });
+    await forceApproveSquadsProposal(this, installed.squadsProposal);
+    await executeVaultTransaction(this, dao, installed.squadsTransaction);
+
+    const storedDao = await this.futarchy.getDao(dao);
+    assert.equal(
+      storedDao.teamAddress.toBase58(),
+      newTeam.publicKey.toBase58(),
+    );
+
+    const callbacks = expectError(
+      "InvalidTeamAddress",
+      "launched a hostile takeover whose target is already the team",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: stale.proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal: stale.squadsProposal,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   // Launch writes a proposal's duration and threshold from whatever applies at
   // that moment: the DAO's own terms for a plain proposal while typed
   // proposals are off, the catalog otherwise.

@@ -46,7 +46,7 @@ pub struct Proposal {
     pub council_can_block: bool,
     /// The typed action parameters.
     pub action: ProposalAction,
-    /// Set by `admin_update_proposal_params`. `launch_proposal` then leaves the 
+    /// Set by `admin_update_proposal_params`. `launch_proposal` then leaves the
     /// duration and threshold alone.
     pub params_overridden: bool,
 }

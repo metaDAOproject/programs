@@ -56,6 +56,8 @@ pub enum ProposalAction {
     },
     ExecuteArbitrary,
     HostileTakeover {
+        /// The team to install. Launch requires it to still differ from the
+        /// DAO's team.
         new_team_address: Pubkey,
         spending_limit_action: SpendingLimitAction,
     },
@@ -150,7 +152,7 @@ impl ProposalAction {
     pub fn params_for(&self, dao: &Dao, is_team_sponsored: bool) -> InstructionParams {
         let follows_dao_config =
             matches!(self, ProposalAction::ExecuteArbitrary) && !dao.typed_proposals_enabled;
-        
+
         if !follows_dao_config {
             return self.params();
         }
@@ -182,6 +184,9 @@ impl ProposalAction {
                 amount,
                 team_address,
             } => verify_large_spend_launch(*amount, *team_address, dao, accounts),
+            ProposalAction::HostileTakeover {
+                new_team_address, ..
+            } => verify_hostile_takeover_launch(*new_team_address, dao, accounts),
             _ => {
                 require_eq!(accounts.len(), 0, FutarchyError::UnexpectedLaunchAccounts);
                 Ok(())
@@ -206,6 +211,24 @@ fn verify_large_spend_launch(
         team_address,
         dao.team_address,
         FutarchyError::StaleTeamAddress
+    );
+
+    Ok(())
+}
+
+/// The hostile-takeover launch gate: no extra accounts, and the create-time
+/// team check re-runs against current state.
+fn verify_hostile_takeover_launch(
+    new_team_address: Pubkey,
+    dao: &Dao,
+    accounts: &[AccountInfo],
+) -> Result<()> {
+    require_eq!(accounts.len(), 0, FutarchyError::UnexpectedLaunchAccounts);
+
+    require_keys_neq!(
+        new_team_address,
+        dao.team_address,
+        FutarchyError::InvalidTeamAddress
     );
 
     Ok(())
