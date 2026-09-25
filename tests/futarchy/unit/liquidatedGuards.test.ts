@@ -24,6 +24,7 @@ import {
   THOUSAND_BUCK_PRICE,
 } from "../../utils.js";
 import { TestContext } from "../../main.test.js";
+import { rewriteAccount } from "../utils.js";
 
 // Every blocked instruction refuses on a liquidated DAO; every allowed one
 // still works. Not covered here because a liquidated DAO can't reach them:
@@ -778,6 +779,19 @@ export default function suite() {
       assert.ok(storedDao.liquidator.equals(liquidatorA));
     });
 
+    it("raises the spending-limit flag without a record, and the sync clears it", async function () {
+      let storedDao = await this.futarchy.getDao(reservedDao);
+      assert.isNull(storedDao.initialSpendingLimit);
+      assert.isTrue(storedDao.spendingLimitDirty);
+
+      await this.futarchy.syncSpendingLimitIx({ dao: reservedDao }).rpc();
+
+      storedDao = await this.futarchy.getDao(reservedDao);
+      assert.isFalse(storedDao.spendingLimitDirty);
+      const [spendingLimitPda] = getSpendingLimitAddr({ dao: reservedDao });
+      assert.isNull(await this.banksClient.getAccount(spendingLimitPda));
+    });
+
     it("refuses to launch a second liquidation once the first has passed", async function () {
       const callbacks = expectError(
         "DaoLiquidated",
@@ -817,6 +831,143 @@ export default function suite() {
         })
         .rpc()
         .then(callbacks[0], callbacks[1]);
+    });
+  });
+
+  // A limit the migration mapped to "no record" while the Squads account stayed
+  // live: the flag must still be raised at liquidation so the sync removes it.
+  describe("a live limit the migration did not recognise", function () {
+    let base: PublicKey, quote: PublicKey, orphanDao: PublicKey;
+
+    // Appends a destination allowlist to the live Squads limit, a shape
+    // `resize_dao` maps to no record.
+    async function addDestination(ctx: TestContext, dao: PublicKey) {
+      const [spendingLimit] = getSpendingLimitAddr({ dao });
+      const raw = await ctx.banksClient.getAccount(spendingLimit);
+      const data = Buffer.from(raw.data);
+      // disc(8) multisig(32) create_key(32) vault_index(1) mint(32) amount(8)
+      // period(1) remaining_amount(8) last_reset(8) bump(1) members(vec) destinations(vec)
+      const membersLen = data.readUInt32LE(131);
+      const destinationsOffset = 131 + 4 + 32 * membersLen;
+      const len = Buffer.alloc(4);
+      len.writeUInt32LE(1, 0);
+      ctx.context.setAccount(spendingLimit, {
+        ...raw,
+        data: Buffer.concat([
+          data.subarray(0, destinationsOffset),
+          len,
+          Keypair.generate().publicKey.toBuffer(),
+        ]),
+      });
+    }
+
+    before(async function () {
+      base = await this.createMint(this.payer.publicKey, 6);
+      quote = await this.createMint(this.payer.publicKey, 6);
+      await this.createTokenAccount(base, this.payer.publicKey);
+      await this.createTokenAccount(quote, this.payer.publicKey);
+      await this.mintTo(
+        base,
+        this.payer.publicKey,
+        this.payer,
+        1_000 * 1_000_000,
+      );
+      await this.mintTo(
+        quote,
+        this.payer.publicKey,
+        this.payer,
+        500_000 * 1_000_000,
+      );
+
+      const nonce = new BN(Math.floor(Math.random() * 1000000));
+      await this.futarchy
+        .initializeDaoIx({
+          baseMint: base,
+          quoteMint: quote,
+          params: {
+            secondsPerProposal: 60 * 60 * 24 * 3,
+            twapStartDelaySeconds: 60 * 60 * 24,
+            twapInitialObservation: THOUSAND_BUCK_PRICE,
+            twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(10),
+            minQuoteFutarchicLiquidity: new BN(10_000),
+            minBaseFutarchicLiquidity: new BN(10_000),
+            passThresholdBps: 300,
+            nonce,
+            initialSpendingLimit: {
+              amountPerMonth: new BN(10_000_000), // 10 USDC
+              members: [this.payer.publicKey],
+            },
+            baseToStake: new BN(0),
+            teamSponsoredPassThresholdBps: 300,
+            teamAddress: this.payer.publicKey,
+          },
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+        ])
+        .rpc();
+      [orphanDao] = getDaoAddr({ nonce, daoCreator: this.payer.publicKey });
+
+      await this.futarchy
+        .provideLiquidityIx({
+          dao: orphanDao,
+          baseMint: base,
+          quoteMint: quote,
+          quoteAmount: new BN(100_000 * 1_000_000), // 100,000 USDC
+          maxBaseAmount: new BN(100 * 1_000_000), // 100 META
+          minLiquidity: new BN(0),
+          positionAuthority: this.payer.publicKey,
+          liquidityProvider: this.payer.publicKey,
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+        ])
+        .rpc();
+
+      // The post-migration state: the live limit is non-canonical and the
+      // DAO holds no record and a clean flag
+      await addDestination(this, orphanDao);
+      await rewriteAccount(this, orphanDao, "dao", (decoded) => {
+        decoded.initialSpendingLimit = null;
+        decoded.spendingLimitDirty = false;
+      });
+
+      const liquidation =
+        await this.futarchy.initializeHostileLiquidateProposal({
+          dao: orphanDao,
+          liquidator: Keypair.generate().publicKey,
+        });
+      await this.futarchy
+        .launchProposalIx({
+          proposal: liquidation.proposal,
+          dao: orphanDao,
+          baseMint: base,
+          quoteMint: quote,
+          squadsProposal: liquidation.squadsProposal,
+        })
+        .rpc();
+      await passProposal(this, {
+        dao: orphanDao,
+        proposal: liquidation.proposal,
+        baseMint: base,
+        quoteMint: quote,
+        cranks: 50,
+      });
+    });
+
+    it("raises the flag at liquidation and the sync closes the live limit", async function () {
+      const [spendingLimitPda] = getSpendingLimitAddr({ dao: orphanDao });
+      assert.isNotNull(await this.banksClient.getAccount(spendingLimitPda));
+
+      let storedDao = await this.futarchy.getDao(orphanDao);
+      assert.isNull(storedDao.initialSpendingLimit);
+      assert.isTrue(storedDao.spendingLimitDirty);
+
+      await this.futarchy.syncSpendingLimitIx({ dao: orphanDao }).rpc();
+
+      storedDao = await this.futarchy.getDao(orphanDao);
+      assert.isFalse(storedDao.spendingLimitDirty);
+      assert.isNull(await this.banksClient.getAccount(spendingLimitPda));
     });
   });
 }

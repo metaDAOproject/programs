@@ -185,11 +185,8 @@ impl FinalizeProposal<'_> {
                 dao.liquidator = Some(*liquidator);
 
                 // The spending limit must be zeroed so that the estate can be swept.
-                // Otherwise a still-live limit member could drain the estate.
-                if dao.initial_spending_limit.is_some() {
-                    dao.initial_spending_limit = None;
-                    dao.spending_limit_dirty = true;
-                }
+                dao.initial_spending_limit = None;
+                dao.spending_limit_dirty = true;
             }
         }
 
