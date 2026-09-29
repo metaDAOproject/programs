@@ -1231,9 +1231,9 @@ export class FutarchyClient {
       .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
-  // The payload declares the complete post-takeover regime: update_dao
-  // re-points the team, and unless the action is `keep`, set_spending_limit
-  // carries the declared limit end state.
+  // The proposal's action declares the complete post-takeover regime. A passed
+  // takeover is applied by finalize_proposal itself; the baked payload is only
+  // a memo.
   async initializeHostileTakeoverProposal({
     dao,
     newTeamAddress,

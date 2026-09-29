@@ -1,20 +1,15 @@
+import { getDaoAddr, PriceMath } from "@metadaoproject/programs";
 import {
-  getDaoAddr,
-  getSpendingLimitAddr,
-  PriceMath,
-} from "@metadaoproject/programs";
-import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  TransactionInstruction,
+} from "@solana/web3.js";
+import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 import BN from "bn.js";
 import { assert } from "chai";
-import * as multisig from "@sqds/multisig";
-import {
-  assertVaultTransactionPayload,
-  executeVaultTransaction,
-  expectError,
-  forceApproveSquadsProposal,
-} from "../../utils.js";
+import { assertVaultTransactionPayload, expectError } from "../../utils.js";
 import { setTypedProposalsEnabled } from "../utils.js";
-import { TestContext } from "../../main.test.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
@@ -57,32 +52,24 @@ export default function suite() {
     [dao] = getDaoAddr({ nonce, daoCreator: this.payer.publicKey });
   });
 
-  // update_dao re-pointing the team and changing nothing else
-  function expectedUpdateDaoIx(
-    context: TestContext,
+  // The whole payload: one memo naming the proposal and the declared regime.
+  // A passed takeover is applied by finalize, so nothing in it can execute.
+  function expectedMemoIx(
+    proposal: PublicKey,
     newTeamAddress: PublicKey,
+    spendingLimit: string,
   ) {
-    return context.futarchy
-      .updateDaoIx({
-        dao,
-        params: {
-          passThresholdBps: null,
-          secondsPerProposal: null,
-          twapInitialObservation: null,
-          twapMaxObservationChangePerUpdate: null,
-          twapStartDelaySeconds: null,
-          minQuoteFutarchicLiquidity: null,
-          minBaseFutarchicLiquidity: null,
-          baseToStake: null,
-          teamSponsoredPassThresholdBps: null,
-          teamAddress: newTeamAddress,
-          typedProposalsEnabled: null,
-        },
-      })
-      .instruction();
+    return new TransactionInstruction({
+      programId: MEMO_PROGRAM_ID,
+      keys: [],
+      data: Buffer.from(
+        `metadao-takeover/1 proposal=${proposal.toBase58()} new_team=${newTeamAddress.toBase58()} spending_limit=${spendingLimit}`,
+        "utf8",
+      ),
+    });
   }
 
-  it("bakes only a vault-signed update_dao when keeping the limit and snapshots the kind's params", async function () {
+  it("bakes exactly one program-built memo as the whole payload and snapshots the kind's params", async function () {
     const newTeamAddress = Keypair.generate().publicKey;
 
     const { proposal, squadsProposal, squadsTransaction } =
@@ -93,7 +80,7 @@ export default function suite() {
       });
 
     await assertVaultTransactionPayload(this, dao, squadsTransaction, [
-      await expectedUpdateDaoIx(this, newTeamAddress),
+      expectedMemoIx(proposal, newTeamAddress, "keep"),
     ]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
@@ -123,7 +110,7 @@ export default function suite() {
     assert.equal(storedDao.proposalCount, 1);
   });
 
-  it("appends a set_spending_limit with a None config when removing the limit", async function () {
+  it("formats a Remove action into the memo", async function () {
     const newTeamAddress = Keypair.generate().publicKey;
 
     const { proposal, squadsTransaction } =
@@ -134,10 +121,7 @@ export default function suite() {
       });
 
     await assertVaultTransactionPayload(this, dao, squadsTransaction, [
-      await expectedUpdateDaoIx(this, newTeamAddress),
-      await this.futarchy
-        .setSpendingLimitIx({ dao, config: null })
-        .instruction(),
+      expectedMemoIx(proposal, newTeamAddress, "remove"),
     ]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
@@ -146,7 +130,7 @@ export default function suite() {
     );
   });
 
-  it("appends a set_spending_limit carrying the declared config verbatim when setting the limit", async function () {
+  it("formats a Set action's monthly amount into the memo and stores the config verbatim", async function () {
     const newTeamAddress = Keypair.generate().publicKey;
     const config = {
       amountPerMonth: new BN(25_000_000_000), // 25,000 USDC
@@ -161,8 +145,7 @@ export default function suite() {
       });
 
     await assertVaultTransactionPayload(this, dao, squadsTransaction, [
-      await expectedUpdateDaoIx(this, newTeamAddress),
-      await this.futarchy.setSpendingLimitIx({ dao, config }).instruction(),
+      expectedMemoIx(proposal, newTeamAddress, "set:25000000000"),
     ]);
 
     const storedProposal = await this.futarchy.getProposal(proposal);
@@ -176,61 +159,6 @@ export default function suite() {
       storedAction.spendingLimitAction.set[0].members.map((m) => m.toBase58()),
       config.members.map((m) => m.toBase58()),
     );
-  });
-
-  it("the executed and synced end state matches the declaration", async function () {
-    const newTeamAddress = Keypair.generate().publicKey;
-    const config = {
-      amountPerMonth: new BN(25_000_000_000), // 25,000 USDC
-      members: [Keypair.generate().publicKey, Keypair.generate().publicKey],
-    };
-
-    const { squadsProposal, squadsTransaction } =
-      await this.futarchy.initializeHostileTakeoverProposal({
-        dao,
-        newTeamAddress,
-        spendingLimitAction: { set: { 0: config } },
-      });
-
-    await forceApproveSquadsProposal(this, squadsProposal);
-    await executeVaultTransaction(this, dao, squadsTransaction);
-
-    let storedDao = await this.futarchy.getDao(dao);
-    assert.ok(storedDao.teamAddress.equals(newTeamAddress));
-    assert.equal(
-      storedDao.initialSpendingLimit.amountPerMonth.toString(),
-      config.amountPerMonth.toString(),
-    );
-    assert.deepEqual(
-      storedDao.initialSpendingLimit.members.map((m) => m.toBase58()),
-      config.members.map((m) => m.toBase58()),
-    );
-    assert.isTrue(storedDao.spendingLimitDirty);
-
-    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
-
-    const [spendingLimitPda] = getSpendingLimitAddr({ dao });
-    const storedLimit =
-      await multisig.accounts.SpendingLimit.fromAccountAddress(
-        this.squadsConnection,
-        spendingLimitPda,
-      );
-    assert.equal(
-      storedLimit.amount.toString(),
-      config.amountPerMonth.toString(),
-    );
-    assert.equal(
-      storedLimit.remainingAmount.toString(),
-      config.amountPerMonth.toString(),
-    );
-    // Squads stores members sorted, so compare as sets
-    assert.sameMembers(
-      storedLimit.members.map((m) => m.toBase58()),
-      config.members.map((m) => m.toBase58()),
-    );
-
-    storedDao = await this.futarchy.getDao(dao);
-    assert.isFalse(storedDao.spendingLimitDirty);
   });
 
   it("throws error when a Set action has more than 10 members", async function () {

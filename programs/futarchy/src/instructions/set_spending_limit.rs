@@ -33,8 +33,7 @@ impl SetSpendingLimit<'_> {
     pub fn handle(ctx: Context<Self>, args: SetSpendingLimitArgs) -> Result<()> {
         let dao = &mut ctx.accounts.dao;
 
-        dao.initial_spending_limit = args.config;
-        dao.spending_limit_dirty = true;
+        dao.set_spending_limit(args.config);
         dao.seq_num += 1;
 
         let clock = Clock::get()?;

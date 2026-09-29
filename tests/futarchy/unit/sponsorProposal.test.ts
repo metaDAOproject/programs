@@ -10,11 +10,8 @@ import {
 } from "@solana/spl-token";
 import BN from "bn.js";
 import { assert } from "chai";
-import {
-  executeVaultTransaction,
-  expectError,
-  forceApproveSquadsProposal,
-} from "../../utils.js";
+import { expectError } from "../../utils.js";
+import { updateDaoViaVault } from "../utils.js";
 import { TestContext } from "../../main.test.js";
 
 export default function suite() {
@@ -150,13 +147,7 @@ export default function suite() {
     await this.futarchy.sponsorProposalIx({ proposal, dao }).rpc();
 
     const newTeam = Keypair.generate();
-    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
-      dao,
-      newTeamAddress: newTeam.publicKey,
-      spendingLimitAction: { keep: {} },
-    });
-    await forceApproveSquadsProposal(this, takeover.squadsProposal);
-    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
+    await updateDaoViaVault(this, dao, { teamAddress: newTeam.publicKey });
 
     await this.futarchy
       .sponsorProposalIx({ proposal, dao, teamAddress: newTeam.publicKey })
@@ -173,13 +164,9 @@ export default function suite() {
   it("rejects the previous team after a team change", async function () {
     const { proposal } = await createMintTokensDraft(this);
 
-    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
-      dao,
-      newTeamAddress: Keypair.generate().publicKey,
-      spendingLimitAction: { keep: {} },
+    await updateDaoViaVault(this, dao, {
+      teamAddress: Keypair.generate().publicKey,
     });
-    await forceApproveSquadsProposal(this, takeover.squadsProposal);
-    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
 
     const callbacks = expectError(
       "ConstraintHasOne",

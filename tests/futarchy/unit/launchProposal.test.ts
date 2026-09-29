@@ -735,13 +735,7 @@ export default function suite() {
 
     // Replace the team while the sponsored draft is still unlaunched
     const newTeam = Keypair.generate();
-    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
-      dao,
-      newTeamAddress: newTeam.publicKey,
-      spendingLimitAction: { keep: {} },
-    });
-    await forceApproveSquadsProposal(this, takeover.squadsProposal);
-    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
+    await updateDaoViaVault(this, dao, { teamAddress: newTeam.publicKey });
 
     const staleSponsorCallbacks = expectError(
       "ProposalNotTeamSponsored",
@@ -1034,13 +1028,7 @@ export default function suite() {
       .rpc();
 
     const newTeam = Keypair.generate();
-    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
-      dao,
-      newTeamAddress: newTeam.publicKey,
-      spendingLimitAction: { keep: {} },
-    });
-    await forceApproveSquadsProposal(this, takeover.squadsProposal);
-    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
+    await updateDaoViaVault(this, dao, { teamAddress: newTeam.publicKey });
 
     const callbacks = expectError(
       "ProposalNotTeamSponsored",
@@ -1123,13 +1111,9 @@ export default function suite() {
       })
       .rpc();
 
-    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
-      dao,
-      newTeamAddress: Keypair.generate().publicKey,
-      spendingLimitAction: { keep: {} },
+    await updateDaoViaVault(this, dao, {
+      teamAddress: Keypair.generate().publicKey,
     });
-    await forceApproveSquadsProposal(this, takeover.squadsProposal);
-    await executeVaultTransaction(this, dao, takeover.squadsTransaction);
 
     const callbacks = expectError(
       "InsufficientStakeToLaunch",
@@ -1312,15 +1296,8 @@ export default function suite() {
       spendingLimitAction: { keep: {} },
     });
 
-    // Install the same team through another takeover while the draft is
-    // still unlaunched
-    const installed = await this.futarchy.initializeHostileTakeoverProposal({
-      dao,
-      newTeamAddress: newTeam.publicKey,
-      spendingLimitAction: { keep: {} },
-    });
-    await forceApproveSquadsProposal(this, installed.squadsProposal);
-    await executeVaultTransaction(this, dao, installed.squadsTransaction);
+    // Install the same team while the draft is still unlaunched
+    await updateDaoViaVault(this, dao, { teamAddress: newTeam.publicKey });
 
     const storedDao = await this.futarchy.getDao(dao);
     assert.equal(

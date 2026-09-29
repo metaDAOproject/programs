@@ -147,6 +147,12 @@ impl Dao {
         Ok(())
     }
 
+    /// Replaces the spending-limit record and flags it for the next sync.
+    pub fn set_spending_limit(&mut self, config: Option<InitialSpendingLimit>) {
+        self.initial_spending_limit = config;
+        self.spending_limit_dirty = true;
+    }
+
     pub fn invariant(&self) -> Result<()> {
         require_gte!(
             self.seconds_per_proposal,
