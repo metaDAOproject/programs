@@ -19,7 +19,12 @@ import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
 
 export type InitializeDaoParams =
   IdlTypes<FutarchyProgram>["InitializeDaoParams"];
-export type UpdateDaoParams = IdlTypes<FutarchyProgram>["UpdateDaoParams"];
+// The retired optimistic-governance flag only keeps its position in the
+// encoding; `updateDaoIx` fills it in, so callers never set it.
+export type UpdateDaoParams = Omit<
+  IdlTypes<FutarchyProgram>["UpdateDaoParams"],
+  "deprecatedIsOptimisticGovernanceEnabled"
+>;
 export type SetSpendingLimitArgs =
   IdlTypes<FutarchyProgram>["SetSpendingLimitArgs"];
 export type InitializeLargeSpendProposalArgs =

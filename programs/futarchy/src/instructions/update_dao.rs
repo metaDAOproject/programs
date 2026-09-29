@@ -12,6 +12,9 @@ pub struct UpdateDaoParams {
     pub base_to_stake: Option<u64>,
     pub team_sponsored_pass_threshold_bps: Option<i16>,
     pub team_address: Option<Pubkey>,
+    /// Ignored. The retired optimistic-governance flag, kept in place so
+    /// payloads encoded before the upgrade are refused, not reinterpreted.
+    pub _deprecated_is_optimistic_governance_enabled: Option<bool>,
     /// `Some(true)` turns typed proposals on for this DAO. `None` leaves them
     /// as they are. `Some(false)` is refused: there is no way to turn them off.
     pub typed_proposals_enabled: Option<bool>,

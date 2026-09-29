@@ -1,5 +1,9 @@
 import { assert } from "chai";
-import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  PublicKey,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import BN from "bn.js";
 import * as multisig from "@sqds/multisig";
 import {
@@ -101,13 +105,13 @@ export const EMPTY_UPDATE_DAO_PARAMS: UpdateDaoParams = {
   typedProposalsEnabled: null,
 };
 
-// Runs a vault-signed update_dao without a market: a Squads vault transaction
-// and proposal at the multisig's next index, force-approved and executed.
-// Omitted params are left unchanged.
-export async function updateDaoViaVault(
+// Runs instructions through the DAO's Squads vault without a market: a vault
+// transaction and proposal at the multisig's next index, force-approved and
+// executed.
+export async function executeViaVault(
   ctx: TestContext,
   dao: PublicKey,
-  params: Partial<UpdateDaoParams>,
+  instructions: TransactionInstruction[],
 ) {
   const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
   const multisigAccount = await multisig.accounts.Multisig.fromAccountAddress(
@@ -117,13 +121,9 @@ export async function updateDaoViaVault(
   const transactionIndex =
     BigInt(multisigAccount.transactionIndex.toString()) + 1n;
 
-  const updateDaoIx = await ctx.futarchy
-    .updateDaoIx({ dao, params: { ...EMPTY_UPDATE_DAO_PARAMS, ...params } })
-    .instruction();
-
   const { tx, squadsProposal } = ctx.futarchy.squadsProposalCreateTx({
     dao,
-    instructions: [updateDaoIx],
+    instructions,
     transactionIndex,
   });
   [tx.recentBlockhash] = await ctx.banksClient.getLatestBlockhash();
@@ -138,6 +138,20 @@ export async function updateDaoViaVault(
     index: transactionIndex,
   });
   await executeVaultTransaction(ctx, dao, squadsTransaction);
+}
+
+// Runs a vault-signed update_dao without a market. Omitted params are left
+// unchanged.
+export async function updateDaoViaVault(
+  ctx: TestContext,
+  dao: PublicKey,
+  params: Partial<UpdateDaoParams>,
+) {
+  const updateDaoIx = await ctx.futarchy
+    .updateDaoIx({ dao, params: { ...EMPTY_UPDATE_DAO_PARAMS, ...params } })
+    .instruction();
+
+  await executeViaVault(ctx, dao, [updateDaoIx]);
 }
 
 // An error inside a vault-executed instruction surfaces through Squads'

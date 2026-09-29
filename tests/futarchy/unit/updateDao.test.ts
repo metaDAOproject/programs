@@ -18,6 +18,8 @@ import {
 } from "@metadaoproject/programs";
 import BN from "bn.js";
 import {
+  EMPTY_UPDATE_DAO_PARAMS,
+  executeViaVault,
   expectVaultExecutionError,
   rewriteAccount,
   setTypedProposalsEnabled,
@@ -502,4 +504,69 @@ export default function suite() {
     assert.isTrue(daoAccount.typedProposalsEnabled);
     assert.equal(daoAccount.minQuoteFutarchicLiquidity.toString(), "1");
   });
+
+  it("ignores the retired optimistic-governance flag", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+    const before = await this.futarchy.getDao(dao);
+
+    // Twelve fields: ten `None`, the retired flag set, the switch `None`.
+    await executeViaVault(this, dao, [
+      await updateDaoIxWithArgs(this, dao, [...Array(10).fill(0), 1, 1, 0]),
+    ]);
+
+    const after = await this.futarchy.getDao(dao);
+    assert.isFalse(after.typedProposalsEnabled);
+    assert.equal(after.seqNum.toString(), before.seqNum.addn(1).toString());
+    assert.deepEqual(
+      JSON.parse(JSON.stringify({ ...after, seqNum: before.seqNum })),
+      JSON.parse(JSON.stringify(before)),
+    );
+  });
+
+  it("refuses a payload encoded before the upgrade with the old flag set", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectInstructionDidNotDeserialize(
+      executeViaVault(this, dao, [
+        await updateDaoIxWithArgs(this, dao, [...Array(10).fill(0), 1, 1]),
+      ]),
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+
+  it("refuses a payload encoded before the upgrade with the old flag unset", async function () {
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectInstructionDidNotDeserialize(
+      executeViaVault(this, dao, [
+        await updateDaoIxWithArgs(this, dao, Array(11).fill(0)),
+      ]),
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+}
+
+// The SDK's update_dao instruction with hand-encoded arguments, for payload
+// layouts the client cannot produce. Eleven `None` bytes is what a client of
+// the deployed program sends when it leaves every field alone.
+async function updateDaoIxWithArgs(ctx: any, dao: PublicKey, args: number[]) {
+  const ix = await ctx.futarchy
+    .updateDaoIx({ dao, params: EMPTY_UPDATE_DAO_PARAMS })
+    .instruction();
+  ix.data = Buffer.concat([ix.data.subarray(0, 8), Buffer.from(args)]);
+  return ix;
+}
+
+// Anchor's own InstructionDidNotDeserialize (102) is not in the IDL, so it is
+// matched by code.
+async function expectInstructionDidNotDeserialize(execution: Promise<unknown>) {
+  await execution.then(
+    () => assert.fail("should have failed with InstructionDidNotDeserialize"),
+    (e) => assert.include(e.toString(), "custom program error: 0x66"),
+  );
 }

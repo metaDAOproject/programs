@@ -3374,6 +3374,16 @@ export type Futarchy = {
             };
           },
           {
+            name: "deprecatedIsOptimisticGovernanceEnabled";
+            docs: [
+              "Ignored. The retired optimistic-governance flag, kept in place so",
+              "payloads encoded before the upgrade are refused, not reinterpreted.",
+            ];
+            type: {
+              option: "bool";
+            };
+          },
+          {
             name: "typedProposalsEnabled";
             docs: [
               "`Some(true)` turns typed proposals on for this DAO. `None` leaves them",
@@ -8686,6 +8696,16 @@ export const IDL: Futarchy = {
             name: "teamAddress",
             type: {
               option: "publicKey",
+            },
+          },
+          {
+            name: "deprecatedIsOptimisticGovernanceEnabled",
+            docs: [
+              "Ignored. The retired optimistic-governance flag, kept in place so",
+              "payloads encoded before the upgrade are refused, not reinterpreted.",
+            ],
+            type: {
+              option: "bool",
             },
           },
           {

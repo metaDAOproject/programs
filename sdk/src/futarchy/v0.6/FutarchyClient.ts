@@ -1570,10 +1570,12 @@ export class FutarchyClient {
       index: 0,
     })[0];
 
-    return this.futarchy.methods.updateDao(params).accounts({
-      dao,
-      squadsMultisigVault,
-    });
+    return this.futarchy.methods
+      .updateDao({ ...params, deprecatedIsOptimisticGovernanceEnabled: null })
+      .accounts({
+        dao,
+        squadsMultisigVault,
+      });
   }
 
   setSpendingLimitIx({
