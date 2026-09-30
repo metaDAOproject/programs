@@ -1361,7 +1361,7 @@ export type Futarchy = {
           isSigner: false;
           docs: [
             "The proposal's DAO, checked against the deserialized proposal in the",
-            "handler. Must already be migrated to the new layout (crank DAOs first).",
+            "handler.",
           ];
         },
         {
@@ -6686,7 +6686,7 @@ export const IDL: Futarchy = {
           isSigner: false,
           docs: [
             "The proposal's DAO, checked against the deserialized proposal in the",
-            "handler. Must already be migrated to the new layout (crank DAOs first).",
+            "handler.",
           ],
         },
         {

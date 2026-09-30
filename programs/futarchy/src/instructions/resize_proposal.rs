@@ -8,7 +8,7 @@ pub struct ResizeProposal<'info> {
     #[account(mut)]
     pub proposal: UncheckedAccount<'info>,
     /// The proposal's DAO, checked against the deserialized proposal in the
-    /// handler. Must already be migrated to the new layout (crank DAOs first).
+    /// handler.
     pub dao: Account<'info, Dao>,
     #[account(mut)]
     pub payer: Signer<'info>,

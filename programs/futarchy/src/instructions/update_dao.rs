@@ -30,6 +30,9 @@ pub struct UpdateDao<'info> {
 
 impl UpdateDao<'_> {
     pub fn validate(&self, dao_params: &UpdateDaoParams) -> Result<()> {
+        // Ensure the DAO is migrated.
+        Dao::assert_migrated(&self.dao.to_account_info())?;
+
         require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
 
         // Prevent parameter updates during active futarchy markets

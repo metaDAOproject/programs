@@ -25,6 +25,7 @@ import {
   setTypedProposalsEnabled,
   updateDaoViaVault,
 } from "../utils.js";
+import { makeOldDaoLayout } from "../../utils.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 
@@ -544,6 +545,20 @@ export default function suite() {
       executeViaVault(this, dao, [
         await updateDaoIxWithArgs(this, dao, Array(11).fill(0)),
       ]),
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+
+  it("fails on a DAO that has not been migrated", async function () {
+    await makeOldDaoLayout(this, dao);
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectVaultExecutionError(
+      this,
+      updateDaoViaVault(this, dao, { passThresholdBps: 500 }),
+      "AccountNotMigrated",
     );
 
     const after = await this.banksClient.getAccount(dao);
