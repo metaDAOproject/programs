@@ -96,6 +96,11 @@ export function getValuationPrice(dao: Dao): BN {
   return BN.max(observation, reservePrice);
 }
 
+// `amount` base atoms valued at `price`, in quote atoms, rounded up as the program does.
+function getQuoteValueAtPrice(amount: BN, price: BN): BN {
+  return amount.mul(price).add(PRICE_SCALE.subn(1)).div(PRICE_SCALE);
+}
+
 /** The largest amount `withdraw_tokens` accepts at `now`; the Dao is only needed while limits are active. */
 export function getMaxTokenWithdrawal({
   performancePackage,
@@ -157,4 +162,12 @@ export function getSellProceedsEstimate(dao: Dao, amount: BN): BN {
   const denominator = pool.baseReserves.mul(MAX_BPS).add(inputAfterLpFee);
 
   return numerator.div(denominator);
+}
+
+/** The quote atoms `withdraw_via_sell` records against the window's quote cap for `amount`: the higher of the pool's proceeds and the amount's value at the valuation price before the sale. */
+export function getSellQuoteUsage(dao: Dao, amount: BN): BN {
+  return BN.max(
+    getSellProceedsEstimate(dao, amount),
+    getQuoteValueAtPrice(amount, getValuationPrice(dao)),
+  );
 }

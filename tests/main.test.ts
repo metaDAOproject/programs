@@ -137,11 +137,13 @@ export interface TestContext {
     quoteMint,
     teamSponsoredPassThresholdBps,
     teamAddress,
+    twapInitialObservation,
   }: {
     baseMint: PublicKey;
     quoteMint: PublicKey;
     teamSponsoredPassThresholdBps?: number;
     teamAddress?: PublicKey;
+    twapInitialObservation?: BN;
   }) => Promise<PublicKey>;
   setupBasicDaoWithLiquidity: ({
     baseMint,
@@ -507,11 +509,13 @@ before(async function () {
     quoteMint,
     teamSponsoredPassThresholdBps = 300,
     teamAddress = this.payer.publicKey,
+    twapInitialObservation = ONE_BUCK_PRICE,
   }: {
     baseMint: PublicKey;
     quoteMint: PublicKey;
     teamSponsoredPassThresholdBps?: number;
     teamAddress?: PublicKey;
+    twapInitialObservation?: BN;
   }) => {
     const nonce = new BN(Math.floor(Math.random() * 1000000));
 
@@ -522,7 +526,7 @@ before(async function () {
         params: {
           secondsPerProposal: 60 * 60 * 24 * 3,
           twapStartDelaySeconds: 60 * 60 * 24,
-          twapInitialObservation: ONE_BUCK_PRICE,
+          twapInitialObservation,
           twapMaxObservationChangePerUpdate: ONE_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(10_000),
           minBaseFutarchicLiquidity: new BN(10_000),

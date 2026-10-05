@@ -6,7 +6,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { LimitsParams, Tranche } from "@metadaoproject/programs";
+import { LimitsParams, PriceMath, Tranche } from "@metadaoproject/programs";
 
 const OLD_PERFORMANCE_PACKAGE_SIZE = 520;
 
@@ -129,6 +129,7 @@ export async function setupPackageOnDao(
     limits,
     tranches,
     minUnlockTimestamp,
+    twapInitialObservation,
   }: {
     tokenMint: PublicKey;
     quoteMint: PublicKey;
@@ -136,9 +137,14 @@ export async function setupPackageOnDao(
     limits?: LimitsParams;
     tranches?: Tranche[];
     minUnlockTimestamp?: BN;
+    twapInitialObservation?: BN;
   },
 ): Promise<{ dao: PublicKey; performancePackage: PublicKey }> {
-  const dao = await ctx.setupBasicDao({ baseMint: tokenMint, quoteMint });
+  const dao = await ctx.setupBasicDao({
+    baseMint: tokenMint,
+    quoteMint,
+    twapInitialObservation,
+  });
   const performancePackage = await ctx.setupBasicPerformancePackage({
     tokenMint,
     oracleAccount: dao,
@@ -333,6 +339,11 @@ export async function setupSellablePackage(
       },
     ],
     limits,
+    // The oracle's observation opens at the pool's price, as on a launchpad Dao
+    twapInitialObservation: PriceMath.getAmmPriceFromReserves(
+      new BN(SELLABLE_POOL_BASE),
+      new BN(SELLABLE_POOL_QUOTE),
+    ),
   });
 
   await ctx.futarchy

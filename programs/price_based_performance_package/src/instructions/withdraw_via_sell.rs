@@ -130,15 +130,21 @@ impl WithdrawViaSell<'_> {
         );
 
         // The token cap is checked before the sale so that a failure moves nothing
-        if let Some(policy) = performance_package.active_policy(now) {
-            require!(
-                policy.limits.withdrawal_mode.allows_sell(),
-                PriceBasedPerformancePackageError::WithdrawViaSellDisabled
-            );
+        let quote_value_before_sale = match performance_package.active_policy(now) {
+            Some(policy) => {
+                require!(
+                    policy.limits.withdrawal_mode.allows_sell(),
+                    PriceBasedPerformancePackageError::WithdrawViaSellDisabled
+                );
 
-            policy.roll_if_new_window(now);
-            policy.assert_tokens_fit(amount)?;
-        }
+                policy.roll_if_new_window(now);
+                policy.assert_tokens_fit(amount)?;
+
+                // Value the tokens at the pool's price before the sale; the quote cap is charged at least this much
+                Some(quote_value_at_price(amount, valuation_price(&dao)?)?)
+            }
+            None => None,
+        };
 
         let quote_before = package_quote_account.amount;
 
@@ -179,12 +185,12 @@ impl WithdrawViaSell<'_> {
             .checked_sub(quote_before)
             .ok_or(PriceBasedPerformancePackageError::InvariantViolated)?;
 
-        // The quote cap is checked against what the pool actually paid; a failure fails the transaction, sale included
+        // The quote cap is charged the higher of what the pool paid and the pre-sale value; a failure fails the transaction, sale included
         let capped = match performance_package.active_policy(now) {
             Some(policy) => {
-                // Fail the transaction if the quote cap is exceeded
-                policy.assert_quote_fits(quote_received)?;
-                policy.record_withdrawal(amount, quote_received);
+                let quote_value = quote_received.max(quote_value_before_sale.unwrap_or(0));
+                policy.assert_quote_fits(quote_value)?;
+                policy.record_withdrawal(amount, quote_value);
 
                 Some(policy.usage)
             }

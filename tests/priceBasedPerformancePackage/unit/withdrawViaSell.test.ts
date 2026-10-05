@@ -3,8 +3,11 @@ import { assert } from "chai";
 import BN from "bn.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
-import { LimitsParams } from "@metadaoproject/programs";
-import { getSellProceedsEstimate } from "@metadaoproject/programs/price_based_performance_package/v0.6/withdrawalLimits";
+import { LimitsParams, PriceMath } from "@metadaoproject/programs";
+import {
+  getSellProceedsEstimate,
+  getSellQuoteUsage,
+} from "@metadaoproject/programs/price_based_performance_package/v0.6/withdrawalLimits";
 import { expectError } from "../../utils.js";
 import {
   setMockOracle,
@@ -20,9 +23,15 @@ const LOCKED_THRESHOLD = new BN(2e12);
 // At most 645,000 tokens or 100,000 USDC per 30-day window
 const TOKEN_CAP = 645_000 * 10 ** 6;
 const QUOTE_CAP = 100_000 * 10 ** 6;
-// The Dao's pool opens at $0.0728 per token
+// The Dao's pool opens at $0.0728 per token, and so does its oracle's observation
 const POOL_BASE = 10_000_000 * 10 ** 6;
 const POOL_QUOTE = 728_000 * 10 ** 6;
+const POOL_PRICE = PriceMath.getAmmPriceFromReserves(
+  new BN(POOL_BASE),
+  new BN(POOL_QUOTE),
+);
+// Sold into the pool by the payer to depress its price
+const DUMP_AMOUNT = 6_000_000 * 10 ** 6;
 // Kept by the payer for oracle-stamping buys and proposal liquidity
 const PAYER_RESERVE = 1_000 * 10 ** 6;
 const ORACLE_STAMP_BUY = 1 * 10 ** 6;
@@ -89,6 +98,28 @@ export default function () {
       new BN(amount),
     );
     return BigInt(estimate.toString());
+  }
+
+  // What a sale of `amount` records against the window's quote cap
+  async function sellQuoteUsage(
+    ctx: Mocha.Context,
+    amount: number,
+  ): Promise<bigint> {
+    const quoteUsage = getSellQuoteUsage(
+      await ctx.futarchy.getDao(dao),
+      new BN(amount),
+    );
+    return BigInt(quoteUsage.toString());
+  }
+
+  function dumpIx(ctx: Mocha.Context) {
+    return ctx.futarchy.spotSwapIx({
+      dao,
+      baseMint: tokenMint,
+      quoteMint,
+      swapType: "sell",
+      inputAmount: new BN(DUMP_AMOUNT),
+    });
   }
 
   type SellOverrides = {
@@ -240,6 +271,7 @@ export default function () {
               withdrawalMode: { both: {} },
               ...limits,
             },
+      twapInitialObservation: POOL_PRICE,
     }));
 
     await ctx.futarchy
@@ -272,6 +304,10 @@ export default function () {
     const estimate = await estimateProceeds(this, TOKEN_CAP);
     assert.isAbove(Number(estimate), 43_000 * 10 ** 6);
     assert.isBelow(Number(estimate), 44_000 * 10 ** 6);
+    // The quote cap is charged their value at the pool's price, about 46,900 USDC
+    const quoteUsage = await sellQuoteUsage(this, TOKEN_CAP);
+    assert.isAbove(Number(quoteUsage), 46_000 * 10 ** 6);
+    assert.isBelow(Number(quoteUsage), 47_000 * 10 ** 6);
 
     await sell(this, TOKEN_CAP);
 
@@ -293,7 +329,7 @@ export default function () {
     assert.deepEqual(await usage(this), {
       windowIndex: "0",
       tokensUsed: TOKEN_CAP.toString(),
-      quoteUsed: estimate.toString(),
+      quoteUsed: quoteUsage.toString(),
     });
     assert.equal(
       (await storedPackage(this)).seqNum.toNumber(),
@@ -306,6 +342,7 @@ export default function () {
     const donation = 1 * 10 ** 6;
     await this.mintTo(quoteMint, performancePackage, this.payer, donation);
     const estimate = await estimateProceeds(this, TOKEN_CAP);
+    const quoteUsage = await sellQuoteUsage(this, TOKEN_CAP);
 
     await sell(this, TOKEN_CAP);
 
@@ -317,7 +354,7 @@ export default function () {
       await this.getTokenBalance(quoteMint, performancePackage),
       BigInt(donation),
     );
-    assert.equal((await usage(this)).quoteUsed, estimate.toString());
+    assert.equal((await usage(this)).quoteUsed, quoteUsage.toString());
   });
 
   it("rejects proceeds above the quote cap", async function () {
@@ -343,6 +380,44 @@ export default function () {
       0n,
     );
     assert.deepEqual(await usage(this), NO_USAGE);
+  });
+
+  it("charges the quote cap at the pool's price before the sale, so a dump in the same transaction cannot lower it", async function () {
+    await setupSellablePackage(this, {
+      limits: { maxQuotePerWindow: new BN(20_000 * 10 ** 6) },
+    });
+    await this.mintTo(tokenMint, this.payer.publicKey, this.payer, DUMP_AMOUNT);
+    const reservesBefore = await reserves(this);
+    assert.isAbove(
+      Number(await sellQuoteUsage(this, TOKEN_CAP)),
+      20_000 * 10 ** 6,
+    );
+
+    const callbacks = expectError(
+      "QuoteWindowLimitExceeded",
+      "sold at a price depressed in the same transaction",
+    );
+    await sellIx(this, TOKEN_CAP)
+      .preInstructions([await dumpIx(this).instruction()])
+      .signers([recipient])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    assert.deepEqual(await reserves(this), reservesBefore);
+    assert.deepEqual(await usage(this), NO_USAGE);
+
+    // On its own the dump leaves the pool paying less than the cap for the sale, which is still rejected
+    await dumpIx(this).preInstructions([uniqueTxIx()]).rpc();
+    assert.isBelow(
+      Number(await estimateProceeds(this, TOKEN_CAP)),
+      20_000 * 10 ** 6,
+    );
+    await expectSellError(
+      this,
+      TOKEN_CAP,
+      "QuoteWindowLimitExceeded",
+      "sold at a depressed price",
+    );
   });
 
   it("rejects an amount above the token cap", async function () {
@@ -551,6 +626,7 @@ export default function () {
 
     // With a proposal live the pool also pays out the arbitrage profit, so the spot estimate is a floor
     const estimate = await estimateProceeds(this, TOKEN_CAP);
+    const quoteUsage = await sellQuoteUsage(this, TOKEN_CAP);
     await sell(this, TOKEN_CAP);
 
     const received = await this.getTokenBalance(quoteMint, recipient.publicKey);
@@ -563,28 +639,25 @@ export default function () {
     assert.deepEqual(await usage(this), {
       windowIndex: "0",
       tokensUsed: TOKEN_CAP.toString(),
-      quoteUsed: received.toString(),
+      quoteUsed: (received > quoteUsage ? received : quoteUsage).toString(),
     });
   });
 
   it("counts a token withdrawal and a sale against one window", async function () {
-    // The token route values at the oracle's observation, still near the $1 it started at
-    await setupSellablePackage(this, {
-      limits: { maxQuotePerWindow: new BN(1_000_000 * 10 ** 6) },
-    });
+    await setupSellablePackage(this);
     const tokenAmount = 300_000 * 10 ** 6;
     const sellAmount = TOKEN_CAP - tokenAmount;
 
     await withdrawTokens(this, tokenAmount);
     const { quoteUsed: tokenValue } = await usage(this);
-    const estimate = await estimateProceeds(this, sellAmount);
+    const quoteUsage = await sellQuoteUsage(this, sellAmount);
 
     await sell(this, sellAmount);
 
     assert.deepEqual(await usage(this), {
       windowIndex: "0",
       tokensUsed: TOKEN_CAP.toString(),
-      quoteUsed: (BigInt(tokenValue) + estimate).toString(),
+      quoteUsed: (BigInt(tokenValue) + quoteUsage).toString(),
     });
 
     await expectSellError(

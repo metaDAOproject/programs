@@ -6,6 +6,7 @@ import { getChangeRequestAddr, LimitsParams } from "@metadaoproject/programs";
 import {
   getMaxTokenWithdrawal,
   getSellProceedsEstimate,
+  getSellQuoteUsage,
 } from "@metadaoproject/programs/price_based_performance_package/v0.6/withdrawalLimits";
 import { expectError } from "../../utils.js";
 import { setupPackageOnDao, stampDaoOracle, uniqueTxIx } from "../utils.js";
@@ -259,10 +260,9 @@ export default function suite() {
     await this.advanceBySeconds(THIRTY_DAYS);
     const halfCap = TOKEN_CAP / 2;
     const poolBaseBefore = await this.getTokenBalance(tokenMint, dao);
-    const estimate = getSellProceedsEstimate(
-      await this.futarchy.getDao(dao),
-      new BN(halfCap),
-    );
+    const daoBeforeSale = await this.futarchy.getDao(dao);
+    const estimate = getSellProceedsEstimate(daoBeforeSale, new BN(halfCap));
+    const quoteUsage = getSellQuoteUsage(daoBeforeSale, new BN(halfCap));
 
     await this.priceBasedPerformancePackage
       .withdrawViaSellIx({
@@ -293,7 +293,7 @@ export default function suite() {
     assert.deepEqual(await usage(this), {
       windowIndex: "1",
       tokensUsed: halfCap.toString(),
-      quoteUsed: estimate.toString(),
+      quoteUsed: quoteUsage.toString(),
     });
     const packageQuoteAccount = getAssociatedTokenAddressSync(
       quoteMint,
