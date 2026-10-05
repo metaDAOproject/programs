@@ -186,8 +186,7 @@ impl WithdrawalPolicy {
 
     /// Reset the counters if `now` falls in a later window than the last withdrawal.
     pub fn roll_if_new_window(&mut self, now: i64) {
-        let window_index =
-            (now - self.limits.start_timestamp) / self.limits.window_seconds as i64;
+        let window_index = (now - self.limits.start_timestamp) / self.limits.window_seconds as i64;
 
         if window_index != self.usage.window_index {
             self.usage = WindowUsage {

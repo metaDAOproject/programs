@@ -45,9 +45,8 @@ impl ResizePerformancePackage<'_> {
             ErrorCode::AccountDidNotDeserialize
         );
 
-        let old = OldPerformancePackage::deserialize(
-            &mut &performance_package.try_borrow_data()?[8..],
-        )?;
+        let old =
+            OldPerformancePackage::deserialize(&mut &performance_package.try_borrow_data()?[8..])?;
 
         let new = PerformancePackage {
             tranches: old.tranches,
