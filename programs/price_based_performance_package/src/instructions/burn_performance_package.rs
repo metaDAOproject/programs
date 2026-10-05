@@ -1,8 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{self, Burn, CloseAccount, Mint, Token, TokenAccount},
-};
+use anchor_spl::token::{self, Burn, CloseAccount, Mint, Token, TokenAccount};
 
 use super::*;
 
@@ -35,16 +32,14 @@ pub struct BurnPerformancePackage<'info> {
     /// CHECK: Pinned to the package's recipient by `has_one`
     pub recipient: UncheckedAccount<'info>,
 
-    /// The recipient's ATA that receives the unlocked balance - created if needed
+    /// Any token account owned by the recipient; receives the unlocked balance
     #[account(
-        init_if_needed,
-        payer = admin,
-        associated_token::mint = token_mint,
-        associated_token::authority = recipient
+        mut,
+        token::mint = token_mint,
+        token::authority = recipient
     )]
     pub recipient_token_account: Box<Account<'info, TokenAccount>>,
 
-    #[account(mut)]
     pub admin: Signer<'info>,
 
     /// CHECK: SOL from account closures go to this account
@@ -69,9 +64,7 @@ pub struct BurnPerformancePackage<'info> {
     #[account(mut, token::mint = quote_mint)]
     pub quote_destination: Option<Box<Account<'info, TokenAccount>>>,
 
-    pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl BurnPerformancePackage<'_> {
@@ -116,9 +109,7 @@ impl BurnPerformancePackage<'_> {
             quote_mint: _,
             package_quote_account,
             quote_destination,
-            system_program: _,
             token_program,
-            associated_token_program: _,
         } = ctx.accounts;
 
         let vault_amount = performance_package_token_vault.amount;

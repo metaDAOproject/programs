@@ -46,9 +46,9 @@ export const burnPerformancePackage = async () => {
       metadaoSquadsMultisig,
     );
 
-  // Prepare transaction message. The recipient's token account is created if
-  // it is missing, paid by the vault; rent from the closed accounts goes to the payer.
-  const burnPerformancePackageIx = await priceBasedPerformancePackage
+  // Prepare transaction message. The recipient's ATA is created in the same
+  // transaction, paid by the vault; rent from the closed accounts goes to the payer.
+  const burnPerformancePackageTx = await priceBasedPerformancePackage
     .burnPerformancePackageIx({
       performancePackage,
       tokenMint: performancePackageAccount.tokenMint,
@@ -57,10 +57,10 @@ export const burnPerformancePackage = async () => {
       spillAccount: payer.publicKey,
       quoteSweep,
     })
-    .instruction();
+    .transaction();
 
   const transactionMessage = new TransactionMessage({
-    instructions: [burnPerformancePackageIx],
+    instructions: burnPerformancePackageTx.instructions,
     payerKey: metadaoSquadsMultisigVault,
     recentBlockhash: (await provider.connection.getLatestBlockhash()).blockhash,
   });

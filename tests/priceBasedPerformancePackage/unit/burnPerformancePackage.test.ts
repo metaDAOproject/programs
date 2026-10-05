@@ -6,11 +6,13 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import BN from "bn.js";
-import { getMint } from "spl-token-bankrun";
+import { getAccount, getMint } from "spl-token-bankrun";
 import {
   ACCOUNT_SIZE,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
+  AuthorityType,
   TOKEN_PROGRAM_ID,
+  createInitializeAccount3Instruction,
+  createSetAuthorityInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { QuoteSweep } from "@metadaoproject/programs";
@@ -81,7 +83,11 @@ export default function () {
     });
   }
 
-  function burnIx(ctx: Mocha.Context, quoteSweep?: QuoteSweep) {
+  function burnIx(
+    ctx: Mocha.Context,
+    quoteSweep?: QuoteSweep,
+    recipientTokenAccount?: PublicKey,
+  ) {
     return ctx.priceBasedPerformancePackage.burnPerformancePackageIx({
       performancePackage,
       tokenMint,
@@ -89,6 +95,7 @@ export default function () {
       admin: admin.publicKey,
       spillAccount: spillAccount.publicKey,
       quoteSweep,
+      recipientTokenAccount,
     });
   }
 
@@ -259,6 +266,66 @@ export default function () {
     );
   });
 
+  it("pays into a token account created in the burn transaction when the recipient has handed their ATA to another key", async function () {
+    await unlockTranches(this, BigInt(1e12));
+
+    const recipientAta = await this.createTokenAccount(
+      tokenMint,
+      recipient.publicKey,
+    );
+    const handoverTx = new Transaction().add(
+      createSetAuthorityInstruction(
+        recipientAta,
+        recipient.publicKey,
+        AuthorityType.AccountOwner,
+        Keypair.generate().publicKey,
+      ),
+    );
+    handoverTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    handoverTx.feePayer = this.payer.publicKey;
+    handoverTx.sign(this.payer, recipient);
+    await this.banksClient.processTransaction(handoverTx);
+
+    const callbacks = expectError(
+      "ConstraintTokenOwner",
+      "paid into an ATA the recipient no longer owns",
+    );
+    await burnIx(this, undefined, recipientAta)
+      .signers([admin])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+
+    const freshAccount = Keypair.generate();
+    const rent = await this.banksClient.getRent();
+    await burnIx(this, undefined, freshAccount.publicKey)
+      .preInstructions([
+        SystemProgram.createAccount({
+          fromPubkey: admin.publicKey,
+          newAccountPubkey: freshAccount.publicKey,
+          space: ACCOUNT_SIZE,
+          lamports: Number(rent.minimumBalance(BigInt(ACCOUNT_SIZE))),
+          programId: TOKEN_PROGRAM_ID,
+        }),
+        createInitializeAccount3Instruction(
+          freshAccount.publicKey,
+          tokenMint,
+          recipient.publicKey,
+        ),
+      ])
+      .signers([admin, freshAccount])
+      .rpc();
+
+    assert.equal(
+      (await getAccount(this.banksClient, freshAccount.publicKey)).amount,
+      BigInt(TRANCHE_AMOUNT),
+    );
+    assert.equal((await getAccount(this.banksClient, recipientAta)).amount, 0n);
+    assert.isNull(await this.banksClient.getAccount(performancePackage));
+    assert.isNull(await this.banksClient.getAccount(vaultAddress()));
+  });
+
   it("sweeps the quote account to the destination and closes it along with the vault", async function () {
     const quoteMint = await this.createMint(this.payer.publicKey, 6);
     await this.mintTo(
@@ -346,6 +413,11 @@ export default function () {
       performancePackage,
     );
 
+    const recipientTokenAccount = await this.createTokenAccount(
+      tokenMint,
+      recipient.publicKey,
+    );
+
     const callbacks = expectError(
       "QuoteSweepAccountsIncomplete",
       "burned with the quote account but no destination",
@@ -357,19 +429,14 @@ export default function () {
         performancePackage,
         performancePackageTokenVault: vaultAddress(),
         recipient: recipient.publicKey,
-        recipientTokenAccount: getAssociatedTokenAddressSync(
-          tokenMint,
-          recipient.publicKey,
-        ),
+        recipientTokenAccount,
         admin: admin.publicKey,
         spillAccount: spillAccount.publicKey,
         tokenMint,
         quoteMint,
         packageQuoteAccount,
         quoteDestination: null,
-        systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       })
       .signers([admin])
       .rpc()

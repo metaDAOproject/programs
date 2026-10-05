@@ -9,6 +9,7 @@ import {
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
@@ -302,6 +303,7 @@ export class PriceBasedPerformancePackageClient {
     admin = this.provider.publicKey,
     spillAccount = admin,
     quoteSweep,
+    recipientTokenAccount,
   }: {
     performancePackage: PublicKey;
     tokenMint: PublicKey;
@@ -309,8 +311,16 @@ export class PriceBasedPerformancePackageClient {
     admin?: PublicKey;
     spillAccount?: PublicKey;
     quoteSweep?: QuoteSweep;
+    /** A token account owned by the recipient to pay into instead of their ATA */
+    recipientTokenAccount?: PublicKey;
   }) {
-    return this.program.methods.burnPerformancePackage().accounts({
+    const recipientAta = getAssociatedTokenAddressSync(
+      tokenMint,
+      recipient,
+      true,
+    );
+
+    const builder = this.program.methods.burnPerformancePackage().accounts({
       performancePackage,
       performancePackageTokenVault: getAssociatedTokenAddressSync(
         tokenMint,
@@ -318,11 +328,7 @@ export class PriceBasedPerformancePackageClient {
         true,
       ),
       recipient,
-      recipientTokenAccount: getAssociatedTokenAddressSync(
-        tokenMint,
-        recipient,
-        true,
-      ),
+      recipientTokenAccount: recipientTokenAccount ?? recipientAta,
       admin,
       spillAccount,
       tokenMint,
@@ -335,10 +341,22 @@ export class PriceBasedPerformancePackageClient {
           )
         : null,
       quoteDestination: quoteSweep?.quoteDestination ?? null,
-      systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     });
+
+    if (recipientTokenAccount) {
+      return builder;
+    }
+
+    // Create the recipient's ATA in the same transaction, paid by the admin
+    return builder.preInstructions([
+      createAssociatedTokenAccountIdempotentInstruction(
+        admin,
+        recipientAta,
+        recipient,
+        tokenMint,
+      ),
+    ]);
   }
 
   public resizePerformancePackageIx(params: {

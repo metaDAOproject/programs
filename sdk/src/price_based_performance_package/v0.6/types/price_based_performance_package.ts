@@ -371,12 +371,12 @@ export type PriceBasedPerformancePackage = {
           isMut: true;
           isSigner: false;
           docs: [
-            "The recipient's ATA that receives the unlocked balance - created if needed",
+            "Any token account owned by the recipient; receives the unlocked balance",
           ];
         },
         {
           name: "admin";
-          isMut: true;
+          isMut: false;
           isSigner: true;
         },
         {
@@ -415,17 +415,7 @@ export type PriceBasedPerformancePackage = {
           docs: ["Where the quote balance goes, chosen by the admin"];
         },
         {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "associatedTokenProgram";
           isMut: false;
           isSigner: false;
         },
@@ -2106,12 +2096,12 @@ export const IDL: PriceBasedPerformancePackage = {
           isMut: true,
           isSigner: false,
           docs: [
-            "The recipient's ATA that receives the unlocked balance - created if needed",
+            "Any token account owned by the recipient; receives the unlocked balance",
           ],
         },
         {
           name: "admin",
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -2150,17 +2140,7 @@ export const IDL: PriceBasedPerformancePackage = {
           docs: ["Where the quote balance goes, chosen by the admin"],
         },
         {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
           isMut: false,
           isSigner: false,
         },
