@@ -933,6 +933,10 @@ export type PriceBasedPerformancePackage = {
             name: "amount";
             type: "u64";
           },
+          {
+            name: "maxQuoteValue";
+            type: "u64";
+          },
         ];
       };
     },
@@ -1719,6 +1723,11 @@ export type PriceBasedPerformancePackage = {
       code: 6026;
       name: "OracleMintMismatch";
       msg: "Oracle Dao's base mint must be the package's token mint";
+    },
+    {
+      code: 6027;
+      name: "MaxQuoteValueExceeded";
+      msg: "Withdrawal is valued above the recipient's maximum quote value";
     },
   ];
 };
@@ -2658,6 +2667,10 @@ export const IDL: PriceBasedPerformancePackage = {
             name: "amount",
             type: "u64",
           },
+          {
+            name: "maxQuoteValue",
+            type: "u64",
+          },
         ],
       },
     },
@@ -3444,6 +3457,11 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6026,
       name: "OracleMintMismatch",
       msg: "Oracle Dao's base mint must be the package's token mint",
+    },
+    {
+      code: 6027,
+      name: "MaxQuoteValueExceeded",
+      msg: "Withdrawal is valued above the recipient's maximum quote value",
     },
   ],
 };

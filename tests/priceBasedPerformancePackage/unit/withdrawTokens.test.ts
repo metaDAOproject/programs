@@ -12,6 +12,7 @@ import { LimitsParams, Tranche } from "@metadaoproject/programs";
 import {
   getActiveWithdrawalPolicy,
   getMaxTokenWithdrawal,
+  getTokenQuoteUsage,
 } from "@metadaoproject/programs/price_based_performance_package/v0.6/withdrawalLimits";
 import { expectError } from "../../utils.js";
 import {
@@ -67,7 +68,11 @@ export default function () {
   function withdrawTokensIx(
     ctx: Mocha.Context,
     amount: number,
-    overrides: { recipient?: PublicKey; payer?: PublicKey } = {},
+    overrides: {
+      recipient?: PublicKey;
+      payer?: PublicKey;
+      maxQuoteValue?: BN;
+    } = {},
   ) {
     return ctx.priceBasedPerformancePackage.withdrawTokensIx({
       performancePackage,
@@ -76,6 +81,7 @@ export default function () {
       recipient: overrides.recipient ?? recipient.publicKey,
       payer: overrides.payer,
       amount: new BN(amount),
+      maxQuoteValue: overrides.maxQuoteValue,
     });
   }
 
@@ -291,6 +297,19 @@ export default function () {
         BigInt(TRANCHE_AMOUNT),
       );
     });
+
+    it("ignores the recipient's maximum quote value without limits", async function () {
+      await unlockFirstTranche(this);
+
+      await withdrawTokensIx(this, TRANCHE_AMOUNT, { maxQuoteValue: new BN(0) })
+        .signers([recipient])
+        .rpc();
+
+      assert.equal(
+        await this.getTokenBalance(tokenMint, recipient.publicKey),
+        BigInt(TRANCHE_AMOUNT),
+      );
+    });
   });
 
   describe("under a withdrawal policy", function () {
@@ -371,9 +390,9 @@ export default function () {
 
     // A distinct compute-unit price on every call gives repeated identical
     // withdrawals different transaction hashes, so none is rejected as a duplicate.
-    function withdraw(ctx: Mocha.Context, amount: number) {
+    function withdraw(ctx: Mocha.Context, amount: number, maxQuoteValue?: BN) {
       withdrawalCount += 1;
-      return withdrawTokensIx(ctx, amount)
+      return withdrawTokensIx(ctx, amount, { maxQuoteValue })
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitPrice({
             microLamports: withdrawalCount,
@@ -388,9 +407,13 @@ export default function () {
       amount: number,
       error: string,
       message: string,
+      maxQuoteValue?: BN,
     ) {
       const callbacks = expectError(error, message);
-      await withdraw(ctx, amount).then(callbacks[0], callbacks[1]);
+      await withdraw(ctx, amount, maxQuoteValue).then(
+        callbacks[0],
+        callbacks[1],
+      );
     }
 
     async function usage(ctx: Mocha.Context) {
@@ -775,6 +798,59 @@ export default function () {
         quoteUsed: "7275239188",
       });
       assert.equal(await maxWithdrawal(this), "0");
+    });
+
+    it("rejects a withdrawal valued above the recipient's maximum and records nothing", async function () {
+      await setupCappedPackage(this);
+      const amount = 400_000 * 10 ** 6;
+      const maxQuoteValue = getTokenQuoteUsage(
+        await this.futarchy.getDao(oracle),
+        new BN(amount),
+      );
+      assert.equal(maxQuoteValue.toString(), "29100956752");
+
+      // A buy into the pool doubles its reserve price before the withdrawal lands
+      await setDaoOracle(this, oracle, {
+        reserves: { base: ONE_MILLION_TOKENS, quote: 145_504_783_756n },
+      });
+      await expectWithdrawError(
+        this,
+        amount,
+        "MaxQuoteValueExceeded",
+        "withdrew at a value above the recipient's maximum",
+        maxQuoteValue,
+      );
+      assert.deepEqual(await usage(this), {
+        windowIndex: "0",
+        tokensUsed: "0",
+        quoteUsed: "0",
+      });
+
+      await setDaoOracle(this, oracle, {
+        reserves: RESERVES_BELOW_OBSERVATION,
+      });
+      await withdraw(this, amount, maxQuoteValue);
+      assert.deepEqual(await usage(this), {
+        windowIndex: "0",
+        tokensUsed: amount.toString(),
+        quoteUsed: "29100956752",
+      });
+    });
+
+    it("accepts a withdrawal valued exactly at the recipient's maximum", async function () {
+      await setupCappedPackage(this);
+      const exact = new BN(TOKEN_CAP_QUOTE_VALUE);
+
+      await expectWithdrawError(
+        this,
+        TOKEN_CAP,
+        "MaxQuoteValueExceeded",
+        "withdrew one atom above the recipient's maximum",
+        exact.subn(1),
+      );
+      await withdraw(this, TOKEN_CAP, exact);
+
+      assert.equal((await usage(this)).quoteUsed, TOKEN_CAP_QUOTE_VALUE);
     });
   });
 }

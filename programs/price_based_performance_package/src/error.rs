@@ -56,4 +56,6 @@ pub enum PriceBasedPerformancePackageError {
     QuoteSweepAccountsIncomplete,
     #[msg("Oracle Dao's base mint must be the package's token mint")]
     OracleMintMismatch,
+    #[msg("Withdrawal is valued above the recipient's maximum quote value")]
+    MaxQuoteValueExceeded,
 }

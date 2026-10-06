@@ -36,6 +36,8 @@ export type CreatePriceBasedPerformancePackageClientParams = {
   priceBasedTokenLockProgramId?: PublicKey;
 };
 
+const MAX_U64 = new BN("18446744073709551615");
+
 /** Burning sweeps the package's ATA for `quoteMint` into `quoteDestination` and closes it */
 export type QuoteSweep = {
   quoteMint: PublicKey;
@@ -154,12 +156,14 @@ export class PriceBasedPerformancePackageClient {
     });
   }
 
+  // Under active limits the withdrawal fails when it is valued above `maxQuoteValue`; by default there is no bound.
   public withdrawTokensIx({
     performancePackage,
     oracleAccount,
     tokenMint,
     recipient,
     amount,
+    maxQuoteValue = MAX_U64,
     payer = this.provider.publicKey,
   }: {
     performancePackage: PublicKey;
@@ -167,28 +171,31 @@ export class PriceBasedPerformancePackageClient {
     tokenMint: PublicKey;
     recipient: PublicKey;
     amount: BN;
+    maxQuoteValue?: BN;
     payer?: PublicKey;
   }) {
-    return this.program.methods.withdrawTokens({ amount }).accounts({
-      performancePackage,
-      oracleAccount,
-      performancePackageTokenVault: getAssociatedTokenAddressSync(
-        tokenMint,
+    return this.program.methods
+      .withdrawTokens({ amount, maxQuoteValue })
+      .accounts({
         performancePackage,
-        true,
-      ),
-      tokenMint,
-      recipientTokenAccount: getAssociatedTokenAddressSync(
+        oracleAccount,
+        performancePackageTokenVault: getAssociatedTokenAddressSync(
+          tokenMint,
+          performancePackage,
+          true,
+        ),
         tokenMint,
+        recipientTokenAccount: getAssociatedTokenAddressSync(
+          tokenMint,
+          recipient,
+          true,
+        ),
         recipient,
-        true,
-      ),
-      recipient,
-      payer,
-      systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-    });
+        payer,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      });
   }
 
   // The Dao is the package's oracle account; futarchy's AMM vaults are the Dao's ATAs.

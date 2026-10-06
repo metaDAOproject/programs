@@ -9,6 +9,7 @@ use super::*;
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct WithdrawTokensParams {
     pub amount: u64,
+    pub max_quote_value: u64,
 }
 
 #[derive(Accounts)]
@@ -80,7 +81,10 @@ impl WithdrawTokens<'_> {
 
         let clock = Clock::get()?;
         let now = clock.unix_timestamp;
-        let WithdrawTokensParams { amount } = params;
+        let WithdrawTokensParams {
+            amount,
+            max_quote_value,
+        } = params;
 
         let withdrawable =
             performance_package.withdrawable(performance_package_token_vault.amount)?;
@@ -103,6 +107,12 @@ impl WithdrawTokens<'_> {
                 let dao = read_dao(oracle_account, &token_mint.key())?;
                 let price = valuation_price(&dao)?;
                 let quote_value = quote_value_at_price(amount, price)?;
+                // Ensure the withdrawal is not valued above the recipient's maximum.
+                require_gte!(
+                    max_quote_value,
+                    quote_value,
+                    PriceBasedPerformancePackageError::MaxQuoteValueExceeded
+                );
                 policy.assert_quote_fits(quote_value)?;
 
                 policy.record_withdrawal(amount, quote_value);
