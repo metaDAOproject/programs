@@ -125,7 +125,11 @@ impl PerformancePackage {
 
     /// Replace the withdrawal policy as a whole. `None` removes it.
     pub fn replace_withdrawal_policy(&mut self, limits: Option<LimitsParams>, now: i64) {
-        let current = self.withdrawal_policy;
+        let current = self.active_policy(now).map(|policy| {
+            // Roll policy window to ensure we're using the correct window
+            policy.roll_if_new_window(now);
+            *policy
+        });
 
         self.withdrawal_policy = limits.map(|new_limits| match current {
             // If the window size is the same, keep the same window and usage

@@ -798,6 +798,71 @@ export default function () {
       assert.equal(usageAfter.tokensUsed, TOKEN_CAP.toString());
     });
 
+    it("drops the counters of an ended window when the window length changes", async function () {
+      await setupCappedPackage(
+        this,
+        cappedLimits(await clock(this), { windowSeconds: ONE_DAY }),
+      );
+      await withdrawTokens(this, TOKEN_CAP);
+      const { minUnlockTimestamp } = await storedPackage(this);
+      await this.advanceBySeconds(40 * ONE_DAY);
+      assert.equal((await usage(this)).tokensUsed, TOKEN_CAP.toString());
+
+      const newLimits = cappedLimits(await clock(this));
+      const executedAt = await proposeAndExecute(this, {
+        minUnlockTimestamp,
+        limits: newLimits,
+      });
+
+      const after = (await storedPackage(this)).withdrawalPolicy;
+      assert.deepEqual(
+        asJson(after.limits),
+        asJson({ startTimestamp: new BN(executedAt), ...newLimits }),
+      );
+      assert.deepEqual(await usage(this), NO_USAGE);
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
+
+      await withdrawTokens(this, TOKEN_CAP);
+      assert.equal((await usage(this)).tokensUsed, TOKEN_CAP.toString());
+    });
+
+    it("starts a fresh window with zero usage when the replaced policy has expired", async function () {
+      const now = await clock(this);
+      await setupCappedPackage(
+        this,
+        cappedLimits(now, {
+          endTimestamp: new BN(now + 10 * ONE_DAY),
+          windowSeconds: ONE_DAY,
+        }),
+      );
+      await withdrawTokens(this, PARTIAL_WITHDRAWAL);
+      const { minUnlockTimestamp } = await storedPackage(this);
+      await this.advanceBySeconds(10 * ONE_DAY);
+      assert.isNull(
+        getActiveWithdrawalPolicy(await storedPackage(this), await clock(this)),
+      );
+      assert.equal(
+        (await usage(this)).tokensUsed,
+        PARTIAL_WITHDRAWAL.toString(),
+      );
+
+      const newLimits = cappedLimits(await clock(this), {
+        windowSeconds: ONE_DAY,
+      });
+      const executedAt = await proposeAndExecute(this, {
+        minUnlockTimestamp,
+        limits: newLimits,
+      });
+
+      const after = (await storedPackage(this)).withdrawalPolicy;
+      assert.deepEqual(
+        asJson(after.limits),
+        asJson({ startTimestamp: new BN(executedAt), ...newLimits }),
+      );
+      assert.deepEqual(await usage(this), NO_USAGE);
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
+    });
+
     it("removes the limits, uncapping both routes", async function () {
       await setupCappedPackage(this, cappedLimits(await clock(this)));
       const { minUnlockTimestamp } = await storedPackage(this);
