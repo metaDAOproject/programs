@@ -34,6 +34,9 @@ import {
   getProposalAddrV2,
   InstructionUtils,
   getPerformancePackageAddr,
+  InitializePerformancePackageParams,
+  LimitsParams,
+  Tranche,
   DAMM_V2_PROGRAM_ID,
   LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
   BidWallClient,
@@ -85,7 +88,7 @@ import fullLaunch_v7 from "./integration/fullLaunch_v7.test.js";
 import fullLaunch_v8 from "./integration/launchpad_v8_full_lifecycle.test.js";
 import gatedLaunchpadV8 from "./integration/gatedLaunchpadV8.test.js";
 import trancheLifecycle_v8 from "./integration/launchpad_v8_tranche_lifecycle.test.js";
-import { BN } from "bn.js";
+import BN from "bn.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
@@ -134,11 +137,13 @@ export interface TestContext {
     quoteMint,
     teamSponsoredPassThresholdBps,
     teamAddress,
+    twapInitialObservation,
   }: {
     baseMint: PublicKey;
     quoteMint: PublicKey;
     teamSponsoredPassThresholdBps?: number;
     teamAddress?: PublicKey;
+    twapInitialObservation?: BN;
   }) => Promise<PublicKey>;
   setupBasicDaoWithLiquidity: ({
     baseMint,
@@ -146,6 +151,23 @@ export interface TestContext {
   }: {
     baseMint: PublicKey;
     quoteMint: PublicKey;
+  }) => Promise<PublicKey>;
+  setupBasicPerformancePackage: ({
+    tokenMint,
+    oracleAccount,
+    recipient,
+    limits,
+    minUnlockTimestamp,
+    tranches,
+    byteOffset,
+  }: {
+    tokenMint: PublicKey;
+    oracleAccount: PublicKey;
+    recipient: PublicKey;
+    limits?: LimitsParams;
+    minUnlockTimestamp?: BN;
+    tranches?: Tranche[];
+    byteOffset?: number;
   }) => Promise<PublicKey>;
   initializeProposal: ({
     dao,
@@ -487,11 +509,13 @@ before(async function () {
     quoteMint,
     teamSponsoredPassThresholdBps = 300,
     teamAddress = this.payer.publicKey,
+    twapInitialObservation = ONE_BUCK_PRICE,
   }: {
     baseMint: PublicKey;
     quoteMint: PublicKey;
     teamSponsoredPassThresholdBps?: number;
     teamAddress?: PublicKey;
+    twapInitialObservation?: BN;
   }) => {
     const nonce = new BN(Math.floor(Math.random() * 1000000));
 
@@ -502,7 +526,7 @@ before(async function () {
         params: {
           secondsPerProposal: 60 * 60 * 24 * 3,
           twapStartDelaySeconds: 60 * 60 * 24,
-          twapInitialObservation: ONE_BUCK_PRICE,
+          twapInitialObservation,
           twapMaxObservationChangePerUpdate: ONE_BUCK_PRICE.divn(100),
           minQuoteFutarchicLiquidity: new BN(10_000),
           minBaseFutarchicLiquidity: new BN(10_000),
@@ -670,44 +694,65 @@ before(async function () {
     tokenMint,
     oracleAccount,
     recipient,
+    limits,
+    minUnlockTimestamp,
+    tranches,
+    byteOffset = 0,
   }: {
     tokenMint: PublicKey;
     oracleAccount: PublicKey;
     recipient: PublicKey;
+    limits?: LimitsParams;
+    minUnlockTimestamp?: BN;
+    tranches?: Tranche[];
+    byteOffset?: number;
   }): Promise<PublicKey> => {
     const createKey = Keypair.generate();
 
-    await this.priceBasedPerformancePackage
-      .initializePerformancePackageIx({
-        params: {
-          tranches: [
-            {
-              priceThreshold: new BN(1e12),
-              tokenAmount: new BN(100 * 10 ** 6),
-            },
-            {
-              priceThreshold: new BN(2e12),
-              tokenAmount: new BN(100 * 10 ** 6),
-            },
-          ],
-          grantee: recipient,
-          performancePackageAuthority: this.payer.publicKey,
-          minUnlockTimestamp: new BN(
-            Number((await this.context.banksClient.getClock()).unixTimestamp) +
-              1,
-          ),
-          oracleConfig: {
-            oracleAccount,
-            byteOffset: 0,
-          },
-          twapLengthSeconds: 24 * 60 * 60, // 1 day, the minimum
+    const params: InitializePerformancePackageParams = {
+      tranches: tranches ?? [
+        {
+          priceThreshold: new BN(1e12),
+          tokenAmount: new BN(100 * 10 ** 6),
         },
-        createKey: createKey.publicKey,
-        tokenMint,
-        grantor: this.payer.publicKey,
-      })
-      .signers([createKey])
-      .rpc();
+        {
+          priceThreshold: new BN(2e12),
+          tokenAmount: new BN(100 * 10 ** 6),
+        },
+      ],
+      grantee: recipient,
+      performancePackageAuthority: this.payer.publicKey,
+      minUnlockTimestamp:
+        minUnlockTimestamp ??
+        new BN(
+          Number((await this.context.banksClient.getClock()).unixTimestamp) + 1,
+        ),
+      oracleConfig: {
+        oracleAccount,
+        byteOffset,
+      },
+      twapLengthSeconds: 24 * 60 * 60, // 1 day, the minimum
+    };
+    const accounts = {
+      createKey: createKey.publicKey,
+      tokenMint,
+      grantor: this.payer.publicKey,
+    };
+
+    if (limits) {
+      await this.priceBasedPerformancePackage
+        .initializePerformancePackageWithLimitsIx({
+          params: { base: params, limits },
+          ...accounts,
+        })
+        .signers([createKey])
+        .rpc();
+    } else {
+      await this.priceBasedPerformancePackage
+        .initializePerformancePackageIx({ params, ...accounts })
+        .signers([createKey])
+        .rpc();
+    }
 
     return getPerformancePackageAddr({
       createKey: createKey.publicKey,

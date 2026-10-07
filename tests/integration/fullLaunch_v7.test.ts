@@ -809,17 +809,91 @@ export default async function suite() {
       .completeUnlockIx({
         performancePackage,
         oracleAccount: dao,
-        tokenMint: META,
-        tokenRecipient: insiderMultisigVaultPda,
       })
       .rpc();
 
-    const postUnlockBalance = await this.getTokenBalance(
+    // should go through 2 tranches, or 40% of 10M = 4M tokens
+    const unlockedAmount = 4_000_000_000000n;
+    const storedPackage =
+      await this.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
+    assert.equal(
+      BigInt(storedPackage.alreadyUnlockedAmount.toString()),
+      unlockedAmount,
+    );
+    assert.equal(
+      await this.getTokenBalance(META, insiderMultisigVaultPda),
+      preUnlockBalance,
+    );
+
+    // The insider multisig vault is the recipient, so it withdraws through a Squads vault transaction
+    const withdrawTx = await this.priceBasedPerformancePackage
+      .withdrawTokensIx({
+        performancePackage,
+        oracleAccount: dao,
+        tokenMint: META,
+        recipient: insiderMultisigVaultPda,
+        payer: this.payer.publicKey,
+        amount: new BN(unlockedAmount.toString()),
+      })
+      .transaction();
+
+    const squadsWithdrawTx = new Transaction().add(
+      multisig.instructions.vaultTransactionCreate({
+        multisigPda: insiderMultisigPda,
+        transactionIndex: 2n,
+        creator: cofounder0.publicKey,
+        rentPayer: this.payer.publicKey,
+        vaultIndex: 0,
+        ephemeralSigners: 0,
+        transactionMessage: new TransactionMessage({
+          payerKey: this.payer.publicKey,
+          recentBlockhash: "",
+          instructions: withdrawTx.instructions,
+        }),
+      }),
+      multisig.instructions.proposalCreate({
+        multisigPda: insiderMultisigPda,
+        creator: cofounder0.publicKey,
+        rentPayer: this.payer.publicKey,
+        transactionIndex: 2n,
+        isDraft: false,
+      }),
+      multisig.instructions.proposalApprove({
+        multisigPda: insiderMultisigPda,
+        transactionIndex: 2n,
+        member: cofounder0.publicKey,
+      }),
+    );
+    squadsWithdrawTx.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    squadsWithdrawTx.feePayer = this.payer.publicKey;
+    squadsWithdrawTx.sign(this.payer, cofounder0);
+    await this.banksClient.processTransaction(squadsWithdrawTx);
+
+    const withdrawExecuteIx =
+      await multisig.instructions.vaultTransactionExecute({
+        connection: this.squadsConnection,
+        multisigPda: insiderMultisigPda,
+        transactionIndex: 2n,
+        member: cofounder1.publicKey,
+      });
+    const withdrawExecute = new Transaction().add(
+      withdrawExecuteIx.instruction,
+    );
+    withdrawExecute.recentBlockhash = (
+      await this.banksClient.getLatestBlockhash()
+    )[0];
+    withdrawExecute.feePayer = this.payer.publicKey;
+    withdrawExecute.sign(this.payer, cofounder1);
+    await this.banksClient.processTransaction(withdrawExecute);
+
+    const postWithdrawBalance = await this.getTokenBalance(
       META,
       insiderMultisigVaultPda,
     );
-
-    // should go through 2 tranches, or 40% of 10M = 4M tokens
-    assert.equal(postUnlockBalance - preUnlockBalance, 4_000_000_000000n);
+    assert.equal(postWithdrawBalance - preUnlockBalance, unlockedAmount);
   });
 }

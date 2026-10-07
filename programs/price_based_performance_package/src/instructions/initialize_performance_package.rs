@@ -15,7 +15,6 @@ pub struct InitializePerformancePackageParams {
 }
 
 #[derive(Accounts)]
-#[instruction(params: InitializePerformancePackageParams)]
 #[event_cpi]
 pub struct InitializePerformancePackage<'info> {
     #[account(
@@ -67,6 +66,15 @@ impl InitializePerformancePackage<'_> {
     }
 
     pub fn handle(ctx: Context<Self>, params: InitializePerformancePackageParams) -> Result<()> {
+        Self::handle_inner(ctx, params, None)
+    }
+
+    /// Shared by both initialisers; `limits` anchor a withdrawal policy at the creation clock.
+    pub fn handle_inner(
+        ctx: Context<Self>,
+        base: InitializePerformancePackageParams,
+        limits: Option<LimitsParams>,
+    ) -> Result<()> {
         let Self {
             performance_package,
             create_key,
@@ -89,7 +97,7 @@ impl InitializePerformancePackage<'_> {
             twap_length_seconds,
             grantee,
             performance_package_authority,
-        } = params;
+        } = base;
 
         require_neq!(tranches.len(), 0);
 
@@ -163,6 +171,8 @@ impl InitializePerformancePackage<'_> {
             already_unlocked_amount: 0,
             performance_package_token_vault: performance_package_token_vault.key(),
             seq_num: 0,
+            withdrawal_policy: limits
+                .map(|limits| WithdrawalPolicy::new(limits.into_limits(clock.unix_timestamp))),
         });
 
         emit_cpi!(PerformancePackageInitialized {

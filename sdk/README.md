@@ -37,7 +37,7 @@ Each versioned subpath exports:
 - PDA derivation helpers (`getDaoAddr`, `getProposalAddr`, `getLaunchAddr`, ...).
 - Generated Anchor types (accounts, args, IDL).
 
-The package root also exports shared utilities: program IDs and constants (`MAINNET_USDC`, `SQUADS_PROGRAM_ID`, ...), top-level PDA helpers (`getEventAuthorityAddr`, `getMetadataAddr`), and price math (`AmmMath`).
+The package root also exports shared utilities: program IDs and constants (`MAINNET_USDC`, `SQUADS_PROGRAM_ID`, ...), top-level PDA helpers (`getEventAuthorityAddr`, `getMetadataAddr`), and price math (`AmmMath`). Optional helper modules live on their own subpath under a program version and are not re-exported by any barrel, e.g. `@metadaoproject/programs/price_based_performance_package/v0.6/withdrawalLimits`.
 
 ## Usage
 
