@@ -936,6 +936,57 @@ export default function () {
       assert.isNotNull(stored.withdrawalPolicy);
     });
 
+    it("cancels a running unlock when the new cliff is after its start", async function () {
+      await this.advanceBySeconds(2);
+      await setMockOracle(this, oracleAccount.publicKey, {
+        aggregator: 1_000_000n,
+      });
+      await startUnlock(this);
+      const newCliff = (await clock(this)) + ONE_DAY;
+
+      await proposeAndExecute(this, {
+        minUnlockTimestamp: new BN(newCliff),
+        limits: null,
+      });
+
+      const stored = await storedPackage(this);
+      assert.isDefined(stored.state.locked);
+      assert.equal(stored.alreadyUnlockedAmount.toString(), "0");
+
+      const complete = expectError(
+        "InvalidPerformancePackageState",
+        "completed a cancelled unlock",
+      );
+      await this.priceBasedPerformancePackage
+        .completeUnlockIx({
+          performancePackage,
+          oracleAccount: oracleAccount.publicKey,
+        })
+        .rpc()
+        .then(complete[0], complete[1]);
+      const start = expectError(
+        "UnlockTimestampNotReached",
+        "started an unlock before the new cliff",
+      );
+      await startUnlock(this).then(start[0], start[1]);
+    });
+
+    it("keeps a running unlock when the new cliff is at its start", async function () {
+      await this.advanceBySeconds(2);
+      const unlockStart = await clock(this);
+      await setMockOracle(this, oracleAccount.publicKey, {
+        aggregator: 1_000_000n,
+      });
+      await startUnlock(this);
+
+      await proposeAndExecute(this, {
+        minUnlockTimestamp: new BN(unlockStart),
+        limits: null,
+      });
+
+      assert.isDefined((await storedPackage(this)).state.unlocking);
+    });
+
     it("rejects execution by the proposing party", async function () {
       const changeRequest = await propose(
         this,

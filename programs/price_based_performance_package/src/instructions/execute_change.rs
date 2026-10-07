@@ -87,6 +87,15 @@ impl<'info> ExecuteChange<'info> {
                 limits,
             } => {
                 performance_package.min_unlock_timestamp = *min_unlock_timestamp;
+                // A cliff moved past a running unlock's start cancels that unlock.
+                if let PerformancePackageState::Unlocking {
+                    start_timestamp, ..
+                } = performance_package.state
+                {
+                    if start_timestamp < *min_unlock_timestamp {
+                        performance_package.state = PerformancePackageState::Locked;
+                    }
+                }
                 performance_package.replace_withdrawal_policy(*limits, clock.unix_timestamp);
             }
         }
