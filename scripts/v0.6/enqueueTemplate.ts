@@ -10,6 +10,7 @@ import {
   transferToken,
   updateDao,
   withdrawLiquidity,
+  withdrawMeteoraLiquidity,
 } from "../utils/daoActions.js";
 
 // Template for enqueueing DAO vault actions through the admin approval system.
@@ -55,6 +56,13 @@ async function main() {
       }),
       //
       // withdrawLiquidity({ fractionBps: 5_000, slippageBps: 2_000 }),
+      //
+      // withdrawMeteoraLiquidity({ slippageBps: 500 }),
+      //
+      // withdrawMeteoraLiquidity({
+      //   pool: new PublicKey("..."), // when not the launchpad-created pool
+      //   slippageBps: 500,
+      // }),
       //
       // transferToken({
       //   mint: MAINNET_USDC,

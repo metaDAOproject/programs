@@ -70,6 +70,11 @@ async function main() {
       //
       // withdrawMeteoraLiquidity({ slippageBps: 500 }),
       //
+      // withdrawMeteoraLiquidity({
+      //   pool: new PublicKey("..."), // when not the launchpad-created pool
+      //   slippageBps: 500,
+      // }),
+      //
       // transferToken({
       //   mint: MAINNET_USDC,
       //   recipient: new PublicKey("..."),
