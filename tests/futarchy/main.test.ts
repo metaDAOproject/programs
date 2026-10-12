@@ -6,6 +6,7 @@ import gatedLiquidationUnwind from "./integration/gatedLiquidationUnwind.test.js
 import largeSpendEndToEnd from "./integration/largeSpendEndToEnd.test.js";
 import cooldownRoundTrip from "./integration/cooldownRoundTrip.test.js";
 import typedProposalsOptInEndToEnd from "./integration/typedProposalsOptInEndToEnd.test.js";
+import gatedProposalSettlement from "./integration/gatedProposalSettlement.test.js";
 
 import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
@@ -153,4 +154,5 @@ export default function suite() {
     "integration: typed proposals opt-in end to end",
     typedProposalsOptInEndToEnd,
   );
+  describe("integration: gated proposal settlement", gatedProposalSettlement);
 }
