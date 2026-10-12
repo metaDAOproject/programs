@@ -3,6 +3,7 @@ import takeoverEndToEnd from "./integration/takeoverEndToEnd.test.js";
 import liquidationEndToEnd from "./integration/liquidationEndToEnd.test.js";
 import largeSpendEndToEnd from "./integration/largeSpendEndToEnd.test.js";
 import cooldownRoundTrip from "./integration/cooldownRoundTrip.test.js";
+import gatedProposalSettlement from "./integration/gatedProposalSettlement.test.js";
 
 import initializeDao from "./unit/initializeDao.test.js";
 import initializeProposal from "./unit/initializeProposal.test.js";
@@ -129,4 +130,5 @@ export default function suite() {
   describe("integration: liquidation end to end", liquidationEndToEnd);
   describe("integration: large spend end to end", largeSpendEndToEnd);
   describe("integration: cooldown round-trip", cooldownRoundTrip);
+  describe("integration: gated proposal settlement", gatedProposalSettlement);
 }

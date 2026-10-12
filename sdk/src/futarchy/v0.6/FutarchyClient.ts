@@ -619,6 +619,7 @@ export class FutarchyClient {
         ),
         baseVault,
         quoteVault,
+        trader,
         userInputAccount: getAssociatedTokenAddressSync(
           inputMint,
           trader,
