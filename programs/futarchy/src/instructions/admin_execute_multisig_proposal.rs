@@ -67,10 +67,6 @@ impl<'info, 'c: 'info> AdminExecuteMultisigProposal<'info> {
             return Err(FutarchyError::PoolNotInSpotState.into());
         }
 
-        if self.dao.optimistic_proposal.is_some() {
-            return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
-        }
-
         Ok(())
     }
 

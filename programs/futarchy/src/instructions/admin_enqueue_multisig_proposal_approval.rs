@@ -62,15 +62,26 @@ pub struct AdminEnqueueMultisigProposalApproval<'info> {
 
 impl AdminEnqueueMultisigProposalApproval<'_> {
     pub fn validate(&self, _args: &AdminEnqueueMultisigProposalApprovalArgs) -> Result<()> {
-        #[cfg(feature = "production")]
-        require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
+        // On a liquidated DAO the liquidator replaces the admin id as the
+        // required signer. Enqueueing is the only capability the liquidator
+        // gains: the approve leg stays permissionless and execution is
+        // ordinary top-level Squads execution.
+        match self.dao.liquidator {
+            Some(liquidator) => {
+                require_keys_eq!(
+                    self.admin.key(),
+                    liquidator,
+                    FutarchyError::InvalidLiquidator
+                );
+            }
+            None => {
+                #[cfg(feature = "production")]
+                require_keys_eq!(self.admin.key(), admin::ID, FutarchyError::InvalidAdmin);
+            }
+        }
 
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());
-        }
-
-        if self.dao.optimistic_proposal.is_some() {
-            return Err(FutarchyError::ActiveOptimisticProposalAlreadyEnqueued.into());
         }
 
         validate_squads_proposal(
