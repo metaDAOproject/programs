@@ -167,6 +167,11 @@ export default function () {
       tokenMint.toString(),
     );
     assert.exists(storedPerformancePackage.state.locked);
+    assert.isNull(storedPerformancePackage.withdrawalPolicy);
+
+    const rawPerformancePackage =
+      await this.banksClient.getAccount(performancePackage);
+    assert.equal(rawPerformancePackage.data.length, 582);
 
     // Verify tokens were transferred
     const storedPerformancePackageTokenAccount = await getAccount(

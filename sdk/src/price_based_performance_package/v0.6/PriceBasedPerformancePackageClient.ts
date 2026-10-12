@@ -1,5 +1,6 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import {
+  ComputeBudgetProgram,
   PublicKey,
   Transaction,
   TransactionInstruction,
@@ -8,22 +9,39 @@ import {
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
   PriceBasedPerformancePackage,
   IDL as PriceBasedPerformancePackageIDL,
 } from "./types/price_based_performance_package.js";
-import { PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID } from "../../constants.js";
+import {
+  FUTARCHY_V0_6_PROGRAM_ID,
+  PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
+} from "../../constants.js";
 import BN from "bn.js";
 // import { OracleConfig } from "./types/index.js";
 import { getChangeRequestAddr, getPerformancePackageAddr } from "./pda.js";
 import { getEventAuthorityAddr } from "../../pda.js";
-import { InitializePerformancePackageParams } from "./types/index.js";
+import {
+  InitializePerformancePackageParams,
+  InitializePerformancePackageWithLimitsParams,
+  PerformancePackage,
+  ProposeChangeParams,
+} from "./types/index.js";
 
 export type CreatePriceBasedPerformancePackageClientParams = {
   provider: AnchorProvider;
   priceBasedTokenLockProgramId?: PublicKey;
+};
+
+const MAX_U64 = new BN("18446744073709551615");
+
+/** Burning sweeps the package's ATA for `quoteMint` into `quoteDestination` and closes it */
+export type QuoteSweep = {
+  quoteMint: PublicKey;
+  quoteDestination: PublicKey;
 };
 
 export class PriceBasedPerformancePackageClient {
@@ -66,31 +84,54 @@ export class PriceBasedPerformancePackageClient {
     grantor: PublicKey;
     grantorTokenAccount?: PublicKey;
   }) {
-    const performancePackage = getPerformancePackageAddr({
-      createKey: params.createKey,
-    })[0];
-
-    const grantorTokenAccount =
-      params.grantorTokenAccount ??
-      getAssociatedTokenAddressSync(params.tokenMint, params.grantor, true);
-
     return this.program.methods
       .initializePerformancePackage(params.params)
-      .accounts({
+      .accounts(this.initializePerformancePackageAccounts(params));
+  }
+
+  public initializePerformancePackageWithLimitsIx(params: {
+    params: InitializePerformancePackageWithLimitsParams;
+    createKey: PublicKey;
+    tokenMint: PublicKey;
+    grantor: PublicKey;
+    grantorTokenAccount?: PublicKey;
+  }) {
+    return this.program.methods
+      .initializePerformancePackageWithLimits(params.params)
+      .accounts(this.initializePerformancePackageAccounts(params));
+  }
+
+  // Both initialisers share one accounts struct.
+  private initializePerformancePackageAccounts({
+    createKey,
+    tokenMint,
+    grantor,
+    grantorTokenAccount,
+  }: {
+    createKey: PublicKey;
+    tokenMint: PublicKey;
+    grantor: PublicKey;
+    grantorTokenAccount?: PublicKey;
+  }) {
+    const performancePackage = getPerformancePackageAddr({ createKey })[0];
+
+    return {
+      performancePackage,
+      createKey,
+      tokenMint,
+      grantorTokenAccount:
+        grantorTokenAccount ??
+        getAssociatedTokenAddressSync(tokenMint, grantor, true),
+      performancePackageTokenVault: getAssociatedTokenAddressSync(
+        tokenMint,
         performancePackage,
-        createKey: params.createKey,
-        tokenMint: params.tokenMint,
-        grantorTokenAccount,
-        performancePackageTokenVault: getAssociatedTokenAddressSync(
-          params.tokenMint,
-          performancePackage,
-          true,
-        ),
-        grantor: params.grantor,
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      });
+        true,
+      ),
+      grantor,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    };
   }
 
   public startUnlockIx(params: {
@@ -108,35 +149,116 @@ export class PriceBasedPerformancePackageClient {
   public completeUnlockIx(params: {
     performancePackage: PublicKey;
     oracleAccount: PublicKey;
-    tokenMint: PublicKey;
-    tokenRecipient: PublicKey;
   }) {
     return this.program.methods.completeUnlock().accounts({
       performancePackage: params.performancePackage,
       oracleAccount: params.oracleAccount,
-      performancePackageTokenVault: getAssociatedTokenAddressSync(
-        params.tokenMint,
-        params.performancePackage,
-        true,
-      ),
-      tokenMint: params.tokenMint,
-      recipientTokenAccount: getAssociatedTokenAddressSync(
-        params.tokenMint,
-        params.tokenRecipient,
-        true,
-      ),
-      tokenRecipient: params.tokenRecipient,
-      systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     });
   }
 
+  // Under active limits the withdrawal fails when it is valued above `maxQuoteValue`; by default there is no bound.
+  public withdrawTokensIx({
+    performancePackage,
+    oracleAccount,
+    tokenMint,
+    recipient,
+    amount,
+    maxQuoteValue = MAX_U64,
+    payer = this.provider.publicKey,
+  }: {
+    performancePackage: PublicKey;
+    oracleAccount: PublicKey;
+    tokenMint: PublicKey;
+    recipient: PublicKey;
+    amount: BN;
+    maxQuoteValue?: BN;
+    payer?: PublicKey;
+  }) {
+    return this.program.methods
+      .withdrawTokens({ amount, maxQuoteValue })
+      .accounts({
+        performancePackage,
+        oracleAccount,
+        performancePackageTokenVault: getAssociatedTokenAddressSync(
+          tokenMint,
+          performancePackage,
+          true,
+        ),
+        tokenMint,
+        recipientTokenAccount: getAssociatedTokenAddressSync(
+          tokenMint,
+          recipient,
+          true,
+        ),
+        recipient,
+        payer,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      });
+  }
+
+  // The Dao is the package's oracle account; futarchy's AMM vaults are the Dao's ATAs.
+  public withdrawViaSellIx({
+    performancePackage,
+    dao,
+    tokenMint,
+    quoteMint,
+    recipient,
+    amount,
+    minQuoteOut,
+    payer = this.provider.publicKey,
+  }: {
+    performancePackage: PublicKey;
+    dao: PublicKey;
+    tokenMint: PublicKey;
+    quoteMint: PublicKey;
+    recipient: PublicKey;
+    amount: BN;
+    minQuoteOut: BN;
+    payer?: PublicKey;
+  }) {
+    return this.program.methods
+      .withdrawViaSell({ amount, minQuoteOut })
+      .accounts({
+        performancePackage,
+        dao,
+        performancePackageTokenVault: getAssociatedTokenAddressSync(
+          tokenMint,
+          performancePackage,
+          true,
+        ),
+        tokenMint,
+        quoteMint,
+        ammBaseVault: getAssociatedTokenAddressSync(tokenMint, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(quoteMint, dao, true),
+        packageQuoteAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          performancePackage,
+          true,
+        ),
+        recipientQuoteAccount: getAssociatedTokenAddressSync(
+          quoteMint,
+          recipient,
+          true,
+        ),
+        recipient,
+        payer,
+        futarchyProgram: FUTARCHY_V0_6_PROGRAM_ID,
+        futarchyEventAuthority: getEventAuthorityAddr(
+          FUTARCHY_V0_6_PROGRAM_ID,
+        )[0],
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ]);
+  }
+
   public proposeChangeIx(params: {
-    params: {
-      changeType: any;
-      pdaNonce: number;
-    };
+    params: ProposeChangeParams;
     performancePackage: PublicKey;
     proposer: PublicKey;
   }) {
@@ -181,7 +303,83 @@ export class PriceBasedPerformancePackageClient {
       });
   }
 
-  public async getPerformancePackage(performancePackageAddress: PublicKey) {
+  public burnPerformancePackageIx({
+    performancePackage,
+    tokenMint,
+    recipient,
+    admin = this.provider.publicKey,
+    spillAccount = admin,
+    quoteSweep,
+    recipientTokenAccount,
+  }: {
+    performancePackage: PublicKey;
+    tokenMint: PublicKey;
+    recipient: PublicKey;
+    admin?: PublicKey;
+    spillAccount?: PublicKey;
+    quoteSweep?: QuoteSweep;
+    /** A token account owned by the recipient to pay into instead of their ATA */
+    recipientTokenAccount?: PublicKey;
+  }) {
+    const recipientAta = getAssociatedTokenAddressSync(
+      tokenMint,
+      recipient,
+      true,
+    );
+
+    const builder = this.program.methods.burnPerformancePackage().accounts({
+      performancePackage,
+      performancePackageTokenVault: getAssociatedTokenAddressSync(
+        tokenMint,
+        performancePackage,
+        true,
+      ),
+      recipient,
+      recipientTokenAccount: recipientTokenAccount ?? recipientAta,
+      admin,
+      spillAccount,
+      tokenMint,
+      quoteMint: quoteSweep?.quoteMint ?? null,
+      packageQuoteAccount: quoteSweep
+        ? getAssociatedTokenAddressSync(
+            quoteSweep.quoteMint,
+            performancePackage,
+            true,
+          )
+        : null,
+      quoteDestination: quoteSweep?.quoteDestination ?? null,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    });
+
+    if (recipientTokenAccount) {
+      return builder;
+    }
+
+    // Create the recipient's ATA in the same transaction, paid by the admin
+    return builder.preInstructions([
+      createAssociatedTokenAccountIdempotentInstruction(
+        admin,
+        recipientAta,
+        recipient,
+        tokenMint,
+      ),
+    ]);
+  }
+
+  public resizePerformancePackageIx(params: {
+    performancePackage: PublicKey;
+    payer: PublicKey;
+  }) {
+    return this.program.methods.resizePerformancePackage().accounts({
+      performancePackage: params.performancePackage,
+      payer: params.payer,
+      systemProgram: SystemProgram.programId,
+    });
+  }
+
+  public async getPerformancePackage(
+    performancePackageAddress: PublicKey,
+  ): Promise<PerformancePackage> {
     return await this.program.account.performancePackage.fetch(
       performancePackageAddress,
     );
