@@ -13,7 +13,7 @@ import {
 } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import BN from "bn.js";
-import { expectError, setupBasicDao } from "../../utils.js";
+import { expectError, makeOldDaoLayout, setupBasicDao } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 
@@ -75,7 +75,6 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
-          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();
@@ -329,6 +328,219 @@ export default function suite() {
       .accounts(accounts)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_001 }),
+      ])
+      .signers([this.payer])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a legacy-sized proposal that has not been migrated", async function () {
+    // Shrink the live proposal to the pre-migration allocation: the 8-byte
+    // discriminator plus the 339-byte Pending body, then 8 bytes standing in
+    // for the residue a legacy account carries past its Pending body. The
+    // residue decodes as council_can_block = false — exactly the value that
+    // would otherwise shield the proposal from cancellation — so the size
+    // guard must reject it before that flag is ever consulted.
+    const raw = await this.banksClient.getAccount(proposal);
+    const legacy = Buffer.concat([
+      Buffer.from(raw.data.subarray(0, 347)),
+      Buffer.from([0xb1, 0xf3, 0x00, 0x03, 0xf0, 0x37, 0xa2, 0x00]),
+    ]);
+    assert.equal(legacy.length, 355);
+    this.context.setAccount(proposal, { ...raw, data: legacy });
+
+    const crafted = await this.futarchy.getProposal(proposal);
+    assert.exists(crafted.state.pending);
+    assert.isFalse(crafted.councilCanBlock);
+
+    const storedDao = await this.futarchy.getDao(dao);
+    const {
+      question,
+      baseVault,
+      quoteVault,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+    } = this.futarchy.getProposalPdas(
+      proposal,
+      storedDao.baseMint,
+      storedDao.quoteMint,
+      dao,
+    );
+
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const [vaultEventAuthority] = getEventAuthorityAddr(
+      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+    );
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "cancelled an un-migrated legacy proposal",
+    );
+
+    await this.futarchy.futarchy.methods
+      .adminCancelProposal()
+      .accounts({
+        proposal,
+        dao,
+        question,
+        squadsProposal: squadsProposalPda,
+        squadsMultisig: multisigPda,
+        squadsMultisigProgram: SQUADS_PROGRAM_ID,
+        admin: this.payer.publicKey,
+        ammPassBaseVault: getAssociatedTokenAddressSync(
+          passBaseMint,
+          dao,
+          true,
+        ),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          dao,
+          true,
+        ),
+        ammFailBaseVault: getAssociatedTokenAddressSync(
+          failBaseMint,
+          dao,
+          true,
+        ),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          dao,
+          true,
+        ),
+        ammBaseVault: getAssociatedTokenAddressSync(
+          storedDao.baseMint,
+          dao,
+          true,
+        ),
+        ammQuoteVault: getAssociatedTokenAddressSync(
+          storedDao.quoteMint,
+          dao,
+          true,
+        ),
+        vaultProgram: CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+        vaultEventAuthority,
+        quoteVault,
+        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          storedDao.quoteMint,
+          quoteVault,
+          true,
+        ),
+        passQuoteMint,
+        failQuoteMint,
+        passBaseMint,
+        failBaseMint,
+        baseVault,
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          storedDao.baseMint,
+          baseVault,
+          true,
+        ),
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .signers([this.payer])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a legacy-sized DAO that has not been migrated", async function () {
+    // Shrink only the DAO to the pre-migration allocation; the proposal keeps
+    // its migrated size so its own guard passes.
+    await makeOldDaoLayout(this, dao);
+
+    const storedDao = await this.futarchy.getDao(dao);
+    assert.exists(storedDao.amm.state.futarchy);
+    assert.isNull(storedDao.liquidator);
+
+    const {
+      question,
+      baseVault,
+      quoteVault,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+    } = this.futarchy.getProposalPdas(
+      proposal,
+      storedDao.baseMint,
+      storedDao.quoteMint,
+      dao,
+    );
+
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const [vaultEventAuthority] = getEventAuthorityAddr(
+      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+    );
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "cancelled a proposal on an un-migrated legacy DAO",
+    );
+
+    await this.futarchy.futarchy.methods
+      .adminCancelProposal()
+      .accounts({
+        proposal,
+        dao,
+        question,
+        squadsProposal: squadsProposalPda,
+        squadsMultisig: multisigPda,
+        squadsMultisigProgram: SQUADS_PROGRAM_ID,
+        admin: this.payer.publicKey,
+        ammPassBaseVault: getAssociatedTokenAddressSync(
+          passBaseMint,
+          dao,
+          true,
+        ),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          dao,
+          true,
+        ),
+        ammFailBaseVault: getAssociatedTokenAddressSync(
+          failBaseMint,
+          dao,
+          true,
+        ),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          dao,
+          true,
+        ),
+        ammBaseVault: getAssociatedTokenAddressSync(
+          storedDao.baseMint,
+          dao,
+          true,
+        ),
+        ammQuoteVault: getAssociatedTokenAddressSync(
+          storedDao.quoteMint,
+          dao,
+          true,
+        ),
+        vaultProgram: CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+        vaultEventAuthority,
+        quoteVault,
+        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          storedDao.quoteMint,
+          quoteVault,
+          true,
+        ),
+        passQuoteMint,
+        failQuoteMint,
+        passBaseMint,
+        failBaseMint,
+        baseVault,
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          storedDao.baseMint,
+          baseVault,
+          true,
+        ),
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
       .signers([this.payer])
       .rpc()

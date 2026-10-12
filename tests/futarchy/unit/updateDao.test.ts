@@ -104,7 +104,6 @@ export default function suite() {
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
           twapStartDelaySeconds: null,
-          isOptimisticGovernanceEnabled: null,
         },
       })
       .instruction();

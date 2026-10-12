@@ -108,11 +108,14 @@ export default function suite() {
     assert.ok(storedProposal.proposer.equals(this.payer.publicKey));
     assert.ok(storedProposal.squadsProposal.equals(squadsProposal));
     assert.exists(storedProposal.state.draft);
-    assert.isFalse(storedProposal.isTeamSponsored);
+    assert.isNull(storedProposal.sponsoredBy);
 
     assert.equal(
       storedProposal.action.largeSpend.amount.toString(),
       amount.toString(),
+    );
+    assert.ok(
+      storedProposal.action.largeSpend.teamAddress.equals(this.payer.publicKey),
     );
     assert.equal(storedProposal.durationInSeconds, 129_600);
     assert.equal(storedProposal.passThresholdBps, -1000);

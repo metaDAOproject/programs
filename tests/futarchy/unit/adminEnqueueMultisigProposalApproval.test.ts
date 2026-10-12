@@ -1,17 +1,19 @@
-import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
+import {
+  getEnqueuedMultisigProposalApprovalAddr,
+  PERMISSIONLESS_ACCOUNT,
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
+  Keypair,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionMessage,
 } from "@solana/web3.js";
-import { expectError } from "../../utils.js";
+import { expectError, makeOldDaoLayout } from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 import { createMemoInstruction } from "@solana/spl-memo";
-import BN from "bn.js";
-
-const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
 export default function suite() {
   let META: PublicKey, USDC: PublicKey, dao: PublicKey;
@@ -41,22 +43,6 @@ export default function suite() {
       quoteMint: USDC,
     });
   });
-
-  const deriveEnqueuedApprovalPda = (
-    context: any,
-    daoKey: PublicKey,
-    transactionIndex: bigint,
-  ): PublicKey => {
-    const [pda] = PublicKey.findProgramAddressSync(
-      [
-        SEED_ENQUEUED_APPROVAL,
-        daoKey.toBuffer(),
-        new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
-      ],
-      context.futarchy.futarchy.programId,
-    );
-    return pda;
-  };
 
   const createSquadsVaultTxAndProposal = async function (
     context: any,
@@ -106,24 +92,15 @@ export default function suite() {
 
   it("should enqueue a proposal approval", async function () {
     const daoAccount = await this.futarchy.getDao(dao);
-    const { proposalPda } = await createSquadsVaultTxAndProposal(
-      this,
-      daoAccount.squadsMultisig,
-      1n,
-    );
+    await createSquadsVaultTxAndProposal(this, daoAccount.squadsMultisig, 1n);
 
-    const enqueuedApprovalPda = deriveEnqueuedApprovalPda(this, dao, 1n);
+    const enqueuedApprovalPda = getEnqueuedMultisigProposalApprovalAddr({
+      dao,
+      transactionIndex: 1n,
+    })[0];
 
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
-      .accounts({
-        dao,
-        admin: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: proposalPda,
-        enqueuedApproval: enqueuedApprovalPda,
-      })
-      .signers([this.payer])
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
       .rpc();
 
     const enqueued =
@@ -134,71 +111,90 @@ export default function suite() {
     assert.equal(enqueued.transactionIndex.toString(), "1");
   });
 
-  it("should fail with PoolNotInSpotState when a futarchy proposal is active", async function () {
+  it("rejects a legacy-sized DAO whose residue decodes as a liquidator", async function () {
     const daoAccount = await this.futarchy.getDao(dao);
+    await createSquadsVaultTxAndProposal(this, daoAccount.squadsMultisig, 1n);
 
+    // The attacker pays rent for the enqueued approval account
+    const attacker = Keypair.generate();
+    const fundTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: this.payer.publicKey,
+        toPubkey: attacker.publicKey,
+        lamports: 1_000_000_000,
+      }),
+    );
+    fundTx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    fundTx.feePayer = this.payer.publicKey;
+    fundTx.sign(this.payer);
+    await this.banksClient.processTransaction(fundTx);
+
+    // Shrink the DAO to the pre-migration allocation and plant, immediately
+    // after its Spot-layout body, the bytes a legacy DAO carries there once a
+    // finalized proposal has collapsed its AMM from Futarchy back to Spot:
+    // `Some(attacker)` where the new layout reads `liquidator`, then zeros for
+    // the two timestamps, the dirty flag, and the buyback timestamp.
+    const residue = Buffer.concat([
+      Buffer.from([1]),
+      attacker.publicKey.toBuffer(),
+      Buffer.alloc(25),
+    ]);
+    await makeOldDaoLayout(this, dao, {}, { residue });
+
+    // The account still decodes — with the attacker as the liquidator
+    // authority — so only the size guard stands between them and enqueueing.
+    const crafted = await this.futarchy.getDao(dao);
+    assert.equal(crafted.liquidator.toBase58(), attacker.publicKey.toBase58());
+    assert.exists(crafted.amm.state.spot);
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "enqueued on an un-migrated legacy DAO",
+    );
+
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({
+        dao,
+        transactionIndex: 1n,
+        admin: attacker.publicKey,
+      })
+      .signers([attacker])
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("should fail with PoolNotInSpotState when a futarchy proposal is active", async function () {
     // Launching a futarchy proposal creates a Squads proposal at index 1 and
     // moves the AMM out of Spot. Use that Squads proposal as our approval
     // target — any Active Squads proposal would do here; we just need one
     // that exists when the AMM is non-Spot.
-    const { squadsProposal } = await this.initializeAndLaunchProposal({
+    await this.initializeAndLaunchProposal({
       dao,
       instructions: [],
     });
-
-    const enqueuedApprovalPda = deriveEnqueuedApprovalPda(this, dao, 1n);
 
     const callbacks = expectError(
       "PoolNotInSpotState",
       "enqueue should fail when the AMM is not in Spot state",
     );
 
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
-      .accounts({
-        dao,
-        admin: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: squadsProposal,
-        enqueuedApproval: enqueuedApprovalPda,
-      })
-      .signers([this.payer])
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
 
   it("should fail when enqueuing twice for the same transaction_index", async function () {
     const daoAccount = await this.futarchy.getDao(dao);
-    const { proposalPda } = await createSquadsVaultTxAndProposal(
-      this,
-      daoAccount.squadsMultisig,
-      1n,
-    );
+    await createSquadsVaultTxAndProposal(this, daoAccount.squadsMultisig, 1n);
 
-    const enqueuedApprovalPda = deriveEnqueuedApprovalPda(this, dao, 1n);
-
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
-      .accounts({
-        dao,
-        admin: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: proposalPda,
-        enqueuedApproval: enqueuedApprovalPda,
-      })
-      .signers([this.payer])
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
       .rpc();
 
     try {
-      await this.futarchy.futarchy.methods
-        .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
-        .accounts({
-          dao,
-          admin: this.payer.publicKey,
-          squadsMultisig: daoAccount.squadsMultisig,
-          squadsMultisigProposal: proposalPda,
-          enqueuedApproval: enqueuedApprovalPda,
-        })
+      await this.futarchy
+        .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
         .preInstructions([
           ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
         ])
@@ -214,37 +210,14 @@ export default function suite() {
 
   it("should fail with InvalidSquadsProposalStatus when the Squads proposal is no longer Active", async function () {
     const daoAccount = await this.futarchy.getDao(dao);
-    const { proposalPda } = await createSquadsVaultTxAndProposal(
-      this,
-      daoAccount.squadsMultisig,
-      1n,
-    );
+    await createSquadsVaultTxAndProposal(this, daoAccount.squadsMultisig, 1n);
 
-    const enqueuedApprovalPda = deriveEnqueuedApprovalPda(this, dao, 1n);
-
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
-      .accounts({
-        dao,
-        admin: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: proposalPda,
-        enqueuedApproval: enqueuedApprovalPda,
-      })
-      .signers([this.payer])
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
       .rpc();
 
-    await this.futarchy.futarchy.methods
-      .executeMultisigProposalApproval()
-      .accounts({
-        dao,
-        rentReceiver: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: proposalPda,
-        enqueuedApproval: enqueuedApprovalPda,
-        squadsMultisigProgram: multisig.PROGRAM_ID,
-      })
-      .signers([this.payer])
+    await this.futarchy
+      .executeMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
       .rpc();
 
     const callbacks = expectError(
@@ -252,15 +225,8 @@ export default function suite() {
       "second enqueue should fail because proposal is no longer Active",
     );
 
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
-      .accounts({
-        dao,
-        admin: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: proposalPda,
-        enqueuedApproval: enqueuedApprovalPda,
-      })
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
       ])
@@ -272,13 +238,12 @@ export default function suite() {
   it("should fail with RequireGtViolated when the Squads proposal is stale", async function () {
     const daoAccount = await this.futarchy.getDao(dao);
 
-    const { proposalPda: victimProposalPda } =
-      await createSquadsVaultTxAndProposal(
-        this,
-        daoAccount.squadsMultisig,
-        1n,
-        "will be invalidated",
-      );
+    await createSquadsVaultTxAndProposal(
+      this,
+      daoAccount.squadsMultisig,
+      1n,
+      "will be invalidated",
+    );
 
     const configTransactionIndex = 2n;
     const multisigSetTimeLockIx = multisig.instructions.multisigSetTimeLock({
@@ -330,37 +295,19 @@ export default function suite() {
       multisigPda: daoAccount.squadsMultisig,
       transactionIndex: configTransactionIndex,
     });
-    const configEnqueuedApprovalPda = deriveEnqueuedApprovalPda(
-      this,
-      dao,
-      configTransactionIndex,
-    );
 
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({
-        transactionIndex: new BN(configTransactionIndex.toString()),
-      })
-      .accounts({
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({
         dao,
-        admin: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: configProposalPda,
-        enqueuedApproval: configEnqueuedApprovalPda,
+        transactionIndex: configTransactionIndex,
       })
-      .signers([this.payer])
       .rpc();
 
-    await this.futarchy.futarchy.methods
-      .executeMultisigProposalApproval()
-      .accounts({
+    await this.futarchy
+      .executeMultisigProposalApprovalIx({
         dao,
-        rentReceiver: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: configProposalPda,
-        enqueuedApproval: configEnqueuedApprovalPda,
-        squadsMultisigProgram: multisig.PROGRAM_ID,
+        transactionIndex: configTransactionIndex,
       })
-      .signers([this.payer])
       .rpc();
 
     const configTransactionAccount =
@@ -401,22 +348,13 @@ export default function suite() {
       .signers([this.payer])
       .rpc();
 
-    const victimEnqueuedApprovalPda = deriveEnqueuedApprovalPda(this, dao, 1n);
-
     const callbacks = expectError(
       "RequireGtViolated",
       "enqueue should fail because the proposal was invalidated by a later config tx",
     );
 
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(1) })
-      .accounts({
-        dao,
-        admin: this.payer.publicKey,
-        squadsMultisig: daoAccount.squadsMultisig,
-        squadsMultisigProposal: victimProposalPda,
-        enqueuedApproval: victimEnqueuedApprovalPda,
-      })
+    await this.futarchy
+      .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex: 1n })
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_001 }),
       ])

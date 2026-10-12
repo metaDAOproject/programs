@@ -12,7 +12,6 @@ pub struct UpdateDaoParams {
     pub base_to_stake: Option<u64>,
     pub team_sponsored_pass_threshold_bps: Option<i16>,
     pub team_address: Option<Pubkey>,
-    pub is_optimistic_governance_enabled: Option<bool>,
 }
 
 #[derive(Accounts)]
@@ -77,9 +76,7 @@ impl UpdateDao<'_> {
                 .unwrap_or(dao.team_sponsored_pass_threshold_bps),
             team_address: dao_params.team_address.unwrap_or(dao.team_address),
             optimistic_proposal: dao.optimistic_proposal.clone(),
-            is_optimistic_governance_enabled: dao_params
-                .is_optimistic_governance_enabled
-                .unwrap_or(dao.is_optimistic_governance_enabled),
+            is_optimistic_governance_enabled: dao.is_optimistic_governance_enabled,
             liquidator: dao.liquidator,
             last_failed_takeover_at: dao.last_failed_takeover_at,
             last_failed_liquidation_at: dao.last_failed_liquidation_at,
