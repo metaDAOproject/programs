@@ -70,6 +70,20 @@ export type WithdrawLiquidityEvent =
   IdlEvents<FutarchyProgram>["WithdrawLiquidityEvent"];
 export type SponsorProposalEvent =
   IdlEvents<FutarchyProgram>["SponsorProposalEvent"];
+export type RemoveProposalEvent =
+  IdlEvents<FutarchyProgram>["RemoveProposalEvent"];
+export type AdminUpdateProposalParamsEvent =
+  IdlEvents<FutarchyProgram>["AdminUpdateProposalParamsEvent"];
+export type AdminCancelProposalEvent =
+  IdlEvents<FutarchyProgram>["AdminCancelProposalEvent"];
+export type CollectMeteoraDammFeesEvent =
+  IdlEvents<FutarchyProgram>["CollectMeteoraDammFeesEvent"];
+export type AdminFixPositionAuthorityEvent =
+  IdlEvents<FutarchyProgram>["AdminFixPositionAuthorityEvent"];
+export type SetSpendingLimitEvent =
+  IdlEvents<FutarchyProgram>["SetSpendingLimitEvent"];
+export type SyncSpendingLimitEvent =
+  IdlEvents<FutarchyProgram>["SyncSpendingLimitEvent"];
 export type FutarchyEvent =
   | CollectFeesEvent
   | InitializeDaoEvent
@@ -83,7 +97,14 @@ export type FutarchyEvent =
   | ConditionalSwapEvent
   | ProvideLiquidityEvent
   | WithdrawLiquidityEvent
-  | SponsorProposalEvent;
+  | SponsorProposalEvent
+  | RemoveProposalEvent
+  | AdminUpdateProposalParamsEvent
+  | AdminCancelProposalEvent
+  | CollectMeteoraDammFeesEvent
+  | AdminFixPositionAuthorityEvent
+  | SetSpendingLimitEvent
+  | SyncSpendingLimitEvent;
 
 export type v0_6_0_CollectFeesEvent =
   IdlEvents<v0_6_0_Futarchy>["CollectFeesEvent"];
