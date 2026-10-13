@@ -46,15 +46,44 @@ impl LaunchProposal<'_> {
 
         require_keys_eq!(self.proposal.dao, self.dao.key());
 
-        // If the proposal is not team sponsored, check if sufficient stake has been accumulated
-        if !self.proposal.is_team_sponsored {
-            if let ProposalState::Draft { amount_staked } = self.proposal.state {
-                require_gte!(
-                    amount_staked,
-                    self.dao.base_to_stake,
-                    FutarchyError::InsufficientStakeToLaunch
-                );
-            }
+        let amount_staked = match self.proposal.state {
+            ProposalState::Draft { amount_staked } => amount_staked,
+            _ => unreachable!(), // Draft already asserted above
+        };
+
+        if self.dao.is_proposal_validation_enabled {
+            // A proposal that challenges an active optimistic proposal is team-authored by design:
+            // the team initiated *this exact* squads_proposal optimistically (the match is also enforced
+            // below in validate), so it carries the team point — mirroring `handle`, which already flips
+            // `is_team_sponsored = true` for the pass threshold.
+            let is_optimistic_challenge = matches!(
+                &self.dao.optimistic_proposal,
+                Some(op) if op.squads_proposal == self.proposal.squads_proposal
+            );
+
+            // Approval points: launch needs >= 2 of 3 {token-holder, team, MetaDAO}
+            let points = [
+                amount_staked >= self.dao.base_to_stake, // token-holder point
+                self.proposal.is_team_sponsored || is_optimistic_challenge, // team point (auto for optimistic challenges)
+                self.proposal.is_metadao_approved,                          // MetaDAO point
+            ]
+            .into_iter()
+            .filter(|&p| p)
+            .count();
+
+            // Supermajority: stake alone reaches the per-DAO bar (0 disables this path)
+            let supermajority_reached = self.dao.base_to_supermajority > 0
+                && amount_staked >= self.dao.base_to_supermajority;
+
+            require!(
+                points >= LAUNCH_APPROVAL_POINTS_REQUIRED || supermajority_reached,
+                FutarchyError::InsufficientApprovalToLaunch
+            );
+        } else {
+            require!(
+                self.proposal.is_team_sponsored || amount_staked >= self.dao.base_to_stake,
+                FutarchyError::InsufficientStakeToLaunch
+            );
         }
 
         // If there is an active optimistic proposal, it must be for the same squads proposal

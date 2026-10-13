@@ -60,6 +60,13 @@ pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 // Unstaking from a proposal should only be allowed after a small delay
 pub const MIN_PROPOSAL_UNSTAKE_DELAY_SECONDS: i64 = 5;
 
+// Standard supermajority bar in WHOLE tokens (~25% of the 10M floating supply). Single source
+// of truth; scaled to base units by the base mint's decimals at the point of use.
+pub const DEFAULT_BASE_TO_SUPERMAJORITY_TOKENS: u64 = 2_500_000;
+
+// Number of approval points (of 3: stake, team, MetaDAO) a proposal needs to launch.
+pub const LAUNCH_APPROVAL_POINTS_REQUIRED: usize = 2;
+
 #[program]
 pub mod futarchy {
     use super::*;
@@ -109,6 +116,10 @@ pub mod futarchy {
         ResizeDao::handle(ctx)
     }
 
+    pub fn resize_proposal(ctx: Context<ResizeProposal>) -> Result<()> {
+        ResizeProposal::handle(ctx)
+    }
+
     // AMM instructions
 
     pub fn spot_swap(ctx: Context<SpotSwap>, params: SpotSwapParams) -> Result<()> {
@@ -152,6 +163,11 @@ pub mod futarchy {
     #[access_control(ctx.accounts.validate())]
     pub fn sponsor_proposal(ctx: Context<SponsorProposal>) -> Result<()> {
         SponsorProposal::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn approve_proposal(ctx: Context<ApproveProposal>) -> Result<()> {
+        ApproveProposal::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate())]

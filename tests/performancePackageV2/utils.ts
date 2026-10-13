@@ -8,6 +8,7 @@ import {
 import * as token from "@solana/spl-token";
 import { BanksClient } from "solana-bankrun";
 import BN from "bn.js";
+import { nextDaoNonce } from "../utils.js";
 import {
   MintGovernorClient,
   PerformancePackageV2Client,
@@ -338,7 +339,7 @@ export async function setupDaoForTwapTests(context: any): Promise<PublicKey> {
   await context.banksClient.processTransaction(mintBaseTx);
 
   // Initialize DAO
-  const nonce = new BN(Math.floor(Math.random() * 1000000));
+  const nonce = nextDaoNonce();
 
   await context.futarchy
     .initializeDaoIx({
@@ -355,6 +356,8 @@ export async function setupDaoForTwapTests(context: any): Promise<PublicKey> {
         nonce,
         initialSpendingLimit: null,
         baseToStake: new BN(0),
+        baseToSupermajority: new BN(0),
+        isProposalValidationEnabled: false,
         teamSponsoredPassThresholdBps: 300,
         teamAddress: context.payer.publicKey,
       },

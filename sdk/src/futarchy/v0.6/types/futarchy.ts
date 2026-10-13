@@ -604,6 +604,27 @@ export type Futarchy = {
       args: [];
     },
     {
+      name: "resizeProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "spotSwap";
       accounts: [
         {
@@ -1037,6 +1058,37 @@ export type Futarchy = {
         },
         {
           name: "teamAddress";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "approveProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "approver";
           isMut: false;
           isSigner: true;
         },
@@ -1769,6 +1821,23 @@ export type Futarchy = {
             name: "isOptimisticGovernanceEnabled";
             type: "bool";
           },
+          {
+            name: "baseToSupermajority";
+            docs: [
+              "Absolute base-token stake at which a proposal launches on supermajority",
+              "stake alone. `0` disables the supermajority path for this DAO.",
+            ];
+            type: "u64";
+          },
+          {
+            name: "isProposalValidationEnabled";
+            docs: [
+              "When enabled, `launch_proposal` enforces the stricter validation gate",
+              "(>= 2 of 3 approval points, or the supermajority path). When disabled,",
+              "the DAO uses the legacy gate",
+            ];
+            type: "bool";
+          },
         ];
       };
     },
@@ -1905,6 +1974,18 @@ export type Futarchy = {
             name: "teamAddress";
             type: "publicKey";
           },
+          {
+            name: "optimisticProposal";
+            type: {
+              option: {
+                defined: "OptimisticProposal";
+              };
+            };
+          },
+          {
+            name: "isOptimisticGovernanceEnabled";
+            type: "bool";
+          },
         ];
       };
     },
@@ -1930,6 +2011,84 @@ export type Futarchy = {
     },
     {
       name: "proposal";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "number";
+            type: "u32";
+          },
+          {
+            name: "proposer";
+            type: "publicKey";
+          },
+          {
+            name: "timestampEnqueued";
+            type: "i64";
+          },
+          {
+            name: "state";
+            type: {
+              defined: "ProposalState";
+            };
+          },
+          {
+            name: "baseVault";
+            type: "publicKey";
+          },
+          {
+            name: "quoteVault";
+            type: "publicKey";
+          },
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "question";
+            type: "publicKey";
+          },
+          {
+            name: "durationInSeconds";
+            type: "u32";
+          },
+          {
+            name: "squadsProposal";
+            type: "publicKey";
+          },
+          {
+            name: "passBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "passQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "failBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "failQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "isTeamSponsored";
+            type: "bool";
+          },
+          {
+            name: "isMetadaoApproved";
+            type: "bool";
+          },
+        ];
+      };
+    },
+    {
+      name: "oldProposal";
       type: {
         kind: "struct";
         fields: [
@@ -2145,6 +2304,14 @@ export type Futarchy = {
             name: "teamAddress";
             type: "publicKey";
           },
+          {
+            name: "baseToSupermajority";
+            type: "u64";
+          },
+          {
+            name: "isProposalValidationEnabled";
+            type: "bool";
+          },
         ];
       };
     },
@@ -2304,6 +2471,18 @@ export type Futarchy = {
           },
           {
             name: "isOptimisticGovernanceEnabled";
+            type: {
+              option: "bool";
+            };
+          },
+          {
+            name: "baseToSupermajority";
+            type: {
+              option: "u64";
+            };
+          },
+          {
+            name: "isProposalValidationEnabled";
             type: {
               option: "bool";
             };
@@ -2786,6 +2965,16 @@ export type Futarchy = {
           type: "publicKey";
           index: false;
         },
+        {
+          name: "baseToSupermajority";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "isProposalValidationEnabled";
+          type: "bool";
+          index: false;
+        },
       ];
     },
     {
@@ -2855,6 +3044,16 @@ export type Futarchy = {
         },
         {
           name: "isOptimisticGovernanceEnabled";
+          type: "bool";
+          index: false;
+        },
+        {
+          name: "baseToSupermajority";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "isProposalValidationEnabled";
           type: "bool";
           index: false;
         },
@@ -3351,6 +3550,33 @@ export type Futarchy = {
       ];
     },
     {
+      name: "ApproveProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "approver";
+          type: "publicKey";
+          index: false;
+        },
+      ];
+    },
+    {
       name: "RemoveProposalEvent";
       fields: [
         {
@@ -3800,6 +4026,31 @@ export type Futarchy = {
       code: 6042;
       name: "NoActiveOptimisticProposal";
       msg: "No active optimistic proposal";
+    },
+    {
+      code: 6043;
+      name: "InvalidApprover";
+      msg: "Invalid MetaDAO approver";
+    },
+    {
+      code: 6044;
+      name: "ProposalAlreadyApproved";
+      msg: "Proposal has already been approved by MetaDAO";
+    },
+    {
+      code: 6045;
+      name: "InvalidSupermajorityThreshold";
+      msg: "base_to_supermajority must be 0 (disabled) or >= base_to_stake";
+    },
+    {
+      code: 6046;
+      name: "InsufficientApprovalToLaunch";
+      msg: "Proposal lacks enough approval points to launch";
+    },
+    {
+      code: 6047;
+      name: "ProposalValidationDisabled";
+      msg: "Proposal validation is not enabled for this DAO";
     },
   ];
 };
@@ -4410,6 +4661,27 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
+      name: "resizeProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "spotSwap",
       accounts: [
         {
@@ -4843,6 +5115,37 @@ export const IDL: Futarchy = {
         },
         {
           name: "teamAddress",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "approveProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "approver",
           isMut: false,
           isSigner: true,
         },
@@ -5575,6 +5878,23 @@ export const IDL: Futarchy = {
             name: "isOptimisticGovernanceEnabled",
             type: "bool",
           },
+          {
+            name: "baseToSupermajority",
+            docs: [
+              "Absolute base-token stake at which a proposal launches on supermajority",
+              "stake alone. `0` disables the supermajority path for this DAO.",
+            ],
+            type: "u64",
+          },
+          {
+            name: "isProposalValidationEnabled",
+            docs: [
+              "When enabled, `launch_proposal` enforces the stricter validation gate",
+              "(>= 2 of 3 approval points, or the supermajority path). When disabled,",
+              "the DAO uses the legacy gate",
+            ],
+            type: "bool",
+          },
         ],
       },
     },
@@ -5711,6 +6031,18 @@ export const IDL: Futarchy = {
             name: "teamAddress",
             type: "publicKey",
           },
+          {
+            name: "optimisticProposal",
+            type: {
+              option: {
+                defined: "OptimisticProposal",
+              },
+            },
+          },
+          {
+            name: "isOptimisticGovernanceEnabled",
+            type: "bool",
+          },
         ],
       },
     },
@@ -5736,6 +6068,84 @@ export const IDL: Futarchy = {
     },
     {
       name: "proposal",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "number",
+            type: "u32",
+          },
+          {
+            name: "proposer",
+            type: "publicKey",
+          },
+          {
+            name: "timestampEnqueued",
+            type: "i64",
+          },
+          {
+            name: "state",
+            type: {
+              defined: "ProposalState",
+            },
+          },
+          {
+            name: "baseVault",
+            type: "publicKey",
+          },
+          {
+            name: "quoteVault",
+            type: "publicKey",
+          },
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "question",
+            type: "publicKey",
+          },
+          {
+            name: "durationInSeconds",
+            type: "u32",
+          },
+          {
+            name: "squadsProposal",
+            type: "publicKey",
+          },
+          {
+            name: "passBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "passQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "failBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "failQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "isTeamSponsored",
+            type: "bool",
+          },
+          {
+            name: "isMetadaoApproved",
+            type: "bool",
+          },
+        ],
+      },
+    },
+    {
+      name: "oldProposal",
       type: {
         kind: "struct",
         fields: [
@@ -5951,6 +6361,14 @@ export const IDL: Futarchy = {
             name: "teamAddress",
             type: "publicKey",
           },
+          {
+            name: "baseToSupermajority",
+            type: "u64",
+          },
+          {
+            name: "isProposalValidationEnabled",
+            type: "bool",
+          },
         ],
       },
     },
@@ -6110,6 +6528,18 @@ export const IDL: Futarchy = {
           },
           {
             name: "isOptimisticGovernanceEnabled",
+            type: {
+              option: "bool",
+            },
+          },
+          {
+            name: "baseToSupermajority",
+            type: {
+              option: "u64",
+            },
+          },
+          {
+            name: "isProposalValidationEnabled",
             type: {
               option: "bool",
             },
@@ -6592,6 +7022,16 @@ export const IDL: Futarchy = {
           type: "publicKey",
           index: false,
         },
+        {
+          name: "baseToSupermajority",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "isProposalValidationEnabled",
+          type: "bool",
+          index: false,
+        },
       ],
     },
     {
@@ -6661,6 +7101,16 @@ export const IDL: Futarchy = {
         },
         {
           name: "isOptimisticGovernanceEnabled",
+          type: "bool",
+          index: false,
+        },
+        {
+          name: "baseToSupermajority",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "isProposalValidationEnabled",
           type: "bool",
           index: false,
         },
@@ -7157,6 +7607,33 @@ export const IDL: Futarchy = {
       ],
     },
     {
+      name: "ApproveProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "approver",
+          type: "publicKey",
+          index: false,
+        },
+      ],
+    },
+    {
       name: "RemoveProposalEvent",
       fields: [
         {
@@ -7606,6 +8083,31 @@ export const IDL: Futarchy = {
       code: 6042,
       name: "NoActiveOptimisticProposal",
       msg: "No active optimistic proposal",
+    },
+    {
+      code: 6043,
+      name: "InvalidApprover",
+      msg: "Invalid MetaDAO approver",
+    },
+    {
+      code: 6044,
+      name: "ProposalAlreadyApproved",
+      msg: "Proposal has already been approved by MetaDAO",
+    },
+    {
+      code: 6045,
+      name: "InvalidSupermajorityThreshold",
+      msg: "base_to_supermajority must be 0 (disabled) or >= base_to_stake",
+    },
+    {
+      code: 6046,
+      name: "InsufficientApprovalToLaunch",
+      msg: "Proposal lacks enough approval points to launch",
+    },
+    {
+      code: 6047,
+      name: "ProposalValidationDisabled",
+      msg: "Proposal validation is not enabled for this DAO",
     },
   ],
 };
