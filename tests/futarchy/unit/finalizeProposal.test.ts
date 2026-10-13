@@ -119,6 +119,9 @@ export default function suite() {
     // Now initialize the futarchy proposal
     proposal = await this.futarchy.initializeProposal(dao, squadsProposalPda);
 
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda);
+
     await this.futarchy
       .launchProposalIx({
         proposal,
@@ -126,6 +129,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsVaultTransaction,
       })
       .rpc();
   });
@@ -200,6 +204,7 @@ export default function suite() {
           minOutputAmount: new BN(0),
         })
         .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
         ])
         .rpc();
@@ -347,6 +352,7 @@ export default function suite() {
           minOutputAmount: new BN(0),
         })
         .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
         ])
         .rpc();
@@ -504,6 +510,9 @@ export default function suite() {
       })
       .rpc();
 
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda);
+
     await this.futarchy
       .launchProposalIx({
         proposal: teamSponsoredProposal,
@@ -511,6 +520,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsVaultTransaction,
       })
       .rpc();
 
@@ -543,6 +553,9 @@ export default function suite() {
           minOutputAmount: new BN(0),
         })
         .preInstructions([
+          // The swap sits right at the 200k default compute limit; the unit price keeps
+          // each crank transaction unique.
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
         ])
         .rpc();

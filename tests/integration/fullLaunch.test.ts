@@ -461,6 +461,9 @@ export default async function suite() {
       .rpc();
 
     // Launch the proposal first
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda);
+
     await this.futarchy
       .launchProposalIx({
         proposal,
@@ -468,6 +471,7 @@ export default async function suite() {
         baseMint: META,
         quoteMint: MAINNET_USDC,
         squadsProposal: squadsProposalPda,
+        squadsVaultTransaction,
       })
       .rpc();
 

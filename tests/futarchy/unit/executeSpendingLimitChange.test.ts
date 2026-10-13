@@ -127,6 +127,7 @@ export default function suite() {
           minOutputAmount: new BN(0),
         })
         .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
         ])
         .rpc();
@@ -414,6 +415,7 @@ export default function suite() {
           minOutputAmount: new BN(0),
         })
         .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
         ])
         .rpc();
@@ -541,6 +543,7 @@ export default function suite() {
           minOutputAmount: new BN(0),
         })
         .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
         ])
         .rpc();

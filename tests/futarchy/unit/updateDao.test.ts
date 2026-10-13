@@ -175,8 +175,18 @@ export default function suite() {
       )
       .rpc();
 
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda);
+
     await this.futarchy
-      .initializeProposalIx(squadsProposalPda, dao, META, USDC, question)
+      .initializeProposalIx(
+        squadsProposalPda,
+        dao,
+        META,
+        USDC,
+        question,
+        squadsVaultTransaction,
+      )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
@@ -198,6 +208,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsVaultTransaction,
       })
       .rpc();
 
@@ -237,6 +248,7 @@ export default function suite() {
           payer: this.payer.publicKey,
         })
         .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
         ])
         .rpc();
@@ -331,6 +343,9 @@ export default function suite() {
       )
       .rpc();
 
+    const { squadsVaultTransaction: squadsVaultTransaction2 } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda2);
+
     await this.futarchy
       .initializeProposalIx(
         squadsProposalPda2,
@@ -338,6 +353,7 @@ export default function suite() {
         META,
         USDC,
         proposalBPdas.question,
+        squadsVaultTransaction2,
       )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
@@ -352,6 +368,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda2,
+        squadsVaultTransaction: squadsVaultTransaction2,
       })
       .rpc();
 
@@ -476,8 +493,18 @@ export default function suite() {
       )
       .rpc();
 
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(squadsProposalPda);
+
     await this.futarchy
-      .initializeProposalIx(squadsProposalPda, dao, META, USDC, question)
+      .initializeProposalIx(
+        squadsProposalPda,
+        dao,
+        META,
+        USDC,
+        question,
+        squadsVaultTransaction,
+      )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
@@ -499,6 +526,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsVaultTransaction,
       })
       .rpc();
 
@@ -533,6 +561,7 @@ export default function suite() {
           payer: this.payer.publicKey,
         })
         .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
         ])
         .rpc();

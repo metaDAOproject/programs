@@ -5,12 +5,19 @@ import {
 } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
+  Keypair,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
+import {
+  addLookupsToVaultTransaction,
+  expectError,
+  setLookupTableAccount,
+  setOptimisticGovernanceEnabled,
+} from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -74,6 +81,60 @@ export default function suite() {
 
     await setOptimisticGovernanceEnabled(this, dao, true);
   });
+
+  async function createSquadsProposal(
+    context: any,
+    daoKey: PublicKey,
+  ): Promise<{ squadsProposal: PublicKey; squadsVaultTransaction: PublicKey }> {
+    const multisigPda = multisig.getMultisigPda({ createKey: daoKey })[0];
+
+    const transactionMessage = new TransactionMessage({
+      payerKey: context.payer.publicKey,
+      recentBlockhash: (await context.banksClient.getLatestBlockhash())[0],
+      instructions: [
+        SystemProgram.transfer({
+          fromPubkey: context.payer.publicKey,
+          toPubkey: context.payer.publicKey,
+          lamports: 1,
+        }),
+      ],
+    });
+
+    const tx = new Transaction().add(
+      multisig.instructions.vaultTransactionCreate({
+        multisigPda,
+        transactionIndex: 1n,
+        creator: PERMISSIONLESS_ACCOUNT.publicKey,
+        rentPayer: context.payer.publicKey,
+        vaultIndex: 0,
+        ephemeralSigners: 0,
+        transactionMessage,
+      }),
+      multisig.instructions.proposalCreate({
+        multisigPda,
+        transactionIndex: 1n,
+        creator: PERMISSIONLESS_ACCOUNT.publicKey,
+        rentPayer: context.payer.publicKey,
+      }),
+    );
+
+    tx.recentBlockhash = (await context.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = context.payer.publicKey;
+    tx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
+
+    await context.banksClient.processTransaction(tx);
+
+    const [squadsProposal] = multisig.getProposalPda({
+      multisigPda,
+      transactionIndex: 1n,
+    });
+    const [squadsVaultTransaction] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
+    });
+
+    return { squadsProposal, squadsVaultTransaction };
+  }
 
   it("should initialize a proposal", async function () {
     // Create a simple instruction for the proposal
@@ -193,6 +254,50 @@ export default function suite() {
 
     await this.futarchy
       .initializeProposal(dao, daoAccount.optimisticProposal.squadsProposal)
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a vault transaction referencing an unfrozen lookup table", async function () {
+    const { squadsProposal, squadsVaultTransaction } =
+      await createSquadsProposal(this, dao);
+
+    const lookupTable = Keypair.generate().publicKey;
+    setLookupTableAccount(this, lookupTable, this.payer.publicKey, [
+      Keypair.generate().publicKey,
+    ]);
+    await addLookupsToVaultTransaction(this, squadsVaultTransaction, [
+      { accountKey: lookupTable, writableIndexes: [0], readonlyIndexes: [] },
+    ]);
+
+    const callbacks = expectError(
+      "UnfrozenAddressLookupTable",
+      "initialize_proposal accepted an unfrozen lookup table",
+    );
+
+    await this.futarchy
+      .initializeProposal(dao, squadsProposal)
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a frozen lookup table when the message references an index that doesn't exist", async function () {
+    const { squadsProposal, squadsVaultTransaction } =
+      await createSquadsProposal(this, dao);
+
+    const lookupTable = Keypair.generate().publicKey;
+    setLookupTableAccount(this, lookupTable, null, [
+      Keypair.generate().publicKey,
+    ]);
+    await addLookupsToVaultTransaction(this, squadsVaultTransaction, [
+      { accountKey: lookupTable, writableIndexes: [0], readonlyIndexes: [5] },
+    ]);
+
+    const callbacks = expectError(
+      "InvalidTransaction",
+      "initialize_proposal accepted a lookup index that is out of range",
+    );
+
+    await this.futarchy
+      .initializeProposal(dao, squadsProposal)
       .then(callbacks[0], callbacks[1]);
   });
 }

@@ -1,8 +1,68 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::address_lookup_table::{self, state::AddressLookupTable};
 
 use std::collections::BTreeMap;
 
 use crate::FutarchyError;
+
+/// Validates that every Address Lookup Table referenced by a vault transaction message is
+/// frozen (`authority` permanently `None`, so its contents can never change) and that every
+/// index the message references already exists in the table. `remaining_accounts` must hold
+/// exactly one ALT account per `message.address_table_lookups` entry, in the same order —
+/// the same convention Squads' own `vault_transaction_execute` uses.
+pub fn validate_address_lookup_tables<'info>(
+    message: &squads_multisig_program::VaultTransactionMessage,
+    remaining_accounts: &[AccountInfo<'info>],
+) -> Result<()> {
+    require_eq!(
+        remaining_accounts.len(),
+        message.address_table_lookups.len(),
+        FutarchyError::InvalidTransaction
+    );
+
+    for (lookup, alt_account_info) in message
+        .address_table_lookups
+        .iter()
+        .zip(remaining_accounts.iter())
+    {
+        require_keys_eq!(
+            *alt_account_info.key,
+            lookup.account_key,
+            FutarchyError::InvalidTransaction
+        );
+        require_keys_eq!(
+            *alt_account_info.owner,
+            address_lookup_table::program::ID,
+            FutarchyError::InvalidTransaction
+        );
+
+        let alt_data = alt_account_info.try_borrow_data()?;
+        let alt_state = AddressLookupTable::deserialize(&alt_data)
+            .map_err(|_| FutarchyError::InvalidTransaction)?;
+
+        require!(
+            alt_state.meta.authority.is_none(),
+            FutarchyError::UnfrozenAddressLookupTable
+        );
+
+        // A frozen table's length is final: an out-of-range index can never be filled,
+        // so the proposal could pass its market but never execute. Reject it upfront.
+        if let Some(max_index) = lookup
+            .writable_indexes
+            .iter()
+            .chain(lookup.readonly_indexes.iter())
+            .max()
+        {
+            require_gt!(
+                alt_state.addresses.len(),
+                *max_index as usize,
+                FutarchyError::InvalidTransaction
+            );
+        }
+    }
+
+    Ok(())
+}
 
 /// Compiles a Solana instruction into a Squads TransactionMessage format.
 /// This is necessary because Solana's Message::serialize() uses a different header format

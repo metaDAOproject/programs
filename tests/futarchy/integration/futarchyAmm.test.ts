@@ -214,6 +214,11 @@ export default function suite() {
 
     const proposalAccount = await this.futarchy.getProposal(proposal);
 
+    const { squadsVaultTransaction } =
+      await this.futarchy.getSquadsVaultTransactionAccounts(
+        proposalAccount.squadsProposal,
+      );
+
     await this.futarchy
       .launchProposalIx({
         proposal,
@@ -221,6 +226,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: proposalAccount.squadsProposal,
+        squadsVaultTransaction,
       })
       .rpc();
 
