@@ -121,6 +121,9 @@ impl FinalizeProposal<'_> {
 
         let clock = Clock::get()?;
 
+        // Read before a passed takeover moves the team below.
+        let is_team_sponsored = proposal.is_sponsored_by(dao.team_address);
+
         let calculate_twap = |amm: &Pool| -> Result<u128> {
             let twap_start_timestamp =
                 amm.oracle.created_at_timestamp + amm.oracle.start_delay_seconds as i64;
@@ -331,7 +334,7 @@ impl FinalizeProposal<'_> {
             squads_proposal: squads_proposal.key(),
             squads_multisig: dao.squads_multisig,
             post_amm_state: dao.amm.clone(),
-            is_team_sponsored: proposal.is_sponsored_by(dao.team_address),
+            is_team_sponsored,
         });
 
         Ok(())

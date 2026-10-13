@@ -235,6 +235,7 @@ impl<'info> LaunchProposal<'info> {
             post_amm_state: dao.amm.clone(),
             duration_in_seconds: proposal.duration_in_seconds,
             pass_threshold_bps: proposal.pass_threshold_bps,
+            is_team_sponsored: proposal.is_sponsored_by(dao.team_address),
         });
 
         Ok(())

@@ -121,6 +121,7 @@ pub struct LaunchProposalEvent {
     /// The terms the market opened with, as written by launch.
     pub duration_in_seconds: u32,
     pub pass_threshold_bps: i16,
+    pub is_team_sponsored: bool,
 }
 
 #[event]

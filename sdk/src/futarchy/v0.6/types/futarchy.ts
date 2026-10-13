@@ -4357,6 +4357,11 @@ export type Futarchy = {
           type: "i16";
           index: false;
         },
+        {
+          name: "isTeamSponsored";
+          type: "bool";
+          index: false;
+        },
       ];
     },
     {
@@ -9680,6 +9685,11 @@ export const IDL: Futarchy = {
         {
           name: "passThresholdBps",
           type: "i16",
+          index: false,
+        },
+        {
+          name: "isTeamSponsored",
+          type: "bool",
           index: false,
         },
       ],
