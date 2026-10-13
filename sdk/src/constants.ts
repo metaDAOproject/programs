@@ -68,6 +68,19 @@ export const PERFORMANCE_PACKAGE_V2_PROGRAM_ID = new PublicKey(
 export const LIQUIDATION_V0_7_PROGRAM_ID = new PublicKey(
   "LiQnowFbFQdYyZhF4pUbpsrZCjxRTQ1upKJxZ2VXjde",
 );
+export const RELAUNCH_V0_1_PROGRAM_ID = new PublicKey(
+  "vaMpdXN2P3Z5v8y6GtAU5NzCUjxtphnRVpvqu37Spik",
+);
+
+// The relaunch global frozen address lookup table (contents documented in
+// vibes/relaunch-alt-contents.html plus the two Raydium AMM v4 statics,
+// created by `yarn relaunch-create-alt`).
+// PLACEHOLDER: this is the table from the 2026-08-12 surfpool dry run, which
+// tests/fixtures/relaunch-global-alt mirrors byte-for-byte. Replace with the
+// real table address once it is created and frozen on mainnet.
+export const RELAUNCH_V0_1_GLOBAL_ALT = new PublicKey(
+  "HXH8J1qEhfXWoAgsFhstHgcLkRXqvheoiNuRbXM3VS13",
+);
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
@@ -108,6 +121,24 @@ export const DEVNET_RAYDIUM_AUTHORITY = PublicKey.findProgramAddressSync(
   [anchor.utils.bytes.utf8.encode("vault_and_lp_mint_auth_seed")],
   DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
 )[0];
+
+/// The pump bonding-curve program. Canonical PumpSwap pools have the
+/// `["pool-authority", mint]` PDA of this program as their creator.
+export const PUMP_PROGRAM_ID = new PublicKey(
+  "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+);
+
+export const PUMP_AMM_PROGRAM_ID = new PublicKey(
+  "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+);
+
+export const PUMP_FEES_PROGRAM_ID = new PublicKey(
+  "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ",
+);
+
+export const WHIRLPOOL_PROGRAM_ID = new PublicKey(
+  "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",
+);
 
 export const DAMM_V2_PROGRAM_ID = new PublicKey(
   "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG",

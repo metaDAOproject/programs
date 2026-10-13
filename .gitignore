@@ -11,3 +11,4 @@ scripts/*.js
 test-ledger-accounts
 # Surfpool
 .surfpool/
+vibes/

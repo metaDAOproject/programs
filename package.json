@@ -13,6 +13,7 @@
     "redeem-launch": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/redeemLaunch.ts",
     "setup-futarchy-amm": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/setupFutarchyAmm.ts",
     "initialize-dao": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/v0.6/initializeDao.ts",
+    "relaunch-create-alt": "NODE_OPTIONS=\"--no-deprecation\" tsx --tsconfig tsconfig.json scripts/relaunch/createAlt.ts",
     "prepare": "husky"
   },
   "lint-staged": {

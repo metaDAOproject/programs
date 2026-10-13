@@ -9,6 +9,7 @@ import mintGovernor from "./mintGovernor/main.test.js";
 import performancePackageV2 from "./performancePackageV2/main.test.js";
 import liquidation from "./liquidation/main.test.js";
 import gatedMint from "./gatedMint/main.test.js";
+import relaunch from "./relaunch/main.test.js";
 
 import {
   BanksClient,
@@ -40,9 +41,19 @@ import {
   MintGovernorClient,
   GatedMintClient,
   LiquidationClient,
+  RelaunchClient,
   LOW_FEE_RAYDIUM_CONFIG,
+  PUMP_AMM_FEE_CONFIG,
+  PUMP_AMM_GLOBAL_CONFIG,
+  PUMP_AMM_PROGRAM_ID,
+  PUMP_FEES_PROGRAM_ID,
+  RELAUNCH_V0_1_GLOBAL_ALT,
+  WHIRLPOOL_PROGRAM_ID,
   sha256,
 } from "@metadaoproject/programs";
+import { PUMP_GLOBAL_VOLUME_ACCUMULATOR } from "./relaunch/pumpAmm.js";
+import { RAYDIUM_AMM_PROGRAM_ID } from "./relaunch/raydiumAmm.js";
+import { WHIRLPOOLS_CONFIG, WHIRLPOOL_FEE_TIER } from "./relaunch/whirlpool.js";
 import { LaunchpadClient as LaunchpadClientV6 } from "@metadaoproject/programs/launchpad/v0.6";
 import { LaunchpadClient as LaunchpadClientV8 } from "@metadaoproject/programs/launchpad/v0.8";
 
@@ -54,6 +65,7 @@ import {
   Transaction,
   ComputeBudgetProgram,
   TransactionInstruction,
+  AddressLookupTableProgram,
 } from "@solana/web3.js";
 
 import {
@@ -85,6 +97,7 @@ import fullLaunch_v7 from "./integration/fullLaunch_v7.test.js";
 import fullLaunch_v8 from "./integration/launchpad_v8_full_lifecycle.test.js";
 import gatedLaunchpadV8 from "./integration/gatedLaunchpadV8.test.js";
 import trancheLifecycle_v8 from "./integration/launchpad_v8_tranche_lifecycle.test.js";
+import relaunchLifecycle from "./integration/relaunch.test.js";
 import { BN } from "bn.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
@@ -93,6 +106,7 @@ const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 export interface TestContext {
   context: ProgramTestContext;
   banksClient: BanksClient;
+  connection: Connection;
   conditionalVault: ConditionalVaultClient;
   futarchy: FutarchyClient;
   launchpad_v7: LaunchpadClientV7;
@@ -103,6 +117,7 @@ export interface TestContext {
   mintGovernor: MintGovernorClient;
   gatedMint: GatedMintClient;
   liquidation: LiquidationClient;
+  relaunch: RelaunchClient;
   payer: Keypair;
   squadsConnection: Connection;
   createTokenAccount: (mint: PublicKey, owner: PublicKey) => Promise<PublicKey>;
@@ -115,6 +130,7 @@ export interface TestContext {
     to: PublicKey,
     mintAuthority: Keypair,
     amount: number,
+    computeUnitPrice?: number,
   ) => Promise<any>;
   getTokenBalance: (mint: PublicKey, owner: PublicKey) => Promise<bigint>;
   getMint: (mint: PublicKey) => Promise<any>;
@@ -200,6 +216,22 @@ before(async function () {
         name: "cp_amm",
         programId: DAMM_V2_PROGRAM_ID,
       },
+      {
+        name: "pump_amm",
+        programId: PUMP_AMM_PROGRAM_ID,
+      },
+      {
+        name: "pump_fees",
+        programId: PUMP_FEES_PROGRAM_ID,
+      },
+      {
+        name: "whirlpool",
+        programId: WHIRLPOOL_PROGRAM_ID,
+      },
+      {
+        name: "raydium_amm",
+        programId: RAYDIUM_AMM_PROGRAM_ID,
+      },
     ],
     [
       {
@@ -249,11 +281,85 @@ before(async function () {
           lamports: 1_000_000_000,
         },
       },
+      {
+        address: PUMP_AMM_GLOBAL_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/pump-global-config"),
+          executable: false,
+          owner: PUMP_AMM_PROGRAM_ID,
+          lamports: 9_215_825,
+        },
+      },
+      {
+        address: PUMP_AMM_FEE_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/pump-fee-config"),
+          executable: false,
+          owner: PUMP_FEES_PROGRAM_ID,
+          lamports: 33_103_977,
+        },
+      },
+      {
+        address: PUMP_GLOBAL_VOLUME_ACCUMULATOR,
+        info: {
+          data: fs.readFileSync(
+            "./tests/fixtures/pump-global-volume-accumulator",
+          ),
+          executable: false,
+          owner: PUMP_AMM_PROGRAM_ID,
+          lamports: 28_668_918,
+        },
+      },
+      {
+        address: token.NATIVE_MINT,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/wsol-mint"),
+          executable: false,
+          owner: token.TOKEN_PROGRAM_ID,
+          lamports: 1_642_232_546_455,
+        },
+      },
+      {
+        address: WHIRLPOOLS_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/whirlpool-config"),
+          executable: false,
+          owner: WHIRLPOOL_PROGRAM_ID,
+          lamports: 1_642_560,
+        },
+      },
+      {
+        address: WHIRLPOOL_FEE_TIER,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/whirlpool-fee-tier"),
+          executable: false,
+          owner: WHIRLPOOL_PROGRAM_ID,
+          lamports: 1_197_120,
+        },
+      },
+      {
+        // Dumped by `yarn relaunch-create-alt dump`, which zeroes
+        // last_extended_slot so every entry is active at bankrun's low slots.
+        address: RELAUNCH_V0_1_GLOBAL_ALT,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/relaunch-global-alt"),
+          executable: false,
+          owner: AddressLookupTableProgram.programId,
+          lamports: 42_261_120,
+        },
+      },
     ],
   );
   this.banksClient = this.context.banksClient;
   const provider = new BankrunProvider(this.context);
   anchor.setProvider(provider);
+  // web3.js implements getAddressLookupTable purely in terms of
+  // getAccountInfoAndContext, which the bankrun connection proxy provides, so
+  // grafting the real implementation on lets tests fetch lookup tables the
+  // same way a script would.
+  (provider.connection as any).getAddressLookupTable =
+    Connection.prototype.getAddressLookupTable;
+  this.connection = provider.connection;
 
   this.conditionalVault = ConditionalVaultClient.createClient({
     provider: provider as any,
@@ -375,15 +481,28 @@ before(async function () {
     );
   };
 
+  // computeUnitPrice, when set, prepends a ComputeBudget instruction so an
+  // otherwise byte-identical mint transaction gets a unique hash — bankrun
+  // rejects duplicate hashes within a blockhash window with "This transaction
+  // has already been processed".
   this.mintTo = async (
     mint: PublicKey,
     to: PublicKey,
     mintAuthority: Keypair,
     amount: number,
+    computeUnitPrice?: number,
   ) => {
     const tokenAccount = token.getAssociatedTokenAddressSync(mint, to, true);
 
     const tx = new Transaction();
+
+    if (computeUnitPrice !== undefined) {
+      tx.add(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: computeUnitPrice,
+        }),
+      );
+    }
 
     tx.add(
       token.createAssociatedTokenAccountIdempotentInstruction(
@@ -762,6 +881,7 @@ describe("mint_governor", mintGovernor);
 describe("performance_package_v2", performancePackageV2);
 describe("liquidation", liquidation);
 describe("gated_mint", gatedMint);
+describe("relaunch", relaunch);
 describe("project-wide integration tests", function () {
   it.skip("mint and swap in a single transaction", mintAndSwap);
   describe("full launch v6", fullLaunch);
@@ -769,4 +889,5 @@ describe("project-wide integration tests", function () {
   describe("full launch v8", fullLaunch_v8);
   describe("gated_mint + launchpad v8", gatedLaunchpadV8);
   describe("full launch v8 - tranche lifecycle", trancheLifecycle_v8);
+  describe("relaunch full lifecycle", relaunchLifecycle);
 });
