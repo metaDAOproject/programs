@@ -32,14 +32,22 @@ export async function setupBasicDao({
   context,
   baseMint,
   quoteMint,
+  secondsPerProposal = 60 * 60 * 24 * 3,
+  twapStartDelaySeconds = 60 * 60 * 24,
+  passThresholdBps = 300,
   teamSponsoredPassThresholdBps = 300,
+  baseToStake = new BN(0),
   teamAddress,
   initialSpendingLimit = null,
 }: {
   context: TestContext;
   baseMint: PublicKey;
   quoteMint: PublicKey;
+  secondsPerProposal?: number;
+  twapStartDelaySeconds?: number;
+  passThresholdBps?: number;
   teamSponsoredPassThresholdBps?: number;
+  baseToStake?: typeof BN.prototype;
   teamAddress?: PublicKey;
   initialSpendingLimit?: {
     amountPerMonth: typeof BN.prototype;
@@ -53,16 +61,16 @@ export async function setupBasicDao({
       baseMint,
       quoteMint,
       params: {
-        secondsPerProposal: 60 * 60 * 24 * 3,
-        twapStartDelaySeconds: 60 * 60 * 24,
+        secondsPerProposal,
+        twapStartDelaySeconds,
         twapInitialObservation: THOUSAND_BUCK_PRICE,
         twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
         minQuoteFutarchicLiquidity: new BN(10_000),
         minBaseFutarchicLiquidity: new BN(10_000),
-        passThresholdBps: 300,
+        passThresholdBps,
         nonce,
         initialSpendingLimit,
-        baseToStake: new BN(0),
+        baseToStake,
         teamSponsoredPassThresholdBps,
         teamAddress: teamAddress || context.payer.publicKey,
       },
@@ -91,6 +99,8 @@ export type OldDaoLayoutOverrides = {
     amountPerMonth: typeof BN.prototype;
     members: PublicKey[];
   } | null;
+  minQuoteFutarchicLiquidity?: typeof BN.prototype;
+  minBaseFutarchicLiquidity?: typeof BN.prototype;
 };
 
 // Rewrites a real (new-layout) Dao account to the pre-migration on-chain layout.
@@ -102,10 +112,10 @@ export async function makeOldDaoLayout(
 ): Promise<{ AFTER: number; BEFORE: number }> {
   const raw = await ctx.banksClient.getAccount(dao);
   const AFTER = raw.data.length;
-  // 58 bytes: liquidator (Option<Pubkey>) + last_failed_takeover_at (i64)
+  // 59 bytes: liquidator (Option<Pubkey>) + last_failed_takeover_at (i64)
   // + last_failed_liquidation_at (i64) + spending_limit_dirty (bool)
-  // + last_buyback_finalized_at (i64)
-  const BEFORE = AFTER - 58;
+  // + last_buyback_finalized_at (i64) + typed_proposals_enabled (bool)
+  const BEFORE = AFTER - 59;
 
   const disc = Buffer.from(raw.data.slice(0, 8));
   const coder = ctx.futarchy.futarchy.account.dao.coder.accounts;
@@ -118,6 +128,10 @@ export async function makeOldDaoLayout(
       overrides.isOptimisticGovernanceEnabled;
   if (overrides.initialSpendingLimit !== undefined)
     decoded.initialSpendingLimit = overrides.initialSpendingLimit;
+  if (overrides.minQuoteFutarchicLiquidity !== undefined)
+    decoded.minQuoteFutarchicLiquidity = overrides.minQuoteFutarchicLiquidity;
+  if (overrides.minBaseFutarchicLiquidity !== undefined)
+    decoded.minBaseFutarchicLiquidity = overrides.minBaseFutarchicLiquidity;
 
   // Encode as oldDao and truncate to the pre-migration size.
   const body = await coder.encode("oldDao", decoded);
@@ -486,3 +500,66 @@ export const advanceBySlots = async (
     ),
   );
 };
+
+// Writes an address lookup table account directly: the bincode-serialized
+// ProgramState::LookupTable(LookupTableMeta) header padded to 56 bytes, then the
+// raw addresses. A null authority makes the table frozen.
+export function setLookupTableAccount(
+  context: TestContext,
+  address: PublicKey,
+  authority: PublicKey | null,
+  addresses: PublicKey[],
+) {
+  const meta = Buffer.alloc(56);
+  meta.writeUInt32LE(1, 0);
+  meta.writeBigUInt64LE(0xffffffffffffffffn, 4);
+  meta.writeBigUInt64LE(0n, 12);
+  meta.writeUInt8(0, 20);
+  if (authority !== null) {
+    meta.writeUInt8(1, 21);
+    authority.toBuffer().copy(meta, 22);
+  }
+
+  context.context.setAccount(address, {
+    lamports: 1_000_000_000,
+    data: Buffer.concat([meta, ...addresses.map((a) => a.toBuffer())]),
+    owner: AddressLookupTableProgram.programId,
+    executable: false,
+  });
+}
+
+// The Squads SDK only compiles lookups from real on-chain tables, so tests
+// rewrite a stored vault transaction message to reference arbitrary tables
+// and indexes.
+export async function addLookupsToVaultTransaction(
+  context: TestContext,
+  squadsTransaction: PublicKey,
+  lookups: {
+    accountKey: PublicKey;
+    writableIndexes: number[];
+    readonlyIndexes: number[];
+  }[],
+) {
+  const vaultTransaction =
+    await multisig.accounts.VaultTransaction.fromAccountAddress(
+      context.squadsConnection,
+      squadsTransaction,
+    );
+
+  const modified = multisig.accounts.VaultTransaction.fromArgs({
+    ...vaultTransaction,
+    message: {
+      ...vaultTransaction.message,
+      addressTableLookups: lookups.map((lookup) => ({
+        accountKey: lookup.accountKey,
+        writableIndexes: Uint8Array.from(lookup.writableIndexes),
+        readonlyIndexes: Uint8Array.from(lookup.readonlyIndexes),
+      })),
+    },
+  });
+  const [serialized] = modified.serialize();
+
+  const stored = await context.banksClient.getAccount(squadsTransaction);
+  stored.data = serialized;
+  context.context.setAccount(squadsTransaction, stored);
+}

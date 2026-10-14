@@ -17,6 +17,15 @@ import {
   sha256,
 } from "@metadaoproject/programs";
 import BN from "bn.js";
+import {
+  EMPTY_UPDATE_DAO_PARAMS,
+  executeViaVault,
+  expectVaultExecutionError,
+  rewriteAccount,
+  setTypedProposalsEnabled,
+  updateDaoViaVault,
+} from "../utils.js";
+import { makeOldDaoLayout } from "../../utils.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 9, 6);
 
@@ -104,6 +113,7 @@ export default function suite() {
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
           twapStartDelaySeconds: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -134,6 +144,10 @@ export default function suite() {
     const [squadsProposalPda] = multisig.getProposalPda({
       multisigPda: daoAccount.squadsMultisig,
       transactionIndex: 1n,
+    });
+    const [squadsTransactionPda] = multisig.getTransactionPda({
+      multisigPda: daoAccount.squadsMultisig,
+      index: 1n,
     });
 
     const createSquadsTx = new Transaction().add(
@@ -174,7 +188,14 @@ export default function suite() {
       .rpc();
 
     await this.futarchy
-      .initializeProposalIx(squadsProposalPda, dao, META, USDC, question)
+      .initializeProposalIx(
+        squadsProposalPda,
+        dao,
+        META,
+        USDC,
+        question,
+        squadsTransactionPda,
+      )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
@@ -196,6 +217,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
 
@@ -288,6 +310,10 @@ export default function suite() {
       multisigPda: daoAccount.squadsMultisig,
       transactionIndex: 2n,
     });
+    const [squadsTransactionPda2] = multisig.getTransactionPda({
+      multisigPda: daoAccount.squadsMultisig,
+      index: 2n,
+    });
 
     const createSquadsTx2 = new Transaction().add(
       vaultTxCreateIx2,
@@ -337,6 +363,7 @@ export default function suite() {
         META,
         USDC,
         proposalBPdas.question,
+        squadsTransactionPda2,
       )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
@@ -351,6 +378,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda2,
+        squadsTransaction: squadsTransactionPda2,
       })
       .rpc();
 
@@ -386,4 +414,174 @@ export default function suite() {
       );
     }
   });
+
+  it("turns typed proposals on for a DAO that has them off", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+    const before = await this.futarchy.getDao(dao);
+    assert.isFalse(before.typedProposalsEnabled);
+
+    await updateDaoViaVault(this, dao, { typedProposalsEnabled: true });
+
+    const after = await this.futarchy.getDao(dao);
+    assert.isTrue(after.typedProposalsEnabled);
+    assert.equal(after.seqNum.toString(), before.seqNum.addn(1).toString());
+    assert.deepEqual(
+      JSON.parse(
+        JSON.stringify({
+          ...after,
+          typedProposalsEnabled: false,
+          seqNum: before.seqNum,
+        }),
+      ),
+      JSON.parse(JSON.stringify(before)),
+    );
+  });
+
+  it("keeps typed proposals on when asked to turn them on again", async function () {
+    const before = await this.futarchy.getDao(dao);
+    assert.isTrue(before.typedProposalsEnabled);
+
+    await updateDaoViaVault(this, dao, { typedProposalsEnabled: true });
+
+    const after = await this.futarchy.getDao(dao);
+    assert.isTrue(after.typedProposalsEnabled);
+    assert.equal(after.seqNum.toString(), before.seqNum.addn(1).toString());
+  });
+
+  it("refuses to turn typed proposals off on a DAO that has them off", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectVaultExecutionError(
+      this,
+      updateDaoViaVault(this, dao, {
+        typedProposalsEnabled: false,
+        passThresholdBps: 500,
+      }),
+      "TypedProposalsCannotBeDisabled",
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+
+  it("refuses to turn typed proposals off on a DAO that has them on", async function () {
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectVaultExecutionError(
+      this,
+      updateDaoViaVault(this, dao, {
+        typedProposalsEnabled: false,
+        passThresholdBps: 500,
+      }),
+      "TypedProposalsCannotBeDisabled",
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+
+  it("cannot opt in on a configuration that fails the invariant without fixing it in the same call", async function () {
+    await rewriteAccount(this, dao, "dao", (decoded) => {
+      decoded.typedProposalsEnabled = false;
+      decoded.minQuoteFutarchicLiquidity = new BN(0);
+    });
+
+    await expectVaultExecutionError(
+      this,
+      updateDaoViaVault(this, dao, { typedProposalsEnabled: true }),
+      "InsufficientLiquidity",
+    );
+
+    let daoAccount = await this.futarchy.getDao(dao);
+    assert.isFalse(daoAccount.typedProposalsEnabled);
+
+    await updateDaoViaVault(this, dao, {
+      typedProposalsEnabled: true,
+      minQuoteFutarchicLiquidity: new BN(1),
+    });
+
+    daoAccount = await this.futarchy.getDao(dao);
+    assert.isTrue(daoAccount.typedProposalsEnabled);
+    assert.equal(daoAccount.minQuoteFutarchicLiquidity.toString(), "1");
+  });
+
+  it("ignores the retired optimistic-governance flag", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+    const before = await this.futarchy.getDao(dao);
+
+    // Twelve fields: ten `None`, the retired flag set, the switch `None`.
+    await executeViaVault(this, dao, [
+      await updateDaoIxWithArgs(this, dao, [...Array(10).fill(0), 1, 1, 0]),
+    ]);
+
+    const after = await this.futarchy.getDao(dao);
+    assert.isFalse(after.typedProposalsEnabled);
+    assert.equal(after.seqNum.toString(), before.seqNum.addn(1).toString());
+    assert.deepEqual(
+      JSON.parse(JSON.stringify({ ...after, seqNum: before.seqNum })),
+      JSON.parse(JSON.stringify(before)),
+    );
+  });
+
+  it("refuses a payload encoded before the upgrade with the old flag set", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectInstructionDidNotDeserialize(
+      executeViaVault(this, dao, [
+        await updateDaoIxWithArgs(this, dao, [...Array(10).fill(0), 1, 1]),
+      ]),
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+
+  it("refuses a payload encoded before the upgrade with the old flag unset", async function () {
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectInstructionDidNotDeserialize(
+      executeViaVault(this, dao, [
+        await updateDaoIxWithArgs(this, dao, Array(11).fill(0)),
+      ]),
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+
+  it("fails on a DAO that has not been migrated", async function () {
+    await makeOldDaoLayout(this, dao);
+    const before = await this.banksClient.getAccount(dao);
+
+    await expectVaultExecutionError(
+      this,
+      updateDaoViaVault(this, dao, { passThresholdBps: 500 }),
+      "AccountNotMigrated",
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
+  });
+}
+
+// The SDK's update_dao instruction with hand-encoded arguments, for payload
+// layouts the client cannot produce. Eleven `None` bytes is what a client of
+// the deployed program sends when it leaves every field alone.
+async function updateDaoIxWithArgs(ctx: any, dao: PublicKey, args: number[]) {
+  const ix = await ctx.futarchy
+    .updateDaoIx({ dao, params: EMPTY_UPDATE_DAO_PARAMS })
+    .instruction();
+  ix.data = Buffer.concat([ix.data.subarray(0, 8), Buffer.from(args)]);
+  return ix;
+}
+
+// Anchor's own InstructionDidNotDeserialize (102) is not in the IDL, so it is
+// matched by code.
+async function expectInstructionDidNotDeserialize(execution: Promise<unknown>) {
+  await execution.then(
+    () => assert.fail("should have failed with InstructionDidNotDeserialize"),
+    (e) => assert.include(e.toString(), "custom program error: 0x66"),
+  );
 }

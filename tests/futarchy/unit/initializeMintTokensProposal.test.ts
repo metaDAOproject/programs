@@ -19,6 +19,7 @@ import {
   expectError,
   forceApproveSquadsProposal,
 } from "../../utils.js";
+import { setTypedProposalsEnabled } from "../utils.js";
 import { TestContext } from "../../main.test.js";
 
 async function setMintAuthority(
@@ -201,6 +202,23 @@ export default function suite() {
       .initializeMintTokensProposal({
         dao,
         amount: new BN(1_000_000),
+        recipient,
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when the DAO has typed proposals off", async function () {
+    await setMintAuthority(this, META, squadsMultisigVault);
+    await setTypedProposalsEnabled(this, dao, false);
+
+    const callbacks = expectError(
+      "TypedProposalsDisabled",
+      "created a mint tokens proposal on a DAO with typed proposals off",
+    );
+    await this.futarchy
+      .initializeMintTokensProposal({
+        dao,
+        amount: new BN(1_000_000_000),
         recipient,
       })
       .then(...callbacks);

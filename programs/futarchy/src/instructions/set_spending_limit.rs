@@ -16,6 +16,9 @@ pub struct SetSpendingLimit<'info> {
 
 impl SetSpendingLimit<'_> {
     pub fn validate(&self, args: &SetSpendingLimitArgs) -> Result<()> {
+        // Ensure the DAO is migrated.
+        Dao::assert_migrated(&self.dao.to_account_info())?;
+
         // Prevent config changes during active futarchy markets
         if !matches!(self.dao.amm.state, PoolState::Spot { .. }) {
             return Err(FutarchyError::PoolNotInSpotState.into());
@@ -33,8 +36,7 @@ impl SetSpendingLimit<'_> {
     pub fn handle(ctx: Context<Self>, args: SetSpendingLimitArgs) -> Result<()> {
         let dao = &mut ctx.accounts.dao;
 
-        dao.initial_spending_limit = args.config;
-        dao.spending_limit_dirty = true;
+        dao.set_spending_limit(args.config);
         dao.seq_num += 1;
 
         let clock = Clock::get()?;

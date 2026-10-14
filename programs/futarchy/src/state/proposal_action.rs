@@ -56,6 +56,8 @@ pub enum ProposalAction {
     },
     ExecuteArbitrary,
     HostileTakeover {
+        /// The team to install. Launch requires it to still differ from the
+        /// DAO's team.
         new_team_address: Pubkey,
         spending_limit_action: SpendingLimitAction,
     },
@@ -143,14 +145,42 @@ impl ProposalAction {
         }
     }
 
+    /// The parameters a proposal of this kind runs under for `dao`. Plain
+    /// proposals of a DAO that has not opted in run under the DAO's own
+    /// configuration, where sponsorship by the current team selects the
+    /// team-sponsored threshold; everything else is the catalog.
+    pub fn params_for(&self, dao: &Dao, is_team_sponsored: bool) -> InstructionParams {
+        let follows_dao_config =
+            matches!(self, ProposalAction::ExecuteArbitrary) && !dao.typed_proposals_enabled;
+
+        if !follows_dao_config {
+            return self.params();
+        }
+
+        InstructionParams {
+            duration_seconds: dao.seconds_per_proposal,
+            pass_threshold_bps: if is_team_sponsored {
+                dao.team_sponsored_pass_threshold_bps
+            } else {
+                dao.pass_threshold_bps as i16
+            },
+            twap_start_delay_seconds: dao.twap_start_delay_seconds,
+            ..self.params()
+        }
+    }
+
     /// Per-kind launch gates over caller-supplied accounts, hooked in by
     /// `launch_proposal`. Kinds with no account gate require an empty list.
     pub fn verify_launch_accounts<'info>(
         &self,
         dao: &Account<'info, Dao>,
+        squads_transaction_index: u64,
         accounts: &'info [AccountInfo<'info>],
     ) -> Result<()> {
         match self {
+            ProposalAction::ExecuteArbitrary => {
+                verify_execute_arbitrary_launch(dao, squads_transaction_index, accounts)
+            }
             ProposalAction::BuybackToken { quote_amount, .. } => {
                 verify_buyback_treasury_cap(*quote_amount, dao, accounts)
             }
@@ -158,12 +188,48 @@ impl ProposalAction {
                 amount,
                 team_address,
             } => verify_large_spend_launch(*amount, *team_address, dao, accounts),
+            ProposalAction::HostileTakeover {
+                new_team_address, ..
+            } => verify_hostile_takeover_launch(*new_team_address, dao, accounts),
             _ => {
                 require_eq!(accounts.len(), 0, FutarchyError::UnexpectedLaunchAccounts);
                 Ok(())
             }
         }
     }
+}
+
+/// The execute-arbitrary launch gate: the proposal's Squads vault transaction
+/// followed by every lookup table its message references, which must be
+/// frozen. Only this kind carries a caller-built payload; typed kinds compile
+/// theirs on-chain. Repeated at launch for drafts created before this check.
+fn verify_execute_arbitrary_launch<'info>(
+    dao: &Dao,
+    squads_transaction_index: u64,
+    accounts: &'info [AccountInfo<'info>],
+) -> Result<()> {
+    let Some((vault_transaction_account, lookup_table_accounts)) = accounts.split_first() else {
+        return err!(FutarchyError::InvalidSquadsVaultTransaction);
+    };
+
+    let (vault_transaction_pda, _) = Pubkey::find_program_address(
+        &[
+            squads_multisig_program::SEED_PREFIX,
+            dao.squads_multisig.as_ref(),
+            squads_multisig_program::SEED_TRANSACTION,
+            &squads_transaction_index.to_le_bytes(),
+        ],
+        &squads_multisig_program::ID,
+    );
+    require_keys_eq!(
+        vault_transaction_account.key(),
+        vault_transaction_pda,
+        FutarchyError::InvalidSquadsVaultTransaction
+    );
+    let vault_transaction =
+        Account::<squads_multisig_program::VaultTransaction>::try_from(vault_transaction_account)?;
+
+    validate_address_lookup_tables(&vault_transaction.message, lookup_table_accounts)
 }
 
 /// The large-spend launch gate: no extra accounts, and the create-time checks
@@ -182,6 +248,24 @@ fn verify_large_spend_launch(
         team_address,
         dao.team_address,
         FutarchyError::StaleTeamAddress
+    );
+
+    Ok(())
+}
+
+/// The hostile-takeover launch gate: no extra accounts, and the create-time
+/// team check re-runs against current state.
+fn verify_hostile_takeover_launch(
+    new_team_address: Pubkey,
+    dao: &Dao,
+    accounts: &[AccountInfo],
+) -> Result<()> {
+    require_eq!(accounts.len(), 0, FutarchyError::UnexpectedLaunchAccounts);
+
+    require_keys_neq!(
+        new_team_address,
+        dao.team_address,
+        FutarchyError::InvalidTeamAddress
     );
 
     Ok(())

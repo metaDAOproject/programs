@@ -59,6 +59,12 @@ impl TypedInitializeAccounts<'_> {
     pub fn validate(&self) -> Result<()> {
         require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
 
+        // The catalog is opt-in per DAO.
+        require!(
+            self.dao.typed_proposals_enabled,
+            FutarchyError::TypedProposalsDisabled
+        );
+
         require_eq!(
             self.question.num_outcomes(),
             2,
@@ -150,6 +156,7 @@ impl TypedInitializeAccounts<'_> {
             pass_threshold_bps: params.pass_threshold_bps,
             council_can_block: params.council_can_block,
             action,
+            params_overridden: false,
         };
         self.proposal.set_inner(proposal);
 

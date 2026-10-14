@@ -340,12 +340,19 @@ export class FutarchyClient {
     return existing.sort((a, b) => a.toBuffer().compare(b.toBuffer()));
   }
 
+  /**
+   * `squadsTransaction` and `lookupTables` are required for a generic
+   * (execute-arbitrary) proposal and must be omitted for typed kinds; see
+   * `getSquadsVaultTransactionAccounts`. `treasuryAccounts` is for buybacks.
+   */
   launchProposalIx({
     proposal,
     dao,
     baseMint,
     quoteMint,
     squadsProposal,
+    squadsTransaction,
+    lookupTables = [],
     treasuryAccounts = [],
   }: {
     proposal: PublicKey;
@@ -353,6 +360,8 @@ export class FutarchyClient {
     baseMint: PublicKey;
     quoteMint: PublicKey;
     squadsProposal: PublicKey;
+    squadsTransaction?: PublicKey;
+    lookupTables?: PublicKey[];
     treasuryAccounts?: PublicKey[];
   }) {
     const {
@@ -402,7 +411,10 @@ export class FutarchyClient {
         payer: this.provider.publicKey,
       })
       .remainingAccounts(
-        treasuryAccounts.map((pubkey) => ({
+        [
+          ...(squadsTransaction ? [squadsTransaction, ...lookupTables] : []),
+          ...treasuryAccounts,
+        ].map((pubkey) => ({
           pubkey,
           isSigner: false,
           isWritable: false,
@@ -664,7 +676,11 @@ export class FutarchyClient {
     instructions: TransactionInstruction[];
     transactionIndex: bigint;
     payer?: PublicKey;
-  }): { tx: Transaction; squadsProposal: PublicKey } {
+  }): {
+    tx: Transaction;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  } {
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const squadsMultisigVault = multisig.getVaultPda({
       multisigPda,
@@ -699,10 +715,48 @@ export class FutarchyClient {
       multisigPda,
       transactionIndex: transactionIndex,
     });
+    const [squadsTransaction] = multisig.getTransactionPda({
+      multisigPda,
+      index: transactionIndex,
+    });
 
     const tx = new Transaction().add(vaultTxCreate, proposalCreate);
 
-    return { tx, squadsProposal };
+    return { tx, squadsProposal, squadsTransaction };
+  }
+
+  /**
+   * Resolves the vault transaction behind a Squads proposal and the lookup
+   * tables its message references. Both go to `initializeProposalIx` and, for
+   * a generic proposal, `launchProposalIx`, which check that every table is
+   * frozen.
+   */
+  async getSquadsVaultTransactionAccounts(squadsProposal: PublicKey): Promise<{
+    squadsTransaction: PublicKey;
+    lookupTables: PublicKey[];
+  }> {
+    const squadsProposalAccount =
+      await multisig.accounts.Proposal.fromAccountAddress(
+        this.provider.connection,
+        squadsProposal,
+      );
+
+    const [squadsTransaction] = multisig.getTransactionPda({
+      multisigPda: squadsProposalAccount.multisig,
+      index: BigInt(squadsProposalAccount.transactionIndex.toString()),
+    });
+
+    const vaultTransaction =
+      await multisig.accounts.VaultTransaction.fromAccountAddress(
+        this.provider.connection,
+        squadsTransaction,
+      );
+
+    const lookupTables = vaultTransaction.message.addressTableLookups.map(
+      (lookup) => lookup.accountKey,
+    );
+
+    return { squadsTransaction, lookupTables };
   }
 
   async initializeProposal(
@@ -736,12 +790,17 @@ export class FutarchyClient {
       )
       .rpc();
 
+    const { squadsTransaction, lookupTables } =
+      await this.getSquadsVaultTransactionAccounts(squadsProposal);
+
     await this.initializeProposalIx(
       squadsProposal,
       dao,
       storedDao.baseMint,
       storedDao.quoteMint,
       question,
+      squadsTransaction,
+      lookupTables,
     )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
@@ -757,6 +816,8 @@ export class FutarchyClient {
     baseMint: PublicKey,
     quoteMint: PublicKey,
     question: PublicKey,
+    squadsTransaction: PublicKey,
+    lookupTables: PublicKey[] = [],
     proposer: PublicKey = this.provider.publicKey,
   ) {
     let [proposal] = getProposalAddr(this.futarchy.programId, squadsProposal);
@@ -782,12 +843,20 @@ export class FutarchyClient {
         question,
         proposal,
         squadsProposal,
+        squadsVaultTransaction: squadsTransaction,
         dao,
         baseVault,
         quoteVault,
         proposer,
         squadsMultisig,
       })
+      .remainingAccounts(
+        lookupTables.map((pubkey) => ({
+          pubkey,
+          isSigner: false,
+          isWritable: false,
+        })),
+      )
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
@@ -1163,9 +1232,9 @@ export class FutarchyClient {
       .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
-  // The payload declares the complete post-takeover regime: update_dao
-  // re-points the team, and unless the action is `keep`, set_spending_limit
-  // carries the declared limit end state.
+  // The proposal's action declares the complete post-takeover regime. A passed
+  // takeover is applied by finalize_proposal itself; the baked payload is only
+  // a memo.
   async initializeHostileTakeoverProposal({
     dao,
     newTeamAddress,
@@ -1502,10 +1571,12 @@ export class FutarchyClient {
       index: 0,
     })[0];
 
-    return this.futarchy.methods.updateDao(params).accounts({
-      dao,
-      squadsMultisigVault,
-    });
+    return this.futarchy.methods
+      .updateDao({ ...params, deprecatedIsOptimisticGovernanceEnabled: null })
+      .accounts({
+        dao,
+        squadsMultisigVault,
+      });
   }
 
   setSpendingLimitIx({

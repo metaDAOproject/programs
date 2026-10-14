@@ -26,8 +26,9 @@ impl ResizeDao<'_> {
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Dao::MIGRATED_SIZE;
-        // 58 bytes: 33 (Option<Pubkey> liquidator) + 8 (i64) + 8 (i64) + 1 (bool) + 8 (i64)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 58;
+        // 59 bytes: 33 (Option<Pubkey> liquidator) + 8 (i64) + 8 (i64) + 1 (bool)
+        // + 8 (i64) + 1 (bool typed_proposals_enabled)
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 59;
 
         if dao.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -75,8 +76,9 @@ impl ResizeDao<'_> {
             twap_max_observation_change_per_update: old_dao_data
                 .twap_max_observation_change_per_update,
             twap_start_delay_seconds: old_dao_data.twap_start_delay_seconds,
-            min_quote_futarchic_liquidity: old_dao_data.min_quote_futarchic_liquidity,
-            min_base_futarchic_liquidity: old_dao_data.min_base_futarchic_liquidity,
+            // A zero minimum fails `Dao::invariant`; 1 is the launchpads' value.
+            min_quote_futarchic_liquidity: old_dao_data.min_quote_futarchic_liquidity.max(1),
+            min_base_futarchic_liquidity: old_dao_data.min_base_futarchic_liquidity.max(1),
             base_to_stake: old_dao_data.base_to_stake,
             seq_num: old_dao_data.seq_num,
             initial_spending_limit: live_spending_limit,
@@ -92,6 +94,7 @@ impl ResizeDao<'_> {
             last_failed_liquidation_at: 0,
             spending_limit_dirty: false,
             last_buyback_finalized_at: 0,
+            typed_proposals_enabled: false,
         };
 
         dao.realloc(AFTER_REALLOC_SIZE, true)?;

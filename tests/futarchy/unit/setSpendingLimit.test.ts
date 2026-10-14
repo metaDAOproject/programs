@@ -12,7 +12,7 @@ import {
   PriceMath,
 } from "@metadaoproject/programs";
 import BN from "bn.js";
-import { expectError } from "../../utils.js";
+import { expectError, makeOldDaoLayout } from "../../utils.js";
 import { TestContext } from "../../main.test.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
@@ -260,5 +260,24 @@ export default function suite() {
       "DuplicateSpendingLimitMember",
       "0x17b4", // 6068
     );
+  });
+
+  it("fails on a DAO that has not been migrated", async function () {
+    await makeOldDaoLayout(this, dao);
+    const before = await this.banksClient.getAccount(dao);
+
+    await executeSetSpendingLimitViaVault(this, dao, null).then(
+      () =>
+        assert.fail("set_spending_limit should have thrown AccountNotMigrated"),
+      (e) =>
+        assert(
+          e.toString().includes("AccountNotMigrated") ||
+            e.toString().includes("0x17b1"),
+          `Expected AccountNotMigrated error, got: ${e}`,
+        ),
+    );
+
+    const after = await this.banksClient.getAccount(dao);
+    assert.deepEqual(after.data, before.data);
   });
 }

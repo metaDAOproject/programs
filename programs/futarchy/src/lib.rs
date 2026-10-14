@@ -25,7 +25,7 @@ security_txt! {
     project_url: "https://metadao.fi",
     contacts: "telegram:metaproph3t,telegram:kollan_house",
     source_code: "https://github.com/metaDAOproject/programs",
-    source_release: "v0.6.1",
+    source_release: "v0.6.2",
     policy: "The market will decide whether we pay a bug bounty.",
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
@@ -69,8 +69,10 @@ pub mod futarchy {
         InitializeDao::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn initialize_proposal(ctx: Context<InitializeProposal>) -> Result<()> {
+    #[access_control(ctx.accounts.validate(ctx.remaining_accounts))]
+    pub fn initialize_proposal<'info>(
+        ctx: Context<'_, '_, 'info, 'info, InitializeProposal<'info>>,
+    ) -> Result<()> {
         InitializeProposal::handle(ctx)
     }
 
@@ -150,7 +152,7 @@ pub mod futarchy {
         FinalizeProposal::handle(ctx)
     }
 
-    #[access_control(ctx.accounts.validate())]
+    #[access_control(ctx.accounts.validate(&dao_params))]
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {
         UpdateDao::handle(ctx, dao_params)
     }

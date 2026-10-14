@@ -92,6 +92,8 @@ export const initializeFutarchyProposal = async ({
     dao,
   );
   const vaultClient = futarchy.vaultClient;
+  const { squadsTransaction, lookupTables } =
+    await futarchy.getSquadsVaultTransactionAccounts(squadsProposal);
 
   console.log("Squads proposal:", squadsProposal.toBase58());
   console.log("Proposal:", proposal.toBase58());
@@ -149,6 +151,8 @@ export const initializeFutarchyProposal = async ({
           daoAccount.baseMint,
           daoAccount.quoteMint,
           question,
+          squadsTransaction,
+          lookupTables,
           payer.publicKey,
         )
         .preInstructions([

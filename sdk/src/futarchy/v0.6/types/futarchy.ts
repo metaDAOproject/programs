@@ -124,6 +124,11 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "squadsVaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "dao";
           isMut: true;
           isSigner: false;
@@ -1356,7 +1361,7 @@ export type Futarchy = {
           isSigner: false;
           docs: [
             "The proposal's DAO, checked against the deserialized proposal in the",
-            "handler. Must already be migrated to the new layout (crank DAOs first).",
+            "handler.",
           ];
         },
         {
@@ -2543,6 +2548,13 @@ export type Futarchy = {
             docs: ["Unix time of the last buyback finalization. 0 = never."];
             type: "i64";
           },
+          {
+            name: "typedProposalsEnabled";
+            docs: [
+              "Whether the DAO runs on the mini-instructions catalog. Never turns off.",
+            ];
+            type: "bool";
+          },
         ];
       };
     },
@@ -2812,7 +2824,6 @@ export type Futarchy = {
           },
           {
             name: "passThresholdBps";
-            docs: ["Snapshot of the kind's threshold at create."];
             type: "i16";
           },
           {
@@ -2826,6 +2837,14 @@ export type Futarchy = {
             type: {
               defined: "ProposalAction";
             };
+          },
+          {
+            name: "paramsOverridden";
+            docs: [
+              "Set by `admin_update_proposal_params`. `launch_proposal` then leaves the",
+              "duration and threshold alone.",
+            ];
+            type: "bool";
           },
         ];
       };
@@ -3354,6 +3373,26 @@ export type Futarchy = {
               option: "publicKey";
             };
           },
+          {
+            name: "deprecatedIsOptimisticGovernanceEnabled";
+            docs: [
+              "Ignored. The retired optimistic-governance flag, kept in place so",
+              "payloads encoded before the upgrade are refused, not reinterpreted.",
+            ];
+            type: {
+              option: "bool";
+            };
+          },
+          {
+            name: "typedProposalsEnabled";
+            docs: [
+              "`Some(true)` turns typed proposals on for this DAO. `None` leaves them",
+              "as they are. `Some(false)` is refused: there is no way to turn them off.",
+            ];
+            type: {
+              option: "bool";
+            };
+          },
         ];
       };
     },
@@ -3785,6 +3824,10 @@ export type Futarchy = {
             fields: [
               {
                 name: "newTeamAddress";
+                docs: [
+                  "The team to install. Launch requires it to still differ from the",
+                  "DAO's team.",
+                ];
                 type: "publicKey";
               },
               {
@@ -4040,6 +4083,11 @@ export type Futarchy = {
           type: "publicKey";
           index: false;
         },
+        {
+          name: "typedProposalsEnabled";
+          type: "bool";
+          index: false;
+        },
       ];
     },
     {
@@ -4109,6 +4157,11 @@ export type Futarchy = {
         },
         {
           name: "isOptimisticGovernanceEnabled";
+          type: "bool";
+          index: false;
+        },
+        {
+          name: "typedProposalsEnabled";
           type: "bool";
           index: false;
         },
@@ -4292,6 +4345,21 @@ export type Futarchy = {
           type: {
             defined: "FutarchyAmm";
           };
+          index: false;
+        },
+        {
+          name: "durationInSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "passThresholdBps";
+          type: "i16";
+          index: false;
+        },
+        {
+          name: "isTeamSponsored";
+          type: "bool";
           index: false;
         },
       ];
@@ -5232,6 +5300,31 @@ export type Futarchy = {
       name: "SquadsProposalNotApproved";
       msg: "Squads proposal must be in Approved status to be cancelled";
     },
+    {
+      code: 6073;
+      name: "TypedProposalsDisabled";
+      msg: "This DAO has not opted into typed proposals";
+    },
+    {
+      code: 6074;
+      name: "TypedProposalsCannotBeDisabled";
+      msg: "Typed proposals cannot be disabled";
+    },
+    {
+      code: 6075;
+      name: "UnfrozenAddressLookupTable";
+      msg: "Address lookup tables referenced by the vault transaction must be frozen";
+    },
+    {
+      code: 6076;
+      name: "InvalidAddressLookupTable";
+      msg: "Lookup table accounts must match the vault transaction's address table lookups";
+    },
+    {
+      code: 6077;
+      name: "InvalidSquadsVaultTransaction";
+      msg: "Expected the proposal's Squads vault transaction as the first launch account";
+    },
   ];
 };
 
@@ -5357,6 +5450,11 @@ export const IDL: Futarchy = {
         },
         {
           name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsVaultTransaction",
           isMut: false,
           isSigner: false,
         },
@@ -6593,7 +6691,7 @@ export const IDL: Futarchy = {
           isSigner: false,
           docs: [
             "The proposal's DAO, checked against the deserialized proposal in the",
-            "handler. Must already be migrated to the new layout (crank DAOs first).",
+            "handler.",
           ],
         },
         {
@@ -7780,6 +7878,13 @@ export const IDL: Futarchy = {
             docs: ["Unix time of the last buyback finalization. 0 = never."],
             type: "i64",
           },
+          {
+            name: "typedProposalsEnabled",
+            docs: [
+              "Whether the DAO runs on the mini-instructions catalog. Never turns off.",
+            ],
+            type: "bool",
+          },
         ],
       },
     },
@@ -8049,7 +8154,6 @@ export const IDL: Futarchy = {
           },
           {
             name: "passThresholdBps",
-            docs: ["Snapshot of the kind's threshold at create."],
             type: "i16",
           },
           {
@@ -8063,6 +8167,14 @@ export const IDL: Futarchy = {
             type: {
               defined: "ProposalAction",
             },
+          },
+          {
+            name: "paramsOverridden",
+            docs: [
+              "Set by `admin_update_proposal_params`. `launch_proposal` then leaves the",
+              "duration and threshold alone.",
+            ],
+            type: "bool",
           },
         ],
       },
@@ -8591,6 +8703,26 @@ export const IDL: Futarchy = {
               option: "publicKey",
             },
           },
+          {
+            name: "deprecatedIsOptimisticGovernanceEnabled",
+            docs: [
+              "Ignored. The retired optimistic-governance flag, kept in place so",
+              "payloads encoded before the upgrade are refused, not reinterpreted.",
+            ],
+            type: {
+              option: "bool",
+            },
+          },
+          {
+            name: "typedProposalsEnabled",
+            docs: [
+              "`Some(true)` turns typed proposals on for this DAO. `None` leaves them",
+              "as they are. `Some(false)` is refused: there is no way to turn them off.",
+            ],
+            type: {
+              option: "bool",
+            },
+          },
         ],
       },
     },
@@ -9022,6 +9154,10 @@ export const IDL: Futarchy = {
             fields: [
               {
                 name: "newTeamAddress",
+                docs: [
+                  "The team to install. Launch requires it to still differ from the",
+                  "DAO's team.",
+                ],
                 type: "publicKey",
               },
               {
@@ -9277,6 +9413,11 @@ export const IDL: Futarchy = {
           type: "publicKey",
           index: false,
         },
+        {
+          name: "typedProposalsEnabled",
+          type: "bool",
+          index: false,
+        },
       ],
     },
     {
@@ -9346,6 +9487,11 @@ export const IDL: Futarchy = {
         },
         {
           name: "isOptimisticGovernanceEnabled",
+          type: "bool",
+          index: false,
+        },
+        {
+          name: "typedProposalsEnabled",
           type: "bool",
           index: false,
         },
@@ -9529,6 +9675,21 @@ export const IDL: Futarchy = {
           type: {
             defined: "FutarchyAmm",
           },
+          index: false,
+        },
+        {
+          name: "durationInSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "passThresholdBps",
+          type: "i16",
+          index: false,
+        },
+        {
+          name: "isTeamSponsored",
+          type: "bool",
           index: false,
         },
       ],
@@ -10468,6 +10629,31 @@ export const IDL: Futarchy = {
       code: 6072,
       name: "SquadsProposalNotApproved",
       msg: "Squads proposal must be in Approved status to be cancelled",
+    },
+    {
+      code: 6073,
+      name: "TypedProposalsDisabled",
+      msg: "This DAO has not opted into typed proposals",
+    },
+    {
+      code: 6074,
+      name: "TypedProposalsCannotBeDisabled",
+      msg: "Typed proposals cannot be disabled",
+    },
+    {
+      code: 6075,
+      name: "UnfrozenAddressLookupTable",
+      msg: "Address lookup tables referenced by the vault transaction must be frozen",
+    },
+    {
+      code: 6076,
+      name: "InvalidAddressLookupTable",
+      msg: "Lookup table accounts must match the vault transaction's address table lookups",
+    },
+    {
+      code: 6077,
+      name: "InvalidSquadsVaultTransaction",
+      msg: "Expected the proposal's Squads vault transaction as the first launch account",
     },
   ],
 };

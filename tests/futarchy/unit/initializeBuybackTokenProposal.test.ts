@@ -21,6 +21,7 @@ import {
   passProposal,
   setupBasicDao,
 } from "../../utils.js";
+import { setTypedProposalsEnabled } from "../utils.js";
 import { TestContext } from "../../main.test.js";
 
 const MEMO_PROGRAM_ID = new PublicKey(
@@ -785,14 +786,15 @@ export default function suite() {
       keys: [],
       data: Buffer.from("arbitrary", "utf8"),
     });
-    const { proposal, squadsProposal } = await this.initializeProposal({
-      dao,
-      instructions: [memoIx],
-    });
+    const { proposal, squadsProposal, squadsTransaction } =
+      await this.initializeProposal({
+        dao,
+        instructions: [memoIx],
+      });
 
     const callbacks = expectError(
-      "UnexpectedLaunchAccounts",
-      "launched a non-buyback proposal with a treasury list",
+      "InvalidAddressLookupTable",
+      "launched a generic proposal with a treasury list",
     );
 
     await this.futarchy
@@ -802,6 +804,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
         treasuryAccounts: [vaultQuoteAccount],
       })
       .rpc()
@@ -1089,6 +1092,24 @@ export default function suite() {
         squadsProposal,
       );
     assert.equal(storedSquadsProposal.status.__kind, "Executed");
+  });
+
+  it("throws error when the DAO has typed proposals off", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+
+    const callbacks = expectError(
+      "TypedProposalsDisabled",
+      "created a buyback proposal on a DAO with typed proposals off",
+    );
+    await this.futarchy
+      .initializeBuybackTokenProposal({
+        dao,
+        quoteAmount: new BN(400_000_000_000),
+        cycleCount: 80,
+        cycleFrequencySeconds: 86_400,
+        startDelaySeconds: 0,
+      })
+      .then(callbacks[0], callbacks[1]);
   });
 
   it("rejects a zero total", async function () {

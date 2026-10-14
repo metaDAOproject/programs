@@ -13,6 +13,7 @@ import {
   forceApproveSquadsProposal,
   setupBasicDao,
 } from "../../utils.js";
+import { setTypedProposalsEnabled } from "../utils.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
@@ -150,6 +151,18 @@ export default function suite() {
         dao,
         amount: AMOUNT_PER_MONTH.muln(3).addn(1),
       })
+      .then(...callbacks);
+  });
+
+  it("throws error when the DAO has typed proposals off", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+
+    const callbacks = expectError(
+      "TypedProposalsDisabled",
+      "created a large spend proposal on a DAO with typed proposals off",
+    );
+    await this.futarchy
+      .initializeLargeSpendProposal({ dao, amount: AMOUNT_PER_MONTH })
       .then(...callbacks);
   });
 
