@@ -57,6 +57,8 @@ import {
 } from "./types/v0.6.1-futarchy.js";
 import {
   getDaoAddr,
+  getEnqueuedMultisigProposalApprovalAddr,
+  getEnqueuedMultisigProposalCancellationAddr,
   getProposalAddr,
   getProposalAddrV2,
   getProposalAddrsForTransactionIndex,
@@ -1228,15 +1230,15 @@ export class FutarchyClient {
       .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
-  // The payload is one apply_liquidation call whose accounts — including this
-  // proposal's own not-yet-created PDA — the program bakes by derivation from
-  // the next transaction index. The liquidator is stored in `action`.
+  // The payload is the IP-transfer memo alone — finalize_proposal performs the
+  // state flip, and the liquidator (stored in `action`) unwinds the treasury
+  // position afterward through the estate cycle.
   async initializeHostileLiquidateProposal({
     dao,
-    liquidator,
+    liquidator = METADAO_MULTISIG_VAULT,
   }: {
     dao: PublicKey;
-    liquidator: PublicKey;
+    liquidator?: PublicKey;
   }): Promise<{
     proposal: PublicKey;
     squadsProposal: PublicKey;
@@ -1259,7 +1261,7 @@ export class FutarchyClient {
     dao,
     baseMint,
     quoteMint,
-    liquidator,
+    liquidator = METADAO_MULTISIG_VAULT,
     transactionIndex,
     proposer = this.provider.publicKey,
     payer = this.provider.publicKey,
@@ -1267,7 +1269,7 @@ export class FutarchyClient {
     dao: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
-    liquidator: PublicKey;
+    liquidator?: PublicKey;
     transactionIndex: bigint;
     proposer?: PublicKey;
     payer?: PublicKey;
@@ -1293,7 +1295,7 @@ export class FutarchyClient {
   async initializeBuybackTokenProposal({
     dao,
     quoteAmount,
-    quoteAmountPerCycle,
+    cycleCount,
     cycleFrequencySeconds,
     startDelaySeconds,
     minPrice = null,
@@ -1301,7 +1303,7 @@ export class FutarchyClient {
   }: {
     dao: PublicKey;
     quoteAmount: BN;
-    quoteAmountPerCycle: BN;
+    cycleCount: number;
     cycleFrequencySeconds: number;
     startDelaySeconds: number;
     minPrice?: BN | null;
@@ -1319,7 +1321,7 @@ export class FutarchyClient {
           baseMint: storedDao.baseMint,
           quoteMint: storedDao.quoteMint,
           quoteAmount,
-          quoteAmountPerCycle,
+          cycleCount,
           cycleFrequencySeconds,
           startDelaySeconds,
           minPrice,
@@ -1334,7 +1336,7 @@ export class FutarchyClient {
     baseMint,
     quoteMint,
     quoteAmount,
-    quoteAmountPerCycle,
+    cycleCount,
     cycleFrequencySeconds,
     startDelaySeconds,
     minPrice = null,
@@ -1347,7 +1349,7 @@ export class FutarchyClient {
     baseMint: PublicKey;
     quoteMint: PublicKey;
     quoteAmount: BN;
-    quoteAmountPerCycle: BN;
+    cycleCount: number;
     cycleFrequencySeconds: number;
     startDelaySeconds: number;
     minPrice?: BN | null;
@@ -1359,7 +1361,7 @@ export class FutarchyClient {
     return this.futarchy.methods
       .initializeBuybackTokenProposal({
         quoteAmount,
-        quoteAmountPerCycle,
+        cycleCount,
         cycleFrequencySeconds,
         startDelaySeconds,
         minPrice,
@@ -1544,6 +1546,22 @@ export class FutarchyClient {
     });
   }
 
+  resizeDaoIx({
+    dao,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const [spendingLimit] = getSpendingLimitAddr({ dao });
+
+    return this.futarchy.methods.resizeDao().accounts({
+      dao,
+      spendingLimit,
+      payer,
+    });
+  }
+
   stakeToProposalIx({
     proposal,
     dao,
@@ -1703,6 +1721,118 @@ export class FutarchyClient {
         dao,
         proposal,
         admin,
+      });
+  }
+
+  adminEnqueueMultisigProposalApprovalIx({
+    dao,
+    transactionIndex,
+    admin = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    admin?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedApproval] = getEnqueuedMultisigProposalApprovalAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods
+      .adminEnqueueMultisigProposalApproval({
+        transactionIndex: new BN(transactionIndex.toString()),
+      })
+      .accounts({
+        dao,
+        admin,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedApproval,
+      });
+  }
+
+  executeMultisigProposalApprovalIx({
+    dao,
+    transactionIndex,
+    rentReceiver = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    rentReceiver?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedApproval] = getEnqueuedMultisigProposalApprovalAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods.executeMultisigProposalApproval().accounts({
+      dao,
+      rentReceiver,
+      squadsMultisig,
+      squadsMultisigProposal: squadsProposal,
+      enqueuedApproval,
+      squadsMultisigProgram: SQUADS_PROGRAM_ID,
+    });
+  }
+
+  adminEnqueueMultisigProposalCancellationIx({
+    dao,
+    transactionIndex,
+    admin = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    admin?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedCancellation] = getEnqueuedMultisigProposalCancellationAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods
+      .adminEnqueueMultisigProposalCancellation({
+        transactionIndex: new BN(transactionIndex.toString()),
+      })
+      .accounts({
+        dao,
+        admin,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedCancellation,
+      });
+  }
+
+  executeMultisigProposalCancellationIx({
+    dao,
+    transactionIndex,
+    rentReceiver = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    rentReceiver?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedCancellation] = getEnqueuedMultisigProposalCancellationAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods
+      .executeMultisigProposalCancellation()
+      .accounts({
+        dao,
+        rentReceiver,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedCancellation,
+        squadsMultisigProgram: SQUADS_PROGRAM_ID,
       });
   }
 

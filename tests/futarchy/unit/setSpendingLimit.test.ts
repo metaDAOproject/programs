@@ -16,7 +16,6 @@ import { expectError } from "../../utils.js";
 import { TestContext } from "../../main.test.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
-const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
 // The vault PDA can only sign via a Squads vault transaction execution, so the
 // record is written by creating + approving + executing one containing a
@@ -52,43 +51,12 @@ async function executeSetSpendingLimitViaVault(
   createTx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
   await context.banksClient.processTransaction(createTx);
 
-  const [squadsProposal] = multisig.getProposalPda({
-    multisigPda,
-    transactionIndex,
-  });
-
-  const [enqueuedApproval] = PublicKey.findProgramAddressSync(
-    [
-      SEED_ENQUEUED_APPROVAL,
-      dao.toBuffer(),
-      new BN(transactionIndex.toString()).toArrayLike(Buffer, "le", 8),
-    ],
-    context.futarchy.futarchy.programId,
-  );
-
-  await context.futarchy.futarchy.methods
-    .adminEnqueueMultisigProposalApproval({
-      transactionIndex: new BN(transactionIndex.toString()),
-    })
-    .accounts({
-      dao,
-      admin: context.payer.publicKey,
-      squadsMultisig: multisigPda,
-      squadsMultisigProposal: squadsProposal,
-      enqueuedApproval,
-    })
+  await context.futarchy
+    .adminEnqueueMultisigProposalApprovalIx({ dao, transactionIndex })
     .rpc();
 
-  await context.futarchy.futarchy.methods
-    .executeMultisigProposalApproval()
-    .accounts({
-      dao,
-      rentReceiver: context.payer.publicKey,
-      squadsMultisig: multisigPda,
-      squadsMultisigProposal: squadsProposal,
-      enqueuedApproval,
-      squadsMultisigProgram: multisig.PROGRAM_ID,
-    })
+  await context.futarchy
+    .executeMultisigProposalApprovalIx({ dao, transactionIndex })
     .rpc();
 
   // Execute as a top-level Squads instruction so the vault PDA signs the
@@ -107,6 +75,33 @@ async function executeSetSpendingLimitViaVault(
   executeTx.feePayer = context.payer.publicKey;
   executeTx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
   await context.banksClient.processTransaction(executeTx);
+}
+
+// A rejected set_spending_limit surfaces through the Squads execute CPI as a
+// raw transaction error, so match on the error name or its hex code and then
+// confirm the record and dirty flag were left untouched.
+async function assertSetSpendingLimitRejected(
+  context: TestContext,
+  dao: PublicKey,
+  config: { amountPerMonth: BN; members: PublicKey[] },
+  errorName: string,
+  errorHex: string,
+) {
+  await executeSetSpendingLimitViaVault(context, dao, config).then(
+    () => assert.fail(`set_spending_limit should have thrown ${errorName}`),
+    (e) =>
+      assert(
+        e.toString().includes(errorName) || e.toString().includes(errorHex),
+        `Expected ${errorName} error, got: ${e}`,
+      ),
+  );
+
+  const daoAccount = await context.futarchy.getDao(dao);
+  assert.equal(
+    daoAccount.initialSpendingLimit.amountPerMonth.toString(),
+    "10000000000",
+  );
+  assert.isFalse(daoAccount.spendingLimitDirty);
 }
 
 export default function suite() {
@@ -213,26 +208,57 @@ export default function suite() {
       () => Keypair.generate().publicKey,
     );
 
-    try {
-      await executeSetSpendingLimitViaVault(this, dao, {
+    await assertSetSpendingLimitRejected(
+      this,
+      dao,
+      {
         amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
         members: elevenMembers,
-      });
-      assert.fail("Should have failed with TooManySpendingLimitMembers");
-    } catch (e) {
-      // The error surfaces through the Squads CPI: TooManySpendingLimitMembers (0x17a4 = 6052)
-      assert(
-        e.toString().includes("TooManySpendingLimitMembers") ||
-          e.toString().includes("0x17a4"),
-        `Expected TooManySpendingLimitMembers error, got: ${e}`,
-      );
-    }
-
-    const daoAccount = await this.futarchy.getDao(dao);
-    assert.equal(
-      daoAccount.initialSpendingLimit.amountPerMonth.toString(),
-      "10000000000",
+      },
+      "TooManySpendingLimitMembers",
+      "0x17a3", // 6051
     );
-    assert.isFalse(daoAccount.spendingLimitDirty);
+  });
+
+  it("throws when the config's monthly amount is zero", async function () {
+    await assertSetSpendingLimitRejected(
+      this,
+      dao,
+      {
+        amountPerMonth: new BN(0),
+        members: [Keypair.generate().publicKey],
+      },
+      "InvalidSpendingLimitAmount",
+      "0x17b2", // 6066
+    );
+  });
+
+  it("throws when the config has no members", async function () {
+    await assertSetSpendingLimitRejected(
+      this,
+      dao,
+      {
+        amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+        members: [],
+      },
+      "EmptySpendingLimitMembers",
+      "0x17b3", // 6067
+    );
+  });
+
+  it("throws when the config has duplicate members", async function () {
+    const member = Keypair.generate().publicKey;
+
+    await assertSetSpendingLimitRejected(
+      this,
+      dao,
+      {
+        amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+        // Non-adjacent so the check must sort before comparing neighbours
+        members: [member, Keypair.generate().publicKey, member],
+      },
+      "DuplicateSpendingLimitMember",
+      "0x17b4", // 6068
+    );
   });
 }

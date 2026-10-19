@@ -232,7 +232,7 @@ export default function suite() {
       await this.futarchy.initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_000_000),
-        quoteAmountPerCycle: new BN(5_000_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
       });
@@ -241,7 +241,7 @@ export default function suite() {
       programId: MEMO_PROGRAM_ID,
       keys: [],
       data: Buffer.from(
-        `metadao-buyback/1 proposal=${proposal.toBase58()} spend=400000000000 per_cycle=5000000000 cycle_seconds=86400 start_delay=0 min_price=none max_price=none`,
+        `metadao-buyback/1 proposal=${proposal.toBase58()} spend=400000000000 cycles=80 cycle_seconds=86400 start_delay=0 min_price=none max_price=none`,
         "utf8",
       ),
     });
@@ -255,7 +255,7 @@ export default function suite() {
     assert.ok(storedProposal.dao.equals(dao));
     assert.ok(storedProposal.squadsProposal.equals(squadsProposal));
     assert.exists(storedProposal.state.draft);
-    assert.isFalse(storedProposal.isTeamSponsored);
+    assert.isNull(storedProposal.sponsoredBy);
   });
 
   it("formats a banded mandate's prices into the memo", async function () {
@@ -263,7 +263,7 @@ export default function suite() {
       await this.futarchy.initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_000),
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 3_600,
         startDelaySeconds: 60,
         minPrice: new BN(1_600_000),
@@ -274,7 +274,7 @@ export default function suite() {
       programId: MEMO_PROGRAM_ID,
       keys: [],
       data: Buffer.from(
-        `metadao-buyback/1 proposal=${proposal.toBase58()} spend=400000000 per_cycle=5000000 cycle_seconds=3600 start_delay=60 min_price=1600000 max_price=2000000`,
+        `metadao-buyback/1 proposal=${proposal.toBase58()} spend=400000000 cycles=80 cycle_seconds=3600 start_delay=60 min_price=1600000 max_price=2000000`,
         "utf8",
       ),
     });
@@ -288,7 +288,7 @@ export default function suite() {
     const { proposal } = await this.futarchy.initializeBuybackTokenProposal({
       dao,
       quoteAmount: new BN(400_000_000),
-      quoteAmountPerCycle: new BN(5_000_000),
+      cycleCount: 80,
       cycleFrequencySeconds: 86_400,
       startDelaySeconds: 3_600,
       minPrice: new BN(1_600_000),
@@ -304,7 +304,7 @@ export default function suite() {
 
     const action = storedProposal.action.buybackToken;
     assert.equal(action.quoteAmount.toString(), "400000000");
-    assert.equal(action.quoteAmountPerCycle.toString(), "5000000");
+    assert.equal(action.cycleCount, 80);
     assert.equal(action.cycleFrequencySeconds, 86_400);
     assert.equal(action.startDelaySeconds, 3_600);
     assert.equal(action.minPrice.toString(), "1600000");
@@ -321,7 +321,7 @@ export default function suite() {
       await this.futarchy.initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_000), // 400 tokens = 25% of 1,600
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
       });
@@ -350,7 +350,7 @@ export default function suite() {
       await this.futarchy.initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_001),
-        quoteAmountPerCycle: new BN(1),
+        cycleCount: 80,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
       });
@@ -401,7 +401,7 @@ export default function suite() {
       await this.futarchy.initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(300_000_000),
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 60,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
       });
@@ -439,6 +439,149 @@ export default function suite() {
     assert.exists(storedProposal.state.pending);
   });
 
+  it("values the position at the pool's observation, so pumping the quote reserves can't lift the cap", async function () {
+    await this.mintTo(USDC, vault, this.payer, 1_000 * 1_000_000);
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(1_000 * 1_000_000),
+        maxBaseAmount: new BN(2 * 1_000_000),
+        minLiquidity: new BN(1),
+        positionAuthority: vault,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    // 600 * 4 = 2,400 against a 2,000 treasury
+    const { proposal, squadsProposal } =
+      await this.futarchy.initializeBuybackTokenProposal({
+        dao,
+        quoteAmount: new BN(600_000_000),
+        cycleCount: 120,
+        cycleFrequencySeconds: 86_400,
+        startDelaySeconds: 0,
+      });
+
+    await this.futarchy
+      .spotSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        swapType: "buy",
+        inputAmount: new BN(50_000 * 1_000_000),
+      })
+      .rpc();
+
+    // The pump lifts the position's reserve-based quote share past the cap;
+    // only valuing it at the observation keeps the launch out.
+    const storedDao = await this.futarchy.getDao(dao);
+    const spot = storedDao.amm.state.spot.spot;
+    const position =
+      await this.futarchy.futarchy.account.ammPosition.fetch(vaultPosition);
+    const reserveBasedTreasury = position.liquidity
+      .mul(spot.quoteReserves)
+      .div(storedDao.amm.totalLiquidity)
+      .add(new BN(1_000 * 1_000_000));
+    assert.isTrue(reserveBasedTreasury.gte(new BN(2_400_000_000)));
+
+    const callbacks = expectError(
+      "BuybackCapExceeded",
+      "launched a buyback against pumped quote reserves",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+        treasuryAccounts: await this.futarchy.assembleBuybackTreasuryAccounts({
+          dao,
+        }),
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("takes the lower of the reserve and observation figures, so dumping into the pool can't lift it either", async function () {
+    await this.mintTo(USDC, vault, this.payer, 1_000 * 1_000_000);
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        quoteAmount: new BN(1_000 * 1_000_000),
+        maxBaseAmount: new BN(2 * 1_000_000),
+        minLiquidity: new BN(1),
+        positionAuthority: vault,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal, squadsProposal } =
+      await this.futarchy.initializeBuybackTokenProposal({
+        dao,
+        quoteAmount: new BN(600_000_000),
+        cycleCount: 120,
+        cycleFrequencySeconds: 86_400,
+        startDelaySeconds: 0,
+      });
+
+    await this.futarchy
+      .spotSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        swapType: "sell",
+        inputAmount: new BN(45 * 1_000_000),
+      })
+      .rpc();
+
+    // The dump lifts the position's observation-priced base share past the
+    // cap while its quote share falls; the lower figure is the one that counts.
+    const storedDao = await this.futarchy.getDao(dao);
+    const spot = storedDao.amm.state.spot.spot;
+    const position =
+      await this.futarchy.futarchy.account.ammPosition.fetch(vaultPosition);
+    const observationBasedTreasury = position.liquidity
+      .mul(spot.baseReserves)
+      .mul(spot.oracle.lastObservation)
+      .div(new BN(10).pow(new BN(12)))
+      .div(storedDao.amm.totalLiquidity)
+      .add(new BN(1_000 * 1_000_000));
+    assert.isTrue(observationBasedTreasury.gte(new BN(2_400_000_000)));
+
+    const callbacks = expectError(
+      "BuybackCapExceeded",
+      "launched a buyback against dumped base reserves",
+    );
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        squadsProposal,
+        treasuryAccounts: await this.futarchy.assembleBuybackTreasuryAccounts({
+          dao,
+        }),
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
   it("binds the cap to the launch-time balance, not create's", async function () {
     await this.mintTo(USDC, vault, this.payer, 1_600 * 1_000_000);
 
@@ -446,7 +589,7 @@ export default function suite() {
       await this.futarchy.initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_000),
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
       });
@@ -566,7 +709,7 @@ export default function suite() {
       await this.futarchy.initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(10_000_000), // comfortably under the cap
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 2,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
       });
@@ -675,7 +818,7 @@ export default function suite() {
     const first = await this.futarchy.initializeBuybackTokenProposal({
       dao,
       quoteAmount: new BN(400_000_000),
-      quoteAmountPerCycle: new BN(5_000_000),
+      cycleCount: 80,
       cycleFrequencySeconds: 86_400,
       startDelaySeconds: 0,
     });
@@ -707,7 +850,7 @@ export default function suite() {
     const second = await this.futarchy.initializeBuybackTokenProposal({
       dao,
       quoteAmount: new BN(400_000_000),
-      quoteAmountPerCycle: new BN(5_000_000),
+      cycleCount: 80,
       cycleFrequencySeconds: 86_400,
       startDelaySeconds: 0,
     });
@@ -735,7 +878,7 @@ export default function suite() {
     const first = await this.futarchy.initializeBuybackTokenProposal({
       dao,
       quoteAmount: new BN(400_000_000),
-      quoteAmountPerCycle: new BN(5_000_000),
+      cycleCount: 80,
       cycleFrequencySeconds: 86_400,
       startDelaySeconds: 0,
     });
@@ -771,7 +914,7 @@ export default function suite() {
     const second = await this.futarchy.initializeBuybackTokenProposal({
       dao,
       quoteAmount: new BN(400_000_000),
-      quoteAmountPerCycle: new BN(5_000_000),
+      cycleCount: 80,
       cycleFrequencySeconds: 86_400,
       startDelaySeconds: 0,
     });
@@ -823,7 +966,7 @@ export default function suite() {
     const first = await this.futarchy.initializeBuybackTokenProposal({
       dao,
       quoteAmount: new BN(400_000_000),
-      quoteAmountPerCycle: new BN(5_000_000),
+      cycleCount: 80,
       cycleFrequencySeconds: 86_400,
       startDelaySeconds: 0,
     });
@@ -858,7 +1001,7 @@ export default function suite() {
     const second = await this.futarchy.initializeBuybackTokenProposal({
       dao,
       quoteAmount: new BN(400_000_000),
-      quoteAmountPerCycle: new BN(5_000_000),
+      cycleCount: 80,
       cycleFrequencySeconds: 86_400,
       startDelaySeconds: 0,
     });
@@ -910,7 +1053,7 @@ export default function suite() {
       await this.futarchy.initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_000),
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
       });
@@ -948,23 +1091,6 @@ export default function suite() {
     assert.equal(storedSquadsProposal.status.__kind, "Executed");
   });
 
-  it("rejects a zero per-cycle amount", async function () {
-    const callbacks = expectError(
-      "InvalidBuybackAmount",
-      "created a buyback with a zero per-cycle amount",
-    );
-
-    await this.futarchy
-      .initializeBuybackTokenProposal({
-        dao,
-        quoteAmount: new BN(400_000_000),
-        quoteAmountPerCycle: new BN(0),
-        cycleFrequencySeconds: 86_400,
-        startDelaySeconds: 0,
-      })
-      .then(callbacks[0], callbacks[1]);
-  });
-
   it("rejects a zero total", async function () {
     const callbacks = expectError(
       "InvalidBuybackAmount",
@@ -975,41 +1101,41 @@ export default function suite() {
       .initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(0),
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
       })
       .then(callbacks[0], callbacks[1]);
   });
 
-  it("rejects a per-cycle that doesn't divide the total", async function () {
-    const callbacks = expectError(
-      "InvalidBuybackAmount",
-      "created a buyback whose per-cycle doesn't divide the total",
-    );
+  it("accepts a total that doesn't split evenly across the cycles", async function () {
+    // 100 USDC over 3 cycles: the venue puts the remainder in the last order,
+    // so the mandate records the total and the count as given
+    const { proposal } = await this.futarchy.initializeBuybackTokenProposal({
+      dao,
+      quoteAmount: new BN(100_000_000),
+      cycleCount: 3,
+      cycleFrequencySeconds: 86_400,
+      startDelaySeconds: 0,
+    });
 
-    await this.futarchy
-      .initializeBuybackTokenProposal({
-        dao,
-        quoteAmount: new BN(100_000_000),
-        quoteAmountPerCycle: new BN(30_000_000),
-        cycleFrequencySeconds: 86_400,
-        startDelaySeconds: 0,
-      })
-      .then(callbacks[0], callbacks[1]);
+    const action = (await this.futarchy.getProposal(proposal)).action
+      .buybackToken;
+    assert.equal(action.quoteAmount.toString(), "100000000");
+    assert.equal(action.cycleCount, 3);
   });
 
-  it("rejects a single-order programme", async function () {
+  it("rejects a single-cycle programme", async function () {
     const callbacks = expectError(
-      "InvalidBuybackAmount",
-      "created a single-order buyback",
+      "InvalidBuybackCycleCount",
+      "created a single-cycle buyback",
     );
 
     await this.futarchy
       .initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(100_000_000),
-        quoteAmountPerCycle: new BN(100_000_000),
+        cycleCount: 1,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
       })
@@ -1026,7 +1152,7 @@ export default function suite() {
       .initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_000),
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 0,
         minPrice: new BN(2_000_000),
@@ -1045,7 +1171,7 @@ export default function suite() {
       .initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_000),
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 59,
         startDelaySeconds: 0,
       })
@@ -1062,7 +1188,7 @@ export default function suite() {
       .initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_000),
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 365 * 24 * 60 * 60 + 1,
         startDelaySeconds: 0,
       })
@@ -1079,7 +1205,7 @@ export default function suite() {
       .initializeBuybackTokenProposal({
         dao,
         quoteAmount: new BN(400_000_000),
-        quoteAmountPerCycle: new BN(5_000_000),
+        cycleCount: 80,
         cycleFrequencySeconds: 86_400,
         startDelaySeconds: 30 * 24 * 60 * 60 + 1,
       })
@@ -1090,7 +1216,7 @@ export default function suite() {
     const { proposal } = await this.futarchy.initializeBuybackTokenProposal({
       dao,
       quoteAmount: new BN(400_000_000),
-      quoteAmountPerCycle: new BN(5_000_000),
+      cycleCount: 80,
       cycleFrequencySeconds: 86_400,
       startDelaySeconds: 0,
     });

@@ -1,8 +1,11 @@
 use super::*;
 
-/// The venue's DCA interface bounds (Jupiter's Trigger API suite): an
-/// integral order count of at least 2, an interval between a minute and a
-/// year, and a start at most 30 days out.
+/// The venue's DCA interface bounds (Jupiter's Trigger API suite): a total
+/// split across an integral order count of at least 2, with any remainder
+/// landing in the last order; an interval between a minute and a year; and a
+/// start at most 30 days out. Its per-order value floor is a USD figure set by
+/// venue policy, so it is deliberately not mirrored here.
+pub const MIN_BUYBACK_CYCLE_COUNT: u32 = 2;
 pub const MIN_BUYBACK_CYCLE_SECONDS: u32 = 60;
 pub const MAX_BUYBACK_CYCLE_SECONDS: u32 = 365 * DAY_SECONDS;
 pub const MAX_BUYBACK_START_DELAY_SECONDS: u32 = 30 * DAY_SECONDS;
@@ -10,7 +13,7 @@ pub const MAX_BUYBACK_START_DELAY_SECONDS: u32 = 30 * DAY_SECONDS;
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeBuybackTokenProposalArgs {
     pub quote_amount: u64,
-    pub quote_amount_per_cycle: u64,
+    pub cycle_count: u32,
     pub cycle_frequency_seconds: u32,
     pub start_delay_seconds: u32,
     pub min_price: Option<u64>,
@@ -27,23 +30,12 @@ impl InitializeBuybackTokenProposal<'_> {
     pub fn validate(&self, args: &InitializeBuybackTokenProposalArgs) -> Result<()> {
         self.typed_initialize_accounts.validate()?;
 
-        // The venue takes an integral order count with a two-order minimum,
-        // so the total must be an exact multiple of the per-cycle amount, at
-        // least twice over. A zero total falls out of the two-order check.
-        require_gt!(
-            args.quote_amount_per_cycle,
-            0,
-            FutarchyError::InvalidBuybackAmount
-        );
-        require_eq!(
-            args.quote_amount % args.quote_amount_per_cycle,
-            0,
-            FutarchyError::InvalidBuybackAmount
-        );
+        // A zero total is a mandate to buy nothing.
+        require_gt!(args.quote_amount, 0, FutarchyError::InvalidBuybackAmount);
         require_gte!(
-            args.quote_amount / args.quote_amount_per_cycle,
-            2,
-            FutarchyError::InvalidBuybackAmount
+            args.cycle_count,
+            MIN_BUYBACK_CYCLE_COUNT,
+            FutarchyError::InvalidBuybackCycleCount
         );
 
         require_gte!(
@@ -78,10 +70,10 @@ impl InitializeBuybackTokenProposal<'_> {
             None => "none".to_string(),
         };
         let memo = format!(
-            "metadao-buyback/1 proposal={} spend={} per_cycle={} cycle_seconds={} start_delay={} min_price={} max_price={}",
+            "metadao-buyback/1 proposal={} spend={} cycles={} cycle_seconds={} start_delay={} min_price={} max_price={}",
             typed_initialize_accounts.proposal.key(),
             args.quote_amount,
-            args.quote_amount_per_cycle,
+            args.cycle_count,
             args.cycle_frequency_seconds,
             args.start_delay_seconds,
             format_price(args.min_price),
@@ -94,7 +86,7 @@ impl InitializeBuybackTokenProposal<'_> {
             &[memo_ix],
             ProposalAction::BuybackToken {
                 quote_amount: args.quote_amount,
-                quote_amount_per_cycle: args.quote_amount_per_cycle,
+                cycle_count: args.cycle_count,
                 cycle_frequency_seconds: args.cycle_frequency_seconds,
                 start_delay_seconds: args.start_delay_seconds,
                 min_price: args.min_price,

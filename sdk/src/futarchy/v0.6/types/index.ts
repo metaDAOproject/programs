@@ -33,6 +33,8 @@ export type InitializeHostileTakeoverProposalArgs =
 export type InitializeBuybackTokenProposalArgs =
   IdlTypes<FutarchyProgram>["InitializeBuybackTokenProposalArgs"];
 export type InstructionParams = IdlTypes<FutarchyProgram>["InstructionParams"];
+export type TeamSponsorshipPolicy =
+  IdlTypes<FutarchyProgram>["TeamSponsorshipPolicy"];
 export type SpendingLimitAction =
   IdlTypes<FutarchyProgram>["SpendingLimitAction"];
 export type ProposalAction = IdlTypes<FutarchyProgram>["ProposalAction"];

@@ -13,8 +13,7 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
-  TransactionMessage,
-  VersionedTransaction,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import {
   createTransferInstruction,
@@ -24,21 +23,16 @@ import {
 import BN from "bn.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
-import {
-  createLookupTableForTransaction,
-  executeVaultTransaction,
-  pumpPassMarket,
-} from "../../utils.js";
+import { executeVaultTransaction, passProposal } from "../../utils.js";
 
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
-const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
 
-// The no-window path: finalize + execute + sync land as one
-// transaction, then the liquidated DAO runs as an estate — liquidator-gated
-// enqueue, permissionless approve, ordinary Squads execution — while
+// The lazy-unwind path: finalize bricks the DAO (liquidator written, limit
+// zeroed), the payload is ceremony (memo only), and the treasury position
+// exits afterward through a liquidator-authored estate cycle, while
 // third-party LPs exit on their own schedule.
 export default function suite() {
-  it("liquidates in one transaction, runs the estate cycle, and lets a third-party LP exit", async function () {
+  it("liquidates at finalize, unwinds the treasury through the estate cycle, and lets a third-party LP exit", async function () {
     const META = await this.createMint(this.payer.publicKey, 6);
     const USDC = await this.createMint(this.payer.publicKey, 6);
 
@@ -93,9 +87,8 @@ export default function suite() {
 
     const storedDaoBefore = await this.futarchy.getDao(dao);
     const vault = storedDaoBefore.squadsMultisigVault;
-    const multisigPda = storedDaoBefore.squadsMultisig;
 
-    // The baked apply_liquidation payload requires the vault's ATAs to exist
+    // The unwind destination: the vault's ATAs
     await this.createTokenAccount(META, vault);
     await this.createTokenAccount(USDC, vault);
 
@@ -116,7 +109,7 @@ export default function suite() {
       ])
       .rpc();
 
-    // The treasury's own LP position, swept at liquidation
+    // The treasury's own LP position, unwound after liquidation
     await this.futarchy
       .provideLiquidityIx({
         dao,
@@ -151,9 +144,7 @@ export default function suite() {
       })
       .rpc();
 
-    // Runs out the 10-day snapshot with the pass market above +25%, without
-    // finalizing — finalize rides in the packed transaction below
-    await pumpPassMarket(this, {
+    await passProposal(this, {
       dao,
       proposal,
       baseMint: META,
@@ -161,78 +152,34 @@ export default function suite() {
       cranks: 50,
     });
 
-    // finalize + execute + sync packed in ONE transaction: the DAO never
-    // exists in a passed-but-not-liquidated state
-    const vaultTransaction =
-      await multisig.accounts.VaultTransaction.fromAccountAddress(
-        this.squadsConnection,
-        squadsTransaction,
-      );
-    const packIxs = [
-      await this.futarchy
-        .finalizeProposalIxV2({
-          squadsProposal,
-          dao,
-          baseMint: META,
-          quoteMint: USDC,
-        })
-        .instruction(),
-      (
-        await multisig.instructions.vaultTransactionExecute({
-          connection: this.squadsConnection,
-          multisigPda,
-          transactionIndex: BigInt(vaultTransaction.index.toString()),
-          member: PERMISSIONLESS_ACCOUNT.publicKey,
-        })
-      ).instruction,
-      await this.futarchy.syncSpendingLimitIx({ dao }).instruction(),
-    ];
-
-    const lut = await createLookupTableForTransaction(
-      new Transaction().add(...packIxs),
-      this,
-    );
-
-    const packMessage = new TransactionMessage({
-      payerKey: this.payer.publicKey,
-      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
-      instructions: [
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
-        ...packIxs,
-      ],
-    }).compileToV0Message([lut]);
-    const packTx = new VersionedTransaction(packMessage);
-    packTx.sign([this.payer, PERMISSIONLESS_ACCOUNT]);
-    await this.banksClient.processTransaction(packTx);
-
-    // The liquidated end state, all landed by the single transaction
-    const storedProposal = await this.futarchy.getProposal(proposal);
-    assert.exists(storedProposal.state.passed);
-
-    const storedDao = await this.futarchy.getDao(dao);
+    // Finalize marks the DAO as liquidated: the liquidator is installed and the
+    // spending-limit record zeroed before any payload runs
+    let storedDao = await this.futarchy.getDao(dao);
     assert.ok(storedDao.liquidator.equals(liquidator.publicKey));
     assert.isNull(storedDao.initialSpendingLimit);
-    assert.isFalse(storedDao.spendingLimitDirty);
+    assert.isTrue(storedDao.spendingLimitDirty);
 
+    // The permissionless sync removes the Squads-side limit, so the outgoing
+    // team's pull rights die before any funds reach the vault
+    await this.futarchy.syncSpendingLimitIx({ dao }).rpc();
+
+    storedDao = await this.futarchy.getDao(dao);
+    assert.isFalse(storedDao.spendingLimitDirty);
     const [spendingLimitPda] = getSpendingLimitAddr({ dao });
     assert.isNull(await this.banksClient.getAccount(spendingLimitPda));
 
-    const [treasuryPosition] = PublicKey.findProgramAddressSync(
-      [Buffer.from("amm_position"), dao.toBuffer(), vault.toBuffer()],
-      FUTARCHY_V0_6_PROGRAM_ID,
+    // The ceremonial payload
+    await executeVaultTransaction(this, dao, squadsTransaction);
+    const storedSquadsProposal =
+      await multisig.accounts.Proposal.fromAccountAddress(
+        this.squadsConnection,
+        squadsProposal,
+      );
+    assert.isTrue(
+      multisig.generated.isProposalStatusExecuted(storedSquadsProposal.status),
     );
-    const storedTreasuryPosition =
-      await this.futarchy.futarchy.account.ammPosition.fetch(treasuryPosition);
-    assert.equal(storedTreasuryPosition.liquidity.toString(), "0");
 
-    const sweptBase = await this.getTokenBalance(META, vault);
-    const sweptQuote = await this.getTokenBalance(USDC, vault);
-    assert.isTrue(sweptBase > 0n);
-    assert.isTrue(sweptQuote > 0n);
-
-    // The estate cycle: the liquidator enqueues a distribution from the swept
-    // treasury, the approval executes permissionlessly, and ordinary Squads
-    // execution pays out
+    // The liquidator pays rent for the enqueued approval accounts
     const fundTx = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: this.payer.publicKey,
@@ -245,87 +192,100 @@ export default function suite() {
     fundTx.sign(this.payer);
     await this.banksClient.processTransaction(fundTx);
 
-    const recipient = Keypair.generate().publicKey;
-    const recipientAta = await this.createTokenAccount(USDC, recipient);
-    const vaultUsdcAta = getAssociatedTokenAddressSync(USDC, vault, true);
+    // One estate cycle: liquidator-authored vault transaction, liquidator
+    // enqueue, permissionless approve, ordinary Squads execution
+    const runEstateCycle = async (
+      transactionIndex: bigint,
+      instructions: TransactionInstruction[],
+    ) => {
+      const { tx: createTx } = this.futarchy.squadsProposalCreateTx({
+        dao,
+        instructions,
+        transactionIndex,
+      });
+      createTx.recentBlockhash = (
+        await this.banksClient.getLatestBlockhash()
+      )[0];
+      createTx.feePayer = this.payer.publicKey;
+      createTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
+      await this.banksClient.processTransaction(createTx);
 
-    // The liquidation payload was transaction 1; the estate starts at 2
-    const { tx: estateCreateTx } = this.futarchy.squadsProposalCreateTx({
-      dao,
-      instructions: [
-        createTransferInstruction(
-          vaultUsdcAta,
-          recipientAta,
+      const { squadsTransaction: estateSquadsTransaction } =
+        getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+
+      await this.futarchy
+        .adminEnqueueMultisigProposalApprovalIx({
+          dao,
+          transactionIndex,
+          admin: liquidator.publicKey,
+        })
+        .signers([liquidator])
+        .rpc();
+
+      await this.futarchy
+        .executeMultisigProposalApprovalIx({ dao, transactionIndex })
+        .rpc();
+
+      await executeVaultTransaction(this, dao, estateSquadsTransaction);
+    };
+
+    // Estate cycle #1 unwinds the treasury position into the vault's ATAs.
+    const preUnwindDao = await this.futarchy.getDao(dao);
+    const preUnwindSpot = preUnwindDao.amm.state.spot.spot;
+
+    const [treasuryPosition] = PublicKey.findProgramAddressSync(
+      [Buffer.from("amm_position"), dao.toBuffer(), vault.toBuffer()],
+      FUTARCHY_V0_6_PROGRAM_ID,
+    );
+    const storedTreasuryPosition =
+      await this.futarchy.futarchy.account.ammPosition.fetch(treasuryPosition);
+    const expectedBase = storedTreasuryPosition.liquidity
+      .mul(preUnwindSpot.baseReserves)
+      .div(preUnwindDao.amm.totalLiquidity);
+    const expectedQuote = storedTreasuryPosition.liquidity
+      .mul(preUnwindSpot.quoteReserves)
+      .div(preUnwindDao.amm.totalLiquidity);
+
+    const [eventAuthority] = getEventAuthorityAddr(FUTARCHY_V0_6_PROGRAM_ID);
+    const withdrawIx = await this.futarchy.futarchy.methods
+      .withdrawLiquidity({
+        liquidityToWithdraw: storedTreasuryPosition.liquidity,
+        minBaseAmount: new BN(0),
+        minQuoteAmount: new BN(0),
+      })
+      .accounts({
+        dao,
+        positionAuthority: vault,
+        liquidityProviderBaseAccount: getAssociatedTokenAddressSync(
+          META,
           vault,
-          600 * 1_000_000,
+          true,
         ),
-      ],
-      transactionIndex: 2n,
-    });
-    estateCreateTx.recentBlockhash = (
-      await this.banksClient.getLatestBlockhash()
-    )[0];
-    estateCreateTx.feePayer = this.payer.publicKey;
-    estateCreateTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
-    await this.banksClient.processTransaction(estateCreateTx);
-
-    const {
-      squadsProposal: estateSquadsProposal,
-      squadsTransaction: estateSquadsTransaction,
-    } = getProposalAddrsForTransactionIndex({ dao, transactionIndex: 2n });
-
-    const [enqueuedApproval] = PublicKey.findProgramAddressSync(
-      [
-        SEED_ENQUEUED_APPROVAL,
-        dao.toBuffer(),
-        new BN(2).toArrayLike(Buffer, "le", 8),
-      ],
-      this.futarchy.futarchy.programId,
-    );
-
-    await this.futarchy.futarchy.methods
-      .adminEnqueueMultisigProposalApproval({ transactionIndex: new BN(2) })
-      .accounts({
-        dao,
-        admin: liquidator.publicKey,
-        squadsMultisig: multisigPda,
-        squadsMultisigProposal: estateSquadsProposal,
-        enqueuedApproval,
+        liquidityProviderQuoteAccount: getAssociatedTokenAddressSync(
+          USDC,
+          vault,
+          true,
+        ),
+        ammBaseVault: getAssociatedTokenAddressSync(META, dao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(USDC, dao, true),
+        ammPosition: treasuryPosition,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        eventAuthority,
+        program: FUTARCHY_V0_6_PROGRAM_ID,
       })
-      .signers([liquidator])
-      .rpc();
+      .instruction();
 
-    await this.futarchy.futarchy.methods
-      .executeMultisigProposalApproval()
-      .accounts({
-        dao,
-        rentReceiver: this.payer.publicKey,
-        squadsMultisig: multisigPda,
-        squadsMultisigProposal: estateSquadsProposal,
-        enqueuedApproval,
-        squadsMultisigProgram: multisig.PROGRAM_ID,
-      })
-      .rpc();
+    // The memo payload was transaction 1; the estate starts at 2
+    await runEstateCycle(2n, [withdrawIx]);
 
-    const storedEstateProposal =
-      await multisig.accounts.Proposal.fromAccountAddress(
-        this.squadsConnection,
-        estateSquadsProposal,
-      );
-    assert.isTrue(
-      multisig.generated.isProposalStatusApproved(storedEstateProposal.status),
-    );
+    const postUnwindPosition =
+      await this.futarchy.futarchy.account.ammPosition.fetch(treasuryPosition);
+    assert.equal(postUnwindPosition.liquidity.toString(), "0");
 
-    await executeVaultTransaction(this, dao, estateSquadsTransaction);
-
-    assert.equal(
-      (await this.getTokenBalance(USDC, recipient)).toString(),
-      (600 * 1_000_000).toString(),
-    );
-    assert.equal(
-      (await this.getTokenBalance(USDC, vault)).toString(),
-      (sweptQuote - BigInt(600 * 1_000_000)).toString(),
-    );
+    const sweptBase = await this.getTokenBalance(META, vault);
+    const sweptQuote = await this.getTokenBalance(USDC, vault);
+    assert.equal(sweptBase.toString(), expectedBase.toString());
+    assert.equal(sweptQuote.toString(), expectedQuote.toString());
 
     // Liquidation never traps third-party LPs: withdraw_liquidity is exempt
     // from the liquidated guards
@@ -343,7 +303,6 @@ export default function suite() {
     const preBase = await this.getTokenBalance(META, this.payer.publicKey);
     const preQuote = await this.getTokenBalance(USDC, this.payer.publicKey);
 
-    const [eventAuthority] = getEventAuthorityAddr(FUTARCHY_V0_6_PROGRAM_ID);
     await this.futarchy.futarchy.methods
       .withdrawLiquidity({
         liquidityToWithdraw: storedLpPosition.liquidity,
@@ -382,5 +341,29 @@ export default function suite() {
     const postLpPosition =
       await this.futarchy.futarchy.account.ammPosition.fetch(lpPosition);
     assert.equal(postLpPosition.liquidity.toString(), "0");
+
+    // Estate cycle #2 distributes from the swept treasury
+    // Simply proof that the liquidator can move funds out of the DAO
+    const recipient = Keypair.generate().publicKey;
+    const recipientAta = await this.createTokenAccount(USDC, recipient);
+    const vaultUsdcAta = getAssociatedTokenAddressSync(USDC, vault, true);
+
+    await runEstateCycle(3n, [
+      createTransferInstruction(
+        vaultUsdcAta,
+        recipientAta,
+        vault,
+        600 * 1_000_000,
+      ),
+    ]);
+
+    assert.equal(
+      (await this.getTokenBalance(USDC, recipient)).toString(),
+      (600 * 1_000_000).toString(),
+    );
+    assert.equal(
+      (await this.getTokenBalance(USDC, vault)).toString(),
+      (sweptQuote - BigInt(600 * 1_000_000)).toString(),
+    );
   });
 }

@@ -62,6 +62,10 @@ pub struct FinalizeProposal<'info> {
 
 impl FinalizeProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        // Ensure the proposal and DAO are migrated.
+        Proposal::assert_migrated(&self.proposal.to_account_info())?;
+        Dao::assert_migrated(&self.dao.to_account_info())?;
+
         let clock = Clock::get()?;
 
         require_gte!(
@@ -171,6 +175,21 @@ impl FinalizeProposal<'_> {
                     dao.last_failed_liquidation_at = clock.unix_timestamp
                 }
                 _ => {}
+            }
+        }
+
+        // In case of a hostile liquidation, set the liquidator immediately.
+        // This write can only occur once, as a liquidated DAO can't start another proposal.
+        if new_proposal_state == ProposalState::Passed {
+            if let ProposalAction::HostileLiquidate { liquidator } = &proposal.action {
+                dao.liquidator = Some(*liquidator);
+
+                // The spending limit must be zeroed so that the estate can be swept.
+                // Otherwise a still-live limit member could drain the estate.
+                if dao.initial_spending_limit.is_some() {
+                    dao.initial_spending_limit = None;
+                    dao.spending_limit_dirty = true;
+                }
             }
         }
 
@@ -302,7 +321,7 @@ impl FinalizeProposal<'_> {
             squads_proposal: squads_proposal.key(),
             squads_multisig: dao.squads_multisig,
             post_amm_state: dao.amm.clone(),
-            is_team_sponsored: proposal.is_team_sponsored,
+            is_team_sponsored: proposal.is_sponsored_by(dao.team_address),
         });
 
         Ok(())
