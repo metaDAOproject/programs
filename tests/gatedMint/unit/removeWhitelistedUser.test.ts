@@ -191,8 +191,9 @@ export default function suite() {
       .rpc();
     assert.isNull(await this.banksClient.getAccount(addr));
 
-    // The PDA was freed, so the same user can be whitelisted again.
-    await whitelistUser(gatedMintClient, mint, admin, user, this.payer);
+    // The PDA was freed, so the same user can be whitelisted again. The
+    // compute price keeps this transaction distinct from the first add.
+    await whitelistUser(gatedMintClient, mint, admin, user, this.payer, 1);
     assert.isNotNull(await this.banksClient.getAccount(addr));
   });
 

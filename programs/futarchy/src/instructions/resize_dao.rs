@@ -21,8 +21,8 @@ impl ResizeDao<'_> {
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Dao::INIT_SPACE + 8;
-        // 42 bytes: 1 (Option discriminant) + 32 (Pubkey) + 8 (i64) + 1 (bool)
-        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 42;
+        // 58 bytes: 33 (Option<Pubkey> liquidator) + 8 (i64) + 8 (i64) + 1 (bool) + 8 (i64)
+        const BEFORE_REALLOC_SIZE: usize = AFTER_REALLOC_SIZE - 58;
 
         if dao.data_len() != BEFORE_REALLOC_SIZE {
             // already realloced
@@ -55,8 +55,15 @@ impl ResizeDao<'_> {
             initial_spending_limit: old_dao_data.initial_spending_limit,
             team_sponsored_pass_threshold_bps: old_dao_data.team_sponsored_pass_threshold_bps,
             team_address: old_dao_data.team_address,
+            // The optimistic execution machinery is gone; any in-flight
+            // optimistic spend is cleared rather than carried over.
             optimistic_proposal: None,
-            is_optimistic_governance_enabled: false,
+            is_optimistic_governance_enabled: old_dao_data.is_optimistic_governance_enabled,
+            liquidator: None,
+            last_failed_takeover_at: 0,
+            last_failed_liquidation_at: 0,
+            spending_limit_dirty: false,
+            last_buyback_finalized_at: 0,
         };
 
         dao.realloc(AFTER_REALLOC_SIZE, true)?;

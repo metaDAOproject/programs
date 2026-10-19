@@ -6,6 +6,7 @@ import {
 } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
+  Keypair,
   PublicKey,
   Transaction,
   TransactionMessage,
@@ -128,9 +129,10 @@ export default function suite() {
       .rpc();
   });
 
-  it("should cancel a pending proposal", async function () {
+  it("should cancel a blockable proposal mid-market", async function () {
     let storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.pending);
+    assert.isTrue(storedProposal.councilCanBlock);
 
     const storedDao = await this.futarchy.getDao(dao);
     const seqNumBefore = storedDao.seqNum.toNumber();
@@ -331,5 +333,145 @@ export default function suite() {
       .signers([this.payer])
       .rpc()
       .then(callbacks[0], callbacks[1]);
+  });
+
+  // This will be blockable in the future
+  it("should cancel a live hostile proposal", async function () {
+    // Fresh DAO — the suite DAO already has a live blockable proposal
+    const BASE = await this.createMint(this.payer.publicKey, 6);
+    const QUOTE = await this.createMint(this.payer.publicKey, 6);
+
+    await this.createTokenAccount(BASE, this.payer.publicKey);
+    await this.createTokenAccount(QUOTE, this.payer.publicKey);
+
+    await this.mintTo(BASE, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+    await this.mintTo(
+      QUOTE,
+      this.payer.publicKey,
+      this.payer,
+      200_000 * 1_000_000,
+    );
+
+    const hostileDao = await setupBasicDao({
+      context: this,
+      baseMint: BASE,
+      quoteMint: QUOTE,
+    });
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao: hostileDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal: hostileProposal, squadsProposal } =
+      await this.futarchy.initializeHostileTakeoverProposal({
+        dao: hostileDao,
+        newTeamAddress: Keypair.generate().publicKey,
+        spendingLimitAction: { keep: {} },
+      });
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: hostileProposal,
+        dao: hostileDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        squadsProposal,
+      })
+      .rpc();
+
+    let storedProposal = await this.futarchy.getProposal(hostileProposal);
+    assert.exists(storedProposal.state.pending);
+    assert.isTrue(storedProposal.councilCanBlock);
+
+    const {
+      question,
+      baseVault,
+      quoteVault,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+    } = this.futarchy.getProposalPdas(hostileProposal, BASE, QUOTE, hostileDao);
+
+    const multisigPda = multisig.getMultisigPda({ createKey: hostileDao })[0];
+    const [vaultEventAuthority] = getEventAuthorityAddr(
+      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+    );
+
+    await this.futarchy.futarchy.methods
+      .adminCancelProposal()
+      .accounts({
+        proposal: hostileProposal,
+        dao: hostileDao,
+        question,
+        squadsProposal,
+        squadsMultisig: multisigPda,
+        squadsMultisigProgram: SQUADS_PROGRAM_ID,
+        admin: this.payer.publicKey,
+        ammPassBaseVault: getAssociatedTokenAddressSync(
+          passBaseMint,
+          hostileDao,
+          true,
+        ),
+        ammPassQuoteVault: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          hostileDao,
+          true,
+        ),
+        ammFailBaseVault: getAssociatedTokenAddressSync(
+          failBaseMint,
+          hostileDao,
+          true,
+        ),
+        ammFailQuoteVault: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          hostileDao,
+          true,
+        ),
+        ammBaseVault: getAssociatedTokenAddressSync(BASE, hostileDao, true),
+        ammQuoteVault: getAssociatedTokenAddressSync(QUOTE, hostileDao, true),
+        vaultProgram: CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+        vaultEventAuthority,
+        quoteVault,
+        quoteVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          QUOTE,
+          quoteVault,
+          true,
+        ),
+        passQuoteMint,
+        failQuoteMint,
+        passBaseMint,
+        failBaseMint,
+        baseVault,
+        baseVaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
+          BASE,
+          baseVault,
+          true,
+        ),
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .signers([this.payer])
+      .rpc();
+
+    storedProposal = await this.futarchy.getProposal(hostileProposal);
+    assert.exists(storedProposal.state.failed);
+
+    const storedDaoAfter = await this.futarchy.getDao(hostileDao);
+    assert.exists(storedDaoAfter.amm.state.spot);
+    assert.notExists(storedDaoAfter.amm.state.futarchy);
   });
 }

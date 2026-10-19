@@ -90,4 +90,46 @@ pub enum FutarchyError {
     InvalidSpendingLimitMint,
     #[msg("No active optimistic proposal")]
     NoActiveOptimisticProposal,
+    #[msg("This DAO has been liquidated")]
+    DaoLiquidated,
+    #[msg("A proposal of this kind finalized recently, so the cooldown must elapse first")]
+    ProposalKindCooldownActive,
+    #[msg("The DAO has no spending limit")]
+    NoSpendingLimit,
+    #[msg("Amount exceeds the cap of 3x the monthly spending limit")]
+    SpendCapExceeded,
+    #[msg("The base mint's authority is neither the treasury vault nor a mint governor")]
+    UnknownMintAuthority,
+    #[msg("This proposal kind must be team-sponsored before it can launch")]
+    ProposalNotTeamSponsored,
+    #[msg("The spending limit record hasn't changed, so there is nothing to sync")]
+    SpendingLimitNotDirty,
+    #[msg("Wrong proposal kind for this instruction")]
+    InvalidProposalKind,
+    #[msg("This DAO has already been liquidated")]
+    AlreadyLiquidated,
+    #[msg("A spending limit can have at most 10 members")]
+    TooManySpendingLimitMembers,
+    #[msg("Invalid liquidator")]
+    InvalidLiquidator,
+    #[msg("Pass threshold must be between -99.99% and 99.99%")]
+    InvalidProposalPassThreshold,
+    #[msg("A proposal params update must set at least one field")]
+    EmptyProposalParamsUpdate,
+    #[msg("Buyback amount exceeds 25% of the treasury")]
+    BuybackCapExceeded,
+    #[msg("The total must be an exact multiple of the non-zero per-cycle amount, at least twice over")]
+    InvalidBuybackAmount,
+    #[msg("Cycle frequency must be between 60 seconds and 1 year")]
+    InvalidBuybackCycleFrequency,
+    #[msg("Start delay must be at most 30 days")]
+    InvalidBuybackStartDelay,
+    #[msg("min_price must be no greater than max_price")]
+    InvalidBuybackPriceBand,
+    #[msg("A treasury account is neither a vault-owned quote account nor the treasury's AMM position")]
+    InvalidTreasuryAccount,
+    #[msg("Treasury accounts must be in strictly ascending key order")]
+    TreasuryAccountsNotSorted,
+    #[msg("This proposal kind's launch takes no extra accounts")]
+    UnexpectedLaunchAccounts,
 }
