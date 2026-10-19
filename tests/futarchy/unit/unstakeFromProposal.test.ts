@@ -18,7 +18,8 @@ export default function suite() {
     USDC: PublicKey,
     dao: PublicKey,
     proposal: PublicKey,
-    squadsProposalPda: PublicKey;
+    squadsProposalPda: PublicKey,
+    squadsTransactionPda: PublicKey;
 
   beforeEach(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
@@ -76,6 +77,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -107,6 +109,10 @@ export default function suite() {
     [squadsProposalPda] = multisig.getProposalPda({
       multisigPda,
       transactionIndex: 1n,
+    });
+    [squadsTransactionPda] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
     });
 
     const tx = new Transaction().add(vaultTxCreate, proposalCreateIx);
@@ -171,6 +177,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
 
@@ -216,6 +223,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
 
@@ -264,6 +272,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .instruction();
 

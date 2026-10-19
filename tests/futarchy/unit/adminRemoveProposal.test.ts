@@ -50,6 +50,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -223,6 +224,10 @@ export default function suite() {
       multisigPda,
       transactionIndex: 1n,
     });
+    const [squadsTransactionPda] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
+    });
 
     // Launch the proposal to move it to Pending state
     await this.futarchy
@@ -232,6 +237,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
 

@@ -29,6 +29,7 @@ import {
   whitelistUser,
 } from "../../gatedMint/utils.js";
 import { TestContext } from "../../main.test.js";
+import { EMPTY_UPDATE_DAO_PARAMS } from "../utils.js";
 
 const ata = (mint: PublicKey, owner: PublicKey) =>
   getAssociatedTokenAddressSync(mint, owner, true);
@@ -179,27 +180,18 @@ export default function suite() {
     const updateDaoIx = await this.futarchy
       .updateDaoIx({
         dao,
-        params: {
-          passThresholdBps: 500,
-          secondsPerProposal: null,
-          baseToStake: null,
-          twapInitialObservation: null,
-          twapMaxObservationChangePerUpdate: null,
-          minQuoteFutarchicLiquidity: null,
-          minBaseFutarchicLiquidity: null,
-          twapStartDelaySeconds: null,
-          teamSponsoredPassThresholdBps: null,
-          teamAddress: null,
-          isOptimisticGovernanceEnabled: null,
-        },
+        params: { ...EMPTY_UPDATE_DAO_PARAMS, passThresholdBps: 500 },
       })
       .instruction();
-    const { tx: squadsCreateTx, squadsProposal: createdSquadsProposal } =
-      this.futarchy.squadsProposalCreateTx({
-        dao,
-        instructions: [updateDaoIx],
-        transactionIndex: 1n,
-      });
+    const {
+      tx: squadsCreateTx,
+      squadsProposal: createdSquadsProposal,
+      squadsTransaction,
+    } = this.futarchy.squadsProposalCreateTx({
+      dao,
+      instructions: [updateDaoIx],
+      transactionIndex: 1n,
+    });
     squadsCreateTx.recentBlockhash = (
       await this.banksClient.getLatestBlockhash()
     )[0];
@@ -216,6 +208,7 @@ export default function suite() {
         baseMint: GATED,
         quoteMint: USDC,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc();
 

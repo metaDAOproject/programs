@@ -55,7 +55,10 @@ impl AdminUpdateProposalParams<'_> {
             // The same comparison `launch_proposal` makes
             require_gt!(
                 duration_in_seconds,
-                self.proposal.action.params().twap_start_delay_seconds,
+                self.proposal
+                    .action
+                    .params_for(&self.dao, false)
+                    .twap_start_delay_seconds,
                 FutarchyError::ProposalDurationTooShort
             );
         }
@@ -90,6 +93,11 @@ impl AdminUpdateProposalParams<'_> {
         if let Some(pass_threshold_bps) = args.pass_threshold_bps {
             proposal.pass_threshold_bps = pass_threshold_bps;
         }
+
+        // `launch_proposal` keeps these values instead of writing its own.
+        // It is assumed that a change to the proposal params applies to both,
+        // even when only one is changed.
+        proposal.params_overridden = true;
 
         dao.seq_num += 1;
         let clock = Clock::get()?;

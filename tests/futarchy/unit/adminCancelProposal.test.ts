@@ -22,7 +22,8 @@ export default function suite() {
     USDC: PublicKey,
     dao: PublicKey,
     proposal: PublicKey,
-    squadsProposalPda: PublicKey;
+    squadsProposalPda: PublicKey,
+    squadsTransactionPda: PublicKey;
 
   beforeEach(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
@@ -75,6 +76,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -107,6 +109,10 @@ export default function suite() {
       multisigPda,
       transactionIndex: 1n,
     });
+    [squadsTransactionPda] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
+    });
 
     const tx = new Transaction().add(vaultTxCreate, proposalCreateIx);
     tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
@@ -124,6 +130,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
   });
@@ -344,7 +351,7 @@ export default function suite() {
     const raw = await this.banksClient.getAccount(proposal);
     const legacy = Buffer.concat([
       Buffer.from(raw.data.subarray(0, 347)),
-      Buffer.from([0xb1, 0xf3, 0x00, 0x03, 0xf0, 0x37, 0xa2, 0x00]),
+      Buffer.from([0xb1, 0xf3, 0x00, 0x03, 0x00, 0x37, 0xa2, 0x00]),
     ]);
     assert.equal(legacy.length, 355);
     this.context.setAccount(proposal, { ...raw, data: legacy });

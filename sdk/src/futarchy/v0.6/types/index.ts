@@ -19,7 +19,12 @@ import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
 
 export type InitializeDaoParams =
   IdlTypes<FutarchyProgram>["InitializeDaoParams"];
-export type UpdateDaoParams = IdlTypes<FutarchyProgram>["UpdateDaoParams"];
+// The retired optimistic-governance flag only keeps its position in the
+// encoding; `updateDaoIx` fills it in, so callers never set it.
+export type UpdateDaoParams = Omit<
+  IdlTypes<FutarchyProgram>["UpdateDaoParams"],
+  "deprecatedIsOptimisticGovernanceEnabled"
+>;
 export type SetSpendingLimitArgs =
   IdlTypes<FutarchyProgram>["SetSpendingLimitArgs"];
 export type InitializeLargeSpendProposalArgs =
@@ -65,6 +70,20 @@ export type WithdrawLiquidityEvent =
   IdlEvents<FutarchyProgram>["WithdrawLiquidityEvent"];
 export type SponsorProposalEvent =
   IdlEvents<FutarchyProgram>["SponsorProposalEvent"];
+export type RemoveProposalEvent =
+  IdlEvents<FutarchyProgram>["RemoveProposalEvent"];
+export type AdminUpdateProposalParamsEvent =
+  IdlEvents<FutarchyProgram>["AdminUpdateProposalParamsEvent"];
+export type AdminCancelProposalEvent =
+  IdlEvents<FutarchyProgram>["AdminCancelProposalEvent"];
+export type CollectMeteoraDammFeesEvent =
+  IdlEvents<FutarchyProgram>["CollectMeteoraDammFeesEvent"];
+export type AdminFixPositionAuthorityEvent =
+  IdlEvents<FutarchyProgram>["AdminFixPositionAuthorityEvent"];
+export type SetSpendingLimitEvent =
+  IdlEvents<FutarchyProgram>["SetSpendingLimitEvent"];
+export type SyncSpendingLimitEvent =
+  IdlEvents<FutarchyProgram>["SyncSpendingLimitEvent"];
 export type FutarchyEvent =
   | CollectFeesEvent
   | InitializeDaoEvent
@@ -78,7 +97,14 @@ export type FutarchyEvent =
   | ConditionalSwapEvent
   | ProvideLiquidityEvent
   | WithdrawLiquidityEvent
-  | SponsorProposalEvent;
+  | SponsorProposalEvent
+  | RemoveProposalEvent
+  | AdminUpdateProposalParamsEvent
+  | AdminCancelProposalEvent
+  | CollectMeteoraDammFeesEvent
+  | AdminFixPositionAuthorityEvent
+  | SetSpendingLimitEvent
+  | SyncSpendingLimitEvent;
 
 export type v0_6_0_CollectFeesEvent =
   IdlEvents<v0_6_0_Futarchy>["CollectFeesEvent"];

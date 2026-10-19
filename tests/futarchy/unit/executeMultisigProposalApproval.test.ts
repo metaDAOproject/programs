@@ -157,8 +157,11 @@ export default function suite() {
     // Initialize (but don't launch) a futarchy proposal. This creates a
     // Squads proposal at index 1 and leaves the AMM in Spot — so we can
     // enqueue approval against it. Launching is done separately below.
-    const { proposal, squadsProposal: proposalPda } =
-      await this.initializeProposal({ dao, instructions: [] });
+    const {
+      proposal,
+      squadsProposal: proposalPda,
+      squadsTransaction,
+    } = await this.initializeProposal({ dao, instructions: [] });
 
     const enqueuedApprovalPda = await enqueue(this, 1n);
 
@@ -171,6 +174,7 @@ export default function suite() {
         baseMint: storedDao.baseMint,
         quoteMint: storedDao.quoteMint,
         squadsProposal: proposalPda,
+        squadsTransaction,
       })
       .rpc();
 

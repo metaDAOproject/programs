@@ -121,6 +121,9 @@ impl FinalizeProposal<'_> {
 
         let clock = Clock::get()?;
 
+        // Read before a passed takeover moves the team below.
+        let is_team_sponsored = proposal.is_sponsored_by(dao.team_address);
+
         let calculate_twap = |amm: &Pool| -> Result<u128> {
             let twap_start_timestamp =
                 amm.oracle.created_at_timestamp + amm.oracle.start_delay_seconds as i64;
@@ -165,7 +168,6 @@ impl FinalizeProposal<'_> {
         proposal.state = new_proposal_state;
 
         // We want to prevent certain proposals from being retried immediately after failure.
-        // This is to prevent abuse of the system, given that the council can't veto the proposal.
         if new_proposal_state == ProposalState::Failed {
             match proposal.action {
                 ProposalAction::HostileTakeover { .. } => {
@@ -178,26 +180,37 @@ impl FinalizeProposal<'_> {
             }
         }
 
-        // In case of a hostile liquidation, set the liquidator immediately.
-        // This write can only occur once, as a liquidated DAO can't start another proposal.
+        // Hostile actions that change the DAO itself land said changes immediately.
         if new_proposal_state == ProposalState::Passed {
-            if let ProposalAction::HostileLiquidate { liquidator } = &proposal.action {
-                dao.liquidator = Some(*liquidator);
+            match &proposal.action {
+                // This write can only occur once, as a liquidated DAO can't start another proposal.
+                ProposalAction::HostileLiquidate { liquidator } => {
+                    dao.liquidator = Some(*liquidator);
 
-                // The spending limit must be zeroed so that the estate can be swept.
-                // Otherwise a still-live limit member could drain the estate.
-                if dao.initial_spending_limit.is_some() {
-                    dao.initial_spending_limit = None;
-                    dao.spending_limit_dirty = true;
+                    // The spending limit must be zeroed so that the estate can be swept.
+                    dao.set_spending_limit(None);
                 }
+                // The team moves at once, so the outgoing team's sponsorships stop counting.
+                ProposalAction::HostileTakeover {
+                    new_team_address,
+                    spending_limit_action,
+                } => {
+                    dao.team_address = *new_team_address;
+
+                    match spending_limit_action {
+                        SpendingLimitAction::Keep => {}
+                        SpendingLimitAction::Remove => dao.set_spending_limit(None),
+                        SpendingLimitAction::Set(config) => {
+                            dao.set_spending_limit(Some(config.clone()))
+                        }
+                    }
+                }
+                _ => {}
             }
         }
 
-        // The buyback cooldown stamps on either outcome: it rate-limits an
-        // action the DAO consented to — draining the treasury through a
-        // sequence of individually reasonable votes — rather than deterring
-        // retries of a rejected proposal. `admin_cancel_proposal` writes no
-        // timestamp, so a council block can't lock buybacks out for a quarter.
+        // The buyback cooldown stamps on either outcome, so back-to-back
+        // buybacks can't drain the treasury.
         if matches!(proposal.action, ProposalAction::BuybackToken { .. }) {
             dao.last_buyback_finalized_at = clock.unix_timestamp;
         }
@@ -321,7 +334,7 @@ impl FinalizeProposal<'_> {
             squads_proposal: squads_proposal.key(),
             squads_multisig: dao.squads_multisig,
             post_amm_state: dao.amm.clone(),
-            is_team_sponsored: proposal.is_sponsored_by(dao.team_address),
+            is_team_sponsored,
         });
 
         Ok(())

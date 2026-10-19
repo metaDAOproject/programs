@@ -13,6 +13,7 @@ import {
   expectError,
   forceApproveSquadsProposal,
 } from "../../utils.js";
+import { setTypedProposalsEnabled } from "../utils.js";
 
 const ONE_BUCK_PRICE = PriceMath.getAmmPrice(1, 6, 6);
 
@@ -182,6 +183,24 @@ export default function suite() {
           amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
           // Non-adjacent so the check must sort before comparing neighbours
           members: [member, Keypair.generate().publicKey, member],
+        },
+      })
+      .then(...callbacks);
+  });
+
+  it("throws error when the DAO has typed proposals off", async function () {
+    await setTypedProposalsEnabled(this, dao, false);
+
+    const callbacks = expectError(
+      "TypedProposalsDisabled",
+      "created a spending limit change proposal on a DAO with typed proposals off",
+    );
+    await this.futarchy
+      .initializeSpendingLimitChangeProposal({
+        dao,
+        config: {
+          amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+          members: [Keypair.generate().publicKey],
         },
       })
       .then(...callbacks);

@@ -84,6 +84,8 @@ pub struct Dao {
     pub spending_limit_dirty: bool,
     /// Unix time of the last buyback finalization. 0 = never.
     pub last_buyback_finalized_at: i64,
+    /// Whether the DAO runs on the mini-instructions catalog. Never turns off.
+    pub typed_proposals_enabled: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
@@ -143,6 +145,12 @@ impl Dao {
             FutarchyError::AccountNotMigrated
         );
         Ok(())
+    }
+
+    /// Replaces the spending-limit record and flags it for the next sync.
+    pub fn set_spending_limit(&mut self, config: Option<InitialSpendingLimit>) {
+        self.initial_spending_limit = config;
+        self.spending_limit_dirty = true;
     }
 
     pub fn invariant(&self) -> Result<()> {
