@@ -2,6 +2,7 @@ import { AnchorProvider } from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
 import BN from "bn.js";
 import {
+  AddressLookupTableAccount,
   Keypair,
   PublicKey,
   Transaction,
@@ -15,10 +16,14 @@ import {
   PERMISSIONLESS_ACCOUNT,
 } from "@metadaoproject/programs";
 import {
+  AuthorityType,
+  createApproveInstruction,
   createAssociatedTokenAccountIdempotentInstruction,
+  createSetAuthorityInstruction,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddressSync,
+  getMint,
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
@@ -33,8 +38,14 @@ import {
   FutarchyClient,
   UpdateDaoParams,
 } from "@metadaoproject/programs/futarchy/v0.6";
+import { MintGovernorClient } from "@metadaoproject/programs/mint_governor";
 import { buildAdminApprovalTransactions } from "./adminApproval.js";
-import { getSquadsPdasFromDao, probeSquadsVaultTransaction } from "./squads.js";
+import {
+  createLookupTable,
+  getSquadsPdasFromDao,
+  probeSquadsVaultTransaction,
+  squadsVaultTransactionFits,
+} from "./squads.js";
 import { sendAndConfirm, sendWithRetries } from "./transactions.js";
 
 const SEED_AMM_POSITION = Buffer.from("amm_position");
@@ -99,6 +110,97 @@ export const updateDao =
     ],
   });
 
+// The vault's position in the DAO's AMM - the DAO's protocol-owned liquidity
+const findAmmPosition = async ({
+  futarchy,
+  dao,
+  daoMultisigVault,
+}: DaoActionContext) => {
+  const daoAccount = await futarchy.getDao(dao);
+  const [ammPosition] = PublicKey.findProgramAddressSync(
+    [SEED_AMM_POSITION, dao.toBuffer(), daoMultisigVault.toBuffer()],
+    futarchy.futarchy.programId,
+  );
+  const ammPositionAccount =
+    await futarchy.futarchy.account.ammPosition.fetch(ammPosition);
+
+  console.log("AMM position:", ammPosition.toBase58());
+  console.log("Position liquidity:", ammPositionAccount.liquidity.toString());
+
+  return { daoAccount, ammPosition, ammPositionAccount };
+};
+
+// Withdraws `liquidityToWithdraw` of the vault's AMM position into the
+// vault's token accounts, which the setup instructions make sure exist
+const withdrawLiquidityAction = async (
+  { futarchy, dao, daoMultisigVault, payer }: DaoActionContext,
+  { daoAccount, ammPosition }: Awaited<ReturnType<typeof findAmmPosition>>,
+  {
+    liquidityToWithdraw,
+    minBaseAmount,
+    minQuoteAmount,
+  }: {
+    liquidityToWithdraw: BN;
+    minBaseAmount: BN;
+    minQuoteAmount: BN;
+  },
+): Promise<DaoAction> => {
+  const vaultBaseTokenAccount = getAssociatedTokenAddressSync(
+    daoAccount.baseMint,
+    daoMultisigVault,
+    true,
+  );
+  const vaultQuoteTokenAccount = getAssociatedTokenAddressSync(
+    daoAccount.quoteMint,
+    daoMultisigVault,
+    true,
+  );
+
+  const withdrawLiquidityIx = await futarchy.futarchy.methods
+    .withdrawLiquidity({
+      liquidityToWithdraw,
+      minBaseAmount,
+      minQuoteAmount,
+    })
+    .accounts({
+      dao,
+      positionAuthority: daoMultisigVault,
+      liquidityProviderBaseAccount: vaultBaseTokenAccount,
+      liquidityProviderQuoteAccount: vaultQuoteTokenAccount,
+      ammBaseVault: getAssociatedTokenAddressSync(
+        daoAccount.baseMint,
+        dao,
+        true,
+      ),
+      ammQuoteVault: getAssociatedTokenAddressSync(
+        daoAccount.quoteMint,
+        dao,
+        true,
+      ),
+      ammPosition,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .instruction();
+
+  return {
+    instructions: [withdrawLiquidityIx],
+    setupInstructions: [
+      createAssociatedTokenAccountIdempotentInstruction(
+        payer,
+        vaultBaseTokenAccount,
+        daoMultisigVault,
+        daoAccount.baseMint,
+      ),
+      createAssociatedTokenAccountIdempotentInstruction(
+        payer,
+        vaultQuoteTokenAccount,
+        daoMultisigVault,
+        daoAccount.quoteMint,
+      ),
+    ],
+  };
+};
+
 // Withdraws a fraction of the vault's AMM position into the vault's token
 // accounts. The min amounts are set `slippageBps` below what the withdrawn
 // liquidity is worth right now, so reserve changes between now and execution
@@ -130,19 +232,11 @@ export const withdrawLiquidity = ({
     );
   }
 
-  return async ({ futarchy, dao, daoMultisigVault, payer }) => {
-    const daoAccount = await futarchy.getDao(dao);
+  return async (ctx) => {
+    const position = await findAmmPosition(ctx);
+    const { daoAccount, ammPositionAccount } = position;
 
-    // The DAO's protocol-owned liquidity position is held by its squads vault
-    const [ammPositionPda] = PublicKey.findProgramAddressSync(
-      [SEED_AMM_POSITION, dao.toBuffer(), daoMultisigVault.toBuffer()],
-      futarchy.futarchy.programId,
-    );
-
-    const ammPosition =
-      await futarchy.futarchy.account.ammPosition.fetch(ammPositionPda);
-
-    const liquidityToWithdraw = ammPosition.liquidity
+    const liquidityToWithdraw = ammPositionAccount.liquidity
       .muln(fractionBps)
       .divn(10_000);
     if (liquidityToWithdraw.isZero()) {
@@ -171,68 +265,136 @@ export const withdrawLiquidity = ({
       .muln(10_000 - slippageBps)
       .divn(10_000);
 
-    console.log("AMM position:", ammPositionPda.toBase58());
-    console.log("Position liquidity:", ammPosition.liquidity.toString());
     console.log("Liquidity to withdraw:", liquidityToWithdraw.toString());
     console.log("Expected base out:", baseWithdrawable.toString());
     console.log("Expected quote out:", quoteWithdrawable.toString());
     console.log("Min base amount:", minBaseAmount.toString());
     console.log("Min quote amount:", minQuoteAmount.toString());
 
-    const vaultBaseTokenAccount = getAssociatedTokenAddressSync(
-      daoAccount.baseMint,
-      daoMultisigVault,
-      true,
-    );
-    const vaultQuoteTokenAccount = getAssociatedTokenAddressSync(
-      daoAccount.quoteMint,
-      daoMultisigVault,
-      true,
-    );
+    return withdrawLiquidityAction(ctx, position, {
+      liquidityToWithdraw,
+      minBaseAmount,
+      minQuoteAmount,
+    });
+  };
+};
 
-    const withdrawLiquidityIx = await futarchy.futarchy.methods
-      .withdrawLiquidity({
-        liquidityToWithdraw,
-        minBaseAmount,
-        minQuoteAmount,
-      })
-      .accounts({
-        dao,
-        positionAuthority: daoMultisigVault,
-        liquidityProviderBaseAccount: vaultBaseTokenAccount,
-        liquidityProviderQuoteAccount: vaultQuoteTokenAccount,
-        ammBaseVault: getAssociatedTokenAddressSync(
-          daoAccount.baseMint,
-          dao,
-          true,
-        ),
-        ammQuoteVault: getAssociatedTokenAddressSync(
-          daoAccount.quoteMint,
-          dao,
-          true,
-        ),
-        ammPosition: ammPositionPda,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .instruction();
+// Withdraws the vault's whole AMM position into the vault's token accounts,
+// taking whatever it's worth at execution: nothing is computed from the
+// reserves and the min amounts are zero, so a price move during the vote
+// can't fail the withdrawal. For liquidating the DAO, where the vault ends
+// up holding its share of the reserves either way.
+export const withdrawAllLiquidity = (): DaoActionBuilder => async (ctx) => {
+  const position = await findAmmPosition(ctx);
 
+  const liquidityToWithdraw = position.ammPositionAccount.liquidity;
+  if (liquidityToWithdraw.isZero()) {
+    throw new Error("The position has no liquidity to withdraw");
+  }
+
+  return withdrawLiquidityAction(ctx, position, {
+    liquidityToWithdraw,
+    minBaseAmount: new BN(0),
+    minQuoteAmount: new BN(0),
+  });
+};
+
+// The Meteora DAMM v2 position the launchpad created for the DAO, which the
+// vault owns through its position NFT, with the vault's accounts for the
+// pool's tokens and the instructions making sure those exist
+const findMeteoraPosition = async ({
+  provider,
+  futarchy,
+  dao,
+  daoMultisigVault,
+  payer,
+}: DaoActionContext) => {
+  const daoAccount = await futarchy.getDao(dao);
+  const cpAmm = new CpAmm(provider.connection);
+
+  // Any launchpad version may have launched the DAO, so use whichever
+  // version's position exists
+  const candidates = LAUNCHPAD_PROGRAM_IDS.map((launchpadProgramId) => {
+    const [positionNftMint] = PublicKey.findProgramAddressSync(
+      [SEED_POSITION_NFT_MINT, daoAccount.baseMint.toBuffer()],
+      launchpadProgramId,
+    );
     return {
-      instructions: [withdrawLiquidityIx],
-      setupInstructions: [
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer,
-          vaultBaseTokenAccount,
-          daoMultisigVault,
-          daoAccount.baseMint,
-        ),
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer,
-          vaultQuoteTokenAccount,
-          daoMultisigVault,
-          daoAccount.quoteMint,
-        ),
-      ],
+      positionNftMint,
+      position: derivePositionAddress(positionNftMint),
     };
+  });
+  const positionStates = await cpAmm._program.account.position.fetchMultiple(
+    candidates.map((candidate) => candidate.position),
+  );
+  const foundIndex = positionStates.findIndex((state) => state !== null);
+  if (foundIndex === -1) {
+    throw new Error("No launchpad-created Meteora position found for this DAO");
+  }
+  const { positionNftMint, position } = candidates[foundIndex];
+  const positionState = positionStates[foundIndex]!;
+  const positionNftAccount = derivePositionNftAccount(positionNftMint);
+
+  // The vault signs as the position owner, so it must hold the position NFT
+  const positionNft = await getAccount(
+    provider.connection,
+    positionNftAccount,
+    undefined,
+    TOKEN_2022_PROGRAM_ID,
+  );
+  if (!positionNft.owner.equals(daoMultisigVault)) {
+    throw new Error(
+      `Position NFT is owned by ${positionNft.owner.toBase58()}, not the DAO's vault`,
+    );
+  }
+
+  const poolState = await cpAmm.fetchPoolState(positionState.pool);
+  const tokenAProgram = getTokenProgram(poolState.tokenAFlag);
+  const tokenBProgram = getTokenProgram(poolState.tokenBFlag);
+  const vaultTokenAAccount = getAssociatedTokenAddressSync(
+    poolState.tokenAMint,
+    daoMultisigVault,
+    true,
+    tokenAProgram,
+  );
+  const vaultTokenBAccount = getAssociatedTokenAddressSync(
+    poolState.tokenBMint,
+    daoMultisigVault,
+    true,
+    tokenBProgram,
+  );
+
+  console.log("Meteora pool:", positionState.pool.toBase58());
+  console.log("Meteora position:", position.toBase58());
+  console.log("Token A mint:", poolState.tokenAMint.toBase58());
+  console.log("Token B mint:", poolState.tokenBMint.toBase58());
+
+  return {
+    cpAmm,
+    position,
+    positionState,
+    positionNftAccount,
+    poolState,
+    tokenAProgram,
+    tokenBProgram,
+    vaultTokenAAccount,
+    vaultTokenBAccount,
+    setupInstructions: [
+      createAssociatedTokenAccountIdempotentInstruction(
+        payer,
+        vaultTokenAAccount,
+        daoMultisigVault,
+        poolState.tokenAMint,
+        tokenAProgram,
+      ),
+      createAssociatedTokenAccountIdempotentInstruction(
+        payer,
+        vaultTokenBAccount,
+        daoMultisigVault,
+        poolState.tokenBMint,
+        tokenBProgram,
+      ),
+    ],
   };
 };
 
@@ -256,55 +418,24 @@ export const withdrawMeteoraLiquidity = ({
     );
   }
 
-  return async ({ provider, futarchy, dao, daoMultisigVault, payer }) => {
-    const daoAccount = await futarchy.getDao(dao);
-    const cpAmm = new CpAmm(provider.connection);
-
-    // Any launchpad version may have launched the DAO, so use whichever
-    // version's position exists
-    const candidates = LAUNCHPAD_PROGRAM_IDS.map((launchpadProgramId) => {
-      const [positionNftMint] = PublicKey.findProgramAddressSync(
-        [SEED_POSITION_NFT_MINT, daoAccount.baseMint.toBuffer()],
-        launchpadProgramId,
-      );
-      return {
-        positionNftMint,
-        position: derivePositionAddress(positionNftMint),
-      };
-    });
-    const positionStates = await cpAmm._program.account.position.fetchMultiple(
-      candidates.map((candidate) => candidate.position),
-    );
-    const foundIndex = positionStates.findIndex((state) => state !== null);
-    if (foundIndex === -1) {
-      throw new Error(
-        "No launchpad-created Meteora position found for this DAO",
-      );
-    }
-    const { positionNftMint, position } = candidates[foundIndex];
-    const positionState = positionStates[foundIndex]!;
-    const positionNftAccount = derivePositionNftAccount(positionNftMint);
-
-    // The vault signs the withdrawal as the position owner, so it must hold
-    // the position NFT
-    const positionNft = await getAccount(
-      provider.connection,
+  return async (ctx) => {
+    const {
+      cpAmm,
+      position,
+      positionState,
       positionNftAccount,
-      undefined,
-      TOKEN_2022_PROGRAM_ID,
-    );
-    if (!positionNft.owner.equals(daoMultisigVault)) {
-      throw new Error(
-        `Position NFT is owned by ${positionNft.owner.toBase58()}, not the DAO's vault`,
-      );
-    }
+      poolState,
+      tokenAProgram,
+      tokenBProgram,
+      vaultTokenAAccount,
+      vaultTokenBAccount,
+      setupInstructions,
+    } = await findMeteoraPosition(ctx);
 
     const liquidity = positionState.unlockedLiquidity;
     if (liquidity.isZero()) {
       throw new Error("The position has no unlocked liquidity to withdraw");
     }
-
-    const poolState = await cpAmm.fetchPoolState(positionState.pool);
 
     // Same math as the program's remove_all_liquidity
     const { outAmountA, outAmountB } = cpAmm.getWithdrawQuote({
@@ -320,23 +451,6 @@ export const withdrawMeteoraLiquidity = ({
       .muln(10_000 - slippageBps)
       .divn(10_000);
 
-    const tokenAProgram = getTokenProgram(poolState.tokenAFlag);
-    const tokenBProgram = getTokenProgram(poolState.tokenBFlag);
-    const vaultTokenAAccount = getAssociatedTokenAddressSync(
-      poolState.tokenAMint,
-      daoMultisigVault,
-      true,
-      tokenAProgram,
-    );
-    const vaultTokenBAccount = getAssociatedTokenAddressSync(
-      poolState.tokenBMint,
-      daoMultisigVault,
-      true,
-      tokenBProgram,
-    );
-
-    console.log("Meteora pool:", positionState.pool.toBase58());
-    console.log("Meteora position:", position.toBase58());
     console.log("Unlocked liquidity:", liquidity.toString());
     console.log(
       "Vested liquidity (stays):",
@@ -346,8 +460,6 @@ export const withdrawMeteoraLiquidity = ({
       "Permanently locked liquidity (stays):",
       positionState.permanentLockedLiquidity.toString(),
     );
-    console.log("Token A mint:", poolState.tokenAMint.toBase58());
-    console.log("Token B mint:", poolState.tokenBMint.toBase58());
     console.log("Expected token A out:", outAmountA.toString());
     console.log("Expected token B out:", outAmountB.toString());
     console.log("Min token A amount:", tokenAAmountThreshold.toString());
@@ -360,7 +472,7 @@ export const withdrawMeteoraLiquidity = ({
         pool: positionState.pool,
         position,
         positionNftAccount,
-        owner: daoMultisigVault,
+        owner: ctx.daoMultisigVault,
         tokenAAccount: vaultTokenAAccount,
         tokenBAccount: vaultTokenBAccount,
         tokenAMint: poolState.tokenAMint,
@@ -374,23 +486,53 @@ export const withdrawMeteoraLiquidity = ({
 
     return {
       instructions: [removeAllLiquidityIx],
-      setupInstructions: [
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer,
-          vaultTokenAAccount,
-          daoMultisigVault,
-          poolState.tokenAMint,
-          tokenAProgram,
-        ),
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer,
-          vaultTokenBAccount,
-          daoMultisigVault,
-          poolState.tokenBMint,
-          tokenBProgram,
-        ),
-      ],
+      setupInstructions,
     };
+  };
+};
+
+// Claims the swap fees the Meteora DAMM v2 position the launchpad created for
+// the DAO has earned into the vault's token accounts. Removing the liquidity
+// leaves them on the position.
+export const claimMeteoraFees = (): DaoActionBuilder => async (ctx) => {
+  const {
+    cpAmm,
+    position,
+    positionState,
+    positionNftAccount,
+    poolState,
+    tokenAProgram,
+    tokenBProgram,
+    vaultTokenAAccount,
+    vaultTokenBAccount,
+    setupInstructions,
+  } = await findMeteoraPosition(ctx);
+
+  console.log("Unclaimed token A fees:", positionState.feeAPending.toString());
+  console.log("Unclaimed token B fees:", positionState.feeBPending.toString());
+
+  const claimPositionFeeIx = await cpAmm._program.methods
+    .claimPositionFee()
+    .accountsPartial({
+      poolAuthority: DAMM_V2_POOL_AUTHORITY,
+      pool: positionState.pool,
+      position,
+      positionNftAccount,
+      owner: ctx.daoMultisigVault,
+      tokenAAccount: vaultTokenAAccount,
+      tokenBAccount: vaultTokenBAccount,
+      tokenAMint: poolState.tokenAMint,
+      tokenBMint: poolState.tokenBMint,
+      tokenAVault: poolState.tokenAVault,
+      tokenBVault: poolState.tokenBVault,
+      tokenAProgram,
+      tokenBProgram,
+    })
+    .instruction();
+
+  return {
+    instructions: [claimPositionFeeIx],
+    setupInstructions,
   };
 };
 
@@ -455,6 +597,150 @@ export const transferToken =
     };
   };
 
+// Gives up the base mint's mint authority for good. Launches up to v0.7 left
+// it with the vault; v0.8 launches left it with a mint governor the vault
+// administers, which hands it back to the vault first.
+export const revokeMintAuthority =
+  (): DaoActionBuilder =>
+  async ({ provider, futarchy, dao, daoMultisigVault }) => {
+    const daoAccount = await futarchy.getDao(dao);
+    const mint = await getMint(provider.connection, daoAccount.baseMint);
+    if (!mint.mintAuthority) {
+      throw new Error("The base mint has no mint authority");
+    }
+
+    console.log("Base mint:", daoAccount.baseMint.toBase58());
+    console.log("Mint authority:", mint.mintAuthority.toBase58());
+
+    const instructions: TransactionInstruction[] = [];
+    if (!mint.mintAuthority.equals(daoMultisigVault)) {
+      const mintGovernorClient = MintGovernorClient.createClient({ provider });
+      const mintAuthorityAccount = await provider.connection.getAccountInfo(
+        mint.mintAuthority,
+      );
+      const mintGovernor = mintAuthorityAccount?.owner.equals(
+        mintGovernorClient.programId,
+      )
+        ? await mintGovernorClient.deserializeMintGovernor(mintAuthorityAccount)
+        : null;
+      if (!mintGovernor?.admin.equals(daoMultisigVault)) {
+        throw new Error(
+          `Mint authority ${mint.mintAuthority.toBase58()} is neither the DAO's vault nor a mint governor it administers`,
+        );
+      }
+
+      instructions.push(
+        await mintGovernorClient
+          .reclaimAuthorityIx({
+            mintGovernor: mint.mintAuthority,
+            mint: daoAccount.baseMint,
+            admin: daoMultisigVault,
+            newAuthority: daoMultisigVault,
+          })
+          .instruction(),
+      );
+    }
+
+    instructions.push(
+      createSetAuthorityInstruction(
+        daoAccount.baseMint,
+        daoMultisigVault,
+        AuthorityType.MintTokens,
+        null,
+      ),
+    );
+
+    return { instructions };
+  };
+
+const U64_MAX = 2n ** 64n - 1n;
+
+// Approves `delegate` to transfer and burn any amount from the vault's
+// associated token account for `mint`. The vault stays the owner and can
+// revoke the delegate again.
+export const approveDelegate =
+  ({
+    mint,
+    delegate,
+  }: {
+    mint: PublicKey;
+    delegate: PublicKey;
+  }): DaoActionBuilder =>
+  async ({ daoMultisigVault, payer }) => {
+    const vaultTokenAccount = getAssociatedTokenAddressSync(
+      mint,
+      daoMultisigVault,
+      true,
+    );
+
+    console.log(
+      `Delegating the vault's ${mint.toBase58()} account ${vaultTokenAccount.toBase58()} to ${delegate.toBase58()}`,
+    );
+
+    return {
+      instructions: [
+        createApproveInstruction(
+          vaultTokenAccount,
+          delegate,
+          daoMultisigVault,
+          U64_MAX,
+        ),
+      ],
+      setupInstructions: [
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          vaultTokenAccount,
+          daoMultisigVault,
+          mint,
+        ),
+      ],
+    };
+  };
+
+// Hands the vault's associated token account for `mint` over to `newOwner`
+// for good: only the new owner can move what's in it or pass it on, and
+// since the account keeps its address the vault can't have an associated
+// token account for the mint again. Classic SPL Token accounts only, as
+// Token-2022 associated accounts have immutable owners.
+export const transferTokenAccountOwnership =
+  ({
+    mint,
+    newOwner,
+  }: {
+    mint: PublicKey;
+    newOwner: PublicKey;
+  }): DaoActionBuilder =>
+  async ({ daoMultisigVault, payer }) => {
+    const vaultTokenAccount = getAssociatedTokenAddressSync(
+      mint,
+      daoMultisigVault,
+      true,
+    );
+
+    console.log(
+      `Handing the vault's ${mint.toBase58()} account ${vaultTokenAccount.toBase58()} over to ${newOwner.toBase58()}`,
+    );
+
+    return {
+      instructions: [
+        createSetAuthorityInstruction(
+          vaultTokenAccount,
+          daoMultisigVault,
+          AuthorityType.AccountOwner,
+          newOwner,
+        ),
+      ],
+      setupInstructions: [
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          vaultTokenAccount,
+          daoMultisigVault,
+          mint,
+        ),
+      ],
+    };
+  };
+
 // Removes the DAO's spending limit, returning its rent to the vault. The DAO
 // is its multisig's config authority, so the DAO signs this rather than the
 // vault, which makes the proposal admin-execute only.
@@ -495,11 +781,14 @@ export const removeSpendingLimit =
 
 /**
  * Runs the action builders against the DAO's squads accounts. Returns the
- * instructions the DAO's vault should execute, `setupTransaction` - a
- * payer-funded transaction with the actions' setup instructions (null if
- * none), to be signed by the payer and sent before anything else - and
- * `requiresAdminExecution`, set when any action needs the DAO proposal
- * executed through admin_execute_multisig_proposal.
+ * instructions the DAO's vault should execute, `setupTransactions` -
+ * payer-funded transactions with the actions' setup instructions and, when
+ * the instructions don't fit a squads transaction otherwise, the ones
+ * creating a lookup table of their accounts, to be signed by the payer and
+ * sent in order before anything else - `lookupTable`, the table to compile
+ * the vault transaction with in that case, and `requiresAdminExecution`, set
+ * when any action needs the DAO proposal executed through
+ * admin_execute_multisig_proposal.
  */
 export const buildDaoActions = async ({
   provider,
@@ -544,27 +833,63 @@ export const buildDaoActions = async ({
     (action) => action.requiresAdminExecution,
   );
 
-  let setupTransaction: Transaction | null = null;
+  const setupTransactions: Transaction[] = [];
   if (setupInstructions.length > 0) {
-    setupTransaction = new Transaction().add(...setupInstructions);
-    setupTransaction.recentBlockhash = (
-      await provider.connection.getLatestBlockhash()
-    ).blockhash;
-    setupTransaction.feePayer = payer;
+    setupTransactions.push(new Transaction().add(...setupInstructions));
+  }
+
+  // A vault transaction carries its whole message as instruction data, so
+  // instructions touching many accounts only fit once the accounts are
+  // loaded from a lookup table, created and frozen up front
+  let lookupTable: AddressLookupTableAccount | undefined;
+  const fits = (addressLookupTableAccounts?: AddressLookupTableAccount[]) =>
+    squadsVaultTransactionFits({
+      squadsMultisig: daoMultisig,
+      vault: daoMultisigVault,
+      instructions,
+      payer,
+      addressLookupTableAccounts,
+    });
+  if (!(await fits())) {
+    const created = await createLookupTable({
+      connection: provider.connection,
+      payer,
+      instructions,
+    });
+    lookupTable = created.lookupTable;
+    setupTransactions.push(...created.transactions);
+
+    console.log("Lookup table:", lookupTable.key.toBase58());
+    console.log(
+      `The instructions don't fit a squads transaction as is - ${lookupTable.state.addresses.length} of their accounts are loaded from the lookup table`,
+    );
+
+    if (!(await fits([lookupTable]))) {
+      throw new Error(
+        "The instructions don't fit a squads transaction even with a lookup table - split them across proposals",
+      );
+    }
+  }
+
+  const { blockhash } = await provider.connection.getLatestBlockhash();
+  for (const transaction of setupTransactions) {
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = payer;
   }
 
   return {
     daoMultisig,
     daoMultisigVault,
     instructions,
-    setupTransaction,
+    setupTransactions,
+    lookupTable,
     requiresAdminExecution,
   };
 };
 
 /**
  * Runs the action builders and routes their instructions through the admin
- * approval system. Returns buildDaoActions' `setupTransaction` and
+ * approval system. Returns buildDaoActions' `setupTransactions` and
  * `requiresAdminExecution` on top of buildAdminApprovalTransactions' result.
  */
 export const buildDaoActionTransactions = async ({
@@ -580,17 +905,22 @@ export const buildDaoActionTransactions = async ({
   payer: PublicKey;
   actions: DaoActionBuilder[];
 }) => {
-  const { instructions, setupTransaction, requiresAdminExecution } =
-    await buildDaoActions({ provider, futarchy, dao, payer, actions });
+  const {
+    instructions,
+    setupTransactions,
+    lookupTable,
+    requiresAdminExecution,
+  } = await buildDaoActions({ provider, futarchy, dao, payer, actions });
 
   return {
-    setupTransaction,
+    setupTransactions,
     requiresAdminExecution,
     ...(await buildAdminApprovalTransactions({
       provider,
       futarchy,
       dao,
       instructions,
+      lookupTable,
       payer,
     })),
   };
@@ -598,7 +928,7 @@ export const buildDaoActionTransactions = async ({
 
 /**
  * Signs and sends the transactions built by buildDaoActionTransactions in
- * order (setup if any, DAO multisig, ops multisig), logging the created
+ * order (setup ones if any, DAO multisig, ops multisig), logging the created
  * squads transactions and proposals along the way. Each squads transaction
  * is built right before it's sent, so its multisig's transaction index is
  * read as late as possible, and goes through sendWithRetries, which keeps
@@ -614,14 +944,15 @@ export const signAndSendDaoActionTransactions = async ({
   payer: Keypair;
   transactions: Awaited<ReturnType<typeof buildDaoActionTransactions>>;
 }) => {
-  const { setupTransaction, requiresAdminExecution, buildDaoTransaction } =
+  const { setupTransactions, requiresAdminExecution, buildDaoTransaction } =
     transactions;
 
-  let setupSignature: string | null = null;
-  if (setupTransaction) {
+  const setupSignatures: string[] = [];
+  for (const setupTransaction of setupTransactions) {
     setupTransaction.sign(payer);
 
-    setupSignature = await sendAndConfirm(provider, setupTransaction);
+    const setupSignature = await sendAndConfirm(provider, setupTransaction);
+    setupSignatures.push(setupSignature);
 
     console.log("Setup transaction sent!");
     console.log("Transaction signature:", setupSignature);
@@ -693,5 +1024,5 @@ export const signAndSendDaoActionTransactions = async ({
     );
   }
 
-  return { setupSignature, daoSignature, metadaoSignature };
+  return { setupSignatures, daoSignature, metadaoSignature };
 };
