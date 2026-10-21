@@ -197,7 +197,7 @@ export default function suite() {
 
     // here we literally swap 1 atom of META, which should result in one atom of META fee because we round up
 
-    this.advanceBySeconds(60 * 60 * 24 * 4);
+    this.advanceBySeconds(60 * 60 * 24 * 11);
 
     await this.futarchy
       .conditionalSwapIx({

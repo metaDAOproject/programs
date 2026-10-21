@@ -3,8 +3,9 @@ import {
   ConditionalVaultClient,
   getConditionalTokenMintAddr,
   getMetadataAddr,
+  getVaultAddr,
 } from "@metadaoproject/programs";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint } from "spl-token-bankrun";
 import { expectError } from "../../utils.js";
@@ -40,11 +41,18 @@ export default function suite() {
       8,
     );
 
-    vault = await vaultClient.initializeVault(
+    [vault] = getVaultAddr(
+      vaultClient.vaultProgram.programId,
       question,
       underlyingTokenMint,
-      outcomes,
     );
+    // A ten-outcome vault creates ten mints, which exceeds the default compute budget.
+    await vaultClient
+      .initializeVaultIx(question, underlyingTokenMint, outcomes)
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
+      .rpc();
   }
 
   async function addMetadataToConditionalTokens(outcomes: number) {

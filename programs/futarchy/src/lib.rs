@@ -25,7 +25,7 @@ security_txt! {
     project_url: "https://metadao.fi",
     contacts: "telegram:metaproph3t,telegram:kollan_house",
     source_code: "https://github.com/metaDAOproject/programs",
-    source_release: "v0.6.1",
+    source_release: "v0.6.2",
     policy: "The market will decide whether we pay a bug bounty.",
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
@@ -69,9 +69,59 @@ pub mod futarchy {
         InitializeDao::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn initialize_proposal(ctx: Context<InitializeProposal>) -> Result<()> {
+    #[access_control(ctx.accounts.validate(ctx.remaining_accounts))]
+    pub fn initialize_proposal<'info>(
+        ctx: Context<'_, '_, 'info, 'info, InitializeProposal<'info>>,
+    ) -> Result<()> {
         InitializeProposal::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_large_spend_proposal(
+        ctx: Context<InitializeLargeSpendProposal>,
+        args: InitializeLargeSpendProposalArgs,
+    ) -> Result<()> {
+        InitializeLargeSpendProposal::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn initialize_mint_tokens_proposal(
+        ctx: Context<InitializeMintTokensProposal>,
+        args: InitializeMintTokensProposalArgs,
+    ) -> Result<()> {
+        InitializeMintTokensProposal::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_spending_limit_change_proposal(
+        ctx: Context<InitializeSpendingLimitChangeProposal>,
+        args: InitializeSpendingLimitChangeProposalArgs,
+    ) -> Result<()> {
+        InitializeSpendingLimitChangeProposal::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_hostile_takeover_proposal(
+        ctx: Context<InitializeHostileTakeoverProposal>,
+        args: InitializeHostileTakeoverProposalArgs,
+    ) -> Result<()> {
+        InitializeHostileTakeoverProposal::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_hostile_liquidate_proposal(
+        ctx: Context<InitializeHostileLiquidateProposal>,
+        args: InitializeHostileLiquidateProposalArgs,
+    ) -> Result<()> {
+        InitializeHostileLiquidateProposal::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn initialize_buyback_token_proposal(
+        ctx: Context<InitializeBuybackTokenProposal>,
+        args: InitializeBuybackTokenProposalArgs,
+    ) -> Result<()> {
+        InitializeBuybackTokenProposal::handle(ctx, args)
     }
 
     #[access_control(ctx.accounts.validate(&params))]
@@ -90,8 +140,10 @@ pub mod futarchy {
         UnstakeFromProposal::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn launch_proposal(ctx: Context<LaunchProposal>) -> Result<()> {
+    #[access_control(ctx.accounts.validate(ctx.remaining_accounts))]
+    pub fn launch_proposal<'c: 'info, 'info>(
+        ctx: Context<'_, '_, 'c, 'info, LaunchProposal<'info>>,
+    ) -> Result<()> {
         LaunchProposal::handle(ctx)
     }
 
@@ -100,13 +152,30 @@ pub mod futarchy {
         FinalizeProposal::handle(ctx)
     }
 
-    #[access_control(ctx.accounts.validate())]
+    #[access_control(ctx.accounts.validate(&dao_params))]
     pub fn update_dao(ctx: Context<UpdateDao>, dao_params: UpdateDaoParams) -> Result<()> {
         UpdateDao::handle(ctx, dao_params)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn set_spending_limit(
+        ctx: Context<SetSpendingLimit>,
+        args: SetSpendingLimitArgs,
+    ) -> Result<()> {
+        SetSpendingLimit::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn sync_spending_limit(ctx: Context<SyncSpendingLimit>) -> Result<()> {
+        SyncSpendingLimit::handle(ctx)
+    }
+
     pub fn resize_dao(ctx: Context<ResizeDao>) -> Result<()> {
         ResizeDao::handle(ctx)
+    }
+
+    pub fn resize_proposal(ctx: Context<ResizeProposal>) -> Result<()> {
+        ResizeProposal::handle(ctx)
     }
 
     // AMM instructions
@@ -123,6 +192,7 @@ pub mod futarchy {
         ConditionalSwap::handle(ctx, params)
     }
 
+    #[access_control(ctx.accounts.validate())]
     pub fn provide_liquidity(
         ctx: Context<ProvideLiquidity>,
         params: ProvideLiquidityParams,
@@ -143,13 +213,6 @@ pub mod futarchy {
     }
 
     #[access_control(ctx.accounts.validate())]
-    pub fn execute_spending_limit_change<'c: 'info, 'info>(
-        ctx: Context<'_, '_, 'c, 'info, ExecuteSpendingLimitChange<'info>>,
-    ) -> Result<()> {
-        ExecuteSpendingLimitChange::handle(ctx)
-    }
-
-    #[access_control(ctx.accounts.validate())]
     pub fn sponsor_proposal(ctx: Context<SponsorProposal>) -> Result<()> {
         SponsorProposal::handle(ctx)
     }
@@ -157,19 +220,6 @@ pub mod futarchy {
     #[access_control(ctx.accounts.validate())]
     pub fn collect_meteora_damm_fees(ctx: Context<CollectMeteoraDammFees>) -> Result<()> {
         CollectMeteoraDammFees::handle(ctx)
-    }
-
-    #[access_control(ctx.accounts.validate(&params))]
-    pub fn initiate_vault_spend_optimistic_proposal(
-        ctx: Context<InitiateVaultSpendOptimisticProposal>,
-        params: InitiateVaultSpendOptimisticProposalParams,
-    ) -> Result<()> {
-        InitiateVaultSpendOptimisticProposal::handle(ctx, params)
-    }
-
-    #[access_control(ctx.accounts.validate())]
-    pub fn finalize_optimistic_proposal(ctx: Context<FinalizeOptimisticProposal>) -> Result<()> {
-        FinalizeOptimisticProposal::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate(&args))]
@@ -187,6 +237,21 @@ pub mod futarchy {
         ExecuteMultisigProposalApproval::handle(ctx)
     }
 
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn admin_enqueue_multisig_proposal_cancellation(
+        ctx: Context<AdminEnqueueMultisigProposalCancellation>,
+        args: AdminEnqueueMultisigProposalCancellationArgs,
+    ) -> Result<()> {
+        AdminEnqueueMultisigProposalCancellation::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn execute_multisig_proposal_cancellation(
+        ctx: Context<ExecuteMultisigProposalCancellation>,
+    ) -> Result<()> {
+        ExecuteMultisigProposalCancellation::handle(ctx)
+    }
+
     #[access_control(ctx.accounts.validate())]
     pub fn admin_execute_multisig_proposal<'c: 'info, 'info>(
         ctx: Context<'_, '_, 'c, 'info, AdminExecuteMultisigProposal<'info>>,
@@ -202,5 +267,13 @@ pub mod futarchy {
     #[access_control(ctx.accounts.validate())]
     pub fn admin_remove_proposal(ctx: Context<AdminRemoveProposal>) -> Result<()> {
         AdminRemoveProposal::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn admin_update_proposal_params(
+        ctx: Context<AdminUpdateProposalParams>,
+        args: AdminUpdateProposalParamsArgs,
+    ) -> Result<()> {
+        AdminUpdateProposalParams::handle(ctx, args)
     }
 }

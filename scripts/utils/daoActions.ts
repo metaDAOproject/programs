@@ -10,9 +10,9 @@ import {
 } from "@solana/web3.js";
 import {
   DAMM_V2_POOL_AUTHORITY,
-  LAUNCHPAD_V0_6_PROGRAM_ID,
-  LAUNCHPAD_V0_7_PROGRAM_ID,
-  LAUNCHPAD_V0_8_PROGRAM_ID,
+  LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_8_MAINNET_METEORA_CONFIG,
   PERMISSIONLESS_ACCOUNT,
 } from "@metadaoproject/programs";
 import {
@@ -21,17 +21,14 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   createSetAuthorityInstruction,
   createTransferInstruction,
-  getAccount,
   getAssociatedTokenAddressSync,
   getMint,
-  TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { createMemoInstruction } from "@solana/spl-memo";
 import {
   CpAmm,
-  derivePositionAddress,
-  derivePositionNftAccount,
+  derivePoolAddress,
   getTokenProgram,
 } from "@meteora-ag/cp-amm-sdk";
 import {
@@ -49,14 +46,12 @@ import {
 import { sendAndConfirm, sendWithRetries } from "./transactions.js";
 
 const SEED_AMM_POSITION = Buffer.from("amm_position");
-const SEED_POSITION_NFT_MINT = Buffer.from("position_nft_mint");
 
-// Launchpad versions that create a DAO's Meteora position at launch, all
-// seeding its NFT mint from the base mint
-const LAUNCHPAD_PROGRAM_IDS = [
-  LAUNCHPAD_V0_6_PROGRAM_ID,
-  LAUNCHPAD_V0_7_PROGRAM_ID,
-  LAUNCHPAD_V0_8_PROGRAM_ID,
+// Meteora configs the launchpad versions create a DAO's pool under
+const LAUNCHPAD_METEORA_CONFIGS = [
+  LAUNCHPAD_V0_6_MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_7_MAINNET_METEORA_CONFIG,
+  LAUNCHPAD_V0_8_MAINNET_METEORA_CONFIG,
 ];
 
 export type DaoActionContext = {
@@ -96,7 +91,7 @@ const EMPTY_UPDATE_DAO_PARAMS: UpdateDaoParams = {
   baseToStake: null,
   teamSponsoredPassThresholdBps: null,
   teamAddress: null,
-  isOptimisticGovernanceEnabled: null,
+  typedProposalsEnabled: null,
 };
 
 // Updates the given DAO config fields, leaving the omitted ones unchanged
@@ -299,56 +294,59 @@ export const withdrawAllLiquidity = (): DaoActionBuilder => async (ctx) => {
   });
 };
 
-// The Meteora DAMM v2 position the launchpad created for the DAO, which the
-// vault owns through its position NFT, with the vault's accounts for the
-// pool's tokens and the instructions making sure those exist
-const findMeteoraPosition = async ({
-  provider,
-  futarchy,
-  dao,
-  daoMultisigVault,
-  payer,
-}: DaoActionContext) => {
-  const daoAccount = await futarchy.getDao(dao);
-  const cpAmm = new CpAmm(provider.connection);
-
-  // Any launchpad version may have launched the DAO, so use whichever
-  // version's position exists
-  const candidates = LAUNCHPAD_PROGRAM_IDS.map((launchpadProgramId) => {
-    const [positionNftMint] = PublicKey.findProgramAddressSync(
-      [SEED_POSITION_NFT_MINT, daoAccount.baseMint.toBuffer()],
-      launchpadProgramId,
-    );
-    return {
-      positionNftMint,
-      position: derivePositionAddress(positionNftMint),
-    };
-  });
-  const positionStates = await cpAmm._program.account.position.fetchMultiple(
-    candidates.map((candidate) => candidate.position),
+// Finds the Meteora DAMM v2 pool the launchpad created for the DAO's mints,
+// under whichever of its configs it exists
+const findLaunchpadMeteoraPool = async (
+  cpAmm: CpAmm,
+  futarchy: FutarchyClient,
+  dao: PublicKey,
+) => {
+  const { baseMint, quoteMint } = await futarchy.getDao(dao);
+  const candidates = LAUNCHPAD_METEORA_CONFIGS.map((config) =>
+    derivePoolAddress(config, baseMint, quoteMint),
   );
-  const foundIndex = positionStates.findIndex((state) => state !== null);
-  if (foundIndex === -1) {
-    throw new Error("No launchpad-created Meteora position found for this DAO");
-  }
-  const { positionNftMint, position } = candidates[foundIndex];
-  const positionState = positionStates[foundIndex]!;
-  const positionNftAccount = derivePositionNftAccount(positionNftMint);
-
-  // The vault signs as the position owner, so it must hold the position NFT
-  const positionNft = await getAccount(
-    provider.connection,
-    positionNftAccount,
-    undefined,
-    TOKEN_2022_PROGRAM_ID,
-  );
-  if (!positionNft.owner.equals(daoMultisigVault)) {
+  const poolStates =
+    await cpAmm._program.account.pool.fetchMultiple(candidates);
+  const existing = candidates.filter((_, i) => poolStates[i] !== null);
+  if (existing.length === 0) {
     throw new Error(
-      `Position NFT is owned by ${positionNft.owner.toBase58()}, not the DAO's vault`,
+      "No launchpad-created Meteora pool found for this DAO's mints - pass `pool`",
+    );
+  }
+  if (existing.length > 1) {
+    throw new Error(
+      `The launchpad created several Meteora pools for this DAO's mints (${existing
+        .map((candidate) => candidate.toBase58())
+        .join(", ")}) - pass \`pool\``,
+    );
+  }
+  return existing[0];
+};
+
+// The vault's positions in a Meteora DAMM v2 pool - the one the launchpad
+// created for the DAO's mints, unless `pool` is given - with the vault's
+// accounts for the pool's tokens and the instructions making sure those
+// exist. The vault signs as the position owner, so only the positions whose
+// NFT it holds count.
+const findMeteoraPositions = async (
+  { provider, futarchy, dao, daoMultisigVault, payer }: DaoActionContext,
+  pool?: PublicKey,
+) => {
+  const cpAmm = new CpAmm(provider.connection);
+  const meteoraPool =
+    pool ?? (await findLaunchpadMeteoraPool(cpAmm, futarchy, dao));
+  const poolState = await cpAmm.fetchPoolState(meteoraPool);
+
+  const positions = await cpAmm.getUserPositionByPool(
+    meteoraPool,
+    daoMultisigVault,
+  );
+  if (positions.length === 0) {
+    throw new Error(
+      `The DAO's vault holds no position in Meteora pool ${meteoraPool.toBase58()}`,
     );
   }
 
-  const poolState = await cpAmm.fetchPoolState(positionState.pool);
   const tokenAProgram = getTokenProgram(poolState.tokenAFlag);
   const tokenBProgram = getTokenProgram(poolState.tokenBFlag);
   const vaultTokenAAccount = getAssociatedTokenAddressSync(
@@ -364,21 +362,35 @@ const findMeteoraPosition = async ({
     tokenBProgram,
   );
 
-  console.log("Meteora pool:", positionState.pool.toBase58());
-  console.log("Meteora position:", position.toBase58());
+  console.log("Meteora pool:", meteoraPool.toBase58());
   console.log("Token A mint:", poolState.tokenAMint.toBase58());
   console.log("Token B mint:", poolState.tokenBMint.toBase58());
 
-  return {
-    cpAmm,
+  // The accounts every instruction on one of the positions takes
+  const positionAccounts = (
+    position: PublicKey,
+    positionNftAccount: PublicKey,
+  ) => ({
+    poolAuthority: DAMM_V2_POOL_AUTHORITY,
+    pool: meteoraPool,
     position,
-    positionState,
     positionNftAccount,
-    poolState,
+    owner: daoMultisigVault,
+    tokenAAccount: vaultTokenAAccount,
+    tokenBAccount: vaultTokenBAccount,
+    tokenAMint: poolState.tokenAMint,
+    tokenBMint: poolState.tokenBMint,
+    tokenAVault: poolState.tokenAVault,
+    tokenBVault: poolState.tokenBVault,
     tokenAProgram,
     tokenBProgram,
-    vaultTokenAAccount,
-    vaultTokenBAccount,
+  });
+
+  return {
+    cpAmm,
+    poolState,
+    positions,
+    positionAccounts,
     setupInstructions: [
       createAssociatedTokenAccountIdempotentInstruction(
         payer,
@@ -398,16 +410,34 @@ const findMeteoraPosition = async ({
   };
 };
 
-// Withdraws all unlocked liquidity from the Meteora DAMM v2 position the
-// launchpad created for the DAO into the vault's token accounts. The min
-// amounts are set `slippageBps` below what the position is worth right now,
-// so pool changes between now and execution beyond that tolerance fail the
-// withdrawal instead of silently accepting a worse outcome.
+// Withdraws the vault's liquidity from a Meteora DAMM v2 pool - the one the
+// launchpad created for the DAO's mints, unless `pool` is given - into the
+// vault's token accounts: `fractionBps` of the unlocked liquidity of every
+// position the vault holds in the pool. A full withdrawal (the default) removes
+// whatever is unlocked when the vault transaction executes; a partial one
+// removes that share of what's unlocked now. The min amounts are set
+// `slippageBps` below what the withdrawn liquidity is worth right now, so pool
+// changes between now and execution beyond that tolerance fail the withdrawal
+// instead of silently accepting a worse outcome. Vested and permanently locked
+// liquidity stays in the position, as do the fees it has accrued.
 export const withdrawMeteoraLiquidity = ({
+  pool,
+  fractionBps = 10_000,
   slippageBps,
 }: {
+  pool?: PublicKey;
+  fractionBps?: number;
   slippageBps: number;
 }): DaoActionBuilder => {
+  if (
+    !Number.isInteger(fractionBps) ||
+    fractionBps <= 0 ||
+    fractionBps > 10_000
+  ) {
+    throw new Error(
+      `fractionBps must be an integer between 1 and 10000, got ${fractionBps}`,
+    );
+  }
   if (
     !Number.isInteger(slippageBps) ||
     slippageBps < 0 ||
@@ -419,122 +449,119 @@ export const withdrawMeteoraLiquidity = ({
   }
 
   return async (ctx) => {
-    const {
-      cpAmm,
-      position,
-      positionState,
-      positionNftAccount,
-      poolState,
-      tokenAProgram,
-      tokenBProgram,
-      vaultTokenAAccount,
-      vaultTokenBAccount,
-      setupInstructions,
-    } = await findMeteoraPosition(ctx);
+    const { cpAmm, poolState, positions, positionAccounts, setupInstructions } =
+      await findMeteoraPositions(ctx, pool);
 
-    const liquidity = positionState.unlockedLiquidity;
-    if (liquidity.isZero()) {
-      throw new Error("The position has no unlocked liquidity to withdraw");
+    const instructions: TransactionInstruction[] = [];
+    for (const { position, positionNftAccount, positionState } of positions) {
+      console.log("Meteora position:", position.toBase58());
+      console.log(
+        "  Unlocked liquidity:",
+        positionState.unlockedLiquidity.toString(),
+      );
+      console.log(
+        "  Vested liquidity (stays):",
+        positionState.vestedLiquidity.toString(),
+      );
+      console.log(
+        "  Permanently locked liquidity (stays):",
+        positionState.permanentLockedLiquidity.toString(),
+      );
+
+      if (positionState.unlockedLiquidity.isZero()) {
+        console.warn("  No unlocked liquidity - skipping this position");
+        continue;
+      }
+
+      const liquidityDelta =
+        fractionBps === 10_000
+          ? positionState.unlockedLiquidity
+          : positionState.unlockedLiquidity.muln(fractionBps).divn(10_000);
+
+      // Same math as the program's remove_liquidity
+      const { outAmountA, outAmountB } = cpAmm.getWithdrawQuote({
+        liquidityDelta,
+        sqrtPrice: poolState.sqrtPrice,
+        minSqrtPrice: poolState.sqrtMinPrice,
+        maxSqrtPrice: poolState.sqrtMaxPrice,
+      });
+      const tokenAAmountThreshold = outAmountA
+        .muln(10_000 - slippageBps)
+        .divn(10_000);
+      const tokenBAmountThreshold = outAmountB
+        .muln(10_000 - slippageBps)
+        .divn(10_000);
+
+      console.log("  Liquidity to withdraw:", liquidityDelta.toString());
+      console.log("  Expected token A out:", outAmountA.toString());
+      console.log("  Expected token B out:", outAmountB.toString());
+      console.log("  Min token A amount:", tokenAAmountThreshold.toString());
+      console.log("  Min token B amount:", tokenBAmountThreshold.toString());
+
+      const accounts = positionAccounts(position, positionNftAccount);
+
+      // A full withdrawal is sized by the program at execution, so liquidity
+      // that unlocks before then is withdrawn too
+      instructions.push(
+        fractionBps === 10_000
+          ? await cpAmm._program.methods
+              .removeAllLiquidity(tokenAAmountThreshold, tokenBAmountThreshold)
+              .accountsPartial(accounts)
+              .instruction()
+          : await cpAmm._program.methods
+              .removeLiquidity({
+                liquidityDelta,
+                tokenAAmountThreshold,
+                tokenBAmountThreshold,
+              })
+              .accountsPartial(accounts)
+              .instruction(),
+      );
     }
 
-    // Same math as the program's remove_all_liquidity
-    const { outAmountA, outAmountB } = cpAmm.getWithdrawQuote({
-      liquidityDelta: liquidity,
-      sqrtPrice: poolState.sqrtPrice,
-      minSqrtPrice: poolState.sqrtMinPrice,
-      maxSqrtPrice: poolState.sqrtMaxPrice,
-    });
-    const tokenAAmountThreshold = outAmountA
-      .muln(10_000 - slippageBps)
-      .divn(10_000);
-    const tokenBAmountThreshold = outAmountB
-      .muln(10_000 - slippageBps)
-      .divn(10_000);
+    if (instructions.length === 0) {
+      throw new Error(
+        "None of the vault's positions in the pool has unlocked liquidity to withdraw",
+      );
+    }
 
-    console.log("Unlocked liquidity:", liquidity.toString());
-    console.log(
-      "Vested liquidity (stays):",
-      positionState.vestedLiquidity.toString(),
-    );
-    console.log(
-      "Permanently locked liquidity (stays):",
-      positionState.permanentLockedLiquidity.toString(),
-    );
-    console.log("Expected token A out:", outAmountA.toString());
-    console.log("Expected token B out:", outAmountB.toString());
-    console.log("Min token A amount:", tokenAAmountThreshold.toString());
-    console.log("Min token B amount:", tokenBAmountThreshold.toString());
-
-    const removeAllLiquidityIx = await cpAmm._program.methods
-      .removeAllLiquidity(tokenAAmountThreshold, tokenBAmountThreshold)
-      .accountsPartial({
-        poolAuthority: DAMM_V2_POOL_AUTHORITY,
-        pool: positionState.pool,
-        position,
-        positionNftAccount,
-        owner: ctx.daoMultisigVault,
-        tokenAAccount: vaultTokenAAccount,
-        tokenBAccount: vaultTokenBAccount,
-        tokenAMint: poolState.tokenAMint,
-        tokenBMint: poolState.tokenBMint,
-        tokenAVault: poolState.tokenAVault,
-        tokenBVault: poolState.tokenBVault,
-        tokenAProgram,
-        tokenBProgram,
-      })
-      .instruction();
-
-    return {
-      instructions: [removeAllLiquidityIx],
-      setupInstructions,
-    };
+    return { instructions, setupInstructions };
   };
 };
 
-// Claims the swap fees the Meteora DAMM v2 position the launchpad created for
-// the DAO has earned into the vault's token accounts. Removing the liquidity
-// leaves them on the position.
-export const claimMeteoraFees = (): DaoActionBuilder => async (ctx) => {
-  const {
-    cpAmm,
-    position,
-    positionState,
-    positionNftAccount,
-    poolState,
-    tokenAProgram,
-    tokenBProgram,
-    vaultTokenAAccount,
-    vaultTokenBAccount,
-    setupInstructions,
-  } = await findMeteoraPosition(ctx);
+// Claims the swap fees the vault's positions in a Meteora DAMM v2 pool - the
+// one the launchpad created for the DAO's mints, unless `pool` is given - have
+// earned into the vault's token accounts. Whatever is pending when the vault
+// transaction executes is claimed; removing liquidity leaves the fees on the
+// position.
+export const claimMeteoraFees =
+  ({ pool }: { pool?: PublicKey } = {}): DaoActionBuilder =>
+  async (ctx) => {
+    const { cpAmm, positions, positionAccounts, setupInstructions } =
+      await findMeteoraPositions(ctx, pool);
 
-  console.log("Unclaimed token A fees:", positionState.feeAPending.toString());
-  console.log("Unclaimed token B fees:", positionState.feeBPending.toString());
+    const instructions: TransactionInstruction[] = [];
+    for (const { position, positionNftAccount, positionState } of positions) {
+      console.log("Meteora position:", position.toBase58());
+      console.log(
+        "  Unclaimed token A fees:",
+        positionState.feeAPending.toString(),
+      );
+      console.log(
+        "  Unclaimed token B fees:",
+        positionState.feeBPending.toString(),
+      );
 
-  const claimPositionFeeIx = await cpAmm._program.methods
-    .claimPositionFee()
-    .accountsPartial({
-      poolAuthority: DAMM_V2_POOL_AUTHORITY,
-      pool: positionState.pool,
-      position,
-      positionNftAccount,
-      owner: ctx.daoMultisigVault,
-      tokenAAccount: vaultTokenAAccount,
-      tokenBAccount: vaultTokenBAccount,
-      tokenAMint: poolState.tokenAMint,
-      tokenBMint: poolState.tokenBMint,
-      tokenAVault: poolState.tokenAVault,
-      tokenBVault: poolState.tokenBVault,
-      tokenAProgram,
-      tokenBProgram,
-    })
-    .instruction();
+      instructions.push(
+        await cpAmm._program.methods
+          .claimPositionFee()
+          .accountsPartial(positionAccounts(position, positionNftAccount))
+          .instruction(),
+      );
+    }
 
-  return {
-    instructions: [claimPositionFeeIx],
-    setupInstructions,
+    return { instructions, setupInstructions };
   };
-};
 
 // Logs the text on-chain when the vault transaction executes, with the vault
 // as a verified signer

@@ -90,4 +90,76 @@ pub enum FutarchyError {
     InvalidSpendingLimitMint,
     #[msg("No active optimistic proposal")]
     NoActiveOptimisticProposal,
+    #[msg("This DAO has been liquidated")]
+    DaoLiquidated,
+    #[msg("A proposal of this kind finalized recently, so the cooldown must elapse first")]
+    ProposalKindCooldownActive,
+    #[msg("The DAO has no spending limit")]
+    NoSpendingLimit,
+    #[msg("Amount exceeds the cap of 3x the monthly spending limit")]
+    SpendCapExceeded,
+    #[msg("The base mint's authority is neither the treasury vault nor a mint governor")]
+    UnknownMintAuthority,
+    #[msg("This proposal kind must be team-sponsored before it can launch")]
+    ProposalNotTeamSponsored,
+    #[msg("The spending limit record hasn't changed, so there is nothing to sync")]
+    SpendingLimitNotDirty,
+    #[msg("Wrong proposal kind for this instruction")]
+    InvalidProposalKind,
+    #[msg("A spending limit can have at most 10 members")]
+    TooManySpendingLimitMembers,
+    #[msg("Invalid liquidator")]
+    InvalidLiquidator,
+    #[msg("Pass threshold must be between -99.99% and 99.99%")]
+    InvalidProposalPassThreshold,
+    #[msg("A proposal params update must set at least one field")]
+    EmptyProposalParamsUpdate,
+    #[msg("Buyback amount exceeds 25% of the treasury")]
+    BuybackCapExceeded,
+    #[msg("Buyback total must be non-zero")]
+    InvalidBuybackAmount,
+    #[msg("Cycle frequency must be between 60 seconds and 1 year")]
+    InvalidBuybackCycleFrequency,
+    #[msg("Start delay must be at most 30 days")]
+    InvalidBuybackStartDelay,
+    #[msg("min_price must be no greater than max_price")]
+    InvalidBuybackPriceBand,
+    #[msg(
+        "A treasury account is neither a vault-owned quote account nor the treasury's AMM position"
+    )]
+    InvalidTreasuryAccount,
+    #[msg("Treasury accounts must be in strictly ascending key order")]
+    TreasuryAccountsNotSorted,
+    #[msg("This proposal kind's launch takes no extra accounts")]
+    UnexpectedLaunchAccounts,
+    #[msg("Spending limit account is not the canonical spending-limit PDA")]
+    InvalidSpendingLimitAccount,
+    #[msg("The DAO's team has changed since this draft was created")]
+    StaleTeamAddress,
+    #[msg("Account is not migrated to latest layout")]
+    AccountNotMigrated,
+    #[msg("A spending limit's monthly amount must be non-zero")]
+    InvalidSpendingLimitAmount,
+    #[msg("A spending limit must have at least one member")]
+    EmptySpendingLimitMembers,
+    #[msg("A spending limit's members must be unique")]
+    DuplicateSpendingLimitMember,
+    #[msg("A buyback must run at least two cycles")]
+    InvalidBuybackCycleCount,
+    #[msg("Invalid team address")]
+    InvalidTeamAddress,
+    #[msg("This proposal kind cannot be team-sponsored")]
+    TeamSponsorshipForbidden,
+    #[msg("Squads proposal must be in Approved status to be cancelled")]
+    SquadsProposalNotApproved,
+    #[msg("This DAO has not opted into typed proposals")]
+    TypedProposalsDisabled,
+    #[msg("Typed proposals cannot be disabled")]
+    TypedProposalsCannotBeDisabled,
+    #[msg("Address lookup tables referenced by the vault transaction must be frozen")]
+    UnfrozenAddressLookupTable,
+    #[msg("Lookup table accounts must match the vault transaction's address table lookups")]
+    InvalidAddressLookupTable,
+    #[msg("Expected the proposal's Squads vault transaction as the first launch account")]
+    InvalidSquadsVaultTransaction,
 }

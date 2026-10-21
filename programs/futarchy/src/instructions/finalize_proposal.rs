@@ -62,6 +62,10 @@ pub struct FinalizeProposal<'info> {
 
 impl FinalizeProposal<'_> {
     pub fn validate(&self) -> Result<()> {
+        // Ensure the proposal and DAO are migrated.
+        Proposal::assert_migrated(&self.proposal.to_account_info())?;
+        Dao::assert_migrated(&self.dao.to_account_info())?;
+
         let clock = Clock::get()?;
 
         require_gte!(
@@ -117,6 +121,9 @@ impl FinalizeProposal<'_> {
 
         let clock = Clock::get()?;
 
+        // Read before a passed takeover moves the team below.
+        let is_team_sponsored = proposal.is_sponsored_by(dao.team_address);
+
         let calculate_twap = |amm: &Pool| -> Result<u128> {
             let twap_start_timestamp =
                 amm.oracle.created_at_timestamp + amm.oracle.start_delay_seconds as i64;
@@ -142,12 +149,8 @@ impl FinalizeProposal<'_> {
         let pass_market_twap = calculate_twap(&pass)?;
         let fail_market_twap = calculate_twap(&fail)?;
 
-        let threshold_bps = if proposal.is_team_sponsored {
-            dao.team_sponsored_pass_threshold_bps
-        } else {
-            // Thanks to invariants this will never error - still it's better to be safe here.
-            i16::try_from(dao.pass_threshold_bps).map_err(|_| FutarchyError::CastingOverflow)?
-        };
+        // Take the pass threshold from the proposal. DAO pass threshold is legacy.
+        let threshold_bps = proposal.pass_threshold_bps;
 
         // this can't overflow because each twap can only be MAX_PRICE (~1e31),
         // MAX_BPS + pass_threshold_bps is at most 1e5, and a u128 can hold
@@ -163,6 +166,54 @@ impl FinalizeProposal<'_> {
         };
 
         proposal.state = new_proposal_state;
+
+        // We want to prevent certain proposals from being retried immediately after failure.
+        if new_proposal_state == ProposalState::Failed {
+            match proposal.action {
+                ProposalAction::HostileTakeover { .. } => {
+                    dao.last_failed_takeover_at = clock.unix_timestamp
+                }
+                ProposalAction::HostileLiquidate { .. } => {
+                    dao.last_failed_liquidation_at = clock.unix_timestamp
+                }
+                _ => {}
+            }
+        }
+
+        // Hostile actions that change the DAO itself land said changes immediately.
+        if new_proposal_state == ProposalState::Passed {
+            match &proposal.action {
+                // This write can only occur once, as a liquidated DAO can't start another proposal.
+                ProposalAction::HostileLiquidate { liquidator } => {
+                    dao.liquidator = Some(*liquidator);
+
+                    // The spending limit must be zeroed so that the estate can be swept.
+                    dao.set_spending_limit(None);
+                }
+                // The team moves at once, so the outgoing team's sponsorships stop counting.
+                ProposalAction::HostileTakeover {
+                    new_team_address,
+                    spending_limit_action,
+                } => {
+                    dao.team_address = *new_team_address;
+
+                    match spending_limit_action {
+                        SpendingLimitAction::Keep => {}
+                        SpendingLimitAction::Remove => dao.set_spending_limit(None),
+                        SpendingLimitAction::Set(config) => {
+                            dao.set_spending_limit(Some(config.clone()))
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        // The buyback cooldown stamps on either outcome, so back-to-back
+        // buybacks can't drain the treasury.
+        if matches!(proposal.action, ProposalAction::BuybackToken { .. }) {
+            dao.last_buyback_finalized_at = clock.unix_timestamp;
+        }
 
         let cpi_accounts = ResolveQuestion {
             question: question.to_account_info(),
@@ -283,7 +334,7 @@ impl FinalizeProposal<'_> {
             squads_proposal: squads_proposal.key(),
             squads_multisig: dao.squads_multisig,
             post_amm_state: dao.amm.clone(),
-            is_team_sponsored: proposal.is_team_sponsored,
+            is_team_sponsored,
         });
 
         Ok(())

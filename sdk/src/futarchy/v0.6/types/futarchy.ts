@@ -1,5 +1,5 @@
 export type Futarchy = {
-  version: "0.6.1";
+  version: "0.6.2";
   name: "futarchy";
   instructions: [
     {
@@ -124,6 +124,11 @@ export type Futarchy = {
           isSigner: false;
         },
         {
+          name: "squadsVaultTransaction";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "dao";
           isMut: true;
           isSigner: false;
@@ -170,6 +175,654 @@ export type Futarchy = {
         },
       ];
       args: [];
+    },
+    {
+      name: "initializeLargeSpendProposal";
+      accounts: [
+        {
+          name: "typedInitializeAccounts";
+          accounts: [
+            {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "dao";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsMultisig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsTransaction";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "squadsProposal";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "proposer";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "permissionlessAccount";
+              isMut: false;
+              isSigner: true;
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ];
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeLargeSpendProposalArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "initializeMintTokensProposal";
+      accounts: [
+        {
+          name: "typedInitializeAccounts";
+          accounts: [
+            {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "dao";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsMultisig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsTransaction";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "squadsProposal";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "proposer";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "permissionlessAccount";
+              isMut: false;
+              isSigner: true;
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ];
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "baseMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintGovernor";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
+          docs: [
+            "Only for governed mints (v0.8 launches): the `MintGovernor` holding the",
+            "base mint's authority.",
+          ];
+        },
+        {
+          name: "mintAuthority";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
+          docs: [
+            "Only for governed mints: the vault's minting rights on `mint_governor`.",
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeMintTokensProposalArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "initializeSpendingLimitChangeProposal";
+      accounts: [
+        {
+          name: "typedInitializeAccounts";
+          accounts: [
+            {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "dao";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsMultisig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsTransaction";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "squadsProposal";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "proposer";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "permissionlessAccount";
+              isMut: false;
+              isSigner: true;
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ];
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeSpendingLimitChangeProposalArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "initializeHostileTakeoverProposal";
+      accounts: [
+        {
+          name: "typedInitializeAccounts";
+          accounts: [
+            {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "dao";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsMultisig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsTransaction";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "squadsProposal";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "proposer";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "permissionlessAccount";
+              isMut: false;
+              isSigner: true;
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ];
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeHostileTakeoverProposalArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "initializeHostileLiquidateProposal";
+      accounts: [
+        {
+          name: "typedInitializeAccounts";
+          accounts: [
+            {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "dao";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsMultisig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsTransaction";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "squadsProposal";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "proposer";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "permissionlessAccount";
+              isMut: false;
+              isSigner: true;
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ];
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeHostileLiquidateProposalArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "initializeBuybackTokenProposal";
+      accounts: [
+        {
+          name: "typedInitializeAccounts";
+          accounts: [
+            {
+              name: "proposal";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "dao";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsMultisig";
+              isMut: true;
+              isSigner: false;
+            },
+            {
+              name: "squadsTransaction";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "squadsProposal";
+              isMut: true;
+              isSigner: false;
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ];
+            },
+            {
+              name: "question";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "baseVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "quoteVault";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "proposer";
+              isMut: false;
+              isSigner: true;
+            },
+            {
+              name: "payer";
+              isMut: true;
+              isSigner: true;
+            },
+            {
+              name: "permissionlessAccount";
+              isMut: false;
+              isSigner: true;
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ];
+            },
+            {
+              name: "squadsProgram";
+              isMut: false;
+              isSigner: false;
+            },
+            {
+              name: "systemProgram";
+              isMut: false;
+              isSigner: false;
+            },
+          ];
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "InitializeBuybackTokenProposalArgs";
+          };
+        },
+      ];
     },
     {
       name: "stakeToProposal";
@@ -583,12 +1236,133 @@ export type Futarchy = {
       ];
     },
     {
+      name: "setSpendingLimit";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigVault";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "SetSpendingLimitArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "syncSpendingLimit";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "spendingLimit";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "rentPayer";
+          isMut: true;
+          isSigner: true;
+          docs: [
+            "Pays rent when the limit is recreated and receives freed rent when it is removed.",
+          ];
+        },
+        {
+          name: "squadsProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
       name: "resizeDao";
       accounts: [
         {
           name: "dao";
           isMut: true;
           isSigner: false;
+        },
+        {
+          name: "spendingLimit";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "spending-limit PDA (`create_key` is always the DAO); read-only and may",
+            "not exist",
+          ];
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "resizeProposal";
+      accounts: [
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "dao";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "The proposal's DAO, checked against the deserialized proposal in the",
+            "handler.",
+          ];
         },
         {
           name: "payer";
@@ -987,42 +1761,6 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "executeSpendingLimitChange";
-      accounts: [
-        {
-          name: "proposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsProposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisig";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "vaultTransaction";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
       name: "sponsorProposal";
       accounts: [
         {
@@ -1202,125 +1940,6 @@ export type Futarchy = {
       args: [];
     },
     {
-      name: "initiateVaultSpendOptimisticProposal";
-      accounts: [
-        {
-          name: "squadsMultisig";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsMultisigVault";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsSpendingLimit";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsProposal";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsVaultTransaction";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "daoQuoteVaultAccount";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "proposer";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "recipient";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "recipientQuoteAccount";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "squadsProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [
-        {
-          name: "params";
-          type: {
-            defined: "InitiateVaultSpendOptimisticProposalParams";
-          };
-        },
-      ];
-    },
-    {
-      name: "finalizeOptimisticProposal";
-      accounts: [
-        {
-          name: "squadsMultisig";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsProposal";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "dao";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "squadsProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
       name: "adminEnqueueMultisigProposalApproval";
       accounts: [
         {
@@ -1388,6 +2007,85 @@ export type Futarchy = {
         },
         {
           name: "enqueuedApproval";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "adminEnqueueMultisigProposalCancellation";
+      accounts: [
+        {
+          name: "dao";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "enqueuedCancellation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "AdminEnqueueMultisigProposalCancellationArgs";
+          };
+        },
+      ];
+    },
+    {
+      name: "executeMultisigProposalCancellation";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "rentReceiver";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "squadsMultisig";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "squadsMultisigProposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "enqueuedCancellation";
           isMut: true;
           isSigner: false;
         },
@@ -1602,6 +2300,44 @@ export type Futarchy = {
       ];
       args: [];
     },
+    {
+      name: "adminUpdateProposalParams";
+      accounts: [
+        {
+          name: "dao";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "proposal";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "AdminUpdateProposalParamsArgs";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -1626,6 +2362,204 @@ export type Futarchy = {
     },
     {
       name: "dao";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amm";
+            docs: ["Embedded FutarchyAmm - 1:1 relationship"];
+            type: {
+              defined: "FutarchyAmm";
+            };
+          },
+          {
+            name: "nonce";
+            docs: ["`nonce` + `dao_creator` are PDA seeds"];
+            type: "u64";
+          },
+          {
+            name: "daoCreator";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "squadsMultisig";
+            type: "publicKey";
+          },
+          {
+            name: "squadsMultisigVault";
+            type: "publicKey";
+          },
+          {
+            name: "baseMint";
+            type: "publicKey";
+          },
+          {
+            name: "quoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "proposalCount";
+            type: "u32";
+          },
+          {
+            name: "passThresholdBps";
+            type: "u16";
+          },
+          {
+            name: "secondsPerProposal";
+            type: "u32";
+          },
+          {
+            name: "twapInitialObservation";
+            docs: [
+              "For manipulation-resistance the TWAP is a time-weighted average observation,",
+              "where observation tries to approximate price but can only move by",
+              "`twap_max_observation_change_per_update` per update. Because it can only move",
+              "a little bit per update, you need to check that it has a good initial observation.",
+              "Otherwise, an attacker could create a very high initial observation in the pass",
+              "market and a very low one in the fail market to force the proposal to pass.",
+              "",
+              "We recommend setting an initial observation around the spot price of the token,",
+              "and max observation change per update around 2% the spot price of the token.",
+              "For example, if the spot price of META is $400, we'd recommend setting an initial",
+              "observation of 400 (converted into the AMM prices) and a max observation change per",
+              "update of 8 (also converted into the AMM prices). Observations can be updated once",
+              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
+              "in 50 minutes.",
+            ];
+            type: "u128";
+          },
+          {
+            name: "twapMaxObservationChangePerUpdate";
+            type: "u128";
+          },
+          {
+            name: "twapStartDelaySeconds";
+            docs: [
+              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds",
+            ];
+            type: "u32";
+          },
+          {
+            name: "minQuoteFutarchicLiquidity";
+            docs: [
+              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
+              "in both futarchic markets in order to create a proposal.",
+              "",
+              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
+              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
+              "10 * 1_000_000_000 (10 META).",
+            ];
+            type: "u64";
+          },
+          {
+            name: "minBaseFutarchicLiquidity";
+            type: "u64";
+          },
+          {
+            name: "baseToStake";
+            docs: [
+              "Minimum amount of base tokens that must be staked to launch a proposal",
+            ];
+            type: "u64";
+          },
+          {
+            name: "seqNum";
+            type: "u64";
+          },
+          {
+            name: "initialSpendingLimit";
+            docs: [
+              "The authoritative record of what the Squads spending limit should be.",
+              "`None` = no limit. Kept in sync with the Squads-side account by",
+              "`sync_spending_limit`. (Named for its original init-only role)",
+            ];
+            type: {
+              option: {
+                defined: "InitialSpendingLimit";
+              };
+            };
+          },
+          {
+            name: "teamSponsoredPassThresholdBps";
+            docs: [
+              "The percentage, in basis points, the pass price needs to be above the",
+              "fail price in order for the proposal to pass for team-sponsored proposals.",
+              "",
+              "Can be negative to allow for team-sponsored proposals to pass by default.",
+            ];
+            type: "i16";
+          },
+          {
+            name: "teamAddress";
+            type: "publicKey";
+          },
+          {
+            name: "optimisticProposal";
+            docs: ["Deprecated in favor of typed proposals"];
+            type: {
+              option: {
+                defined: "OptimisticProposal";
+              };
+            };
+          },
+          {
+            name: "isOptimisticGovernanceEnabled";
+            docs: ["Deprecated in favor of typed proposals"];
+            type: "bool";
+          },
+          {
+            name: "liquidator";
+            docs: [
+              "`Some` means the DAO has been liquidated, and holds who runs the estate.",
+              "Set once by `finalize_proposal` the moment a hostile liquidation",
+              "passes, never cleared.",
+            ];
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "lastFailedTakeoverAt";
+            docs: ["Unix time of the last failed hostile takeover. 0 = never."];
+            type: "i64";
+          },
+          {
+            name: "lastFailedLiquidationAt";
+            docs: [
+              "Unix time of the last failed hostile liquidation. 0 = never.",
+            ];
+            type: "i64";
+          },
+          {
+            name: "spendingLimitDirty";
+            docs: [
+              "Set by every write to the spending-limit record (`initial_spending_limit`),",
+              "consumed by `sync_spending_limit`.",
+            ];
+            type: "bool";
+          },
+          {
+            name: "lastBuybackFinalizedAt";
+            docs: ["Unix time of the last buyback finalization. 0 = never."];
+            type: "i64";
+          },
+          {
+            name: "typedProposalsEnabled";
+            docs: [
+              "Whether the DAO runs on the mini-instructions catalog. Never turns off.",
+            ];
+            type: "bool";
+          },
+        ];
+      };
+    },
+    {
+      name: "oldDao";
       type: {
         kind: "struct";
         fields: [
@@ -1773,142 +2707,6 @@ export type Futarchy = {
       };
     },
     {
-      name: "oldDao";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "amm";
-            docs: ["Embedded FutarchyAmm - 1:1 relationship"];
-            type: {
-              defined: "FutarchyAmm";
-            };
-          },
-          {
-            name: "nonce";
-            docs: ["`nonce` + `dao_creator` are PDA seeds"];
-            type: "u64";
-          },
-          {
-            name: "daoCreator";
-            type: "publicKey";
-          },
-          {
-            name: "pdaBump";
-            type: "u8";
-          },
-          {
-            name: "squadsMultisig";
-            type: "publicKey";
-          },
-          {
-            name: "squadsMultisigVault";
-            type: "publicKey";
-          },
-          {
-            name: "baseMint";
-            type: "publicKey";
-          },
-          {
-            name: "quoteMint";
-            type: "publicKey";
-          },
-          {
-            name: "proposalCount";
-            type: "u32";
-          },
-          {
-            name: "passThresholdBps";
-            type: "u16";
-          },
-          {
-            name: "secondsPerProposal";
-            type: "u32";
-          },
-          {
-            name: "twapInitialObservation";
-            docs: [
-              "For manipulation-resistance the TWAP is a time-weighted average observation,",
-              "where observation tries to approximate price but can only move by",
-              "`twap_max_observation_change_per_update` per update. Because it can only move",
-              "a little bit per update, you need to check that it has a good initial observation.",
-              "Otherwise, an attacker could create a very high initial observation in the pass",
-              "market and a very low one in the fail market to force the proposal to pass.",
-              "",
-              "We recommend setting an initial observation around the spot price of the token,",
-              "and max observation change per update around 2% the spot price of the token.",
-              "For example, if the spot price of META is $400, we'd recommend setting an initial",
-              "observation of 400 (converted into the AMM prices) and a max observation change per",
-              "update of 8 (also converted into the AMM prices). Observations can be updated once",
-              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
-              "in 50 minutes.",
-            ];
-            type: "u128";
-          },
-          {
-            name: "twapMaxObservationChangePerUpdate";
-            type: "u128";
-          },
-          {
-            name: "twapStartDelaySeconds";
-            docs: [
-              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds",
-            ];
-            type: "u32";
-          },
-          {
-            name: "minQuoteFutarchicLiquidity";
-            docs: [
-              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
-              "in both futarchic markets in order to create a proposal.",
-              "",
-              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
-              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
-              "10 * 1_000_000_000 (10 META).",
-            ];
-            type: "u64";
-          },
-          {
-            name: "minBaseFutarchicLiquidity";
-            type: "u64";
-          },
-          {
-            name: "baseToStake";
-            docs: [
-              "Minimum amount of base tokens that must be staked to launch a proposal",
-            ];
-            type: "u64";
-          },
-          {
-            name: "seqNum";
-            type: "u64";
-          },
-          {
-            name: "initialSpendingLimit";
-            type: {
-              option: {
-                defined: "InitialSpendingLimit";
-              };
-            };
-          },
-          {
-            name: "teamSponsoredPassThresholdBps";
-            docs: [
-              "The percentage, in basis points, the pass price needs to be above the",
-              "fail price in order for the proposal to pass for team-sponsored proposals.",
-              "",
-              "Can be negative to allow for team-sponsored proposals to pass by default.",
-            ];
-            type: "i16";
-          },
-          {
-            name: "teamAddress";
-            type: "publicKey";
-          },
-        ];
-      };
-    },
-    {
       name: "enqueuedMultisigProposalApproval";
       type: {
         kind: "struct";
@@ -1929,7 +2727,130 @@ export type Futarchy = {
       };
     },
     {
+      name: "enqueuedMultisigProposalCancellation";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "transactionIndex";
+            type: "u64";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
       name: "proposal";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "number";
+            type: "u32";
+          },
+          {
+            name: "proposer";
+            type: "publicKey";
+          },
+          {
+            name: "timestampEnqueued";
+            type: "i64";
+          },
+          {
+            name: "state";
+            type: {
+              defined: "ProposalState";
+            };
+          },
+          {
+            name: "baseVault";
+            type: "publicKey";
+          },
+          {
+            name: "quoteVault";
+            type: "publicKey";
+          },
+          {
+            name: "dao";
+            type: "publicKey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+          {
+            name: "question";
+            type: "publicKey";
+          },
+          {
+            name: "durationInSeconds";
+            type: "u32";
+          },
+          {
+            name: "squadsProposal";
+            type: "publicKey";
+          },
+          {
+            name: "passBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "passQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "failBaseMint";
+            type: "publicKey";
+          },
+          {
+            name: "failQuoteMint";
+            type: "publicKey";
+          },
+          {
+            name: "sponsoredBy";
+            docs: [
+              "The team that last sponsored the proposal. `None` = never sponsored.",
+            ];
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "passThresholdBps";
+            type: "i16";
+          },
+          {
+            name: "councilCanBlock";
+            docs: ["Snapshot of the kind's blockable flag at create."];
+            type: "bool";
+          },
+          {
+            name: "action";
+            docs: ["The typed action parameters."];
+            type: {
+              defined: "ProposalAction";
+            };
+          },
+          {
+            name: "paramsOverridden";
+            docs: [
+              "Set by `admin_update_proposal_params`. `launch_proposal` then leaves the",
+              "duration and threshold alone.",
+            ];
+            type: "bool";
+          },
+        ];
+      };
+    },
+    {
+      name: "oldProposal";
       type: {
         kind: "struct";
         fields: [
@@ -2061,6 +2982,38 @@ export type Futarchy = {
       };
     },
     {
+      name: "AdminEnqueueMultisigProposalCancellationArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "transactionIndex";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "AdminUpdateProposalParamsArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "durationInSeconds";
+            type: {
+              option: "u32";
+            };
+          },
+          {
+            name: "passThresholdBps";
+            type: {
+              option: "i16";
+            };
+          },
+        ];
+      };
+    },
+    {
       name: "ConditionalSwapParams";
       type: {
         kind: "struct";
@@ -2084,6 +3037,42 @@ export type Futarchy = {
           {
             name: "minOutputAmount";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeBuybackTokenProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "quoteAmount";
+            type: "u64";
+          },
+          {
+            name: "cycleCount";
+            type: "u32";
+          },
+          {
+            name: "cycleFrequencySeconds";
+            type: "u32";
+          },
+          {
+            name: "startDelaySeconds";
+            type: "u32";
+          },
+          {
+            name: "minPrice";
+            type: {
+              option: "u64";
+            };
+          },
+          {
+            name: "maxPrice";
+            type: {
+              option: "u64";
+            };
           },
         ];
       };
@@ -2149,13 +3138,76 @@ export type Futarchy = {
       };
     },
     {
-      name: "InitiateVaultSpendOptimisticProposalParams";
+      name: "InitializeHostileLiquidateProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "liquidator";
+            type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeHostileTakeoverProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newTeamAddress";
+            type: "publicKey";
+          },
+          {
+            name: "spendingLimitAction";
+            type: {
+              defined: "SpendingLimitAction";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeLargeSpendProposalArgs";
       type: {
         kind: "struct";
         fields: [
           {
             name: "amount";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeMintTokensProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "amount";
+            type: "u64";
+          },
+          {
+            name: "recipient";
+            type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "InitializeSpendingLimitChangeProposalArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "config";
+            docs: ["`Some` replaces the record, `None` removes it."];
+            type: {
+              option: {
+                defined: "InitialSpendingLimit";
+              };
+            };
           },
         ];
       };
@@ -2187,6 +3239,25 @@ export type Futarchy = {
               "liquidity provider",
             ];
             type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "SetSpendingLimitArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "config";
+            docs: [
+              "`Some` becomes the new record verbatim; `None` deletes it.",
+            ];
+            type: {
+              option: {
+                defined: "InitialSpendingLimit";
+              };
+            };
           },
         ];
       };
@@ -2303,7 +3374,21 @@ export type Futarchy = {
             };
           },
           {
-            name: "isOptimisticGovernanceEnabled";
+            name: "deprecatedIsOptimisticGovernanceEnabled";
+            docs: [
+              "Ignored. The retired optimistic-governance flag, kept in place so",
+              "payloads encoded before the upgrade are refused, not reinterpreted.",
+            ];
+            type: {
+              option: "bool";
+            };
+          },
+          {
+            name: "typedProposalsEnabled";
+            docs: [
+              "`Some(true)` turns typed proposals on for this DAO. `None` leaves them",
+              "as they are. `Some(false)` is refused: there is no way to turn them off.",
+            ];
             type: {
               option: "bool";
             };
@@ -2511,6 +3596,47 @@ export type Futarchy = {
       };
     },
     {
+      name: "InstructionParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "durationSeconds";
+            type: "u32";
+          },
+          {
+            name: "passThresholdBps";
+            docs: [
+              "Signed: a negative threshold lets a proposal pass even when the pass",
+              "price is below the fail price.",
+            ];
+            type: "i16";
+          },
+          {
+            name: "teamSponsorshipPolicy";
+            docs: ["Sponsorship policy"];
+            type: {
+              defined: "TeamSponsorshipPolicy";
+            };
+          },
+          {
+            name: "councilCanBlock";
+            type: "bool";
+          },
+          {
+            name: "cooldownSeconds";
+            docs: ["Cooldown checked at launch. 0 = none."];
+            type: "u32";
+          },
+          {
+            name: "twapStartDelaySeconds";
+            docs: ["Delay before the conditional TWAPs start to accumulate"];
+            type: "u32";
+          },
+        ];
+      };
+    },
+    {
       name: "PoolState";
       type: {
         kind: "enum";
@@ -2593,6 +3719,177 @@ export type Futarchy = {
           },
           {
             name: "Quote";
+          },
+        ];
+      };
+    },
+    {
+      name: "TeamSponsorshipPolicy";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Required";
+          },
+          {
+            name: "Optional";
+          },
+          {
+            name: "Forbidden";
+          },
+        ];
+      };
+    },
+    {
+      name: "SpendingLimitAction";
+      docs: ["What a hostile takeover declares for the spending limit."];
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Keep";
+          },
+          {
+            name: "Remove";
+          },
+          {
+            name: "Set";
+            fields: [
+              {
+                defined: "InitialSpendingLimit";
+              },
+            ];
+          },
+        ];
+      };
+    },
+    {
+      name: "ProposalAction";
+      docs: [
+        "The typed action parameters, stored on the proposal. The borsh variant tag",
+        "is the proposal's kind discriminator, so variants are append-only — the",
+        "variant index is the wire tag.",
+      ];
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "LargeSpend";
+            fields: [
+              {
+                name: "amount";
+                type: "u64";
+              },
+              {
+                name: "teamAddress";
+                docs: [
+                  "The team the baked transfer pays, snapshotted at create. Launch",
+                  "requires it to still be the DAO's team.",
+                ];
+                type: "publicKey";
+              },
+            ];
+          },
+          {
+            name: "MintTokens";
+            fields: [
+              {
+                name: "amount";
+                type: "u64";
+              },
+              {
+                name: "recipient";
+                type: "publicKey";
+              },
+            ];
+          },
+          {
+            name: "SpendingLimitChange";
+            fields: [
+              {
+                name: "config";
+                type: {
+                  option: {
+                    defined: "InitialSpendingLimit";
+                  };
+                };
+              },
+            ];
+          },
+          {
+            name: "ExecuteArbitrary";
+          },
+          {
+            name: "HostileTakeover";
+            fields: [
+              {
+                name: "newTeamAddress";
+                docs: [
+                  "The team to install. Launch requires it to still differ from the",
+                  "DAO's team.",
+                ];
+                type: "publicKey";
+              },
+              {
+                name: "spendingLimitAction";
+                type: {
+                  defined: "SpendingLimitAction";
+                };
+              },
+            ];
+          },
+          {
+            name: "HostileLiquidate";
+            fields: [
+              {
+                name: "liquidator";
+                type: "publicKey";
+              },
+            ];
+          },
+          {
+            name: "BuybackToken";
+            fields: [
+              {
+                name: "quoteAmount";
+                docs: ["Total quote to deploy. Capped at 25% of the treasury."];
+                type: "u64";
+              },
+              {
+                name: "cycleCount";
+                docs: ["Orders the total is split across. At least 2."];
+                type: "u32";
+              },
+              {
+                name: "cycleFrequencySeconds";
+                docs: ["Seconds between orders."];
+                type: "u32";
+              },
+              {
+                name: "startDelaySeconds";
+                docs: [
+                  "Seconds after execution before the first order. 0 = immediately.",
+                ];
+                type: "u32";
+              },
+              {
+                name: "minPrice";
+                docs: [
+                  "Optional price band, in quote native units per whole base token:",
+                  "1_600_000 = 1.6 USDC per token.",
+                  "`None` = unguarded.",
+                ];
+                type: {
+                  option: "u64";
+                };
+              },
+              {
+                name: "maxPrice";
+                type: {
+                  option: "u64";
+                };
+              },
+            ];
           },
         ];
       };
@@ -2786,6 +4083,11 @@ export type Futarchy = {
           type: "publicKey";
           index: false;
         },
+        {
+          name: "typedProposalsEnabled";
+          type: "bool";
+          index: false;
+        },
       ];
     },
     {
@@ -2855,6 +4157,11 @@ export type Futarchy = {
         },
         {
           name: "isOptimisticGovernanceEnabled";
+          type: "bool";
+          index: false;
+        },
+        {
+          name: "typedProposalsEnabled";
           type: "bool";
           index: false;
         },
@@ -2928,6 +4235,13 @@ export type Futarchy = {
         {
           name: "squadsMultisigVault";
           type: "publicKey";
+          index: false;
+        },
+        {
+          name: "action";
+          type: {
+            defined: "ProposalAction";
+          };
           index: false;
         },
       ];
@@ -3031,6 +4345,21 @@ export type Futarchy = {
           type: {
             defined: "FutarchyAmm";
           };
+          index: false;
+        },
+        {
+          name: "durationInSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "passThresholdBps";
+          type: "i16";
+          index: false;
+        },
+        {
+          name: "isTeamSponsored";
+          type: "bool";
           index: false;
         },
       ];
@@ -3378,6 +4707,53 @@ export type Futarchy = {
       ];
     },
     {
+      name: "AdminUpdateProposalParamsEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "admin";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oldDurationInSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "newDurationInSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "oldPassThresholdBps";
+          type: "i16";
+          index: false;
+        },
+        {
+          name: "newPassThresholdBps";
+          type: "i16";
+          index: false;
+        },
+      ];
+    },
+    {
       name: "AdminCancelProposalEvent";
       fields: [
         {
@@ -3501,7 +4877,7 @@ export type Futarchy = {
       ];
     },
     {
-      name: "InitiateVaultSpendOptimisticProposalEvent";
+      name: "SetSpendingLimitEvent";
       fields: [
         {
           name: "common";
@@ -3516,54 +4892,18 @@ export type Futarchy = {
           index: false;
         },
         {
-          name: "proposer";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "squadsProposal";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "squadsMultisig";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "squadsMultisigVault";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "amount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "recipient";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "daoQuoteVaultAccount";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "recipientQuoteAccount";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "enqueuedTimestamp";
-          type: "i64";
+          name: "config";
+          type: {
+            option: {
+              defined: "InitialSpendingLimit";
+            };
+          };
           index: false;
         },
       ];
     },
     {
-      name: "FinalizeOptimisticProposalEvent";
+      name: "SyncSpendingLimitEvent";
       fields: [
         {
           name: "common";
@@ -3578,8 +4918,17 @@ export type Futarchy = {
           index: false;
         },
         {
-          name: "squadsProposal";
+          name: "spendingLimit";
           type: "publicKey";
+          index: false;
+        },
+        {
+          name: "config";
+          type: {
+            option: {
+              defined: "InitialSpendingLimit";
+            };
+          };
           index: false;
         },
       ];
@@ -3801,11 +5150,186 @@ export type Futarchy = {
       name: "NoActiveOptimisticProposal";
       msg: "No active optimistic proposal";
     },
+    {
+      code: 6043;
+      name: "DaoLiquidated";
+      msg: "This DAO has been liquidated";
+    },
+    {
+      code: 6044;
+      name: "ProposalKindCooldownActive";
+      msg: "A proposal of this kind finalized recently, so the cooldown must elapse first";
+    },
+    {
+      code: 6045;
+      name: "NoSpendingLimit";
+      msg: "The DAO has no spending limit";
+    },
+    {
+      code: 6046;
+      name: "SpendCapExceeded";
+      msg: "Amount exceeds the cap of 3x the monthly spending limit";
+    },
+    {
+      code: 6047;
+      name: "UnknownMintAuthority";
+      msg: "The base mint's authority is neither the treasury vault nor a mint governor";
+    },
+    {
+      code: 6048;
+      name: "ProposalNotTeamSponsored";
+      msg: "This proposal kind must be team-sponsored before it can launch";
+    },
+    {
+      code: 6049;
+      name: "SpendingLimitNotDirty";
+      msg: "The spending limit record hasn't changed, so there is nothing to sync";
+    },
+    {
+      code: 6050;
+      name: "InvalidProposalKind";
+      msg: "Wrong proposal kind for this instruction";
+    },
+    {
+      code: 6051;
+      name: "TooManySpendingLimitMembers";
+      msg: "A spending limit can have at most 10 members";
+    },
+    {
+      code: 6052;
+      name: "InvalidLiquidator";
+      msg: "Invalid liquidator";
+    },
+    {
+      code: 6053;
+      name: "InvalidProposalPassThreshold";
+      msg: "Pass threshold must be between -99.99% and 99.99%";
+    },
+    {
+      code: 6054;
+      name: "EmptyProposalParamsUpdate";
+      msg: "A proposal params update must set at least one field";
+    },
+    {
+      code: 6055;
+      name: "BuybackCapExceeded";
+      msg: "Buyback amount exceeds 25% of the treasury";
+    },
+    {
+      code: 6056;
+      name: "InvalidBuybackAmount";
+      msg: "Buyback total must be non-zero";
+    },
+    {
+      code: 6057;
+      name: "InvalidBuybackCycleFrequency";
+      msg: "Cycle frequency must be between 60 seconds and 1 year";
+    },
+    {
+      code: 6058;
+      name: "InvalidBuybackStartDelay";
+      msg: "Start delay must be at most 30 days";
+    },
+    {
+      code: 6059;
+      name: "InvalidBuybackPriceBand";
+      msg: "min_price must be no greater than max_price";
+    },
+    {
+      code: 6060;
+      name: "InvalidTreasuryAccount";
+      msg: "A treasury account is neither a vault-owned quote account nor the treasury's AMM position";
+    },
+    {
+      code: 6061;
+      name: "TreasuryAccountsNotSorted";
+      msg: "Treasury accounts must be in strictly ascending key order";
+    },
+    {
+      code: 6062;
+      name: "UnexpectedLaunchAccounts";
+      msg: "This proposal kind's launch takes no extra accounts";
+    },
+    {
+      code: 6063;
+      name: "InvalidSpendingLimitAccount";
+      msg: "Spending limit account is not the canonical spending-limit PDA";
+    },
+    {
+      code: 6064;
+      name: "StaleTeamAddress";
+      msg: "The DAO's team has changed since this draft was created";
+    },
+    {
+      code: 6065;
+      name: "AccountNotMigrated";
+      msg: "Account is not migrated to latest layout";
+    },
+    {
+      code: 6066;
+      name: "InvalidSpendingLimitAmount";
+      msg: "A spending limit's monthly amount must be non-zero";
+    },
+    {
+      code: 6067;
+      name: "EmptySpendingLimitMembers";
+      msg: "A spending limit must have at least one member";
+    },
+    {
+      code: 6068;
+      name: "DuplicateSpendingLimitMember";
+      msg: "A spending limit's members must be unique";
+    },
+    {
+      code: 6069;
+      name: "InvalidBuybackCycleCount";
+      msg: "A buyback must run at least two cycles";
+    },
+    {
+      code: 6070;
+      name: "InvalidTeamAddress";
+      msg: "Invalid team address";
+    },
+    {
+      code: 6071;
+      name: "TeamSponsorshipForbidden";
+      msg: "This proposal kind cannot be team-sponsored";
+    },
+    {
+      code: 6072;
+      name: "SquadsProposalNotApproved";
+      msg: "Squads proposal must be in Approved status to be cancelled";
+    },
+    {
+      code: 6073;
+      name: "TypedProposalsDisabled";
+      msg: "This DAO has not opted into typed proposals";
+    },
+    {
+      code: 6074;
+      name: "TypedProposalsCannotBeDisabled";
+      msg: "Typed proposals cannot be disabled";
+    },
+    {
+      code: 6075;
+      name: "UnfrozenAddressLookupTable";
+      msg: "Address lookup tables referenced by the vault transaction must be frozen";
+    },
+    {
+      code: 6076;
+      name: "InvalidAddressLookupTable";
+      msg: "Lookup table accounts must match the vault transaction's address table lookups";
+    },
+    {
+      code: 6077;
+      name: "InvalidSquadsVaultTransaction";
+      msg: "Expected the proposal's Squads vault transaction as the first launch account";
+    },
   ];
 };
 
 export const IDL: Futarchy = {
-  version: "0.6.1",
+  version: "0.6.2",
   name: "futarchy",
   instructions: [
     {
@@ -3930,6 +5454,11 @@ export const IDL: Futarchy = {
           isSigner: false,
         },
         {
+          name: "squadsVaultTransaction",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "dao",
           isMut: true,
           isSigner: false,
@@ -3976,6 +5505,654 @@ export const IDL: Futarchy = {
         },
       ],
       args: [],
+    },
+    {
+      name: "initializeLargeSpendProposal",
+      accounts: [
+        {
+          name: "typedInitializeAccounts",
+          accounts: [
+            {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "dao",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsMultisig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsTransaction",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "squadsProposal",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "proposer",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "permissionlessAccount",
+              isMut: false,
+              isSigner: true,
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ],
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeLargeSpendProposalArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "initializeMintTokensProposal",
+      accounts: [
+        {
+          name: "typedInitializeAccounts",
+          accounts: [
+            {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "dao",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsMultisig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsTransaction",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "squadsProposal",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "proposer",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "permissionlessAccount",
+              isMut: false,
+              isSigner: true,
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ],
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "baseMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintGovernor",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
+          docs: [
+            "Only for governed mints (v0.8 launches): the `MintGovernor` holding the",
+            "base mint's authority.",
+          ],
+        },
+        {
+          name: "mintAuthority",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
+          docs: [
+            "Only for governed mints: the vault's minting rights on `mint_governor`.",
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeMintTokensProposalArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "initializeSpendingLimitChangeProposal",
+      accounts: [
+        {
+          name: "typedInitializeAccounts",
+          accounts: [
+            {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "dao",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsMultisig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsTransaction",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "squadsProposal",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "proposer",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "permissionlessAccount",
+              isMut: false,
+              isSigner: true,
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ],
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeSpendingLimitChangeProposalArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "initializeHostileTakeoverProposal",
+      accounts: [
+        {
+          name: "typedInitializeAccounts",
+          accounts: [
+            {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "dao",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsMultisig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsTransaction",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "squadsProposal",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "proposer",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "permissionlessAccount",
+              isMut: false,
+              isSigner: true,
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ],
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeHostileTakeoverProposalArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "initializeHostileLiquidateProposal",
+      accounts: [
+        {
+          name: "typedInitializeAccounts",
+          accounts: [
+            {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "dao",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsMultisig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsTransaction",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "squadsProposal",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "proposer",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "permissionlessAccount",
+              isMut: false,
+              isSigner: true,
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ],
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeHostileLiquidateProposalArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "initializeBuybackTokenProposal",
+      accounts: [
+        {
+          name: "typedInitializeAccounts",
+          accounts: [
+            {
+              name: "proposal",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "dao",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsMultisig",
+              isMut: true,
+              isSigner: false,
+            },
+            {
+              name: "squadsTransaction",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "and enforces that it is the transaction PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "squadsProposal",
+              isMut: true,
+              isSigner: false,
+              docs: [
+                "enforces that it is the proposal PDA for the next transaction index",
+              ],
+            },
+            {
+              name: "question",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "baseVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "quoteVault",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "proposer",
+              isMut: false,
+              isSigner: true,
+            },
+            {
+              name: "payer",
+              isMut: true,
+              isSigner: true,
+            },
+            {
+              name: "permissionlessAccount",
+              isMut: false,
+              isSigner: true,
+              docs: [
+                "The Squads-side creator of the vault transaction and proposal, an",
+                "Initiate | Execute member of every DAO multisig. Its keypair ships in",
+                "the SDK, so anyone can provide this signature.",
+              ],
+            },
+            {
+              name: "squadsProgram",
+              isMut: false,
+              isSigner: false,
+            },
+            {
+              name: "systemProgram",
+              isMut: false,
+              isSigner: false,
+            },
+          ],
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "InitializeBuybackTokenProposalArgs",
+          },
+        },
+      ],
     },
     {
       name: "stakeToProposal",
@@ -4389,12 +6566,133 @@ export const IDL: Futarchy = {
       ],
     },
     {
+      name: "setSpendingLimit",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigVault",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "SetSpendingLimitArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "syncSpendingLimit",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "spendingLimit",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "rentPayer",
+          isMut: true,
+          isSigner: true,
+          docs: [
+            "Pays rent when the limit is recreated and receives freed rent when it is removed.",
+          ],
+        },
+        {
+          name: "squadsProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "resizeDao",
       accounts: [
         {
           name: "dao",
           isMut: true,
           isSigner: false,
+        },
+        {
+          name: "spendingLimit",
+          isMut: false,
+          isSigner: false,
+          docs: [
+            "spending-limit PDA (`create_key` is always the DAO); read-only and may",
+            "not exist",
+          ],
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "resizeProposal",
+      accounts: [
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "dao",
+          isMut: false,
+          isSigner: false,
+          docs: [
+            "The proposal's DAO, checked against the deserialized proposal in the",
+            "handler.",
+          ],
         },
         {
           name: "payer",
@@ -4793,42 +7091,6 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
-      name: "executeSpendingLimitChange",
-      accounts: [
-        {
-          name: "proposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsProposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisig",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "vaultTransaction",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "sponsorProposal",
       accounts: [
         {
@@ -5008,125 +7270,6 @@ export const IDL: Futarchy = {
       args: [],
     },
     {
-      name: "initiateVaultSpendOptimisticProposal",
-      accounts: [
-        {
-          name: "squadsMultisig",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigVault",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsSpendingLimit",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsProposal",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsVaultTransaction",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "daoQuoteVaultAccount",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "proposer",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "recipient",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "recipientQuoteAccount",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "squadsProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "params",
-          type: {
-            defined: "InitiateVaultSpendOptimisticProposalParams",
-          },
-        },
-      ],
-    },
-    {
-      name: "finalizeOptimisticProposal",
-      accounts: [
-        {
-          name: "squadsMultisig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsProposal",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "adminEnqueueMultisigProposalApproval",
       accounts: [
         {
@@ -5194,6 +7337,85 @@ export const IDL: Futarchy = {
         },
         {
           name: "enqueuedApproval",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "adminEnqueueMultisigProposalCancellation",
+      accounts: [
+        {
+          name: "dao",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "enqueuedCancellation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "AdminEnqueueMultisigProposalCancellationArgs",
+          },
+        },
+      ],
+    },
+    {
+      name: "executeMultisigProposalCancellation",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "rentReceiver",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "squadsMultisig",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "squadsMultisigProposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "enqueuedCancellation",
           isMut: true,
           isSigner: false,
         },
@@ -5408,6 +7630,44 @@ export const IDL: Futarchy = {
       ],
       args: [],
     },
+    {
+      name: "adminUpdateProposalParams",
+      accounts: [
+        {
+          name: "dao",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "proposal",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "AdminUpdateProposalParamsArgs",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -5432,6 +7692,204 @@ export const IDL: Futarchy = {
     },
     {
       name: "dao",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amm",
+            docs: ["Embedded FutarchyAmm - 1:1 relationship"],
+            type: {
+              defined: "FutarchyAmm",
+            },
+          },
+          {
+            name: "nonce",
+            docs: ["`nonce` + `dao_creator` are PDA seeds"],
+            type: "u64",
+          },
+          {
+            name: "daoCreator",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "squadsMultisig",
+            type: "publicKey",
+          },
+          {
+            name: "squadsMultisigVault",
+            type: "publicKey",
+          },
+          {
+            name: "baseMint",
+            type: "publicKey",
+          },
+          {
+            name: "quoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "proposalCount",
+            type: "u32",
+          },
+          {
+            name: "passThresholdBps",
+            type: "u16",
+          },
+          {
+            name: "secondsPerProposal",
+            type: "u32",
+          },
+          {
+            name: "twapInitialObservation",
+            docs: [
+              "For manipulation-resistance the TWAP is a time-weighted average observation,",
+              "where observation tries to approximate price but can only move by",
+              "`twap_max_observation_change_per_update` per update. Because it can only move",
+              "a little bit per update, you need to check that it has a good initial observation.",
+              "Otherwise, an attacker could create a very high initial observation in the pass",
+              "market and a very low one in the fail market to force the proposal to pass.",
+              "",
+              "We recommend setting an initial observation around the spot price of the token,",
+              "and max observation change per update around 2% the spot price of the token.",
+              "For example, if the spot price of META is $400, we'd recommend setting an initial",
+              "observation of 400 (converted into the AMM prices) and a max observation change per",
+              "update of 8 (also converted into the AMM prices). Observations can be updated once",
+              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
+              "in 50 minutes.",
+            ],
+            type: "u128",
+          },
+          {
+            name: "twapMaxObservationChangePerUpdate",
+            type: "u128",
+          },
+          {
+            name: "twapStartDelaySeconds",
+            docs: [
+              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds",
+            ],
+            type: "u32",
+          },
+          {
+            name: "minQuoteFutarchicLiquidity",
+            docs: [
+              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
+              "in both futarchic markets in order to create a proposal.",
+              "",
+              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
+              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
+              "10 * 1_000_000_000 (10 META).",
+            ],
+            type: "u64",
+          },
+          {
+            name: "minBaseFutarchicLiquidity",
+            type: "u64",
+          },
+          {
+            name: "baseToStake",
+            docs: [
+              "Minimum amount of base tokens that must be staked to launch a proposal",
+            ],
+            type: "u64",
+          },
+          {
+            name: "seqNum",
+            type: "u64",
+          },
+          {
+            name: "initialSpendingLimit",
+            docs: [
+              "The authoritative record of what the Squads spending limit should be.",
+              "`None` = no limit. Kept in sync with the Squads-side account by",
+              "`sync_spending_limit`. (Named for its original init-only role)",
+            ],
+            type: {
+              option: {
+                defined: "InitialSpendingLimit",
+              },
+            },
+          },
+          {
+            name: "teamSponsoredPassThresholdBps",
+            docs: [
+              "The percentage, in basis points, the pass price needs to be above the",
+              "fail price in order for the proposal to pass for team-sponsored proposals.",
+              "",
+              "Can be negative to allow for team-sponsored proposals to pass by default.",
+            ],
+            type: "i16",
+          },
+          {
+            name: "teamAddress",
+            type: "publicKey",
+          },
+          {
+            name: "optimisticProposal",
+            docs: ["Deprecated in favor of typed proposals"],
+            type: {
+              option: {
+                defined: "OptimisticProposal",
+              },
+            },
+          },
+          {
+            name: "isOptimisticGovernanceEnabled",
+            docs: ["Deprecated in favor of typed proposals"],
+            type: "bool",
+          },
+          {
+            name: "liquidator",
+            docs: [
+              "`Some` means the DAO has been liquidated, and holds who runs the estate.",
+              "Set once by `finalize_proposal` the moment a hostile liquidation",
+              "passes, never cleared.",
+            ],
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "lastFailedTakeoverAt",
+            docs: ["Unix time of the last failed hostile takeover. 0 = never."],
+            type: "i64",
+          },
+          {
+            name: "lastFailedLiquidationAt",
+            docs: [
+              "Unix time of the last failed hostile liquidation. 0 = never.",
+            ],
+            type: "i64",
+          },
+          {
+            name: "spendingLimitDirty",
+            docs: [
+              "Set by every write to the spending-limit record (`initial_spending_limit`),",
+              "consumed by `sync_spending_limit`.",
+            ],
+            type: "bool",
+          },
+          {
+            name: "lastBuybackFinalizedAt",
+            docs: ["Unix time of the last buyback finalization. 0 = never."],
+            type: "i64",
+          },
+          {
+            name: "typedProposalsEnabled",
+            docs: [
+              "Whether the DAO runs on the mini-instructions catalog. Never turns off.",
+            ],
+            type: "bool",
+          },
+        ],
+      },
+    },
+    {
+      name: "oldDao",
       type: {
         kind: "struct",
         fields: [
@@ -5579,142 +8037,6 @@ export const IDL: Futarchy = {
       },
     },
     {
-      name: "oldDao",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "amm",
-            docs: ["Embedded FutarchyAmm - 1:1 relationship"],
-            type: {
-              defined: "FutarchyAmm",
-            },
-          },
-          {
-            name: "nonce",
-            docs: ["`nonce` + `dao_creator` are PDA seeds"],
-            type: "u64",
-          },
-          {
-            name: "daoCreator",
-            type: "publicKey",
-          },
-          {
-            name: "pdaBump",
-            type: "u8",
-          },
-          {
-            name: "squadsMultisig",
-            type: "publicKey",
-          },
-          {
-            name: "squadsMultisigVault",
-            type: "publicKey",
-          },
-          {
-            name: "baseMint",
-            type: "publicKey",
-          },
-          {
-            name: "quoteMint",
-            type: "publicKey",
-          },
-          {
-            name: "proposalCount",
-            type: "u32",
-          },
-          {
-            name: "passThresholdBps",
-            type: "u16",
-          },
-          {
-            name: "secondsPerProposal",
-            type: "u32",
-          },
-          {
-            name: "twapInitialObservation",
-            docs: [
-              "For manipulation-resistance the TWAP is a time-weighted average observation,",
-              "where observation tries to approximate price but can only move by",
-              "`twap_max_observation_change_per_update` per update. Because it can only move",
-              "a little bit per update, you need to check that it has a good initial observation.",
-              "Otherwise, an attacker could create a very high initial observation in the pass",
-              "market and a very low one in the fail market to force the proposal to pass.",
-              "",
-              "We recommend setting an initial observation around the spot price of the token,",
-              "and max observation change per update around 2% the spot price of the token.",
-              "For example, if the spot price of META is $400, we'd recommend setting an initial",
-              "observation of 400 (converted into the AMM prices) and a max observation change per",
-              "update of 8 (also converted into the AMM prices). Observations can be updated once",
-              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
-              "in 50 minutes.",
-            ],
-            type: "u128",
-          },
-          {
-            name: "twapMaxObservationChangePerUpdate",
-            type: "u128",
-          },
-          {
-            name: "twapStartDelaySeconds",
-            docs: [
-              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds",
-            ],
-            type: "u32",
-          },
-          {
-            name: "minQuoteFutarchicLiquidity",
-            docs: [
-              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
-              "in both futarchic markets in order to create a proposal.",
-              "",
-              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
-              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
-              "10 * 1_000_000_000 (10 META).",
-            ],
-            type: "u64",
-          },
-          {
-            name: "minBaseFutarchicLiquidity",
-            type: "u64",
-          },
-          {
-            name: "baseToStake",
-            docs: [
-              "Minimum amount of base tokens that must be staked to launch a proposal",
-            ],
-            type: "u64",
-          },
-          {
-            name: "seqNum",
-            type: "u64",
-          },
-          {
-            name: "initialSpendingLimit",
-            type: {
-              option: {
-                defined: "InitialSpendingLimit",
-              },
-            },
-          },
-          {
-            name: "teamSponsoredPassThresholdBps",
-            docs: [
-              "The percentage, in basis points, the pass price needs to be above the",
-              "fail price in order for the proposal to pass for team-sponsored proposals.",
-              "",
-              "Can be negative to allow for team-sponsored proposals to pass by default.",
-            ],
-            type: "i16",
-          },
-          {
-            name: "teamAddress",
-            type: "publicKey",
-          },
-        ],
-      },
-    },
-    {
       name: "enqueuedMultisigProposalApproval",
       type: {
         kind: "struct",
@@ -5735,7 +8057,130 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "enqueuedMultisigProposalCancellation",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "transactionIndex",
+            type: "u64",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
       name: "proposal",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "number",
+            type: "u32",
+          },
+          {
+            name: "proposer",
+            type: "publicKey",
+          },
+          {
+            name: "timestampEnqueued",
+            type: "i64",
+          },
+          {
+            name: "state",
+            type: {
+              defined: "ProposalState",
+            },
+          },
+          {
+            name: "baseVault",
+            type: "publicKey",
+          },
+          {
+            name: "quoteVault",
+            type: "publicKey",
+          },
+          {
+            name: "dao",
+            type: "publicKey",
+          },
+          {
+            name: "pdaBump",
+            type: "u8",
+          },
+          {
+            name: "question",
+            type: "publicKey",
+          },
+          {
+            name: "durationInSeconds",
+            type: "u32",
+          },
+          {
+            name: "squadsProposal",
+            type: "publicKey",
+          },
+          {
+            name: "passBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "passQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "failBaseMint",
+            type: "publicKey",
+          },
+          {
+            name: "failQuoteMint",
+            type: "publicKey",
+          },
+          {
+            name: "sponsoredBy",
+            docs: [
+              "The team that last sponsored the proposal. `None` = never sponsored.",
+            ],
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "passThresholdBps",
+            type: "i16",
+          },
+          {
+            name: "councilCanBlock",
+            docs: ["Snapshot of the kind's blockable flag at create."],
+            type: "bool",
+          },
+          {
+            name: "action",
+            docs: ["The typed action parameters."],
+            type: {
+              defined: "ProposalAction",
+            },
+          },
+          {
+            name: "paramsOverridden",
+            docs: [
+              "Set by `admin_update_proposal_params`. `launch_proposal` then leaves the",
+              "duration and threshold alone.",
+            ],
+            type: "bool",
+          },
+        ],
+      },
+    },
+    {
+      name: "oldProposal",
       type: {
         kind: "struct",
         fields: [
@@ -5867,6 +8312,38 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "AdminEnqueueMultisigProposalCancellationArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "transactionIndex",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "AdminUpdateProposalParamsArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "durationInSeconds",
+            type: {
+              option: "u32",
+            },
+          },
+          {
+            name: "passThresholdBps",
+            type: {
+              option: "i16",
+            },
+          },
+        ],
+      },
+    },
+    {
       name: "ConditionalSwapParams",
       type: {
         kind: "struct",
@@ -5890,6 +8367,42 @@ export const IDL: Futarchy = {
           {
             name: "minOutputAmount",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeBuybackTokenProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "quoteAmount",
+            type: "u64",
+          },
+          {
+            name: "cycleCount",
+            type: "u32",
+          },
+          {
+            name: "cycleFrequencySeconds",
+            type: "u32",
+          },
+          {
+            name: "startDelaySeconds",
+            type: "u32",
+          },
+          {
+            name: "minPrice",
+            type: {
+              option: "u64",
+            },
+          },
+          {
+            name: "maxPrice",
+            type: {
+              option: "u64",
+            },
           },
         ],
       },
@@ -5955,13 +8468,76 @@ export const IDL: Futarchy = {
       },
     },
     {
-      name: "InitiateVaultSpendOptimisticProposalParams",
+      name: "InitializeHostileLiquidateProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "liquidator",
+            type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeHostileTakeoverProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "newTeamAddress",
+            type: "publicKey",
+          },
+          {
+            name: "spendingLimitAction",
+            type: {
+              defined: "SpendingLimitAction",
+            },
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeLargeSpendProposalArgs",
       type: {
         kind: "struct",
         fields: [
           {
             name: "amount",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeMintTokensProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "amount",
+            type: "u64",
+          },
+          {
+            name: "recipient",
+            type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "InitializeSpendingLimitChangeProposalArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "config",
+            docs: ["`Some` replaces the record, `None` removes it."],
+            type: {
+              option: {
+                defined: "InitialSpendingLimit",
+              },
+            },
           },
         ],
       },
@@ -5993,6 +8569,25 @@ export const IDL: Futarchy = {
               "liquidity provider",
             ],
             type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "SetSpendingLimitArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "config",
+            docs: [
+              "`Some` becomes the new record verbatim; `None` deletes it.",
+            ],
+            type: {
+              option: {
+                defined: "InitialSpendingLimit",
+              },
+            },
           },
         ],
       },
@@ -6109,7 +8704,21 @@ export const IDL: Futarchy = {
             },
           },
           {
-            name: "isOptimisticGovernanceEnabled",
+            name: "deprecatedIsOptimisticGovernanceEnabled",
+            docs: [
+              "Ignored. The retired optimistic-governance flag, kept in place so",
+              "payloads encoded before the upgrade are refused, not reinterpreted.",
+            ],
+            type: {
+              option: "bool",
+            },
+          },
+          {
+            name: "typedProposalsEnabled",
+            docs: [
+              "`Some(true)` turns typed proposals on for this DAO. `None` leaves them",
+              "as they are. `Some(false)` is refused: there is no way to turn them off.",
+            ],
             type: {
               option: "bool",
             },
@@ -6317,6 +8926,47 @@ export const IDL: Futarchy = {
       },
     },
     {
+      name: "InstructionParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "durationSeconds",
+            type: "u32",
+          },
+          {
+            name: "passThresholdBps",
+            docs: [
+              "Signed: a negative threshold lets a proposal pass even when the pass",
+              "price is below the fail price.",
+            ],
+            type: "i16",
+          },
+          {
+            name: "teamSponsorshipPolicy",
+            docs: ["Sponsorship policy"],
+            type: {
+              defined: "TeamSponsorshipPolicy",
+            },
+          },
+          {
+            name: "councilCanBlock",
+            type: "bool",
+          },
+          {
+            name: "cooldownSeconds",
+            docs: ["Cooldown checked at launch. 0 = none."],
+            type: "u32",
+          },
+          {
+            name: "twapStartDelaySeconds",
+            docs: ["Delay before the conditional TWAPs start to accumulate"],
+            type: "u32",
+          },
+        ],
+      },
+    },
+    {
       name: "PoolState",
       type: {
         kind: "enum",
@@ -6399,6 +9049,177 @@ export const IDL: Futarchy = {
           },
           {
             name: "Quote",
+          },
+        ],
+      },
+    },
+    {
+      name: "TeamSponsorshipPolicy",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Required",
+          },
+          {
+            name: "Optional",
+          },
+          {
+            name: "Forbidden",
+          },
+        ],
+      },
+    },
+    {
+      name: "SpendingLimitAction",
+      docs: ["What a hostile takeover declares for the spending limit."],
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Keep",
+          },
+          {
+            name: "Remove",
+          },
+          {
+            name: "Set",
+            fields: [
+              {
+                defined: "InitialSpendingLimit",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      name: "ProposalAction",
+      docs: [
+        "The typed action parameters, stored on the proposal. The borsh variant tag",
+        "is the proposal's kind discriminator, so variants are append-only — the",
+        "variant index is the wire tag.",
+      ],
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "LargeSpend",
+            fields: [
+              {
+                name: "amount",
+                type: "u64",
+              },
+              {
+                name: "teamAddress",
+                docs: [
+                  "The team the baked transfer pays, snapshotted at create. Launch",
+                  "requires it to still be the DAO's team.",
+                ],
+                type: "publicKey",
+              },
+            ],
+          },
+          {
+            name: "MintTokens",
+            fields: [
+              {
+                name: "amount",
+                type: "u64",
+              },
+              {
+                name: "recipient",
+                type: "publicKey",
+              },
+            ],
+          },
+          {
+            name: "SpendingLimitChange",
+            fields: [
+              {
+                name: "config",
+                type: {
+                  option: {
+                    defined: "InitialSpendingLimit",
+                  },
+                },
+              },
+            ],
+          },
+          {
+            name: "ExecuteArbitrary",
+          },
+          {
+            name: "HostileTakeover",
+            fields: [
+              {
+                name: "newTeamAddress",
+                docs: [
+                  "The team to install. Launch requires it to still differ from the",
+                  "DAO's team.",
+                ],
+                type: "publicKey",
+              },
+              {
+                name: "spendingLimitAction",
+                type: {
+                  defined: "SpendingLimitAction",
+                },
+              },
+            ],
+          },
+          {
+            name: "HostileLiquidate",
+            fields: [
+              {
+                name: "liquidator",
+                type: "publicKey",
+              },
+            ],
+          },
+          {
+            name: "BuybackToken",
+            fields: [
+              {
+                name: "quoteAmount",
+                docs: ["Total quote to deploy. Capped at 25% of the treasury."],
+                type: "u64",
+              },
+              {
+                name: "cycleCount",
+                docs: ["Orders the total is split across. At least 2."],
+                type: "u32",
+              },
+              {
+                name: "cycleFrequencySeconds",
+                docs: ["Seconds between orders."],
+                type: "u32",
+              },
+              {
+                name: "startDelaySeconds",
+                docs: [
+                  "Seconds after execution before the first order. 0 = immediately.",
+                ],
+                type: "u32",
+              },
+              {
+                name: "minPrice",
+                docs: [
+                  "Optional price band, in quote native units per whole base token:",
+                  "1_600_000 = 1.6 USDC per token.",
+                  "`None` = unguarded.",
+                ],
+                type: {
+                  option: "u64",
+                },
+              },
+              {
+                name: "maxPrice",
+                type: {
+                  option: "u64",
+                },
+              },
+            ],
           },
         ],
       },
@@ -6592,6 +9413,11 @@ export const IDL: Futarchy = {
           type: "publicKey",
           index: false,
         },
+        {
+          name: "typedProposalsEnabled",
+          type: "bool",
+          index: false,
+        },
       ],
     },
     {
@@ -6661,6 +9487,11 @@ export const IDL: Futarchy = {
         },
         {
           name: "isOptimisticGovernanceEnabled",
+          type: "bool",
+          index: false,
+        },
+        {
+          name: "typedProposalsEnabled",
           type: "bool",
           index: false,
         },
@@ -6734,6 +9565,13 @@ export const IDL: Futarchy = {
         {
           name: "squadsMultisigVault",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "action",
+          type: {
+            defined: "ProposalAction",
+          },
           index: false,
         },
       ],
@@ -6837,6 +9675,21 @@ export const IDL: Futarchy = {
           type: {
             defined: "FutarchyAmm",
           },
+          index: false,
+        },
+        {
+          name: "durationInSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "passThresholdBps",
+          type: "i16",
+          index: false,
+        },
+        {
+          name: "isTeamSponsored",
+          type: "bool",
           index: false,
         },
       ],
@@ -7184,6 +10037,53 @@ export const IDL: Futarchy = {
       ],
     },
     {
+      name: "AdminUpdateProposalParamsEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "admin",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oldDurationInSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "newDurationInSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "oldPassThresholdBps",
+          type: "i16",
+          index: false,
+        },
+        {
+          name: "newPassThresholdBps",
+          type: "i16",
+          index: false,
+        },
+      ],
+    },
+    {
       name: "AdminCancelProposalEvent",
       fields: [
         {
@@ -7307,7 +10207,7 @@ export const IDL: Futarchy = {
       ],
     },
     {
-      name: "InitiateVaultSpendOptimisticProposalEvent",
+      name: "SetSpendingLimitEvent",
       fields: [
         {
           name: "common",
@@ -7322,54 +10222,18 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
-          name: "proposer",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "squadsProposal",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "squadsMultisig",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "squadsMultisigVault",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "amount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "recipient",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "daoQuoteVaultAccount",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "recipientQuoteAccount",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "enqueuedTimestamp",
-          type: "i64",
+          name: "config",
+          type: {
+            option: {
+              defined: "InitialSpendingLimit",
+            },
+          },
           index: false,
         },
       ],
     },
     {
-      name: "FinalizeOptimisticProposalEvent",
+      name: "SyncSpendingLimitEvent",
       fields: [
         {
           name: "common",
@@ -7384,8 +10248,17 @@ export const IDL: Futarchy = {
           index: false,
         },
         {
-          name: "squadsProposal",
+          name: "spendingLimit",
           type: "publicKey",
+          index: false,
+        },
+        {
+          name: "config",
+          type: {
+            option: {
+              defined: "InitialSpendingLimit",
+            },
+          },
           index: false,
         },
       ],
@@ -7606,6 +10479,181 @@ export const IDL: Futarchy = {
       code: 6042,
       name: "NoActiveOptimisticProposal",
       msg: "No active optimistic proposal",
+    },
+    {
+      code: 6043,
+      name: "DaoLiquidated",
+      msg: "This DAO has been liquidated",
+    },
+    {
+      code: 6044,
+      name: "ProposalKindCooldownActive",
+      msg: "A proposal of this kind finalized recently, so the cooldown must elapse first",
+    },
+    {
+      code: 6045,
+      name: "NoSpendingLimit",
+      msg: "The DAO has no spending limit",
+    },
+    {
+      code: 6046,
+      name: "SpendCapExceeded",
+      msg: "Amount exceeds the cap of 3x the monthly spending limit",
+    },
+    {
+      code: 6047,
+      name: "UnknownMintAuthority",
+      msg: "The base mint's authority is neither the treasury vault nor a mint governor",
+    },
+    {
+      code: 6048,
+      name: "ProposalNotTeamSponsored",
+      msg: "This proposal kind must be team-sponsored before it can launch",
+    },
+    {
+      code: 6049,
+      name: "SpendingLimitNotDirty",
+      msg: "The spending limit record hasn't changed, so there is nothing to sync",
+    },
+    {
+      code: 6050,
+      name: "InvalidProposalKind",
+      msg: "Wrong proposal kind for this instruction",
+    },
+    {
+      code: 6051,
+      name: "TooManySpendingLimitMembers",
+      msg: "A spending limit can have at most 10 members",
+    },
+    {
+      code: 6052,
+      name: "InvalidLiquidator",
+      msg: "Invalid liquidator",
+    },
+    {
+      code: 6053,
+      name: "InvalidProposalPassThreshold",
+      msg: "Pass threshold must be between -99.99% and 99.99%",
+    },
+    {
+      code: 6054,
+      name: "EmptyProposalParamsUpdate",
+      msg: "A proposal params update must set at least one field",
+    },
+    {
+      code: 6055,
+      name: "BuybackCapExceeded",
+      msg: "Buyback amount exceeds 25% of the treasury",
+    },
+    {
+      code: 6056,
+      name: "InvalidBuybackAmount",
+      msg: "Buyback total must be non-zero",
+    },
+    {
+      code: 6057,
+      name: "InvalidBuybackCycleFrequency",
+      msg: "Cycle frequency must be between 60 seconds and 1 year",
+    },
+    {
+      code: 6058,
+      name: "InvalidBuybackStartDelay",
+      msg: "Start delay must be at most 30 days",
+    },
+    {
+      code: 6059,
+      name: "InvalidBuybackPriceBand",
+      msg: "min_price must be no greater than max_price",
+    },
+    {
+      code: 6060,
+      name: "InvalidTreasuryAccount",
+      msg: "A treasury account is neither a vault-owned quote account nor the treasury's AMM position",
+    },
+    {
+      code: 6061,
+      name: "TreasuryAccountsNotSorted",
+      msg: "Treasury accounts must be in strictly ascending key order",
+    },
+    {
+      code: 6062,
+      name: "UnexpectedLaunchAccounts",
+      msg: "This proposal kind's launch takes no extra accounts",
+    },
+    {
+      code: 6063,
+      name: "InvalidSpendingLimitAccount",
+      msg: "Spending limit account is not the canonical spending-limit PDA",
+    },
+    {
+      code: 6064,
+      name: "StaleTeamAddress",
+      msg: "The DAO's team has changed since this draft was created",
+    },
+    {
+      code: 6065,
+      name: "AccountNotMigrated",
+      msg: "Account is not migrated to latest layout",
+    },
+    {
+      code: 6066,
+      name: "InvalidSpendingLimitAmount",
+      msg: "A spending limit's monthly amount must be non-zero",
+    },
+    {
+      code: 6067,
+      name: "EmptySpendingLimitMembers",
+      msg: "A spending limit must have at least one member",
+    },
+    {
+      code: 6068,
+      name: "DuplicateSpendingLimitMember",
+      msg: "A spending limit's members must be unique",
+    },
+    {
+      code: 6069,
+      name: "InvalidBuybackCycleCount",
+      msg: "A buyback must run at least two cycles",
+    },
+    {
+      code: 6070,
+      name: "InvalidTeamAddress",
+      msg: "Invalid team address",
+    },
+    {
+      code: 6071,
+      name: "TeamSponsorshipForbidden",
+      msg: "This proposal kind cannot be team-sponsored",
+    },
+    {
+      code: 6072,
+      name: "SquadsProposalNotApproved",
+      msg: "Squads proposal must be in Approved status to be cancelled",
+    },
+    {
+      code: 6073,
+      name: "TypedProposalsDisabled",
+      msg: "This DAO has not opted into typed proposals",
+    },
+    {
+      code: 6074,
+      name: "TypedProposalsCannotBeDisabled",
+      msg: "Typed proposals cannot be disabled",
+    },
+    {
+      code: 6075,
+      name: "UnfrozenAddressLookupTable",
+      msg: "Address lookup tables referenced by the vault transaction must be frozen",
+    },
+    {
+      code: 6076,
+      name: "InvalidAddressLookupTable",
+      msg: "Lookup table accounts must match the vault transaction's address table lookups",
+    },
+    {
+      code: 6077,
+      name: "InvalidSquadsVaultTransaction",
+      msg: "Expected the proposal's Squads vault transaction as the first launch account",
     },
   ],
 };

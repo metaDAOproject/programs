@@ -1,16 +1,35 @@
-import { PERMISSIONLESS_ACCOUNT, PriceMath } from "@metadaoproject/programs";
+import {
+  PERMISSIONLESS_ACCOUNT,
+  PriceMath,
+  getDaoAddr,
+  getSpendingLimitAddr,
+} from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
+  Keypair,
   PublicKey,
   Transaction,
+  TransactionInstruction,
   TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
+import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 import BN from "bn.js";
-import { expectError, setupBasicDao } from "../../utils.js";
+import {
+  createLookupTableForTransaction,
+  executeVaultTransaction,
+  expectError,
+  makeOldDaoLayout,
+  passProposal,
+  pumpPassMarket,
+  setupBasicDao,
+} from "../../utils.js";
+import { updateDaoViaVault } from "../utils.js";
+import { TestContext } from "../../main.test.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -18,7 +37,12 @@ const { Permissions, Permission } = multisig.types;
 const THOUSAND_BUCK_PRICE = PriceMath.getAmmPrice(1000, 6, 6);
 
 export default function suite() {
-  let META: PublicKey, USDC: PublicKey, dao: PublicKey, proposal: PublicKey;
+  let META: PublicKey,
+    USDC: PublicKey,
+    dao: PublicKey,
+    proposal: PublicKey,
+    squadsProposalPda: PublicKey,
+    squadsTransactionPda: PublicKey;
 
   beforeEach(async function () {
     META = await this.createMint(this.payer.publicKey, 6);
@@ -74,7 +98,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
-          isOptimisticGovernanceEnabled: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -103,9 +127,13 @@ export default function suite() {
       rentPayer: this.payer.publicKey,
     });
 
-    const [squadsProposalPda] = multisig.getProposalPda({
+    [squadsProposalPda] = multisig.getProposalPda({
       multisigPda,
       transactionIndex: 1n,
+    });
+    [squadsTransactionPda] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
     });
 
     // Create the squads proposal first
@@ -126,9 +154,97 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
   });
+
+  const STAKE = new BN(100 * 1_000_000); // 100 tokens
+
+  // A fresh DAO with a stake requirement, apart from the suite DAO whose
+  // market is live
+  async function setupStakedDao(
+    ctx: TestContext,
+    initialSpendingLimit: {
+      amountPerMonth: typeof BN.prototype;
+      members: PublicKey[];
+    } | null,
+  ) {
+    const base = await ctx.createMint(ctx.payer.publicKey, 6);
+    const quote = await ctx.createMint(ctx.payer.publicKey, 6);
+
+    await ctx.createTokenAccount(base, ctx.payer.publicKey);
+    await ctx.createTokenAccount(quote, ctx.payer.publicKey);
+
+    await ctx.mintTo(base, ctx.payer.publicKey, ctx.payer, 10_000 * 1_000_000);
+    await ctx.mintTo(
+      quote,
+      ctx.payer.publicKey,
+      ctx.payer,
+      500_000 * 1_000_000,
+    );
+
+    const stakedDao = await setupBasicDao({
+      context: ctx,
+      baseMint: base,
+      quoteMint: quote,
+      baseToStake: STAKE,
+      initialSpendingLimit,
+    });
+
+    await ctx.futarchy
+      .provideLiquidityIx({
+        dao: stakedDao,
+        baseMint: base,
+        quoteMint: quote,
+        quoteAmount: new BN(100_000 * 1_000_000), // 100,000 USDC
+        maxBaseAmount: new BN(100 * 1_000_000), // 100 META
+        minLiquidity: new BN(0),
+        positionAuthority: ctx.payer.publicKey,
+        liquidityProvider: ctx.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    return { base, quote, dao: stakedDao };
+  }
+
+  // A plain draft whose payload is a memo, at the multisig's next index
+  async function createMemoDraft(ctx: TestContext, targetDao: PublicKey) {
+    const multisigPda = multisig.getMultisigPda({ createKey: targetDao })[0];
+    const multisigAccount = await multisig.accounts.Multisig.fromAccountAddress(
+      ctx.squadsConnection,
+      multisigPda,
+    );
+    const transactionIndex =
+      BigInt(multisigAccount.transactionIndex.toString()) + 1n;
+
+    const { tx, squadsProposal, squadsTransaction } =
+      ctx.futarchy.squadsProposalCreateTx({
+        dao: targetDao,
+        instructions: [
+          new TransactionInstruction({
+            programId: MEMO_PROGRAM_ID,
+            keys: [],
+            data: Buffer.from("draft"),
+          }),
+        ],
+        transactionIndex,
+      });
+    [tx.recentBlockhash] = await ctx.banksClient.getLatestBlockhash();
+    tx.feePayer = ctx.payer.publicKey;
+    tx.sign(ctx.payer, PERMISSIONLESS_ACCOUNT);
+    await ctx.banksClient.processTransaction(tx);
+
+    const proposal = await ctx.futarchy.initializeProposal(
+      targetDao,
+      squadsProposal,
+    );
+
+    return { proposal, squadsProposal, squadsTransaction };
+  }
 
   it("doesn't finalize proposals that are too young", async function () {
     const callbacks = expectError(
@@ -138,6 +254,70 @@ export default function suite() {
 
     await this.futarchy
       .finalizeProposal(proposal)
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a legacy-sized proposal that has not been migrated", async function () {
+    // Shrink the live proposal to the pre-migration allocation: the 8-byte
+    // discriminator plus the 339-byte Pending body, then 8 bytes standing in
+    // for the residue a legacy account carries past its Pending body. The
+    // residue decodes as pass_threshold_bps = -3151, council_can_block =
+    // false, action = ExecuteArbitrary, params_overridden = false — a
+    // well-formed new-layout read, so only the size guard stands between it
+    // and finalization.
+    const raw = await this.banksClient.getAccount(proposal);
+    const legacy = Buffer.concat([
+      Buffer.from(raw.data.subarray(0, 347)),
+      Buffer.from([0xb1, 0xf3, 0x00, 0x03, 0x00, 0x37, 0xa2, 0x00]),
+    ]);
+    assert.equal(legacy.length, 355);
+    this.context.setAccount(proposal, { ...raw, data: legacy });
+
+    const crafted = await this.futarchy.getProposal(proposal);
+    assert.exists(crafted.state.pending);
+    assert.equal(crafted.passThresholdBps, -3151);
+    assert.isFalse(crafted.councilCanBlock);
+    assert.isDefined(crafted.action.executeArbitrary);
+    assert.isFalse(crafted.paramsOverridden);
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "finalized an un-migrated legacy proposal",
+    );
+
+    await this.futarchy
+      .finalizeProposalIxV2({
+        squadsProposal: squadsProposalPda,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+      })
+      .rpc()
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a legacy-sized DAO that has not been migrated", async function () {
+    // Shrink only the DAO to the pre-migration allocation; the proposal keeps
+    // its migrated size so its own guard passes.
+    await makeOldDaoLayout(this, dao);
+
+    const crafted = await this.futarchy.getDao(dao);
+    assert.exists(crafted.amm.state.futarchy);
+    assert.isNull(crafted.liquidator);
+
+    const callbacks = expectError(
+      "AccountNotMigrated",
+      "finalized a proposal on an un-migrated legacy DAO",
+    );
+
+    await this.futarchy
+      .finalizeProposalIxV2({
+        squadsProposal: squadsProposalPda,
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+      })
+      .rpc()
       .then(callbacks[0], callbacks[1]);
   });
 
@@ -282,6 +462,11 @@ export default function suite() {
     const storedProposal = await this.futarchy.getProposal(proposal);
     assert.exists(storedProposal.state.failed);
 
+    // A failed ExecuteArbitrary stamps no hostile-failure timestamp
+    const storedDao = await this.futarchy.getDao(dao);
+    assert.equal(storedDao.lastFailedTakeoverAt.toString(), "0");
+    assert.equal(storedDao.lastFailedLiquidationAt.toString(), "0");
+
     // Verify Squads proposal is rejected
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const [squadsProposalPda] = multisig.getProposalPda({
@@ -298,7 +483,7 @@ export default function suite() {
   });
 
   it("finalizes when last trade is before the deadline (virtual crank covers the gap)", async function () {
-    // Trade for ~200,000s of the 259,200s proposal duration, then stop
+    // Trade for ~400,000s of the 864,000s proposal duration, then stop
     // trading and advance the clock past the deadline before finalizing.
     // The virtual crank in get_twap() fills in the gap after the last trade.
 
@@ -330,9 +515,11 @@ export default function suite() {
       })
       .rpc();
 
-    // Trade for ~200,000 seconds (10 swaps × 20,000s each)
-    // This is ~77% of the 259,200s proposal duration
-    for (let i = 0; i < 10; i++) {
+    // Trade for ~400,000 seconds (20 swaps × 20,000s each), well short of
+    // the 864,000s proposal duration. Each swap moves the pass observation
+    // up by the max change per update, so 20 swaps push the pass TWAP
+    // comfortably past the +10% snapshot threshold.
+    for (let i = 0; i < 20; i++) {
       await this.advanceBySeconds(20_000);
 
       await this.futarchy
@@ -352,7 +539,7 @@ export default function suite() {
         .rpc();
     }
 
-    // At ~200,000s into a 259,200s proposal — finalization should fail
+    // At ~400,000s into an 864,000s proposal — finalization should fail
     // because wall-clock time hasn't reached the deadline yet.
     const earlyCallbacks = expectError(
       "ProposalTooYoung",
@@ -372,9 +559,9 @@ export default function suite() {
       .rpc()
       .then(earlyCallbacks[0], earlyCallbacks[1]);
 
-    // Stop trading. Advance time past the proposal deadline (259,200s).
-    // Last trade was at ~200,000s. We need at least 60,000 more seconds.
-    await this.advanceBySeconds(70_000);
+    // Stop trading. Advance time past the proposal deadline (864,000s).
+    // Last trade was at ~400,000s. We need at least 464,000 more seconds.
+    await this.advanceBySeconds(700_000);
 
     // Finalize — should succeed because:
     // 1. Wall-clock time is past the deadline (validate() passes)
@@ -386,8 +573,95 @@ export default function suite() {
     assert.exists(storedProposal.state.passed);
   });
 
-  it("passes proposals when the team sponsors them and pass twap is slightly below fail twap", async function () {
-    // Create a new DAO with -5% team-sponsored threshold
+  it("fails proposals above the DAO threshold but below the snapshot threshold", async function () {
+    // The DAO's pass_threshold_bps is +3%, but the proposal snapshotted
+    // ExecuteArbitrary's +10% at create. Push the pass TWAP ~5% above fail —
+    // clearing the DAO threshold but not the snapshot — and the proposal
+    // must still fail, proving finalize judges at the snapshot.
+    const { baseVault, quoteVault, question } = this.futarchy.getProposalPdas(
+      proposal,
+      META,
+      USDC,
+      dao,
+    );
+
+    await this.conditionalVault
+      .splitTokensIx(question, baseVault, META, new BN(10 * 10 ** 9), 2)
+      .rpc();
+    await this.conditionalVault
+      .splitTokensIx(question, quoteVault, USDC, new BN(11_000 * 1_000_000), 2)
+      .rpc();
+
+    // Initial swap to pump the pass market price
+    await this.futarchy
+      .conditionalSwapIx({
+        dao,
+        baseMint: META,
+        quoteMint: USDC,
+        proposal,
+        market: "pass",
+        swapType: "buy",
+        inputAmount: new BN(10_000 * 1_000_000),
+        minOutputAmount: new BN(0),
+      })
+      .rpc();
+
+    // 5 swaps × 20,000s: each moves the pass observation up by the max
+    // change per update (1%), landing the pass TWAP ~5% above fail
+    for (let i = 0; i < 5; i++) {
+      await this.advanceBySeconds(20_000);
+
+      await this.futarchy
+        .conditionalSwapIx({
+          dao,
+          baseMint: META,
+          quoteMint: USDC,
+          proposal,
+          market: "pass",
+          swapType: "buy",
+          inputAmount: new BN(10),
+          minOutputAmount: new BN(0),
+        })
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: i }),
+        ])
+        .rpc();
+    }
+
+    // Advance past the 864,000s proposal deadline
+    await this.advanceBySeconds(800_000);
+
+    // Pin the scenario in the discriminating band: pass TWAP above the
+    // DAO's +3% threshold, at or below the snapshot's +10%
+    const now = (await this.banksClient.getClock()).unixTimestamp;
+    const { pass, fail } = (await this.futarchy.getDao(dao)).amm.state.futarchy;
+    const twap = (pool: typeof pass) => {
+      const start =
+        BigInt(pool.oracle.createdAtTimestamp.toString()) +
+        BigInt(pool.oracle.startDelaySeconds);
+      const finalInterval =
+        now - BigInt(pool.oracle.lastUpdatedTimestamp.toString());
+      const total =
+        BigInt(pool.oracle.aggregator.toString()) +
+        BigInt(pool.oracle.lastObservation.toString()) * finalInterval;
+      return total / (now - start);
+    };
+    const passTwap = twap(pass);
+    const failTwap = twap(fail);
+    assert.isTrue(passTwap > (failTwap * 10_300n) / 10_000n);
+    assert.isTrue(passTwap <= (failTwap * 11_000n) / 10_000n);
+
+    await this.futarchy.finalizeProposal(proposal);
+
+    const storedProposal = await this.futarchy.getProposal(proposal);
+    assert.exists(storedProposal.state.failed);
+  });
+
+  it("judges team-sponsored proposals at the snapshot threshold, not the DAO's team threshold", async function () {
+    // Create a new DAO with -5% team-sponsored threshold. That per-DAO
+    // threshold is vestigial: finalize judges at the proposal's snapshot
+    // (+10% for ExecuteArbitrary), so with the pass TWAP slightly below
+    // fail this sponsored proposal now fails.
     const META = await this.createMint(this.payer.publicKey, 6);
     const USDC = await this.createMint(this.payer.publicKey, 6);
 
@@ -445,7 +719,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
-          isOptimisticGovernanceEnabled: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -480,6 +754,10 @@ export default function suite() {
       multisigPda,
       transactionIndex: 1n,
     });
+    const [squadsTransactionPda] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
+    });
 
     // Create the squads proposal first
     const tx = new Transaction().add(vaultTxCreate, proposalCreateIx);
@@ -511,6 +789,7 @@ export default function suite() {
         baseMint: META,
         quoteMint: USDC,
         squadsProposal: squadsProposalPda,
+        squadsTransaction: squadsTransactionPda,
       })
       .rpc();
 
@@ -550,16 +829,492 @@ export default function suite() {
       await this.advanceBySeconds(20_000);
     }
 
-    // Finalize the proposal - should pass because it's team-sponsored
-    // and the pass TWAP is within the -5% threshold
+    // Fails despite team sponsorship: the pass TWAP is below fail, nowhere
+    // near the +10% snapshot threshold
     await this.futarchy.finalizeProposal(teamSponsoredProposal);
 
     const storedProposal = await this.futarchy.getProposal(
       teamSponsoredProposal,
     );
-    assert.exists(
-      storedProposal.state.passed,
-      "Team-sponsored proposal should pass when within threshold",
+    assert.exists(storedProposal.state.failed);
+  });
+
+  it("passes an uncontested large_spend at its -10% threshold", async function () {
+    // Fresh DAO with a spending limit — the suite DAO has none and already
+    // has a live proposal
+    const BASE = await this.createMint(this.payer.publicKey, 6);
+    const QUOTE = await this.createMint(this.payer.publicKey, 6);
+
+    await this.createTokenAccount(BASE, this.payer.publicKey);
+    await this.createTokenAccount(QUOTE, this.payer.publicKey);
+
+    await this.mintTo(BASE, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+    await this.mintTo(
+      QUOTE,
+      this.payer.publicKey,
+      this.payer,
+      200_000 * 1_000_000,
     );
+
+    const nonce = new BN(Math.floor(Math.random() * 1000000));
+
+    await this.futarchy
+      .initializeDaoIx({
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        params: {
+          secondsPerProposal: 60 * 60 * 24 * 3,
+          twapStartDelaySeconds: 60 * 60 * 24,
+          twapInitialObservation: THOUSAND_BUCK_PRICE,
+          twapMaxObservationChangePerUpdate: THOUSAND_BUCK_PRICE.divn(100),
+          minQuoteFutarchicLiquidity: new BN(10_000),
+          minBaseFutarchicLiquidity: new BN(10_000),
+          passThresholdBps: 300,
+          nonce,
+          initialSpendingLimit: {
+            amountPerMonth: new BN(1_000_000_000), // 1,000 USDC
+            members: [this.payer.publicKey],
+          },
+          baseToStake: new BN(0),
+          teamSponsoredPassThresholdBps: 300,
+          teamAddress: this.payer.publicKey,
+        },
+        provideLiquidity: true,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const [spendDao] = getDaoAddr({
+      nonce,
+      daoCreator: this.payer.publicKey,
+    });
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao: spendDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal: spendProposal, squadsProposal: spendSquadsProposal } =
+      await this.futarchy.initializeLargeSpendProposal({
+        dao: spendDao,
+        amount: new BN(1_000_000_000), // 1,000 USDC
+      });
+
+    await this.futarchy
+      .sponsorProposalIx({
+        proposal: spendProposal,
+        dao: spendDao,
+        teamAddress: this.payer.publicKey,
+      })
+      .rpc();
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: spendProposal,
+        dao: spendDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        squadsProposal: spendSquadsProposal,
+      })
+      .rpc();
+
+    // Nobody contests the market: one swap after the TWAP start delay
+    // records an observation in both markets and leaves the TWAPs equal
+    await this.advanceBySeconds(60 * 60 * 24 + 60);
+    await this.futarchy
+      .spotSwapIx({
+        dao: spendDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        swapType: "buy",
+        inputAmount: new BN(1_000),
+      })
+      .rpc();
+
+    // Past the kind's 1.5-day duration snapshot
+    await this.advanceBySeconds(129_600);
+    await this.futarchy.finalizeProposal(spendProposal);
+
+    // Equal TWAPs clear the -10% snapshot threshold
+    const storedProposal = await this.futarchy.getProposal(spendProposal);
+    assert.exists(storedProposal.state.passed);
+
+    const squadsProposalAccount =
+      await multisig.accounts.Proposal.fromAccountAddress(
+        this.squadsConnection,
+        spendSquadsProposal,
+      );
+    assert.isTrue(
+      multisig.generated.isProposalStatusApproved(squadsProposalAccount.status),
+    );
+  });
+
+  it("stamps only its own cooldown timestamp when a hostile proposal fails", async function () {
+    // Fresh DAO — the suite DAO already has a live proposal
+    const BASE = await this.createMint(this.payer.publicKey, 6);
+    const QUOTE = await this.createMint(this.payer.publicKey, 6);
+
+    await this.createTokenAccount(BASE, this.payer.publicKey);
+    await this.createTokenAccount(QUOTE, this.payer.publicKey);
+
+    await this.mintTo(BASE, this.payer.publicKey, this.payer, 100 * 10 ** 9);
+    await this.mintTo(
+      QUOTE,
+      this.payer.publicKey,
+      this.payer,
+      200_000 * 1_000_000,
+    );
+
+    const hostileDao = await setupBasicDao({
+      context: this,
+      baseMint: BASE,
+      quoteMint: QUOTE,
+    });
+
+    await this.futarchy
+      .provideLiquidityIx({
+        dao: hostileDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        quoteAmount: new BN(100_000 * 10 ** 6),
+        maxBaseAmount: new BN(100 * 10 ** 6),
+        minLiquidity: new BN(0),
+        positionAuthority: this.payer.publicKey,
+        liquidityProvider: this.payer.publicKey,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
+      ])
+      .rpc();
+
+    const { proposal: hostileProposal, squadsProposal } =
+      await this.futarchy.initializeHostileTakeoverProposal({
+        dao: hostileDao,
+        newTeamAddress: Keypair.generate().publicKey,
+        spendingLimitAction: { keep: {} },
+      });
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: hostileProposal,
+        dao: hostileDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        squadsProposal,
+      })
+      .rpc();
+
+    // One swap after the TWAP start delay records an observation in both
+    // markets; the equal TWAPs it leaves can't clear the +10% threshold
+    await this.advanceBySeconds(60 * 60 * 24 + 60);
+    await this.futarchy
+      .spotSwapIx({
+        dao: hostileDao,
+        baseMint: BASE,
+        quoteMint: QUOTE,
+        swapType: "buy",
+        inputAmount: new BN(1_000),
+      })
+      .rpc();
+
+    await this.advanceBySeconds(60 * 60 * 24 * 20);
+    await this.futarchy.finalizeProposal(hostileProposal);
+
+    const storedProposal = await this.futarchy.getProposal(hostileProposal);
+    assert.exists(storedProposal.state.failed);
+
+    // The failed takeover stamps its own timestamp and only its own
+    const clock = await this.banksClient.getClock();
+    const storedDao = await this.futarchy.getDao(hostileDao);
+    assert.equal(
+      storedDao.lastFailedTakeoverAt.toString(),
+      clock.unixTimestamp.toString(),
+    );
+    assert.equal(storedDao.lastFailedLiquidationAt.toString(), "0");
+
+    // Nothing of the declared regime lands on a failure
+    assert.ok(storedDao.teamAddress.equals(this.payer.publicKey));
+    assert.isNull(storedDao.initialSpendingLimit);
+    assert.isFalse(storedDao.spendingLimitDirty);
+  });
+
+  it("applies a passed takeover even when a new market launches in the same transaction", async function () {
+    const { base, quote, dao: hostileDao } = await setupStakedDao(this, null);
+
+    const newTeamAddress = Keypair.generate().publicKey;
+    const takeover = await this.futarchy.initializeHostileTakeoverProposal({
+      dao: hostileDao,
+      newTeamAddress,
+      spendingLimitAction: { keep: {} },
+    });
+    const blocker = await createMemoDraft(this, hostileDao);
+
+    for (const proposal of [takeover.proposal, blocker.proposal]) {
+      await this.futarchy
+        .stakeToProposalIx({
+          proposal,
+          dao: hostileDao,
+          baseMint: base,
+          amount: STAKE,
+        })
+        .rpc();
+    }
+
+    await this.futarchy
+      .launchProposalIx({
+        proposal: takeover.proposal,
+        dao: hostileDao,
+        baseMint: base,
+        quoteMint: quote,
+        squadsProposal: takeover.squadsProposal,
+      })
+      .rpc();
+
+    await pumpPassMarket(this, {
+      dao: hostileDao,
+      proposal: takeover.proposal,
+      baseMint: base,
+      quoteMint: quote,
+      cranks: 90,
+    });
+
+    // Finalize and the blocker's launch in one transaction: the takeover is
+    // written by finalize itself, so the new market cannot hold it off
+    const packIxs = [
+      await this.futarchy
+        .finalizeProposalIxV2({
+          squadsProposal: takeover.squadsProposal,
+          dao: hostileDao,
+          baseMint: base,
+          quoteMint: quote,
+        })
+        .instruction(),
+      await this.futarchy
+        .launchProposalIx({
+          proposal: blocker.proposal,
+          dao: hostileDao,
+          baseMint: base,
+          quoteMint: quote,
+          squadsProposal: blocker.squadsProposal,
+          squadsTransaction: blocker.squadsTransaction,
+        })
+        .instruction(),
+    ];
+
+    const lut = await createLookupTableForTransaction(
+      new Transaction().add(...packIxs),
+      this,
+    );
+    const packMessage = new TransactionMessage({
+      payerKey: this.payer.publicKey,
+      recentBlockhash: (await this.banksClient.getLatestBlockhash())[0],
+      instructions: [
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+        ...packIxs,
+      ],
+    }).compileToV0Message([lut]);
+    const packTx = new VersionedTransaction(packMessage);
+    packTx.sign([this.payer]);
+    await this.banksClient.processTransaction(packTx);
+
+    const storedDao = await this.futarchy.getDao(hostileDao);
+    assert.ok(storedDao.teamAddress.equals(newTeamAddress));
+    assert.exists(storedDao.amm.state.futarchy);
+
+    const storedBlocker = await this.futarchy.getProposal(blocker.proposal);
+    assert.exists(storedBlocker.state.pending);
+  });
+
+  // A takeover's effect lives on the DAO account, so finalize writes it itself
+  // rather than leaving it to a payload that a new market could hold off
+  describe("takeover applied by finalize", function () {
+    let base: PublicKey,
+      quote: PublicKey,
+      takeoverDao: PublicKey,
+      newTeamAddress: PublicKey,
+      declaredConfig: {
+        amountPerMonth: typeof BN.prototype;
+        members: PublicKey[];
+      },
+      takeoverSquadsTransaction: PublicKey,
+      sponsoredDraft: {
+        proposal: PublicKey;
+        squadsProposal: PublicKey;
+        squadsTransaction: PublicKey;
+      },
+      stakedDraft: {
+        proposal: PublicKey;
+        squadsProposal: PublicKey;
+        squadsTransaction: PublicKey;
+      };
+
+    before(async function () {
+      ({
+        base,
+        quote,
+        dao: takeoverDao,
+      } = await setupStakedDao(this, {
+        amountPerMonth: new BN(10_000 * 1_000_000), // 10,000 USDC
+        members: [this.payer.publicKey],
+      }));
+
+      newTeamAddress = Keypair.generate().publicKey;
+      declaredConfig = {
+        amountPerMonth: new BN(25_000 * 1_000_000), // 25,000 USDC
+        members: [Keypair.generate().publicKey],
+      };
+
+      const takeover = await this.futarchy.initializeHostileTakeoverProposal({
+        dao: takeoverDao,
+        newTeamAddress,
+        spendingLimitAction: { set: { 0: declaredConfig } },
+      });
+      takeoverSquadsTransaction = takeover.squadsTransaction;
+
+      // Both drafts are staged while the current team is still in place: one
+      // rides on its sponsorship, the other on a stake
+      sponsoredDraft = await createMemoDraft(this, takeoverDao);
+      await this.futarchy
+        .sponsorProposalIx({
+          proposal: sponsoredDraft.proposal,
+          dao: takeoverDao,
+        })
+        .rpc();
+
+      stakedDraft = await createMemoDraft(this, takeoverDao);
+      await this.futarchy
+        .stakeToProposalIx({
+          proposal: stakedDraft.proposal,
+          dao: takeoverDao,
+          baseMint: base,
+          amount: STAKE,
+        })
+        .rpc();
+
+      await this.futarchy
+        .stakeToProposalIx({
+          proposal: takeover.proposal,
+          dao: takeoverDao,
+          baseMint: base,
+          amount: STAKE,
+        })
+        .rpc();
+
+      await this.futarchy
+        .launchProposalIx({
+          proposal: takeover.proposal,
+          dao: takeoverDao,
+          baseMint: base,
+          quoteMint: quote,
+          squadsProposal: takeover.squadsProposal,
+        })
+        .rpc();
+
+      await passProposal(this, {
+        dao: takeoverDao,
+        proposal: takeover.proposal,
+        baseMint: base,
+        quoteMint: quote,
+        cranks: 90,
+      });
+    });
+
+    it("writes the new team at finalize, before the memo executes", async function () {
+      const storedDao = await this.futarchy.getDao(takeoverDao);
+      assert.ok(storedDao.teamAddress.equals(newTeamAddress));
+    });
+
+    it("writes the declared record and raises the flag, and the sync projects it", async function () {
+      let storedDao = await this.futarchy.getDao(takeoverDao);
+      assert.equal(
+        storedDao.initialSpendingLimit.amountPerMonth.toString(),
+        declaredConfig.amountPerMonth.toString(),
+      );
+      assert.deepEqual(
+        storedDao.initialSpendingLimit.members.map((m) => m.toBase58()),
+        declaredConfig.members.map((m) => m.toBase58()),
+      );
+      assert.isTrue(storedDao.spendingLimitDirty);
+
+      await this.futarchy.syncSpendingLimitIx({ dao: takeoverDao }).rpc();
+
+      storedDao = await this.futarchy.getDao(takeoverDao);
+      assert.isFalse(storedDao.spendingLimitDirty);
+
+      const [spendingLimitPda] = getSpendingLimitAddr({ dao: takeoverDao });
+      const storedLimit =
+        await multisig.accounts.SpendingLimit.fromAccountAddress(
+          this.squadsConnection,
+          spendingLimitPda,
+        );
+      assert.equal(
+        storedLimit.amount.toString(),
+        declaredConfig.amountPerMonth.toString(),
+      );
+    });
+
+    it("the outgoing team's sponsored draft needs the stake once the takeover lands", async function () {
+      const callbacks = expectError(
+        "InsufficientStakeToLaunch",
+        "launched on the outgoing team's sponsorship",
+      );
+
+      await this.futarchy
+        .launchProposalIx({
+          proposal: sponsoredDraft.proposal,
+          dao: takeoverDao,
+          baseMint: base,
+          quoteMint: quote,
+          squadsProposal: sponsoredDraft.squadsProposal,
+          squadsTransaction: sponsoredDraft.squadsTransaction,
+        })
+        .rpc()
+        .then(callbacks[0], callbacks[1]);
+    });
+
+    it("executing the memo after a later team change leaves that team in place", async function () {
+      const laterTeam = Keypair.generate().publicKey;
+      await updateDaoViaVault(this, takeoverDao, { teamAddress: laterTeam });
+
+      await executeVaultTransaction(
+        this,
+        takeoverDao,
+        takeoverSquadsTransaction,
+      );
+
+      const storedDao = await this.futarchy.getDao(takeoverDao);
+      assert.ok(storedDao.teamAddress.equals(laterTeam));
+    });
+
+    it("a staked draft launches afterwards", async function () {
+      await this.futarchy
+        .launchProposalIx({
+          proposal: stakedDraft.proposal,
+          dao: takeoverDao,
+          baseMint: base,
+          quoteMint: quote,
+          squadsProposal: stakedDraft.squadsProposal,
+          squadsTransaction: stakedDraft.squadsTransaction,
+        })
+        .rpc();
+
+      const storedProposal = await this.futarchy.getProposal(
+        stakedDraft.proposal,
+      );
+      assert.exists(storedProposal.state.pending);
+    });
   });
 }

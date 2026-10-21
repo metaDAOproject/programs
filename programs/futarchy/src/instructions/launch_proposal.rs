@@ -36,8 +36,10 @@ pub struct LaunchProposal<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
-impl LaunchProposal<'_> {
-    pub fn validate(&self) -> Result<()> {
+impl<'info> LaunchProposal<'info> {
+    pub fn validate(&self, remaining_accounts: &'info [AccountInfo<'info>]) -> Result<()> {
+        require!(self.dao.liquidator.is_none(), FutarchyError::DaoLiquidated);
+
         msg!("proposal state: {:?}", self.proposal.state);
         require!(
             matches!(self.proposal.state, ProposalState::Draft { .. }),
@@ -46,8 +48,11 @@ impl LaunchProposal<'_> {
 
         require_keys_eq!(self.proposal.dao, self.dao.key());
 
+        // A sponsorship only counts while the sponsor is still the DAO's team.
+        let is_team_sponsored = self.proposal.is_sponsored_by(self.dao.team_address);
+
         // If the proposal is not team sponsored, check if sufficient stake has been accumulated
-        if !self.proposal.is_team_sponsored {
+        if !is_team_sponsored {
             if let ProposalState::Draft { amount_staked } = self.proposal.state {
                 require_gte!(
                     amount_staked,
@@ -57,26 +62,48 @@ impl LaunchProposal<'_> {
             }
         }
 
-        // If there is an active optimistic proposal, it must be for the same squads proposal
-        // as the futarchy proposal we're launching, thus challenging the optimistic proposal.
-        // This follows the logic that a DAO can have only one proposal active at a time.
-        if let Some(optimistic_proposal) = &self.dao.optimistic_proposal {
-            require_keys_eq!(
-                optimistic_proposal.squads_proposal,
-                self.proposal.squads_proposal
-            );
+        // Kind gates, checked at launch rather than create so that pre-created
+        // drafts can't bypass them
 
-            // The optimistic proposal must be younger than seconds_per_proposal, otherwise it is considered passed and must be finalized
-            require_gt!(
-                optimistic_proposal.enqueued_timestamp + self.dao.seconds_per_proposal as i64,
+        // Typed kinds need the DAO typed proposals enabled.
+        if !matches!(self.proposal.action, ProposalAction::ExecuteArbitrary) {
+            require!(
+                self.dao.typed_proposals_enabled,
+                FutarchyError::TypedProposalsDisabled
+            );
+        }
+
+        let params = self.proposal.launch_params(&self.dao);
+
+        if params.team_sponsorship_policy == TeamSponsorshipPolicy::Required {
+            require!(is_team_sponsored, FutarchyError::ProposalNotTeamSponsored);
+        }
+
+        // A market that doesn't outlive its start delay reaches its nominal end
+        // with an empty aggregator, and `MarketsTooYoung` blocks finalize.
+        // Strict, because finalize needs the last update past that boundary.
+        require_gt!(
+            params.duration_seconds,
+            params.twap_start_delay_seconds,
+            FutarchyError::ProposalDurationTooShort
+        );
+
+        let cooldown_started_at = match self.proposal.action {
+            ProposalAction::HostileTakeover { .. } => Some(self.dao.last_failed_takeover_at),
+            ProposalAction::HostileLiquidate { .. } => Some(self.dao.last_failed_liquidation_at),
+            ProposalAction::BuybackToken { .. } => Some(self.dao.last_buyback_finalized_at),
+            _ => None,
+        };
+        if let Some(cooldown_started_at) = cooldown_started_at {
+            require_gte!(
                 Clock::get()?.unix_timestamp,
-                FutarchyError::OptimisticProposalAlreadyPassed
+                cooldown_started_at + params.cooldown_seconds as i64,
+                FutarchyError::ProposalKindCooldownActive
             );
         }
 
         // Can only launch a proposal if the underlying squads proposal is active
-        // This check exists mainly to prevent a situation where we try to launch a proposal for a passed optimistic proposal.
-        // However, it also applies in general, to prevent a situation where we enter futarchy with an invalid squads proposal state, thus bricking it.
+        // This prevents a situation where we enter futarchy with an invalid squads proposal state, thus bricking it.
         require!(
             matches!(
                 self.squads_proposal.status,
@@ -90,6 +117,12 @@ impl LaunchProposal<'_> {
             self.squads_proposal.transaction_index,
             self.squads_multisig.stale_transaction_index
         );
+
+        self.proposal.action.verify_launch_accounts(
+            &self.dao,
+            self.squads_proposal.transaction_index,
+            remaining_accounts,
+        )?;
 
         Ok(())
     }
@@ -154,6 +187,11 @@ impl LaunchProposal<'_> {
 
         let clock = Clock::get()?;
 
+        // Write the terms in force now; the draft only carried a preview.
+        let params = proposal.launch_params(dao);
+        proposal.duration_in_seconds = params.duration_seconds;
+        proposal.pass_threshold_bps = params.pass_threshold_bps;
+
         dao.amm.state = PoolState::Futarchy {
             spot,
             pass: Pool {
@@ -165,7 +203,7 @@ impl LaunchProposal<'_> {
                     clock.unix_timestamp,
                     dao.twap_initial_observation,
                     dao.twap_max_observation_change_per_update,
-                    dao.twap_start_delay_seconds,
+                    params.twap_start_delay_seconds,
                 ),
             },
             fail: Pool {
@@ -177,7 +215,7 @@ impl LaunchProposal<'_> {
                     clock.unix_timestamp,
                     dao.twap_initial_observation,
                     dao.twap_max_observation_change_per_update,
-                    dao.twap_start_delay_seconds,
+                    params.twap_start_delay_seconds,
                 ),
             },
         };
@@ -185,18 +223,6 @@ impl LaunchProposal<'_> {
         // Update proposal state to Pending and set timestamp enqueued
         proposal.state = ProposalState::Pending;
         proposal.timestamp_enqueued = clock.unix_timestamp;
-        // Additionally, set the duration once more in case it was updated since the proposal was created
-        proposal.duration_in_seconds = dao.seconds_per_proposal;
-
-        // If this is moving an optimistic proposal into the futarchy proposal, the futarchy proposal will be treated as team-sponsored (lower pass threshold)
-        if dao.optimistic_proposal.is_some() {
-            proposal.is_team_sponsored = true;
-        }
-
-        // Update the DAO state
-        // There either is no optimistic proposal, or the optimistic proposal is being moved into the futarchy proposal
-        // This means that the optimistic proposal now has to pass a decision market in order to be approved/executed
-        dao.optimistic_proposal = None;
 
         dao.seq_num += 1;
 
@@ -207,6 +233,9 @@ impl LaunchProposal<'_> {
             timestamp_enqueued: proposal.timestamp_enqueued,
             total_staked,
             post_amm_state: dao.amm.clone(),
+            duration_in_seconds: proposal.duration_in_seconds,
+            pass_threshold_bps: proposal.pass_threshold_bps,
+            is_team_sponsored: proposal.is_sponsored_by(dao.team_address),
         });
 
         Ok(())
