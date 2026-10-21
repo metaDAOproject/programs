@@ -364,6 +364,10 @@ export const createFutarchyProposal = async ({
   }
 
   for (const setupTransaction of setupTransactions) {
+    // Fetched per transaction, as confirming the earlier ones can outlast it
+    setupTransaction.recentBlockhash = (
+      await provider.connection.getLatestBlockhash()
+    ).blockhash;
     setupTransaction.sign(payer);
 
     const setupSignature = await sendAndConfirm(provider, setupTransaction);

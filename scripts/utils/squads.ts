@@ -119,9 +119,19 @@ export const squadsVaultTransactionFits = async ({
   transaction.feePayer = payer;
   const message = transaction.compileMessage();
 
-  const size =
-    1 + 64 * message.header.numRequiredSignatures + message.serialize().length;
-  return size <= PACKET_DATA_SIZE;
+  try {
+    const size =
+      1 +
+      64 * message.header.numRequiredSignatures +
+      message.serialize().length;
+    return size <= PACKET_DATA_SIZE;
+  } catch (error) {
+    // Serializing throws once the instructions alone outgrow the size limit
+    if (error instanceof RangeError) {
+      return false;
+    }
+    throw error;
+  }
 };
 
 // Keeps the transaction creating and extending a lookup table within the

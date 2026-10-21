@@ -811,10 +811,11 @@ export const removeSpendingLimit =
  * instructions the DAO's vault should execute, `setupTransactions` -
  * payer-funded transactions with the actions' setup instructions and, when
  * the instructions don't fit a squads transaction otherwise, the ones
- * creating a lookup table of their accounts, to be signed by the payer and
- * sent in order before anything else - `lookupTable`, the table to compile
- * the vault transaction with in that case, and `requiresAdminExecution`, set
- * when any action needs the DAO proposal executed through
+ * creating a lookup table of their accounts, to be sent in order before
+ * anything else, each given a fresh blockhash and signed by the payer right
+ * before it's sent - `lookupTable`, the table to compile the vault
+ * transaction with in that case, and `requiresAdminExecution`, set when any
+ * action needs the DAO proposal executed through
  * admin_execute_multisig_proposal.
  */
 export const buildDaoActions = async ({
@@ -898,9 +899,7 @@ export const buildDaoActions = async ({
     }
   }
 
-  const { blockhash } = await provider.connection.getLatestBlockhash();
   for (const transaction of setupTransactions) {
-    transaction.recentBlockhash = blockhash;
     transaction.feePayer = payer;
   }
 
@@ -976,6 +975,10 @@ export const signAndSendDaoActionTransactions = async ({
 
   const setupSignatures: string[] = [];
   for (const setupTransaction of setupTransactions) {
+    // Fetched per transaction, as confirming the earlier ones can outlast it
+    setupTransaction.recentBlockhash = (
+      await provider.connection.getLatestBlockhash()
+    ).blockhash;
     setupTransaction.sign(payer);
 
     const setupSignature = await sendAndConfirm(provider, setupTransaction);
