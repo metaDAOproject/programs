@@ -310,7 +310,14 @@ export type PriceBasedPerformancePackage = {
           isSigner: false;
         },
       ];
-      args: [];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "ExecuteChangeParams";
+          };
+        },
+      ];
     },
     {
       name: "changePerformancePackageAuthority";
@@ -847,6 +854,18 @@ export type PriceBasedPerformancePackage = {
           {
             name: "newPerformancePackageAuthority";
             type: "publicKey";
+          },
+        ];
+      };
+    },
+    {
+      name: "ExecuteChangeParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "expectedProposedAt";
+            type: "i64";
           },
         ];
       };
@@ -1739,6 +1758,11 @@ export type PriceBasedPerformancePackage = {
       name: "StaleChangeRequest";
       msg: "Change request was proposed before the last executed change was proposed";
     },
+    {
+      code: 6029;
+      name: "ChangeRequestMismatch";
+      msg: "Change request was proposed at a different time than the executor expected";
+    },
   ];
 };
 
@@ -2054,7 +2078,14 @@ export const IDL: PriceBasedPerformancePackage = {
           isSigner: false,
         },
       ],
-      args: [],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "ExecuteChangeParams",
+          },
+        },
+      ],
     },
     {
       name: "changePerformancePackageAuthority",
@@ -2591,6 +2622,18 @@ export const IDL: PriceBasedPerformancePackage = {
           {
             name: "newPerformancePackageAuthority",
             type: "publicKey",
+          },
+        ],
+      },
+    },
+    {
+      name: "ExecuteChangeParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "expectedProposedAt",
+            type: "i64",
           },
         ],
       },
@@ -3482,6 +3525,11 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6028,
       name: "StaleChangeRequest",
       msg: "Change request was proposed before the last executed change was proposed",
+    },
+    {
+      code: 6029,
+      name: "ChangeRequestMismatch",
+      msg: "Change request was proposed at a different time than the executor expected",
     },
   ],
 };

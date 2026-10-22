@@ -4,6 +4,11 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct ExecuteChangeParams {
+    pub expected_proposed_at: i64,
+}
+
 #[event_cpi]
 #[derive(Accounts)]
 pub struct ExecuteChange<'info> {
@@ -23,8 +28,15 @@ pub struct ExecuteChange<'info> {
 }
 
 impl<'info> ExecuteChange<'info> {
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self, params: &ExecuteChangeParams) -> Result<()> {
         PerformancePackage::assert_migrated(&self.performance_package.to_account_info())?;
+
+        // Ensure this is the request the executor approved and not one re-proposed at the same address.
+        require_eq!(
+            self.change_request.proposed_at,
+            params.expected_proposed_at,
+            PriceBasedPerformancePackageError::ChangeRequestMismatch
+        );
 
         // Ensure the request was not proposed before the last executed change was.
         require_gte!(

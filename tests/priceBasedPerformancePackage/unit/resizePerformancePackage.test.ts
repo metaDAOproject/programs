@@ -439,11 +439,14 @@ export default function () {
         pdaNonce,
       );
 
+    const { proposedAt } =
+      await this.priceBasedPerformancePackage.getChangeRequest(changeRequest);
     await assertGatedUntilResized(this, () =>
       this.priceBasedPerformancePackage.executeChangeIx({
         performancePackage,
         changeRequest,
         executor: this.payer.publicKey,
+        expectedProposedAt: proposedAt,
       }),
     );
 

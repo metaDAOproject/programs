@@ -280,12 +280,15 @@ export class PriceBasedPerformancePackageClient {
     performancePackage: PublicKey;
     changeRequest: PublicKey;
     executor: PublicKey;
+    expectedProposedAt: BN;
   }) {
-    return this.program.methods.executeChange().accounts({
-      changeRequest: params.changeRequest,
-      performancePackage: params.performancePackage,
-      executor: params.executor,
-    });
+    return this.program.methods
+      .executeChange({ expectedProposedAt: params.expectedProposedAt })
+      .accounts({
+        changeRequest: params.changeRequest,
+        performancePackage: params.performancePackage,
+        executor: params.executor,
+      });
   }
 
   public changePerformancePackageAuthorityIx(params: {

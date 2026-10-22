@@ -22,6 +22,7 @@ import {
   setMockOracle,
   setupSellablePackage,
   uniqueTxIx,
+  executeChangeIx,
 } from "../utils.js";
 
 const ONE_HOUR = 60 * 60;
@@ -99,13 +100,13 @@ export default function () {
         pdaNonce,
       );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: this.payer.publicKey, // DAO executes
       })
-      .rpc();
+    ).rpc();
 
     // Verify the change was applied
     const performancePackageAccount =
@@ -162,12 +163,13 @@ export default function () {
         pdaNonce2,
       );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: recipient.publicKey, // Recipient executes
       })
+    )
       .signers([recipient])
       .rpc();
 
@@ -235,12 +237,13 @@ export default function () {
         recipientChangePdaNonce,
       );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: recipientChangeRequestAddr,
         executor: recipient.publicKey, // Original recipient executes recipient change
       })
+    )
       .signers([recipient])
       .rpc();
 
@@ -263,12 +266,13 @@ export default function () {
         pdaNonce3,
       );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: originalChangeRequestAddr,
         executor: newRecipient2.publicKey, // NEW recipient executes original change
       })
+    )
       .signers([newRecipient2])
       .rpc();
 
@@ -321,12 +325,13 @@ export default function () {
 
     // Now the new authority should be able to execute the change
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest,
         executor: newAuthority.publicKey, // New authority executes
       })
+    )
       .signers([newAuthority])
       .rpc();
   });
@@ -362,12 +367,13 @@ export default function () {
     );
 
     // Authority executes - should fail because new recipient == authority
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: this.payer.publicKey,
       })
+    )
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -403,12 +409,13 @@ export default function () {
 
     const wrongVault = Keypair.generate();
 
-    const executeTx = await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    const executeTx = await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: wrongVault.publicKey,
       })
+    )
       .signers([wrongVault])
       .rpc()
       .then(callbacks[0], callbacks[1]);
@@ -451,12 +458,13 @@ export default function () {
       "Unauthorized change request",
     );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: recipient.publicKey, // Same as proposer - should fail
       })
+    )
       .signers([recipient])
       .rpc()
       .then(callbacks[0], callbacks[1]);
@@ -498,12 +506,13 @@ export default function () {
       "Unauthorized change request",
     );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: this.payer.publicKey, // Same as proposer - should fail
       })
+    )
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -548,9 +557,9 @@ export default function () {
       ctx: Mocha.Context,
       terms: UnlockTerms,
       proposer: Keypair | null = null,
+      pdaNonce = Math.floor(Math.random() * 1_000_000),
     ): Promise<PublicKey> {
       const proposerKey = proposer?.publicKey ?? ctx.payer.publicKey;
-      const pdaNonce = Math.floor(Math.random() * 1_000_000);
 
       await ctx.priceBasedPerformancePackage
         .proposeChangeIx({
@@ -569,19 +578,17 @@ export default function () {
     }
 
     // The authority (the payer) executes unless a signer is given.
-    function execute(
+    async function execute(
       ctx: Mocha.Context,
       changeRequest: PublicKey,
       executor: Keypair | null = null,
     ) {
-      return ctx.priceBasedPerformancePackage
-        .executeChangeIx({
-          performancePackage,
-          changeRequest,
-          executor: executor?.publicKey ?? ctx.payer.publicKey,
-        })
-        .signers(executor ? [executor] : [])
-        .rpc();
+      const ix = await executeChangeIx(ctx, {
+        performancePackage,
+        changeRequest,
+        executor: executor?.publicKey ?? ctx.payer.publicKey,
+      });
+      return ix.signers(executor ? [executor] : []).rpc();
     }
 
     // The authority proposes and the recipient executes; returns the execution clock.
@@ -1081,13 +1088,15 @@ export default function () {
       await this.advanceBySeconds(1);
 
       const executeIx = (changeRequest: PublicKey) =>
-        this.priceBasedPerformancePackage.executeChangeIx({
+        executeChangeIx(this, {
           performancePackage,
           changeRequest,
           executor: recipient.publicKey,
         });
-      await executeIx(second)
-        .postInstructions([await executeIx(first).instruction()])
+      await (
+        await executeIx(second)
+      )
+        .postInstructions([await (await executeIx(first)).instruction()])
         .signers([recipient])
         .rpc();
 
@@ -1097,6 +1106,52 @@ export default function () {
         (now + ONE_DAY).toString(),
       );
       assert.equal(stored.lastChangeProposedAt.toString(), now.toString());
+    });
+
+    it("refuses a request re-proposed at the same address under an authorization for the executed one", async function () {
+      const now = await clock(this);
+      const pdaNonce = Math.floor(Math.random() * 1_000_000);
+      const changeRequest = await propose(
+        this,
+        { minUnlockTimestamp: new BN(now + ONE_DAY), limits: null },
+        null,
+        pdaNonce,
+      );
+      await execute(this, changeRequest, recipient);
+
+      await this.advanceBySeconds(1);
+      await propose(
+        this,
+        { minUnlockTimestamp: new BN(0), limits: null },
+        null,
+        pdaNonce,
+      );
+
+      const callbacks = expectError(
+        "ChangeRequestMismatch",
+        "executed a request re-proposed at the same address",
+      );
+      await this.priceBasedPerformancePackage
+        .executeChangeIx({
+          performancePackage,
+          changeRequest,
+          executor: recipient.publicKey,
+          expectedProposedAt: new BN(now),
+        })
+        .postInstructions([uniqueTxIx()])
+        .signers([recipient])
+        .rpc()
+        .then(callbacks[0], callbacks[1]);
+      assert.equal(
+        (await storedPackage(this)).minUnlockTimestamp.toString(),
+        (now + ONE_DAY).toString(),
+      );
+
+      await execute(this, changeRequest, recipient);
+      assert.equal(
+        (await storedPackage(this)).minUnlockTimestamp.toString(),
+        "0",
+      );
     });
 
     it("refuses a request proposed against a burned package re-created under the same key", async function () {

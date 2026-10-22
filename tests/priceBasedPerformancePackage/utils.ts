@@ -368,3 +368,22 @@ export async function setupSellablePackage(
 
   return { tokenMint, quoteMint, dao, performancePackage };
 }
+
+// Builds an execute for the request as it stands now, so tests do not repeat the fetch.
+export async function executeChangeIx(
+  ctx: Mocha.Context,
+  params: {
+    performancePackage: PublicKey;
+    changeRequest: PublicKey;
+    executor: PublicKey;
+  },
+) {
+  const { proposedAt } =
+    await ctx.priceBasedPerformancePackage.getChangeRequest(
+      params.changeRequest,
+    );
+  return ctx.priceBasedPerformancePackage.executeChangeIx({
+    ...params,
+    expectedProposedAt: proposedAt,
+  });
+}

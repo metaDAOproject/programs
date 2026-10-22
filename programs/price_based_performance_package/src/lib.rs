@@ -70,8 +70,8 @@ pub mod price_based_performance_package {
         ProposeChange::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn execute_change(ctx: Context<ExecuteChange>) -> Result<()> {
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn execute_change(ctx: Context<ExecuteChange>, params: ExecuteChangeParams) -> Result<()> {
         ExecuteChange::handle(ctx)
     }
 

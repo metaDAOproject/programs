@@ -9,7 +9,12 @@ import {
   getSellQuoteUsage,
 } from "@metadaoproject/programs/price_based_performance_package/v0.6/withdrawalLimits";
 import { expectError } from "../../utils.js";
-import { setupPackageOnDao, stampDaoOracle, uniqueTxIx } from "../utils.js";
+import {
+  setupPackageOnDao,
+  stampDaoOracle,
+  uniqueTxIx,
+  executeChangeIx,
+} from "../utils.js";
 
 // Five tranches of 2,000,000 tokens. The first threshold sits below the pool
 // price and unlocks against the Dao's TWAP; the others stay locked above it.
@@ -191,12 +196,13 @@ export default function suite() {
 
     await this.advanceBySeconds(ONE_HOUR);
     const executedAt = await clock(this);
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest,
         executor: recipient.publicKey,
       })
+    )
       .signers([recipient])
       .rpc();
 

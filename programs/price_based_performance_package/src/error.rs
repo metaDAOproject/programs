@@ -60,4 +60,6 @@ pub enum PriceBasedPerformancePackageError {
     MaxQuoteValueExceeded,
     #[msg("Change request was proposed before the last executed change was proposed")]
     StaleChangeRequest,
+    #[msg("Change request was proposed at a different time than the executor expected")]
+    ChangeRequestMismatch,
 }

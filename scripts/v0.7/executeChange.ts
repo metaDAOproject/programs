@@ -40,6 +40,7 @@ const executeChange = async () => {
       performancePackage: changeRequest.performancePackage,
       changeRequest: CHANGE_REQUEST,
       executor: executor.publicKey,
+      expectedProposedAt: changeRequest.proposedAt,
     })
     .rpc();
 
