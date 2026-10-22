@@ -97,6 +97,9 @@ async function main() {
     console.log(
       `  Withdrawal policy: ${performancePackage.withdrawalPolicy === null ? "none" : "set"}`,
     );
+    console.log(
+      `  Last change proposed at: ${performancePackage.lastChangeProposedAt.toString()}`,
+    );
   }
 }
 

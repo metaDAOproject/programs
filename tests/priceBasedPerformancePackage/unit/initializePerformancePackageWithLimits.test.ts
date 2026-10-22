@@ -102,6 +102,7 @@ export default function () {
       );
     const policy = stored.withdrawalPolicy;
     assert.equal(policy.limits.startTimestamp.toString(), now.toString());
+    assert.equal(stored.lastChangeProposedAt.toString(), now.toString());
     assert.equal(
       policy.limits.endTimestamp.toString(),
       limits.endTimestamp.toString(),
@@ -136,7 +137,7 @@ export default function () {
     );
 
     const raw = await this.banksClient.getAccount(performancePackage);
-    assert.equal(raw.data.length, 582);
+    assert.equal(raw.data.length, 590);
   });
 
   it("stores no policy without limits and otherwise matches the original instruction", async function () {
@@ -175,7 +176,7 @@ export default function () {
     );
 
     const raw = await this.banksClient.getAccount(performancePackage);
-    assert.equal(raw.data.length, 582);
+    assert.equal(raw.data.length, 590);
   });
 
   it("rejects a zero token cap", async function () {

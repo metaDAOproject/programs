@@ -173,6 +173,7 @@ impl InitializePerformancePackage<'_> {
             seq_num: 0,
             withdrawal_policy: limits
                 .map(|limits| WithdrawalPolicy::new(limits.into_limits(clock.unix_timestamp))),
+            last_change_proposed_at: clock.unix_timestamp,
         });
 
         emit_cpi!(PerformancePackageInitialized {

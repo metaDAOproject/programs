@@ -7,7 +7,11 @@ import {
 import { assert } from "chai";
 import BN from "bn.js";
 import { expectError } from "../../utils.js";
-import { getChangeRequestAddr, LimitsParams } from "@metadaoproject/programs";
+import {
+  getChangeRequestAddr,
+  getPerformancePackageAddr,
+  LimitsParams,
+} from "@metadaoproject/programs";
 import {
   getActiveWithdrawalPolicy,
   getMaxTokenWithdrawal,
@@ -985,6 +989,174 @@ export default function () {
       });
 
       assert.isDefined((await storedPackage(this)).state.unlocking);
+    });
+
+    it("refuses a request proposed before the last executed change was proposed", async function () {
+      const now = await clock(this);
+      const stale = await propose(this, {
+        minUnlockTimestamp: new BN(now),
+        limits: null,
+      });
+      await this.advanceBySeconds(1);
+      const newer = await propose(this, {
+        minUnlockTimestamp: new BN(now + ONE_DAY),
+        limits: null,
+      });
+      await this.advanceBySeconds(1);
+      await execute(this, newer, recipient);
+      // The floor is the executed request's proposal time, not its execution time
+      assert.equal(
+        (await storedPackage(this)).lastChangeProposedAt.toString(),
+        (now + 1).toString(),
+      );
+
+      const callbacks = expectError(
+        "StaleChangeRequest",
+        "executed a request proposed before the last executed change",
+      );
+      await execute(this, stale, recipient).then(callbacks[0], callbacks[1]);
+      assert.equal(
+        (await storedPackage(this)).minUnlockTimestamp.toString(),
+        (now + ONE_DAY).toString(),
+      );
+    });
+
+    it("applies requests in the order they were proposed", async function () {
+      const now = await clock(this);
+      const first = await propose(this, {
+        minUnlockTimestamp: new BN(now + ONE_DAY),
+        limits: null,
+      });
+      await this.advanceBySeconds(1);
+      const second = await propose(this, {
+        minUnlockTimestamp: new BN(now + 2 * ONE_DAY),
+        limits: null,
+      });
+      await this.advanceBySeconds(1);
+
+      await execute(this, first, recipient);
+      await execute(this, second, recipient);
+
+      const stored = await storedPackage(this);
+      assert.equal(
+        stored.minUnlockTimestamp.toString(),
+        (now + 2 * ONE_DAY).toString(),
+      );
+      assert.equal(
+        stored.lastChangeProposedAt.toString(),
+        (now + 1).toString(),
+      );
+    });
+
+    it("applies two requests proposed in one transaction together, in either order", async function () {
+      const now = await clock(this);
+      const params = [now + ONE_DAY, now + 2 * ONE_DAY].map(
+        (minUnlockTimestamp) => ({
+          changeType: {
+            unlockTerms: {
+              minUnlockTimestamp: new BN(minUnlockTimestamp),
+              limits: null,
+            },
+          },
+          pdaNonce: Math.floor(Math.random() * 1_000_000),
+        }),
+      );
+      const proposeIx = (index: number) =>
+        this.priceBasedPerformancePackage.proposeChangeIx({
+          params: params[index],
+          performancePackage,
+          proposer: this.payer.publicKey,
+        });
+      await proposeIx(0)
+        .postInstructions([await proposeIx(1).instruction()])
+        .rpc();
+      const [first, second] = params.map(
+        ({ pdaNonce }) =>
+          getChangeRequestAddr({
+            performancePackage,
+            proposer: this.payer.publicKey,
+            pdaNonce,
+          })[0],
+      );
+      await this.advanceBySeconds(1);
+
+      const executeIx = (changeRequest: PublicKey) =>
+        this.priceBasedPerformancePackage.executeChangeIx({
+          performancePackage,
+          changeRequest,
+          executor: recipient.publicKey,
+        });
+      await executeIx(second)
+        .postInstructions([await executeIx(first).instruction()])
+        .signers([recipient])
+        .rpc();
+
+      const stored = await storedPackage(this);
+      assert.equal(
+        stored.minUnlockTimestamp.toString(),
+        (now + ONE_DAY).toString(),
+      );
+      assert.equal(stored.lastChangeProposedAt.toString(), now.toString());
+    });
+
+    it("refuses a request proposed against a burned package re-created under the same key", async function () {
+      const mint = await this.createMint(this.payer.publicKey, 6);
+      await this.mintTo(mint, this.payer.publicKey, this.payer, 400 * 10 ** 6);
+      const createKey = Keypair.generate();
+      performancePackage = getPerformancePackageAddr({
+        createKey: createKey.publicKey,
+      })[0];
+      const create = (minUnlockTimestamp: number) =>
+        this.priceBasedPerformancePackage
+          .initializePerformancePackageIx({
+            params: {
+              tranches: [
+                {
+                  priceThreshold: new BN(1e12),
+                  tokenAmount: new BN(200 * 10 ** 6),
+                },
+              ],
+              grantee: recipient.publicKey,
+              performancePackageAuthority: this.payer.publicKey,
+              minUnlockTimestamp: new BN(minUnlockTimestamp),
+              oracleConfig: {
+                oracleAccount: oracleAccount.publicKey,
+                byteOffset: 0,
+              },
+              twapLengthSeconds: ONE_DAY,
+            },
+            createKey: createKey.publicKey,
+            tokenMint: mint,
+            grantor: this.payer.publicKey,
+          })
+          .signers([createKey])
+          .rpc();
+
+      const now = await clock(this);
+      await create(now + ONE_YEAR);
+      const stale = await propose(this, {
+        minUnlockTimestamp: new BN(0),
+        limits: null,
+      });
+      await this.priceBasedPerformancePackage
+        .burnPerformancePackageIx({
+          performancePackage,
+          tokenMint: mint,
+          recipient: recipient.publicKey,
+        })
+        .rpc();
+      await this.advanceBySeconds(1);
+      await create(now + 2 * ONE_YEAR);
+
+      const callbacks = expectError(
+        "StaleChangeRequest",
+        "executed a request proposed against the burned package",
+      );
+      await execute(this, stale, recipient).then(callbacks[0], callbacks[1]);
+      assert.equal(
+        (await storedPackage(this)).minUnlockTimestamp.toString(),
+        (now + 2 * ONE_YEAR).toString(),
+      );
     });
 
     it("rejects execution by the proposing party", async function () {

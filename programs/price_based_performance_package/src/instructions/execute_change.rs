@@ -26,6 +26,13 @@ impl<'info> ExecuteChange<'info> {
     pub fn validate(&self) -> Result<()> {
         PerformancePackage::assert_migrated(&self.performance_package.to_account_info())?;
 
+        // Ensure the request was not proposed before the last executed change was.
+        require_gte!(
+            self.change_request.proposed_at,
+            self.performance_package.last_change_proposed_at,
+            PriceBasedPerformancePackageError::StaleChangeRequest
+        );
+
         if self.change_request.proposer_type == ProposerType::Recipient {
             // If recipient proposed, locker authority must execute
             require_keys_eq!(
@@ -99,6 +106,9 @@ impl<'info> ExecuteChange<'info> {
                 performance_package.replace_withdrawal_policy(*limits, clock.unix_timestamp);
             }
         }
+
+        // Requests proposed before this one can no longer be executed.
+        performance_package.last_change_proposed_at = change_request.proposed_at;
 
         performance_package.seq_num += 1;
         // Emit event

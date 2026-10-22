@@ -737,6 +737,13 @@ export type PriceBasedPerformancePackage = {
               };
             };
           },
+          {
+            name: "lastChangeProposedAt";
+            docs: [
+              "Appended in 0.6.1; when the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed",
+            ];
+            type: "i64";
+          },
         ];
       };
     },
@@ -1729,6 +1736,11 @@ export type PriceBasedPerformancePackage = {
       name: "MaxQuoteValueExceeded";
       msg: "Withdrawal is valued above the recipient's maximum quote value";
     },
+    {
+      code: 6028;
+      name: "StaleChangeRequest";
+      msg: "Change request was proposed before the last executed change was proposed";
+    },
   ];
 };
 
@@ -2470,6 +2482,13 @@ export const IDL: PriceBasedPerformancePackage = {
                 defined: "WithdrawalPolicy",
               },
             },
+          },
+          {
+            name: "lastChangeProposedAt",
+            docs: [
+              "Appended in 0.6.1; when the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed",
+            ],
+            type: "i64",
           },
         ],
       },
@@ -3462,6 +3481,11 @@ export const IDL: PriceBasedPerformancePackage = {
       code: 6027,
       name: "MaxQuoteValueExceeded",
       msg: "Withdrawal is valued above the recipient's maximum quote value",
+    },
+    {
+      code: 6028,
+      name: "StaleChangeRequest",
+      msg: "Change request was proposed before the last executed change was proposed",
     },
   ],
 };

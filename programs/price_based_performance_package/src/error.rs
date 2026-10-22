@@ -58,4 +58,6 @@ pub enum PriceBasedPerformancePackageError {
     OracleMintMismatch,
     #[msg("Withdrawal is valued above the recipient's maximum quote value")]
     MaxQuoteValueExceeded,
+    #[msg("Change request was proposed before the last executed change was proposed")]
+    StaleChangeRequest,
 }

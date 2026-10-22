@@ -86,10 +86,12 @@ pub struct PerformancePackage {
     pub performance_package_token_vault: Pubkey,
     /// Appended in 0.6.1; `None` means uncapped, and so do expired limits
     pub withdrawal_policy: Option<WithdrawalPolicy>,
+    /// Appended in 0.6.1; when the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed
+    pub last_change_proposed_at: i64,
 }
 
 impl PerformancePackage {
-    /// Account size since 0.6.1 (582 bytes)
+    /// Account size since 0.6.1 (590 bytes)
     pub const SIZE: usize = 8 + Self::INIT_SPACE;
     /// Account size before 0.6.1 (520 bytes)
     pub const OLD_SIZE: usize = 8 + OldPerformancePackage::INIT_SPACE;

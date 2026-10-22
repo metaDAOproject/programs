@@ -12,7 +12,7 @@ import { expectError } from "../../utils.js";
 import { writeOldLayoutPackage } from "../utils.js";
 
 const OLD_SIZE = 520;
-const NEW_SIZE = 582;
+const NEW_SIZE = 590;
 
 // Plain JSON view of a fetched package so two snapshots can be deep-compared.
 const snapshot = (performancePackage: any) =>
@@ -101,7 +101,12 @@ export default function () {
         performancePackage,
       );
     assert.isNull(after.withdrawalPolicy);
-    assert.deepEqual(snapshot(after), snapshot(before));
+    // The migration has no executed change to start from, so the floor is zero
+    assert.equal(after.lastChangeProposedAt.toString(), "0");
+    assert.deepEqual(
+      { ...snapshot(after), lastChangeProposedAt: null },
+      { ...snapshot(before), lastChangeProposedAt: null },
+    );
   });
 
   it("is a no-op on a package that is already resized", async function () {

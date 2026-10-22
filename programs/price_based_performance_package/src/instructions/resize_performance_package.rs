@@ -64,6 +64,7 @@ impl ResizePerformancePackage<'_> {
             seq_num: old.seq_num,
             performance_package_token_vault: old.performance_package_token_vault,
             withdrawal_policy: None,
+            last_change_proposed_at: 0,
         };
 
         performance_package.realloc(PerformancePackage::SIZE, true)?;
