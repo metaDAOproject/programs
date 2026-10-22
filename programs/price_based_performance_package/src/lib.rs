@@ -28,7 +28,7 @@ security_txt! {
     project_url: "https://metadao.fi",
     contacts: "telegram:metaproph3t,telegram:kollan_house",
     source_code: "https://github.com/metaDAOproject/programs",
-    source_release: "v0.6.0",
+    source_release: "v0.6.1",
     policy: "The market will decide whether we pay a bug bounty.",
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
@@ -47,6 +47,14 @@ pub mod price_based_performance_package {
         InitializePerformancePackage::handle(ctx, params)
     }
 
+    #[access_control(ctx.accounts.validate_with_limits(&params))]
+    pub fn initialize_performance_package_with_limits(
+        ctx: Context<InitializePerformancePackage>,
+        params: InitializePerformancePackageWithLimitsParams,
+    ) -> Result<()> {
+        InitializePerformancePackage::handle_with_limits(ctx, params)
+    }
+
     #[access_control(ctx.accounts.validate())]
     pub fn start_unlock(ctx: Context<StartUnlock>) -> Result<()> {
         StartUnlock::handle(ctx)
@@ -62,8 +70,8 @@ pub mod price_based_performance_package {
         ProposeChange::handle(ctx, params)
     }
 
-    #[access_control(ctx.accounts.validate())]
-    pub fn execute_change(ctx: Context<ExecuteChange>) -> Result<()> {
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn execute_change(ctx: Context<ExecuteChange>, params: ExecuteChangeParams) -> Result<()> {
         ExecuteChange::handle(ctx)
     }
 
@@ -78,5 +86,26 @@ pub mod price_based_performance_package {
     #[access_control(ctx.accounts.validate())]
     pub fn burn_performance_package(ctx: Context<BurnPerformancePackage>) -> Result<()> {
         BurnPerformancePackage::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn resize_performance_package(ctx: Context<ResizePerformancePackage>) -> Result<()> {
+        ResizePerformancePackage::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn withdraw_tokens(
+        ctx: Context<WithdrawTokens>,
+        params: WithdrawTokensParams,
+    ) -> Result<()> {
+        WithdrawTokens::handle(ctx, params)
+    }
+
+    #[access_control(ctx.accounts.validate(&params))]
+    pub fn withdraw_via_sell(
+        ctx: Context<WithdrawViaSell>,
+        params: WithdrawViaSellParams,
+    ) -> Result<()> {
+        WithdrawViaSell::handle(ctx, params)
     }
 }
