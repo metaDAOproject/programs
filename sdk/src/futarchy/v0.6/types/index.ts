@@ -7,13 +7,42 @@ import {
 } from "./v0.6.0-futarchy.js";
 export { v0_6_0_Futarchy, v0_6_0_FutarchyIDL };
 
+import {
+  Futarchy as v0_6_1_Futarchy,
+  IDL as v0_6_1_FutarchyIDL,
+} from "./v0.6.1-futarchy.js";
+export { v0_6_1_Futarchy, v0_6_1_FutarchyIDL };
+
 export { LowercaseKeys } from "../../../utils.js";
 
 import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
 
 export type InitializeDaoParams =
   IdlTypes<FutarchyProgram>["InitializeDaoParams"];
-export type UpdateDaoParams = IdlTypes<FutarchyProgram>["UpdateDaoParams"];
+// The retired optimistic-governance flag only keeps its position in the
+// encoding; `updateDaoIx` fills it in, so callers never set it.
+export type UpdateDaoParams = Omit<
+  IdlTypes<FutarchyProgram>["UpdateDaoParams"],
+  "deprecatedIsOptimisticGovernanceEnabled"
+>;
+export type SetSpendingLimitArgs =
+  IdlTypes<FutarchyProgram>["SetSpendingLimitArgs"];
+export type InitializeLargeSpendProposalArgs =
+  IdlTypes<FutarchyProgram>["InitializeLargeSpendProposalArgs"];
+export type InitializeMintTokensProposalArgs =
+  IdlTypes<FutarchyProgram>["InitializeMintTokensProposalArgs"];
+export type InitializeSpendingLimitChangeProposalArgs =
+  IdlTypes<FutarchyProgram>["InitializeSpendingLimitChangeProposalArgs"];
+export type InitializeHostileTakeoverProposalArgs =
+  IdlTypes<FutarchyProgram>["InitializeHostileTakeoverProposalArgs"];
+export type InitializeBuybackTokenProposalArgs =
+  IdlTypes<FutarchyProgram>["InitializeBuybackTokenProposalArgs"];
+export type InstructionParams = IdlTypes<FutarchyProgram>["InstructionParams"];
+export type TeamSponsorshipPolicy =
+  IdlTypes<FutarchyProgram>["TeamSponsorshipPolicy"];
+export type SpendingLimitAction =
+  IdlTypes<FutarchyProgram>["SpendingLimitAction"];
+export type ProposalAction = IdlTypes<FutarchyProgram>["ProposalAction"];
 
 export type Dao = IdlAccounts<FutarchyProgram>["dao"];
 export type Proposal = IdlAccounts<FutarchyProgram>["proposal"];
@@ -41,10 +70,20 @@ export type WithdrawLiquidityEvent =
   IdlEvents<FutarchyProgram>["WithdrawLiquidityEvent"];
 export type SponsorProposalEvent =
   IdlEvents<FutarchyProgram>["SponsorProposalEvent"];
-export type InitiateVaultSpendOptimisticProposalEvent =
-  IdlEvents<FutarchyProgram>["InitiateVaultSpendOptimisticProposalEvent"];
-export type FinalizeOptimisticProposalEvent =
-  IdlEvents<FutarchyProgram>["FinalizeOptimisticProposalEvent"];
+export type RemoveProposalEvent =
+  IdlEvents<FutarchyProgram>["RemoveProposalEvent"];
+export type AdminUpdateProposalParamsEvent =
+  IdlEvents<FutarchyProgram>["AdminUpdateProposalParamsEvent"];
+export type AdminCancelProposalEvent =
+  IdlEvents<FutarchyProgram>["AdminCancelProposalEvent"];
+export type CollectMeteoraDammFeesEvent =
+  IdlEvents<FutarchyProgram>["CollectMeteoraDammFeesEvent"];
+export type AdminFixPositionAuthorityEvent =
+  IdlEvents<FutarchyProgram>["AdminFixPositionAuthorityEvent"];
+export type SetSpendingLimitEvent =
+  IdlEvents<FutarchyProgram>["SetSpendingLimitEvent"];
+export type SyncSpendingLimitEvent =
+  IdlEvents<FutarchyProgram>["SyncSpendingLimitEvent"];
 export type FutarchyEvent =
   | CollectFeesEvent
   | InitializeDaoEvent
@@ -59,8 +98,13 @@ export type FutarchyEvent =
   | ProvideLiquidityEvent
   | WithdrawLiquidityEvent
   | SponsorProposalEvent
-  | InitiateVaultSpendOptimisticProposalEvent
-  | FinalizeOptimisticProposalEvent;
+  | RemoveProposalEvent
+  | AdminUpdateProposalParamsEvent
+  | AdminCancelProposalEvent
+  | CollectMeteoraDammFeesEvent
+  | AdminFixPositionAuthorityEvent
+  | SetSpendingLimitEvent
+  | SyncSpendingLimitEvent;
 
 export type v0_6_0_CollectFeesEvent =
   IdlEvents<v0_6_0_Futarchy>["CollectFeesEvent"];
@@ -98,3 +142,61 @@ export type v0_6_0_FutarchyEvent =
   | v0_6_0_ConditionalSwapEvent
   | v0_6_0_ProvideLiquidityEvent
   | v0_6_0_WithdrawLiquidityEvent;
+
+export type v0_6_1_CollectFeesEvent =
+  IdlEvents<v0_6_1_Futarchy>["CollectFeesEvent"];
+export type v0_6_1_InitializeDaoEvent =
+  IdlEvents<v0_6_1_Futarchy>["InitializeDaoEvent"];
+export type v0_6_1_UpdateDaoEvent =
+  IdlEvents<v0_6_1_Futarchy>["UpdateDaoEvent"];
+export type v0_6_1_InitializeProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["InitializeProposalEvent"];
+export type v0_6_1_StakeToProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["StakeToProposalEvent"];
+export type v0_6_1_UnstakeFromProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["UnstakeFromProposalEvent"];
+export type v0_6_1_LaunchProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["LaunchProposalEvent"];
+export type v0_6_1_FinalizeProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["FinalizeProposalEvent"];
+export type v0_6_1_SpotSwapEvent = IdlEvents<v0_6_1_Futarchy>["SpotSwapEvent"];
+export type v0_6_1_ConditionalSwapEvent =
+  IdlEvents<v0_6_1_Futarchy>["ConditionalSwapEvent"];
+export type v0_6_1_ProvideLiquidityEvent =
+  IdlEvents<v0_6_1_Futarchy>["ProvideLiquidityEvent"];
+export type v0_6_1_WithdrawLiquidityEvent =
+  IdlEvents<v0_6_1_Futarchy>["WithdrawLiquidityEvent"];
+export type v0_6_1_SponsorProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["SponsorProposalEvent"];
+export type v0_6_1_RemoveProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["RemoveProposalEvent"];
+export type v0_6_1_AdminCancelProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["AdminCancelProposalEvent"];
+export type v0_6_1_CollectMeteoraDammFeesEvent =
+  IdlEvents<v0_6_1_Futarchy>["CollectMeteoraDammFeesEvent"];
+export type v0_6_1_AdminFixPositionAuthorityEvent =
+  IdlEvents<v0_6_1_Futarchy>["AdminFixPositionAuthorityEvent"];
+export type v0_6_1_InitiateVaultSpendOptimisticProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["InitiateVaultSpendOptimisticProposalEvent"];
+export type v0_6_1_FinalizeOptimisticProposalEvent =
+  IdlEvents<v0_6_1_Futarchy>["FinalizeOptimisticProposalEvent"];
+export type v0_6_1_FutarchyEvent =
+  | v0_6_1_CollectFeesEvent
+  | v0_6_1_InitializeDaoEvent
+  | v0_6_1_UpdateDaoEvent
+  | v0_6_1_InitializeProposalEvent
+  | v0_6_1_StakeToProposalEvent
+  | v0_6_1_UnstakeFromProposalEvent
+  | v0_6_1_LaunchProposalEvent
+  | v0_6_1_FinalizeProposalEvent
+  | v0_6_1_SpotSwapEvent
+  | v0_6_1_ConditionalSwapEvent
+  | v0_6_1_ProvideLiquidityEvent
+  | v0_6_1_WithdrawLiquidityEvent
+  | v0_6_1_SponsorProposalEvent
+  | v0_6_1_RemoveProposalEvent
+  | v0_6_1_AdminCancelProposalEvent
+  | v0_6_1_CollectMeteoraDammFeesEvent
+  | v0_6_1_AdminFixPositionAuthorityEvent
+  | v0_6_1_InitiateVaultSpendOptimisticProposalEvent
+  | v0_6_1_FinalizeOptimisticProposalEvent;

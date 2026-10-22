@@ -181,6 +181,7 @@ export interface TestContext {
     baseVault: PublicKey;
     quoteVault: PublicKey;
     squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
   }>;
   initializeAndLaunchProposal: ({
     dao,
@@ -194,6 +195,7 @@ export interface TestContext {
     baseVault: PublicKey;
     quoteVault: PublicKey;
     squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
   }>;
   advanceBySlots: (slots: bigint) => Promise<void>;
   advanceBySeconds: (seconds: number) => Promise<void>;
@@ -599,15 +601,19 @@ before(async function () {
     baseVault: PublicKey;
     quoteVault: PublicKey;
     squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
   }> => {
     const storedDao = await this.futarchy.getDao(dao);
 
-    const { tx: squadsProposalCreateTx, squadsProposal } =
-      this.futarchy.squadsProposalCreateTx({
-        dao,
-        instructions,
-        transactionIndex: 1n,
-      });
+    const {
+      tx: squadsProposalCreateTx,
+      squadsProposal,
+      squadsTransaction,
+    } = this.futarchy.squadsProposalCreateTx({
+      dao,
+      instructions,
+      transactionIndex: 1n,
+    });
 
     squadsProposalCreateTx.recentBlockhash = (
       await this.banksClient.getLatestBlockhash()
@@ -615,7 +621,7 @@ before(async function () {
     squadsProposalCreateTx.feePayer = this.payer.publicKey;
     squadsProposalCreateTx.sign(this.payer, PERMISSIONLESS_ACCOUNT);
 
-    this.banksClient.processTransaction(squadsProposalCreateTx);
+    await this.banksClient.processTransaction(squadsProposalCreateTx);
 
     let [proposal] = getProposalAddrV2({ squadsProposal });
 
@@ -652,13 +658,21 @@ before(async function () {
         storedDao.baseMint,
         storedDao.quoteMint,
         question,
+        squadsTransaction,
       )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
       .rpc();
 
-    return { proposal, question, baseVault, quoteVault, squadsProposal };
+    return {
+      proposal,
+      question,
+      baseVault,
+      quoteVault,
+      squadsProposal,
+      squadsTransaction,
+    };
   };
 
   this.initializeAndLaunchProposal = async ({
@@ -673,9 +687,16 @@ before(async function () {
     baseVault: PublicKey;
     quoteVault: PublicKey;
     squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
   }> => {
-    const { proposal, question, baseVault, quoteVault, squadsProposal } =
-      await this.initializeProposal({ dao, instructions });
+    const {
+      proposal,
+      question,
+      baseVault,
+      quoteVault,
+      squadsProposal,
+      squadsTransaction,
+    } = await this.initializeProposal({ dao, instructions });
     const storedDao = await this.futarchy.getDao(dao);
     await this.futarchy
       .launchProposalIx({
@@ -684,10 +705,18 @@ before(async function () {
         baseMint: storedDao.baseMint,
         quoteMint: storedDao.quoteMint,
         squadsProposal,
+        squadsTransaction,
       })
       .rpc();
 
-    return { proposal, question, baseVault, quoteVault, squadsProposal };
+    return {
+      proposal,
+      question,
+      baseVault,
+      quoteVault,
+      squadsProposal,
+      squadsTransaction,
+    };
   };
 
   this.setupBasicPerformancePackage = async ({

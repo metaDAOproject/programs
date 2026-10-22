@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{FutarchyAmm, InitialSpendingLimit, Market, ProposalState, SwapType};
+use crate::{FutarchyAmm, InitialSpendingLimit, Market, ProposalAction, ProposalState, SwapType};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {
@@ -53,6 +53,7 @@ pub struct InitializeDaoEvent {
     pub squads_multisig_vault: Pubkey,
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
+    pub typed_proposals_enabled: bool,
 }
 
 #[event]
@@ -70,6 +71,7 @@ pub struct UpdateDaoEvent {
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
     pub is_optimistic_governance_enabled: bool,
+    pub typed_proposals_enabled: bool,
 }
 
 #[event]
@@ -87,6 +89,7 @@ pub struct InitializeProposalEvent {
     pub squads_proposal: Pubkey,
     pub squads_multisig: Pubkey,
     pub squads_multisig_vault: Pubkey,
+    pub action: ProposalAction,
 }
 
 #[event]
@@ -115,6 +118,10 @@ pub struct LaunchProposalEvent {
     pub timestamp_enqueued: i64,
     pub total_staked: u64,
     pub post_amm_state: FutarchyAmm,
+    /// The terms the market opened with, as written by launch.
+    pub duration_in_seconds: u32,
+    pub pass_threshold_bps: i16,
+    pub is_team_sponsored: bool,
 }
 
 #[event]
@@ -201,6 +208,18 @@ pub struct RemoveProposalEvent {
 }
 
 #[event]
+pub struct AdminUpdateProposalParamsEvent {
+    pub common: CommonFields,
+    pub dao: Pubkey,
+    pub proposal: Pubkey,
+    pub admin: Pubkey,
+    pub old_duration_in_seconds: u32,
+    pub new_duration_in_seconds: u32,
+    pub old_pass_threshold_bps: i16,
+    pub new_pass_threshold_bps: i16,
+}
+
+#[event]
 pub struct AdminCancelProposalEvent {
     pub common: CommonFields,
     pub proposal: Pubkey,
@@ -233,23 +252,19 @@ pub struct AdminFixPositionAuthorityEvent {
 }
 
 #[event]
-pub struct InitiateVaultSpendOptimisticProposalEvent {
+pub struct SetSpendingLimitEvent {
     pub common: CommonFields,
     pub dao: Pubkey,
-    pub proposer: Pubkey,
-    pub squads_proposal: Pubkey,
-    pub squads_multisig: Pubkey,
-    pub squads_multisig_vault: Pubkey,
-    pub amount: u64,
-    pub recipient: Pubkey,
-    pub dao_quote_vault_account: Pubkey,
-    pub recipient_quote_account: Pubkey,
-    pub enqueued_timestamp: i64,
+    pub config: Option<InitialSpendingLimit>,
 }
 
 #[event]
-pub struct FinalizeOptimisticProposalEvent {
+pub struct SyncSpendingLimitEvent {
     pub common: CommonFields,
     pub dao: Pubkey,
-    pub squads_proposal: Pubkey,
+    /// The Squads-side SpendingLimit PDA the record was projected onto.
+    pub spending_limit: Pubkey,
+    /// The projected record — the Squads-side end-state after the sync.
+    /// `None` = no limit (removed or never existed).
+    pub config: Option<InitialSpendingLimit>,
 }

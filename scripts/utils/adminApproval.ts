@@ -2,13 +2,17 @@ import { AnchorProvider } from "@coral-xyz/anchor";
 import * as multisig from "@sqds/multisig";
 import BN from "bn.js";
 import {
+  AddressLookupTableAccount,
   PublicKey,
   Transaction,
   TransactionInstruction,
   TransactionMessage,
 } from "@solana/web3.js";
 import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
-import { METADAO_MULTISIG_VAULT } from "@metadaoproject/programs";
+import {
+  METADAO_MULTISIG_VAULT,
+  PERMISSIONLESS_ACCOUNT,
+} from "@metadaoproject/programs";
 import {
   createSquadsVaultTxAndProposal,
   getSquadsPdasFromDao,
@@ -28,6 +32,8 @@ const SEED_ENQUEUED_APPROVAL = Buffer.from("enqueued_approval");
  * 1. `buildDaoTransaction()` builds the transaction that creates the squads
  *    vault transaction + proposal holding `instructions` on the DAO's
  *    multisig. Sign with the payer and PERMISSIONLESS_ACCOUNT (the creator).
+ *    `lookupTable` is the table the instructions' accounts are loaded from,
+ *    when they don't fit the vault transaction otherwise.
  * 2. `buildMetadaoTransaction()` (returned by `buildDaoTransaction`) builds
  *    the transaction that creates the squads vault transaction + proposal on
  *    the MetaDAO operational multisig enqueueing the futarchy admin approval
@@ -52,12 +58,14 @@ export const buildAdminApprovalTransactions = async ({
   futarchy,
   dao,
   instructions,
+  lookupTable,
   payer,
 }: {
   provider: AnchorProvider;
   futarchy: FutarchyClient;
   dao: PublicKey;
   instructions: TransactionInstruction[];
+  lookupTable?: AddressLookupTableAccount;
   payer: PublicKey;
 }) => {
   const { multisigPda: daoMultisig, vaultPda: daoMultisigVault } =
@@ -88,6 +96,8 @@ export const buildAdminApprovalTransactions = async ({
       daoTransactionIndex,
       daoMessage,
       payer,
+      PERMISSIONLESS_ACCOUNT.publicKey,
+      lookupTable && [lookupTable],
     );
 
     const [daoVaultTransactionPda] = multisig.getTransactionPda({

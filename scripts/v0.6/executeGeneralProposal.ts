@@ -1,4 +1,9 @@
-import { PublicKey, Transaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  PublicKey,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 import * as anchor from "@coral-xyz/anchor";
 import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
@@ -22,28 +27,41 @@ async function main() {
   const dao = await futarchy.getDao(proposal.dao);
   const multisigPda = dao.squadsMultisig;
 
-  const vaultTxExecuteIx = multisig.instructions.vaultTransactionExecute({
-    connection: provider.connection,
-    multisigPda,
-    transactionIndex: BigInt(proposalAccount.transactionIndex.toString()),
-    member: PERMISSIONLESS_ACCOUNT.publicKey,
-  });
+  // Resolves the accounts the vault transaction loads from lookup tables, if any
+  const { instruction, lookupTableAccounts } =
+    await multisig.instructions.vaultTransactionExecute({
+      connection: provider.connection,
+      multisigPda,
+      transactionIndex: BigInt(proposalAccount.transactionIndex.toString()),
+      member: PERMISSIONLESS_ACCOUNT.publicKey,
+    });
 
-  // Add both instructions to create the proposal
-  const vaultTxExecuteIxResolved = await vaultTxExecuteIx;
-  const tx = new Transaction().add(vaultTxExecuteIxResolved.instruction);
-  tx.recentBlockhash = (
-    await provider.connection.getLatestBlockhash()
-  ).blockhash;
-  tx.feePayer = payer.publicKey;
+  const message = new TransactionMessage({
+    payerKey: payer.publicKey,
+    recentBlockhash: (await provider.connection.getLatestBlockhash()).blockhash,
+    instructions: [
+      // The vault transaction may run several programs' worth of work
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+      instruction,
+    ],
+  }).compileToV0Message(lookupTableAccounts);
+  const transaction = new VersionedTransaction(message);
 
   // Sign with both accounts
-  tx.sign(payer, PERMISSIONLESS_ACCOUNT);
+  transaction.sign([payer, PERMISSIONLESS_ACCOUNT]);
 
-  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
-  await provider.connection.confirmTransaction(txHash, "confirmed");
+  const txHash = await provider.connection.sendTransaction(transaction);
+  const status = await provider.connection.confirmTransaction(
+    txHash,
+    "confirmed",
+  );
+  if (status.value.err) {
+    throw new Error(
+      `Transaction ${txHash} failed: ${JSON.stringify(status.value.err)}`,
+    );
+  }
 
-  console.log("USDC transfer proposal executed successfully!");
+  console.log("Proposal executed successfully!");
   console.log("Transaction hash:", txHash);
   console.log(
     "Proposal index",
@@ -52,6 +70,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("Error creating transfer:", error);
+  console.error("Error executing proposal:", error);
   process.exit(1);
 });

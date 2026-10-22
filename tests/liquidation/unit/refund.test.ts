@@ -4,7 +4,12 @@ import {
   PublicKey,
   ComputeBudgetProgram,
   SystemProgram,
+  Transaction,
 } from "@solana/web3.js";
+import {
+  createMintToInstruction,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import { assert } from "chai";
 import { expectError } from "../../utils.js";
 import {
@@ -146,13 +151,21 @@ export default function suite() {
     assert.equal(record.baseBurned.toString(), "500000000");
     assert.equal(record.quoteRefunded.toString(), "250000000");
 
-    // Mint 500 more tokens
-    await this.mintTo(
-      baseMint,
-      recipient.publicKey,
-      baseMintAuthority,
-      500_000_000,
+    // Mint 500 more tokens. The compute-unit price makes this transaction's
+    // hash differ from the first mint.
+    const mintTx = new Transaction().add(
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      createMintToInstruction(
+        baseMint,
+        getAssociatedTokenAddressSync(baseMint, recipient.publicKey, true),
+        baseMintAuthority.publicKey,
+        500_000_000,
+      ),
     );
+    [mintTx.recentBlockhash] = await this.banksClient.getLatestBlockhash();
+    mintTx.feePayer = this.payer.publicKey;
+    mintTx.sign(this.payer, baseMintAuthority);
+    await this.banksClient.processTransaction(mintTx);
 
     // Second refund: burns remaining 500, gets 250 more
     await liquidationClient

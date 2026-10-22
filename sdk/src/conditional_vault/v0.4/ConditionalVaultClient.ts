@@ -151,15 +151,8 @@ export class ConditionalVaultClient {
         question,
         underlyingTokenMint,
         vaultUnderlyingTokenAccount,
+        payer,
       })
-      .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer,
-          vaultUnderlyingTokenAccount,
-          vault,
-          underlyingTokenMint,
-        ),
-      ])
       .remainingAccounts(
         conditionalTokenMintAddrs.map((conditionalTokenMint) => {
           return {

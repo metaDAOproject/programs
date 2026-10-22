@@ -15,18 +15,15 @@ import {
   FutarchyClient,
   getProposalAddr,
 } from "@metadaoproject/programs/futarchy/v0.6";
-import {
-  buildDaoActions,
-  DaoActionBuilder,
-  sendAndConfirm,
-  sendWithRetries,
-} from "./daoActions.js";
+import { buildDaoActions, DaoActionBuilder } from "./daoActions.js";
 import {
   compareVaultTransactionInstructions,
   createSquadsVaultTxAndProposal,
   getSquadsPdasFromDao,
+  loadVaultTransactionAddresses,
   probeSquadsVaultTransaction,
 } from "./squads.js";
+import { sendAndConfirm, sendWithRetries } from "./transactions.js";
 
 const accountExists = async (connection: Connection, account: PublicKey) =>
   (await connection.getAccountInfo(account, "confirmed")) !== null;
@@ -96,6 +93,8 @@ export const initializeFutarchyProposal = async ({
     dao,
   );
   const vaultClient = futarchy.vaultClient;
+  const { squadsTransaction, lookupTables } =
+    await futarchy.getSquadsVaultTransactionAccounts(squadsProposal);
 
   console.log("Squads proposal:", squadsProposal.toBase58());
   console.log("Proposal:", proposal.toBase58());
@@ -153,6 +152,8 @@ export const initializeFutarchyProposal = async ({
           daoAccount.baseMint,
           daoAccount.quoteMint,
           question,
+          squadsTransaction,
+          lookupTables,
           payer.publicKey,
         )
         .preInstructions([
@@ -247,9 +248,19 @@ const resumeFutarchyProposal = async ({
       provider.connection,
       squadsVaultTransaction,
     );
+  const loadedAddresses = await loadVaultTransactionAddresses(
+    provider.connection,
+    vaultTransaction.message,
+  );
+  if (!loadedAddresses) {
+    throw new Error(
+      `Squads proposal ${squadsProposal.toBase58()} loads accounts from a lookup table that doesn't exist - it isn't the proposal these actions created. Check resumeSquadsProposal against the failed run's log.`,
+    );
+  }
   const comparison = compareVaultTransactionInstructions(
     vaultTransaction.message,
     instructions,
+    loadedAddresses,
   );
   if (comparison.kind === "different") {
     throw new Error(
@@ -281,7 +292,7 @@ const resumeFutarchyProposal = async ({
 
 /**
  * Runs the action builders and puts their instructions up for a futarchy
- * vote: sends the payer-funded setup transaction (if any), creates the squads
+ * vote: sends the payer-funded setup transactions (if any), creates the squads
  * vault transaction + proposal holding the instructions on the DAO's
  * multisig, then initializes the futarchy proposal in draft state. Stake base
  * tokens to the proposal - or have the team sponsor it - and launch it to
@@ -324,7 +335,8 @@ export const createFutarchyProposal = async ({
     daoMultisig,
     daoMultisigVault,
     instructions,
-    setupTransaction,
+    setupTransactions,
+    lookupTable,
     requiresAdminExecution,
   } = await buildDaoActions({
     provider,
@@ -351,7 +363,11 @@ export const createFutarchyProposal = async ({
     });
   }
 
-  if (setupTransaction) {
+  for (const setupTransaction of setupTransactions) {
+    // Fetched per transaction, as confirming the earlier ones can outlast it
+    setupTransaction.recentBlockhash = (
+      await provider.connection.getLatestBlockhash()
+    ).blockhash;
     setupTransaction.sign(payer);
 
     const setupSignature = await sendAndConfirm(provider, setupTransaction);
@@ -390,6 +406,8 @@ export const createFutarchyProposal = async ({
             transactionIndex,
             transactionMessage,
             payer.publicKey,
+            PERMISSIONLESS_ACCOUNT.publicKey,
+            lookupTable && [lookupTable],
           );
 
         const [squadsVaultTransaction] = multisig.getTransactionPda({

@@ -5,12 +5,18 @@ import {
 } from "@metadaoproject/programs";
 import {
   ComputeBudgetProgram,
+  Keypair,
   PublicKey,
+  SystemProgram,
   Transaction,
   TransactionMessage,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { expectError, setOptimisticGovernanceEnabled } from "../../utils.js";
+import {
+  addLookupsToVaultTransaction,
+  expectError,
+  setLookupTableAccount,
+} from "../../utils.js";
 import { assert } from "chai";
 import * as multisig from "@sqds/multisig";
 const { Permissions, Permission } = multisig.types;
@@ -71,9 +77,61 @@ export default function suite() {
       nonce,
       daoCreator: this.payer.publicKey,
     });
-
-    await setOptimisticGovernanceEnabled(this, dao, true);
   });
+
+  async function createSquadsProposal(
+    context: any,
+    daoKey: PublicKey,
+  ): Promise<{ squadsProposal: PublicKey; squadsTransaction: PublicKey }> {
+    const multisigPda = multisig.getMultisigPda({ createKey: daoKey })[0];
+
+    const transactionMessage = new TransactionMessage({
+      payerKey: context.payer.publicKey,
+      recentBlockhash: (await context.banksClient.getLatestBlockhash())[0],
+      instructions: [
+        SystemProgram.transfer({
+          fromPubkey: context.payer.publicKey,
+          toPubkey: context.payer.publicKey,
+          lamports: 1,
+        }),
+      ],
+    });
+
+    const tx = new Transaction().add(
+      multisig.instructions.vaultTransactionCreate({
+        multisigPda,
+        transactionIndex: 1n,
+        creator: PERMISSIONLESS_ACCOUNT.publicKey,
+        rentPayer: context.payer.publicKey,
+        vaultIndex: 0,
+        ephemeralSigners: 0,
+        transactionMessage,
+      }),
+      multisig.instructions.proposalCreate({
+        multisigPda,
+        transactionIndex: 1n,
+        creator: PERMISSIONLESS_ACCOUNT.publicKey,
+        rentPayer: context.payer.publicKey,
+      }),
+    );
+
+    tx.recentBlockhash = (await context.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = context.payer.publicKey;
+    tx.sign(context.payer, PERMISSIONLESS_ACCOUNT);
+
+    await context.banksClient.processTransaction(tx);
+
+    const [squadsProposal] = multisig.getProposalPda({
+      multisigPda,
+      transactionIndex: 1n,
+    });
+    const [squadsTransaction] = multisig.getTransactionPda({
+      multisigPda,
+      index: 1n,
+    });
+
+    return { squadsProposal, squadsTransaction };
+  }
 
   it("should initialize a proposal", async function () {
     // Create a simple instruction for the proposal
@@ -91,7 +149,7 @@ export default function suite() {
           twapStartDelaySeconds: null,
           teamSponsoredPassThresholdBps: null,
           teamAddress: null,
-          isOptimisticGovernanceEnabled: null,
+          typedProposalsEnabled: null,
         },
       })
       .instruction();
@@ -161,38 +219,61 @@ export default function suite() {
     assert.ok(storedProposal.squadsProposal.equals(squadsProposalPda));
     assert.exists(storedProposal.state.draft);
 
+    assert.isDefined(storedProposal.action.executeArbitrary);
+    assert.equal(storedProposal.passThresholdBps, 1000);
+    assert.isTrue(storedProposal.councilCanBlock);
+    assert.equal(storedProposal.durationInSeconds, 864_000);
+
     // Verify the DAO proposal count was incremented
     const storedDao = await this.futarchy.getDao(dao);
     assert.equal(storedDao.proposalCount, 1);
   });
 
-  it("doesn't allow challenging an optimistic proposal which has already passed due to age", async function () {
-    let daoAccount = await this.futarchy.getDao(dao);
+  it("rejects a vault transaction referencing an unfrozen lookup table", async function () {
+    const { squadsProposal, squadsTransaction } = await createSquadsProposal(
+      this,
+      dao,
+    );
 
-    await this.createTokenAccount(USDC, daoAccount.squadsMultisigVault);
-
-    await this.futarchy
-      .initiateVaultSpendOptimisticProposalIx({
-        dao,
-        amount: new BN(1000),
-        recipient: this.payer.publicKey,
-        transactionIndex: 1n,
-        quoteMint: USDC,
-      })
-      .signers([this.payer, PERMISSIONLESS_ACCOUNT])
-      .rpc();
-
-    daoAccount = await this.futarchy.getDao(dao);
-
-    this.advanceBySeconds(daoAccount.secondsPerProposal);
+    const lookupTable = Keypair.generate().publicKey;
+    setLookupTableAccount(this, lookupTable, this.payer.publicKey, [
+      Keypair.generate().publicKey,
+    ]);
+    await addLookupsToVaultTransaction(this, squadsTransaction, [
+      { accountKey: lookupTable, writableIndexes: [0], readonlyIndexes: [] },
+    ]);
 
     const callbacks = expectError(
-      "OptimisticProposalAlreadyPassed",
-      "Optimistic proposal has already passed",
+      "UnfrozenAddressLookupTable",
+      "initialized a proposal whose payload resolves through an unfrozen lookup table",
     );
 
     await this.futarchy
-      .initializeProposal(dao, daoAccount.optimisticProposal.squadsProposal)
+      .initializeProposal(dao, squadsProposal)
+      .then(callbacks[0], callbacks[1]);
+  });
+
+  it("rejects a frozen lookup table when the message references an index it doesn't hold", async function () {
+    const { squadsProposal, squadsTransaction } = await createSquadsProposal(
+      this,
+      dao,
+    );
+
+    const lookupTable = Keypair.generate().publicKey;
+    setLookupTableAccount(this, lookupTable, null, [
+      Keypair.generate().publicKey,
+    ]);
+    await addLookupsToVaultTransaction(this, squadsTransaction, [
+      { accountKey: lookupTable, writableIndexes: [0], readonlyIndexes: [5] },
+    ]);
+
+    const callbacks = expectError(
+      "InvalidAddressLookupTable",
+      "initialized a proposal with a lookup index past the end of its table",
+    );
+
+    await this.futarchy
+      .initializeProposal(dao, squadsProposal)
       .then(callbacks[0], callbacks[1]);
   });
 }

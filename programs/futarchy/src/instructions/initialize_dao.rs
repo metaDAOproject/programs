@@ -147,10 +147,7 @@ impl InitializeDao<'_> {
         )?;
 
         if let Some(initial_spending_limit) = initial_spending_limit.clone() {
-            require_gte!(
-                MAX_SPENDING_LIMIT_MEMBERS,
-                initial_spending_limit.members.len()
-            );
+            initial_spending_limit.validate()?;
 
             squads_multisig_program::cpi::multisig_add_spending_limit(
                 CpiContext::new_with_signer(
@@ -223,6 +220,12 @@ impl InitializeDao<'_> {
             team_address,
             optimistic_proposal: None,
             is_optimistic_governance_enabled: false,
+            liquidator: None,
+            last_failed_takeover_at: 0,
+            last_failed_liquidation_at: 0,
+            spending_limit_dirty: false,
+            last_buyback_finalized_at: 0,
+            typed_proposals_enabled: true,
         });
 
         dao.invariant()?;
@@ -248,6 +251,7 @@ impl InitializeDao<'_> {
             squads_multisig_vault: dao.squads_multisig_vault,
             team_sponsored_pass_threshold_bps: dao.team_sponsored_pass_threshold_bps,
             team_address: dao.team_address,
+            typed_proposals_enabled: dao.typed_proposals_enabled,
         });
 
         Ok(())

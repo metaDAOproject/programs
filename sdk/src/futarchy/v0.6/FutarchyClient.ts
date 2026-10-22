@@ -11,8 +11,8 @@ import {
 } from "@solana/web3.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
-  createTransferInstruction,
   getAssociatedTokenAddressSync,
+  getMint,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { sha256 } from "@noble/hashes/sha256";
@@ -23,6 +23,7 @@ import {
   FUTARCHY_V0_6_PROGRAM_ID,
   CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   MAINNET_USDC,
+  MINT_GOVERNOR_V0_7_PROGRAM_ID,
   PERMISSIONLESS_ACCOUNT,
   SQUADS_PROGRAM_CONFIG,
   SQUADS_PROGRAM_CONFIG_TREASURY,
@@ -33,6 +34,7 @@ import {
   LAUNCHPAD_V0_7_PROGRAM_ID,
   DAMM_V2_POOL_AUTHORITY,
 } from "../../constants.js";
+import { getMintAuthorityAddr } from "../../mint_governor/v0.7/pda.js";
 import { getEventAuthorityAddr } from "../../pda.js";
 import { InstructionUtils } from "../../utils.js";
 
@@ -41,6 +43,8 @@ import {
   Proposal,
   InitializeDaoParams,
   UpdateDaoParams,
+  SetSpendingLimitArgs,
+  SpendingLimitAction,
 } from "./types/index.js";
 import { Futarchy, IDL as FutarchyIDL } from "./types/futarchy.js";
 import {
@@ -48,9 +52,17 @@ import {
   IDL as v0_6_0_futarchyIDL,
 } from "./types/v0.6.0-futarchy.js";
 import {
+  Futarchy as v0_6_1_futarchy,
+  IDL as v0_6_1_futarchyIDL,
+} from "./types/v0.6.1-futarchy.js";
+import {
   getDaoAddr,
+  getEnqueuedMultisigProposalApprovalAddr,
+  getEnqueuedMultisigProposalCancellationAddr,
   getProposalAddr,
   getProposalAddrV2,
+  getProposalAddrsForTransactionIndex,
+  getSpendingLimitAddr,
   getStakeAddr,
 } from "./pda.js";
 
@@ -72,10 +84,18 @@ export type ProposalVaults = {
   quoteVault: PublicKey;
 };
 
+// The slice of Anchor's MethodsBuilder the typed-initialize orchestrator drives.
+type TypedInitializeMethodsBuilder = {
+  preInstructions(ixs: TransactionInstruction[]): {
+    rpc(): Promise<string>;
+  };
+};
+
 export class FutarchyClient {
   public readonly provider: AnchorProvider;
   public readonly futarchy: Program<Futarchy>;
   public readonly v0_6_0_futarchy: Program<v0_6_0_futarchy>;
+  public readonly v0_6_1_futarchy: Program<v0_6_1_futarchy>;
   public readonly vaultClient: ConditionalVaultClient;
   public readonly luts: AddressLookupTableAccount[];
 
@@ -93,6 +113,11 @@ export class FutarchyClient {
     );
     this.v0_6_0_futarchy = new Program<v0_6_0_futarchy>(
       v0_6_0_futarchyIDL,
+      futarchyProgramId,
+      provider,
+    );
+    this.v0_6_1_futarchy = new Program<v0_6_1_futarchy>(
+      v0_6_1_futarchyIDL,
       futarchyProgramId,
       provider,
     );
@@ -276,18 +301,68 @@ export class FutarchyClient {
     });
   }
 
+  // The treasury account list a buyback launch must supply as remaining
+  // accounts: the vault's quote ATA and the treasury's AMM position, existing
+  // accounts only, sorted ascending as the program requires.
+  async assembleBuybackTreasuryAccounts({
+    dao,
+  }: {
+    dao: PublicKey;
+  }): Promise<PublicKey[]> {
+    const storedDao = await this.getDao(dao);
+
+    const vaultQuoteAccount = getAssociatedTokenAddressSync(
+      storedDao.quoteMint,
+      storedDao.squadsMultisigVault,
+      true,
+    );
+    const [ammPosition] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("amm_position"),
+        dao.toBuffer(),
+        storedDao.squadsMultisigVault.toBuffer(),
+      ],
+      this.getProgramId(),
+    );
+
+    const existing: PublicKey[] = [];
+    for (const candidate of [vaultQuoteAccount, ammPosition]) {
+      // Bankrun's connection proxy throws on missing accounts where a real
+      // RPC returns null; treat both as "doesn't exist"
+      const info = await this.provider.connection
+        .getAccountInfo(candidate)
+        .catch(() => null);
+      if (info) {
+        existing.push(candidate);
+      }
+    }
+
+    return existing.sort((a, b) => a.toBuffer().compare(b.toBuffer()));
+  }
+
+  /**
+   * `squadsTransaction` and `lookupTables` are required for a generic
+   * (execute-arbitrary) proposal and must be omitted for typed kinds; see
+   * `getSquadsVaultTransactionAccounts`. `treasuryAccounts` is for buybacks.
+   */
   launchProposalIx({
     proposal,
     dao,
     baseMint,
     quoteMint,
     squadsProposal,
+    squadsTransaction,
+    lookupTables = [],
+    treasuryAccounts = [],
   }: {
     proposal: PublicKey;
     dao: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
     squadsProposal: PublicKey;
+    squadsTransaction?: PublicKey;
+    lookupTables?: PublicKey[];
+    treasuryAccounts?: PublicKey[];
   }) {
     const {
       baseVault,
@@ -335,6 +410,16 @@ export class FutarchyClient {
         squadsProposal,
         payer: this.provider.publicKey,
       })
+      .remainingAccounts(
+        [
+          ...(squadsTransaction ? [squadsTransaction, ...lookupTables] : []),
+          ...treasuryAccounts,
+        ].map((pubkey) => ({
+          pubkey,
+          isSigner: false,
+          isWritable: false,
+        })),
+      )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ]);
@@ -548,6 +633,7 @@ export class FutarchyClient {
         ),
         baseVault,
         quoteVault,
+        trader,
         userInputAccount: getAssociatedTokenAddressSync(
           inputMint,
           trader,
@@ -590,11 +676,20 @@ export class FutarchyClient {
     instructions: TransactionInstruction[];
     transactionIndex: bigint;
     payer?: PublicKey;
-  }): { tx: Transaction; squadsProposal: PublicKey } {
+  }): {
+    tx: Transaction;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  } {
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
 
+    // The vault must be the payerKey, otherwise the payer has to co-sign every execution.
     const transactionMessage = new TransactionMessage({
-      payerKey: payer,
+      payerKey: squadsMultisigVault,
       recentBlockhash: "", // this doesn't get used
       instructions,
     });
@@ -620,10 +715,48 @@ export class FutarchyClient {
       multisigPda,
       transactionIndex: transactionIndex,
     });
+    const [squadsTransaction] = multisig.getTransactionPda({
+      multisigPda,
+      index: transactionIndex,
+    });
 
     const tx = new Transaction().add(vaultTxCreate, proposalCreate);
 
-    return { tx, squadsProposal };
+    return { tx, squadsProposal, squadsTransaction };
+  }
+
+  /**
+   * Resolves the vault transaction behind a Squads proposal and the lookup
+   * tables its message references. Both go to `initializeProposalIx` and, for
+   * a generic proposal, `launchProposalIx`, which check that every table is
+   * frozen.
+   */
+  async getSquadsVaultTransactionAccounts(squadsProposal: PublicKey): Promise<{
+    squadsTransaction: PublicKey;
+    lookupTables: PublicKey[];
+  }> {
+    const squadsProposalAccount =
+      await multisig.accounts.Proposal.fromAccountAddress(
+        this.provider.connection,
+        squadsProposal,
+      );
+
+    const [squadsTransaction] = multisig.getTransactionPda({
+      multisigPda: squadsProposalAccount.multisig,
+      index: BigInt(squadsProposalAccount.transactionIndex.toString()),
+    });
+
+    const vaultTransaction =
+      await multisig.accounts.VaultTransaction.fromAccountAddress(
+        this.provider.connection,
+        squadsTransaction,
+      );
+
+    const lookupTables = vaultTransaction.message.addressTableLookups.map(
+      (lookup) => lookup.accountKey,
+    );
+
+    return { squadsTransaction, lookupTables };
   }
 
   async initializeProposal(
@@ -657,12 +790,17 @@ export class FutarchyClient {
       )
       .rpc();
 
+    const { squadsTransaction, lookupTables } =
+      await this.getSquadsVaultTransactionAccounts(squadsProposal);
+
     await this.initializeProposalIx(
       squadsProposal,
       dao,
       storedDao.baseMint,
       storedDao.quoteMint,
       question,
+      squadsTransaction,
+      lookupTables,
     )
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
@@ -678,6 +816,8 @@ export class FutarchyClient {
     baseMint: PublicKey,
     quoteMint: PublicKey,
     question: PublicKey,
+    squadsTransaction: PublicKey,
+    lookupTables: PublicKey[] = [],
     proposer: PublicKey = this.provider.publicKey,
   ) {
     let [proposal] = getProposalAddr(this.futarchy.programId, squadsProposal);
@@ -703,12 +843,20 @@ export class FutarchyClient {
         question,
         proposal,
         squadsProposal,
+        squadsVaultTransaction: squadsTransaction,
         dao,
         baseVault,
         quoteVault,
         proposer,
         squadsMultisig,
       })
+      .remainingAccounts(
+        lookupTables.map((pubkey) => ({
+          pubkey,
+          isSigner: false,
+          isWritable: false,
+        })),
+      )
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
@@ -735,6 +883,570 @@ export class FutarchyClient {
           failQuoteMint,
         ),
       ]);
+  }
+
+  // The PDA set for the proposal a typed initialize would make next: reads the
+  // multisig's current transaction index and derives the Squads transaction,
+  // Squads proposal, and futarchy proposal addresses for index + 1.
+  async getNextProposalAddrs(dao: PublicKey): Promise<{
+    transactionIndex: bigint;
+    squadsMultisig: PublicKey;
+    squadsTransaction: PublicKey;
+    squadsProposal: PublicKey;
+    proposal: PublicKey;
+  }> {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const multisigAccount = await multisig.accounts.Multisig.fromAccountAddress(
+      this.provider.connection,
+      multisigPda,
+    );
+    const transactionIndex =
+      BigInt(multisigAccount.transactionIndex.toString()) + 1n;
+
+    return {
+      transactionIndex,
+      ...getProposalAddrsForTransactionIndex({
+        dao,
+        transactionIndex,
+        programId: this.futarchy.programId,
+      }),
+    };
+  }
+
+  // The shared orchestration of every typed initialize: create the question and
+  // both conditional vaults (same flow as `initializeProposal`), then send the
+  // per-type initialize instruction built by `buildInitializeIx` — the instruction
+  // itself creates the Squads transaction and proposal at the next
+  // transaction index.
+  private async initializeTypedProposal({
+    dao,
+    buildInitializeIx,
+  }: {
+    dao: PublicKey;
+    buildInitializeIx: (params: {
+      storedDao: Dao;
+      transactionIndex: bigint;
+    }) =>
+      | TypedInitializeMethodsBuilder
+      | Promise<TypedInitializeMethodsBuilder>;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    const storedDao = await this.getDao(dao);
+    const { transactionIndex, squadsTransaction, squadsProposal, proposal } =
+      await this.getNextProposalAddrs(dao);
+
+    await this.vaultClient.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2,
+    );
+
+    const { question } = this.getProposalPdas(
+      proposal,
+      storedDao.baseMint,
+      storedDao.quoteMint,
+      dao,
+    );
+
+    // it's important that these happen in a single atomic transaction
+    await this.vaultClient
+      .initializeVaultIx(question, storedDao.baseMint, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          this.vaultClient.initializeVaultIx(question, storedDao.quoteMint, 2),
+        ),
+      )
+      .rpc();
+
+    await (await buildInitializeIx({ storedDao, transactionIndex }))
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+      ])
+      .rpc();
+
+    return { proposal, squadsProposal, squadsTransaction };
+  }
+
+  // The `typed_initialize_accounts` composite accounts shared by every typed
+  // initialize instruction, for the proposal at the given transaction index.
+  private typedInitializeAccounts({
+    dao,
+    baseMint,
+    quoteMint,
+    transactionIndex,
+    proposer,
+    payer,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    transactionIndex: bigint;
+    proposer: PublicKey;
+    payer: PublicKey;
+  }) {
+    const { squadsMultisig, squadsTransaction, squadsProposal, proposal } =
+      getProposalAddrsForTransactionIndex({
+        dao,
+        transactionIndex,
+        programId: this.futarchy.programId,
+      });
+    const { question, baseVault, quoteVault } = this.getProposalPdas(
+      proposal,
+      baseMint,
+      quoteMint,
+      dao,
+    );
+
+    return {
+      proposal,
+      dao,
+      squadsMultisig,
+      squadsTransaction,
+      squadsProposal,
+      question,
+      baseVault,
+      quoteVault,
+      proposer,
+      payer,
+      permissionlessAccount: PERMISSIONLESS_ACCOUNT.publicKey,
+      squadsProgram: SQUADS_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    };
+  }
+
+  async initializeLargeSpendProposal({
+    dao,
+    amount,
+  }: {
+    dao: PublicKey;
+    amount: BN;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    return this.initializeTypedProposal({
+      dao,
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
+        this.initializeLargeSpendProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          amount,
+          transactionIndex,
+        }),
+    });
+  }
+
+  initializeLargeSpendProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    amount,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    amount: BN;
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    return this.futarchy.methods
+      .initializeLargeSpendProposal({ amount })
+      .accounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
+          dao,
+          baseMint,
+          quoteMint,
+          transactionIndex,
+          proposer,
+          payer,
+        }),
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
+  // Reads the base mint's authority to pick the template branch: the Squads
+  // vault → SPL MintTo, a MintGovernor → mint_governor::mint_tokens; anything
+  // else is refused by the program.
+  async initializeMintTokensProposal({
+    dao,
+    amount,
+    recipient,
+  }: {
+    dao: PublicKey;
+    amount: BN;
+    recipient: PublicKey;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    return this.initializeTypedProposal({
+      dao,
+      buildInitializeIx: async ({ storedDao, transactionIndex }) => {
+        const baseMintInfo = await getMint(
+          this.provider.connection,
+          storedDao.baseMint,
+        );
+        let mintGovernor: PublicKey | null = null;
+        if (
+          baseMintInfo.mintAuthority &&
+          !baseMintInfo.mintAuthority.equals(storedDao.squadsMultisigVault)
+        ) {
+          const authorityInfo = await this.provider.connection.getAccountInfo(
+            baseMintInfo.mintAuthority,
+          );
+          if (authorityInfo?.owner.equals(MINT_GOVERNOR_V0_7_PROGRAM_ID)) {
+            mintGovernor = baseMintInfo.mintAuthority;
+          }
+        }
+
+        return this.initializeMintTokensProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          amount,
+          recipient,
+          transactionIndex,
+          mintGovernor,
+        });
+      },
+    });
+  }
+
+  initializeMintTokensProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    amount,
+    recipient,
+    transactionIndex,
+    mintGovernor = null,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    amount: BN;
+    recipient: PublicKey;
+    transactionIndex: bigint;
+    mintGovernor?: PublicKey | null;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
+
+    const mintAuthority = mintGovernor
+      ? getMintAuthorityAddr({
+          mintGovernor,
+          authorizedMinter: squadsMultisigVault,
+        })[0]
+      : null;
+
+    return this.futarchy.methods
+      .initializeMintTokensProposal({ amount, recipient })
+      .accounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
+          dao,
+          baseMint,
+          quoteMint,
+          transactionIndex,
+          proposer,
+          payer,
+        }),
+        baseMint,
+        mintGovernor,
+        mintAuthority,
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
+  // The payload is one vault-signed set_spending_limit: `config` replaces the
+  // record verbatim, null removes it.
+  async initializeSpendingLimitChangeProposal({
+    dao,
+    config,
+  }: {
+    dao: PublicKey;
+    config: SetSpendingLimitArgs["config"];
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    return this.initializeTypedProposal({
+      dao,
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
+        this.initializeSpendingLimitChangeProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          config,
+          transactionIndex,
+        }),
+    });
+  }
+
+  initializeSpendingLimitChangeProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    config,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    config: SetSpendingLimitArgs["config"];
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    return this.futarchy.methods
+      .initializeSpendingLimitChangeProposal({ config })
+      .accounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
+          dao,
+          baseMint,
+          quoteMint,
+          transactionIndex,
+          proposer,
+          payer,
+        }),
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
+  // The proposal's action declares the complete post-takeover regime. A passed
+  // takeover is applied by finalize_proposal itself; the baked payload is only
+  // a memo.
+  async initializeHostileTakeoverProposal({
+    dao,
+    newTeamAddress,
+    spendingLimitAction,
+  }: {
+    dao: PublicKey;
+    newTeamAddress: PublicKey;
+    spendingLimitAction: SpendingLimitAction;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    return this.initializeTypedProposal({
+      dao,
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
+        this.initializeHostileTakeoverProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          newTeamAddress,
+          spendingLimitAction,
+          transactionIndex,
+        }),
+    });
+  }
+
+  initializeHostileTakeoverProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    newTeamAddress,
+    spendingLimitAction,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    newTeamAddress: PublicKey;
+    spendingLimitAction: SpendingLimitAction;
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    return this.futarchy.methods
+      .initializeHostileTakeoverProposal({
+        newTeamAddress,
+        spendingLimitAction,
+      })
+      .accounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
+          dao,
+          baseMint,
+          quoteMint,
+          transactionIndex,
+          proposer,
+          payer,
+        }),
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
+  // The payload is the IP-transfer memo alone — finalize_proposal performs the
+  // state flip, and the liquidator (stored in `action`) unwinds the treasury
+  // position afterward through the estate cycle.
+  async initializeHostileLiquidateProposal({
+    dao,
+    liquidator = METADAO_MULTISIG_VAULT,
+  }: {
+    dao: PublicKey;
+    liquidator?: PublicKey;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    return this.initializeTypedProposal({
+      dao,
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
+        this.initializeHostileLiquidateProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          liquidator,
+          transactionIndex,
+        }),
+    });
+  }
+
+  initializeHostileLiquidateProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    liquidator = METADAO_MULTISIG_VAULT,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    liquidator?: PublicKey;
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    return this.futarchy.methods
+      .initializeHostileLiquidateProposal({ liquidator })
+      .accounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
+          dao,
+          baseMint,
+          quoteMint,
+          transactionIndex,
+          proposer,
+          payer,
+        }),
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
+  }
+
+  // The payload is a single program-built memo carrying the DCA-shaped
+  // parameters — a passed buyback authorizes nothing on-chain; ops executes
+  // the programme off-chain with authority it already holds.
+  async initializeBuybackTokenProposal({
+    dao,
+    quoteAmount,
+    cycleCount,
+    cycleFrequencySeconds,
+    startDelaySeconds,
+    minPrice = null,
+    maxPrice = null,
+  }: {
+    dao: PublicKey;
+    quoteAmount: BN;
+    cycleCount: number;
+    cycleFrequencySeconds: number;
+    startDelaySeconds: number;
+    minPrice?: BN | null;
+    maxPrice?: BN | null;
+  }): Promise<{
+    proposal: PublicKey;
+    squadsProposal: PublicKey;
+    squadsTransaction: PublicKey;
+  }> {
+    return this.initializeTypedProposal({
+      dao,
+      buildInitializeIx: ({ storedDao, transactionIndex }) =>
+        this.initializeBuybackTokenProposalIx({
+          dao,
+          baseMint: storedDao.baseMint,
+          quoteMint: storedDao.quoteMint,
+          quoteAmount,
+          cycleCount,
+          cycleFrequencySeconds,
+          startDelaySeconds,
+          minPrice,
+          maxPrice,
+          transactionIndex,
+        }),
+    });
+  }
+
+  initializeBuybackTokenProposalIx({
+    dao,
+    baseMint,
+    quoteMint,
+    quoteAmount,
+    cycleCount,
+    cycleFrequencySeconds,
+    startDelaySeconds,
+    minPrice = null,
+    maxPrice = null,
+    transactionIndex,
+    proposer = this.provider.publicKey,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    baseMint: PublicKey;
+    quoteMint: PublicKey;
+    quoteAmount: BN;
+    cycleCount: number;
+    cycleFrequencySeconds: number;
+    startDelaySeconds: number;
+    minPrice?: BN | null;
+    maxPrice?: BN | null;
+    transactionIndex: bigint;
+    proposer?: PublicKey;
+    payer?: PublicKey;
+  }) {
+    return this.futarchy.methods
+      .initializeBuybackTokenProposal({
+        quoteAmount,
+        cycleCount,
+        cycleFrequencySeconds,
+        startDelaySeconds,
+        minPrice,
+        maxPrice,
+      })
+      .accounts({
+        typedInitializeAccounts: this.typedInitializeAccounts({
+          dao,
+          baseMint,
+          quoteMint,
+          transactionIndex,
+          proposer,
+          payer,
+        }),
+      })
+      .signers([PERMISSIONLESS_ACCOUNT]);
   }
 
   async finalizeProposal(proposal: PublicKey) {
@@ -859,9 +1571,65 @@ export class FutarchyClient {
       index: 0,
     })[0];
 
-    return this.futarchy.methods.updateDao(params).accounts({
+    return this.futarchy.methods
+      .updateDao({ ...params, deprecatedIsOptimisticGovernanceEnabled: null })
+      .accounts({
+        dao,
+        squadsMultisigVault,
+      });
+  }
+
+  setSpendingLimitIx({
+    dao,
+    config,
+  }: {
+    dao: PublicKey;
+    config: SetSpendingLimitArgs["config"];
+  }) {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const squadsMultisigVault = multisig.getVaultPda({
+      multisigPda,
+      index: 0,
+    })[0];
+
+    return this.futarchy.methods.setSpendingLimit({ config }).accounts({
       dao,
       squadsMultisigVault,
+    });
+  }
+
+  syncSpendingLimitIx({
+    dao,
+    rentPayer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    rentPayer?: PublicKey;
+  }) {
+    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
+    const [spendingLimit] = getSpendingLimitAddr({ dao });
+
+    return this.futarchy.methods.syncSpendingLimit().accounts({
+      dao,
+      squadsMultisig: multisigPda,
+      spendingLimit,
+      rentPayer,
+      squadsProgram: SQUADS_PROGRAM_ID,
+    });
+  }
+
+  resizeDaoIx({
+    dao,
+    payer = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    payer?: PublicKey;
+  }) {
+    const [spendingLimit] = getSpendingLimitAddr({ dao });
+
+    return this.futarchy.methods.resizeDao().accounts({
+      dao,
+      spendingLimit,
+      payer,
     });
   }
 
@@ -1005,6 +1773,140 @@ export class FutarchyClient {
     });
   }
 
+  adminUpdateProposalParamsIx({
+    proposal,
+    dao,
+    durationInSeconds = null,
+    passThresholdBps = null,
+    admin = this.provider.publicKey,
+  }: {
+    proposal: PublicKey;
+    dao: PublicKey;
+    durationInSeconds?: number | null;
+    passThresholdBps?: number | null;
+    admin?: PublicKey;
+  }) {
+    return this.futarchy.methods
+      .adminUpdateProposalParams({ durationInSeconds, passThresholdBps })
+      .accounts({
+        dao,
+        proposal,
+        admin,
+      });
+  }
+
+  adminEnqueueMultisigProposalApprovalIx({
+    dao,
+    transactionIndex,
+    admin = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    admin?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedApproval] = getEnqueuedMultisigProposalApprovalAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods
+      .adminEnqueueMultisigProposalApproval({
+        transactionIndex: new BN(transactionIndex.toString()),
+      })
+      .accounts({
+        dao,
+        admin,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedApproval,
+      });
+  }
+
+  executeMultisigProposalApprovalIx({
+    dao,
+    transactionIndex,
+    rentReceiver = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    rentReceiver?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedApproval] = getEnqueuedMultisigProposalApprovalAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods.executeMultisigProposalApproval().accounts({
+      dao,
+      rentReceiver,
+      squadsMultisig,
+      squadsMultisigProposal: squadsProposal,
+      enqueuedApproval,
+      squadsMultisigProgram: SQUADS_PROGRAM_ID,
+    });
+  }
+
+  adminEnqueueMultisigProposalCancellationIx({
+    dao,
+    transactionIndex,
+    admin = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    admin?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedCancellation] = getEnqueuedMultisigProposalCancellationAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods
+      .adminEnqueueMultisigProposalCancellation({
+        transactionIndex: new BN(transactionIndex.toString()),
+      })
+      .accounts({
+        dao,
+        admin,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedCancellation,
+      });
+  }
+
+  executeMultisigProposalCancellationIx({
+    dao,
+    transactionIndex,
+    rentReceiver = this.provider.publicKey,
+  }: {
+    dao: PublicKey;
+    transactionIndex: bigint;
+    rentReceiver?: PublicKey;
+  }) {
+    const { squadsMultisig, squadsProposal } =
+      getProposalAddrsForTransactionIndex({ dao, transactionIndex });
+    const [enqueuedCancellation] = getEnqueuedMultisigProposalCancellationAddr({
+      dao,
+      transactionIndex,
+    });
+
+    return this.futarchy.methods
+      .executeMultisigProposalCancellation()
+      .accounts({
+        dao,
+        rentReceiver,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedCancellation,
+        squadsMultisigProgram: SQUADS_PROGRAM_ID,
+      });
+  }
+
   collectMeteoraDammFeesIx({
     dao,
     baseMint,
@@ -1145,130 +2047,6 @@ export class FutarchyClient {
       },
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
-      squadsProgram: SQUADS_PROGRAM_ID,
-    });
-  }
-
-  initiateVaultSpendOptimisticProposalIx({
-    dao,
-    quoteMint = MAINNET_USDC,
-    amount,
-    recipient,
-    transactionIndex,
-    proposer = this.provider.publicKey,
-    payer = this.provider.publicKey,
-  }: {
-    dao: PublicKey;
-    quoteMint?: PublicKey;
-    amount: BN;
-    recipient: PublicKey;
-    transactionIndex: bigint;
-    proposer?: PublicKey;
-    payer?: PublicKey;
-  }) {
-    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
-    const squadsMultisigVault = multisig.getVaultPda({
-      multisigPda,
-      index: 0,
-    })[0];
-    const squadsSpendingLimit = multisig.getSpendingLimitPda({
-      multisigPda,
-      createKey: dao,
-    })[0];
-    const squadsProposal = multisig.getProposalPda({
-      multisigPda,
-      transactionIndex,
-    })[0];
-    const squadsVaultTransaction = multisig.getTransactionPda({
-      multisigPda,
-      index: transactionIndex,
-    })[0];
-
-    const daoQuoteVaultAccount = getAssociatedTokenAddressSync(
-      quoteMint,
-      squadsMultisigVault,
-      true,
-    );
-    const recipientQuoteAccount = getAssociatedTokenAddressSync(
-      quoteMint,
-      recipient,
-      true,
-    );
-
-    // Build the SPL token transfer instruction for the vault transaction
-    const transferIx = createTransferInstruction(
-      daoQuoteVaultAccount,
-      recipientQuoteAccount,
-      squadsMultisigVault,
-      BigInt(amount.toString()),
-    );
-
-    // Use the vault as the payerKey so it deduplicates with the transfer authority,
-    // producing a clean message with exactly 1 signer (the vault).
-    const transactionMessage = new TransactionMessage({
-      payerKey: squadsMultisigVault,
-      recentBlockhash: "",
-      instructions: [transferIx],
-    });
-
-    const vaultTxCreate = multisig.instructions.vaultTransactionCreate({
-      multisigPda,
-      transactionIndex,
-      creator: PERMISSIONLESS_ACCOUNT.publicKey,
-      rentPayer: payer,
-      vaultIndex: 0,
-      ephemeralSigners: 0,
-      transactionMessage,
-    });
-
-    const proposalCreate = multisig.instructions.proposalCreate({
-      multisigPda,
-      transactionIndex,
-      creator: PERMISSIONLESS_ACCOUNT.publicKey,
-      rentPayer: payer,
-    });
-
-    return this.futarchy.methods
-      .initiateVaultSpendOptimisticProposal({ amount })
-      .accounts({
-        squadsMultisig: multisigPda,
-        squadsMultisigVault,
-        squadsSpendingLimit,
-        squadsProposal,
-        squadsVaultTransaction,
-        dao,
-        daoQuoteVaultAccount,
-        proposer,
-        recipient,
-        recipientQuoteAccount,
-        squadsProgram: SQUADS_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer,
-          recipientQuoteAccount,
-          recipient,
-          quoteMint,
-        ),
-        vaultTxCreate,
-        proposalCreate,
-      ]);
-  }
-
-  finalizeOptimisticProposalIx({
-    dao,
-    squadsProposal,
-  }: {
-    dao: PublicKey;
-    squadsProposal: PublicKey;
-  }) {
-    const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
-
-    return this.futarchy.methods.finalizeOptimisticProposal().accounts({
-      squadsMultisig: multisigPda,
-      squadsProposal,
-      dao,
       squadsProgram: SQUADS_PROGRAM_ID,
     });
   }

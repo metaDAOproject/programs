@@ -57,6 +57,9 @@ pub struct Dao {
     /// Minimum amount of base tokens that must be staked to launch a proposal
     pub base_to_stake: u64,
     pub seq_num: u64,
+    /// The authoritative record of what the Squads spending limit should be.
+    /// `None` = no limit. Kept in sync with the Squads-side account by
+    /// `sync_spending_limit`. (Named for its original init-only role)
     pub initial_spending_limit: Option<InitialSpendingLimit>,
     /// The percentage, in basis points, the pass price needs to be above the
     /// fail price in order for the proposal to pass for team-sponsored proposals.
@@ -64,8 +67,25 @@ pub struct Dao {
     /// Can be negative to allow for team-sponsored proposals to pass by default.
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
+    /// Deprecated in favor of typed proposals
     pub optimistic_proposal: Option<OptimisticProposal>,
+    /// Deprecated in favor of typed proposals
     pub is_optimistic_governance_enabled: bool,
+    /// `Some` means the DAO has been liquidated, and holds who runs the estate.
+    /// Set once by `finalize_proposal` the moment a hostile liquidation
+    /// passes, never cleared.
+    pub liquidator: Option<Pubkey>,
+    /// Unix time of the last failed hostile takeover. 0 = never.
+    pub last_failed_takeover_at: i64,
+    /// Unix time of the last failed hostile liquidation. 0 = never.
+    pub last_failed_liquidation_at: i64,
+    /// Set by every write to the spending-limit record (`initial_spending_limit`),
+    /// consumed by `sync_spending_limit`.
+    pub spending_limit_dirty: bool,
+    /// Unix time of the last buyback finalization. 0 = never.
+    pub last_buyback_finalized_at: i64,
+    /// Whether the DAO runs on the mini-instructions catalog. Never turns off.
+    pub typed_proposals_enabled: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq, InitSpace)]
@@ -83,7 +103,56 @@ pub struct InitialSpendingLimit {
     pub members: Vec<Pubkey>,
 }
 
+impl InitialSpendingLimit {
+    /// Rejects any record that the Squads spending-limit invariant would refuse
+    /// to create, so every stored record can be projected by `sync_spending_limit`.
+    pub fn validate(&self) -> Result<()> {
+        require_neq!(
+            self.amount_per_month,
+            0,
+            FutarchyError::InvalidSpendingLimitAmount
+        );
+
+        require!(
+            !self.members.is_empty(),
+            FutarchyError::EmptySpendingLimitMembers
+        );
+
+        require_gte!(
+            MAX_SPENDING_LIMIT_MEMBERS,
+            self.members.len(),
+            FutarchyError::TooManySpendingLimitMembers
+        );
+
+        let mut sorted_members = self.members.clone();
+        sorted_members.sort();
+        let has_duplicates = sorted_members.windows(2).any(|win| win[0] == win[1]);
+        require!(!has_duplicates, FutarchyError::DuplicateSpendingLimitMember);
+
+        Ok(())
+    }
+}
+
 impl Dao {
+    /// A migrated `Dao` account is exactly this long.
+    pub const MIGRATED_SIZE: usize = Dao::INIT_SPACE + 8;
+
+    /// Errors unless `resize_dao` has migrated the account.
+    pub fn assert_migrated(account: &AccountInfo) -> Result<()> {
+        require_eq!(
+            account.data_len(),
+            Dao::MIGRATED_SIZE,
+            FutarchyError::AccountNotMigrated
+        );
+        Ok(())
+    }
+
+    /// Replaces the spending-limit record and flags it for the next sync.
+    pub fn set_spending_limit(&mut self, config: Option<InitialSpendingLimit>) {
+        self.initial_spending_limit = config;
+        self.spending_limit_dirty = true;
+    }
+
     pub fn invariant(&self) -> Result<()> {
         require_gte!(
             self.seconds_per_proposal,
@@ -191,4 +260,6 @@ pub struct OldDao {
     /// Can be negative to allow for team-sponsored proposals to pass by default.
     pub team_sponsored_pass_threshold_bps: i16,
     pub team_address: Pubkey,
+    pub optimistic_proposal: Option<OptimisticProposal>,
+    pub is_optimistic_governance_enabled: bool,
 }
