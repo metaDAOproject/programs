@@ -84,9 +84,9 @@ pub struct PerformancePackage {
     pub seq_num: u64,
     /// The vault that stores the tokens
     pub performance_package_token_vault: Pubkey,
-    /// Appended in 0.6.1; `None` means uncapped, and so do expired limits
+    /// `None` means uncapped, and so do expired limits
     pub withdrawal_policy: Option<WithdrawalPolicy>,
-    /// Appended in 0.6.1; when the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed
+    /// When the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed
     pub last_change_proposed_at: i64,
 }
 

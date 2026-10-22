@@ -728,9 +728,7 @@ export type PriceBasedPerformancePackage = {
           },
           {
             name: "withdrawalPolicy";
-            docs: [
-              "Appended in 0.6.1; `None` means uncapped, and so do expired limits",
-            ];
+            docs: ["`None` means uncapped, and so do expired limits"];
             type: {
               option: {
                 defined: "WithdrawalPolicy";
@@ -740,7 +738,7 @@ export type PriceBasedPerformancePackage = {
           {
             name: "lastChangeProposedAt";
             docs: [
-              "Appended in 0.6.1; when the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed",
+              "When the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed",
             ];
             type: "i64";
           },
@@ -2474,9 +2472,7 @@ export const IDL: PriceBasedPerformancePackage = {
           },
           {
             name: "withdrawalPolicy",
-            docs: [
-              "Appended in 0.6.1; `None` means uncapped, and so do expired limits",
-            ],
+            docs: ["`None` means uncapped, and so do expired limits"],
             type: {
               option: {
                 defined: "WithdrawalPolicy",
@@ -2486,7 +2482,7 @@ export const IDL: PriceBasedPerformancePackage = {
           {
             name: "lastChangeProposedAt",
             docs: [
-              "Appended in 0.6.1; when the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed",
+              "When the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed",
             ],
             type: "i64",
           },
