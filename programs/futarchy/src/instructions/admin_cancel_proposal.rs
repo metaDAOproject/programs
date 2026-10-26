@@ -3,8 +3,8 @@ use super::*;
 use conditional_vault::{cpi::accounts::ResolveQuestion, ResolveQuestionArgs};
 use squads_multisig_program::program::SquadsMultisigProgram;
 
-pub mod admin {
-    use anchor_lang::prelude::declare_id;
+mod admin {
+    use anchor_lang::solana_program::pubkey::declare_id;
     declare_id!("CWGawadYU8CzRVBecnJymNw97H7E3ndDinV5sMzesgY2");
 }
 

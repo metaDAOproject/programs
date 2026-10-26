@@ -40,7 +40,7 @@ pub const TOKENS_TO_DAMM_V2_LIQUIDITY_UNSCALED: u64 = 900_000;
 pub const MAX_PREMINE: u64 = 15_000_000 * TOKEN_SCALE;
 
 pub mod usdc_mint {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     #[cfg(feature = "devnet")]
     declare_id!("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");

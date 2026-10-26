@@ -5,21 +5,21 @@ use damm_v2_cpi::program::DammV2Cpi;
 use super::*;
 
 pub mod metadao_multisig_vault {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // MetaDAO multisig
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
-pub mod metadao_admin {
-    use anchor_lang::prelude::declare_id;
+mod metadao_admin {
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // We must use a non-Squads signer because of CPI depth limits
     declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
 }
 
 pub mod pool_authority {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // DAMM V2 Pool Authority
     declare_id!("HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC");
@@ -39,7 +39,7 @@ pub struct CollectMeteoraDammFees<'info> {
 
     /// CHECK: checked by futarchy program
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig_program::SEED_MULTISIG, dao.key().as_ref()], bump, seeds::program = squads_program)]
-    pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
+    pub squads_multisig: Account<'info, SquadsMultisig>,
     /// CHECK: signer for the squads transaction, checked by squads program
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_VAULT, 0_u8.to_le_bytes().as_ref()], bump, seeds::program = squads_program)]
     pub squads_multisig_vault: UncheckedAccount<'info>,

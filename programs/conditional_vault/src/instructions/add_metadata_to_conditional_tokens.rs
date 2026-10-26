@@ -1,7 +1,7 @@
 use super::*;
 
 pub mod proph3t_deployer {
-    use anchor_lang::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     declare_id!("613BRiXuAEn7vibs2oAYzpGW9fXgjzDNuFMM4wPzLdY");
 }

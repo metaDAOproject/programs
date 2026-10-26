@@ -4,13 +4,13 @@
 # is released on GitHub.
 #
 
-FROM rust:1.75
+FROM rust:1.89
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ARG SOLANA_CLI="1.17.16"
-ARG ANCHOR_CLI="0.29.0"
-ARG NODE_VERSION="v18.16.0"
+ARG SOLANA_CLI="4.3.0"
+ARG ANCHOR_CLI="0.32.2"
+ARG NODE_VERSION="v20.18.0"
 
 ENV HOME="/root"
 ENV PATH="${HOME}/.cargo/bin:${PATH}"
@@ -41,7 +41,7 @@ RUN . $NVM_DIR/nvm.sh && \
     npm install -g yarn
 
 # Install Solana tools.
-RUN sh -c "$(curl -sSfL https://release.solana.com/v${SOLANA_CLI}/install)"
+RUN sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_CLI}/install)"
 
 # Install anchor.
 RUN cargo install --git https://github.com/coral-xyz/anchor avm --locked --force

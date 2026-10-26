@@ -1,8 +1,8 @@
 [toolchain]
-solana_version = "1.17.34"
+anchor_version = "0.32.2"
+solana_version = "4.3.0"
 
 [features]
-seeds = false
 skip-lint = false
 
 [programs.localnet]
@@ -78,7 +78,7 @@ v07-resize-daos = "yarn run tsx scripts/v0.7/resizeDaos.ts"
 v07-extend-launch = "yarn run tsx scripts/v0.7/extendLaunch.ts"
 
 [test]
-startup_wait = 5000
+startup_wait = 20000
 shutdown_wait = 2000
 upgradeable = false
 

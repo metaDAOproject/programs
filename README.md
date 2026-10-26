@@ -42,10 +42,10 @@ Programs for unruggable capital formation and market-driven governance.
 
 Before you can build and test the programs, you'll need to install the following tools:
 
-- **Rust**: 1.78.0 or compatible
-- **Solana CLI**: 1.17.34 or compatible
-- **Anchor CLI**: 0.29.0
-- **Node.js**: 16.x or higher (tested with v23.x)
+- **Rust**: 1.89.0 or newer (1.95 tested)
+- **Solana CLI**: Agave 4.3.0 (`agave-install init 4.3.0`)
+- **Anchor CLI**: 0.32.2 (`avm install 0.32.2`)
+- **Node.js**: 20.18 or higher (tested with v22.x)
 - **Yarn**: 1.22.22 or compatible
 
 ### MacOS Setup
@@ -61,14 +61,14 @@ cd programs
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup install 1.78.0
-rustup default 1.78.0
+rustup install stable
+rustup default stable
 ```
 
 #### 3. Install Solana CLI
 
 ```bash
-sh -c "$(curl -sSfL https://release.solana.com/v1.17.34/install)"
+sh -c "$(curl -sSfL https://release.anza.xyz/v4.3.0/install)"
 ```
 
 Add Solana to your PATH (add to `~/.zshrc` or `~/.bash_profile`):
@@ -86,7 +86,9 @@ source ~/.zshrc  # or source ~/.bash_profile
 #### 4. Install Anchor CLI
 
 ```bash
-cargo install --git https://github.com/coral-xyz/anchor --tag v0.29.0 anchor-cli --locked
+cargo install --git https://github.com/coral-xyz/anchor avm --locked
+avm install 0.32.2
+avm use 0.32.2
 ```
 
 #### 5. Install Node.js and Yarn
@@ -95,8 +97,8 @@ Install Node.js using [nvm](https://github.com/nvm-sh/nvm) (recommended):
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-nvm install 18
-nvm use 18
+nvm install 20
+nvm use 20
 ```
 
 Install Yarn:

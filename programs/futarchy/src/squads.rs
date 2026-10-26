@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::address_lookup_table::{self, state::AddressLookupTable};
+use solana_address_lookup_table_interface::{
+    self as address_lookup_table, state::AddressLookupTable,
+};
 
 use std::collections::BTreeMap;
 

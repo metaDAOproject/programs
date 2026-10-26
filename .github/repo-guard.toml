@@ -5,12 +5,12 @@
 
 [toolchain]
 # Anchor CLI version. Consistent across every workflow.
-anchor_version = "0.29.0"
+anchor_version = "0.32.2"
 
 # Solana CLI declared in Anchor.toml `[toolchain] solana_version`. Local-dev
 # only: anchor test on a developer machine auto-installs this version. CI
 # workflows pass their own solana-cli-version explicitly and ignore Anchor.toml.
-local_dev_solana_version = "1.17.34"
+local_dev_solana_version = "4.3.0"
 
 # Per-workflow Solana CLI versions. The split is intentional:
 #
@@ -43,8 +43,8 @@ local_dev_solana_version = "1.17.34"
 # anchor-lang and anchor-spl must be the version declared below across
 # every program manifest. Cross-program divergence (program A pins =0.29.0
 # but program B pins =0.29.1) fails.
-anchor_lang_version = "0.29.0"
-anchor_spl_version = "0.29.0"
+anchor_lang_version = "0.32.2"
+anchor_spl_version = "0.32.2"
 
 # `solana-program` crate version. Distinct from any of the CLI versions
 # above - this is the Solana primitives library that program binaries link
@@ -52,7 +52,7 @@ anchor_spl_version = "0.29.0"
 # launchpads (v06/v07/v08). The guard fails if any program pins a different
 # version. Cargo.lock freshness independently catches drift between this
 # pin and the resolved tree.
-solana_program_version = "1.17.14"
+solana_program_version = "2.3.0"
 
 # Minimum age in days for a newly pinned crate version. The check is scoped
 # to crates whose version differs from the PR base, so unrelated bumps that

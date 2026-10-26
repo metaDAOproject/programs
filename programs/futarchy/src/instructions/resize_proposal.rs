@@ -22,7 +22,7 @@ impl ResizeProposal<'_> {
 
         require_eq!(proposal.owner, &crate::ID);
         let is_discriminator_correct =
-            proposal.try_borrow_data().unwrap()[..8] == Proposal::discriminator();
+            &proposal.try_borrow_data().unwrap()[..8] == Proposal::DISCRIMINATOR;
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Proposal::MIGRATED_SIZE;
@@ -89,7 +89,7 @@ impl ResizeProposal<'_> {
             params_overridden: false,
         };
 
-        proposal.realloc(AFTER_REALLOC_SIZE, true)?;
+        proposal.resize(AFTER_REALLOC_SIZE)?;
 
         let lamports_needed = Rent::get()?.minimum_balance(AFTER_REALLOC_SIZE);
 

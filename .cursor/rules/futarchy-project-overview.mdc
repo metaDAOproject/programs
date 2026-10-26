@@ -33,7 +33,7 @@ This is a Solana-based futarchy platform that implements decision markets and DA
 - Programs follow Anchor's instruction-based architecture
 
 ### Testing Patterns
-- Tests use `bankrun` for fast, deterministic testing
+- Tests run in-process on LiteSVM (via `tests/litesvm/`) for fast, deterministic testing
 - Complex transactions use lookup tables and `TransactionMessage` for large account lists
 - Tests often require full proposal lifecycle setup (draft → stake → initialize → crank → finalize).
   We generally do that setup in `before` and `beforeEach` blocks

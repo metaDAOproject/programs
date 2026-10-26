@@ -22,7 +22,7 @@ impl ResizeFundingRecord<'_> {
 
         // Discriminator check
         let is_discriminator_correct =
-            funding_record.data.try_borrow_mut().unwrap()[..8] == FundingRecord::discriminator();
+            &funding_record.data.try_borrow_mut().unwrap()[..8] == FundingRecord::DISCRIMINATOR;
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = 8 + FundingRecord::INIT_SPACE;
@@ -49,7 +49,7 @@ impl ResizeFundingRecord<'_> {
             last_accumulator_update: 0,
         };
 
-        funding_record.realloc(AFTER_REALLOC_SIZE, true)?;
+        funding_record.resize(AFTER_REALLOC_SIZE)?;
 
         let lamports_needed = Rent::get()?.minimum_balance(AFTER_REALLOC_SIZE);
 

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::Pubkey;
-use anchor_lang::solana_program::pubkey;
+use anchor_lang::solana_program::pubkey::pubkey;
 
 pub const WHITELISTED_PROGRAMS: &[Pubkey] = &[
     pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),

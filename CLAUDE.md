@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MetaDAO Futarchy Protocol - Solana programs for market-driven governance and token launches. Uses Anchor 0.29.0, Solana 1.17.34, Rust 1.78.0.
+MetaDAO Futarchy Protocol - Solana programs for market-driven governance and token launches. Uses Anchor 0.32.2, Agave 4.3.0 (programs built as SBPFv3 with `--arch v3`), host Rust 1.89 or newer.
 
 ## Build & Test Commands
 
@@ -301,8 +301,6 @@ External programs required for tests. These are pre-compiled `.so` files in `tes
 **Module resolution errors**: `cd sdk && yarn build-local` (the root `node_modules` entry is a symlink to `sdk/`, so no root reinstall is needed)
 
 **Tests timeout**: Increase `startup_wait` in `Anchor.toml`
-
-**Cargo.lock version error**: If `Cargo.lock` ends up with `version = 4`, simply change it back to `version = 3` to fix lockfile issues. You don't have to remove the lockfile.
 
 ## Mainnet Program IDs
 
