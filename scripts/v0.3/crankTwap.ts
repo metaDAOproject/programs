@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { AmmClient } from "@metadaoproject/programs/amm/v0.3";
 import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.3";
 import { PublicKey } from "@solana/web3.js";

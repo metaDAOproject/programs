@@ -1,4 +1,4 @@
-import { Provider, Wallet, utils } from "@coral-xyz/anchor";
+import { Provider, Wallet, utils } from "@anchor-lang/core";
 import {
   AccountInfo,
   Commitment,
@@ -77,22 +77,18 @@ class LiteSVMConnection {
   }
 }
 
-// web3.js 1.92+ takes an options object, older versions take (message, logs); both expose err.logs, which Anchor reads.
+// Anchor reads err.logs off the thrown error to translate it into an AnchorError.
 function sendTransactionError(
   signature: string,
   message: string,
   logs: string[],
 ): SendTransactionError {
-  const Ctor = SendTransactionError as unknown as new (
-    ...args: unknown[]
-  ) => SendTransactionError & { logs?: string[] };
-  const error = new Ctor({
+  return new SendTransactionError({
     action: "send",
     signature,
     transactionMessage: message,
     logs,
   });
-  return error.logs ? error : new Ctor(message, logs);
 }
 
 // The anchor-bankrun BankrunProvider, re-based on the LiteSVM facade.

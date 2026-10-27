@@ -111,7 +111,7 @@ async function adminCancel(
 
   await context.futarchy.futarchy.methods
     .adminCancelProposal()
-    .accounts({
+    .accountsPartial({
       proposal,
       dao,
       question,

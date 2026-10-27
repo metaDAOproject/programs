@@ -137,7 +137,7 @@ export default function () {
     // Burn the performance package
     await this.priceBasedPerformancePackage.program.methods
       .burnPerformancePackage()
-      .accounts({
+      .accountsPartial({
         performancePackage,
         performancePackageTokenVault,
         tokenMint,

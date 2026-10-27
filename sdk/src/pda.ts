@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { utils } from "@coral-xyz/anchor";
+import { utils } from "@anchor-lang/core";
 
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "./constants.js";
 

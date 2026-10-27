@@ -559,7 +559,7 @@ export default function suite() {
         minBaseAmount: new BN(0),
         minQuoteAmount: new BN(0),
       })
-      .accounts({
+      .accountsPartial({
         dao,
         positionAuthority: this.payer.publicKey,
         liquidityProviderBaseAccount: getAssociatedTokenAddressSync(

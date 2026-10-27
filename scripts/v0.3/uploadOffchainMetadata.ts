@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import {
   Metadata,
   deserializeMetadata,
@@ -12,6 +12,7 @@ import {
   signerIdentity,
 } from "@metaplex-foundation/umi";
 import {
+  fromWeb3JsKeypair,
   fromWeb3JsPublicKey,
   toWeb3JsPublicKey,
 } from "@metaplex-foundation/umi-web3js-adapters";
@@ -34,7 +35,7 @@ anchor.setProvider(provider);
 const payer = provider.wallet["payer"];
 
 const umi = createUmi(provider.connection);
-umi.use(keypairIdentity(payer));
+umi.use(keypairIdentity(fromWeb3JsKeypair(payer)));
 
 type AcceptedVaultTokens = "META" | "USDC";
 type ConditionalToken = "pMETA" | "fMETA" | "pUSDC" | "fUSDC";

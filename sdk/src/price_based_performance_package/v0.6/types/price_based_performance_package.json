@@ -1,0 +1,1667 @@
+{
+  "address": "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS",
+  "metadata": {
+    "name": "price_based_performance_package",
+    "version": "0.6.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "burn_performance_package",
+      "discriminator": [
+        232,
+        251,
+        10,
+        122,
+        204,
+        255,
+        248,
+        208
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "performance_package_token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          },
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "spill_account",
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "writable": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "change_performance_package_authority",
+      "discriminator": [
+        167,
+        96,
+        117,
+        32,
+        209,
+        186,
+        226,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "current_authority",
+          "signer": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ChangePerformancePackageAuthorityParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "complete_unlock",
+      "discriminator": [
+        22,
+        203,
+        15,
+        189,
+        239,
+        125,
+        25,
+        132
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "oracle_account"
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "The token account where locked tokens are stored"
+          ],
+          "writable": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The token mint - validated via has_one constraint on locker"
+          ],
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "recipient_token_account",
+          "docs": [
+            "The recipient's ATA where tokens will be sent - created if needed"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "token_recipient"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_recipient"
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Payer for creating the ATA if needed"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "execute_change",
+      "discriminator": [
+        104,
+        53,
+        136,
+        238,
+        82,
+        222,
+        200,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "change_request",
+          "writable": true
+        },
+        {
+          "name": "performance_package",
+          "writable": true,
+          "relations": [
+            "change_request"
+          ]
+        },
+        {
+          "name": "executor",
+          "docs": [
+            "The party executing the change (must be opposite of proposer)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_performance_package",
+      "discriminator": [
+        3,
+        171,
+        56,
+        55,
+        135,
+        100,
+        163,
+        186
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  102,
+                  111,
+                  114,
+                  109,
+                  97,
+                  110,
+                  99,
+                  101,
+                  95,
+                  112,
+                  97,
+                  99,
+                  107,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "create_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "create_key",
+          "docs": [
+            "Used to derive the PDA"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The mint of the tokens to be locked"
+          ]
+        },
+        {
+          "name": "grantor_token_account",
+          "docs": [
+            "The token account containing the tokens to be locked"
+          ],
+          "writable": true
+        },
+        {
+          "name": "grantor",
+          "docs": [
+            "The authority of the token account"
+          ],
+          "signer": true
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "The locker's token account where tokens will be stored"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializePerformancePackageParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "propose_change",
+      "discriminator": [
+        167,
+        211,
+        18,
+        222,
+        93,
+        215,
+        74,
+        159
+      ],
+      "accounts": [
+        {
+          "name": "change_request",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  110,
+                  103,
+                  101,
+                  95,
+                  114,
+                  101,
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "account",
+                "path": "proposer"
+              },
+              {
+                "kind": "arg",
+                "path": "params.pda_nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "proposer",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ProposeChangeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "start_unlock",
+      "discriminator": [
+        53,
+        202,
+        212,
+        31,
+        76,
+        178,
+        31,
+        123
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "oracle_account"
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "Only the token recipient can start unlock"
+          ],
+          "signer": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ChangeRequest",
+      "discriminator": [
+        75,
+        130,
+        166,
+        47,
+        15,
+        217,
+        131,
+        190
+      ]
+    },
+    {
+      "name": "PerformancePackage",
+      "discriminator": [
+        228,
+        146,
+        174,
+        131,
+        121,
+        249,
+        99,
+        132
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "ChangeExecuted",
+      "discriminator": [
+        50,
+        115,
+        8,
+        12,
+        139,
+        8,
+        191,
+        26
+      ]
+    },
+    {
+      "name": "ChangeProposed",
+      "discriminator": [
+        170,
+        10,
+        10,
+        8,
+        244,
+        196,
+        146,
+        151
+      ]
+    },
+    {
+      "name": "PerformancePackageAuthorityChanged",
+      "discriminator": [
+        61,
+        106,
+        117,
+        16,
+        219,
+        103,
+        0,
+        43
+      ]
+    },
+    {
+      "name": "PerformancePackageInitialized",
+      "discriminator": [
+        215,
+        87,
+        36,
+        3,
+        199,
+        219,
+        188,
+        121
+      ]
+    },
+    {
+      "name": "UnlockCompleted",
+      "discriminator": [
+        9,
+        6,
+        169,
+        127,
+        233,
+        218,
+        94,
+        165
+      ]
+    },
+    {
+      "name": "UnlockStarted",
+      "discriminator": [
+        156,
+        214,
+        102,
+        63,
+        177,
+        19,
+        228,
+        124
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UnlockTimestampNotReached",
+      "msg": "Unlock timestamp has not been reached yet"
+    },
+    {
+      "code": 6001,
+      "name": "UnlockTimestampInThePast",
+      "msg": "Unlock timestamp must be in the future"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidPerformancePackageState",
+      "msg": "Performance package is not in the expected state"
+    },
+    {
+      "code": 6003,
+      "name": "TwapPeriodNotElapsed",
+      "msg": "TWAP calculation failed"
+    },
+    {
+      "code": 6004,
+      "name": "PriceThresholdNotMet",
+      "msg": "Price threshold not met"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidOracleData",
+      "msg": "Invalid oracle account data"
+    },
+    {
+      "code": 6006,
+      "name": "UnauthorizedChangeRequest",
+      "msg": "Unauthorized to create or execute change request"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidChangeRequest",
+      "msg": "Change request does not match locker"
+    },
+    {
+      "code": 6008,
+      "name": "UnauthorizedLockerAuthority",
+      "msg": "Unauthorized locker authority"
+    },
+    {
+      "code": 6009,
+      "name": "InvariantViolated",
+      "msg": "An invariant was violated. You should get in contact with the MetaDAO team if you see this"
+    },
+    {
+      "code": 6010,
+      "name": "TranchePriceThresholdsNotMonotonic",
+      "msg": "Tranche price thresholds must be monotonically increasing"
+    },
+    {
+      "code": 6011,
+      "name": "TrancheTokenAmountZero",
+      "msg": "Tranche token amount must be greater than 0"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidTwapLength",
+      "msg": "TWAP length must be greater than or equal to 1 day and less than 1 year"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidAdmin",
+      "msg": "Invalid admin"
+    },
+    {
+      "code": 6014,
+      "name": "TotalTokenAmountOverflow",
+      "msg": "Total token amount calculation would overflow"
+    },
+    {
+      "code": 6015,
+      "name": "RecipientAuthorityMustDiffer",
+      "msg": "Recipient and performance package authority must be different keys"
+    }
+  ],
+  "types": [
+    {
+      "name": "ChangeExecuted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_request",
+            "type": "pubkey"
+          },
+          {
+            "name": "executor",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_type",
+            "type": {
+              "defined": {
+                "name": "ChangeType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangePerformancePackageAuthorityParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "new_performance_package_authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeProposed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "locker",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_request",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_type",
+            "type": {
+              "defined": {
+                "name": "ChangeType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeRequest",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "performance_package",
+            "docs": [
+              "The performance package this change applies to"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "change_type",
+            "docs": [
+              "What is being changed"
+            ],
+            "type": {
+              "defined": {
+                "name": "ChangeType"
+              }
+            }
+          },
+          {
+            "name": "proposed_at",
+            "docs": [
+              "When the change was proposed"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "proposer_type",
+            "docs": [
+              "Who proposed this change (either token_recipient or locker_authority)"
+            ],
+            "type": {
+              "defined": {
+                "name": "ProposerType"
+              }
+            }
+          },
+          {
+            "name": "pda_nonce",
+            "docs": [
+              "Used to derive the PDA along with the proposer"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "pda_bump",
+            "docs": [
+              "The PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Oracle",
+            "fields": [
+              {
+                "name": "new_oracle_config",
+                "type": {
+                  "defined": {
+                    "name": "OracleConfig"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "Recipient",
+            "fields": [
+              {
+                "name": "new_recipient",
+                "type": "pubkey"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "CommonFields",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "performance_package_seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializePerformancePackageParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tranches",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Tranche"
+                }
+              }
+            }
+          },
+          {
+            "name": "min_unlock_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "oracle_config",
+            "type": {
+              "defined": {
+                "name": "OracleConfig"
+              }
+            }
+          },
+          {
+            "name": "twap_length_seconds",
+            "type": "u32"
+          },
+          {
+            "name": "grantee",
+            "type": "pubkey"
+          },
+          {
+            "name": "performance_package_authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleConfig",
+      "docs": [
+        "Starting at `byte_offset` in `oracle_account`, this program expects to read:",
+        "- 16 bytes for the aggregator, stored as a little endian u128",
+        "- 8 bytes for the slot that the aggregator was last updated, stored as a",
+        "little endian u64",
+        "",
+        "The aggregator should be a weighted sum of prices, where the weight is the",
+        "number of seconds between prices. Here's an example:",
+        "- at second 0, the aggregator is 0",
+        "- at second 1, the price is 10 and the aggregator is 10 (10 * 1)",
+        "- at second 4, the price is 11 and 3 seconds have passed, so the aggregator is",
+        "10 + 11 * 3 = 43",
+        "",
+        "This allows our program to read a TWAP over a time period by reading the",
+        "aggregator value at the beginning and at the end, and dividing the difference",
+        "by the number of seconds between the two."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "byte_offset",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackage",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tranches",
+            "docs": [
+              "The tranches that make up the performance package"
+            ],
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "StoredTranche"
+                }
+              }
+            }
+          },
+          {
+            "name": "total_token_amount",
+            "docs": [
+              "Total amount of tokens in the performance package"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "already_unlocked_amount",
+            "docs": [
+              "Amount of tokens already unlocked"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_unlock_timestamp",
+            "docs": [
+              "The timestamp when unlocking can begin"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "oracle_config",
+            "docs": [
+              "Where to pull price data from"
+            ],
+            "type": {
+              "defined": {
+                "name": "OracleConfig"
+              }
+            }
+          },
+          {
+            "name": "twap_length_seconds",
+            "docs": [
+              "Length of time in seconds for TWAP calculation, between 1 day and 1 year"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "recipient",
+            "docs": [
+              "The recipient of the tokens when unlocked"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "The current state of the locker"
+            ],
+            "type": {
+              "defined": {
+                "name": "PerformancePackageState"
+              }
+            }
+          },
+          {
+            "name": "create_key",
+            "docs": [
+              "Used to derive the PDA"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "docs": [
+              "The PDA bump"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "performance_package_authority",
+            "docs": [
+              "The authorized locker authority that can execute changes, usually the organization"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "docs": [
+              "The mint of the locked tokens"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "seq_num",
+            "docs": [
+              "The sequence number of the performance package, used for indexing events"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "performance_package_token_vault",
+            "docs": [
+              "The vault that stores the tokens"
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackageAuthorityChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "locker",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackageInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackageState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Locked"
+          },
+          {
+            "name": "Unlocking",
+            "fields": [
+              {
+                "name": "start_aggregator",
+                "docs": [
+                  "The aggregator value when unlocking started"
+                ],
+                "type": "u128"
+              },
+              {
+                "name": "start_timestamp",
+                "docs": [
+                  "The timestamp when unlocking started"
+                ],
+                "type": "i64"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposeChangeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "change_type",
+            "type": {
+              "defined": {
+                "name": "ChangeType"
+              }
+            }
+          },
+          {
+            "name": "pda_nonce",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposerType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Recipient"
+          },
+          {
+            "name": "Authority"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StoredTranche",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price_threshold",
+            "type": "u128"
+          },
+          {
+            "name": "token_amount",
+            "type": "u64"
+          },
+          {
+            "name": "is_unlocked",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tranche",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price_threshold",
+            "docs": [
+              "The price at which this tranch unlocks"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "token_amount",
+            "docs": [
+              "The amount of tokens in this tranch"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnlockCompleted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_amount",
+            "type": "u64"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "twap_price",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnlockStarted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "start_aggregator",
+            "type": "u128"
+          },
+          {
+            "name": "start_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -24,7 +24,7 @@
     ]
   },
   "dependencies": {
-    "@coral-xyz/anchor": "0.29.0",
+    "@anchor-lang/core": "0.32.2",
     "@inquirer/prompts": "7.9.0",
     "@ledgerhq/hw-app-solana": "7.10.4",
     "@ledgerhq/hw-transport-node-hid": "6.33.4",
@@ -40,7 +40,7 @@
     "@noble/secp256k1": "2.3.0",
     "@solana/kit": "8.3.0",
     "@solana/spl-token": "0.3.11",
-    "@solana/web3.js": "1.76.0",
+    "@solana/web3.js": "1.99.0",
     "@sqds/multisig": "2.1.4",
     "arweave": "1.15.7",
     "bs58": "6.0.0",

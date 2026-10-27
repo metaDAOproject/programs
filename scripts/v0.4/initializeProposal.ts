@@ -1,6 +1,6 @@
 import * as token from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import {
   AutocratClient,
   AutocratIDL,
@@ -60,8 +60,7 @@ async function main() {
   }
 
   const autocrat = new anchor.Program(
-    AutocratIDL,
-    AUTOCRAT_V0_4_PROGRAM_ID,
+    { ...AutocratIDL, address: AUTOCRAT_V0_4_PROGRAM_ID.toBase58() },
     provider,
   );
 

@@ -44,6 +44,7 @@ Before you can build and test the programs, you'll need to install the following
 
 - **Rust**: 1.89.0 or newer (1.95 tested)
 - **Solana CLI**: Agave 4.3.0 (`agave-install init 4.3.0`)
+- **cargo-build-sbf**: 4.4.0 standalone (`cargo install cargo-build-sbf --version 4.4.0 --locked`), which emits SBPFv3 by default
 - **Anchor CLI**: 0.32.2 (`avm install 0.32.2`)
 - **Node.js**: 20.18 or higher (tested with v22.x)
 - **Yarn**: 1.22.22 or compatible
@@ -82,6 +83,20 @@ Reload your shell configuration:
 ```bash
 source ~/.zshrc  # or source ~/.bash_profile
 ```
+
+Agave 4.3.0 bundles cargo-build-sbf 4.3.0, which emits SBPFv0. The programs are built as SBPFv3, which the standalone 4.4.0 emits by default:
+
+```bash
+cargo install cargo-build-sbf --version 4.4.0 --locked
+```
+
+The Solana install directory holds the bundled copy too, so add this line *after* the Solana PATH line in your shell profile to make the cargo-installed copy win:
+
+```bash
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+Check with `cargo build-sbf --version`, which must print `cargo-build-sbf 4.4.0`. (`./rebuild.sh` sets this order for itself.)
 
 #### 4. Install Anchor CLI
 

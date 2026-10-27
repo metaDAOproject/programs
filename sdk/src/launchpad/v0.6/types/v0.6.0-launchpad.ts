@@ -1,183 +1,153 @@
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL was converted from the legacy format with `anchor idl convert` and lives in
+ * the `.json` file next to this one.
+ */
 export type Launchpad = {
-  version: "0.6.0";
-  name: "launchpad";
+  address: "MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV";
+  metadata: {
+    name: "launchpad";
+    version: "0.6.0";
+    spec: "0.1.0";
+  };
   instructions: [
     {
       name: "initializeLaunch";
+      discriminator: [90, 201, 220, 142, 112, 253, 100, 13];
       accounts: [
         {
           name: "launch";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "baseMint";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "tokenMetadata";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchSigner";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "quoteVault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "baseVault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "payer";
-          isMut: true;
-          isSigner: true;
+          writable: true;
+          signer: true;
         },
         {
           name: "launchAuthority";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "quoteMint";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "rent";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "tokenMetadataProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [
         {
           name: "args";
           type: {
-            defined: "InitializeLaunchArgs";
+            defined: {
+              name: "initializeLaunchArgs";
+            };
           };
         },
       ];
     },
     {
       name: "startLaunch";
+      discriminator: [205, 178, 36, 232, 95, 202, 241, 68];
       accounts: [
         {
           name: "launch";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchAuthority";
-          isMut: false;
-          isSigner: true;
+          signer: true;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [];
     },
     {
       name: "fund";
+      discriminator: [218, 188, 111, 221, 152, 113, 174, 7];
       accounts: [
         {
           name: "launch";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "fundingRecord";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchSigner";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "launchQuoteVault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "funder";
-          isMut: false;
-          isSigner: true;
+          signer: true;
         },
         {
           name: "payer";
-          isMut: true;
-          isSigner: true;
+          writable: true;
+          signer: true;
         },
         {
           name: "funderQuoteAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [
@@ -189,160 +159,120 @@ export type Launchpad = {
     },
     {
       name: "completeLaunch";
+      discriminator: [118, 207, 250, 130, 44, 148, 251, 237];
       accounts: [
         {
           name: "launch";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchAuthority";
-          isMut: false;
-          isSigner: true;
-          isOptional: true;
+          signer: true;
+          optional: true;
         },
         {
           name: "tokenMetadata";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "payer";
-          isMut: true;
-          isSigner: true;
+          writable: true;
+          signer: true;
         },
         {
           name: "launchSigner";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchQuoteVault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchBaseVault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "treasuryQuoteAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "baseMint";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "quoteMint";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "daoOwnedLpPosition";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "futarchyAmmBaseVault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "futarchyAmmQuoteVault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "dao";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "squadsMultisig";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "squadsMultisigVault";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "spendingLimit";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "performancePackage";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "performancePackageTokenAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "staticAccounts";
           accounts: [
             {
               name: "futarchyProgram";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "tokenMetadataProgram";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "autocratEventAuthority";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "squadsProgram";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "squadsProgramConfig";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "squadsProgramConfigTreasury";
-              isMut: true;
-              isSigner: false;
+              writable: true;
             },
             {
               name: "priceBasedPerformancePackageProgram";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "priceBasedPerformancePackageEventAuthority";
-              isMut: false;
-              isSigner: false;
             },
           ];
         },
@@ -351,236 +281,436 @@ export type Launchpad = {
           accounts: [
             {
               name: "dammV2Program";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "config";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "token2022Program";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "positionNftAccount";
-              isMut: true;
-              isSigner: false;
+              writable: true;
             },
             {
               name: "pool";
-              isMut: true;
-              isSigner: false;
+              writable: true;
             },
             {
               name: "position";
-              isMut: true;
-              isSigner: false;
+              writable: true;
             },
             {
               name: "positionNftMint";
-              isMut: true;
-              isSigner: false;
+              writable: true;
             },
             {
               name: "baseMint";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "quoteMint";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "tokenAVault";
-              isMut: true;
-              isSigner: false;
+              writable: true;
             },
             {
               name: "tokenBVault";
-              isMut: true;
-              isSigner: false;
+              writable: true;
             },
             {
               name: "poolCreatorAuthority";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "poolAuthority";
-              isMut: false;
-              isSigner: false;
             },
             {
               name: "dammV2EventAuthority";
-              isMut: false;
-              isSigner: false;
             },
           ];
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [
         {
           name: "args";
           type: {
-            defined: "CompleteLaunchArgs";
+            defined: {
+              name: "completeLaunchArgs";
+            };
           };
         },
       ];
     },
     {
       name: "refund";
+      discriminator: [2, 96, 183, 251, 63, 208, 46, 46];
       accounts: [
         {
           name: "launch";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "fundingRecord";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchQuoteVault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchSigner";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "funder";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "funderQuoteAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [];
     },
     {
       name: "claim";
+      discriminator: [62, 198, 214, 193, 213, 159, 108, 210];
       accounts: [
         {
           name: "launch";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "fundingRecord";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchSigner";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "baseMint";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "launchBaseVault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "funder";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "funderTokenAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [];
     },
     {
       name: "closeLaunch";
+      discriminator: [27, 216, 111, 223, 10, 230, 19, 211];
       accounts: [
         {
           name: "launch";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [];
     },
   ];
   accounts: [
+    {
+      name: "fundingRecord";
+      discriminator: [20, 34, 251, 238, 204, 117, 11, 67];
+    },
+    {
+      name: "launch";
+      discriminator: [144, 51, 51, 163, 206, 85, 213, 38];
+    },
+  ];
+  events: [
+    {
+      name: "launchInitializedEvent";
+      discriminator: [227, 109, 144, 20, 65, 239, 101, 176];
+    },
+    {
+      name: "launchStartedEvent";
+      discriminator: [187, 129, 95, 253, 255, 206, 36, 239];
+    },
+    {
+      name: "launchFundedEvent";
+      discriminator: [107, 1, 188, 175, 129, 59, 38, 79];
+    },
+    {
+      name: "launchCompletedEvent";
+      discriminator: [11, 31, 43, 56, 39, 157, 147, 101];
+    },
+    {
+      name: "launchRefundedEvent";
+      discriminator: [59, 128, 76, 161, 92, 17, 206, 130];
+    },
+    {
+      name: "launchClaimEvent";
+      discriminator: [185, 124, 167, 74, 161, 160, 106, 96];
+    },
+    {
+      name: "launchCloseEvent";
+      discriminator: [229, 71, 160, 47, 144, 13, 115, 12];
+    },
+  ];
+  errors: [
+    {
+      code: 6000;
+      name: "invalidAmount";
+      msg: "Invalid amount";
+    },
+    {
+      code: 6001;
+      name: "supplyNonZero";
+      msg: "Supply must be zero";
+    },
+    {
+      code: 6002;
+      name: "invalidSecondsForLaunch";
+      msg: "Launch period must be between 1 hour and 2 weeks";
+    },
+    {
+      code: 6003;
+      name: "insufficientFunds";
+      msg: "Insufficient funds";
+    },
+    {
+      code: 6004;
+      name: "invalidTokenKey";
+      msg: "Token mint key must end in 'meta'";
+    },
+    {
+      code: 6005;
+      name: "invalidLaunchState";
+      msg: "Invalid launch state";
+    },
+    {
+      code: 6006;
+      name: "launchPeriodNotOver";
+      msg: "Launch period not over";
+    },
+    {
+      code: 6007;
+      name: "launchExpired";
+      msg: "Launch is complete, no more funding allowed";
+    },
+    {
+      code: 6008;
+      name: "launchNotRefunding";
+      msg: "For you to get a refund, either the launch needs to be in a refunding state or the launch must have been over-committed";
+    },
+    {
+      code: 6009;
+      name: "launchNotInitialized";
+      msg: "Launch must be initialized to be started";
+    },
+    {
+      code: 6010;
+      name: "freezeAuthoritySet";
+      msg: "Freeze authority can't be set on launchpad tokens";
+    },
+    {
+      code: 6011;
+      name: "invalidMonthlySpendingLimit";
+      msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount and cannot be 0";
+    },
+    {
+      code: 6012;
+      name: "invalidMonthlySpendingLimitMembers";
+      msg: "There can only be at most 10 monthly spending limit members";
+    },
+    {
+      code: 6013;
+      name: "invalidPriceBasedPremineAmount";
+      msg: "Cannot do more than a 50% premine";
+    },
+    {
+      code: 6014;
+      name: "invalidPerformancePackageMinUnlockTime";
+      msg: "Insiders must be forced to wait at least 18 months before unlocking their tokens";
+    },
+    {
+      code: 6015;
+      name: "launchAuthorityNotSet";
+      msg: "Launch authority must be set to complete the launch until 2 days after closing";
+    },
+    {
+      code: 6016;
+      name: "finalRaiseAmountTooLow";
+      msg: "The final amount raised must be greater than or equal to the minimum raise amount";
+    },
+    {
+      code: 6017;
+      name: "tokensAlreadyClaimed";
+      msg: "Tokens already claimed";
+    },
+    {
+      code: 6018;
+      name: "moneyAlreadyRefunded";
+      msg: "Money already refunded";
+    },
+    {
+      code: 6019;
+      name: "invariantViolated";
+      msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this";
+    },
+    {
+      code: 6020;
+      name: "launchNotLive";
+      msg: "Launch must be live to be closed";
+    },
+    {
+      code: 6021;
+      name: "invalidMinimumRaiseAmount";
+      msg: "Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch";
+    },
+  ];
+  types: [
+    {
+      name: "commonFields";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "slot";
+            type: "u64";
+          },
+          {
+            name: "unixTimestamp";
+            type: "i64";
+          },
+          {
+            name: "launchSeqNum";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "completeLaunchArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "finalRaiseAmount";
+            type: {
+              option: "u64";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "initializeLaunchArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "minimumRaiseAmount";
+            type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitAmount";
+            type: "u64";
+          },
+          {
+            name: "monthlySpendingLimitMembers";
+            type: {
+              vec: "pubkey";
+            };
+          },
+          {
+            name: "secondsForLaunch";
+            type: "u32";
+          },
+          {
+            name: "tokenName";
+            type: "string";
+          },
+          {
+            name: "tokenSymbol";
+            type: "string";
+          },
+          {
+            name: "tokenUri";
+            type: "string";
+          },
+          {
+            name: "performancePackageGrantee";
+            type: "pubkey";
+          },
+          {
+            name: "performancePackageTokenAmount";
+            type: "u64";
+          },
+          {
+            name: "monthsUntilInsidersCanUnlock";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
+      name: "launchState";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "initialized";
+          },
+          {
+            name: "live";
+          },
+          {
+            name: "closed";
+          },
+          {
+            name: "complete";
+          },
+          {
+            name: "refunding";
+          },
+        ];
+      };
+    },
     {
       name: "fundingRecord";
       type: {
@@ -594,12 +724,12 @@ export type Launchpad = {
           {
             name: "funder";
             docs: ["The funder."];
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "launch";
             docs: ["The launch."];
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "committedAmount";
@@ -651,20 +781,20 @@ export type Launchpad = {
               "The wallets that have access to the monthly spending limit.",
             ];
             type: {
-              vec: "publicKey";
+              vec: "pubkey";
             };
           },
           {
             name: "launchAuthority";
             docs: ["The account that can start the launch."];
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "launchSigner";
             docs: [
               "The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.",
             ];
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "launchSignerPdaBump";
@@ -676,24 +806,24 @@ export type Launchpad = {
             docs: [
               "The USDC vault that will hold the USDC raised until the launch is over.",
             ];
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "launchBaseVault";
             docs: ["The token vault, used to send tokens to Raydium."];
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "baseMint";
             docs: [
               "The token that will be minted to funders and that will control the DAO.",
             ];
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "quoteMint";
             docs: ["The USDC mint."];
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "unixTimestampStarted";
@@ -727,7 +857,9 @@ export type Launchpad = {
             name: "state";
             docs: ["The state of the launch."];
             type: {
-              defined: "LaunchState";
+              defined: {
+                name: "launchState";
+              };
             };
           },
           {
@@ -746,7 +878,7 @@ export type Launchpad = {
             name: "dao";
             docs: ["The DAO, if the launch is complete."];
             type: {
-              option: "publicKey";
+              option: "pubkey";
             };
           },
           {
@@ -755,7 +887,7 @@ export type Launchpad = {
               "The DAO treasury that USDC / LP is sent to, if the launch is complete.",
             ];
             type: {
-              option: "publicKey";
+              option: "pubkey";
             };
           },
           {
@@ -763,7 +895,7 @@ export type Launchpad = {
             docs: [
               "The address that will receive the performance package tokens.",
             ];
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "performancePackageTokenAmount";
@@ -782,1772 +914,269 @@ export type Launchpad = {
         ];
       };
     },
-  ];
-  types: [
     {
-      name: "CommonFields";
+      name: "launchInitializedEvent";
       type: {
         kind: "struct";
         fields: [
           {
-            name: "slot";
-            type: "u64";
-          },
-          {
-            name: "unixTimestamp";
-            type: "i64";
-          },
-          {
-            name: "launchSeqNum";
-            type: "u64";
-          },
-        ];
-      };
-    },
-    {
-      name: "CompleteLaunchArgs";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "finalRaiseAmount";
+            name: "common";
             type: {
-              option: "u64";
+              defined: {
+                name: "commonFields";
+              };
             };
           },
-        ];
-      };
-    },
-    {
-      name: "InitializeLaunchArgs";
-      type: {
-        kind: "struct";
-        fields: [
+          {
+            name: "launch";
+            type: "pubkey";
+          },
           {
             name: "minimumRaiseAmount";
             type: "u64";
           },
           {
-            name: "monthlySpendingLimitAmount";
-            type: "u64";
+            name: "launchAuthority";
+            type: "pubkey";
           },
           {
-            name: "monthlySpendingLimitMembers";
-            type: {
-              vec: "publicKey";
-            };
+            name: "launchSigner";
+            type: "pubkey";
+          },
+          {
+            name: "launchSignerPdaBump";
+            type: "u8";
+          },
+          {
+            name: "launchUsdcVault";
+            type: "pubkey";
+          },
+          {
+            name: "launchTokenVault";
+            type: "pubkey";
+          },
+          {
+            name: "baseMint";
+            type: "pubkey";
+          },
+          {
+            name: "quoteMint";
+            type: "pubkey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
           },
           {
             name: "secondsForLaunch";
             type: "u32";
           },
+        ];
+      };
+    },
+    {
+      name: "launchStartedEvent";
+      type: {
+        kind: "struct";
+        fields: [
           {
-            name: "tokenName";
-            type: "string";
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
           },
           {
-            name: "tokenSymbol";
-            type: "string";
+            name: "launch";
+            type: "pubkey";
           },
           {
-            name: "tokenUri";
-            type: "string";
+            name: "launchAuthority";
+            type: "pubkey";
           },
           {
-            name: "performancePackageGrantee";
-            type: "publicKey";
+            name: "slotStarted";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "launchFundedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
           },
           {
-            name: "performancePackageTokenAmount";
+            name: "fundingRecord";
+            type: "pubkey";
+          },
+          {
+            name: "launch";
+            type: "pubkey";
+          },
+          {
+            name: "funder";
+            type: "pubkey";
+          },
+          {
+            name: "amount";
             type: "u64";
           },
           {
-            name: "monthsUntilInsidersCanUnlock";
-            type: "u8";
+            name: "totalCommittedByFunder";
+            type: "u64";
+          },
+          {
+            name: "totalCommitted";
+            type: "u64";
           },
         ];
       };
     },
     {
-      name: "LaunchState";
+      name: "launchCompletedEvent";
       type: {
-        kind: "enum";
-        variants: [
+        kind: "struct";
+        fields: [
           {
-            name: "Initialized";
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
           },
           {
-            name: "Live";
+            name: "launch";
+            type: "pubkey";
           },
           {
-            name: "Closed";
+            name: "finalState";
+            type: {
+              defined: {
+                name: "launchState";
+              };
+            };
           },
           {
-            name: "Complete";
+            name: "totalCommitted";
+            type: "u64";
           },
           {
-            name: "Refunding";
+            name: "dao";
+            type: {
+              option: "pubkey";
+            };
+          },
+          {
+            name: "daoTreasury";
+            type: {
+              option: "pubkey";
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: "launchRefundedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "launch";
+            type: "pubkey";
+          },
+          {
+            name: "funder";
+            type: "pubkey";
+          },
+          {
+            name: "usdcRefunded";
+            type: "u64";
+          },
+          {
+            name: "fundingRecord";
+            type: "pubkey";
+          },
+        ];
+      };
+    },
+    {
+      name: "launchClaimEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "launch";
+            type: "pubkey";
+          },
+          {
+            name: "funder";
+            type: "pubkey";
+          },
+          {
+            name: "tokensClaimed";
+            type: "u64";
+          },
+          {
+            name: "fundingRecord";
+            type: "pubkey";
+          },
+        ];
+      };
+    },
+    {
+      name: "launchCloseEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "launch";
+            type: "pubkey";
+          },
+          {
+            name: "newState";
+            type: {
+              defined: {
+                name: "launchState";
+              };
+            };
           },
         ];
       };
     },
   ];
-  events: [
-    {
-      name: "LaunchInitializedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "launch";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "minimumRaiseAmount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "launchAuthority";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "launchSigner";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "launchSignerPdaBump";
-          type: "u8";
-          index: false;
-        },
-        {
-          name: "launchUsdcVault";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "launchTokenVault";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "baseMint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "quoteMint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "pdaBump";
-          type: "u8";
-          index: false;
-        },
-        {
-          name: "secondsForLaunch";
-          type: "u32";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "LaunchStartedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "launch";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "launchAuthority";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "slotStarted";
-          type: "u64";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "LaunchFundedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "fundingRecord";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "launch";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "funder";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "amount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "totalCommittedByFunder";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "totalCommitted";
-          type: "u64";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "LaunchCompletedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "launch";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "finalState";
-          type: {
-            defined: "LaunchState";
-          };
-          index: false;
-        },
-        {
-          name: "totalCommitted";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "dao";
-          type: {
-            option: "publicKey";
-          };
-          index: false;
-        },
-        {
-          name: "daoTreasury";
-          type: {
-            option: "publicKey";
-          };
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "LaunchRefundedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "launch";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "funder";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "usdcRefunded";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "fundingRecord";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "LaunchClaimEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "launch";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "funder";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "tokensClaimed";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "fundingRecord";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "LaunchCloseEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "launch";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "newState";
-          type: {
-            defined: "LaunchState";
-          };
-          index: false;
-        },
-      ];
-    },
-  ];
-  errors: [
-    {
-      code: 6000;
-      name: "InvalidAmount";
-      msg: "Invalid amount";
-    },
-    {
-      code: 6001;
-      name: "SupplyNonZero";
-      msg: "Supply must be zero";
-    },
-    {
-      code: 6002;
-      name: "InvalidSecondsForLaunch";
-      msg: "Launch period must be between 1 hour and 2 weeks";
-    },
-    {
-      code: 6003;
-      name: "InsufficientFunds";
-      msg: "Insufficient funds";
-    },
-    {
-      code: 6004;
-      name: "InvalidTokenKey";
-      msg: "Token mint key must end in 'meta'";
-    },
-    {
-      code: 6005;
-      name: "InvalidLaunchState";
-      msg: "Invalid launch state";
-    },
-    {
-      code: 6006;
-      name: "LaunchPeriodNotOver";
-      msg: "Launch period not over";
-    },
-    {
-      code: 6007;
-      name: "LaunchExpired";
-      msg: "Launch is complete, no more funding allowed";
-    },
-    {
-      code: 6008;
-      name: "LaunchNotRefunding";
-      msg: "For you to get a refund, either the launch needs to be in a refunding state or the launch must have been over-committed";
-    },
-    {
-      code: 6009;
-      name: "LaunchNotInitialized";
-      msg: "Launch must be initialized to be started";
-    },
-    {
-      code: 6010;
-      name: "FreezeAuthoritySet";
-      msg: "Freeze authority can't be set on launchpad tokens";
-    },
-    {
-      code: 6011;
-      name: "InvalidMonthlySpendingLimit";
-      msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount and cannot be 0";
-    },
-    {
-      code: 6012;
-      name: "InvalidMonthlySpendingLimitMembers";
-      msg: "There can only be at most 10 monthly spending limit members";
-    },
-    {
-      code: 6013;
-      name: "InvalidPriceBasedPremineAmount";
-      msg: "Cannot do more than a 50% premine";
-    },
-    {
-      code: 6014;
-      name: "InvalidPerformancePackageMinUnlockTime";
-      msg: "Insiders must be forced to wait at least 18 months before unlocking their tokens";
-    },
-    {
-      code: 6015;
-      name: "LaunchAuthorityNotSet";
-      msg: "Launch authority must be set to complete the launch until 2 days after closing";
-    },
-    {
-      code: 6016;
-      name: "FinalRaiseAmountTooLow";
-      msg: "The final amount raised must be greater than or equal to the minimum raise amount";
-    },
-    {
-      code: 6017;
-      name: "TokensAlreadyClaimed";
-      msg: "Tokens already claimed";
-    },
-    {
-      code: 6018;
-      name: "MoneyAlreadyRefunded";
-      msg: "Money already refunded";
-    },
-    {
-      code: 6019;
-      name: "InvariantViolated";
-      msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this";
-    },
-    {
-      code: 6020;
-      name: "LaunchNotLive";
-      msg: "Launch must be live to be closed";
-    },
-    {
-      code: 6021;
-      name: "InvalidMinimumRaiseAmount";
-      msg: "Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch";
-    },
-  ];
-};
-
-export const IDL: Launchpad = {
-  version: "0.6.0",
-  name: "launchpad",
-  instructions: [
-    {
-      name: "initializeLaunch",
-      accounts: [
-        {
-          name: "launch",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "baseMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenMetadata",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchSigner",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "quoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "baseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "launchAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "quoteMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "rent",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenMetadataProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "InitializeLaunchArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "startLaunch",
-      accounts: [
-        {
-          name: "launch",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchAuthority",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "fund",
-      accounts: [
-        {
-          name: "launch",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "fundingRecord",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchSigner",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "launchQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "funder",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "funderQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "amount",
-          type: "u64",
-        },
-      ],
-    },
-    {
-      name: "completeLaunch",
-      accounts: [
-        {
-          name: "launch",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchAuthority",
-          isMut: false,
-          isSigner: true,
-          isOptional: true,
-        },
-        {
-          name: "tokenMetadata",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "launchSigner",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "treasuryQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "baseMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "quoteMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "daoOwnedLpPosition",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "futarchyAmmBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "futarchyAmmQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "dao",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "squadsMultisigVault",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "spendingLimit",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "performancePackage",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "performancePackageTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "staticAccounts",
-          accounts: [
-            {
-              name: "futarchyProgram",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "tokenMetadataProgram",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "autocratEventAuthority",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "squadsProgram",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "squadsProgramConfig",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "squadsProgramConfigTreasury",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "priceBasedPerformancePackageProgram",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "priceBasedPerformancePackageEventAuthority",
-              isMut: false,
-              isSigner: false,
-            },
-          ],
-        },
-        {
-          name: "meteoraAccounts",
-          accounts: [
-            {
-              name: "dammV2Program",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "config",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "token2022Program",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "positionNftAccount",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "pool",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "position",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "positionNftMint",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "baseMint",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "quoteMint",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "tokenAVault",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "tokenBVault",
-              isMut: true,
-              isSigner: false,
-            },
-            {
-              name: "poolCreatorAuthority",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "poolAuthority",
-              isMut: false,
-              isSigner: false,
-            },
-            {
-              name: "dammV2EventAuthority",
-              isMut: false,
-              isSigner: false,
-            },
-          ],
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "CompleteLaunchArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "refund",
-      accounts: [
-        {
-          name: "launch",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "fundingRecord",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchQuoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchSigner",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "funder",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "funderQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "claim",
-      accounts: [
-        {
-          name: "launch",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "fundingRecord",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchSigner",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "baseMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "launchBaseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "funder",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "funderTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "closeLaunch",
-      accounts: [
-        {
-          name: "launch",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-  ],
-  accounts: [
-    {
-      name: "fundingRecord",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "pdaBump",
-            docs: ["The PDA bump."],
-            type: "u8",
-          },
-          {
-            name: "funder",
-            docs: ["The funder."],
-            type: "publicKey",
-          },
-          {
-            name: "launch",
-            docs: ["The launch."],
-            type: "publicKey",
-          },
-          {
-            name: "committedAmount",
-            docs: ["The amount of USDC that has been committed by the funder."],
-            type: "u64",
-          },
-          {
-            name: "isTokensClaimed",
-            docs: ["Whether the tokens have been claimed."],
-            type: "bool",
-          },
-          {
-            name: "isUsdcRefunded",
-            docs: ["Whether the USDC has been refunded."],
-            type: "bool",
-          },
-        ],
-      },
-    },
-    {
-      name: "launch",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "pdaBump",
-            docs: ["The PDA bump."],
-            type: "u8",
-          },
-          {
-            name: "minimumRaiseAmount",
-            docs: [
-              "The minimum amount of USDC that must be raised, otherwise",
-              "everyone can get their USDC back.",
-            ],
-            type: "u64",
-          },
-          {
-            name: "monthlySpendingLimitAmount",
-            docs: [
-              "The monthly spending limit the DAO allocates to the team. Must be",
-              "less than 1/6th of the minimum raise amount (so 6 months of burn).",
-            ],
-            type: "u64",
-          },
-          {
-            name: "monthlySpendingLimitMembers",
-            docs: [
-              "The wallets that have access to the monthly spending limit.",
-            ],
-            type: {
-              vec: "publicKey",
-            },
-          },
-          {
-            name: "launchAuthority",
-            docs: ["The account that can start the launch."],
-            type: "publicKey",
-          },
-          {
-            name: "launchSigner",
-            docs: [
-              "The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.",
-            ],
-            type: "publicKey",
-          },
-          {
-            name: "launchSignerPdaBump",
-            docs: ["The PDA bump for the launch signer."],
-            type: "u8",
-          },
-          {
-            name: "launchQuoteVault",
-            docs: [
-              "The USDC vault that will hold the USDC raised until the launch is over.",
-            ],
-            type: "publicKey",
-          },
-          {
-            name: "launchBaseVault",
-            docs: ["The token vault, used to send tokens to Raydium."],
-            type: "publicKey",
-          },
-          {
-            name: "baseMint",
-            docs: [
-              "The token that will be minted to funders and that will control the DAO.",
-            ],
-            type: "publicKey",
-          },
-          {
-            name: "quoteMint",
-            docs: ["The USDC mint."],
-            type: "publicKey",
-          },
-          {
-            name: "unixTimestampStarted",
-            docs: ["The unix timestamp when the launch was started."],
-            type: {
-              option: "i64",
-            },
-          },
-          {
-            name: "unixTimestampClosed",
-            docs: [
-              "The unix timestamp when the launch stopped taking new contributions.",
-            ],
-            type: {
-              option: "i64",
-            },
-          },
-          {
-            name: "totalCommittedAmount",
-            docs: ["The amount of USDC that has been committed by the users."],
-            type: "u64",
-          },
-          {
-            name: "finalRaiseAmount",
-            docs: ["The final raise amount."],
-            type: {
-              option: "u64",
-            },
-          },
-          {
-            name: "state",
-            docs: ["The state of the launch."],
-            type: {
-              defined: "LaunchState",
-            },
-          },
-          {
-            name: "seqNum",
-            docs: [
-              "The sequence number of this launch. Useful for sorting events.",
-            ],
-            type: "u64",
-          },
-          {
-            name: "secondsForLaunch",
-            docs: ["The number of seconds that the launch will be live for."],
-            type: "u32",
-          },
-          {
-            name: "dao",
-            docs: ["The DAO, if the launch is complete."],
-            type: {
-              option: "publicKey",
-            },
-          },
-          {
-            name: "daoVault",
-            docs: [
-              "The DAO treasury that USDC / LP is sent to, if the launch is complete.",
-            ],
-            type: {
-              option: "publicKey",
-            },
-          },
-          {
-            name: "performancePackageGrantee",
-            docs: [
-              "The address that will receive the performance package tokens.",
-            ],
-            type: "publicKey",
-          },
-          {
-            name: "performancePackageTokenAmount",
-            docs: [
-              "The amount of tokens to be granted to the performance package grantee.",
-            ],
-            type: "u64",
-          },
-          {
-            name: "monthsUntilInsidersCanUnlock",
-            docs: [
-              "The number of months that insiders must wait before unlocking their tokens.",
-            ],
-            type: "u8",
-          },
-        ],
-      },
-    },
-  ],
-  types: [
-    {
-      name: "CommonFields",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "slot",
-            type: "u64",
-          },
-          {
-            name: "unixTimestamp",
-            type: "i64",
-          },
-          {
-            name: "launchSeqNum",
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "CompleteLaunchArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "finalRaiseAmount",
-            type: {
-              option: "u64",
-            },
-          },
-        ],
-      },
-    },
-    {
-      name: "InitializeLaunchArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "minimumRaiseAmount",
-            type: "u64",
-          },
-          {
-            name: "monthlySpendingLimitAmount",
-            type: "u64",
-          },
-          {
-            name: "monthlySpendingLimitMembers",
-            type: {
-              vec: "publicKey",
-            },
-          },
-          {
-            name: "secondsForLaunch",
-            type: "u32",
-          },
-          {
-            name: "tokenName",
-            type: "string",
-          },
-          {
-            name: "tokenSymbol",
-            type: "string",
-          },
-          {
-            name: "tokenUri",
-            type: "string",
-          },
-          {
-            name: "performancePackageGrantee",
-            type: "publicKey",
-          },
-          {
-            name: "performancePackageTokenAmount",
-            type: "u64",
-          },
-          {
-            name: "monthsUntilInsidersCanUnlock",
-            type: "u8",
-          },
-        ],
-      },
-    },
-    {
-      name: "LaunchState",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Initialized",
-          },
-          {
-            name: "Live",
-          },
-          {
-            name: "Closed",
-          },
-          {
-            name: "Complete",
-          },
-          {
-            name: "Refunding",
-          },
-        ],
-      },
-    },
-  ],
-  events: [
-    {
-      name: "LaunchInitializedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "launch",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "minimumRaiseAmount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "launchAuthority",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "launchSigner",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "launchSignerPdaBump",
-          type: "u8",
-          index: false,
-        },
-        {
-          name: "launchUsdcVault",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "launchTokenVault",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "baseMint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "quoteMint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "pdaBump",
-          type: "u8",
-          index: false,
-        },
-        {
-          name: "secondsForLaunch",
-          type: "u32",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "LaunchStartedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "launch",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "launchAuthority",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "slotStarted",
-          type: "u64",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "LaunchFundedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "fundingRecord",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "launch",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "funder",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "amount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "totalCommittedByFunder",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "totalCommitted",
-          type: "u64",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "LaunchCompletedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "launch",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "finalState",
-          type: {
-            defined: "LaunchState",
-          },
-          index: false,
-        },
-        {
-          name: "totalCommitted",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "dao",
-          type: {
-            option: "publicKey",
-          },
-          index: false,
-        },
-        {
-          name: "daoTreasury",
-          type: {
-            option: "publicKey",
-          },
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "LaunchRefundedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "launch",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "funder",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "usdcRefunded",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "fundingRecord",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "LaunchClaimEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "launch",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "funder",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "tokensClaimed",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "fundingRecord",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "LaunchCloseEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "launch",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "newState",
-          type: {
-            defined: "LaunchState",
-          },
-          index: false,
-        },
-      ],
-    },
-  ],
-  errors: [
-    {
-      code: 6000,
-      name: "InvalidAmount",
-      msg: "Invalid amount",
-    },
-    {
-      code: 6001,
-      name: "SupplyNonZero",
-      msg: "Supply must be zero",
-    },
-    {
-      code: 6002,
-      name: "InvalidSecondsForLaunch",
-      msg: "Launch period must be between 1 hour and 2 weeks",
-    },
-    {
-      code: 6003,
-      name: "InsufficientFunds",
-      msg: "Insufficient funds",
-    },
-    {
-      code: 6004,
-      name: "InvalidTokenKey",
-      msg: "Token mint key must end in 'meta'",
-    },
-    {
-      code: 6005,
-      name: "InvalidLaunchState",
-      msg: "Invalid launch state",
-    },
-    {
-      code: 6006,
-      name: "LaunchPeriodNotOver",
-      msg: "Launch period not over",
-    },
-    {
-      code: 6007,
-      name: "LaunchExpired",
-      msg: "Launch is complete, no more funding allowed",
-    },
-    {
-      code: 6008,
-      name: "LaunchNotRefunding",
-      msg: "For you to get a refund, either the launch needs to be in a refunding state or the launch must have been over-committed",
-    },
-    {
-      code: 6009,
-      name: "LaunchNotInitialized",
-      msg: "Launch must be initialized to be started",
-    },
-    {
-      code: 6010,
-      name: "FreezeAuthoritySet",
-      msg: "Freeze authority can't be set on launchpad tokens",
-    },
-    {
-      code: 6011,
-      name: "InvalidMonthlySpendingLimit",
-      msg: "Monthly spending limit must be less than 1/6th of the minimum raise amount and cannot be 0",
-    },
-    {
-      code: 6012,
-      name: "InvalidMonthlySpendingLimitMembers",
-      msg: "There can only be at most 10 monthly spending limit members",
-    },
-    {
-      code: 6013,
-      name: "InvalidPriceBasedPremineAmount",
-      msg: "Cannot do more than a 50% premine",
-    },
-    {
-      code: 6014,
-      name: "InvalidPerformancePackageMinUnlockTime",
-      msg: "Insiders must be forced to wait at least 18 months before unlocking their tokens",
-    },
-    {
-      code: 6015,
-      name: "LaunchAuthorityNotSet",
-      msg: "Launch authority must be set to complete the launch until 2 days after closing",
-    },
-    {
-      code: 6016,
-      name: "FinalRaiseAmountTooLow",
-      msg: "The final amount raised must be greater than or equal to the minimum raise amount",
-    },
-    {
-      code: 6017,
-      name: "TokensAlreadyClaimed",
-      msg: "Tokens already claimed",
-    },
-    {
-      code: 6018,
-      name: "MoneyAlreadyRefunded",
-      msg: "Money already refunded",
-    },
-    {
-      code: 6019,
-      name: "InvariantViolated",
-      msg: "An invariant was violated. You should get in contact with the MetaDAO team if you see this",
-    },
-    {
-      code: 6020,
-      name: "LaunchNotLive",
-      msg: "Launch must be live to be closed",
-    },
-    {
-      code: 6021,
-      name: "InvalidMinimumRaiseAmount",
-      msg: "Minimum raise amount must be greater than or equal to $0.5 so that there's enough liquidity for the launch",
-    },
-  ],
 };

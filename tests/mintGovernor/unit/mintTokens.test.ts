@@ -301,7 +301,7 @@ export default function suite() {
     // but use the mint_authority created for the real authorizedMinter
     await mintGovernorClient.program.methods
       .mintTokens({ amount: new BN(500) })
-      .accounts({
+      .accountsPartial({
         mintGovernor,
         mintAuthority,
         mint,
@@ -387,7 +387,7 @@ export default function suite() {
       // Manually construct the instruction to pass the wrong mint_authority
       await mintGovernorClient.program.methods
         .mintTokens({ amount: new BN(500) })
-        .accounts({
+        .accountsPartial({
           mintGovernor,
           mintAuthority: wrongMintAuthority,
           mint,
@@ -435,7 +435,7 @@ export default function suite() {
     try {
       await mintGovernorClient.program.methods
         .mintTokens({ amount: new BN(500) })
-        .accounts({
+        .accountsPartial({
           mintGovernor,
           mintAuthority: getMintAuthorityAddr({
             mintGovernor,

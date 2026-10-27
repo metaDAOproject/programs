@@ -1,9 +1,8 @@
-import { IdlAccounts, IdlEvents } from "@coral-xyz/anchor";
-import {
-  MintGovernor as MintGovernorProgram,
-  IDL as MintGovernorIDL,
-} from "./mint_governor.js";
-export { MintGovernorProgram, MintGovernorIDL };
+import { IdlAccounts, IdlEvents } from "@anchor-lang/core";
+import type { MintGovernor as MintGovernorProgram } from "./mint_governor.js";
+import mintGovernorIdl from "./mint_governor.json" with { type: "json" };
+export type { MintGovernorProgram };
+export const MintGovernorIDL = mintGovernorIdl as MintGovernorProgram;
 
 export type MintGovernorAccount =
   IdlAccounts<MintGovernorProgram>["mintGovernor"];
@@ -11,21 +10,21 @@ export type MintAuthorityAccount =
   IdlAccounts<MintGovernorProgram>["mintAuthority"];
 
 export type MintGovernorInitializedEvent =
-  IdlEvents<MintGovernorProgram>["MintGovernorInitializedEvent"];
+  IdlEvents<MintGovernorProgram>["mintGovernorInitializedEvent"];
 export type MintAuthorityTransferredEvent =
-  IdlEvents<MintGovernorProgram>["MintAuthorityTransferredEvent"];
+  IdlEvents<MintGovernorProgram>["mintAuthorityTransferredEvent"];
 export type MintAuthorityAddedEvent =
-  IdlEvents<MintGovernorProgram>["MintAuthorityAddedEvent"];
+  IdlEvents<MintGovernorProgram>["mintAuthorityAddedEvent"];
 export type TokensMintedEvent =
-  IdlEvents<MintGovernorProgram>["TokensMintedEvent"];
+  IdlEvents<MintGovernorProgram>["tokensMintedEvent"];
 export type MintAuthorityUpdatedEvent =
-  IdlEvents<MintGovernorProgram>["MintAuthorityUpdatedEvent"];
+  IdlEvents<MintGovernorProgram>["mintAuthorityUpdatedEvent"];
 export type MintAuthorityRemovedEvent =
-  IdlEvents<MintGovernorProgram>["MintAuthorityRemovedEvent"];
+  IdlEvents<MintGovernorProgram>["mintAuthorityRemovedEvent"];
 export type MintGovernorAdminUpdatedEvent =
-  IdlEvents<MintGovernorProgram>["MintGovernorAdminUpdatedEvent"];
+  IdlEvents<MintGovernorProgram>["mintGovernorAdminUpdatedEvent"];
 export type MintAuthorityReclaimedEvent =
-  IdlEvents<MintGovernorProgram>["MintAuthorityReclaimedEvent"];
+  IdlEvents<MintGovernorProgram>["mintAuthorityReclaimedEvent"];
 export type MintGovernorEvent =
   | MintGovernorInitializedEvent
   | MintAuthorityTransferredEvent

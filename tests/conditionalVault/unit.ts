@@ -1,5 +1,5 @@
-import * as anchor from "@coral-xyz/anchor";
-import { BN, Program, web3 } from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
+import { BN, Program, web3 } from "@anchor-lang/core";
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { Umi, keypairIdentity } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
@@ -27,12 +27,10 @@ import {
 const { PublicKey, Keypair } = web3;
 
 import {
-  ConditionalVault,
-  IDL as ConditionalVaultIDL,
-} from "../../target/types/conditional_vault.js";
-import {
   CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   ConditionalVaultClient,
+  ConditionalVaultIDL,
+  ConditionalVaultProgram as ConditionalVault,
   getConditionalTokenMintAddr,
   getQuestionAddr,
   getVaultAddr,
@@ -100,8 +98,10 @@ describe("conditional_vault", async function () {
     umi = createUmi(anchor.AnchorProvider.env().connection);
 
     vaultProgram = new Program<ConditionalVault>(
-      ConditionalVaultIDL,
-      CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
+      {
+        ...ConditionalVaultIDL,
+        address: CONDITIONAL_VAULT_V0_4_PROGRAM_ID.toBase58(),
+      },
       provider,
     );
 
@@ -830,7 +830,7 @@ describe("conditional_vault", async function () {
 
 //       await vaultProgram.methods
 //         .settleConditionalVault({ finalized: {} })
-//         .accounts({
+//         .accountsPartial({
 //           settlementAuthority: settlementAuthority.publicKey,
 //           vault,
 //         })
@@ -849,7 +849,7 @@ describe("conditional_vault", async function () {
 
 //       await vaultProgram.methods
 //         .settleConditionalVault({ reverted: {} })
-//         .accounts({
+//         .accountsPartial({
 //           settlementAuthority: settlementAuthority.publicKey,
 //           vault,
 //         })
@@ -868,7 +868,7 @@ describe("conditional_vault", async function () {
 
 //       await vaultProgram.methods
 //         .settleConditionalVault({ finalized: {} })
-//         .accounts({
+//         .accountsPartial({
 //           settlementAuthority: settlementAuthority.publicKey,
 //           vault,
 //         })
@@ -882,7 +882,7 @@ describe("conditional_vault", async function () {
 
 //       await vaultProgram.methods
 //         .settleConditionalVault({ reverted: {} })
-//         .accounts({
+//         .accountsPartial({
 //           settlementAuthority: settlementAuthority.publicKey,
 //           vault,
 //         })
@@ -979,7 +979,7 @@ describe("conditional_vault", async function () {
 //     it("prevents users from merging conditional tokens after the vault has been finalized", async function () {
 //       await vaultProgram.methods
 //         .settleConditionalVault({ finalized: {} })
-//         .accounts({
+//         .accountsPartial({
 //           settlementAuthority: settlementAuthority.publicKey,
 //           vault,
 //         })
@@ -1008,7 +1008,7 @@ describe("conditional_vault", async function () {
 //     it("allows users to redeem conditional-on-finalize tokens for underlying tokens when a vault has been finalized", async function () {
 //       await vaultProgram.methods
 //         .settleConditionalVault({ finalized: {} })
-//         .accounts({
+//         .accountsPartial({
 //           settlementAuthority: settlementAuthority.publicKey,
 //           vault,
 //         })
@@ -1032,7 +1032,7 @@ describe("conditional_vault", async function () {
 //     it("allows user to redeeming conditional-on-revert tokens for underlying tokens when a vault is reverted", async function () {
 //       await vaultProgram.methods
 //         .settleConditionalVault({ reverted: {} })
-//         .accounts({
+//         .accountsPartial({
 //           settlementAuthority: settlementAuthority.publicKey,
 //           vault,
 //         })
@@ -1220,7 +1220,7 @@ describe("conditional_vault", async function () {
 //   //     onFinalizeUri: METADATA_URI,
 //   //     onRevertUri: METADATA_URI,
 //   //   })
-//   //   .accounts({
+//   //   .accountsPartial({
 //   //     payer: payer.publicKey,
 //   //     vault,
 //   //     underlyingTokenMint,
@@ -1319,7 +1319,7 @@ describe("conditional_vault", async function () {
 //   /* try { */
 //   await program.methods
 //     .mintConditionalTokens(bnAmount)
-//     .accounts({
+//     .accountsPartial({
 //       authority: user.publicKey,
 //       vault,
 //       vaultUnderlyingTokenAccount,
@@ -1400,7 +1400,7 @@ describe("conditional_vault", async function () {
 //   const bnAmount = new anchor.BN(amount.toString());
 //   await vaultProgram.methods
 //     .mergeConditionalTokensForUnderlyingTokens(bnAmount)
-//     .accounts({
+//     .accountsPartial({
 //       authority: user.publicKey,
 //       userConditionalOnFinalizeTokenAccount,
 //       userConditionalOnRevertTokenAccount,
@@ -1480,7 +1480,7 @@ describe("conditional_vault", async function () {
 
 //   await vaultProgram.methods
 //     .redeemConditionalTokensForUnderlyingTokens()
-//     .accounts({
+//     .accountsPartial({
 //       authority: user.publicKey,
 //       userConditionalOnFinalizeTokenAccount,
 //       userConditionalOnRevertTokenAccount,

@@ -232,7 +232,7 @@ export default function suite() {
 
     await gatedMintClient.program.methods
       .gatedInvoke({ instructionData: transferIx.data })
-      .accounts({
+      .accountsPartial({
         caller: alice.publicKey,
         gatedMintConfig,
         whitelistedUser,
@@ -289,7 +289,7 @@ export default function suite() {
 
     await gatedMintClient.program.methods
       .gatedInvoke({ instructionData: transferIx.data })
-      .accounts({
+      .accountsPartial({
         caller: alice.publicKey,
         gatedMintConfig,
         whitelistedUser,

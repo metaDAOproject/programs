@@ -1,0 +1,1073 @@
+{
+  "address": "AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE",
+  "metadata": {
+    "name": "launchpad",
+    "version": "0.4.1",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "initialize_launch",
+      "discriminator": [
+        90,
+        201,
+        220,
+        142,
+        112,
+        253,
+        100,
+        13
+      ],
+      "accounts": [
+        {
+          "name": "launch",
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "token_metadata",
+          "writable": true
+        },
+        {
+          "name": "launch_signer"
+        },
+        {
+          "name": "usdc_vault",
+          "writable": true
+        },
+        {
+          "name": "token_vault",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "launch_authority"
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "rent"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_metadata_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeLaunchArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "start_launch",
+      "discriminator": [
+        205,
+        178,
+        36,
+        232,
+        95,
+        202,
+        241,
+        68
+      ],
+      "accounts": [
+        {
+          "name": "launch",
+          "writable": true
+        },
+        {
+          "name": "launch_authority",
+          "signer": true
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "fund",
+      "discriminator": [
+        218,
+        188,
+        111,
+        221,
+        152,
+        113,
+        174,
+        7
+      ],
+      "accounts": [
+        {
+          "name": "launch",
+          "writable": true
+        },
+        {
+          "name": "funding_record",
+          "writable": true
+        },
+        {
+          "name": "launch_signer"
+        },
+        {
+          "name": "launch_usdc_vault",
+          "writable": true
+        },
+        {
+          "name": "funder",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "funder_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "complete_launch",
+      "discriminator": [
+        118,
+        207,
+        250,
+        130,
+        44,
+        148,
+        251,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "launch",
+          "writable": true
+        },
+        {
+          "name": "token_metadata",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "launch_signer",
+          "writable": true
+        },
+        {
+          "name": "authority"
+        },
+        {
+          "name": "launch_usdc_vault",
+          "writable": true
+        },
+        {
+          "name": "launch_token_vault",
+          "writable": true
+        },
+        {
+          "name": "treasury_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "treasury_lp_account",
+          "writable": true
+        },
+        {
+          "name": "amm_config",
+          "docs": [
+            "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config"
+          ],
+          "writable": true
+        },
+        {
+          "name": "pool_state",
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "lp_mint",
+          "writable": true
+        },
+        {
+          "name": "lp_vault",
+          "writable": true
+        },
+        {
+          "name": "pool_token_vault",
+          "writable": true
+        },
+        {
+          "name": "pool_usdc_vault",
+          "writable": true
+        },
+        {
+          "name": "create_pool_fee",
+          "docs": [
+            "create pool fee account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "observation_state",
+          "writable": true
+        },
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "dao_treasury"
+        },
+        {
+          "name": "cp_swap_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "autocrat_program"
+        },
+        {
+          "name": "token_metadata_program"
+        },
+        {
+          "name": "autocrat_event_authority"
+        },
+        {
+          "name": "rent"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "refund",
+      "discriminator": [
+        2,
+        96,
+        183,
+        251,
+        63,
+        208,
+        46,
+        46
+      ],
+      "accounts": [
+        {
+          "name": "launch",
+          "writable": true
+        },
+        {
+          "name": "funding_record",
+          "writable": true
+        },
+        {
+          "name": "launch_usdc_vault",
+          "writable": true
+        },
+        {
+          "name": "launch_signer"
+        },
+        {
+          "name": "funder",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "funder_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim",
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "launch",
+          "writable": true
+        },
+        {
+          "name": "funding_record",
+          "writable": true
+        },
+        {
+          "name": "launch_signer"
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "launch_token_vault",
+          "writable": true
+        },
+        {
+          "name": "funder"
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "funder_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "FundingRecord",
+      "discriminator": [
+        20,
+        34,
+        251,
+        238,
+        204,
+        117,
+        11,
+        67
+      ]
+    },
+    {
+      "name": "Launch",
+      "discriminator": [
+        144,
+        51,
+        51,
+        163,
+        206,
+        85,
+        213,
+        38
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "LaunchInitializedEvent",
+      "discriminator": [
+        227,
+        109,
+        144,
+        20,
+        65,
+        239,
+        101,
+        176
+      ]
+    },
+    {
+      "name": "LaunchStartedEvent",
+      "discriminator": [
+        187,
+        129,
+        95,
+        253,
+        255,
+        206,
+        36,
+        239
+      ]
+    },
+    {
+      "name": "LaunchFundedEvent",
+      "discriminator": [
+        107,
+        1,
+        188,
+        175,
+        129,
+        59,
+        38,
+        79
+      ]
+    },
+    {
+      "name": "LaunchCompletedEvent",
+      "discriminator": [
+        11,
+        31,
+        43,
+        56,
+        39,
+        157,
+        147,
+        101
+      ]
+    },
+    {
+      "name": "LaunchRefundedEvent",
+      "discriminator": [
+        59,
+        128,
+        76,
+        161,
+        92,
+        17,
+        206,
+        130
+      ]
+    },
+    {
+      "name": "LaunchClaimEvent",
+      "discriminator": [
+        185,
+        124,
+        167,
+        74,
+        161,
+        160,
+        106,
+        96
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount"
+    },
+    {
+      "code": 6001,
+      "name": "SupplyNonZero",
+      "msg": "Supply must be zero"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidSecondsForLaunch",
+      "msg": "Launch period must be between 1 hour and 2 weeks"
+    },
+    {
+      "code": 6003,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidTokenKey",
+      "msg": "Token mint key must end in 'meta'"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidLaunchState",
+      "msg": "Invalid launch state"
+    },
+    {
+      "code": 6006,
+      "name": "LaunchPeriodNotOver",
+      "msg": "Launch period not over"
+    },
+    {
+      "code": 6007,
+      "name": "LaunchExpired",
+      "msg": "Launch is complete, no more funding allowed"
+    },
+    {
+      "code": 6008,
+      "name": "LaunchNotRefunding",
+      "msg": "Launch needs to be in refunding state to get a refund"
+    },
+    {
+      "code": 6009,
+      "name": "LaunchNotInitialized",
+      "msg": "Launch must be initialized to be started"
+    },
+    {
+      "code": 6010,
+      "name": "FreezeAuthoritySet",
+      "msg": "Freeze authority can't be set on launchpad tokens"
+    }
+  ],
+  "types": [
+    {
+      "name": "CommonFields",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "launch_seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeLaunchArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "minimum_raise_amount",
+            "type": "u64"
+          },
+          {
+            "name": "seconds_for_launch",
+            "type": "u32"
+          },
+          {
+            "name": "token_name",
+            "type": "string"
+          },
+          {
+            "name": "token_symbol",
+            "type": "string"
+          },
+          {
+            "name": "token_uri",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Initialized"
+          },
+          {
+            "name": "Live"
+          },
+          {
+            "name": "Complete"
+          },
+          {
+            "name": "Refunding"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FundingRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pda_bump",
+            "docs": [
+              "The PDA bump."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "funder",
+            "docs": [
+              "The funder."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "launch",
+            "docs": [
+              "The launch."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "committed_amount",
+            "docs": [
+              "The amount of USDC that has been committed by the funder."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "seq_num",
+            "docs": [
+              "The sequence number of this funding record. Useful for sorting events."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Launch",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pda_bump",
+            "docs": [
+              "The PDA bump."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "minimum_raise_amount",
+            "docs": [
+              "The minimum amount of USDC that must be raised, otherwise",
+              "everyone can get their USDC back."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "launch_authority",
+            "docs": [
+              "The account that can start the launch."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "launch_signer",
+            "docs": [
+              "The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "launch_signer_pda_bump",
+            "docs": [
+              "The PDA bump for the launch signer."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "launch_usdc_vault",
+            "docs": [
+              "The USDC vault that will hold the USDC raised until the launch is over."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "launch_token_vault",
+            "docs": [
+              "The token vault, used to send tokens to Raydium."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "docs": [
+              "The token that will be minted to funders and that will control the DAO."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "docs": [
+              "The USDC mint."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "unix_timestamp_started",
+            "docs": [
+              "The unix timestamp when the launch was started."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "total_committed_amount",
+            "docs": [
+              "The amount of USDC that has been committed by the users."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "The state of the launch."
+            ],
+            "type": {
+              "defined": {
+                "name": "LaunchState"
+              }
+            }
+          },
+          {
+            "name": "seq_num",
+            "docs": [
+              "The sequence number of this launch. Useful for sorting events."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "seconds_for_launch",
+            "docs": [
+              "The number of seconds that the launch will be live for."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "dao",
+            "docs": [
+              "The DAO, if the launch is complete."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "dao_treasury",
+            "docs": [
+              "The DAO treasury that USDC / LP is sent to, if the launch is complete."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchInitializedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "launch",
+            "type": "pubkey"
+          },
+          {
+            "name": "minimum_raise_amount",
+            "type": "u64"
+          },
+          {
+            "name": "launch_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "launch_signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "launch_signer_pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "launch_usdc_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "launch_token_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "seconds_for_launch",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchStartedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "launch",
+            "type": "pubkey"
+          },
+          {
+            "name": "launch_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "slot_started",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchFundedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "funding_record",
+            "type": "pubkey"
+          },
+          {
+            "name": "launch",
+            "type": "pubkey"
+          },
+          {
+            "name": "funder",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_committed_by_funder",
+            "type": "u64"
+          },
+          {
+            "name": "total_committed",
+            "type": "u64"
+          },
+          {
+            "name": "funding_record_seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchCompletedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "launch",
+            "type": "pubkey"
+          },
+          {
+            "name": "final_state",
+            "type": {
+              "defined": {
+                "name": "LaunchState"
+              }
+            }
+          },
+          {
+            "name": "total_committed",
+            "type": "u64"
+          },
+          {
+            "name": "dao",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "dao_treasury",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchRefundedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "launch",
+            "type": "pubkey"
+          },
+          {
+            "name": "funder",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_refunded",
+            "type": "u64"
+          },
+          {
+            "name": "funding_record",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchClaimEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "launch",
+            "type": "pubkey"
+          },
+          {
+            "name": "funder",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokens_claimed",
+            "type": "u64"
+          },
+          {
+            "name": "funding_record",
+            "type": "pubkey"
+          }
+        ]
+      }
+    }
+  ]
+}

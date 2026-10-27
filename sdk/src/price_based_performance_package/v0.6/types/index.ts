@@ -1,31 +1,31 @@
-import { IdlAccounts, IdlEvents, IdlTypes } from "@coral-xyz/anchor";
+import { IdlAccounts, IdlEvents, IdlTypes } from "@anchor-lang/core";
 
-import {
-  PriceBasedPerformancePackage as PriceBasedPerformancePackageProgram,
-  IDL as PriceBasedPerformancePackageIDL,
-} from "./price_based_performance_package.js";
-export { PriceBasedPerformancePackageProgram, PriceBasedPerformancePackageIDL };
+import type { PriceBasedPerformancePackage as PriceBasedPerformancePackageProgram } from "./price_based_performance_package.js";
+import priceBasedPerformancePackageIdl from "./price_based_performance_package.json" with { type: "json" };
+export type { PriceBasedPerformancePackageProgram };
+export const PriceBasedPerformancePackageIDL =
+  priceBasedPerformancePackageIdl as PriceBasedPerformancePackageProgram;
 
 export type InitializePerformancePackageParams =
-  IdlTypes<PriceBasedPerformancePackageProgram>["InitializePerformancePackageParams"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["initializePerformancePackageParams"];
 export type PerformancePackage =
   IdlAccounts<PriceBasedPerformancePackageProgram>["performancePackage"];
 export type OracleConfig =
-  IdlTypes<PriceBasedPerformancePackageProgram>["OracleConfig"];
-export type Tranche = IdlTypes<PriceBasedPerformancePackageProgram>["Tranche"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["oracleConfig"];
+export type Tranche = IdlTypes<PriceBasedPerformancePackageProgram>["tranche"];
 
 export type PerformancePackageInitializedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageInitialized"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["performancePackageInitialized"];
 export type UnlockStartedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["UnlockStarted"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["unlockStarted"];
 export type UnlockCompletedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["UnlockCompleted"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["unlockCompleted"];
 export type ChangeProposedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["ChangeProposed"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["changeProposed"];
 export type ChangeExecutedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["ChangeExecuted"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["changeExecuted"];
 export type PerformancePackageAuthorityChangedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageAuthorityChanged"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["performancePackageAuthorityChanged"];
 export type PriceBasedPerformancePackageEvent =
   | PerformancePackageInitializedEvent
   | UnlockStartedEvent

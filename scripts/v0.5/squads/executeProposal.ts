@@ -1,6 +1,6 @@
 import { PublicKey, Transaction } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs/";
 import { getSquadsPdasFromDao } from "../../utils/squads.js";
 

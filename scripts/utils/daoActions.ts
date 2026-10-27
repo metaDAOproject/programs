@@ -1,4 +1,4 @@
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider } from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
 import BN from "bn.js";
 import {
@@ -191,7 +191,7 @@ export const withdrawLiquidity = ({
         minBaseAmount,
         minQuoteAmount,
       })
-      .accounts({
+      .accountsPartial({
         dao,
         positionAuthority: daoMultisigVault,
         liquidityProviderBaseAccount: vaultBaseTokenAccount,

@@ -44,10 +44,10 @@
     "prepublishOnly": "yarn lint:fix && yarn build"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "0.29.0",
+    "@anchor-lang/core": "0.32.2",
     "@noble/hashes": "1.8.0",
     "@solana/spl-token": "0.3.11",
-    "@solana/web3.js": "1.98.4",
+    "@solana/web3.js": "1.99.0",
     "@sqds/multisig": "2.1.4",
     "@types/node": "25.0.3",
     "bn.js": "5.2.2"

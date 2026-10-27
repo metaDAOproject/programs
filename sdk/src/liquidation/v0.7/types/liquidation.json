@@ -1,0 +1,1576 @@
+{
+  "address": "LiQnowFbFQdYyZhF4pUbpsrZCjxRTQ1upKJxZ2VXjde",
+  "metadata": {
+    "name": "liquidation",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Manages the orderly liquidation of a project's treasury back to token holders."
+  },
+  "instructions": [
+    {
+      "name": "activate_liquidation",
+      "discriminator": [
+        142,
+        154,
+        220,
+        96,
+        71,
+        12,
+        193,
+        18
+      ],
+      "accounts": [
+        {
+          "name": "liquidation_authority",
+          "signer": true,
+          "relations": [
+            "liquidation"
+          ]
+        },
+        {
+          "name": "liquidation",
+          "writable": true
+        },
+        {
+          "name": "liquidation_authority_quote_account",
+          "writable": true
+        },
+        {
+          "name": "liquidation_quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "liquidation"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "quote_mint",
+          "relations": [
+            "liquidation"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_liquidation",
+      "discriminator": [
+        176,
+        137,
+        148,
+        128,
+        141,
+        254,
+        91,
+        255
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "create_key",
+          "signer": true
+        },
+        {
+          "name": "record_authority"
+        },
+        {
+          "name": "liquidation_authority"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "liquidation",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  113,
+                  117,
+                  105,
+                  100,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              },
+              {
+                "kind": "account",
+                "path": "create_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "liquidation_quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "liquidation"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeLiquidationArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "refund",
+      "discriminator": [
+        2,
+        96,
+        183,
+        251,
+        63,
+        208,
+        46,
+        46
+      ],
+      "accounts": [
+        {
+          "name": "recipient",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "refund_record"
+          ]
+        },
+        {
+          "name": "liquidation",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  113,
+                  117,
+                  105,
+                  100,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              },
+              {
+                "kind": "account",
+                "path": "liquidation.create_key",
+                "account": "Liquidation"
+              }
+            ]
+          },
+          "relations": [
+            "refund_record"
+          ]
+        },
+        {
+          "name": "refund_record",
+          "writable": true
+        },
+        {
+          "name": "recipient_base_account",
+          "writable": true
+        },
+        {
+          "name": "liquidation_quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "liquidation"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient_quote_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "recipient"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "base_mint",
+          "writable": true,
+          "relations": [
+            "liquidation"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "relations": [
+            "liquidation"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_refund_record",
+      "discriminator": [
+        179,
+        197,
+        210,
+        86,
+        84,
+        87,
+        43,
+        16
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "record_authority",
+          "signer": true
+        },
+        {
+          "name": "liquidation",
+          "writable": true
+        },
+        {
+          "name": "recipient"
+        },
+        {
+          "name": "refund_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  117,
+                  110,
+                  100,
+                  95,
+                  114,
+                  101,
+                  99,
+                  111,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "liquidation"
+              },
+              {
+                "kind": "account",
+                "path": "recipient"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SetRefundRecordArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw_remaining_quote",
+      "discriminator": [
+        54,
+        253,
+        188,
+        34,
+        100,
+        145,
+        59,
+        127
+      ],
+      "accounts": [
+        {
+          "name": "liquidation_authority",
+          "signer": true,
+          "relations": [
+            "liquidation"
+          ]
+        },
+        {
+          "name": "liquidation",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  113,
+                  117,
+                  105,
+                  100,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "liquidation.base_mint",
+                "account": "Liquidation"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              },
+              {
+                "kind": "account",
+                "path": "liquidation.create_key",
+                "account": "Liquidation"
+              }
+            ]
+          }
+        },
+        {
+          "name": "liquidation_quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "liquidation"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "liquidation_authority_quote_account",
+          "writable": true
+        },
+        {
+          "name": "quote_mint",
+          "relations": [
+            "liquidation"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Liquidation",
+      "discriminator": [
+        47,
+        86,
+        219,
+        172,
+        131,
+        174,
+        18,
+        227
+      ]
+    },
+    {
+      "name": "RefundRecord",
+      "discriminator": [
+        101,
+        159,
+        85,
+        113,
+        48,
+        38,
+        7,
+        215
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "LiquidationActivatedEvent",
+      "discriminator": [
+        156,
+        171,
+        134,
+        76,
+        106,
+        29,
+        65,
+        180
+      ]
+    },
+    {
+      "name": "LiquidationCreatedEvent",
+      "discriminator": [
+        5,
+        223,
+        88,
+        192,
+        206,
+        170,
+        143,
+        203
+      ]
+    },
+    {
+      "name": "RefundEvent",
+      "discriminator": [
+        176,
+        159,
+        218,
+        59,
+        94,
+        213,
+        129,
+        218
+      ]
+    },
+    {
+      "name": "RefundRecordSetEvent",
+      "discriminator": [
+        8,
+        130,
+        38,
+        95,
+        71,
+        11,
+        27,
+        213
+      ]
+    },
+    {
+      "name": "WithdrawRemainingQuoteEvent",
+      "discriminator": [
+        89,
+        109,
+        106,
+        25,
+        96,
+        35,
+        166,
+        12
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "RefundingNotEnabled",
+      "msg": "Refunding is not enabled"
+    },
+    {
+      "code": 6001,
+      "name": "AlreadyActivated",
+      "msg": "Liquidation is already activated"
+    },
+    {
+      "code": 6002,
+      "name": "NothingToFund",
+      "msg": "No quote tokens to fund"
+    },
+    {
+      "code": 6003,
+      "name": "NoBaseAssigned",
+      "msg": "No base tokens assigned"
+    },
+    {
+      "code": 6004,
+      "name": "RefundWindowExpired",
+      "msg": "Refund window has expired"
+    },
+    {
+      "code": 6005,
+      "name": "RefundWindowNotExpired",
+      "msg": "Refund window has not expired"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidDuration",
+      "msg": "Duration must be greater than zero"
+    },
+    {
+      "code": 6007,
+      "name": "NothingToRefund",
+      "msg": "Nothing to refund"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidAllocation",
+      "msg": "Invalid allocation"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidAuthority",
+      "msg": "Invalid authority"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidMint",
+      "msg": "Invalid mint"
+    }
+  ],
+  "types": [
+    {
+      "name": "CommonFields",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "liquidation_seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeLiquidationArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "duration_seconds",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Liquidation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "create_key",
+            "docs": [
+              "Arbitrary keypair used to make the PDA unique."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "record_authority",
+            "docs": [
+              "The address that can create and modify RefundRecords during setup."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "liquidation_authority",
+            "docs": [
+              "The address that activates the liquidation and receives remaining quote tokens post-deadline."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "docs": [
+              "The project token mint (tokens to be burned)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "docs": [
+              "The refund token mint (USDC)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_quote_refundable",
+            "docs": [
+              "Sum of all RefundRecord quote_refundable values."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_quote_refunded",
+            "docs": [
+              "Sum of all quote tokens actually transferred to users so far."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_base_assigned",
+            "docs": [
+              "Sum of all RefundRecord base_assigned values."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_base_burned",
+            "docs": [
+              "Sum of all base tokens actually burned so far."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "started_at",
+            "docs": [
+              "Unix timestamp when ActivateLiquidation was called. 0 before activation."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "duration_seconds",
+            "docs": [
+              "How long the refund window lasts after activation."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "seq_num",
+            "docs": [
+              "Event sequence number for indexing."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "is_refunding",
+            "docs": [
+              "Whether refunds are currently enabled."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "pda_bump",
+            "docs": [
+              "PDA bump seed."
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LiquidationActivatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "liquidation",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_quote_funded",
+            "type": "u64"
+          },
+          {
+            "name": "started_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LiquidationCreatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "liquidation",
+            "type": "pubkey"
+          },
+          {
+            "name": "create_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "record_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "liquidation_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "u32"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RefundEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "liquidation",
+            "type": "pubkey"
+          },
+          {
+            "name": "refund_record",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_burned",
+            "type": "u64"
+          },
+          {
+            "name": "quote_refunded",
+            "type": "u64"
+          },
+          {
+            "name": "post_record_base_burned",
+            "type": "u64"
+          },
+          {
+            "name": "post_record_quote_refunded",
+            "type": "u64"
+          },
+          {
+            "name": "post_liquidation_total_base_burned",
+            "type": "u64"
+          },
+          {
+            "name": "post_liquidation_total_quote_refunded",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RefundRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "liquidation",
+            "docs": [
+              "The parent Liquidation account."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "docs": [
+              "The user this record belongs to."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "base_assigned",
+            "docs": [
+              "Total base tokens this user is eligible to burn."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "base_burned",
+            "docs": [
+              "Base tokens this user has burned so far."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "quote_refundable",
+            "docs": [
+              "Total quote tokens this user can receive if they burn all assigned base."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "quote_refunded",
+            "docs": [
+              "Quote tokens already transferred to this user."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "pda_bump",
+            "docs": [
+              "PDA bump seed."
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RefundRecordSetEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "liquidation",
+            "type": "pubkey"
+          },
+          {
+            "name": "refund_record",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_assigned",
+            "type": "u64"
+          },
+          {
+            "name": "quote_refundable",
+            "type": "u64"
+          },
+          {
+            "name": "liquidation_total_base_assigned",
+            "type": "u64"
+          },
+          {
+            "name": "liquidation_total_quote_refundable",
+            "type": "u64"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetRefundRecordArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "base_assigned",
+            "type": "u64"
+          },
+          {
+            "name": "quote_refundable",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawRemainingQuoteEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "liquidation",
+            "type": "pubkey"
+          },
+          {
+            "name": "liquidation_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

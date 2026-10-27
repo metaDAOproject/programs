@@ -165,7 +165,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .adminCancelProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         question,
@@ -314,7 +314,7 @@ export default function suite() {
     // Cancel the proposal first
     await this.futarchy.futarchy.methods
       .adminCancelProposal()
-      .accounts(accounts)
+      .accountsPartial(accounts)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 }),
       ])
@@ -332,7 +332,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .adminCancelProposal()
-      .accounts(accounts)
+      .accountsPartial(accounts)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 300_001 }),
       ])
@@ -388,7 +388,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .adminCancelProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         question,
@@ -489,7 +489,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .adminCancelProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         question,
@@ -631,7 +631,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .adminCancelProposal()
-      .accounts({
+      .accountsPartial({
         proposal: hostileProposal,
         dao: hostileDao,
         question,

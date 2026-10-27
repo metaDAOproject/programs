@@ -4,7 +4,7 @@ import {
   Transaction,
   PublicKey,
 } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.4";
 import { homedir } from "os";
 import { join } from "path";

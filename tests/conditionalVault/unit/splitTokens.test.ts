@@ -75,7 +75,7 @@ export default function suite() {
 
     await vaultClient.vaultProgram.methods
       .splitTokens(new BN(1000))
-      .accounts({
+      .accountsPartial({
         question,
         authority: this.payer.publicKey,
         vault,
@@ -118,7 +118,7 @@ export default function suite() {
     // Attempt to split tokens using the original vault but with the malicious vault's conditional token accounts
     await vaultClient.vaultProgram.methods
       .splitTokens(new BN(1000))
-      .accounts({
+      .accountsPartial({
         question,
         authority: this.payer.publicKey,
         vault,
@@ -157,7 +157,7 @@ export default function suite() {
 
     await vaultClient
       .splitTokensIx(question, vault, underlyingTokenMint, new BN(1000), 2)
-      .accounts({
+      .accountsPartial({
         vaultUnderlyingTokenAccount: invalidVaultUnderlyingTokenAccount,
       })
       .rpc()
@@ -179,7 +179,7 @@ export default function suite() {
 
     await vaultClient.vaultProgram.methods
       .splitTokens(new BN(1000))
-      .accounts({
+      .accountsPartial({
         question,
         authority: this.payer.publicKey,
         vault,
@@ -248,7 +248,7 @@ export default function suite() {
     // Resolve the question
     await vaultClient.vaultProgram.methods
       .resolveQuestion({ payoutNumerators: [1, 0] })
-      .accounts({
+      .accountsPartial({
         question,
         oracle: oracle.publicKey,
       })

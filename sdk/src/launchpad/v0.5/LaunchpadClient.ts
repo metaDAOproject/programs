@@ -1,11 +1,11 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import {
   PublicKey,
   Keypair,
   AccountInfo,
   ComputeBudgetProgram,
 } from "@solana/web3.js";
-import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
+import { LaunchpadProgram as Launchpad, LaunchpadIDL } from "./types/index.js";
 import {
   LAUNCHPAD_V0_5_PROGRAM_ID,
   RAYDIUM_AUTHORITY,
@@ -40,7 +40,7 @@ import {
 import { getDaoAddr, getDaoTreasuryAddr } from "../../autocrat/v0.5/pda.js";
 import { getEventAuthorityAddr, getMetadataAddr } from "../../pda.js";
 import { AutocratClient } from "../../autocrat/v0.5/AutocratClient.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
 
 export type CreateLaunchpadClientParams = {
@@ -59,8 +59,12 @@ export class LaunchpadClient {
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
     this.launchpad = new Program(
-      LaunchpadIDL,
-      params.launchpadProgramId || LAUNCHPAD_V0_5_PROGRAM_ID,
+      {
+        ...LaunchpadIDL,
+        address: (
+          params.launchpadProgramId || LAUNCHPAD_V0_5_PROGRAM_ID
+        ).toBase58(),
+      },
       this.provider,
     );
     this.autocratClient = AutocratClient.createClient({
@@ -154,7 +158,7 @@ export class LaunchpadClient {
         monthlySpendingLimitAmount,
         monthlySpendingLimitMembers,
       })
-      .accounts({
+      .accountsPartial({
         launch,
         launchSigner,
         quoteVault,
@@ -181,7 +185,7 @@ export class LaunchpadClient {
     launch: PublicKey,
     launchAuthority: PublicKey = this.provider.publicKey,
   ) {
-    return this.launchpad.methods.startLaunch().accounts({
+    return this.launchpad.methods.startLaunch().accountsPartial({
       launch,
       launchAuthority,
     });
@@ -216,7 +220,7 @@ export class LaunchpadClient {
       funder,
     );
 
-    return this.launchpad.methods.fund(amount).accounts({
+    return this.launchpad.methods.fund(amount).accountsPartial({
       launch,
       launchQuoteVault,
       fundingRecord,
@@ -314,7 +318,7 @@ export class LaunchpadClient {
       true,
     );
 
-    return this.launchpad.methods.completeLaunch().accounts({
+    return this.launchpad.methods.completeLaunch().accountsPartial({
       launch,
       launchSigner,
       launchQuoteVault,
@@ -393,7 +397,7 @@ export class LaunchpadClient {
       true,
     );
 
-    return this.launchpad.methods.refund().accounts({
+    return this.launchpad.methods.refund().accountsPartial({
       launch,
       launchSigner,
       launchQuoteVault,
@@ -420,7 +424,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods
       .claim()
-      .accounts({
+      .accountsPartial({
         launch,
         fundingRecord,
         launchSigner,

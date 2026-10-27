@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 import * as token from "@solana/spl-token";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";

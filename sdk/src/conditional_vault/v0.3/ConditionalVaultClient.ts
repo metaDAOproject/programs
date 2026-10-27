@@ -1,10 +1,10 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import { AddressLookupTableAccount, Keypair, PublicKey } from "@solana/web3.js";
 
 import {
-  ConditionalVault as ConditionalVaultIDLType,
-  IDL as ConditionalVaultIDL,
-} from "./types/conditional_vault.js";
+  ConditionalVaultProgram as ConditionalVaultIDLType,
+  ConditionalVaultIDL,
+} from "./types/index.js";
 
 import BN from "bn.js";
 import {
@@ -39,8 +39,7 @@ export class ConditionalVaultClient {
   ) {
     this.provider = provider;
     this.vaultProgram = new Program<ConditionalVaultIDLType>(
-      ConditionalVaultIDL,
-      conditionalVaultProgramId,
+      { ...ConditionalVaultIDL, address: conditionalVaultProgramId.toBase58() },
       provider,
     );
     this.luts = luts;
@@ -107,7 +106,7 @@ export class ConditionalVaultClient {
 
     let ix = this.vaultProgram.methods
       .mintConditionalTokens(amount)
-      .accounts({
+      .accountsPartial({
         authority: user,
         vault,
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
@@ -171,7 +170,7 @@ export class ConditionalVaultClient {
 
     return this.vaultProgram.methods
       .initializeConditionalVault({ settlementAuthority })
-      .accounts({
+      .accountsPartial({
         vault,
         underlyingTokenMint,
         vaultUnderlyingTokenAccount,
@@ -221,7 +220,7 @@ export class ConditionalVaultClient {
         onFinalizeUri,
         onRevertUri,
       })
-      .accounts({
+      .accountsPartial({
         payer,
         vault,
         underlyingTokenMint,
@@ -250,7 +249,7 @@ export class ConditionalVaultClient {
 
     return this.vaultProgram.methods
       .redeemConditionalTokensForUnderlyingTokens()
-      .accounts({
+      .accountsPartial({
         authority: user,
         vault,
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
@@ -293,7 +292,7 @@ export class ConditionalVaultClient {
 
     return this.vaultProgram.methods
       .mergeConditionalTokensForUnderlyingTokens(amount)
-      .accounts({
+      .accountsPartial({
         authority: user,
         vault,
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(

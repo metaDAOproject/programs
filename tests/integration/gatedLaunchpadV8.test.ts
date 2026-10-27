@@ -505,7 +505,7 @@ export default async function suite() {
         amountIn: new BN(100_000_000),
         minimumAmountOut: new BN(0),
       })
-      .accounts({
+      .accountsPartial({
         tokenAMint: META,
         tokenBMint: MAINNET_USDC,
         tokenAProgram: token.TOKEN_PROGRAM_ID,

@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import BN from "bn.js";
 import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
@@ -30,8 +30,7 @@ export class LiquidationClient {
     this.provider = provider;
     this.programId = liquidationProgramId;
     this.liquidationProgram = new Program<LiquidationProgram>(
-      LiquidationIDL,
-      liquidationProgramId,
+      { ...LiquidationIDL, address: liquidationProgramId.toBase58() },
       provider,
     );
   }
@@ -133,7 +132,7 @@ export class LiquidationClient {
 
     return this.liquidationProgram.methods
       .initializeLiquidation({ durationSeconds })
-      .accounts({
+      .accountsPartial({
         payer,
         createKey,
         recordAuthority,
@@ -170,7 +169,7 @@ export class LiquidationClient {
 
     return this.liquidationProgram.methods
       .setRefundRecord({ baseAssigned, quoteRefundable })
-      .accounts({
+      .accountsPartial({
         payer,
         recordAuthority,
         liquidation,
@@ -201,15 +200,17 @@ export class LiquidationClient {
       liquidationAuthorityQuoteAccount ??
       getAssociatedTokenAddressSync(quoteMint, liquidationAuthority, true);
 
-    return this.liquidationProgram.methods.activateLiquidation().accounts({
-      liquidationAuthority,
-      liquidation,
-      liquidationAuthorityQuoteAccount:
-        resolvedLiquidationAuthorityQuoteAccount,
-      liquidationQuoteVault,
-      quoteMint,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    });
+    return this.liquidationProgram.methods
+      .activateLiquidation()
+      .accountsPartial({
+        liquidationAuthority,
+        liquidation,
+        liquidationAuthorityQuoteAccount:
+          resolvedLiquidationAuthorityQuoteAccount,
+        liquidationQuoteVault,
+        quoteMint,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      });
   }
 
   refundIx({
@@ -246,7 +247,7 @@ export class LiquidationClient {
       true,
     );
 
-    return this.liquidationProgram.methods.refund().accounts({
+    return this.liquidationProgram.methods.refund().accountsPartial({
       recipient,
       liquidation,
       refundRecord,
@@ -282,15 +283,17 @@ export class LiquidationClient {
       liquidationAuthorityQuoteAccount ??
       getAssociatedTokenAddressSync(quoteMint, liquidationAuthority, true);
 
-    return this.liquidationProgram.methods.withdrawRemainingQuote().accounts({
-      liquidationAuthority,
-      liquidation,
-      liquidationQuoteVault,
-      liquidationAuthorityQuoteAccount:
-        resolvedLiquidationAuthorityQuoteAccount,
-      quoteMint,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    });
+    return this.liquidationProgram.methods
+      .withdrawRemainingQuote()
+      .accountsPartial({
+        liquidationAuthority,
+        liquidation,
+        liquidationQuoteVault,
+        liquidationAuthorityQuoteAccount:
+          resolvedLiquidationAuthorityQuoteAccount,
+        quoteMint,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      });
   }
 
   async getRefundRecord({

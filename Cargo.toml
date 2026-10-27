@@ -11,6 +11,10 @@ resolver = "2"
 [workspace.metadata.cli]
 solana = "4.3.0"
 
+# Pins the platform-tools compiler that cargo-build-sbf uses.
+[workspace.metadata.solana]
+tools-version = "v1.57"
+
 # Anchor's macros expand to code guarded by these cfgs; declare them so rustc does not flag every expansion.
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [

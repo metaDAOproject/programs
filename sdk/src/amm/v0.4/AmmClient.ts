@@ -1,4 +1,4 @@
-import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, IdlTypes, Program } from "@anchor-lang/core";
 import {
   AccountInfo,
   AddressLookupTableAccount,
@@ -6,7 +6,7 @@ import {
   PublicKey,
 } from "@solana/web3.js";
 
-import { Amm as AmmIDLType, IDL as AmmIDL } from "./types/amm.js";
+import { AmmProgram as AmmIDLType, AmmIDL } from "./types/index.js";
 
 import BN from "bn.js";
 import { AMM_V0_4_PROGRAM_ID } from "../../constants.js";
@@ -21,7 +21,7 @@ import {
 } from "@solana/spl-token";
 import { AmmMath, PriceMath } from "../../priceMath.js";
 
-export type SwapType = LowercaseKeys<IdlTypes<AmmIDLType>["SwapType"]>;
+export type SwapType = LowercaseKeys<IdlTypes<AmmIDLType>["swapType"]>;
 
 export type CreateAmmClientParams = {
   provider: AnchorProvider;
@@ -39,7 +39,10 @@ export class AmmClient {
     luts: AddressLookupTableAccount[],
   ) {
     this.provider = provider;
-    this.program = new Program<AmmIDLType>(AmmIDL, ammProgramId, provider);
+    this.program = new Program<AmmIDLType>(
+      { ...AmmIDL, address: ammProgramId.toBase58() },
+      provider,
+    );
     this.luts = luts;
   }
 
@@ -130,7 +133,7 @@ export class AmmClient {
         twapMaxObservationChangePerUpdate,
         twapStartDelaySlots,
       })
-      .accounts({
+      .accountsPartial({
         user: this.provider.publicKey,
         amm,
         lpMint,
@@ -237,7 +240,7 @@ export class AmmClient {
         maxBaseAmount,
         minLpTokens,
       })
-      .accounts({
+      .accountsPartial({
         user,
         amm,
         lpMint,
@@ -273,7 +276,7 @@ export class AmmClient {
         minBaseAmount,
         minQuoteAmount,
       })
-      .accounts({
+      .accountsPartial({
         user: this.provider.publicKey,
         amm: ammAddr,
         lpMint,
@@ -345,7 +348,7 @@ export class AmmClient {
         inputAmount,
         outputAmountMin,
       })
-      .accounts({
+      .accountsPartial({
         user,
         amm,
         userBaseAccount: getAssociatedTokenAddressSync(baseMint, user, true),
@@ -369,7 +372,7 @@ export class AmmClient {
   }
 
   crankThatTwapIx(amm: PublicKey) {
-    return this.program.methods.crankThatTwap().accounts({
+    return this.program.methods.crankThatTwap().accountsPartial({
       amm,
     });
   }

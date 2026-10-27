@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import {
   PublicKey,
   Transaction,
@@ -11,9 +11,9 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
-  PriceBasedPerformancePackage,
-  IDL as PriceBasedPerformancePackageIDL,
-} from "./types/price_based_performance_package.js";
+  PriceBasedPerformancePackageProgram as PriceBasedPerformancePackage,
+  PriceBasedPerformancePackageIDL,
+} from "./types/index.js";
 import { PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID } from "../../constants.js";
 import BN from "bn.js";
 // import { OracleConfig } from "./types/index.js";
@@ -38,8 +38,10 @@ export class PriceBasedPerformancePackageClient {
     this.provider = provider;
     this.programId = priceBasedTokenLockProgramId;
     this.program = new Program<PriceBasedPerformancePackage>(
-      PriceBasedPerformancePackageIDL,
-      priceBasedTokenLockProgramId,
+      {
+        ...PriceBasedPerformancePackageIDL,
+        address: priceBasedTokenLockProgramId.toBase58(),
+      },
       provider,
     );
   }
@@ -76,7 +78,7 @@ export class PriceBasedPerformancePackageClient {
 
     return this.program.methods
       .initializePerformancePackage(params.params)
-      .accounts({
+      .accountsPartial({
         performancePackage,
         createKey: params.createKey,
         tokenMint: params.tokenMint,
@@ -98,7 +100,7 @@ export class PriceBasedPerformancePackageClient {
     oracleAccount: PublicKey;
     recipient: PublicKey;
   }) {
-    return this.program.methods.startUnlock().accounts({
+    return this.program.methods.startUnlock().accountsPartial({
       performancePackage: params.performancePackage,
       oracleAccount: params.oracleAccount,
       recipient: params.recipient,
@@ -111,7 +113,7 @@ export class PriceBasedPerformancePackageClient {
     tokenMint: PublicKey;
     tokenRecipient: PublicKey;
   }) {
-    return this.program.methods.completeUnlock().accounts({
+    return this.program.methods.completeUnlock().accountsPartial({
       performancePackage: params.performancePackage,
       oracleAccount: params.oracleAccount,
       performancePackageTokenVault: getAssociatedTokenAddressSync(
@@ -146,7 +148,7 @@ export class PriceBasedPerformancePackageClient {
       params.params.pdaNonce,
     );
 
-    return this.program.methods.proposeChange(params.params).accounts({
+    return this.program.methods.proposeChange(params.params).accountsPartial({
       changeRequest: changeRequestAddress,
       performancePackage: params.performancePackage,
       proposer: params.proposer,
@@ -159,7 +161,7 @@ export class PriceBasedPerformancePackageClient {
     changeRequest: PublicKey;
     executor: PublicKey;
   }) {
-    return this.program.methods.executeChange().accounts({
+    return this.program.methods.executeChange().accountsPartial({
       changeRequest: params.changeRequest,
       performancePackage: params.performancePackage,
       executor: params.executor,
@@ -175,7 +177,7 @@ export class PriceBasedPerformancePackageClient {
       .changePerformancePackageAuthority({
         newPerformancePackageAuthority: params.newPerformancePackageAuthority,
       })
-      .accounts({
+      .accountsPartial({
         performancePackage: params.performancePackage,
         currentAuthority: params.currentAuthority,
       });

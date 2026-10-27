@@ -1,6 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
-import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.7";
+import * as anchor from "@anchor-lang/core";
+import {
+  LaunchpadClient,
+  LaunchpadIDL,
+} from "@metadaoproject/programs/launchpad/v0.7";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
@@ -12,7 +15,7 @@ const provider = anchor.AnchorProvider.env();
 
 function getDiscriminator(accountName: string): Buffer {
   return Buffer.from(
-    anchor.BorshAccountsCoder.accountDiscriminator(accountName),
+    LaunchpadIDL.accounts.find((a) => a.name === accountName)!.discriminator,
   );
 }
 

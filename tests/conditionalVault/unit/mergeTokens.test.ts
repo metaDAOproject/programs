@@ -157,7 +157,7 @@ export default function suite() {
     // Resolve the question
     await vaultClient.vaultProgram.methods
       .resolveQuestion({ payoutNumerators: [1, 0] })
-      .accounts({
+      .accountsPartial({
         question,
         oracle: oracle.publicKey,
       })

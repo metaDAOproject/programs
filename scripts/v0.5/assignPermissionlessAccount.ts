@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { SystemProgram, Transaction } from "@solana/web3.js";
 import { PERMISSIONLESS_ACCOUNT } from "@metadaoproject/programs";
 import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.5";

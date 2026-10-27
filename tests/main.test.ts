@@ -17,7 +17,7 @@ import {
   startAnchor,
 } from "./litesvm/index.js";
 import { LiteSVMProvider } from "./litesvm/index.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import {
   FutarchyClient,
   ConditionalVaultClient,

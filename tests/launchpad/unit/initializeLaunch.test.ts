@@ -164,7 +164,7 @@ export default function suite() {
           monthsUntilInsidersCanUnlock: 18,
           teamAddress: PublicKey.default,
         })
-        .accounts({
+        .accountsPartial({
           launch,
           launchSigner: fakeLaunchSigner.publicKey,
           quoteVault: token.getAssociatedTokenAddressSync(

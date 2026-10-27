@@ -1,0 +1,1928 @@
+{
+  "address": "pPV2pfrxnmstSb9j7kEeCLny5BGj6SNwCWGd6xbGGzz",
+  "metadata": {
+    "name": "performance_package_v2",
+    "version": "0.7.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "change_authority",
+      "discriminator": [
+        50,
+        106,
+        66,
+        104,
+        99,
+        118,
+        145,
+        88
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  102,
+                  111,
+                  114,
+                  109,
+                  97,
+                  110,
+                  99,
+                  101,
+                  95,
+                  112,
+                  97,
+                  99,
+                  107,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "performance_package.create_key",
+                "account": "PerformancePackage"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Must be the current authority of the performance package"
+          ],
+          "signer": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "new_authority",
+          "docs": [
+            "The new authority address"
+          ]
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_performance_package",
+      "discriminator": [
+        166,
+        35,
+        29,
+        1,
+        172,
+        39,
+        254,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  102,
+                  111,
+                  114,
+                  109,
+                  97,
+                  110,
+                  99,
+                  101,
+                  95,
+                  112,
+                  97,
+                  99,
+                  107,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "performance_package.create_key",
+                "account": "PerformancePackage"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "rent_destination",
+          "writable": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "complete_unlock",
+      "discriminator": [
+        22,
+        203,
+        15,
+        189,
+        239,
+        125,
+        25,
+        132
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  102,
+                  111,
+                  114,
+                  109,
+                  97,
+                  110,
+                  99,
+                  101,
+                  95,
+                  112,
+                  97,
+                  99,
+                  107,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "performance_package.create_key",
+                "account": "PerformancePackage"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint_governor",
+          "writable": true
+        },
+        {
+          "name": "mint_authority",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "recipient_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package.recipient",
+                "account": "PerformancePackage"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "signer",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "mint_governor_program",
+          "address": "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH"
+        },
+        {
+          "name": "mint_governor_event_authority"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "execute_change",
+      "discriminator": [
+        104,
+        53,
+        136,
+        238,
+        82,
+        222,
+        200,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "relations": [
+            "change_request"
+          ]
+        },
+        {
+          "name": "change_request",
+          "writable": true
+        },
+        {
+          "name": "executor",
+          "signer": true
+        },
+        {
+          "name": "rent_destination",
+          "writable": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_performance_package",
+      "discriminator": [
+        3,
+        171,
+        56,
+        55,
+        135,
+        100,
+        163,
+        186
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  102,
+                  111,
+                  114,
+                  109,
+                  97,
+                  110,
+                  99,
+                  101,
+                  95,
+                  112,
+                  97,
+                  99,
+                  107,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "create_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "mint_governor"
+          ]
+        },
+        {
+          "name": "mint_governor",
+          "relations": [
+            "mint_authority"
+          ]
+        },
+        {
+          "name": "mint_authority"
+        },
+        {
+          "name": "create_key",
+          "signer": true
+        },
+        {
+          "name": "authority"
+        },
+        {
+          "name": "recipient"
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializePerformancePackageArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "propose_change",
+      "discriminator": [
+        167,
+        211,
+        18,
+        222,
+        93,
+        215,
+        74,
+        159
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "change_request",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  110,
+                  103,
+                  101,
+                  95,
+                  114,
+                  101,
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "account",
+                "path": "proposer"
+              },
+              {
+                "kind": "arg",
+                "path": "args.pda_nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "proposer",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "ProposeChangeArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "start_unlock",
+      "discriminator": [
+        53,
+        202,
+        212,
+        31,
+        76,
+        178,
+        31,
+        123
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  102,
+                  111,
+                  114,
+                  109,
+                  97,
+                  110,
+                  99,
+                  101,
+                  95,
+                  112,
+                  97,
+                  99,
+                  107,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "performance_package.create_key",
+                "account": "PerformancePackage"
+              }
+            ]
+          }
+        },
+        {
+          "name": "signer",
+          "signer": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ChangeRequest",
+      "discriminator": [
+        75,
+        130,
+        166,
+        47,
+        15,
+        217,
+        131,
+        190
+      ]
+    },
+    {
+      "name": "MintAuthority",
+      "discriminator": [
+        148,
+        0,
+        219,
+        228,
+        254,
+        237,
+        76,
+        128
+      ]
+    },
+    {
+      "name": "MintGovernor",
+      "discriminator": [
+        110,
+        173,
+        19,
+        114,
+        217,
+        193,
+        37,
+        71
+      ]
+    },
+    {
+      "name": "PerformancePackage",
+      "discriminator": [
+        228,
+        146,
+        174,
+        131,
+        121,
+        249,
+        99,
+        132
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AuthorityChangedEvent",
+      "discriminator": [
+        85,
+        105,
+        159,
+        188,
+        6,
+        44,
+        52,
+        28
+      ]
+    },
+    {
+      "name": "ChangeExecutedEvent",
+      "discriminator": [
+        210,
+        68,
+        107,
+        108,
+        205,
+        125,
+        171,
+        37
+      ]
+    },
+    {
+      "name": "ChangeProposedEvent",
+      "discriminator": [
+        235,
+        3,
+        116,
+        187,
+        11,
+        199,
+        254,
+        249
+      ]
+    },
+    {
+      "name": "PerformancePackageClosedEvent",
+      "discriminator": [
+        6,
+        236,
+        112,
+        207,
+        221,
+        238,
+        59,
+        75
+      ]
+    },
+    {
+      "name": "PerformancePackageCreatedEvent",
+      "discriminator": [
+        201,
+        17,
+        26,
+        145,
+        170,
+        42,
+        219,
+        154
+      ]
+    },
+    {
+      "name": "UnlockCompletedEvent",
+      "discriminator": [
+        218,
+        116,
+        8,
+        71,
+        184,
+        86,
+        230,
+        9
+      ]
+    },
+    {
+      "name": "UnlockStartedEvent",
+      "discriminator": [
+        143,
+        238,
+        115,
+        206,
+        153,
+        246,
+        44,
+        253
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Signer is neither authority nor recipient"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidExecutor",
+      "msg": "Executor is not the opposite party from proposer"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidAuthority",
+      "msg": "Signer is not the current authority"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidAdmin",
+      "msg": "Signer is not the admin"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidMintGovernor",
+      "msg": "Mint governor does not match the provided mint"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidMintAuthority",
+      "msg": "Mint authority does not match expected configuration"
+    },
+    {
+      "code": 6006,
+      "name": "NotLocked",
+      "msg": "Expected Locked status"
+    },
+    {
+      "code": 6007,
+      "name": "NotUnlocking",
+      "msg": "Expected Unlocking status"
+    },
+    {
+      "code": 6008,
+      "name": "OracleMissingAccount",
+      "msg": "Expected remaining_accounts not provided"
+    },
+    {
+      "code": 6009,
+      "name": "OracleInvalidAccount",
+      "msg": "Account pubkey doesn't match expected"
+    },
+    {
+      "code": 6010,
+      "name": "OracleParseError",
+      "msg": "Failed to parse account data"
+    },
+    {
+      "code": 6011,
+      "name": "OracleInvalidState",
+      "msg": "Oracle state invalid"
+    },
+    {
+      "code": 6012,
+      "name": "OracleMinDurationNotReached",
+      "msg": "Minimum duration hasn't passed yet"
+    },
+    {
+      "code": 6013,
+      "name": "UnlockTimestampNotReached",
+      "msg": "Minimum unlock timestamp not yet reached"
+    },
+    {
+      "code": 6014,
+      "name": "RewardCalculationOverflow",
+      "msg": "Math overflow in reward function"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidTranches",
+      "msg": "Tranches should be sorted and non-empty"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidVestingSchedule",
+      "msg": "Invalid vesting schedule configuration"
+    },
+    {
+      "code": 6017,
+      "name": "ChangeRequestNotFound",
+      "msg": "Missing proposal for execute"
+    },
+    {
+      "code": 6018,
+      "name": "NoChangesProposed",
+      "msg": "All optional change fields are None"
+    },
+    {
+      "code": 6019,
+      "name": "MinDurationTooLarge",
+      "msg": "min_duration exceeds maximum allowed (365 days)"
+    },
+    {
+      "code": 6020,
+      "name": "StaleChangeRequest",
+      "msg": "Change request is stale: PP was recreated or the proposing party has changed"
+    }
+  ],
+  "types": [
+    {
+      "name": "AuthorityChangedEvent",
+      "docs": [
+        "Emitted by: `change_authority`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "pp_created_at_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeExecutedEvent",
+      "docs": [
+        "Emitted by: `execute_change`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "executed_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_recipient",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "new_oracle_reader",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "OracleReader"
+                }
+              }
+            }
+          },
+          {
+            "name": "new_reward_function",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "RewardFunction"
+                }
+              }
+            }
+          },
+          {
+            "name": "change_request",
+            "docs": [
+              "The ChangeRequest PDA that was executed (and closed) by this instruction"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pp_created_at_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeProposedEvent",
+      "docs": [
+        "Emitted by: `propose_change`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_request",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_nonce",
+            "type": "u32"
+          },
+          {
+            "name": "new_recipient",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "new_oracle_reader",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "OracleReader"
+                }
+              }
+            }
+          },
+          {
+            "name": "new_reward_function",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "RewardFunction"
+                }
+              }
+            }
+          },
+          {
+            "name": "pp_created_at_timestamp",
+            "docs": [
+              "`PerformancePackage.created_at_timestamp` as stamped onto the ChangeRequest"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeRequest",
+      "docs": [
+        "Temporary account for two-party approval flow.",
+        "Seeds: `[\"change_request\", performance_package, proposer, pda_nonce.to_le_bytes()]`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "performance_package",
+            "docs": [
+              "The performance package this change applies to"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "docs": [
+              "The proposer's pubkey at proposal time"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pp_created_at_timestamp",
+            "docs": [
+              "PP's created_at_timestamp at proposal time; used to detect stale CRs after close/recreate"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "proposed_at",
+            "docs": [
+              "When the change was proposed"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "pda_nonce",
+            "docs": [
+              "For unique PDA derivation (allows multiple concurrent proposals)"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "new_recipient",
+            "docs": [
+              "New recipient address (if changing)"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "new_oracle_reader",
+            "docs": [
+              "New oracle configuration (if changing)"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "OracleReader"
+                }
+              }
+            }
+          },
+          {
+            "name": "new_reward_function",
+            "docs": [
+              "New reward function (if changing)"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "RewardFunction"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CommonFields",
+      "docs": [
+        "Common fields included in all events for consistent metadata."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "performance_package_seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializePerformancePackageArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle_reader",
+            "type": {
+              "defined": {
+                "name": "OracleReader"
+              }
+            }
+          },
+          {
+            "name": "reward_function",
+            "type": {
+              "defined": {
+                "name": "RewardFunction"
+              }
+            }
+          },
+          {
+            "name": "min_unlock_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintAuthority",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "authorized_minter",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_total",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "total_minted",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintGovernor",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "create_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "seq_num",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleReader",
+      "docs": [
+        "Oracle reader that knows how to read from an external oracle account.",
+        "Extracts a `value: u128` for reward calculations."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Time"
+          },
+          {
+            "name": "FutarchyTwap",
+            "fields": [
+              {
+                "name": "amm",
+                "docs": [
+                  "The Futarchy DAO account to read (contains embedded AMM)"
+                ],
+                "type": "pubkey"
+              },
+              {
+                "name": "min_duration",
+                "docs": [
+                  "Minimum seconds between start and end"
+                ],
+                "type": "u32"
+              },
+              {
+                "name": "start_value",
+                "docs": [
+                  "Start snapshot (recorded on start_unlock)"
+                ],
+                "type": "u128"
+              },
+              {
+                "name": "start_time",
+                "type": "i64"
+              },
+              {
+                "name": "end_value",
+                "docs": [
+                  "End snapshot (recorded on complete_unlock)"
+                ],
+                "type": "u128"
+              },
+              {
+                "name": "end_time",
+                "type": "i64"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "PackageStatus",
+      "docs": [
+        "Lifecycle state for the performance package."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Locked"
+          },
+          {
+            "name": "Unlocking"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackage",
+      "docs": [
+        "The main account representing a performance package.",
+        "Acts as the `authorized_minter` in mint_governor.",
+        "Seeds: `[\"performance_package\", create_key]`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "docs": [
+              "Token mint controlled by mint_governor"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_governor",
+            "docs": [
+              "MintGovernor account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_authority",
+            "docs": [
+              "MintAuthority PDA for this PP"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "Usually the DAO multisig vault - can modify PP"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "docs": [
+              "Usually the team multisig - receives minted tokens"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle_reader",
+            "docs": [
+              "Stores start/end snapshots for oracle calculations"
+            ],
+            "type": {
+              "defined": {
+                "name": "OracleReader"
+              }
+            }
+          },
+          {
+            "name": "reward_function",
+            "docs": [
+              "How to calculate rewards"
+            ],
+            "type": {
+              "defined": {
+                "name": "RewardFunction"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "docs": [
+              "Locked or Unlocking state"
+            ],
+            "type": {
+              "defined": {
+                "name": "PackageStatus"
+              }
+            }
+          },
+          {
+            "name": "min_unlock_timestamp",
+            "docs": [
+              "Can't start unlock before this time"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "created_at_timestamp",
+            "docs": [
+              "Timestamp when this PP was created; used to invalidate stale ChangeRequests"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "total_rewards_paid_out",
+            "docs": [
+              "Cumulative tokens minted to the recipient"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "seq_num",
+            "docs": [
+              "Event sequence number"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "create_key",
+            "docs": [
+              "Used for PDA derivation"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackageClosedEvent",
+      "docs": [
+        "Emitted by: `close_performance_package`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_rewards_paid_out",
+            "docs": [
+              "Final cumulative amount paid"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "pp_created_at_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackageCreatedEvent",
+      "docs": [
+        "Emitted by: `initialize_performance_package`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "create_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "oracle_reader",
+            "type": {
+              "defined": {
+                "name": "OracleReader"
+              }
+            }
+          },
+          {
+            "name": "reward_function",
+            "type": {
+              "defined": {
+                "name": "RewardFunction"
+              }
+            }
+          },
+          {
+            "name": "min_unlock_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "pp_created_at_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposeChangeArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pda_nonce",
+            "type": "u32"
+          },
+          {
+            "name": "new_recipient",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "new_oracle_reader",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "OracleReader"
+                }
+              }
+            }
+          },
+          {
+            "name": "new_reward_function",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "RewardFunction"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RewardFunction",
+      "docs": [
+        "Reward function that calculates cumulative rewards from oracle values.",
+        "Returns total tokens deserved so far (not incremental)."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CliffLinear",
+            "fields": [
+              {
+                "name": "cliff_value",
+                "type": "u128"
+              },
+              {
+                "name": "end_value",
+                "type": "u128"
+              },
+              {
+                "name": "cliff_amount",
+                "type": "u64"
+              },
+              {
+                "name": "total_amount",
+                "docs": [
+                  "Total amount including cliff"
+                ],
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "Threshold",
+            "fields": [
+              {
+                "name": "tranches",
+                "docs": [
+                  "Must be sorted by threshold ascending"
+                ],
+                "type": {
+                  "vec": {
+                    "defined": {
+                      "name": "ThresholdTranche"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "ThresholdTranche",
+      "docs": [
+        "A threshold tranche for step-based rewards."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "threshold",
+            "docs": [
+              "Oracle value threshold"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "cumulative_amount",
+            "docs": [
+              "Total tokens at this tranche (cumulative, not incremental)"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnlockCompletedEvent",
+      "docs": [
+        "Emitted by: `complete_unlock`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle_value",
+            "type": "u128"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_minted",
+            "type": "u64"
+          },
+          {
+            "name": "total_rewards_paid_out",
+            "docs": [
+              "Cumulative after this unlock"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "pp_created_at_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnlockStartedEvent",
+      "docs": [
+        "Emitted by: `start_unlock`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "start_oracle_value",
+            "type": "u128"
+          },
+          {
+            "name": "pp_created_at_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "MAX_MIN_DURATION",
+      "type": "u32",
+      "value": "31536000"
+    }
+  ]
+}
