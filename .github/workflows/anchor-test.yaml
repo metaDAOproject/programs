@@ -39,7 +39,7 @@ jobs:
 
       - uses: ./.github/actions/anchor-test
         with:
-          anchor-version: '0.29.0'
-          solana-cli-version: '1.17.31'
+          anchor-version: '0.32.2'
+          solana-cli-version: '4.3.0'
           node-version: '20.18.0'
 

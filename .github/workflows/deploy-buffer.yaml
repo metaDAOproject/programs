@@ -17,6 +17,14 @@ on:
         description: 'Program ID'
         required: true
         type: string
+      network:
+        description: 'Network whose deployer keypair pays for the buffer'
+        required: true
+        type: choice
+        options:
+          - devnet
+          - mainnet
+        default: 'devnet'
       rpc_url:
         description: 'RPC URL'
         required: true
@@ -28,14 +36,15 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/setup-anchor@7d1e9699eb18c33ba5f32f6a9952f0e90515996a # v3.2
+      - uses: ./.github/actions/setup-toolchain
         with:
-          solana-cli-version: '1.17.16'
-          anchor-version: '0.29.0'
+          solana-cli-version: '4.3.0'
+          anchor-version: '0.32.2'
+          node-version: '20.18.0'
       - run: echo "$DEPLOYER_KEYPAIR" > deployer-keypair.json && chmod 600 deployer-keypair.json
         shell: bash
         env:
-          DEPLOYER_KEYPAIR: ${{ secrets.DEPLOYER_KEYPAIR }}
+          DEPLOYER_KEYPAIR: ${{ inputs.network == 'mainnet' && secrets.MAINNET_DEPLOYER_KEYPAIR || secrets.DEVNET_DEPLOYER_KEYPAIR }}
       - run: solana-keygen new -s -o buffer-keypair --no-bip39-passphrase
         shell: bash
       - name: Deploy Buffer
@@ -44,4 +53,8 @@ jobs:
           timeout_minutes: 30
           max_attempts: 10
           shell: bash
-          command: solana program write-buffer --max-sign-attempts 50 --with-compute-unit-price 100 --use-rpc --buffer ./buffer-keypair ./verifiable-builds/${{ inputs.program_name }}.so -u $NETWORK
+          command: solana program write-buffer --max-sign-attempts 50 --with-compute-unit-price 100 --use-rpc -k ./deployer-keypair.json --buffer ./buffer-keypair ./verifiable-builds/${{ inputs.program_name }}.so -u ${{ inputs.rpc_url }}
+      - name: Remove deployer keypair
+        if: always()
+        run: rm -f deployer-keypair.json
+        shell: bash

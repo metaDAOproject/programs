@@ -1,5 +1,5 @@
 name: 'Anchor Test'
-description: 'An "anchor test" action that runs in ~1 minute.'
+description: 'Build the programs as SBPFv3 and run the test suite.'
 branding:
   icon: anchor
   color: blue
@@ -7,15 +7,15 @@ inputs:
   node-version:
     description: 'Version of node.js to use'
     required: false
-    default: '20.11.0' # LTS
+    default: '20.18.0'
   solana-cli-version:
-    description: 'Version of Solana CLI to use'
+    description: 'Version of the Agave CLI to use'
     required: false
-    default: '1.17.16' # stable
+    default: '4.3.0'
   anchor-version:
-    description: 'Version of Anchor to use'
+    description: 'Version of the Anchor CLI to use'
     required: false
-    default: '0.29.0' # latest
+    default: '0.32.2'
   features:
     description: 'Features to pass to cargo'
     required: false
@@ -23,7 +23,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: metadaoproject/setup-anchor@aeeb5505f3fd3d52a1080d14863c6aa428c9fdf9 # v3.4
+    - uses: ./.github/actions/setup-toolchain
       with:
         node-version: ${{ inputs.node-version }}
         solana-cli-version: ${{ inputs.solana-cli-version }}
@@ -39,17 +39,11 @@ runs:
     - name: Create keypair
       run: solana-keygen new --no-bip39-passphrase
       shell: bash
-    - name: Make Anchor.toml compatible with runner
-      run: sed -i 's:/user/:/runner/:' Anchor.toml
-      shell: bash
-    - name: Install Cargo toolchain
-      uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1.0.7
-      with:
-        toolchain: stable
-        profile: minimal
-        components: rustc
     - name: Cache Cargo dependencies
       uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+    - name: Build programs
+      run: anchor build -- --features ${{ inputs.features }}
+      shell: bash
     - name: Run tests
-      run: anchor test -- --features ${{ inputs.features }}
+      run: anchor test --skip-build
       shell: bash

@@ -1,0 +1,66 @@
+name: 'Setup Toolchain'
+description: 'Install Node.js, the Rust version pinned in rust-toolchain.toml, the Agave CLI, the Anchor CLI and the standalone cargo-build-sbf.'
+inputs:
+  node-version:
+    description: 'Version of Node.js to use'
+    required: false
+    default: '20.18.0'
+  solana-cli-version:
+    description: 'Version of the Agave CLI to use'
+    required: false
+    default: '4.3.0'
+  anchor-version:
+    description: 'Version of the Anchor CLI to use'
+    required: false
+    default: '0.32.2'
+  cargo-build-sbf-version:
+    description: 'Version of the standalone cargo-build-sbf to use'
+    required: false
+    default: '4.4.0'
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+    # Installs the Rust version pinned in rust-toolchain.toml.
+    - name: Install Rust
+      run: rustup toolchain install
+      shell: bash
+    - name: Cache Agave CLI
+      uses: actions/cache@v4
+      id: cache-agave
+      with:
+        path: ~/.local/share/solana/
+        key: agave-${{ runner.os }}-${{ inputs.solana-cli-version }}
+    - name: Install Agave CLI
+      if: steps.cache-agave.outputs.cache-hit != 'true'
+      run: sh -c "$(curl -sSfL https://release.anza.xyz/v${{ inputs.solana-cli-version }}/install)"
+      shell: bash
+    - name: Install Anchor CLI
+      run: npm i -g @anchor-lang/cli@${{ inputs.anchor-version }}
+      shell: bash
+    - name: Cache cargo-build-sbf
+      uses: actions/cache@v4
+      id: cache-cargo-build-sbf
+      with:
+        path: ~/.cargo/bin/cargo-build-sbf
+        key: cargo-build-sbf-${{ runner.os }}-${{ inputs.cargo-build-sbf-version }}
+    - name: Install cargo-build-sbf
+      if: steps.cache-cargo-build-sbf.outputs.cache-hit != 'true'
+      run: cargo install cargo-build-sbf --version ${{ inputs.cargo-build-sbf-version }} --locked
+      shell: bash
+    # Later lines end up earlier on PATH, so the cargo-installed cargo-build-sbf wins over the copy Agave bundles.
+    - name: Put the toolchain on PATH
+      run: |
+        echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+        echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      shell: bash
+    - name: Check tool versions
+      run: |
+        rustc --version
+        solana --version
+        anchor --version
+        [ "$(cargo build-sbf --version | head -1)" = "cargo-build-sbf ${{ inputs.cargo-build-sbf-version }}" ] ||
+          { echo "cargo-build-sbf ${{ inputs.cargo-build-sbf-version }} must be the first cargo-build-sbf on PATH"; exit 1; }
+      shell: bash

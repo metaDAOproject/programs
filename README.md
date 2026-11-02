@@ -42,7 +42,7 @@ Programs for unruggable capital formation and market-driven governance.
 
 Before you can build and test the programs, you'll need to install the following tools:
 
-- **Rust**: 1.89.0 or newer (1.95 tested)
+- **Rust**: 1.95.0, pinned by `rust-toolchain.toml` (rustup installs it on first use)
 - **Solana CLI**: Agave 4.3.0 (`agave-install init 4.3.0`)
 - **cargo-build-sbf**: 4.4.0 standalone (`cargo install cargo-build-sbf --version 4.4.0 --locked`), which emits SBPFv3 by default
 - **Anchor CLI**: 0.32.2 (`avm install 0.32.2`)
@@ -62,8 +62,7 @@ cd programs
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup install stable
-rustup default stable
+rustup toolchain install
 ```
 
 #### 3. Install Solana CLI

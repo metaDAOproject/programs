@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MetaDAO Futarchy Protocol - Solana programs for market-driven governance and token launches. Uses Anchor 0.32.2, Agave 4.3.0, the standalone cargo-build-sbf 4.4.0 (`cargo install cargo-build-sbf --version 4.4.0 --locked`; it emits SBPFv3 by default, so `anchor build` needs no arch flag), host Rust 1.89 or newer.
+MetaDAO Futarchy Protocol - Solana programs for market-driven governance and token launches. Uses Anchor 0.32.2, Agave 4.3.0, the standalone cargo-build-sbf 4.4.0 (`cargo install cargo-build-sbf --version 4.4.0 --locked`; it emits SBPFv3 by default, so `anchor build` needs no arch flag), host Rust 1.95.0 pinned by `rust-toolchain.toml`.
 
 ## Build & Test Commands
 

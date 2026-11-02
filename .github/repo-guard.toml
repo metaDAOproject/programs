@@ -7,34 +7,26 @@
 # Anchor CLI version. Consistent across every workflow.
 anchor_version = "0.32.2"
 
-# Solana CLI declared in Anchor.toml `[toolchain] solana_version`. Local-dev
-# only: anchor test on a developer machine auto-installs this version. CI
-# workflows pass their own solana-cli-version explicitly and ignore Anchor.toml.
+# Solana CLI declared in Anchor.toml `[toolchain] solana_version`. anchor test
+# on a developer machine auto-installs this version. CI workflows pass their
+# own solana-cli-version explicitly, except `reusable-build.yaml`, which reads
+# this same Anchor.toml value.
 local_dev_solana_version = "4.3.0"
 
-# Per-workflow Solana CLI versions. The split is intentional:
-#
-#   1.17.31 - build/test workflows that compile programs locally. This is the
-#             newest tag published as `ellipsislabs/solana:<ver>` on Docker
-#             Hub, which is what solana-verify uses to reproduce the deployed
-#             .so files. Changing this version changes the bytes that
-#             solana-verify expects, breaking verification of deployed
-#             programs unless they are rebuilt.
-#
-#   1.17.16 - CLI tooling workflows. These do not compile - they only invoke
-#             `solana program write-buffer` / `solana-verify --remote`, which
-#             talk to the cluster RPC. The version mostly does not matter;
-#             1.17.16 is what the repo has used and there is no reason to
-#             move it.
+# Per-workflow Solana CLI versions. Every workflow that compiles programs or
+# talks to a cluster runs the Agave 4.3.0 CLI: the artifacts are SBPFv3, which
+# a pre-4.x CLI rejects in `solana program write-buffer`. Verifiable builds
+# compile inside the solana-verify Docker image, so
+# `generate-verifiable-builds.yaml` declares no CLI version.
 #
 # `reusable-build.yaml` is intentionally not in this map: it reads versions
-# from Cargo.lock via `solana-developers/github-actions/extract-versions`,
-# so the version is dynamic and stays in sync with the workspace.
+# from Anchor.toml `[toolchain]` via
+# `solana-developers/github-actions/extract-versions`, so the version stays
+# in sync with the workspace.
 [toolchain.workflow_solana_cli]
-".github/workflows/anchor-test.yaml" = "1.17.31"
-".github/workflows/generate-verifiable-builds.yaml" = "1.17.31"
-".github/workflows/deploy-buffer.yaml" = "1.17.16"
-".github/workflows/verify-build.yaml" = "1.17.16"
+".github/workflows/anchor-test.yaml" = "4.3.0"
+".github/workflows/deploy-buffer.yaml" = "4.3.0"
+".github/workflows/verify-build.yaml" = "4.3.0"
 
 [cargo]
 # Every program's Cargo.toml must pin external deps with `=x.y.z`. Loose
@@ -45,14 +37,6 @@ local_dev_solana_version = "4.3.0"
 # but program B pins =0.29.1) fails.
 anchor_lang_version = "0.32.2"
 anchor_spl_version = "0.32.2"
-
-# `solana-program` crate version. Distinct from any of the CLI versions
-# above - this is the Solana primitives library that program binaries link
-# against, and Cargo.lock is built around it. Currently pinned by the three
-# launchpads (v06/v07/v08). The guard fails if any program pins a different
-# version. Cargo.lock freshness independently catches drift between this
-# pin and the resolved tree.
-solana_program_version = "2.3.0"
 
 # Minimum age in days for a newly pinned crate version. The check is scoped
 # to crates whose version differs from the PR base, so unrelated bumps that
@@ -70,12 +54,6 @@ package_min_age_days = 14
 # add it here in a PR that also bumps the workflow reference. CODEOWNERS
 # review is required.
 [actions.sha_allowlist]
-"metadaoproject/anchor-test" = ["876dde6990e0a3d22e1cf1c702b4e4c64aa47d15"]               # v2.3
-"metadaoproject/anchor-verifiable-build" = ["6d8fc1999ea4b7ff701e8b166903b398741e1c50"] # v0.4
-"metadaoproject/setup-anchor" = [
-  "7d1e9699eb18c33ba5f32f6a9952f0e90515996a",                                            # v3.2
-  "aeeb5505f3fd3d52a1080d14863c6aa428c9fdf9",                                            # v3.4
-]
 "nick-fields/retry" = [
   "ce71cc2ab81d554ebbe88c79ab5975992d79ba08",                                            # v3
   "14672906e672a08bd6eeb15720e9ed3ce869cdd4",                                            # v2
@@ -85,7 +63,6 @@ package_min_age_days = 14
 "EndBug/add-and-commit" = ["a94899bca583c204427a224a7af87c02f9b325d5"]                   # v9.1.4
 "peter-evans/find-comment" = ["3eae4d37986fb5a8592848f6a574fdf654e61f9e"]               # v3
 "peter-evans/create-or-update-comment" = ["71345be0265236311c031f5c7866368bd1eff043"]   # v4
-"actions-rs/toolchain" = ["16499b5e05bf2e26879000db0c1d13f7e13fa3af"]                    # v1.0.7
 "Swatinem/rust-cache" = ["6323deb102c322ba6fcbdcafc7e3dddab59af2b6"]                     # v2.9.2
 
 [sensitive_diff]

@@ -1,0 +1,5 @@
+# The host compiler, the same rustc as inside platform-tools v1.57 (Agave 4.3.0). Bump it together with the Solana toolchain.
+[toolchain]
+channel = "1.95.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"
