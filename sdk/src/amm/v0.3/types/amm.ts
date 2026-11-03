@@ -46,12 +46,15 @@ export type Amm = {
         },
         {
           name: "associatedTokenProgram";
+          address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
       ];
       args: [
@@ -104,6 +107,7 @@ export type Amm = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
       ];
       args: [
@@ -156,6 +160,7 @@ export type Amm = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
       ];
       args: [
@@ -200,6 +205,7 @@ export type Amm = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
       ];
       args: [

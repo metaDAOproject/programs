@@ -29,6 +29,7 @@ export type Autocrat = {
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
         {
           name: "tokenMint";
@@ -101,9 +102,11 @@ export type Autocrat = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
       ];
       args: [
@@ -163,6 +166,7 @@ export type Autocrat = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "vaultProgram";

@@ -42,12 +42,15 @@ export type ConditionalVault = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "associatedTokenProgram";
+          address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
       ];
       args: [
@@ -102,9 +105,11 @@ export type ConditionalVault = {
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
         {
           name: "rent";
+          address: "SysvarRent111111111111111111111111111111111";
         },
       ];
       args: [
@@ -179,6 +184,7 @@ export type ConditionalVault = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
       ];
       args: [
@@ -225,6 +231,7 @@ export type ConditionalVault = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
       ];
       args: [
@@ -271,6 +278,7 @@ export type ConditionalVault = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
       ];
       args: [];

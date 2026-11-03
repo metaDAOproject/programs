@@ -54,16 +54,20 @@
           "name": "quote_mint"
         },
         {
-          "name": "rent"
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "associated_token_program"
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "token_metadata_program"
@@ -158,10 +162,12 @@
           "writable": true
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "event_authority"
@@ -270,13 +276,16 @@
           "writable": true
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "associated_token_program"
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "static_accounts",
@@ -311,7 +320,8 @@
               "name": "autocrat_event_authority"
             },
             {
-              "name": "rent"
+              "name": "rent",
+              "address": "SysvarRent111111111111111111111111111111111"
             },
             {
               "name": "squads_program"
@@ -372,10 +382,12 @@
           "writable": true
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "event_authority"
@@ -431,10 +443,12 @@
           "writable": true
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "event_authority"

@@ -30,7 +30,8 @@
           "signer": true
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "token_mint"
@@ -120,10 +121,12 @@
           "signer": true
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "event_authority"
@@ -193,7 +196,8 @@
           "writable": true
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "vault_program"

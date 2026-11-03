@@ -53,15 +53,19 @@ export type Launchpad = {
         },
         {
           name: "rent";
+          address: "SysvarRent111111111111111111111111111111111";
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "associatedTokenProgram";
+          address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
         {
           name: "tokenMetadataProgram";
@@ -139,9 +143,11 @@ export type Launchpad = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
         {
           name: "eventAuthority";
@@ -242,12 +248,15 @@ export type Launchpad = {
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "associatedTokenProgram";
+          address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
         },
         {
           name: "staticAccounts";
@@ -281,6 +290,7 @@ export type Launchpad = {
             },
             {
               name: "rent";
+              address: "SysvarRent111111111111111111111111111111111";
             },
             {
               name: "squadsProgram";
@@ -333,9 +343,11 @@ export type Launchpad = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
         {
           name: "eventAuthority";
@@ -383,9 +395,11 @@ export type Launchpad = {
         },
         {
           name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "systemProgram";
+          address: "11111111111111111111111111111111";
         },
         {
           name: "eventAuthority";

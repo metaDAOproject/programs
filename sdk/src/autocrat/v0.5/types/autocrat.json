@@ -33,7 +33,8 @@
           "signer": true
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "base_mint"
@@ -151,13 +152,16 @@
           "signer": true
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
-          "name": "associated_token_program"
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "event_authority"
@@ -235,7 +239,8 @@
           "writable": true
         },
         {
-          "name": "token_program"
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "vault_program"
