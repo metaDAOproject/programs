@@ -169,7 +169,7 @@ export function getTokenQuoteUsage(dao: Dao, amount: BN): BN {
   return getQuoteValueAtPrice(amount, getValuationPrice(dao));
 }
 
-/** The quote atoms `withdraw_via_sell` records against the window's quote cap for `amount`: the higher of the pool's proceeds and the amount's value at the valuation price before the sale. */
+/** The quote atoms `withdraw_via_sell` records against the window's quote cap for `amount`: the higher of the pool's proceeds and the amount's value at the valuation price before the sale. While a proposal is live the sale also earns profit from the conditional pools, so the program can record more than this. */
 export function getSellQuoteUsage(dao: Dao, amount: BN): BN {
   return BN.max(
     getSellProceedsEstimate(dao, amount),
