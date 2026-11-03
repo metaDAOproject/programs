@@ -33,14 +33,14 @@ on:
 
 jobs:
   deploy-buffer:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-toolchain
         with:
           solana-cli-version: '4.3.0'
           anchor-version: '0.32.2'
-          node-version: '20.18.0'
+          node-version: '24.22.1'
       - run: echo "$DEPLOYER_KEYPAIR" > deployer-keypair.json && chmod 600 deployer-keypair.json
         shell: bash
         env:

@@ -4,7 +4,7 @@ inputs:
   node-version:
     description: 'Version of Node.js to use'
     required: false
-    default: '20.18.0'
+    default: '24.22.1'
   solana-cli-version:
     description: 'Version of the Agave CLI to use'
     required: false
