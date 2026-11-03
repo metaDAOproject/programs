@@ -60,7 +60,8 @@ runs:
       run: |
         rustc --version
         solana --version
-        anchor --version
+        [ "$(anchor --version)" = "anchor-cli ${{ inputs.anchor-version }}" ] ||
+          { echo "anchor --version must print anchor-cli ${{ inputs.anchor-version }}"; exit 1; }
         [ "$(cargo build-sbf --version | head -1)" = "cargo-build-sbf ${{ inputs.cargo-build-sbf-version }}" ] ||
           { echo "cargo-build-sbf ${{ inputs.cargo-build-sbf-version }} must be the first cargo-build-sbf on PATH"; exit 1; }
       shell: bash
