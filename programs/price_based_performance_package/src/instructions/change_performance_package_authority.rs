@@ -21,6 +21,8 @@ pub struct ChangePerformancePackageAuthority<'info> {
 
 impl<'info> ChangePerformancePackageAuthority<'info> {
     pub fn validate(&self, params: &ChangePerformancePackageAuthorityParams) -> Result<()> {
+        PerformancePackage::assert_migrated(&self.performance_package.to_account_info())?;
+
         require_keys_neq!(
             params.new_performance_package_authority,
             self.performance_package.recipient,

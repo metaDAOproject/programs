@@ -4,6 +4,11 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct ExecuteChangeParams {
+    pub expected_proposed_at: i64,
+}
+
 #[event_cpi]
 #[derive(Accounts)]
 pub struct ExecuteChange<'info> {
@@ -23,7 +28,23 @@ pub struct ExecuteChange<'info> {
 }
 
 impl<'info> ExecuteChange<'info> {
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self, params: &ExecuteChangeParams) -> Result<()> {
+        PerformancePackage::assert_migrated(&self.performance_package.to_account_info())?;
+
+        // Ensure this is the request the executor approved and not one re-proposed at the same address.
+        require_eq!(
+            self.change_request.proposed_at,
+            params.expected_proposed_at,
+            PriceBasedPerformancePackageError::ChangeRequestMismatch
+        );
+
+        // Ensure the request was not proposed before the last executed change was.
+        require_gte!(
+            self.change_request.proposed_at,
+            self.performance_package.last_change_proposed_at,
+            PriceBasedPerformancePackageError::StaleChangeRequest
+        );
+
         if self.change_request.proposer_type == ProposerType::Recipient {
             // If recipient proposed, locker authority must execute
             require_keys_eq!(
@@ -70,6 +91,8 @@ impl<'info> ExecuteChange<'info> {
             return Err(PriceBasedPerformancePackageError::InvalidPerformancePackageState.into());
         }
 
+        let clock = Clock::get()?;
+
         // Apply the change based on type
         match &change_request.change_type {
             ChangeType::Oracle { new_oracle_config } => {
@@ -78,11 +101,29 @@ impl<'info> ExecuteChange<'info> {
             ChangeType::Recipient { new_recipient } => {
                 performance_package.recipient = *new_recipient;
             }
+            ChangeType::UnlockTerms {
+                min_unlock_timestamp,
+                limits,
+            } => {
+                performance_package.min_unlock_timestamp = *min_unlock_timestamp;
+                // A cliff moved past a running unlock's start cancels that unlock.
+                if let PerformancePackageState::Unlocking {
+                    start_timestamp, ..
+                } = performance_package.state
+                {
+                    if start_timestamp < *min_unlock_timestamp {
+                        performance_package.state = PerformancePackageState::Locked;
+                    }
+                }
+                performance_package.replace_withdrawal_policy(*limits, clock.unix_timestamp);
+            }
         }
+
+        // Requests proposed before this one can no longer be executed.
+        performance_package.last_change_proposed_at = change_request.proposed_at;
 
         performance_package.seq_num += 1;
         // Emit event
-        let clock = Clock::get()?;
         emit_cpi!(ChangeExecuted {
             common: CommonFields::new(&clock, performance_package.seq_num),
             performance_package: performance_package.key(),
