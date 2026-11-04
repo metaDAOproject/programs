@@ -1,6 +1,9 @@
 import * as anchor from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
-import { PriceBasedPerformancePackageClient } from "@metadaoproject/programs/price_based_performance_package/v0.6";
+import {
+  PriceBasedPerformancePackageClient,
+  QuoteSweep,
+} from "@metadaoproject/programs/price_based_performance_package/v0.6";
 import {
   METADAO_MULTISIG_VAULT,
   PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
@@ -9,6 +12,9 @@ import { PublicKey, TransactionMessage } from "@solana/web3.js";
 
 // Set the performance package address before running the script
 const performancePackage = new PublicKey("");
+// Set when the package's quote ATA exists (it does once the recipient has
+// sold): its balance is swept into `quoteDestination` and the ATA is closed
+const quoteSweep: QuoteSweep | undefined = undefined;
 
 const provider = anchor.AnchorProvider.env();
 
@@ -27,39 +33,36 @@ const metadaoSquadsMultisig = new PublicKey(
 );
 const metadaoSquadsMultisigVault = METADAO_MULTISIG_VAULT;
 
-// This should only be run once per DAO/AMM
-// It's meant to be a one-off operation that reduces liquidity to a target K (the inital pool's liquidity) and collect it as "fees"
-// We're using this because we didn't track LP fee collection in the pool state, nor did we exclude those fees from liquidity
+// Retires a performance package: the recipient is paid what is already unlocked,
+// the locked remainder is burned, and the package with its token accounts is closed
 export const burnPerformancePackage = async () => {
   const performancePackageAccount =
     await priceBasedPerformancePackage.getPerformancePackage(
       performancePackage,
     );
 
-  // We call the collect fees instruction from Metadao DAO's multisig account
-  // It's the only one that can call the collect fees instruction
+  // Only Metadao DAO's multisig vault may burn a package
   const metaDaoSquadsMultisigAccount =
     await multisig.accounts.Multisig.fromAccountAddress(
       anchor.getProvider().connection,
       metadaoSquadsMultisig,
     );
 
-  // Prepare transaction message
-  const burnPerformancePackageIx =
-    await priceBasedPerformancePackage.program.methods
-      .burnPerformancePackage()
-      .accountsPartial({
-        performancePackage,
-        performancePackageTokenVault:
-          performancePackageAccount.performancePackageTokenVault,
-        tokenMint: performancePackageAccount.tokenMint,
-        admin: metadaoSquadsMultisigVault,
-        spillAccount: payer.publicKey,
-      })
-      .instruction();
+  // Prepare transaction message. The recipient's ATA is created in the same
+  // transaction, paid by the vault; rent from the closed accounts goes to the payer.
+  const burnPerformancePackageTx = await priceBasedPerformancePackage
+    .burnPerformancePackageIx({
+      performancePackage,
+      tokenMint: performancePackageAccount.tokenMint,
+      recipient: performancePackageAccount.recipient,
+      admin: metadaoSquadsMultisigVault,
+      spillAccount: payer.publicKey,
+      quoteSweep,
+    })
+    .transaction();
 
   const transactionMessage = new TransactionMessage({
-    instructions: [burnPerformancePackageIx],
+    instructions: burnPerformancePackageTx.instructions,
     payerKey: metadaoSquadsMultisigVault,
     recentBlockhash: (await provider.connection.getLatestBlockhash()).blockhash,
   });

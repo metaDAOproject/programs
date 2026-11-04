@@ -2,7 +2,7 @@
   "address": "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS",
   "metadata": {
     "name": "price_based_performance_package",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
@@ -26,6 +26,9 @@
         },
         {
           "name": "performance_package_token_vault",
+          "docs": [
+            "Emptied by the payout and the burn, then closed to the spill account"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -118,8 +121,20 @@
           ]
         },
         {
+          "name": "recipient",
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "recipient_token_account",
+          "docs": [
+            "Any token account owned by the recipient; receives the unlocked balance"
+          ],
+          "writable": true
+        },
+        {
           "name": "admin",
-          "writable": true,
           "signer": true
         },
         {
@@ -132,6 +147,115 @@
           "relations": [
             "performance_package"
           ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "The mint of the package's quote ATA; any mint other than the package's token mint"
+          ],
+          "optional": true
+        },
+        {
+          "name": "package_quote_account",
+          "docs": [
+            "The package's quote ATA, swept into `quote_destination` and closed when passed"
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "quote_destination",
+          "docs": [
+            "Where the quote balance goes, chosen by the admin"
+          ],
+          "writable": true,
+          "optional": true
         },
         {
           "name": "token_program",
@@ -224,141 +348,6 @@
         },
         {
           "name": "oracle_account"
-        },
-        {
-          "name": "performance_package_token_vault",
-          "docs": [
-            "The token account where locked tokens are stored"
-          ],
-          "writable": true,
-          "relations": [
-            "performance_package"
-          ]
-        },
-        {
-          "name": "token_mint",
-          "docs": [
-            "The token mint - validated via has_one constraint on locker"
-          ],
-          "relations": [
-            "performance_package"
-          ]
-        },
-        {
-          "name": "recipient_token_account",
-          "docs": [
-            "The recipient's ATA where tokens will be sent - created if needed"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "token_recipient"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "token_mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "token_recipient"
-        },
-        {
-          "name": "payer",
-          "docs": [
-            "Payer for creating the ATA if needed"
-          ],
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "associated_token_program",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "event_authority",
@@ -460,7 +449,16 @@
           "name": "program"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ExecuteChangeParams"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "initialize_performance_package",
@@ -693,6 +691,236 @@
       ]
     },
     {
+      "name": "initialize_performance_package_with_limits",
+      "discriminator": [
+        49,
+        132,
+        41,
+        239,
+        119,
+        107,
+        42,
+        229
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  102,
+                  111,
+                  114,
+                  109,
+                  97,
+                  110,
+                  99,
+                  101,
+                  95,
+                  112,
+                  97,
+                  99,
+                  107,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "create_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "create_key",
+          "docs": [
+            "Used to derive the PDA"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The mint of the tokens to be locked"
+          ]
+        },
+        {
+          "name": "grantor_token_account",
+          "docs": [
+            "The token account containing the tokens to be locked"
+          ],
+          "writable": true
+        },
+        {
+          "name": "grantor",
+          "docs": [
+            "The authority of the token account"
+          ],
+          "signer": true
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "The locker's token account where tokens will be stored"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializePerformancePackageWithLimitsParams"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "propose_change",
       "discriminator": [
         167,
@@ -806,6 +1034,35 @@
       ]
     },
     {
+      "name": "resize_performance_package",
+      "discriminator": [
+        99,
+        88,
+        136,
+        7,
+        47,
+        157,
+        30,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "start_unlock",
       "discriminator": [
         53,
@@ -869,6 +1126,557 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "withdraw_tokens",
+      "discriminator": [
+        2,
+        4,
+        225,
+        61,
+        19,
+        182,
+        106,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "oracle_account"
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "The token account where locked tokens are stored"
+          ],
+          "writable": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "token_mint",
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "recipient_token_account",
+          "docs": [
+            "The recipient's ATA where tokens will be sent - created if needed"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "recipient"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "Only the recipient can withdraw"
+          ],
+          "signer": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Payer for creating the ATA if needed"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "WithdrawTokensParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw_via_sell",
+      "discriminator": [
+        14,
+        241,
+        77,
+        159,
+        41,
+        120,
+        59,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "dao",
+          "docs": [
+            "The futarchy Dao whose spot pool buys the tokens"
+          ],
+          "writable": true
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "The token account where locked tokens are stored; the sale is paid out of it"
+          ],
+          "writable": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "token_mint",
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "amm_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "package_quote_account",
+          "docs": [
+            "The package's quote ATA that receives the proceeds before they are forwarded"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient_quote_account",
+          "docs": [
+            "The recipient's quote ATA where the proceeds are sent"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "recipient"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "Only the recipient can withdraw"
+          ],
+          "signer": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Payer for creating the ATAs if needed"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "futarchy_program",
+          "address": "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
+        },
+        {
+          "name": "futarchy_event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "futarchy_program"
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "WithdrawViaSellParams"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -883,6 +1691,19 @@
         217,
         131,
         190
+      ]
+    },
+    {
+      "name": "Dao",
+      "discriminator": [
+        163,
+        9,
+        47,
+        31,
+        52,
+        85,
+        197,
+        49
       ]
     },
     {
@@ -950,6 +1771,32 @@
         219,
         188,
         121
+      ]
+    },
+    {
+      "name": "TokensSold",
+      "discriminator": [
+        217,
+        83,
+        68,
+        137,
+        134,
+        225,
+        94,
+        45
+      ]
+    },
+    {
+      "name": "TokensWithdrawn",
+      "discriminator": [
+        30,
+        116,
+        110,
+        147,
+        87,
+        89,
+        9,
+        158
       ]
     },
     {
@@ -1059,9 +1906,115 @@
       "code": 6015,
       "name": "RecipientAuthorityMustDiffer",
       "msg": "Recipient and performance package authority must be different keys"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidWithdrawalLimits",
+      "msg": "Withdrawal limits must have non-zero caps, a future end, and a window of at least one second"
+    },
+    {
+      "code": 6017,
+      "name": "InsufficientWithdrawableBalance",
+      "msg": "Amount exceeds the withdrawable balance"
+    },
+    {
+      "code": 6018,
+      "name": "TokenWindowLimitExceeded",
+      "msg": "Token cap for the current window exceeded"
+    },
+    {
+      "code": 6019,
+      "name": "QuoteWindowLimitExceeded",
+      "msg": "Quote cap for the current window exceeded"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidPriceObservation",
+      "msg": "Oracle price observation is missing or zero"
+    },
+    {
+      "code": 6021,
+      "name": "WithdrawTokensDisabled",
+      "msg": "Token withdrawals are disabled by the withdrawal mode"
+    },
+    {
+      "code": 6022,
+      "name": "WithdrawViaSellDisabled",
+      "msg": "Sell withdrawals are disabled by the withdrawal mode"
+    },
+    {
+      "code": 6023,
+      "name": "AccountNotMigrated",
+      "msg": "Performance package has not been resized to the current layout"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidQuoteMint",
+      "msg": "Quote mint must differ from the package's token mint"
+    },
+    {
+      "code": 6025,
+      "name": "QuoteSweepAccountsIncomplete",
+      "msg": "The package's quote account and the quote destination must be passed together"
+    },
+    {
+      "code": 6026,
+      "name": "OracleMintMismatch",
+      "msg": "Oracle Dao's base mint must be the package's token mint"
+    },
+    {
+      "code": 6027,
+      "name": "MaxQuoteValueExceeded",
+      "msg": "Withdrawal is valued above the recipient's maximum quote value"
+    },
+    {
+      "code": 6028,
+      "name": "StaleChangeRequest",
+      "msg": "Change request was proposed before the last executed change was proposed"
+    },
+    {
+      "code": 6029,
+      "name": "ChangeRequestMismatch",
+      "msg": "Change request was proposed at a different time than the executor expected"
     }
   ],
   "types": [
+    {
+      "name": "CappedWithdrawal",
+      "docs": [
+        "Present on a withdrawal that ran under active limits"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price",
+            "docs": [
+              "The price the withdrawal was valued at: the higher of the spot pool's observation and its reserve price"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "quote_value",
+            "docs": [
+              "`amount` valued at that price, in quote atoms"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "usage",
+            "docs": [
+              "Window usage after this withdrawal"
+            ],
+            "type": {
+              "defined": {
+                "name": "WindowUsage"
+              }
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "ChangeExecuted",
       "type": {
@@ -1230,6 +2183,25 @@
                 "type": "pubkey"
               }
             ]
+          },
+          {
+            "name": "UnlockTerms",
+            "fields": [
+              {
+                "name": "min_unlock_timestamp",
+                "type": "i64"
+              },
+              {
+                "name": "limits",
+                "type": {
+                  "option": {
+                    "defined": {
+                      "name": "LimitsParams"
+                    }
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -1250,6 +2222,288 @@
           {
             "name": "performance_package_seq_num",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Dao",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amm",
+            "docs": [
+              "Embedded FutarchyAmm - 1:1 relationship"
+            ],
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          },
+          {
+            "name": "nonce",
+            "docs": [
+              "`nonce` + `dao_creator` are PDA seeds"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "dao_creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposal_count",
+            "type": "u32"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "seconds_per_proposal",
+            "type": "u32"
+          },
+          {
+            "name": "twap_initial_observation",
+            "docs": [
+              "For manipulation-resistance the TWAP is a time-weighted average observation,",
+              "where observation tries to approximate price but can only move by",
+              "`twap_max_observation_change_per_update` per update. Because it can only move",
+              "a little bit per update, you need to check that it has a good initial observation.",
+              "Otherwise, an attacker could create a very high initial observation in the pass",
+              "market and a very low one in the fail market to force the proposal to pass.",
+              "",
+              "We recommend setting an initial observation around the spot price of the token,",
+              "and max observation change per update around 2% the spot price of the token.",
+              "For example, if the spot price of META is $400, we'd recommend setting an initial",
+              "observation of 400 (converted into the AMM prices) and a max observation change per",
+              "update of 8 (also converted into the AMM prices). Observations can be updated once",
+              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
+              "in 50 minutes."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "twap_start_delay_seconds",
+            "docs": [
+              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "docs": [
+              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
+              "in both futarchic markets in order to create a proposal.",
+              "",
+              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
+              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
+              "10 * 1_000_000_000 (10 META)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "base_to_stake",
+            "docs": [
+              "Minimum amount of base tokens that must be staked to launch a proposal"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "seq_num",
+            "type": "u64"
+          },
+          {
+            "name": "initial_spending_limit",
+            "docs": [
+              "The authoritative record of what the Squads spending limit should be.",
+              "`None` = no limit. Kept in sync with the Squads-side account by",
+              "`sync_spending_limit`. (Named for its original init-only role)"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "InitialSpendingLimit"
+                }
+              }
+            }
+          },
+          {
+            "name": "team_sponsored_pass_threshold_bps",
+            "docs": [
+              "The percentage, in basis points, the pass price needs to be above the",
+              "fail price in order for the proposal to pass for team-sponsored proposals.",
+              "",
+              "Can be negative to allow for team-sponsored proposals to pass by default."
+            ],
+            "type": "i16"
+          },
+          {
+            "name": "team_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "optimistic_proposal",
+            "docs": [
+              "Deprecated in favor of typed proposals"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "OptimisticProposal"
+                }
+              }
+            }
+          },
+          {
+            "name": "is_optimistic_governance_enabled",
+            "docs": [
+              "Deprecated in favor of typed proposals"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "liquidator",
+            "docs": [
+              "`Some` means the DAO has been liquidated, and holds who runs the estate.",
+              "Set once by `finalize_proposal` the moment a hostile liquidation",
+              "passes, never cleared."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "last_failed_takeover_at",
+            "docs": [
+              "Unix time of the last failed hostile takeover. 0 = never."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "last_failed_liquidation_at",
+            "docs": [
+              "Unix time of the last failed hostile liquidation. 0 = never."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "spending_limit_dirty",
+            "docs": [
+              "Set by every write to the spending-limit record (`initial_spending_limit`),",
+              "consumed by `sync_spending_limit`."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "last_buyback_finalized_at",
+            "docs": [
+              "Unix time of the last buyback finalization. 0 = never."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "typed_proposals_enabled",
+            "docs": [
+              "Whether the DAO runs on the mini-instructions catalog. Never turns off."
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExecuteChangeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "expected_proposed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FutarchyAmm",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "PoolState"
+              }
+            }
+          },
+          {
+            "name": "total_liquidity",
+            "type": "u128"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_quote_vault",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitialSpendingLimit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount_per_month",
+            "type": "u64"
+          },
+          {
+            "name": "members",
+            "type": {
+              "vec": "pubkey"
+            }
           }
         ]
       }
@@ -1297,12 +2551,99 @@
       }
     },
     {
+      "name": "InitializePerformancePackageWithLimitsParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "base",
+            "type": {
+              "defined": {
+                "name": "InitializePerformancePackageParams"
+              }
+            }
+          },
+          {
+            "name": "limits",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "LimitsParams"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LimitsParams",
+      "docs": [
+        "What the two parties agree on; the program supplies `start_timestamp`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "end_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "window_seconds",
+            "type": "u32"
+          },
+          {
+            "name": "max_tokens_per_window",
+            "type": "u64"
+          },
+          {
+            "name": "max_quote_per_window",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawal_mode",
+            "type": {
+              "defined": {
+                "name": "WithdrawalMode"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "OptimisticProposal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "squads_proposal",
+            "docs": [
+              "The squads proposal currently enqueued for execution if not challenged by a new proposal."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "enqueued_timestamp",
+            "docs": [
+              "The timestamp when the active optimistic squads proposal was enqueued."
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "OracleConfig",
       "docs": [
-        "Starting at `byte_offset` in `oracle_account`, this program expects to read:",
+        "Starting at `byte_offset` in `oracle_account`, the unlock instructions read:",
         "- 16 bytes for the aggregator, stored as a little endian u128",
-        "- 8 bytes for the slot that the aggregator was last updated, stored as a",
-        "little endian u64",
+        "- 8 bytes for the timestamp that the aggregator was last updated, stored as",
+        "a little endian i64",
+        "",
+        "While withdrawal limits are active, `oracle_account` must also be a futarchy",
+        "`Dao`: the withdraw instructions value withdrawals from its spot pool, at the",
+        "higher of the pool's damped observation and its reserve price.",
         "",
         "The aggregator should be a weighted sum of prices, where the weight is the",
         "number of seconds between prices. Here's an example:",
@@ -1445,6 +2786,26 @@
               "The vault that stores the tokens"
             ],
             "type": "pubkey"
+          },
+          {
+            "name": "withdrawal_policy",
+            "docs": [
+              "`None` means uncapped, and so do expired limits"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "WithdrawalPolicy"
+                }
+              }
+            }
+          },
+          {
+            "name": "last_change_proposed_at",
+            "docs": [
+              "When the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed"
+            ],
+            "type": "i64"
           }
         ]
       }
@@ -1528,6 +2889,88 @@
       }
     },
     {
+      "name": "Pool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle",
+            "type": {
+              "defined": {
+                "name": "TwapOracle"
+              }
+            }
+          },
+          {
+            "name": "quote_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "base_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "quote_protocol_fee_balance",
+            "type": "u64"
+          },
+          {
+            "name": "base_protocol_fee_balance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PoolState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Spot",
+            "fields": [
+              {
+                "name": "spot",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "Futarchy",
+            "fields": [
+              {
+                "name": "spot",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              },
+              {
+                "name": "pass",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              },
+              {
+                "name": "fail",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "name": "ProposeChangeParams",
       "type": {
         "kind": "struct",
@@ -1582,6 +3025,96 @@
       }
     },
     {
+      "name": "TokensSold",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "quote_received",
+            "type": "u64"
+          },
+          {
+            "name": "min_quote_out",
+            "type": "u64"
+          },
+          {
+            "name": "capped",
+            "docs": [
+              "Window usage after this sale; `None` when no limits were active"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "WindowUsage"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokensWithdrawn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "capped",
+            "docs": [
+              "`None` when no limits were active"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "CappedWithdrawal"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "Tranche",
       "type": {
         "kind": "struct",
@@ -1599,6 +3132,82 @@
               "The amount of tokens in this tranch"
             ],
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TwapOracle",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "aggregator",
+            "docs": [
+              "Running sum of seconds_since_last_update * last_observation.",
+              "",
+              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
+              "we can store 18 million seconds worth of observations, which turns out to",
+              "be ~213 days.",
+              "",
+              "Assuming that latest observations are 100x smaller than they could theoretically",
+              "be, we can store ~57 years worth of them. Even this is a very",
+              "very conservative assumption - META/USDC prices should be between 1e9 and",
+              "1e15, which would overflow after 1e15 years.",
+              "",
+              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
+              "client's responsibility to sanity check the assets or to handle an",
+              "aggregator at T2 being smaller than an aggregator at T1."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "last_updated_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "created_at_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "last_price",
+            "docs": [
+              "A price is the number of quote units per base unit multiplied by 1e12.",
+              "You cannot simply divide by 1e12 to get a price you can display in the UI",
+              "because the base and quote decimals may be different. Instead, do:",
+              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "last_observation",
+            "docs": [
+              "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
+              "a few extremely large outliers. So we use observations, which can only move",
+              "by `max_observation_change_per_update` per update."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "max_observation_change_per_update",
+            "docs": [
+              "The most that an observation can change per update."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "initial_observation",
+            "docs": [
+              "What the initial `latest_observation` is set to."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "start_delay_seconds",
+            "docs": [
+              "Number of seconds after amm.created_at_slot to start recording TWAP"
+            ],
+            "type": "u32"
           }
         ]
       }
@@ -1662,6 +3271,172 @@
           }
         ]
       }
+    },
+    {
+      "name": "WindowUsage",
+      "docs": [
+        "Usage in the window the last withdrawal fell in"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "window_index",
+            "docs": [
+              "`(now - limits.start_timestamp) / limits.window_seconds` at the last withdrawal"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "tokens_used",
+            "type": "u64"
+          },
+          {
+            "name": "quote_used",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawTokensParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_quote_value",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawViaSellParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_quote_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalLimits",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "start_timestamp",
+            "docs": [
+              "Anchor for window boundaries; set by the program when limits take effect or `window_seconds` changes"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "end_timestamp",
+            "docs": [
+              "Caps apply while `now < end_timestamp`"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "window_seconds",
+            "docs": [
+              "Duration of the window in seconds"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "max_tokens_per_window",
+            "docs": [
+              "Max base tokens withdrawn per window"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_quote_per_window",
+            "docs": [
+              "Max quote value withdrawn per window, in quote atoms"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "withdrawal_mode",
+            "docs": [
+              "Which withdrawal routes the recipient may use while the caps are active"
+            ],
+            "type": {
+              "defined": {
+                "name": "WithdrawalMode"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalMode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Tokens"
+          },
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "Both"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalPolicy",
+      "docs": [
+        "The agreed limits together with the usage they are enforced against"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "limits",
+            "type": {
+              "defined": {
+                "name": "WithdrawalLimits"
+              }
+            }
+          },
+          {
+            "name": "usage",
+            "type": {
+              "defined": {
+                "name": "WindowUsage"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "PRICE_SCALE",
+      "docs": [
+        "Scale of oracle prices: quote atoms per base atom, times 1e12"
+      ],
+      "type": "u128",
+      "value": "1000000000000"
     }
   ]
 }

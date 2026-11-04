@@ -7,7 +7,33 @@ import {
 import { assert } from "chai";
 import BN from "bn.js";
 import { expectError } from "../../utils.js";
-import { getChangeRequestAddr } from "@metadaoproject/programs";
+import {
+  getChangeRequestAddr,
+  getPerformancePackageAddr,
+  LimitsParams,
+} from "@metadaoproject/programs";
+import {
+  getActiveWithdrawalPolicy,
+  getMaxTokenWithdrawal,
+  getSellProceedsEstimate,
+} from "@metadaoproject/programs/price_based_performance_package/v0.6/withdrawalLimits";
+import {
+  runUnlockCycle,
+  setMockOracle,
+  setupSellablePackage,
+  uniqueTxIx,
+  executeChangeIx,
+} from "../utils.js";
+
+const ONE_HOUR = 60 * 60;
+const ONE_DAY = 24 * ONE_HOUR;
+const THIRTY_DAYS = 30 * ONE_DAY;
+const ONE_YEAR = 365 * ONE_DAY;
+// At most 645,000 tokens per window; the quote cap is generous so the token cap binds
+const TOKEN_CAP = 645_000 * 10 ** 6;
+const QUOTE_CAP = 10_000_000 * 10 ** 6;
+const PARTIAL_WITHDRAWAL = 300_000 * 10 ** 6;
+const NO_USAGE = { windowIndex: "0", tokensUsed: "0", quoteUsed: "0" };
 
 export default function () {
   let createKey: Keypair;
@@ -74,13 +100,13 @@ export default function () {
         pdaNonce,
       );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: this.payer.publicKey, // DAO executes
       })
-      .rpc();
+    ).rpc();
 
     // Verify the change was applied
     const performancePackageAccount =
@@ -137,12 +163,13 @@ export default function () {
         pdaNonce2,
       );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: recipient.publicKey, // Recipient executes
       })
+    )
       .signers([recipient])
       .rpc();
 
@@ -210,12 +237,13 @@ export default function () {
         recipientChangePdaNonce,
       );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: recipientChangeRequestAddr,
         executor: recipient.publicKey, // Original recipient executes recipient change
       })
+    )
       .signers([recipient])
       .rpc();
 
@@ -238,12 +266,13 @@ export default function () {
         pdaNonce3,
       );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: originalChangeRequestAddr,
         executor: newRecipient2.publicKey, // NEW recipient executes original change
       })
+    )
       .signers([newRecipient2])
       .rpc();
 
@@ -296,12 +325,13 @@ export default function () {
 
     // Now the new authority should be able to execute the change
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest,
         executor: newAuthority.publicKey, // New authority executes
       })
+    )
       .signers([newAuthority])
       .rpc();
   });
@@ -337,12 +367,13 @@ export default function () {
     );
 
     // Authority executes - should fail because new recipient == authority
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: this.payer.publicKey,
       })
+    )
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });
@@ -378,12 +409,13 @@ export default function () {
 
     const wrongVault = Keypair.generate();
 
-    const executeTx = await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    const executeTx = await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: wrongVault.publicKey,
       })
+    )
       .signers([wrongVault])
       .rpc()
       .then(callbacks[0], callbacks[1]);
@@ -426,12 +458,13 @@ export default function () {
       "Unauthorized change request",
     );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: recipient.publicKey, // Same as proposer - should fail
       })
+    )
       .signers([recipient])
       .rpc()
       .then(callbacks[0], callbacks[1]);
@@ -473,13 +506,790 @@ export default function () {
       "Unauthorized change request",
     );
 
-    await this.priceBasedPerformancePackage
-      .executeChangeIx({
+    await (
+      await executeChangeIx(this, {
         performancePackage,
         changeRequest: changeRequestAddr,
         executor: this.payer.publicKey, // Same as proposer - should fail
       })
+    )
       .rpc()
       .then(callbacks[0], callbacks[1]);
+  });
+
+  describe("with UnlockTerms", function () {
+    type UnlockTerms = { minUnlockTimestamp: BN; limits: LimitsParams | null };
+    let quoteMint: PublicKey;
+    let dao: PublicKey;
+
+    function storedPackage(ctx: Mocha.Context) {
+      return ctx.priceBasedPerformancePackage.getPerformancePackage(
+        performancePackage,
+      );
+    }
+
+    async function clock(ctx: Mocha.Context): Promise<number> {
+      return Number((await ctx.banksClient.getClock()).unixTimestamp);
+    }
+
+    // Plain JSON, so BNs and keys compare by value.
+    function asJson(value: unknown) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function cappedLimits(
+      now: number,
+      overrides: Partial<LimitsParams> = {},
+    ): LimitsParams {
+      return {
+        endTimestamp: new BN(now + ONE_YEAR),
+        windowSeconds: THIRTY_DAYS,
+        maxTokensPerWindow: new BN(TOKEN_CAP),
+        maxQuotePerWindow: new BN(QUOTE_CAP),
+        withdrawalMode: { both: {} },
+        ...overrides,
+      };
+    }
+
+    // Proposes the terms under a fresh nonce and returns the request address.
+    // The authority (the payer) proposes unless a signer is given.
+    async function propose(
+      ctx: Mocha.Context,
+      terms: UnlockTerms,
+      proposer: Keypair | null = null,
+      pdaNonce = Math.floor(Math.random() * 1_000_000),
+    ): Promise<PublicKey> {
+      const proposerKey = proposer?.publicKey ?? ctx.payer.publicKey;
+
+      await ctx.priceBasedPerformancePackage
+        .proposeChangeIx({
+          params: { changeType: { unlockTerms: terms }, pdaNonce },
+          performancePackage,
+          proposer: proposerKey,
+        })
+        .signers(proposer ? [proposer] : [])
+        .rpc();
+
+      return getChangeRequestAddr({
+        performancePackage,
+        proposer: proposerKey,
+        pdaNonce,
+      })[0];
+    }
+
+    // The authority (the payer) executes unless a signer is given.
+    async function execute(
+      ctx: Mocha.Context,
+      changeRequest: PublicKey,
+      executor: Keypair | null = null,
+    ) {
+      const ix = await executeChangeIx(ctx, {
+        performancePackage,
+        changeRequest,
+        executor: executor?.publicKey ?? ctx.payer.publicKey,
+      });
+      return ix.signers(executor ? [executor] : []).rpc();
+    }
+
+    // The authority proposes and the recipient executes; returns the execution clock.
+    async function proposeAndExecute(
+      ctx: Mocha.Context,
+      terms: UnlockTerms,
+    ): Promise<number> {
+      const changeRequest = await propose(ctx, terms);
+      const executedAt = await clock(ctx);
+      await execute(ctx, changeRequest, recipient);
+      return executedAt;
+    }
+
+    async function usage(ctx: Mocha.Context) {
+      const { usage } = (await storedPackage(ctx)).withdrawalPolicy;
+      return {
+        windowIndex: usage.windowIndex.toString(),
+        tokensUsed: usage.tokensUsed.toString(),
+        quoteUsed: usage.quoteUsed.toString(),
+      };
+    }
+
+    function startUnlock(ctx: Mocha.Context) {
+      return ctx.priceBasedPerformancePackage
+        .startUnlockIx({
+          performancePackage,
+          oracleAccount: oracleAccount.publicKey,
+          recipient: recipient.publicKey,
+        })
+        .preInstructions([uniqueTxIx()])
+        .signers([recipient])
+        .rpc();
+    }
+
+    function withdrawTokens(
+      ctx: Mocha.Context,
+      amount: number,
+      oracle: PublicKey = dao,
+    ) {
+      return ctx.priceBasedPerformancePackage
+        .withdrawTokensIx({
+          performancePackage,
+          oracleAccount: oracle,
+          tokenMint,
+          recipient: recipient.publicKey,
+          amount: new BN(amount),
+        })
+        .preInstructions([uniqueTxIx()])
+        .signers([recipient])
+        .rpc();
+    }
+
+    function sell(ctx: Mocha.Context, amount: number) {
+      return ctx.priceBasedPerformancePackage
+        .withdrawViaSellIx({
+          performancePackage,
+          dao,
+          tokenMint,
+          quoteMint,
+          recipient: recipient.publicKey,
+          amount: new BN(amount),
+          minQuoteOut: new BN(0),
+        })
+        .preInstructions([uniqueTxIx()])
+        .signers([recipient])
+        .rpc();
+    }
+
+    // The SDK's maximum token withdrawal at the current clock.
+    async function maxWithdrawal(ctx: Mocha.Context): Promise<string> {
+      const vaultAmount = new BN(
+        (await ctx.getTokenBalance(tokenMint, performancePackage)).toString(),
+      );
+      return getMaxTokenWithdrawal({
+        performancePackage: await storedPackage(ctx),
+        vaultAmount,
+        now: await clock(ctx),
+        dao: await ctx.futarchy.getDao(dao),
+      }).toString();
+    }
+
+    // Replaces the package from the outer setup with one on a Dao whose pool
+    // is seeded, created with `limits` and its first tranche unlocked.
+    async function setupCappedPackage(
+      ctx: Mocha.Context,
+      limits: LimitsParams,
+    ) {
+      ({ tokenMint, quoteMint, dao, performancePackage } =
+        await setupSellablePackage(ctx, { recipient, limits }));
+    }
+
+    it("removes the cliff so an unlock can start at once", async function () {
+      const now = await clock(this);
+      tokenMint = await this.createMint(this.payer.publicKey, 6);
+      await this.mintTo(
+        tokenMint,
+        this.payer.publicKey,
+        this.payer,
+        200 * 10 ** 6,
+      );
+      performancePackage = await this.setupBasicPerformancePackage({
+        tokenMint,
+        oracleAccount: oracleAccount.publicKey,
+        recipient: recipient.publicKey,
+        minUnlockTimestamp: new BN(now + THIRTY_DAYS),
+      });
+      await setMockOracle(this, oracleAccount.publicKey, {
+        aggregator: 1_000_000n,
+      });
+
+      const callbacks = expectError(
+        "UnlockTimestampNotReached",
+        "started an unlock before the cliff",
+      );
+      await startUnlock(this).then(callbacks[0], callbacks[1]);
+
+      await proposeAndExecute(this, {
+        minUnlockTimestamp: new BN(now),
+        limits: null,
+      });
+
+      const stored = await storedPackage(this);
+      assert.equal(stored.minUnlockTimestamp.toString(), now.toString());
+      assert.isNull(stored.withdrawalPolicy);
+
+      await startUnlock(this);
+      assert.isDefined((await storedPackage(this)).state.unlocking);
+    });
+
+    it("stores limits on a package without any, anchored at the execution clock with zero usage", async function () {
+      const now = await clock(this);
+      const limits = cappedLimits(now);
+      const changeRequest = await propose(this, {
+        minUnlockTimestamp: new BN(now),
+        limits,
+      });
+      await this.advanceBySeconds(ONE_HOUR);
+
+      const executedAt = await clock(this);
+      await execute(this, changeRequest, recipient);
+
+      const stored = await storedPackage(this);
+      assert.equal(stored.minUnlockTimestamp.toString(), now.toString());
+      assert.deepEqual(
+        asJson(stored.withdrawalPolicy.limits),
+        asJson({ startTimestamp: new BN(executedAt), ...limits }),
+      );
+      assert.deepEqual(await usage(this), NO_USAGE);
+    });
+
+    it("keeps the window and its usage when the new limits share the window length", async function () {
+      await setupCappedPackage(this, cappedLimits(await clock(this)));
+      await withdrawTokens(this, PARTIAL_WITHDRAWAL);
+      const { minUnlockTimestamp, withdrawalPolicy: before } =
+        await storedPackage(this);
+      const usageBefore = await usage(this);
+
+      const newLimits = cappedLimits(await clock(this), {
+        endTimestamp: before.limits.endTimestamp.addn(ONE_YEAR),
+        maxTokensPerWindow: new BN(2 * TOKEN_CAP),
+        maxQuotePerWindow: new BN(2 * QUOTE_CAP),
+        withdrawalMode: { tokens: {} },
+      });
+      await this.advanceBySeconds(ONE_HOUR);
+      await proposeAndExecute(this, { minUnlockTimestamp, limits: newLimits });
+
+      const after = (await storedPackage(this)).withdrawalPolicy;
+      assert.deepEqual(
+        asJson(after.limits),
+        asJson({ startTimestamp: before.limits.startTimestamp, ...newLimits }),
+      );
+      assert.deepEqual(await usage(this), usageBefore);
+
+      const room = 2 * TOKEN_CAP - PARTIAL_WITHDRAWAL;
+      assert.equal(await maxWithdrawal(this), room.toString());
+      const callbacks = expectError(
+        "TokenWindowLimitExceeded",
+        "withdrew past the cap shared with the earlier withdrawal",
+      );
+      await withdrawTokens(this, room + 1).then(callbacks[0], callbacks[1]);
+      await withdrawTokens(this, room);
+      assert.equal((await usage(this)).tokensUsed, (2 * TOKEN_CAP).toString());
+    });
+
+    it("re-anchors at the execution clock and carries the counters into the first window when the window length changes", async function () {
+      await setupCappedPackage(
+        this,
+        cappedLimits(await clock(this), { windowSeconds: ONE_DAY }),
+      );
+      await withdrawTokens(this, PARTIAL_WITHDRAWAL);
+      const { minUnlockTimestamp } = await storedPackage(this);
+      const usageBefore = await usage(this);
+      assert.notEqual(usageBefore.windowIndex, "0");
+
+      const newLimits = cappedLimits(await clock(this));
+      const executedAt = await proposeAndExecute(this, {
+        minUnlockTimestamp,
+        limits: newLimits,
+      });
+
+      const after = (await storedPackage(this)).withdrawalPolicy;
+      assert.deepEqual(
+        asJson(after.limits),
+        asJson({ startTimestamp: new BN(executedAt), ...newLimits }),
+      );
+      assert.deepEqual(await usage(this), { ...usageBefore, windowIndex: "0" });
+
+      const room = TOKEN_CAP - PARTIAL_WITHDRAWAL;
+      assert.equal(await maxWithdrawal(this), room.toString());
+      const callbacks = expectError(
+        "TokenWindowLimitExceeded",
+        "withdrew past the cap carried into the new window",
+      );
+      await withdrawTokens(this, room + 1).then(callbacks[0], callbacks[1]);
+      await withdrawTokens(this, room);
+      const usageAfter = await usage(this);
+      assert.equal(usageAfter.windowIndex, "0");
+      assert.equal(usageAfter.tokensUsed, TOKEN_CAP.toString());
+    });
+
+    it("drops the counters of an ended window when the window length changes", async function () {
+      await setupCappedPackage(
+        this,
+        cappedLimits(await clock(this), { windowSeconds: ONE_DAY }),
+      );
+      await withdrawTokens(this, TOKEN_CAP);
+      const { minUnlockTimestamp } = await storedPackage(this);
+      await this.advanceBySeconds(40 * ONE_DAY);
+      assert.equal((await usage(this)).tokensUsed, TOKEN_CAP.toString());
+
+      const newLimits = cappedLimits(await clock(this));
+      const executedAt = await proposeAndExecute(this, {
+        minUnlockTimestamp,
+        limits: newLimits,
+      });
+
+      const after = (await storedPackage(this)).withdrawalPolicy;
+      assert.deepEqual(
+        asJson(after.limits),
+        asJson({ startTimestamp: new BN(executedAt), ...newLimits }),
+      );
+      assert.deepEqual(await usage(this), NO_USAGE);
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
+
+      await withdrawTokens(this, TOKEN_CAP);
+      assert.equal((await usage(this)).tokensUsed, TOKEN_CAP.toString());
+    });
+
+    it("starts a fresh window with zero usage when the replaced policy has expired", async function () {
+      const now = await clock(this);
+      await setupCappedPackage(
+        this,
+        cappedLimits(now, {
+          endTimestamp: new BN(now + 10 * ONE_DAY),
+          windowSeconds: ONE_DAY,
+        }),
+      );
+      await withdrawTokens(this, PARTIAL_WITHDRAWAL);
+      const { minUnlockTimestamp } = await storedPackage(this);
+      await this.advanceBySeconds(10 * ONE_DAY);
+      assert.isNull(
+        getActiveWithdrawalPolicy(await storedPackage(this), await clock(this)),
+      );
+      assert.equal(
+        (await usage(this)).tokensUsed,
+        PARTIAL_WITHDRAWAL.toString(),
+      );
+
+      const newLimits = cappedLimits(await clock(this), {
+        windowSeconds: ONE_DAY,
+      });
+      const executedAt = await proposeAndExecute(this, {
+        minUnlockTimestamp,
+        limits: newLimits,
+      });
+
+      const after = (await storedPackage(this)).withdrawalPolicy;
+      assert.deepEqual(
+        asJson(after.limits),
+        asJson({ startTimestamp: new BN(executedAt), ...newLimits }),
+      );
+      assert.deepEqual(await usage(this), NO_USAGE);
+      assert.equal(await maxWithdrawal(this), TOKEN_CAP.toString());
+    });
+
+    it("removes the limits, uncapping both routes", async function () {
+      await setupCappedPackage(this, cappedLimits(await clock(this)));
+      const { minUnlockTimestamp } = await storedPackage(this);
+
+      await proposeAndExecute(this, { minUnlockTimestamp, limits: null });
+
+      assert.isNull((await storedPackage(this)).withdrawalPolicy);
+      await withdrawTokens(this, 2 * TOKEN_CAP);
+      const estimate = getSellProceedsEstimate(
+        await this.futarchy.getDao(dao),
+        new BN(2 * TOKEN_CAP),
+      );
+      await sell(this, 2 * TOKEN_CAP);
+
+      assert.equal(
+        await this.getTokenBalance(tokenMint, recipient.publicKey),
+        BigInt(2 * TOKEN_CAP),
+      );
+      assert.equal(
+        (await this.getTokenBalance(quoteMint, recipient.publicKey)).toString(),
+        estimate.toString(),
+      );
+    });
+
+    it("applies a mode change to the next withdrawal", async function () {
+      const now = await clock(this);
+      await setupCappedPackage(
+        this,
+        cappedLimits(now, { withdrawalMode: { tokens: {} } }),
+      );
+      const { minUnlockTimestamp } = await storedPackage(this);
+      const sellDisabled = expectError(
+        "WithdrawViaSellDisabled",
+        "sold under mode Tokens",
+      );
+      await sell(this, TOKEN_CAP).then(sellDisabled[0], sellDisabled[1]);
+
+      await proposeAndExecute(this, {
+        minUnlockTimestamp,
+        limits: cappedLimits(now, { withdrawalMode: { sell: {} } }),
+      });
+
+      const tokensDisabled = expectError(
+        "WithdrawTokensDisabled",
+        "withdrew tokens under mode Sell",
+      );
+      await withdrawTokens(this, TOKEN_CAP).then(
+        tokensDisabled[0],
+        tokensDisabled[1],
+      );
+      await sell(this, TOKEN_CAP);
+      assert.equal((await usage(this)).tokensUsed, TOKEN_CAP.toString());
+    });
+
+    it("is allowed while the package is unlocking", async function () {
+      const now = await clock(this);
+      await this.advanceBySeconds(2);
+      await setMockOracle(this, oracleAccount.publicKey, {
+        aggregator: 1_000_000n,
+      });
+      await startUnlock(this);
+
+      await proposeAndExecute(this, {
+        minUnlockTimestamp: new BN(now),
+        limits: cappedLimits(now),
+      });
+
+      const stored = await storedPackage(this);
+      assert.isDefined(stored.state.unlocking);
+      assert.equal(stored.minUnlockTimestamp.toString(), now.toString());
+      assert.isNotNull(stored.withdrawalPolicy);
+    });
+
+    it("cancels a running unlock when the new cliff is after its start", async function () {
+      await this.advanceBySeconds(2);
+      await setMockOracle(this, oracleAccount.publicKey, {
+        aggregator: 1_000_000n,
+      });
+      await startUnlock(this);
+      const newCliff = (await clock(this)) + ONE_DAY;
+
+      await proposeAndExecute(this, {
+        minUnlockTimestamp: new BN(newCliff),
+        limits: null,
+      });
+
+      const stored = await storedPackage(this);
+      assert.isDefined(stored.state.locked);
+      assert.equal(stored.alreadyUnlockedAmount.toString(), "0");
+
+      const complete = expectError(
+        "InvalidPerformancePackageState",
+        "completed a cancelled unlock",
+      );
+      await this.priceBasedPerformancePackage
+        .completeUnlockIx({
+          performancePackage,
+          oracleAccount: oracleAccount.publicKey,
+        })
+        .rpc()
+        .then(complete[0], complete[1]);
+      const start = expectError(
+        "UnlockTimestampNotReached",
+        "started an unlock before the new cliff",
+      );
+      await startUnlock(this).then(start[0], start[1]);
+    });
+
+    it("keeps a running unlock when the new cliff is at its start", async function () {
+      await this.advanceBySeconds(2);
+      const unlockStart = await clock(this);
+      await setMockOracle(this, oracleAccount.publicKey, {
+        aggregator: 1_000_000n,
+      });
+      await startUnlock(this);
+
+      await proposeAndExecute(this, {
+        minUnlockTimestamp: new BN(unlockStart),
+        limits: null,
+      });
+
+      assert.isDefined((await storedPackage(this)).state.unlocking);
+    });
+
+    it("refuses a request proposed before the last executed change was proposed", async function () {
+      const now = await clock(this);
+      const stale = await propose(this, {
+        minUnlockTimestamp: new BN(now),
+        limits: null,
+      });
+      await this.advanceBySeconds(1);
+      const newer = await propose(this, {
+        minUnlockTimestamp: new BN(now + ONE_DAY),
+        limits: null,
+      });
+      await this.advanceBySeconds(1);
+      await execute(this, newer, recipient);
+      // The floor is the executed request's proposal time, not its execution time
+      assert.equal(
+        (await storedPackage(this)).lastChangeProposedAt.toString(),
+        (now + 1).toString(),
+      );
+
+      const callbacks = expectError(
+        "StaleChangeRequest",
+        "executed a request proposed before the last executed change",
+      );
+      await execute(this, stale, recipient).then(callbacks[0], callbacks[1]);
+      assert.equal(
+        (await storedPackage(this)).minUnlockTimestamp.toString(),
+        (now + ONE_DAY).toString(),
+      );
+    });
+
+    it("applies requests in the order they were proposed", async function () {
+      const now = await clock(this);
+      const first = await propose(this, {
+        minUnlockTimestamp: new BN(now + ONE_DAY),
+        limits: null,
+      });
+      await this.advanceBySeconds(1);
+      const second = await propose(this, {
+        minUnlockTimestamp: new BN(now + 2 * ONE_DAY),
+        limits: null,
+      });
+      await this.advanceBySeconds(1);
+
+      await execute(this, first, recipient);
+      await execute(this, second, recipient);
+
+      const stored = await storedPackage(this);
+      assert.equal(
+        stored.minUnlockTimestamp.toString(),
+        (now + 2 * ONE_DAY).toString(),
+      );
+      assert.equal(
+        stored.lastChangeProposedAt.toString(),
+        (now + 1).toString(),
+      );
+    });
+
+    it("applies two requests proposed in one transaction together, in either order", async function () {
+      const now = await clock(this);
+      const params = [now + ONE_DAY, now + 2 * ONE_DAY].map(
+        (minUnlockTimestamp) => ({
+          changeType: {
+            unlockTerms: {
+              minUnlockTimestamp: new BN(minUnlockTimestamp),
+              limits: null,
+            },
+          },
+          pdaNonce: Math.floor(Math.random() * 1_000_000),
+        }),
+      );
+      const proposeIx = (index: number) =>
+        this.priceBasedPerformancePackage.proposeChangeIx({
+          params: params[index],
+          performancePackage,
+          proposer: this.payer.publicKey,
+        });
+      await proposeIx(0)
+        .postInstructions([await proposeIx(1).instruction()])
+        .rpc();
+      const [first, second] = params.map(
+        ({ pdaNonce }) =>
+          getChangeRequestAddr({
+            performancePackage,
+            proposer: this.payer.publicKey,
+            pdaNonce,
+          })[0],
+      );
+      await this.advanceBySeconds(1);
+
+      const executeIx = (changeRequest: PublicKey) =>
+        executeChangeIx(this, {
+          performancePackage,
+          changeRequest,
+          executor: recipient.publicKey,
+        });
+      await (
+        await executeIx(second)
+      )
+        .postInstructions([await (await executeIx(first)).instruction()])
+        .signers([recipient])
+        .rpc();
+
+      const stored = await storedPackage(this);
+      assert.equal(
+        stored.minUnlockTimestamp.toString(),
+        (now + ONE_DAY).toString(),
+      );
+      assert.equal(stored.lastChangeProposedAt.toString(), now.toString());
+    });
+
+    it("refuses a request re-proposed at the same address under an authorization for the executed one", async function () {
+      const now = await clock(this);
+      const pdaNonce = Math.floor(Math.random() * 1_000_000);
+      const changeRequest = await propose(
+        this,
+        { minUnlockTimestamp: new BN(now + ONE_DAY), limits: null },
+        null,
+        pdaNonce,
+      );
+      await execute(this, changeRequest, recipient);
+
+      await this.advanceBySeconds(1);
+      await propose(
+        this,
+        { minUnlockTimestamp: new BN(0), limits: null },
+        null,
+        pdaNonce,
+      );
+
+      const callbacks = expectError(
+        "ChangeRequestMismatch",
+        "executed a request re-proposed at the same address",
+      );
+      await this.priceBasedPerformancePackage
+        .executeChangeIx({
+          performancePackage,
+          changeRequest,
+          executor: recipient.publicKey,
+          expectedProposedAt: new BN(now),
+        })
+        .postInstructions([uniqueTxIx()])
+        .signers([recipient])
+        .rpc()
+        .then(callbacks[0], callbacks[1]);
+      assert.equal(
+        (await storedPackage(this)).minUnlockTimestamp.toString(),
+        (now + ONE_DAY).toString(),
+      );
+
+      await execute(this, changeRequest, recipient);
+      assert.equal(
+        (await storedPackage(this)).minUnlockTimestamp.toString(),
+        "0",
+      );
+    });
+
+    it("refuses a request proposed against a burned package re-created under the same key", async function () {
+      const mint = await this.createMint(this.payer.publicKey, 6);
+      await this.mintTo(mint, this.payer.publicKey, this.payer, 400 * 10 ** 6);
+      const createKey = Keypair.generate();
+      performancePackage = getPerformancePackageAddr({
+        createKey: createKey.publicKey,
+      })[0];
+      const create = (minUnlockTimestamp: number) =>
+        this.priceBasedPerformancePackage
+          .initializePerformancePackageIx({
+            params: {
+              tranches: [
+                {
+                  priceThreshold: new BN(1e12),
+                  tokenAmount: new BN(200 * 10 ** 6),
+                },
+              ],
+              grantee: recipient.publicKey,
+              performancePackageAuthority: this.payer.publicKey,
+              minUnlockTimestamp: new BN(minUnlockTimestamp),
+              oracleConfig: {
+                oracleAccount: oracleAccount.publicKey,
+                byteOffset: 0,
+              },
+              twapLengthSeconds: ONE_DAY,
+            },
+            createKey: createKey.publicKey,
+            tokenMint: mint,
+            grantor: this.payer.publicKey,
+          })
+          .signers([createKey])
+          .rpc();
+
+      const now = await clock(this);
+      await create(now + ONE_YEAR);
+      const stale = await propose(this, {
+        minUnlockTimestamp: new BN(0),
+        limits: null,
+      });
+      await this.priceBasedPerformancePackage
+        .burnPerformancePackageIx({
+          performancePackage,
+          tokenMint: mint,
+          recipient: recipient.publicKey,
+        })
+        .rpc();
+      await this.advanceBySeconds(1);
+      await create(now + 2 * ONE_YEAR);
+
+      const callbacks = expectError(
+        "StaleChangeRequest",
+        "executed a request proposed against the burned package",
+      );
+      await execute(this, stale, recipient).then(callbacks[0], callbacks[1]);
+      assert.equal(
+        (await storedPackage(this)).minUnlockTimestamp.toString(),
+        (now + 2 * ONE_YEAR).toString(),
+      );
+    });
+
+    it("rejects execution by the proposing party", async function () {
+      const changeRequest = await propose(
+        this,
+        { minUnlockTimestamp: new BN(await clock(this)), limits: null },
+        recipient,
+      );
+
+      const callbacks = expectError(
+        "UnauthorizedLockerAuthority",
+        "the recipient executed their own proposal",
+      );
+      await execute(this, changeRequest, recipient).then(
+        callbacks[0],
+        callbacks[1],
+      );
+    });
+
+    it("stores a request whose end passed before execution as an inert policy", async function () {
+      await this.advanceBySeconds(2);
+      await runUnlockCycle(this, {
+        performancePackage,
+        oracleAccount: oracleAccount.publicKey,
+        recipient,
+        twapPrice: BigInt(1e12),
+      });
+      const now = await clock(this);
+      const limits = cappedLimits(now, {
+        endTimestamp: new BN(now + ONE_HOUR),
+        windowSeconds: ONE_HOUR,
+        maxTokensPerWindow: new BN(1),
+        maxQuotePerWindow: new BN(1),
+        withdrawalMode: { sell: {} },
+      });
+      const changeRequest = await propose(this, {
+        minUnlockTimestamp: new BN(now),
+        limits,
+      });
+      await this.advanceBySeconds(2 * ONE_HOUR);
+
+      const executedAt = await clock(this);
+      await execute(this, changeRequest, recipient);
+
+      const stored = await storedPackage(this);
+      assert.deepEqual(
+        asJson(stored.withdrawalPolicy.limits),
+        asJson({ startTimestamp: new BN(executedAt), ...limits }),
+      );
+      assert.isNull(getActiveWithdrawalPolicy(stored, executedAt));
+
+      await withdrawTokens(this, 100 * 10 ** 6, oracleAccount.publicKey);
+      assert.equal(
+        await this.getTokenBalance(tokenMint, recipient.publicKey),
+        BigInt(100 * 10 ** 6),
+      );
+      assert.deepEqual(await usage(this), NO_USAGE);
+    });
+
+    it("closes the request and pays its rent to the executor", async function () {
+      const changeRequest = await propose(this, {
+        minUnlockTimestamp: new BN(await clock(this)),
+        limits: null,
+      });
+      const rent = BigInt(
+        (await this.banksClient.getAccount(changeRequest)).lamports,
+      );
+      const balanceBefore = await this.banksClient.getBalance(
+        recipient.publicKey,
+      );
+
+      await execute(this, changeRequest, recipient);
+
+      assert.isNull(await this.banksClient.getAccount(changeRequest));
+      assert.equal(
+        await this.banksClient.getBalance(recipient.publicKey),
+        balanceBefore + rent,
+      );
+    });
   });
 }
