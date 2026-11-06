@@ -42,10 +42,11 @@ Programs for unruggable capital formation and market-driven governance.
 
 Before you can build and test the programs, you'll need to install the following tools:
 
-- **Rust**: 1.78.0 or compatible
-- **Solana CLI**: 1.17.34 or compatible
-- **Anchor CLI**: 0.29.0
-- **Node.js**: 16.x or higher (tested with v23.x)
+- **Rust**: 1.95.0, pinned by `rust-toolchain.toml` (rustup installs it on first use)
+- **Solana CLI**: Agave 4.3.0 (`agave-install init 4.3.0`)
+- **cargo-build-sbf**: 4.4.0 standalone (`cargo install cargo-build-sbf --version 4.4.0 --locked`), which emits SBPFv3 by default
+- **Anchor CLI**: 0.32.2 (`avm install 0.32.2`)
+- **Node.js**: 20.18 or higher (tested with v22.x)
 - **Yarn**: 1.22.22 or compatible
 
 ### MacOS Setup
@@ -61,14 +62,13 @@ cd programs
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup install 1.78.0
-rustup default 1.78.0
+rustup toolchain install
 ```
 
 #### 3. Install Solana CLI
 
 ```bash
-sh -c "$(curl -sSfL https://release.solana.com/v1.17.34/install)"
+sh -c "$(curl -sSfL https://release.anza.xyz/v4.3.0/install)"
 ```
 
 Add Solana to your PATH (add to `~/.zshrc` or `~/.bash_profile`):
@@ -83,10 +83,26 @@ Reload your shell configuration:
 source ~/.zshrc  # or source ~/.bash_profile
 ```
 
+Agave 4.3.0 bundles cargo-build-sbf 4.3.0, which emits SBPFv0. The programs are built as SBPFv3, which the standalone 4.4.0 emits by default:
+
+```bash
+cargo install cargo-build-sbf --version 4.4.0 --locked
+```
+
+The Solana install directory holds the bundled copy too, so add this line *after* the Solana PATH line in your shell profile to make the cargo-installed copy win:
+
+```bash
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+Check with `cargo build-sbf --version`, which must print `cargo-build-sbf 4.4.0`. (`./rebuild.sh` sets this order for itself.)
+
 #### 4. Install Anchor CLI
 
 ```bash
-cargo install --git https://github.com/coral-xyz/anchor --tag v0.29.0 anchor-cli --locked
+cargo install --git https://github.com/coral-xyz/anchor avm --locked
+avm install 0.32.2
+avm use 0.32.2
 ```
 
 #### 5. Install Node.js and Yarn
@@ -95,8 +111,8 @@ Install Node.js using [nvm](https://github.com/nvm-sh/nvm) (recommended):
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-nvm install 18
-nvm use 18
+nvm install 20
+nvm use 20
 ```
 
 Install Yarn:

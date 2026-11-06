@@ -5,7 +5,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.5";
 
 import dotenv from "dotenv";

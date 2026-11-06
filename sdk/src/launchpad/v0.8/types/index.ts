@@ -1,34 +1,33 @@
-import type { IdlAccounts, IdlEvents } from "@coral-xyz/anchor";
+import type { IdlAccounts, IdlEvents } from "@anchor-lang/core";
 
-import {
-  LaunchpadV8 as LaunchpadProgram,
-  IDL as LaunchpadIDL,
-} from "./launchpad_v8.js";
-export { LaunchpadProgram, LaunchpadIDL };
+import type { LaunchpadV8 as LaunchpadProgram } from "./launchpad_v8.js";
+import launchpadIdl from "./launchpad_v8.json" with { type: "json" };
+export type { LaunchpadProgram };
+export const LaunchpadIDL = launchpadIdl as LaunchpadProgram;
 
 export type Launch = IdlAccounts<LaunchpadProgram>["launch"];
 export type FundingRecord = IdlAccounts<LaunchpadProgram>["fundingRecord"];
 
 export type LaunchInitializedEvent =
-  IdlEvents<LaunchpadProgram>["LaunchInitializedEvent"];
+  IdlEvents<LaunchpadProgram>["launchInitializedEvent"];
 export type LaunchStartedEvent =
-  IdlEvents<LaunchpadProgram>["LaunchStartedEvent"];
+  IdlEvents<LaunchpadProgram>["launchStartedEvent"];
 export type LaunchFundedEvent =
-  IdlEvents<LaunchpadProgram>["LaunchFundedEvent"];
+  IdlEvents<LaunchpadProgram>["launchFundedEvent"];
 export type FundingRecordApprovalSetEvent =
-  IdlEvents<LaunchpadProgram>["FundingRecordApprovalSetEvent"];
+  IdlEvents<LaunchpadProgram>["fundingRecordApprovalSetEvent"];
 export type LaunchSettledEvent =
-  IdlEvents<LaunchpadProgram>["LaunchSettledEvent"];
+  IdlEvents<LaunchpadProgram>["launchSettledEvent"];
 export type LaunchFinalizedEvent =
-  IdlEvents<LaunchpadProgram>["LaunchFinalizedEvent"];
+  IdlEvents<LaunchpadProgram>["launchFinalizedEvent"];
 export type LaunchRefundedEvent =
-  IdlEvents<LaunchpadProgram>["LaunchRefundedEvent"];
-export type LaunchClaimEvent = IdlEvents<LaunchpadProgram>["LaunchClaimEvent"];
-export type LaunchCloseEvent = IdlEvents<LaunchpadProgram>["LaunchCloseEvent"];
+  IdlEvents<LaunchpadProgram>["launchRefundedEvent"];
+export type LaunchClaimEvent = IdlEvents<LaunchpadProgram>["launchClaimEvent"];
+export type LaunchCloseEvent = IdlEvents<LaunchpadProgram>["launchCloseEvent"];
 export type LaunchClaimAdditionalTokenAllocationEvent =
-  IdlEvents<LaunchpadProgram>["LaunchClaimAdditionalTokenAllocationEvent"];
+  IdlEvents<LaunchpadProgram>["launchClaimAdditionalTokenAllocationEvent"];
 export type LaunchExtendedEvent =
-  IdlEvents<LaunchpadProgram>["LaunchExtendedEvent"];
+  IdlEvents<LaunchpadProgram>["launchExtendedEvent"];
 
 export type LaunchpadEvent =
   | LaunchInitializedEvent

@@ -18,7 +18,7 @@ pub struct TypedInitializeAccounts<'info> {
     #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut)]
-    pub squads_multisig: Box<Account<'info, squads_multisig_program::Multisig>>,
+    pub squads_multisig: Box<Account<'info, SquadsMultisig>>,
     /// CHECK: empty on entry; the vault_transaction_create CPI initializes it
     /// and enforces that it is the transaction PDA for the next transaction index
     #[account(mut)]

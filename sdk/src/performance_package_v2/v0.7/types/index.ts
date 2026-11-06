@@ -1,41 +1,41 @@
-import { IdlAccounts, IdlEvents, IdlTypes } from "@coral-xyz/anchor";
-import {
-  PerformancePackageV2 as PerformancePackageV2Program,
-  IDL as PerformancePackageV2IDL,
-} from "./performance_package_v2.js";
-export { PerformancePackageV2Program, PerformancePackageV2IDL };
+import { IdlAccounts, IdlEvents, IdlTypes } from "@anchor-lang/core";
+import type { PerformancePackageV2 as PerformancePackageV2Program } from "./performance_package_v2.js";
+import performancePackageV2Idl from "./performance_package_v2.json" with { type: "json" };
+export type { PerformancePackageV2Program };
+export const PerformancePackageV2IDL =
+  performancePackageV2Idl as PerformancePackageV2Program;
 
 export type PerformancePackageV2Account =
   IdlAccounts<PerformancePackageV2Program>["performancePackage"];
 export type PerformancePackageV2ChangeRequestAccount =
   IdlAccounts<PerformancePackageV2Program>["changeRequest"];
 export type PerformancePackageV2OracleReader =
-  IdlTypes<PerformancePackageV2Program>["OracleReader"];
+  IdlTypes<PerformancePackageV2Program>["oracleReader"];
 export type PerformancePackageV2RewardFunction =
-  IdlTypes<PerformancePackageV2Program>["RewardFunction"];
+  IdlTypes<PerformancePackageV2Program>["rewardFunction"];
 export type PerformancePackageV2PackageStatus =
-  IdlTypes<PerformancePackageV2Program>["PackageStatus"];
+  IdlTypes<PerformancePackageV2Program>["packageStatus"];
 export type PerformancePackageV2ThresholdTranche =
-  IdlTypes<PerformancePackageV2Program>["ThresholdTranche"];
+  IdlTypes<PerformancePackageV2Program>["thresholdTranche"];
 
 // Event aliases are prefixed because several event names (UnlockStartedEvent,
 // UnlockCompletedEvent, ChangeProposedEvent, ChangeExecutedEvent) collide with
 // the v1 `price_based_performance_package` module, which also re-exports them
 // unqualified from the package root.
 export type PerformancePackageV2CreatedEvent =
-  IdlEvents<PerformancePackageV2Program>["PerformancePackageCreatedEvent"];
+  IdlEvents<PerformancePackageV2Program>["performancePackageCreatedEvent"];
 export type PerformancePackageV2UnlockStartedEvent =
-  IdlEvents<PerformancePackageV2Program>["UnlockStartedEvent"];
+  IdlEvents<PerformancePackageV2Program>["unlockStartedEvent"];
 export type PerformancePackageV2UnlockCompletedEvent =
-  IdlEvents<PerformancePackageV2Program>["UnlockCompletedEvent"];
+  IdlEvents<PerformancePackageV2Program>["unlockCompletedEvent"];
 export type PerformancePackageV2AuthorityChangedEvent =
-  IdlEvents<PerformancePackageV2Program>["AuthorityChangedEvent"];
+  IdlEvents<PerformancePackageV2Program>["authorityChangedEvent"];
 export type PerformancePackageV2ChangeProposedEvent =
-  IdlEvents<PerformancePackageV2Program>["ChangeProposedEvent"];
+  IdlEvents<PerformancePackageV2Program>["changeProposedEvent"];
 export type PerformancePackageV2ChangeExecutedEvent =
-  IdlEvents<PerformancePackageV2Program>["ChangeExecutedEvent"];
+  IdlEvents<PerformancePackageV2Program>["changeExecutedEvent"];
 export type PerformancePackageV2ClosedEvent =
-  IdlEvents<PerformancePackageV2Program>["PerformancePackageClosedEvent"];
+  IdlEvents<PerformancePackageV2Program>["performancePackageClosedEvent"];
 export type PerformancePackageV2Event =
   | PerformancePackageV2CreatedEvent
   | PerformancePackageV2UnlockStartedEvent

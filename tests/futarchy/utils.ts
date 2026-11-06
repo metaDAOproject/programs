@@ -162,7 +162,7 @@ export async function expectVaultExecutionError(
   execution: Promise<unknown>,
   errorName: string,
 ) {
-  const error = ctx.futarchy.futarchy.idl.errors.find(
+  const error = ctx.futarchy.futarchy.rawIdl.errors.find(
     (e) => e.name === errorName,
   );
   assert.exists(error, `unknown futarchy error ${errorName}`);

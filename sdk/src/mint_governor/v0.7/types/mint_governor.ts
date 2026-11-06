@@ -1,337 +1,563 @@
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/mint_governor.json`.
+ */
 export type MintGovernor = {
-  version: "0.7.0";
-  name: "mint_governor";
+  address: "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH";
+  metadata: {
+    name: "mintGovernor";
+    version: "0.7.0";
+    spec: "0.1.0";
+    description: "Created with Anchor";
+  };
   instructions: [
     {
-      name: "initializeMintGovernor";
+      name: "addMintAuthority";
+      discriminator: [41, 254, 251, 123, 155, 68, 213, 8];
       accounts: [
         {
-          name: "mint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "mintGovernor";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
-          name: "createKey";
-          isMut: false;
-          isSigner: true;
+          name: "mintAuthority";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+              {
+                kind: "account";
+                path: "mintGovernor";
+              },
+              {
+                kind: "account";
+                path: "authorizedMinter";
+              },
+            ];
+          };
         },
         {
           name: "admin";
-          isMut: false;
-          isSigner: false;
+          signer: true;
+        },
+        {
+          name: "authorizedMinter";
         },
         {
           name: "payer";
-          isMut: true;
-          isSigner: true;
+          writable: true;
+          signer: true;
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
+          address: "11111111111111111111111111111111";
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: {
+              name: "addMintAuthorityArgs";
+            };
+          };
+        },
+      ];
+    },
+    {
+      name: "initializeMintGovernor";
+      discriminator: [198, 71, 122, 52, 99, 36, 35, 197];
+      accounts: [
+        {
+          name: "mint";
+        },
+        {
+          name: "mintGovernor";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  103,
+                  111,
+                  118,
+                  101,
+                  114,
+                  110,
+                  111,
+                  114,
+                ];
+              },
+              {
+                kind: "account";
+                path: "mint";
+              },
+              {
+                kind: "account";
+                path: "createKey";
+              },
+            ];
+          };
+        },
+        {
+          name: "createKey";
+          signer: true;
+        },
+        {
+          name: "admin";
+        },
+        {
+          name: "payer";
+          writable: true;
+          signer: true;
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
+        },
+        {
+          name: "eventAuthority";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
+        },
+        {
+          name: "program";
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "mintTokens";
+      discriminator: [59, 132, 24, 246, 122, 39, 8, 243];
+      accounts: [
+        {
+          name: "mintGovernor";
+          writable: true;
+          relations: ["mintAuthority"];
+        },
+        {
+          name: "mintAuthority";
+          writable: true;
+        },
+        {
+          name: "mint";
+          writable: true;
+          relations: ["destinationAta"];
+        },
+        {
+          name: "destinationAta";
+          writable: true;
+        },
+        {
+          name: "authorizedMinter";
+          signer: true;
+        },
+        {
+          name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+        },
+        {
+          name: "eventAuthority";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
+        },
+        {
+          name: "program";
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: {
+              name: "mintTokensArgs";
+            };
+          };
+        },
+      ];
+    },
+    {
+      name: "reclaimAuthority";
+      discriminator: [156, 147, 67, 113, 251, 229, 162, 166];
+      accounts: [
+        {
+          name: "mintGovernor";
+          writable: true;
+        },
+        {
+          name: "mint";
+          writable: true;
+        },
+        {
+          name: "admin";
+          signer: true;
+        },
+        {
+          name: "newAuthority";
+        },
+        {
+          name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+        },
+        {
+          name: "eventAuthority";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
+        },
+        {
+          name: "program";
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "removeMintAuthority";
+      discriminator: [33, 207, 52, 111, 106, 97, 9, 63];
+      accounts: [
+        {
+          name: "mintGovernor";
+          writable: true;
+          relations: ["mintAuthority"];
+        },
+        {
+          name: "mintAuthority";
+          writable: true;
+        },
+        {
+          name: "admin";
+          signer: true;
+        },
+        {
+          name: "rentDestination";
+          writable: true;
+        },
+        {
+          name: "eventAuthority";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
+        },
+        {
+          name: "program";
         },
       ];
       args: [];
     },
     {
       name: "transferAuthorityToGovernor";
+      discriminator: [14, 48, 149, 50, 10, 197, 115, 141];
       accounts: [
         {
           name: "mintGovernor";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "mint";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "currentAuthority";
-          isMut: false;
-          isSigner: true;
+          signer: true;
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [];
-    },
-    {
-      name: "addMintAuthority";
-      accounts: [
-        {
-          name: "mintGovernor";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "mintAuthority";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "authorizedMinter";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [
-        {
-          name: "args";
-          type: {
-            defined: "AddMintAuthorityArgs";
-          };
-        },
-      ];
-    },
-    {
-      name: "mintTokens";
-      accounts: [
-        {
-          name: "mintGovernor";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "mintAuthority";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "mint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "destinationAta";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "authorizedMinter";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [
-        {
-          name: "args";
-          type: {
-            defined: "MintTokensArgs";
-          };
-        },
-      ];
     },
     {
       name: "updateMintAuthority";
+      discriminator: [103, 51, 57, 197, 223, 22, 44, 142];
       accounts: [
         {
           name: "mintGovernor";
-          isMut: true;
-          isSigner: false;
+          writable: true;
+          relations: ["mintAuthority"];
         },
         {
           name: "mintAuthority";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "admin";
-          isMut: false;
-          isSigner: true;
+          signer: true;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [
         {
           name: "args";
           type: {
-            defined: "UpdateMintAuthorityArgs";
+            defined: {
+              name: "updateMintAuthorityArgs";
+            };
           };
         },
       ];
     },
     {
-      name: "removeMintAuthority";
-      accounts: [
-        {
-          name: "mintGovernor";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "mintAuthority";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "rentDestination";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
       name: "updateMintGovernorAdmin";
+      discriminator: [13, 24, 126, 16, 56, 4, 123, 179];
       accounts: [
         {
           name: "mintGovernor";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "admin";
-          isMut: false;
-          isSigner: true;
+          signer: true;
         },
         {
           name: "newAdmin";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
-    },
-    {
-      name: "reclaimAuthority";
-      accounts: [
-        {
-          name: "mintGovernor";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "mint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "newAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [];
@@ -340,66 +566,86 @@ export type MintGovernor = {
   accounts: [
     {
       name: "mintAuthority";
+      discriminator: [148, 0, 219, 228, 254, 237, 76, 128];
+    },
+    {
+      name: "mintGovernor";
+      discriminator: [110, 173, 19, 114, 217, 193, 37, 71];
+    },
+  ];
+  events: [
+    {
+      name: "mintAuthorityAddedEvent";
+      discriminator: [169, 138, 119, 137, 190, 104, 6, 248];
+    },
+    {
+      name: "mintAuthorityReclaimedEvent";
+      discriminator: [230, 206, 54, 112, 17, 252, 238, 136];
+    },
+    {
+      name: "mintAuthorityRemovedEvent";
+      discriminator: [33, 191, 194, 66, 228, 81, 72, 195];
+    },
+    {
+      name: "mintAuthorityTransferredEvent";
+      discriminator: [205, 127, 250, 250, 151, 40, 121, 49];
+    },
+    {
+      name: "mintAuthorityUpdatedEvent";
+      discriminator: [62, 240, 230, 80, 136, 231, 9, 75];
+    },
+    {
+      name: "mintGovernorAdminUpdatedEvent";
+      discriminator: [65, 63, 211, 60, 91, 209, 207, 132];
+    },
+    {
+      name: "mintGovernorInitializedEvent";
+      discriminator: [19, 13, 254, 0, 215, 154, 195, 136];
+    },
+    {
+      name: "tokensMintedEvent";
+      discriminator: [197, 87, 251, 124, 83, 45, 57, 62];
+    },
+  ];
+  errors: [
+    {
+      code: 6000;
+      name: "unauthorizedAdmin";
+      msg: "Unauthorized: signer is not the admin";
+    },
+    {
+      code: 6001;
+      name: "unauthorizedMinter";
+      msg: "Unauthorized: signer is not the authorized minter";
+    },
+    {
+      code: 6002;
+      name: "mintMismatch";
+      msg: "Mint mismatch: mint_governor.mint does not match provided mint";
+    },
+    {
+      code: 6003;
+      name: "mintLimitExceeded";
+      msg: "Mint limit exceeded: would exceed max_total";
+    },
+  ];
+  types: [
+    {
+      name: "addMintAuthorityArgs";
       type: {
         kind: "struct";
         fields: [
-          {
-            name: "mintGovernor";
-            type: "publicKey";
-          },
-          {
-            name: "authorizedMinter";
-            type: "publicKey";
-          },
           {
             name: "maxTotal";
             type: {
               option: "u64";
             };
           },
-          {
-            name: "totalMinted";
-            type: "u64";
-          },
-          {
-            name: "bump";
-            type: "u8";
-          },
         ];
       };
     },
     {
-      name: "mintGovernor";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "mint";
-            type: "publicKey";
-          },
-          {
-            name: "admin";
-            type: "publicKey";
-          },
-          {
-            name: "createKey";
-            type: "publicKey";
-          },
-          {
-            name: "seqNum";
-            type: "u64";
-          },
-          {
-            name: "bump";
-            type: "u8";
-          },
-        ];
-      };
-    },
-  ];
-  types: [
-    {
-      name: "CommonFields";
+      name: "commonFields";
       type: {
         kind: "struct";
         fields: [
@@ -419,10 +665,60 @@ export type MintGovernor = {
       };
     },
     {
-      name: "AddMintAuthorityArgs";
+      name: "mintAuthority";
       type: {
         kind: "struct";
         fields: [
+          {
+            name: "mintGovernor";
+            type: "pubkey";
+          },
+          {
+            name: "authorizedMinter";
+            type: "pubkey";
+          },
+          {
+            name: "maxTotal";
+            type: {
+              option: "u64";
+            };
+          },
+          {
+            name: "totalMinted";
+            type: "u64";
+          },
+          {
+            name: "bump";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
+      name: "mintAuthorityAddedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "mintGovernor";
+            type: "pubkey";
+          },
+          {
+            name: "mintAuthority";
+            type: "pubkey";
+          },
+          {
+            name: "authorizedMinter";
+            type: "pubkey";
+          },
           {
             name: "maxTotal";
             type: {
@@ -433,7 +729,223 @@ export type MintGovernor = {
       };
     },
     {
-      name: "MintTokensArgs";
+      name: "mintAuthorityReclaimedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "mintGovernor";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "newAuthority";
+            type: "pubkey";
+          },
+        ];
+      };
+    },
+    {
+      name: "mintAuthorityRemovedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "mintGovernor";
+            type: "pubkey";
+          },
+          {
+            name: "mintAuthority";
+            type: "pubkey";
+          },
+          {
+            name: "authorizedMinter";
+            type: "pubkey";
+          },
+          {
+            name: "maxTotal";
+            type: {
+              option: "u64";
+            };
+          },
+          {
+            name: "totalMinted";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "mintAuthorityTransferredEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "mintGovernor";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+        ];
+      };
+    },
+    {
+      name: "mintAuthorityUpdatedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "mintGovernor";
+            type: "pubkey";
+          },
+          {
+            name: "mintAuthority";
+            type: "pubkey";
+          },
+          {
+            name: "authorizedMinter";
+            type: "pubkey";
+          },
+          {
+            name: "maxTotal";
+            type: {
+              option: "u64";
+            };
+          },
+          {
+            name: "totalMinted";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "mintGovernor";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "admin";
+            type: "pubkey";
+          },
+          {
+            name: "createKey";
+            type: "pubkey";
+          },
+          {
+            name: "seqNum";
+            type: "u64";
+          },
+          {
+            name: "bump";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
+      name: "mintGovernorAdminUpdatedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "mintGovernor";
+            type: "pubkey";
+          },
+          {
+            name: "newAdmin";
+            type: "pubkey";
+          },
+        ];
+      };
+    },
+    {
+      name: "mintGovernorInitializedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "mintGovernor";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "admin";
+            type: "pubkey";
+          },
+          {
+            name: "createKey";
+            type: "pubkey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
+      name: "mintTokensArgs";
       type: {
         kind: "struct";
         fields: [
@@ -445,7 +957,57 @@ export type MintGovernor = {
       };
     },
     {
-      name: "UpdateMintAuthorityArgs";
+      name: "tokensMintedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "mintGovernor";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "authorizedMinter";
+            type: "pubkey";
+          },
+          {
+            name: "destinationAta";
+            type: "pubkey";
+          },
+          {
+            name: "amount";
+            type: "u64";
+          },
+          {
+            name: "postTotalMinted";
+            type: "u64";
+          },
+          {
+            name: "authorityMaxTotal";
+            type: {
+              option: "u64";
+            };
+          },
+          {
+            name: "postMintSupply";
+            type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "updateMintAuthorityArgs";
       type: {
         kind: "struct";
         fields: [
@@ -459,1063 +1021,4 @@ export type MintGovernor = {
       };
     },
   ];
-  events: [
-    {
-      name: "MintGovernorInitializedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "admin";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "createKey";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "pdaBump";
-          type: "u8";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "MintAuthorityTransferredEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "MintAuthorityAddedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mintAuthority";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "authorizedMinter";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "maxTotal";
-          type: {
-            option: "u64";
-          };
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "TokensMintedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "authorizedMinter";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "destinationAta";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "amount";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "postTotalMinted";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "authorityMaxTotal";
-          type: {
-            option: "u64";
-          };
-          index: false;
-        },
-        {
-          name: "postMintSupply";
-          type: "u64";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "MintAuthorityUpdatedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mintAuthority";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "authorizedMinter";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "maxTotal";
-          type: {
-            option: "u64";
-          };
-          index: false;
-        },
-        {
-          name: "totalMinted";
-          type: "u64";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "MintAuthorityRemovedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mintAuthority";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "authorizedMinter";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "maxTotal";
-          type: {
-            option: "u64";
-          };
-          index: false;
-        },
-        {
-          name: "totalMinted";
-          type: "u64";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "MintGovernorAdminUpdatedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "newAdmin";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "MintAuthorityReclaimedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "mintGovernor";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "newAuthority";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
-  ];
-  errors: [
-    {
-      code: 6000;
-      name: "UnauthorizedAdmin";
-      msg: "Unauthorized: signer is not the admin";
-    },
-    {
-      code: 6001;
-      name: "UnauthorizedMinter";
-      msg: "Unauthorized: signer is not the authorized minter";
-    },
-    {
-      code: 6002;
-      name: "MintMismatch";
-      msg: "Mint mismatch: mint_governor.mint does not match provided mint";
-    },
-    {
-      code: 6003;
-      name: "MintLimitExceeded";
-      msg: "Mint limit exceeded: would exceed max_total";
-    },
-  ];
-};
-
-export const IDL: MintGovernor = {
-  version: "0.7.0",
-  name: "mint_governor",
-  instructions: [
-    {
-      name: "initializeMintGovernor",
-      accounts: [
-        {
-          name: "mint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "mintGovernor",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "createKey",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "transferAuthorityToGovernor",
-      accounts: [
-        {
-          name: "mintGovernor",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "mint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "currentAuthority",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "addMintAuthority",
-      accounts: [
-        {
-          name: "mintGovernor",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "mintAuthority",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "authorizedMinter",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "AddMintAuthorityArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "mintTokens",
-      accounts: [
-        {
-          name: "mintGovernor",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "mintAuthority",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "mint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "destinationAta",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "authorizedMinter",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "MintTokensArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "updateMintAuthority",
-      accounts: [
-        {
-          name: "mintGovernor",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "mintAuthority",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "UpdateMintAuthorityArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "removeMintAuthority",
-      accounts: [
-        {
-          name: "mintGovernor",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "mintAuthority",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "rentDestination",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "updateMintGovernorAdmin",
-      accounts: [
-        {
-          name: "mintGovernor",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "newAdmin",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "reclaimAuthority",
-      accounts: [
-        {
-          name: "mintGovernor",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "mint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "newAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-  ],
-  accounts: [
-    {
-      name: "mintAuthority",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "mintGovernor",
-            type: "publicKey",
-          },
-          {
-            name: "authorizedMinter",
-            type: "publicKey",
-          },
-          {
-            name: "maxTotal",
-            type: {
-              option: "u64",
-            },
-          },
-          {
-            name: "totalMinted",
-            type: "u64",
-          },
-          {
-            name: "bump",
-            type: "u8",
-          },
-        ],
-      },
-    },
-    {
-      name: "mintGovernor",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "mint",
-            type: "publicKey",
-          },
-          {
-            name: "admin",
-            type: "publicKey",
-          },
-          {
-            name: "createKey",
-            type: "publicKey",
-          },
-          {
-            name: "seqNum",
-            type: "u64",
-          },
-          {
-            name: "bump",
-            type: "u8",
-          },
-        ],
-      },
-    },
-  ],
-  types: [
-    {
-      name: "CommonFields",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "slot",
-            type: "u64",
-          },
-          {
-            name: "unixTimestamp",
-            type: "i64",
-          },
-          {
-            name: "mintGovernorSeqNum",
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "AddMintAuthorityArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "maxTotal",
-            type: {
-              option: "u64",
-            },
-          },
-        ],
-      },
-    },
-    {
-      name: "MintTokensArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "amount",
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "UpdateMintAuthorityArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "maxTotal",
-            type: {
-              option: "u64",
-            },
-          },
-        ],
-      },
-    },
-  ],
-  events: [
-    {
-      name: "MintGovernorInitializedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "mintGovernor",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "admin",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "createKey",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "pdaBump",
-          type: "u8",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "MintAuthorityTransferredEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "mintGovernor",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "MintAuthorityAddedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "mintGovernor",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mintAuthority",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "authorizedMinter",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "maxTotal",
-          type: {
-            option: "u64",
-          },
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "TokensMintedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "mintGovernor",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "authorizedMinter",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "destinationAta",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "amount",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "postTotalMinted",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "authorityMaxTotal",
-          type: {
-            option: "u64",
-          },
-          index: false,
-        },
-        {
-          name: "postMintSupply",
-          type: "u64",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "MintAuthorityUpdatedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "mintGovernor",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mintAuthority",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "authorizedMinter",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "maxTotal",
-          type: {
-            option: "u64",
-          },
-          index: false,
-        },
-        {
-          name: "totalMinted",
-          type: "u64",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "MintAuthorityRemovedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "mintGovernor",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mintAuthority",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "authorizedMinter",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "maxTotal",
-          type: {
-            option: "u64",
-          },
-          index: false,
-        },
-        {
-          name: "totalMinted",
-          type: "u64",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "MintGovernorAdminUpdatedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "mintGovernor",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "newAdmin",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "MintAuthorityReclaimedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "mintGovernor",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "newAuthority",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-  ],
-  errors: [
-    {
-      code: 6000,
-      name: "UnauthorizedAdmin",
-      msg: "Unauthorized: signer is not the admin",
-    },
-    {
-      code: 6001,
-      name: "UnauthorizedMinter",
-      msg: "Unauthorized: signer is not the authorized minter",
-    },
-    {
-      code: 6002,
-      name: "MintMismatch",
-      msg: "Mint mismatch: mint_governor.mint does not match provided mint",
-    },
-    {
-      code: 6003,
-      name: "MintLimitExceeded",
-      msg: "Mint limit exceeded: would exceed max_total",
-    },
-  ],
 };

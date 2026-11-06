@@ -1,4 +1,4 @@
-import { utils } from "@coral-xyz/anchor";
+import { utils } from "@anchor-lang/core";
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import * as multisig from "@sqds/multisig";

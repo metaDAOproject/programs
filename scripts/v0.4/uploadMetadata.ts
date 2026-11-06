@@ -1,5 +1,5 @@
 import { ComputeBudgetProgram, PublicKey, Transaction } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { ConditionalVaultClient } from "@metadaoproject/programs/conditional_vault/v0.4";
 import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.4";
 

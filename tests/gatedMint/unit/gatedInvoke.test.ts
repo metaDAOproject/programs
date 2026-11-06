@@ -27,7 +27,7 @@ import {
 } from "../utils.js";
 import { initializeMintGovernorWithDefaults } from "../../mintGovernor/utils.js";
 import { expectError } from "../../utils.js";
-import { mintTo } from "spl-token-bankrun";
+import { mintTo } from "../../litesvm/index.js";
 
 export default function suite() {
   let gatedMintClient: GatedMintClient;
@@ -232,7 +232,7 @@ export default function suite() {
 
     await gatedMintClient.program.methods
       .gatedInvoke({ instructionData: transferIx.data })
-      .accounts({
+      .accountsPartial({
         caller: alice.publicKey,
         gatedMintConfig,
         whitelistedUser,
@@ -289,7 +289,7 @@ export default function suite() {
 
     await gatedMintClient.program.methods
       .gatedInvoke({ instructionData: transferIx.data })
-      .accounts({
+      .accountsPartial({
         caller: alice.publicKey,
         gatedMintConfig,
         whitelistedUser,

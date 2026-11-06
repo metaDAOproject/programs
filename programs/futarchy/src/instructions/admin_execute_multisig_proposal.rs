@@ -1,7 +1,7 @@
 use super::*;
 
 mod admin {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // MetaDAO-controlled admin - cannot be a Squads signer because of reentrancy
     declare_id!("CWGawadYU8CzRVBecnJymNw97H7E3ndDinV5sMzesgY2");
@@ -24,7 +24,7 @@ pub struct AdminExecuteMultisigProposal<'info> {
         bump,
         seeds::program = squads_multisig_program
     )]
-    pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
+    pub squads_multisig: Account<'info, SquadsMultisig>,
 
     #[account(
         mut,
@@ -38,7 +38,7 @@ pub struct AdminExecuteMultisigProposal<'info> {
         bump,
         seeds::program = squads_multisig_program
     )]
-    pub squads_multisig_proposal: Account<'info, squads_multisig_program::Proposal>,
+    pub squads_multisig_proposal: Account<'info, SquadsProposal>,
 
     #[account(
         mut,
@@ -51,8 +51,7 @@ pub struct AdminExecuteMultisigProposal<'info> {
         bump,
         seeds::program = squads_multisig_program
     )]
-    pub squads_multisig_vault_transaction:
-        Account<'info, squads_multisig_program::VaultTransaction>,
+    pub squads_multisig_vault_transaction: Account<'info, SquadsVaultTransaction>,
 
     pub squads_multisig_program:
         Program<'info, squads_multisig_program::program::SquadsMultisigProgram>,

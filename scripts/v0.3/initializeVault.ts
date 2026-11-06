@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import * as token from "@solana/spl-token";
 const { PublicKey, Keypair, SystemProgram } = anchor.web3;
 const { BN, Program } = anchor;
@@ -61,7 +61,7 @@ async function main() {
 
   await vaultProgram.vaultProgram.methods
     .initializeConditionalVault({ settlementAuthority })
-    .accounts({
+    .accountsPartial({
       vault,
       underlyingTokenMint,
       vaultUnderlyingTokenAccount,

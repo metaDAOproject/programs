@@ -22,7 +22,7 @@ impl ResizeDao<'_> {
         let dao = &ctx.accounts.dao;
 
         require_eq!(dao.owner, &crate::ID);
-        let is_discriminator_correct = dao.try_borrow_data().unwrap()[..8] == Dao::discriminator();
+        let is_discriminator_correct = &dao.try_borrow_data().unwrap()[..8] == Dao::DISCRIMINATOR;
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = Dao::MIGRATED_SIZE;
@@ -97,7 +97,7 @@ impl ResizeDao<'_> {
             typed_proposals_enabled: false,
         };
 
-        dao.realloc(AFTER_REALLOC_SIZE, true)?;
+        dao.resize(AFTER_REALLOC_SIZE)?;
 
         let lamports_needed = Rent::get()?.minimum_balance(AFTER_REALLOC_SIZE);
 

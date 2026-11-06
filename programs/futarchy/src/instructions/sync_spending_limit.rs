@@ -8,7 +8,7 @@ pub struct SyncSpendingLimit<'info> {
     #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(mut)]
-    pub squads_multisig: Box<Account<'info, squads_multisig_program::Multisig>>,
+    pub squads_multisig: Box<Account<'info, SquadsMultisig>>,
     /// CHECK: the Squads spending-limit PDA (`create_key` is always the DAO); may not exist
     #[account(mut, seeds = [squads_multisig_program::SEED_PREFIX, squads_multisig.key().as_ref(), squads_multisig_program::SEED_SPENDING_LIMIT, dao.key().as_ref()], bump, seeds::program = squads_program)]
     pub spending_limit: UncheckedAccount<'info>,

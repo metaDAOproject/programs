@@ -5,7 +5,7 @@ use crate::events::{CommonFields, LaunchFundsReturnedEvent};
 use crate::state::Launch;
 
 pub mod admin {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // MetaDAO multisig vault
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");

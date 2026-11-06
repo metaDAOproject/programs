@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import {
   AccountInfo,
   AddressLookupTableAccount,
@@ -46,15 +46,14 @@ import {
   SetSpendingLimitArgs,
   SpendingLimitAction,
 } from "./types/index.js";
-import { Futarchy, IDL as FutarchyIDL } from "./types/futarchy.js";
 import {
-  Futarchy as v0_6_0_futarchy,
-  IDL as v0_6_0_futarchyIDL,
-} from "./types/v0.6.0-futarchy.js";
-import {
-  Futarchy as v0_6_1_futarchy,
-  IDL as v0_6_1_futarchyIDL,
-} from "./types/v0.6.1-futarchy.js";
+  FutarchyProgram as Futarchy,
+  FutarchyIDL,
+  v0_6_0_Futarchy as v0_6_0_futarchy,
+  v0_6_0_FutarchyIDL as v0_6_0_futarchyIDL,
+  v0_6_1_Futarchy as v0_6_1_futarchy,
+  v0_6_1_FutarchyIDL as v0_6_1_futarchyIDL,
+} from "./types/index.js";
 import {
   getDaoAddr,
   getEnqueuedMultisigProposalApprovalAddr,
@@ -107,18 +106,15 @@ export class FutarchyClient {
   ) {
     this.provider = provider;
     this.futarchy = new Program<Futarchy>(
-      FutarchyIDL,
-      futarchyProgramId,
+      { ...FutarchyIDL, address: futarchyProgramId.toBase58() },
       provider,
     );
     this.v0_6_0_futarchy = new Program<v0_6_0_futarchy>(
-      v0_6_0_futarchyIDL,
-      futarchyProgramId,
+      { ...v0_6_0_futarchyIDL, address: futarchyProgramId.toBase58() },
       provider,
     );
     this.v0_6_1_futarchy = new Program<v0_6_1_futarchy>(
-      v0_6_1_futarchyIDL,
-      futarchyProgramId,
+      { ...v0_6_1_futarchyIDL, address: futarchyProgramId.toBase58() },
       provider,
     );
     this.vaultClient = ConditionalVaultClient.createClient({
@@ -282,7 +278,7 @@ export class FutarchyClient {
       createKey: dao,
     })[0];
 
-    return this.futarchy.methods.initializeDao(params).accounts({
+    return this.futarchy.methods.initializeDao(params).accountsPartial({
       dao,
       baseMint,
       quoteMint,
@@ -377,7 +373,7 @@ export class FutarchyClient {
 
     return this.futarchy.methods
       .launchProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         baseVault,
@@ -448,7 +444,7 @@ export class FutarchyClient {
         inputAmount,
         minOutputAmount,
       })
-      .accounts({
+      .accountsPartial({
         dao,
         userBaseAccount: getAssociatedTokenAddressSync(baseMint, trader, true),
         userQuoteAccount: getAssociatedTokenAddressSync(
@@ -511,7 +507,7 @@ export class FutarchyClient {
         minLiquidity,
         positionAuthority,
       })
-      .accounts({
+      .accountsPartial({
         dao,
         liquidityProvider,
         liquidityProviderBaseAccount: getAssociatedTokenAddressSync(
@@ -606,7 +602,7 @@ export class FutarchyClient {
         inputAmount,
         minOutputAmount,
       })
-      .accounts({
+      .accountsPartial({
         dao,
         proposal,
         ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
@@ -839,7 +835,7 @@ export class FutarchyClient {
 
     return this.futarchy.methods
       .initializeProposal()
-      .accounts({
+      .accountsPartial({
         question,
         proposal,
         squadsProposal,
@@ -1060,7 +1056,7 @@ export class FutarchyClient {
   }) {
     return this.futarchy.methods
       .initializeLargeSpendProposal({ amount })
-      .accounts({
+      .accountsPartial({
         typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
@@ -1158,7 +1154,7 @@ export class FutarchyClient {
 
     return this.futarchy.methods
       .initializeMintTokensProposal({ amount, recipient })
-      .accounts({
+      .accountsPartial({
         typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
@@ -1219,7 +1215,7 @@ export class FutarchyClient {
   }) {
     return this.futarchy.methods
       .initializeSpendingLimitChangeProposal({ config })
-      .accounts({
+      .accountsPartial({
         typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
@@ -1286,7 +1282,7 @@ export class FutarchyClient {
         newTeamAddress,
         spendingLimitAction,
       })
-      .accounts({
+      .accountsPartial({
         typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
@@ -1345,7 +1341,7 @@ export class FutarchyClient {
   }) {
     return this.futarchy.methods
       .initializeHostileLiquidateProposal({ liquidator })
-      .accounts({
+      .accountsPartial({
         typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
@@ -1436,7 +1432,7 @@ export class FutarchyClient {
         minPrice,
         maxPrice,
       })
-      .accounts({
+      .accountsPartial({
         typedInitializeAccounts: this.typedInitializeAccounts({
           dao,
           baseMint,
@@ -1511,7 +1507,7 @@ export class FutarchyClient {
 
     return this.futarchy.methods
       .finalizeProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         squadsProposal,
@@ -1573,7 +1569,7 @@ export class FutarchyClient {
 
     return this.futarchy.methods
       .updateDao({ ...params, deprecatedIsOptimisticGovernanceEnabled: null })
-      .accounts({
+      .accountsPartial({
         dao,
         squadsMultisigVault,
       });
@@ -1592,7 +1588,7 @@ export class FutarchyClient {
       index: 0,
     })[0];
 
-    return this.futarchy.methods.setSpendingLimit({ config }).accounts({
+    return this.futarchy.methods.setSpendingLimit({ config }).accountsPartial({
       dao,
       squadsMultisigVault,
     });
@@ -1608,7 +1604,7 @@ export class FutarchyClient {
     const multisigPda = multisig.getMultisigPda({ createKey: dao })[0];
     const [spendingLimit] = getSpendingLimitAddr({ dao });
 
-    return this.futarchy.methods.syncSpendingLimit().accounts({
+    return this.futarchy.methods.syncSpendingLimit().accountsPartial({
       dao,
       squadsMultisig: multisigPda,
       spendingLimit,
@@ -1626,7 +1622,7 @@ export class FutarchyClient {
   }) {
     const [spendingLimit] = getSpendingLimitAddr({ dao });
 
-    return this.futarchy.methods.resizeDao().accounts({
+    return this.futarchy.methods.resizeDao().accountsPartial({
       dao,
       spendingLimit,
       payer,
@@ -1656,7 +1652,7 @@ export class FutarchyClient {
 
     return this.futarchy.methods
       .stakeToProposal({ amount })
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         stakerBaseAccount: getAssociatedTokenAddressSync(
@@ -1710,20 +1706,26 @@ export class FutarchyClient {
       staker,
     )[0];
 
-    return this.futarchy.methods.unstakeFromProposal({ amount }).accounts({
-      proposal,
-      dao,
-      stakerBaseAccount: getAssociatedTokenAddressSync(baseMint, staker, true),
-      proposalBaseAccount: getAssociatedTokenAddressSync(
-        baseMint,
+    return this.futarchy.methods
+      .unstakeFromProposal({ amount })
+      .accountsPartial({
         proposal,
-        true,
-      ),
-      stakeAccount,
-      staker,
-      baseMint,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    });
+        dao,
+        stakerBaseAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          staker,
+          true,
+        ),
+        proposalBaseAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          proposal,
+          true,
+        ),
+        stakeAccount,
+        staker,
+        baseMint,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      });
   }
 
   collectFeesIx({
@@ -1747,7 +1749,7 @@ export class FutarchyClient {
       true,
     );
 
-    return this.futarchy.methods.collectFees().accounts({
+    return this.futarchy.methods.collectFees().accountsPartial({
       dao,
       admin: this.provider.publicKey,
       ammBaseVault: getAssociatedTokenAddressSync(baseMint, dao, true),
@@ -1766,7 +1768,7 @@ export class FutarchyClient {
     dao: PublicKey;
     teamAddress?: PublicKey;
   }) {
-    return this.futarchy.methods.sponsorProposal().accounts({
+    return this.futarchy.methods.sponsorProposal().accountsPartial({
       proposal,
       dao,
       teamAddress,
@@ -1788,7 +1790,7 @@ export class FutarchyClient {
   }) {
     return this.futarchy.methods
       .adminUpdateProposalParams({ durationInSeconds, passThresholdBps })
-      .accounts({
+      .accountsPartial({
         dao,
         proposal,
         admin,
@@ -1815,7 +1817,7 @@ export class FutarchyClient {
       .adminEnqueueMultisigProposalApproval({
         transactionIndex: new BN(transactionIndex.toString()),
       })
-      .accounts({
+      .accountsPartial({
         dao,
         admin,
         squadsMultisig,
@@ -1840,14 +1842,16 @@ export class FutarchyClient {
       transactionIndex,
     });
 
-    return this.futarchy.methods.executeMultisigProposalApproval().accounts({
-      dao,
-      rentReceiver,
-      squadsMultisig,
-      squadsMultisigProposal: squadsProposal,
-      enqueuedApproval,
-      squadsMultisigProgram: SQUADS_PROGRAM_ID,
-    });
+    return this.futarchy.methods
+      .executeMultisigProposalApproval()
+      .accountsPartial({
+        dao,
+        rentReceiver,
+        squadsMultisig,
+        squadsMultisigProposal: squadsProposal,
+        enqueuedApproval,
+        squadsMultisigProgram: SQUADS_PROGRAM_ID,
+      });
   }
 
   adminEnqueueMultisigProposalCancellationIx({
@@ -1870,7 +1874,7 @@ export class FutarchyClient {
       .adminEnqueueMultisigProposalCancellation({
         transactionIndex: new BN(transactionIndex.toString()),
       })
-      .accounts({
+      .accountsPartial({
         dao,
         admin,
         squadsMultisig,
@@ -1897,7 +1901,7 @@ export class FutarchyClient {
 
     return this.futarchy.methods
       .executeMultisigProposalCancellation()
-      .accounts({
+      .accountsPartial({
         dao,
         rentReceiver,
         squadsMultisig,
@@ -2020,7 +2024,7 @@ export class FutarchyClient {
 
     const [dammV2EventAuthority] = getEventAuthorityAddr(DAMM_V2_PROGRAM_ID);
 
-    return this.futarchy.methods.collectMeteoraDammFees().accounts({
+    return this.futarchy.methods.collectMeteoraDammFees().accountsPartial({
       dao,
       admin,
       squadsMultisig: multisigPda,

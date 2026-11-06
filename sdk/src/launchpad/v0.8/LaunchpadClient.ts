@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import { PublicKey, AccountInfo, ComputeBudgetProgram } from "@solana/web3.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -65,8 +65,12 @@ export class LaunchpadClient {
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
     this.launchpad = new Program<LaunchpadProgram>(
-      LaunchpadIDL as any,
-      params.launchpadProgramId || LAUNCHPAD_V0_8_PROGRAM_ID,
+      {
+        ...LaunchpadIDL,
+        address: (
+          params.launchpadProgramId || LAUNCHPAD_V0_8_PROGRAM_ID
+        ).toBase58(),
+      },
       this.provider,
     );
     this.futarchyClient = FutarchyClient.createClient({
@@ -276,7 +280,7 @@ export class LaunchpadClient {
         accumulatorActivationDelaySeconds,
         hasBidWall,
       })
-      .accounts({
+      .accountsPartial({
         launch,
         launchSigner,
         quoteVault,
@@ -309,7 +313,7 @@ export class LaunchpadClient {
     launch: PublicKey;
     launchAuthority?: PublicKey;
   }) {
-    return this.launchpad.methods.startLaunch().accounts({
+    return this.launchpad.methods.startLaunch().accountsPartial({
       launch,
       launchAuthority,
     });
@@ -346,7 +350,7 @@ export class LaunchpadClient {
       funder,
     );
 
-    return this.launchpad.methods.fund(amount).accounts({
+    return this.launchpad.methods.fund(amount).accountsPartial({
       launch,
       launchQuoteVault,
       fundingRecord,
@@ -357,7 +361,7 @@ export class LaunchpadClient {
   }
 
   closeLaunchIx({ launch }: { launch: PublicKey }) {
-    return this.launchpad.methods.closeLaunch().accounts({
+    return this.launchpad.methods.closeLaunch().accountsPartial({
       launch,
     });
   }
@@ -381,7 +385,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods
       .setFundingRecordApproval(approvedAmount)
-      .accounts({
+      .accountsPartial({
         launch,
         fundingRecord,
         launchAuthority,
@@ -533,7 +537,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods
       .settleLaunch()
-      .accounts({
+      .accountsPartial({
         launch,
         launchSigner,
         launchQuoteVault,
@@ -615,7 +619,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods
       .claim()
-      .accounts({
+      .accountsPartial({
         launch,
         fundingRecord,
         launchSigner,
@@ -669,7 +673,7 @@ export class LaunchpadClient {
       true,
     );
 
-    return this.launchpad.methods.refund().accounts({
+    return this.launchpad.methods.refund().accountsPartial({
       launch,
       fundingRecord,
       launchQuoteVault,
@@ -734,7 +738,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods
       .finalizeLaunch()
-      .accounts({
+      .accountsPartial({
         launch,
         payer,
         launchSigner,
@@ -771,23 +775,25 @@ export class LaunchpadClient {
   }) {
     const launchSigner = this.getLaunchSignerAddress({ launch });
 
-    return this.launchpad.methods.claimAdditionalTokenAllocation().accounts({
-      launch,
-      payer,
-      launchSigner,
-      launchBaseVault: getAssociatedTokenAddressSync(
-        baseMint,
+    return this.launchpad.methods
+      .claimAdditionalTokenAllocation()
+      .accountsPartial({
+        launch,
+        payer,
         launchSigner,
-        true,
-      ),
-      baseMint,
-      additionalTokensRecipient,
-      additionalTokensRecipientTokenAccount: getAssociatedTokenAddressSync(
+        launchBaseVault: getAssociatedTokenAddressSync(
+          baseMint,
+          launchSigner,
+          true,
+        ),
         baseMint,
         additionalTokensRecipient,
-        true,
-      ),
-    });
+        additionalTokensRecipientTokenAccount: getAssociatedTokenAddressSync(
+          baseMint,
+          additionalTokensRecipient,
+          true,
+        ),
+      });
   }
 
   extendLaunchIx({
@@ -799,9 +805,11 @@ export class LaunchpadClient {
     durationSeconds: number;
     admin?: PublicKey;
   }) {
-    return this.launchpad.methods.extendLaunch({ durationSeconds }).accounts({
-      launch,
-      admin,
-    });
+    return this.launchpad.methods
+      .extendLaunch({ durationSeconds })
+      .accountsPartial({
+        launch,
+        admin,
+      });
   }
 }

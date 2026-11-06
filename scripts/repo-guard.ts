@@ -8,21 +8,20 @@
 //   1. Cargo manifests pin every external dep with `=x.y.z`.
 //   2. anchor-lang / anchor-spl versions across programs match the value
 //      declared in repo-guard.toml [cargo] - no cross-program drift.
-//   3. `solana-program` crate pin in launchpads must match the value in
-//      [cargo].solana_program_version. Distinct from any CLI version.
-//   4. Anchor.toml [toolchain].solana_version must match
+//   3. Anchor.toml [toolchain].solana_version must match
 //      [toolchain].local_dev_solana_version.
-//   5. Crates.io minimum age (scoped to PR-introduced version changes).
-//   6. Yarn package.json files use exact versions (no ^, ~, ranges).
-//   7. npm registry minimum age for new yarn pins.
-//   8. anchor-version in every workflow is [toolchain].anchor_version.
+//   4. Crates.io minimum age (scoped to PR-introduced version changes).
+//   5. Yarn package.json files use exact versions (no ^, ~, ranges).
+//   6. npm registry minimum age for new yarn pins.
+//   7. anchor-version in every workflow is [toolchain].anchor_version.
 //      solana-cli-version is checked per-file against
-//      [toolchain.workflow_solana_cli]. Workflows not in the map are
-//      assumed to read versions from Cargo.lock (e.g. reusable-build.yaml).
-//   9. Every third-party GitHub Action is pinned to a SHA from the
+//      [toolchain.workflow_solana_cli]. Workflows not in the map either
+//      read versions from Anchor.toml (reusable-build.yaml) or build inside
+//      Docker (generate-verifiable-builds.yaml).
+//   8. Every third-party GitHub Action is pinned to a SHA from the
 //      [actions.sha_allowlist] in repo-guard.toml. actions/* (GitHub-owned)
 //      are exempt.
-//  10. Sensitive-diff heuristics (review-assist, not a merge gate):
+//   9. Sensitive-diff heuristics (review-assist, not a merge gate):
 //      changes to declare_id! literals, #[error_code] enums, Anchor.toml
 //      [programs.*], or files listed in [sensitive_diff.files].
 //
@@ -44,7 +43,6 @@ type GuardConfig = {
   workflowSolanaCli: Map<string, string>;
   anchorLangVersion: string;
   anchorSplVersion: string;
-  solanaProgramVersion: string;
   packageMinAgeDays: number;
   actionShaAllowlist: Map<string, Set<string>>;
   sensitiveFiles: Set<string>;
@@ -286,7 +284,6 @@ function loadConfig(): GuardConfig {
     workflowSolanaCli,
     anchorLangVersion: requireString("cargo", "anchor_lang_version"),
     anchorSplVersion: requireString("cargo", "anchor_spl_version"),
-    solanaProgramVersion: requireString("cargo", "solana_program_version"),
     packageMinAgeDays: requireNumber("cargo", "package_min_age_days"),
     actionShaAllowlist: allowlist,
     sensitiveFiles,
@@ -909,9 +906,10 @@ function checkWorkflowToolchain(config: GuardConfig): {
 
   for (const file of files) {
     const lines = readFileSync(join(ROOT, file), "utf8").split("\n");
-    // Per-file expected Solana CLI version. Workflows not in the map are
-    // dynamic (e.g. reusable-build.yaml reads from Cargo.lock) - we don't
-    // enforce a value for those.
+    // Per-file expected Solana CLI version. Workflows not in the map either
+    // read versions from Anchor.toml (reusable-build.yaml) or build inside
+    // Docker (generate-verifiable-builds.yaml) - we don't enforce a value
+    // for those.
     const expectedSolana = config.workflowSolanaCli.get(file);
 
     for (let i = 0; i < lines.length; i += 1) {
@@ -955,54 +953,10 @@ function checkWorkflowToolchain(config: GuardConfig): {
   };
 }
 
-// `solana-program` crate pin in launchpads. Must match
-// [cargo].solana_program_version exactly across every program that
-// declares it. Programs that don't declare `solana-program` rely on
-// anchor-lang's transitive dep - not our concern here.
-function checkSolanaProgramCrate(config: GuardConfig): {
-  status: CheckStatus;
-  violations: Array<{
-    file: string;
-    line: number;
-    spec: string;
-    expected: string;
-  }>;
-} {
-  const files = walkCargoToml(join(ROOT, "programs"), []);
-  const violations: Array<{
-    file: string;
-    line: number;
-    spec: string;
-    expected: string;
-  }> = [];
-
-  for (const file of files) {
-    const deps = parseCargoToml(file);
-    for (const dep of deps) {
-      if (dep.name !== "solana-program") continue;
-      if (!dep.spec) continue;
-      const version = dep.spec.replace(/^=/, "");
-      if (version !== config.solanaProgramVersion) {
-        violations.push({
-          file,
-          line: dep.line,
-          spec: dep.spec,
-          expected: `=${config.solanaProgramVersion}`,
-        });
-      }
-    }
-  }
-
-  return {
-    status: violations.length === 0 ? "pass" : "fail",
-    violations,
-  };
-}
-
 // Anchor.toml [toolchain].solana_version is what `anchor test` auto-installs
-// on a local-dev machine. CI workflows don't read it (they pass
-// solana-cli-version explicitly), but we still lock it down so the value
-// stays predictable.
+// on a local-dev machine and what reusable-build.yaml installs through
+// extract-versions. The other CI workflows pass solana-cli-version
+// explicitly, so we lock the value down to keep every path on one version.
 function checkAnchorTomlSolanaVersion(config: GuardConfig): {
   status: CheckStatus;
   actual: string | null;
@@ -1340,25 +1294,6 @@ function renderWorkflowToolchain(
   return lines;
 }
 
-function renderSolanaProgramCrate(
-  r: ReturnType<typeof checkSolanaProgramCrate>,
-  config: GuardConfig,
-): string[] {
-  const lines = renderHeader("solana-program crate pin", r.status);
-  if (r.status === "pass") {
-    lines.push(
-      `- Every \`solana-program = "=X"\` declaration is \`=${config.solanaProgramVersion}\` (locked to match \`Cargo.lock\`).`,
-    );
-    return lines;
-  }
-  for (const v of r.violations) {
-    lines.push(
-      `- ${fmtPath(v.file)}:${v.line} has \`solana-program = "${v.spec}"\`, expected \`${v.expected}\``,
-    );
-  }
-  return lines;
-}
-
 function renderAnchorTomlSolanaVersion(
   r: ReturnType<typeof checkAnchorTomlSolanaVersion>,
 ): string[] {
@@ -1430,7 +1365,6 @@ async function main() {
 
   const cargoPinning = checkCargoExactPinning(config);
   const crossProgram = checkCrossProgramConsistency(config);
-  const solanaProgramCrate = checkSolanaProgramCrate(config);
   const anchorTomlSolana = checkAnchorTomlSolanaVersion(config);
   const crateAge = await checkCrateAge(config, cargoPinning.exactDependencies);
   const npmPinning = checkPackageJsonPinning();
@@ -1442,7 +1376,6 @@ async function main() {
   const overallFailed =
     cargoPinning.status === "fail" ||
     crossProgram.status === "fail" ||
-    solanaProgramCrate.status === "fail" ||
     anchorTomlSolana.status === "fail" ||
     crateAge.status === "fail" ||
     npmPinning.status === "fail" ||
@@ -1456,8 +1389,6 @@ async function main() {
     ...renderCargoPinning(cargoPinning),
     "",
     ...renderCrossProgram(crossProgram),
-    "",
-    ...renderSolanaProgramCrate(solanaProgramCrate, config),
     "",
     ...renderAnchorTomlSolanaVersion(anchorTomlSolana),
     "",
@@ -1513,11 +1444,6 @@ async function main() {
         `::error file=${inst.file}::${v.dependency} = ${inst.spec}, expected =${v.expected}`,
       );
     }
-  }
-  for (const v of solanaProgramCrate.violations) {
-    console.error(
-      `::error file=${v.file},line=${v.line}::solana-program = "${v.spec}", expected "${v.expected}"`,
-    );
   }
   if (anchorTomlSolana.status === "fail") {
     console.error(

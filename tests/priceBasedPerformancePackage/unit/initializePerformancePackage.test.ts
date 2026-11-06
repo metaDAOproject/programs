@@ -5,7 +5,7 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import { assert } from "chai";
-import { mintTo, getAccount } from "spl-token-bankrun";
+import { mintTo, getAccount } from "../../litesvm/index.js";
 import BN from "bn.js";
 import {
   getPerformancePackageAddr,

@@ -7,7 +7,7 @@ import {
 } from "@metadaoproject/programs";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { createMint } from "spl-token-bankrun";
+import { createMint } from "../../litesvm/index.js";
 import { expectError } from "../../utils.js";
 import { getMetadataAccountDataSerializer } from "@metaplex-foundation/mpl-token-metadata";
 

@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.3";
 
 const { PublicKey } = anchor.web3;

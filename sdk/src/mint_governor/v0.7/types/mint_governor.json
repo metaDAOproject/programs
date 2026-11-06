@@ -1,0 +1,1188 @@
+{
+  "address": "gvnr27cVeyW3AVf3acL7VCJ5WjGAphytnsgcK1feHyH",
+  "metadata": {
+    "name": "mint_governor",
+    "version": "0.7.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "add_mint_authority",
+      "discriminator": [
+        41,
+        254,
+        251,
+        123,
+        155,
+        68,
+        213,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "mint_governor",
+          "writable": true
+        },
+        {
+          "name": "mint_authority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint_governor"
+              },
+              {
+                "kind": "account",
+                "path": "authorized_minter"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "authorized_minter"
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "AddMintAuthorityArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_mint_governor",
+      "discriminator": [
+        198,
+        71,
+        122,
+        52,
+        99,
+        36,
+        35,
+        197
+      ],
+      "accounts": [
+        {
+          "name": "mint"
+        },
+        {
+          "name": "mint_governor",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  103,
+                  111,
+                  118,
+                  101,
+                  114,
+                  110,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "create_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "create_key",
+          "signer": true
+        },
+        {
+          "name": "admin"
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "mint_tokens",
+      "discriminator": [
+        59,
+        132,
+        24,
+        246,
+        122,
+        39,
+        8,
+        243
+      ],
+      "accounts": [
+        {
+          "name": "mint_governor",
+          "writable": true,
+          "relations": [
+            "mint_authority"
+          ]
+        },
+        {
+          "name": "mint_authority",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true,
+          "relations": [
+            "destination_ata"
+          ]
+        },
+        {
+          "name": "destination_ata",
+          "writable": true
+        },
+        {
+          "name": "authorized_minter",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "MintTokensArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "reclaim_authority",
+      "discriminator": [
+        156,
+        147,
+        67,
+        113,
+        251,
+        229,
+        162,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "mint_governor",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "new_authority"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "remove_mint_authority",
+      "discriminator": [
+        33,
+        207,
+        52,
+        111,
+        106,
+        97,
+        9,
+        63
+      ],
+      "accounts": [
+        {
+          "name": "mint_governor",
+          "writable": true,
+          "relations": [
+            "mint_authority"
+          ]
+        },
+        {
+          "name": "mint_authority",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "rent_destination",
+          "writable": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "transfer_authority_to_governor",
+      "discriminator": [
+        14,
+        48,
+        149,
+        50,
+        10,
+        197,
+        115,
+        141
+      ],
+      "accounts": [
+        {
+          "name": "mint_governor",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "current_authority",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_mint_authority",
+      "discriminator": [
+        103,
+        51,
+        57,
+        197,
+        223,
+        22,
+        44,
+        142
+      ],
+      "accounts": [
+        {
+          "name": "mint_governor",
+          "writable": true,
+          "relations": [
+            "mint_authority"
+          ]
+        },
+        {
+          "name": "mint_authority",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "UpdateMintAuthorityArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_mint_governor_admin",
+      "discriminator": [
+        13,
+        24,
+        126,
+        16,
+        56,
+        4,
+        123,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "mint_governor",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "new_admin"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "MintAuthority",
+      "discriminator": [
+        148,
+        0,
+        219,
+        228,
+        254,
+        237,
+        76,
+        128
+      ]
+    },
+    {
+      "name": "MintGovernor",
+      "discriminator": [
+        110,
+        173,
+        19,
+        114,
+        217,
+        193,
+        37,
+        71
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "MintAuthorityAddedEvent",
+      "discriminator": [
+        169,
+        138,
+        119,
+        137,
+        190,
+        104,
+        6,
+        248
+      ]
+    },
+    {
+      "name": "MintAuthorityReclaimedEvent",
+      "discriminator": [
+        230,
+        206,
+        54,
+        112,
+        17,
+        252,
+        238,
+        136
+      ]
+    },
+    {
+      "name": "MintAuthorityRemovedEvent",
+      "discriminator": [
+        33,
+        191,
+        194,
+        66,
+        228,
+        81,
+        72,
+        195
+      ]
+    },
+    {
+      "name": "MintAuthorityTransferredEvent",
+      "discriminator": [
+        205,
+        127,
+        250,
+        250,
+        151,
+        40,
+        121,
+        49
+      ]
+    },
+    {
+      "name": "MintAuthorityUpdatedEvent",
+      "discriminator": [
+        62,
+        240,
+        230,
+        80,
+        136,
+        231,
+        9,
+        75
+      ]
+    },
+    {
+      "name": "MintGovernorAdminUpdatedEvent",
+      "discriminator": [
+        65,
+        63,
+        211,
+        60,
+        91,
+        209,
+        207,
+        132
+      ]
+    },
+    {
+      "name": "MintGovernorInitializedEvent",
+      "discriminator": [
+        19,
+        13,
+        254,
+        0,
+        215,
+        154,
+        195,
+        136
+      ]
+    },
+    {
+      "name": "TokensMintedEvent",
+      "discriminator": [
+        197,
+        87,
+        251,
+        124,
+        83,
+        45,
+        57,
+        62
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UnauthorizedAdmin",
+      "msg": "Unauthorized: signer is not the admin"
+    },
+    {
+      "code": 6001,
+      "name": "UnauthorizedMinter",
+      "msg": "Unauthorized: signer is not the authorized minter"
+    },
+    {
+      "code": 6002,
+      "name": "MintMismatch",
+      "msg": "Mint mismatch: mint_governor.mint does not match provided mint"
+    },
+    {
+      "code": 6003,
+      "name": "MintLimitExceeded",
+      "msg": "Mint limit exceeded: would exceed max_total"
+    }
+  ],
+  "types": [
+    {
+      "name": "AddMintAuthorityArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "max_total",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CommonFields",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "mint_governor_seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintAuthority",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "authorized_minter",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_total",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "total_minted",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintAuthorityAddedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "authorized_minter",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_total",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintAuthorityReclaimedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintAuthorityRemovedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "authorized_minter",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_total",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "total_minted",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintAuthorityTransferredEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintAuthorityUpdatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "authorized_minter",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_total",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "total_minted",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintGovernor",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "create_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "seq_num",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintGovernorAdminUpdatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_admin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintGovernorInitializedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "create_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintTokensArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokensMintedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "mint_governor",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "authorized_minter",
+            "type": "pubkey"
+          },
+          {
+            "name": "destination_ata",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "post_total_minted",
+            "type": "u64"
+          },
+          {
+            "name": "authority_max_total",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "post_mint_supply",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateMintAuthorityArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "max_total",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

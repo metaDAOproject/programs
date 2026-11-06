@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
 import {
   PriceBasedPerformancePackageClient,
@@ -71,7 +71,7 @@ export const burnPerformancePackage = async () => {
   const vaultTxCreateSignature = await multisig.rpc.vaultTransactionCreate({
     connection: anchor.getProvider().connection,
     creator: payer.publicKey,
-    feePayer: payer.publicKey,
+    feePayer: payer,
     ephemeralSigners: 0,
     multisigPda: metadaoSquadsMultisig,
     transactionIndex:

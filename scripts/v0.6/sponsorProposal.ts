@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import { PublicKey, TransactionMessage } from "@solana/web3.js";
 import bs58 from "bs58";

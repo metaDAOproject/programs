@@ -1,7 +1,7 @@
 use super::*;
 
 mod admin {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // MetaDAO ops multisig — the same signer as the approval enqueue
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
@@ -16,7 +16,7 @@ pub struct AdminEnqueueMultisigProposalCancellationArgs {
 #[instruction(args: AdminEnqueueMultisigProposalCancellationArgs)]
 pub struct AdminEnqueueMultisigProposalCancellation<'info> {
     #[account(has_one = squads_multisig)]
-    pub dao: Account<'info, Dao>,
+    pub dao: Box<Account<'info, Dao>>,
 
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -30,7 +30,7 @@ pub struct AdminEnqueueMultisigProposalCancellation<'info> {
         bump,
         seeds::program = squads_multisig_program::ID,
     )]
-    pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
+    pub squads_multisig: Box<Account<'info, SquadsMultisig>>,
 
     #[account(
         seeds = [
@@ -43,7 +43,7 @@ pub struct AdminEnqueueMultisigProposalCancellation<'info> {
         bump,
         seeds::program = squads_multisig_program::ID,
     )]
-    pub squads_multisig_proposal: Account<'info, squads_multisig_program::Proposal>,
+    pub squads_multisig_proposal: Box<Account<'info, SquadsProposal>>,
 
     #[account(
         init,

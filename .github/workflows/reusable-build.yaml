@@ -85,10 +85,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
-      SOLANA_VERIFY_VERSION: "0.4.1"
+      SOLANA_VERIFY_VERSION: "0.5.2"
     outputs:
       buffer: ${{ steps.program-buffer.outputs.buffer }}
       idl_buffer: ${{ steps.idl-buffer.outputs.buffer }}
@@ -263,19 +263,20 @@ jobs:
             echo "No Anchor.toml found (this is expected for native programs)"
           fi
 
-      - name: Build Anchor
-        uses: solana-developers/github-actions/build-anchor@860d4e7d3afc9f180f3c5016593a1e86e77eede4 # v0.2.5
+      # Only the IDL is taken from this step; the binary that ships is the verified build below.
+      - name: Build IDL
         if: steps.check-anchor.outputs.is_anchor == 'true'
-        with:
-          program: ${{ env.PROGRAM_NAME }}
-          features: ${{ inputs.features }}
+        run: |
+          FEATURES="${{ inputs.features }}"
+          mkdir -p target/idl
+          anchor idl build -p ${{ env.PROGRAM_NAME }} -o target/idl/${{ env.PROGRAM_NAME }}.json -- ${FEATURES:+--features $FEATURES}
 
+      # The build image comes from [workspace.metadata.cli] in Cargo.toml; --arch v3 makes that image's cargo-build-sbf emit SBPFv3.
       - name: Build Verified
-        uses: solana-developers/github-actions/build-verified@860d4e7d3afc9f180f3c5016593a1e86e77eede4 # v0.2.5
         id: build-verified
-        with:
-          program: ${{ env.PROGRAM_NAME }}
-          features: ${{ inputs.features }}
+        run: |
+          FEATURES="${{ inputs.features }}"
+          solana-verify build --library-name ${{ env.PROGRAM_NAME }} --arch v3 -- ${FEATURES:+--features $FEATURES}
 
       - name: Create local artifacts directory
         run: |

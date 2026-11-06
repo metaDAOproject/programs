@@ -1,7 +1,7 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
 import { assert } from "chai";
-import { mintTo } from "spl-token-bankrun";
+import { mintTo } from "../../litesvm/index.js";
 import {
   GatedMintClient,
   getWhitelistedUserAddr,

@@ -1,12 +1,8 @@
 import * as token from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
-import {
-  AutocratClient,
-  AutocratIDL,
-} from "@metadaoproject/programs/autocrat/v0.4";
+import * as anchor from "@anchor-lang/core";
+import { AutocratClient } from "@metadaoproject/programs/autocrat/v0.4";
 import { PriceMath } from "@metadaoproject/programs";
-import { AUTOCRAT_V0_4_PROGRAM_ID } from "@metadaoproject/programs";
 
 async function main() {
   // Initialize clients
@@ -59,34 +55,22 @@ async function main() {
     return;
   }
 
-  const autocrat = new anchor.Program(
-    AutocratIDL,
-    AUTOCRAT_V0_4_PROGRAM_ID,
-    provider,
-  );
-
-  const accounts = [
-    {
-      pubkey: dao,
-      isSigner: true,
-      isWritable: true,
-    },
-  ];
-
-  const data = autocrat.coder.instruction.encode("update_dao", {
-    daoParams: {
+  const updateDaoIx = await autocratProgram.autocrat.methods
+    .updateDao({
       passThresholdBps: 500,
-      baseBurnLamports: null,
-      burnDecayPerSlotLamports: null,
       slotsPerProposal: null,
-      marketTakerFee: null,
-    },
-  });
+      twapInitialObservation: null,
+      twapMaxObservationChangePerUpdate: null,
+      minQuoteFutarchicLiquidity: null,
+      minBaseFutarchicLiquidity: null,
+    })
+    .accountsPartial({ dao, treasury: storedDao.treasury })
+    .instruction();
 
   const ix = {
-    programId: autocratProgram.getProgramId(),
-    accounts,
-    data,
+    programId: updateDaoIx.programId,
+    accounts: updateDaoIx.keys,
+    data: updateDaoIx.data,
   };
 
   // Initialize the proposal

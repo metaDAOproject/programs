@@ -1,4 +1,4 @@
-import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, IdlTypes, Program } from "@anchor-lang/core";
 import {
   AccountInfo,
   AddressLookupTableAccount,
@@ -13,12 +13,12 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
 } from "@solana/spl-token";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 
 import {
-  SharedLiquidityManager as SharedLiquidityManagerIDLType,
-  IDL as SharedLiquidityManagerIDL,
-} from "./types/shared_liquidity_manager.js";
+  SharedLiquidityManagerProgram as SharedLiquidityManagerIDLType,
+  SharedLiquidityManagerIDL,
+} from "./types/index.js";
 // import {
 //   SharedLiquidityPool,
 //   SharedLiquidityPoolPosition,
@@ -76,9 +76,13 @@ export class SharedLiquidityManagerClient {
   constructor(params: CreateSharedLiquidityManagerClientParams) {
     this.provider = params.provider;
     this.program = new Program<SharedLiquidityManagerIDLType>(
-      SharedLiquidityManagerIDL,
-      params.sharedLiquidityManagerProgramId ||
-        SHARED_LIQUIDITY_MANAGER_PROGRAM_ID,
+      {
+        ...SharedLiquidityManagerIDL,
+        address: (
+          params.sharedLiquidityManagerProgramId ||
+          SHARED_LIQUIDITY_MANAGER_PROGRAM_ID
+        ).toBase58(),
+      },
       this.provider,
     );
     this.autocratClient = AutocratClient.createClient({
@@ -144,7 +148,7 @@ export class SharedLiquidityManagerClient {
   //       quoteAmount,
   //       proposalStakeRateThresholdBps,
   //     })
-  //     .accounts({
+  //     .accountsPartial({
   //       slPool,
   //       baseMint,
   //       quoteMint,
@@ -244,7 +248,7 @@ export class SharedLiquidityManagerClient {
   //       maxBaseTokenAmount,
   //       maxQuoteTokenAmount,
   //     })
-  //     .accounts({
+  //     .accountsPartial({
   //       slPool,
   //       activeSpotPool,
   //       user,
@@ -311,7 +315,7 @@ export class SharedLiquidityManagerClient {
   //       minimumToken0Amount,
   //       minimumToken1Amount,
   //     })
-  //     .accounts({
+  //     .accountsPartial({
   //       slPool,
   //       slPoolSigner,
   //       activeSpotPool,
@@ -409,7 +413,7 @@ export class SharedLiquidityManagerClient {
   //     .initializeProposalWithLiquidity({
   //       nonce,
   //     })
-  //     .accounts({
+  //     .accountsPartial({
   //       sharedLiquidityPool: slPool,
   //       draftProposal,
   //       proposalCreator: this.provider.wallet.publicKey,
@@ -567,7 +571,7 @@ export class SharedLiquidityManagerClient {
   //       instruction,
   //       draftProposalNonce,
   //     })
-  //     .accounts({
+  //     .accountsPartial({
   //       draftProposal,
   //       sharedLiquidityPool,
   //       baseMint,
@@ -595,7 +599,7 @@ export class SharedLiquidityManagerClient {
   //     .stakeToDraftProposal({
   //       amount,
   //     })
-  //     .accounts({
+  //     .accountsPartial({
   //       draftProposal,
   //       staker,
   //       stakerTokenAccount: getAssociatedTokenAddressSync(
@@ -628,7 +632,7 @@ export class SharedLiquidityManagerClient {
   //     .unstakeFromDraftProposal({
   //       amount,
   //     })
-  //     .accounts({
+  //     .accountsPartial({
   //       draftProposal,
   //       staker,
   //       stakerTokenAccount: getAssociatedTokenAddressSync(
@@ -710,7 +714,7 @@ export class SharedLiquidityManagerClient {
   //     spotPoolIndex + 1
   //   );
 
-  //   return this.program.methods.removeProposalLiquidity().accounts({
+  //   return this.program.methods.removeProposalLiquidity().accountsPartial({
   //     slPool,
   //     proposal,
   //     baseMint,

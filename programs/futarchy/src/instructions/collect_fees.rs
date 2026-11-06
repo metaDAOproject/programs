@@ -1,14 +1,14 @@
 use super::*;
 
-pub mod metadao_multisig_vault {
-    use anchor_lang::prelude::declare_id;
+mod metadao_multisig_vault {
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // MetaDAO operations multisig vault - hardcoded fee destination
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");
 }
 
-pub mod metadao_admin {
-    use anchor_lang::prelude::declare_id;
+mod metadao_admin {
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     declare_id!("tSTp6B6kE9o6ZaTmHm2ZwnJBBtgd3x112tapxFhmBEQ");
 }

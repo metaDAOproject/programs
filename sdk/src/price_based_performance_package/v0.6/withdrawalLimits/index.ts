@@ -1,4 +1,4 @@
-import type { IdlTypes } from "@coral-xyz/anchor";
+import type { IdlTypes } from "@anchor-lang/core";
 import BN from "bn.js";
 
 import type {
@@ -19,7 +19,7 @@ const MAX_BPS = new BN(10_000);
 const PROTOCOL_TAKER_FEE_BPS = new BN(50);
 const LP_TAKER_FEE_BPS = new BN(0);
 
-type SpotPool = IdlTypes<FutarchyProgram>["Pool"];
+type SpotPool = IdlTypes<FutarchyProgram>["pool"];
 
 // Anchor's decoded Dao type drops the pool struct nested in the PoolState enum, so it is retyped here.
 function getSpotPool(dao: Dao): SpotPool {

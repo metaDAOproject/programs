@@ -1,57 +1,57 @@
-import { IdlAccounts, IdlEvents, IdlTypes } from "@coral-xyz/anchor";
+import { IdlAccounts, IdlEvents, IdlTypes } from "@anchor-lang/core";
 
-import {
-  PriceBasedPerformancePackage as PriceBasedPerformancePackageProgram,
-  IDL as PriceBasedPerformancePackageIDL,
-} from "./price_based_performance_package.js";
-export { PriceBasedPerformancePackageProgram, PriceBasedPerformancePackageIDL };
+import type { PriceBasedPerformancePackage as PriceBasedPerformancePackageProgram } from "./price_based_performance_package.js";
+import priceBasedPerformancePackageIdl from "./price_based_performance_package.json" with { type: "json" };
+export type { PriceBasedPerformancePackageProgram };
+export const PriceBasedPerformancePackageIDL =
+  priceBasedPerformancePackageIdl as PriceBasedPerformancePackageProgram;
 
 export type InitializePerformancePackageParams =
-  IdlTypes<PriceBasedPerformancePackageProgram>["InitializePerformancePackageParams"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["initializePerformancePackageParams"];
 export type PerformancePackage =
   IdlAccounts<PriceBasedPerformancePackageProgram>["performancePackage"];
 export type OracleConfig =
-  IdlTypes<PriceBasedPerformancePackageProgram>["OracleConfig"];
-export type Tranche = IdlTypes<PriceBasedPerformancePackageProgram>["Tranche"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["oracleConfig"];
+export type Tranche = IdlTypes<PriceBasedPerformancePackageProgram>["tranche"];
 export type WithdrawTokensParams =
-  IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawTokensParams"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["withdrawTokensParams"];
 export type WithdrawViaSellParams =
-  IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawViaSellParams"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["withdrawViaSellParams"];
 export type WithdrawalPolicy =
-  IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawalPolicy"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["withdrawalPolicy"];
 export type CappedWithdrawal =
-  IdlTypes<PriceBasedPerformancePackageProgram>["CappedWithdrawal"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["cappedWithdrawal"];
 export type WithdrawalLimits =
-  IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawalLimits"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["withdrawalLimits"];
 export type WindowUsage =
-  IdlTypes<PriceBasedPerformancePackageProgram>["WindowUsage"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["windowUsage"];
 export type WithdrawalMode =
-  IdlTypes<PriceBasedPerformancePackageProgram>["WithdrawalMode"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["withdrawalMode"];
 export type LimitsParams =
-  IdlTypes<PriceBasedPerformancePackageProgram>["LimitsParams"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["limitsParams"];
 export type InitializePerformancePackageWithLimitsParams =
-  IdlTypes<PriceBasedPerformancePackageProgram>["InitializePerformancePackageWithLimitsParams"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["initializePerformancePackageWithLimitsParams"];
 export type ChangeType =
-  IdlTypes<PriceBasedPerformancePackageProgram>["ChangeType"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["changeType"];
 export type ProposeChangeParams =
-  IdlTypes<PriceBasedPerformancePackageProgram>["ProposeChangeParams"];
+  IdlTypes<PriceBasedPerformancePackageProgram>["proposeChangeParams"];
 
 export type PerformancePackageInitializedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageInitialized"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["performancePackageInitialized"];
 export type UnlockStartedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["UnlockStarted"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["unlockStarted"];
 export type UnlockCompletedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["UnlockCompleted"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["unlockCompleted"];
 export type TokensWithdrawnEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["TokensWithdrawn"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["tokensWithdrawn"];
 export type TokensSoldEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["TokensSold"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["tokensSold"];
 export type ChangeProposedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["ChangeProposed"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["changeProposed"];
 export type ChangeExecutedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["ChangeExecuted"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["changeExecuted"];
 export type PerformancePackageAuthorityChangedEvent =
-  IdlEvents<PriceBasedPerformancePackageProgram>["PerformancePackageAuthorityChanged"];
+  IdlEvents<PriceBasedPerformancePackageProgram>["performancePackageAuthorityChanged"];
 export type PriceBasedPerformancePackageEvent =
   | PerformancePackageInitializedEvent
   | UnlockStartedEvent

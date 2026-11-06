@@ -6,7 +6,7 @@ import {
   ComputeBudgetProgram,
 } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
-import { BanksClient } from "solana-bankrun";
+import { BanksClient } from "../litesvm/index.js";
 import BN from "bn.js";
 import {
   MintGovernorClient,

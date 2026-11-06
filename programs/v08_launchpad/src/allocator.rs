@@ -95,7 +95,7 @@ but with changes to its HEAP_LENGTH and its
 starting allocation address.
 */
 
-use solana_program::entrypoint::HEAP_START_ADDRESS;
+use anchor_lang::solana_program::entrypoint::HEAP_START_ADDRESS;
 use std::{alloc::Layout, mem::size_of, ptr::null_mut};
 
 /// Length of the memory region used for program heap.
@@ -131,6 +131,6 @@ unsafe impl std::alloc::GlobalAlloc for BumpAllocator {
 }
 
 // Only use the allocator if we're not in a no-entrypoint context
-#[cfg(not(feature = "no-entrypoint"))]
+#[cfg(all(not(feature = "no-entrypoint"), target_os = "solana"))]
 #[global_allocator]
 static A: BumpAllocator = BumpAllocator;

@@ -1,5 +1,5 @@
 import { LiquidationClient } from "@metadaoproject/programs";
-import { BankrunProvider } from "anchor-bankrun";
+import { LiteSVMProvider } from "../litesvm/index.js";
 import initializeLiquidation from "./unit/initializeLiquidation.test.js";
 import setRefundRecord from "./unit/setRefundRecord.test.js";
 import activateLiquidation from "./unit/activateLiquidation.test.js";
@@ -8,7 +8,7 @@ import withdrawRemainingQuote from "./unit/withdrawRemainingQuote.test.js";
 
 export default function suite() {
   before(async function () {
-    const provider = new BankrunProvider(this.context);
+    const provider = new LiteSVMProvider(this.context);
     this.liquidation = LiquidationClient.createClient({
       provider: provider as any,
     });

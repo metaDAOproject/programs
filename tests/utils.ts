@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Clock, ProgramTestContext } from "solana-bankrun";
+import { Clock, ProgramTestContext } from "./litesvm/index.js";
 import { BN } from "bn.js";
 import {
   AddressLookupTableAccount,
@@ -133,8 +133,11 @@ export async function makeOldDaoLayout(
   if (overrides.minBaseFutarchicLiquidity !== undefined)
     decoded.minBaseFutarchicLiquidity = overrides.minBaseFutarchicLiquidity;
 
-  // Encode as oldDao and truncate to the pre-migration size.
-  const body = await coder.encode("oldDao", decoded);
+  // Encode with the v0.6.1 layout, the last one before these fields were appended, and truncate.
+  const body = await ctx.futarchy.v0_6_1_futarchy.coder.accounts.encode(
+    "dao",
+    decoded,
+  );
   const buf = Buffer.alloc(BEFORE);
   disc.copy(buf, 0);
   body.subarray(8).copy(buf, 8);

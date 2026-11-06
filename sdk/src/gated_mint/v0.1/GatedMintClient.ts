@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import {
   AccountInfo,
   PublicKey,
@@ -7,10 +7,7 @@ import {
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { GATED_MINT_V0_1_PROGRAM_ID } from "../../constants.js";
 import { getGatedMintConfigAddr, getWhitelistedUserAddr } from "./pda.js";
-import {
-  GatedMint as GatedMintProgram,
-  IDL as GatedMintIDL,
-} from "./types/gated_mint.js";
+import { GatedMintProgram, GatedMintIDL } from "./types/index.js";
 import type {
   GatedMintConfigAccount,
   WhitelistedUserAccount,
@@ -30,8 +27,7 @@ export class GatedMintClient {
     this.provider = provider;
     this.programId = programId;
     this.program = new Program<GatedMintProgram>(
-      GatedMintIDL,
-      programId,
+      { ...GatedMintIDL, address: programId.toBase58() },
       provider,
     );
   }
@@ -96,7 +92,7 @@ export class GatedMintClient {
 
     return this.program.methods
       .initializeGatedMint({ whitelistAdmin })
-      .accounts({
+      .accountsPartial({
         mint,
         gatedMintConfig,
         currentFreezeAuthority,
@@ -127,7 +123,7 @@ export class GatedMintClient {
       user,
     });
 
-    return this.program.methods.addWhitelistedUser().accounts({
+    return this.program.methods.addWhitelistedUser().accountsPartial({
       gatedMintConfig,
       authority,
       mint,
@@ -158,7 +154,7 @@ export class GatedMintClient {
       user,
     });
 
-    return this.program.methods.removeWhitelistedUser().accounts({
+    return this.program.methods.removeWhitelistedUser().accountsPartial({
       gatedMintConfig,
       authority,
       mint,
@@ -182,10 +178,12 @@ export class GatedMintClient {
       mint,
     });
 
-    return this.program.methods.setWhitelistAdmin({ whitelistAdmin }).accounts({
-      gatedMintConfig,
-      admin,
-    });
+    return this.program.methods
+      .setWhitelistAdmin({ whitelistAdmin })
+      .accountsPartial({
+        gatedMintConfig,
+        admin,
+      });
   }
 
   gatedInvokeIx({
@@ -209,7 +207,7 @@ export class GatedMintClient {
 
     return this.program.methods
       .gatedInvoke({ instructionData: instruction.data })
-      .accounts({
+      .accountsPartial({
         caller,
         gatedMintConfig,
         whitelistedUser,
@@ -226,7 +224,7 @@ export class GatedMintClient {
       mint,
     });
 
-    return this.program.methods.disableGating().accounts({
+    return this.program.methods.disableGating().accountsPartial({
       gatedMintConfig,
       admin,
     });
@@ -244,7 +242,7 @@ export class GatedMintClient {
       mint,
     });
 
-    return this.program.methods.thawAccount().accounts({
+    return this.program.methods.thawAccount().accountsPartial({
       gatedMintConfig,
       mint,
       tokenAccount,

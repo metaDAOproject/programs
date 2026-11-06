@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   MAINNET_USDC,
@@ -29,8 +29,7 @@ export class BidWallClient {
     this.provider = provider;
     this.programId = bidWallProgramId;
     this.bidWallProgram = new Program<BidWallProgram>(
-      BidWallIDL,
-      bidWallProgramId,
+      { ...BidWallIDL, address: bidWallProgramId.toBase58() },
       provider,
     );
   }
@@ -103,7 +102,7 @@ export class BidWallClient {
         durationSeconds,
         initialAmmQuoteReserves: new BN(initialAmmQuoteReserves),
       })
-      .accounts({
+      .accountsPartial({
         bidWall,
         payer,
         bidWallQuoteTokenAccount,
@@ -166,7 +165,7 @@ export class BidWallClient {
         amountIn: new BN(amount),
         minAmountOut: new BN(minAmountOut),
       })
-      .accounts({
+      .accountsPartial({
         bidWall,
         user,
         userTokenAccount,
@@ -201,7 +200,7 @@ export class BidWallClient {
       true,
     );
 
-    return this.bidWallProgram.methods.collectFees().accounts({
+    return this.bidWallProgram.methods.collectFees().accountsPartial({
       bidWall,
       cranker: admin,
       bidWallQuoteTokenAccount,
@@ -240,7 +239,7 @@ export class BidWallClient {
       true,
     );
 
-    return this.bidWallProgram.methods.closeBidWall().accounts({
+    return this.bidWallProgram.methods.closeBidWall().accountsPartial({
       bidWall,
       authority,
       feeRecipient,
@@ -285,7 +284,7 @@ export class BidWallClient {
       true,
     );
 
-    return this.bidWallProgram.methods.cancelBidWall().accounts({
+    return this.bidWallProgram.methods.cancelBidWall().accountsPartial({
       bidWall,
       payer,
       authority,

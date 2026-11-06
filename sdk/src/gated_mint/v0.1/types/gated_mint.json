@@ -1,0 +1,1177 @@
+{
+  "address": "GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA",
+  "metadata": {
+    "name": "gated_mint",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "add_whitelisted_user",
+      "discriminator": [
+        211,
+        199,
+        16,
+        14,
+        43,
+        46,
+        211,
+        130
+      ],
+      "accounts": [
+        {
+          "name": "gated_mint_config",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "gated_mint_config"
+          ]
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "whitelisted_user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116,
+                  101,
+                  100,
+                  95,
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "disable_gating",
+      "discriminator": [
+        26,
+        134,
+        241,
+        15,
+        176,
+        212,
+        81,
+        205
+      ],
+      "accounts": [
+        {
+          "name": "gated_mint_config",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "gated_invoke",
+      "discriminator": [
+        253,
+        225,
+        179,
+        175,
+        187,
+        144,
+        104,
+        247
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "gated_mint_config",
+          "writable": true
+        },
+        {
+          "name": "whitelisted_user",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116,
+                  101,
+                  100,
+                  95,
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "caller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "gated_mint_config",
+            "whitelisted_user"
+          ]
+        },
+        {
+          "name": "target_program"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "GatedInvokeArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_gated_mint",
+      "discriminator": [
+        104,
+        52,
+        160,
+        240,
+        89,
+        118,
+        217,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "gated_mint_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "current_freeze_authority",
+          "signer": true
+        },
+        {
+          "name": "admin"
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeGatedMintArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "remove_whitelisted_user",
+      "discriminator": [
+        231,
+        10,
+        54,
+        151,
+        190,
+        230,
+        82,
+        6
+      ],
+      "accounts": [
+        {
+          "name": "gated_mint_config",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "gated_mint_config",
+            "whitelisted_user"
+          ]
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "whitelisted_user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116,
+                  101,
+                  100,
+                  95,
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rent_destination",
+          "writable": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_whitelist_admin",
+      "discriminator": [
+        224,
+        247,
+        186,
+        24,
+        93,
+        98,
+        152,
+        25
+      ],
+      "accounts": [
+        {
+          "name": "gated_mint_config",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SetWhitelistAdminArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "thaw_account",
+      "discriminator": [
+        115,
+        152,
+        79,
+        213,
+        213,
+        169,
+        184,
+        35
+      ],
+      "accounts": [
+        {
+          "name": "gated_mint_config",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "gated_mint_config"
+          ]
+        },
+        {
+          "name": "token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "GatedMintConfig",
+      "discriminator": [
+        58,
+        25,
+        220,
+        64,
+        205,
+        99,
+        235,
+        87
+      ]
+    },
+    {
+      "name": "WhitelistedUser",
+      "discriminator": [
+        156,
+        78,
+        95,
+        223,
+        72,
+        234,
+        174,
+        85
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AccountThawedEvent",
+      "discriminator": [
+        172,
+        202,
+        68,
+        155,
+        173,
+        98,
+        79,
+        74
+      ]
+    },
+    {
+      "name": "GatedInvokeEvent",
+      "discriminator": [
+        111,
+        20,
+        226,
+        55,
+        0,
+        110,
+        86,
+        58
+      ]
+    },
+    {
+      "name": "GatedMintInitializedEvent",
+      "discriminator": [
+        34,
+        94,
+        74,
+        87,
+        153,
+        151,
+        220,
+        10
+      ]
+    },
+    {
+      "name": "GatingDisabledEvent",
+      "discriminator": [
+        183,
+        85,
+        68,
+        72,
+        163,
+        69,
+        125,
+        149
+      ]
+    },
+    {
+      "name": "WhitelistAdminSetEvent",
+      "discriminator": [
+        59,
+        215,
+        174,
+        4,
+        139,
+        231,
+        18,
+        173
+      ]
+    },
+    {
+      "name": "WhitelistedUserAddedEvent",
+      "discriminator": [
+        6,
+        53,
+        76,
+        25,
+        100,
+        133,
+        240,
+        41
+      ]
+    },
+    {
+      "name": "WhitelistedUserRemovedEvent",
+      "discriminator": [
+        28,
+        48,
+        239,
+        140,
+        118,
+        240,
+        96,
+        109
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UnauthorizedAdmin",
+      "msg": "Unauthorized: signer is not the gated mint admin"
+    },
+    {
+      "code": 6001,
+      "name": "UnauthorizedFreezeAuthority",
+      "msg": "Unauthorized: signer is not the current freeze authority of the mint"
+    },
+    {
+      "code": 6002,
+      "name": "MintMismatch",
+      "msg": "Mint mismatch: account does not match the expected gated mint"
+    },
+    {
+      "code": 6003,
+      "name": "GatingDisabled",
+      "msg": "Gating is already disabled for this mint"
+    },
+    {
+      "code": 6004,
+      "name": "GatingNotDisabled",
+      "msg": "Gating must be disabled to call this instruction"
+    },
+    {
+      "code": 6005,
+      "name": "TargetProgramNotWhitelisted",
+      "msg": "Target program is not on the gated_mint whitelist"
+    },
+    {
+      "code": 6006,
+      "name": "SelfInvocation",
+      "msg": "Target program may not be the gated_mint program itself"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidTokenAccount",
+      "msg": "Invalid token account: account is not a valid SPL Token account of the gated mint"
+    },
+    {
+      "code": 6008,
+      "name": "UnauthorizedWhitelistAuthority",
+      "msg": "Unauthorized: signer is neither admin nor whitelist admin"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidWhitelistAdmin",
+      "msg": "Whitelist admin may not equal admin"
+    }
+  ],
+  "types": [
+    {
+      "name": "AccountThawedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "gated_mint_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_account",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CommonFields",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "gated_mint_config_seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GatedInvokeArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instruction_data",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GatedInvokeEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "gated_mint_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "caller",
+            "type": "pubkey"
+          },
+          {
+            "name": "target_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "thawed_count",
+            "type": "u32"
+          },
+          {
+            "name": "frozen_count",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GatedMintConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "whitelist_admin",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "gating_disabled",
+            "type": "bool"
+          },
+          {
+            "name": "seq_num",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GatedMintInitializedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "gated_mint_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "whitelist_admin",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "previous_freeze_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GatingDisabledEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "gated_mint_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeGatedMintArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "whitelist_admin",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetWhitelistAdminArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "whitelist_admin",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WhitelistAdminSetEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "gated_mint_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "previous_whitelist_admin",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "new_whitelist_admin",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WhitelistedUser",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WhitelistedUserAddedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "gated_mint_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "whitelisted_user",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WhitelistedUserRemovedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "gated_mint_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "whitelisted_user",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    }
+  ]
+}

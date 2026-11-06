@@ -64,7 +64,7 @@ pub struct InitializeDao<'info> {
 }
 
 pub mod permissionless_account {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     declare_id!("EP3SoC2SvR3d4c2eXVBvhEMWSr2j3YtoCY3UMiQV7BPD");
 }

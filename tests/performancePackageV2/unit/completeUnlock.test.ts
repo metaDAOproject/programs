@@ -509,7 +509,7 @@ export default function suite() {
     // This would calculate only 100 + 10% of 400 = 140 tokens
     // But since we've already paid 300, no new tokens should be minted
     const clockAfterFirstUnlock = await this.banksClient.getClock();
-    const { Clock } = await import("solana-bankrun");
+    const { Clock } = await import("../../litesvm/index.js");
     this.context.setClock(
       new Clock(
         clockAfterFirstUnlock.slot,

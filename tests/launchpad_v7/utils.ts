@@ -1,6 +1,6 @@
 import { PublicKey, Signer, SystemProgram, Transaction } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
-import { BanksClient } from "solana-bankrun";
+import { BanksClient } from "../litesvm/index.js";
 import { LaunchpadClient } from "@metadaoproject/programs";
 import { getLaunchAddr, getLaunchSignerAddr } from "@metadaoproject/programs";
 

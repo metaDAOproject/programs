@@ -323,15 +323,39 @@ impl FinalizeProposal<'_> {
 
         dao.seq_num += 1;
 
+        Self::emit_finalize_event(
+            &ctx,
+            &clock,
+            pass_market_twap,
+            fail_market_twap,
+            threshold,
+            new_proposal_state,
+            is_team_sponsored,
+        )
+    }
+
+    // Kept out of `handle`, whose stack frame would otherwise exceed the 4 KiB limit.
+    #[inline(never)]
+    fn emit_finalize_event(
+        ctx: &Context<Self>,
+        clock: &Clock,
+        pass_market_twap: u128,
+        fail_market_twap: u128,
+        threshold: u128,
+        state: ProposalState,
+        is_team_sponsored: bool,
+    ) -> Result<()> {
+        let dao = &ctx.accounts.dao;
+
         emit_cpi!(FinalizeProposalEvent {
-            common: CommonFields::new(&clock, dao.seq_num),
-            proposal: proposal.key(),
+            common: CommonFields::new(clock, dao.seq_num),
+            proposal: ctx.accounts.proposal.key(),
             dao: dao.key(),
             pass_market_twap,
             fail_market_twap,
             threshold,
-            state: new_proposal_state,
-            squads_proposal: squads_proposal.key(),
+            state,
+            squads_proposal: ctx.accounts.squads_proposal.key(),
             squads_multisig: dao.squads_multisig,
             post_amm_state: dao.amm.clone(),
             is_team_sponsored,
