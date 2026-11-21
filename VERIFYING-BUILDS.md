@@ -15,7 +15,7 @@ allowing the program to be upgraded. Here's how to do it:
 9. Open up app.squads.so
 10. Click on the program upgrade transaction, you should be able to see the buffer account from either simulating
     the transaction or looking at the transaction details
-11. Now open up a terminal and run the following command: `solana-verify get-buffer-hash ${BUFFER_ACCT}` where
-    `${BUFFER_ACCT}` is the buffer account from step 10
-12. Compare the hash from step 11 with the hash from step 8, if they match, you can approve the upgrade
+11. Open up a terminal and run `solana program show ${BUFFER_ACCT}`, where `${BUFFER_ACCT}` is the buffer account from step 10, and `solana program show ${PROGRAM_ID}`, where `${PROGRAM_ID}` is the program being upgraded. The buffer's `Authority` must be the same address as the program's `Authority`, the multisig vault. If it is any other address, whoever holds that key can still change the buffer after you approve, so do not approve
+12. Now run `solana-verify get-buffer-hash ${BUFFER_ACCT}`
+13. Compare the hash from step 12 with the hash from step 8, if they match, you can approve the upgrade
 

@@ -25,7 +25,6 @@ local_dev_solana_version = "4.3.0"
 # in sync with the workspace.
 [toolchain.workflow_solana_cli]
 ".github/workflows/anchor-test.yaml" = "4.3.0"
-".github/workflows/deploy-buffer.yaml" = "4.3.0"
 ".github/workflows/verify-build.yaml" = "4.3.0"
 
 [cargo]
