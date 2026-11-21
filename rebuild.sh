@@ -6,7 +6,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 [ "$(cargo build-sbf --version | head -1)" = "cargo-build-sbf 4.4.0" ] ||
   { echo "cargo-build-sbf 4.4.0 required: cargo install cargo-build-sbf --version 4.4.0 --locked"; exit 1; }
 
-anchor build
+./scripts/check-stack-frames.sh anchor build
 
 cd sdk
 yarn install

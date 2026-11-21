@@ -42,7 +42,7 @@ runs:
     - name: Cache Cargo dependencies
       uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
     - name: Build programs
-      run: anchor build -- --features ${{ inputs.features }}
+      run: ./scripts/check-stack-frames.sh anchor build -- --features ${{ inputs.features }}
       shell: bash
     - name: Run tests
       run: anchor test --skip-build

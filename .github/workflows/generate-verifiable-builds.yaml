@@ -47,7 +47,7 @@ jobs:
         run: cargo install solana-verify --version ${{ env.SOLANA_VERIFY_VERSION }} --locked
       # The build image comes from [workspace.metadata.cli] in Cargo.toml; --arch v3 makes that image's cargo-build-sbf emit SBPFv3.
       - name: Build verifiable artifact
-        run: solana-verify build --library-name ${{ matrix.program }} --arch v3 -- --features production
+        run: ./scripts/check-stack-frames.sh solana-verify build --library-name ${{ matrix.program }} --arch v3 -- --features production
       - name: Print artifact hash
         run: solana-verify get-executable-hash target/deploy/${{ matrix.program }}.so
       - run: 'git pull --rebase'

@@ -276,7 +276,7 @@ jobs:
         id: build-verified
         run: |
           FEATURES="${{ inputs.features }}"
-          solana-verify build --library-name ${{ env.PROGRAM_NAME }} --arch v3 -- ${FEATURES:+--features $FEATURES}
+          ./scripts/check-stack-frames.sh solana-verify build --library-name ${{ env.PROGRAM_NAME }} --arch v3 -- ${FEATURES:+--features $FEATURES}
 
       - name: Create local artifacts directory
         run: |
