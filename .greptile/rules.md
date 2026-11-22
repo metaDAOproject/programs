@@ -14,10 +14,11 @@
 - launchpad v0.6/v0.7/v0.8 (all live) · futarchy v0.6 · bid_wall v0.7 ·
   mint_governor v0.7 · performance_package_v2 v0.7 · liquidation v0.7 ·
   conditional_vault v0.4 · price_based_performance_package v0.6 · gated_mint v0.1
-- PRs adding a version must update `sync-types.sh`, `sdk/package.json` exports,
-  and `sdk/src/index.ts`.
-- `scripts/v0.3`–`v0.5` paths not listed in sync-types.sh are legacy: summarize,
-  do not line-review.
+- PRs adding a version must update `sdk/sync-types.sh`. Update SDK exports only
+  when they change; changing a program's default version requires updating its
+  own `sdk/src/<program>/index.ts`.
+- `scripts/v0.3`–`v0.5` paths not listed in sync-types.sh are legacy: line-review
+  fund-moving scripts regardless (spending limits, useSpendingLimit, etc).
 
 ## Rust review priorities
 - Account validation and CPI signer checks first; style nits only in mechanical PRs.
@@ -40,8 +41,10 @@
 - Any switch from `workflow_dispatch` to automatic triggers must be flagged.
 
 ## Reviewer shortcut
-- Docs-only, comment-only, rename-only, and legacy-script PRs from contributors
-  with a previously merged fix: summarize, do not line-review.
+- Docs-only, comment-only, and rename-only PRs from contributors with a
+  previously merged fix: summarize, do not line-review.
+- Scripts under `scripts/` that move funds: always line-review changes to
+  amounts, recipients, or signing accounts.
 
 ## Tone
 - Summary-first format, matching this repo's existing review style.
