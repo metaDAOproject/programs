@@ -24,4 +24,10 @@ pub enum LiquidationError {
     InvalidAuthority,
     #[msg("Invalid mint")]
     InvalidMint,
+    #[msg("Invalid admin")]
+    InvalidAdmin,
+    #[msg("New duration must be greater than the current duration")]
+    DurationNotIncreased,
+    #[msg("Vault does not cover the unpaid refunds")]
+    VaultUnderfunded,
 }
