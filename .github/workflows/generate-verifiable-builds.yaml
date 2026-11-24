@@ -13,12 +13,14 @@ permissions:
 
 env:
   HUSKY: 0
+  RUSTUP_TOOLCHAIN: "1.99.1"
 
 jobs:
   generate-verifiable-futarchy:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: futarchy
@@ -36,6 +38,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: conditional_vault
@@ -53,6 +56,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: launchpad
@@ -70,6 +74,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: price_based_performance_package
@@ -87,6 +92,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: launchpad_v7
@@ -104,6 +110,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: bid_wall
@@ -121,6 +128,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: liquidation
@@ -138,6 +146,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: mint_governor
@@ -155,6 +164,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: performance_package_v2
@@ -172,6 +182,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: launchpad_v8
@@ -189,6 +200,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - uses: metadaoproject/anchor-verifiable-build@6d8fc1999ea4b7ff701e8b166903b398741e1c50 # v0.4
         with:
           program: gated_mint

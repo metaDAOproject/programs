@@ -89,6 +89,7 @@ jobs:
     timeout-minutes: 60
     env:
       SOLANA_VERIFY_VERSION: "0.4.1"
+      RUSTUP_TOOLCHAIN: "1.99.1"
     outputs:
       buffer: ${{ steps.program-buffer.outputs.buffer }}
       idl_buffer: ${{ steps.idl-buffer.outputs.buffer }}
@@ -96,6 +97,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
 
       - name: Check for Anchor.toml
         id: check-anchor
