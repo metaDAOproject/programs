@@ -5,6 +5,7 @@ import {
   METADAO_MULTISIG_VAULT,
 } from "@metadaoproject/programs";
 import { PublicKey, Transaction, TransactionMessage } from "@solana/web3.js";
+import { sendAndConfirm } from "../utils/transactions.js";
 
 // Set the liquidation address before running the script
 const LIQUIDATION = new PublicKey("");
@@ -106,8 +107,7 @@ export const extendLiquidation = async () => {
   tx.feePayer = payer.publicKey;
   tx.sign(payer);
 
-  const txHash = await provider.connection.sendRawTransaction(tx.serialize());
-  await provider.connection.confirmTransaction(txHash, "confirmed");
+  const txHash = await sendAndConfirm(provider, tx);
 
   const [proposalPda] = multisig.getProposalPda({
     multisigPda: metadaoSquadsMultisig,
