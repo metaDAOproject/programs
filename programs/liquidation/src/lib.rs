@@ -58,4 +58,12 @@ pub mod liquidation {
     pub fn withdraw_remaining_quote(ctx: Context<WithdrawRemainingQuote>) -> Result<()> {
         WithdrawRemainingQuote::handle(ctx)
     }
+
+    #[access_control(ctx.accounts.validate(&args))]
+    pub fn admin_extend_liquidation(
+        ctx: Context<AdminExtendLiquidation>,
+        args: AdminExtendLiquidationArgs,
+    ) -> Result<()> {
+        AdminExtendLiquidation::handle(ctx, args)
+    }
 }

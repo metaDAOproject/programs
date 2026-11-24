@@ -296,6 +296,49 @@ export type Liquidation = {
       ];
       args: [];
     },
+    {
+      name: "adminExtendLiquidation";
+      accounts: [
+        {
+          name: "admin";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "liquidation";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "liquidationQuoteVault";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: "AdminExtendLiquidationArgs";
+          };
+        },
+      ];
+    },
   ];
   accounts: [
     {
@@ -447,6 +490,18 @@ export type Liquidation = {
           {
             name: "liquidationSeqNum";
             type: "u64";
+          },
+        ];
+      };
+    },
+    {
+      name: "AdminExtendLiquidationArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newDurationSeconds";
+            type: "u32";
           },
         ];
       };
@@ -696,6 +751,33 @@ export type Liquidation = {
         },
       ];
     },
+    {
+      name: "LiquidationExtendedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "liquidation";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "oldDurationSeconds";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "newDurationSeconds";
+          type: "u32";
+          index: false;
+        },
+      ];
+    },
   ];
   errors: [
     {
@@ -752,6 +834,21 @@ export type Liquidation = {
       code: 6010;
       name: "InvalidMint";
       msg: "Invalid mint";
+    },
+    {
+      code: 6011;
+      name: "InvalidAdmin";
+      msg: "Invalid admin";
+    },
+    {
+      code: 6012;
+      name: "DurationNotIncreased";
+      msg: "New duration must be greater than the current duration";
+    },
+    {
+      code: 6013;
+      name: "VaultUnderfunded";
+      msg: "Vault does not cover the unpaid refunds";
     },
   ];
 };
@@ -1054,6 +1151,49 @@ export const IDL: Liquidation = {
       ],
       args: [],
     },
+    {
+      name: "adminExtendLiquidation",
+      accounts: [
+        {
+          name: "admin",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "liquidation",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "liquidationQuoteVault",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "args",
+          type: {
+            defined: "AdminExtendLiquidationArgs",
+          },
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -1205,6 +1345,18 @@ export const IDL: Liquidation = {
           {
             name: "liquidationSeqNum",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "AdminExtendLiquidationArgs",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "newDurationSeconds",
+            type: "u32",
           },
         ],
       },
@@ -1454,6 +1606,33 @@ export const IDL: Liquidation = {
         },
       ],
     },
+    {
+      name: "LiquidationExtendedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "liquidation",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "oldDurationSeconds",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "newDurationSeconds",
+          type: "u32",
+          index: false,
+        },
+      ],
+    },
   ],
   errors: [
     {
@@ -1510,6 +1689,21 @@ export const IDL: Liquidation = {
       code: 6010,
       name: "InvalidMint",
       msg: "Invalid mint",
+    },
+    {
+      code: 6011,
+      name: "InvalidAdmin",
+      msg: "Invalid admin",
+    },
+    {
+      code: 6012,
+      name: "DurationNotIncreased",
+      msg: "New duration must be greater than the current duration",
+    },
+    {
+      code: 6013,
+      name: "VaultUnderfunded",
+      msg: "Vault does not cover the unpaid refunds",
     },
   ],
 };

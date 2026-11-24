@@ -72,3 +72,11 @@ pub struct WithdrawRemainingQuoteEvent {
     pub liquidation_authority: Pubkey,
     pub amount: u64,
 }
+
+#[event]
+pub struct LiquidationExtendedEvent {
+    pub common: CommonFields,
+    pub liquidation: Pubkey,
+    pub old_duration_seconds: u32,
+    pub new_duration_seconds: u32,
+}
