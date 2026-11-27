@@ -1,6 +1,5 @@
 import * as anchor from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
-import { FUTARCHY_V0_6_PROGRAM_ID } from "@metadaoproject/programs";
 import {
   Keypair,
   LAMPORTS_PER_SOL,
@@ -27,11 +26,16 @@ import type { ProbeResult } from "../utils/transactions.js";
 // Proposes an ops multisig batch that makes a program's IDL account larger without changing the IDL it holds.
 // Stage the buffer with stageIdlBuffer.ts first. The payer must be a multisig member allowed to propose.
 
-const PROGRAM_ID = FUTARCHY_V0_6_PROGRAM_ID;
-const MULTISIG = METADAO_MULTISIG;
+const [programArg, bufferArg] = process.argv.slice(2);
+if (!programArg || !bufferArg) {
+  console.error(
+    "Usage: anchor run v06-propose-idl-account-resize -- <program id> <buffer printed by v06-stage-idl-buffer>",
+  );
+  process.exit(1);
+}
 
-// The buffer printed by stageIdlBuffer.ts.
-const IDL_BUFFER_ADDRESS = "";
+const PROGRAM_ID = new PublicKey(programArg);
+const MULTISIG = METADAO_MULTISIG;
 
 // Bytes to add to the IDL account.
 const IDL_ACCOUNT_GROWTH = 10_000;
@@ -50,12 +54,7 @@ const sha256 = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 
 async function main() {
-  if (!IDL_BUFFER_ADDRESS) {
-    throw new Error(
-      "Set IDL_BUFFER_ADDRESS to the buffer printed by stageIdlBuffer.ts",
-    );
-  }
-  const buffer = new PublicKey(IDL_BUFFER_ADDRESS);
+  const buffer = new PublicKey(bufferArg);
   const [vault] = multisig.getVaultPda({ multisigPda: MULTISIG, index: 0 });
   const { base, idlAddress } = await getIdlAddress(PROGRAM_ID);
   const { idlAccount, bufferAccount, payload } = await loadAndCheckAccounts(

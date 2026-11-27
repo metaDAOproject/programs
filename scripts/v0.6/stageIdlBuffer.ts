@@ -1,7 +1,11 @@
 import * as anchor from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
-import { FUTARCHY_V0_6_PROGRAM_ID } from "@metadaoproject/programs";
-import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import { createHash } from "crypto";
 import { METADAO_MULTISIG } from "../utils/adminApproval.js";
 import {
@@ -18,7 +22,13 @@ import { sendAndConfirm } from "../utils/transactions.js";
 // owned by the ops multisig vault. proposeIdlAccountResize.ts then copies the
 // buffer back into a larger IDL account.
 
-const PROGRAM_ID = FUTARCHY_V0_6_PROGRAM_ID;
+const [programArg] = process.argv.slice(2);
+if (!programArg) {
+  console.error("Usage: anchor run v06-stage-idl-buffer -- <program id>");
+  process.exit(1);
+}
+
+const PROGRAM_ID = new PublicKey(programArg);
 const MULTISIG = METADAO_MULTISIG;
 
 // Bytes per write transaction, the chunk size `anchor idl write-buffer` uses.
@@ -122,7 +132,7 @@ async function main() {
     `Buffer verified: ${staged.payload.length} bytes, same as the live IDL, authority ${vault.toBase58()}`,
   );
   console.log(
-    `Set IDL_BUFFER_ADDRESS in proposeIdlAccountResize.ts to ${buffer.publicKey.toBase58()}`,
+    `Propose with: anchor run v06-propose-idl-account-resize --provider.cluster <rpc> --provider.wallet <member keypair> -- ${PROGRAM_ID.toBase58()} ${buffer.publicKey.toBase58()}`,
   );
 }
 
