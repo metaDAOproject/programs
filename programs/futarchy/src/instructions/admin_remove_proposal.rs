@@ -1,7 +1,7 @@
 use super::*;
 
-pub mod admin {
-    use anchor_lang::prelude::declare_id;
+mod admin {
+    use anchor_lang::solana_program::pubkey::declare_id;
     declare_id!("CWGawadYU8CzRVBecnJymNw97H7E3ndDinV5sMzesgY2");
 }
 

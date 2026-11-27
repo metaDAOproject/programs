@@ -11,8 +11,8 @@ pub struct InitializeProposal<'info> {
         bump
     )]
     pub proposal: Box<Account<'info, Proposal>>,
-    pub squads_proposal: Box<Account<'info, squads_multisig_program::Proposal>>,
-    pub squads_multisig: Box<Account<'info, squads_multisig_program::Multisig>>,
+    pub squads_proposal: Box<Account<'info, SquadsProposal>>,
+    pub squads_multisig: Box<Account<'info, SquadsMultisig>>,
     #[account(
         seeds = [
             squads_multisig_program::SEED_PREFIX,
@@ -23,7 +23,7 @@ pub struct InitializeProposal<'info> {
         bump,
         seeds::program = squads_multisig_program::ID,
     )]
-    pub squads_vault_transaction: Box<Account<'info, squads_multisig_program::VaultTransaction>>,
+    pub squads_vault_transaction: Box<Account<'info, SquadsVaultTransaction>>,
     #[account(mut, has_one = squads_multisig)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(

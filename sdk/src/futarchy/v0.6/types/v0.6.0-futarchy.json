@@ -1,0 +1,2709 @@
+{
+  "address": "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq",
+  "metadata": {
+    "name": "futarchy",
+    "version": "0.6.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "initialize_dao",
+      "discriminator": [
+        128,
+        226,
+        96,
+        90,
+        39,
+        56,
+        24,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "dao_creator",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "squads_multisig",
+          "writable": true
+        },
+        {
+          "name": "squads_multisig_vault"
+        },
+        {
+          "name": "squads_program"
+        },
+        {
+          "name": "squads_program_config"
+        },
+        {
+          "name": "squads_program_config_treasury",
+          "writable": true
+        },
+        {
+          "name": "spending_limit",
+          "writable": true
+        },
+        {
+          "name": "futarchy_amm_base_vault",
+          "writable": true
+        },
+        {
+          "name": "futarchy_amm_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeDaoParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_proposal",
+      "discriminator": [
+        50,
+        73,
+        156,
+        98,
+        129,
+        149,
+        21,
+        158
+      ],
+      "accounts": [
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "squads_proposal"
+        },
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "question"
+        },
+        {
+          "name": "quote_vault"
+        },
+        {
+          "name": "base_vault"
+        },
+        {
+          "name": "proposer",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "stake_to_proposal",
+      "discriminator": [
+        10,
+        169,
+        175,
+        238,
+        80,
+        221,
+        37,
+        16
+      ],
+      "accounts": [
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "staker_base_account",
+          "writable": true
+        },
+        {
+          "name": "proposal_base_account",
+          "writable": true
+        },
+        {
+          "name": "stake_account",
+          "writable": true
+        },
+        {
+          "name": "staker",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "StakeToProposalParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "unstake_from_proposal",
+      "discriminator": [
+        179,
+        220,
+        186,
+        86,
+        2,
+        96,
+        50,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "staker_base_account",
+          "writable": true
+        },
+        {
+          "name": "proposal_base_account",
+          "writable": true
+        },
+        {
+          "name": "stake_account",
+          "writable": true
+        },
+        {
+          "name": "staker",
+          "signer": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UnstakeFromProposalParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "launch_proposal",
+      "discriminator": [
+        16,
+        211,
+        189,
+        119,
+        245,
+        72,
+        0,
+        229
+      ],
+      "accounts": [
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "base_vault"
+        },
+        {
+          "name": "quote_vault"
+        },
+        {
+          "name": "pass_base_mint"
+        },
+        {
+          "name": "pass_quote_mint"
+        },
+        {
+          "name": "fail_base_mint"
+        },
+        {
+          "name": "fail_quote_mint"
+        },
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "amm_pass_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_pass_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_fail_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_fail_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "finalize_proposal",
+      "discriminator": [
+        23,
+        68,
+        51,
+        167,
+        109,
+        173,
+        187,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "question",
+          "writable": true
+        },
+        {
+          "name": "squads_proposal",
+          "writable": true
+        },
+        {
+          "name": "squads_multisig"
+        },
+        {
+          "name": "squads_multisig_program"
+        },
+        {
+          "name": "amm_pass_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_pass_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_fail_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_fail_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "vault_program"
+        },
+        {
+          "name": "vault_event_authority"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "pass_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "fail_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "pass_base_mint",
+          "writable": true
+        },
+        {
+          "name": "fail_base_mint",
+          "writable": true
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "base_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_dao",
+      "discriminator": [
+        131,
+        72,
+        75,
+        25,
+        112,
+        210,
+        109,
+        2
+      ],
+      "accounts": [
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "squads_multisig_vault",
+          "signer": true
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "dao_params",
+          "type": {
+            "defined": {
+              "name": "UpdateDaoParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "spot_swap",
+      "discriminator": [
+        167,
+        97,
+        12,
+        231,
+        237,
+        78,
+        166,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "user_base_account",
+          "writable": true
+        },
+        {
+          "name": "user_quote_account",
+          "writable": true
+        },
+        {
+          "name": "amm_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "signer": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "SpotSwapParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "conditional_swap",
+      "discriminator": [
+        194,
+        136,
+        220,
+        89,
+        242,
+        169,
+        130,
+        157
+      ],
+      "accounts": [
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "amm_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "proposal"
+        },
+        {
+          "name": "amm_pass_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_pass_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_fail_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_fail_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "trader",
+          "signer": true
+        },
+        {
+          "name": "user_input_account",
+          "writable": true
+        },
+        {
+          "name": "user_output_account",
+          "writable": true
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "base_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault_underlying_token_account",
+          "writable": true
+        },
+        {
+          "name": "pass_base_mint",
+          "writable": true
+        },
+        {
+          "name": "fail_base_mint",
+          "writable": true
+        },
+        {
+          "name": "pass_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "fail_quote_mint",
+          "writable": true
+        },
+        {
+          "name": "conditional_vault_program"
+        },
+        {
+          "name": "vault_event_authority"
+        },
+        {
+          "name": "question"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ConditionalSwapParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "provide_liquidity",
+      "discriminator": [
+        40,
+        110,
+        107,
+        116,
+        174,
+        127,
+        97,
+        204
+      ],
+      "accounts": [
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "liquidity_provider",
+          "signer": true
+        },
+        {
+          "name": "liquidity_provider_base_account",
+          "writable": true
+        },
+        {
+          "name": "liquidity_provider_quote_account",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "amm_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_position",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ProvideLiquidityParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw_liquidity",
+      "discriminator": [
+        149,
+        158,
+        33,
+        185,
+        47,
+        243,
+        253,
+        31
+      ],
+      "accounts": [
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "position_authority",
+          "signer": true
+        },
+        {
+          "name": "liquidity_provider_base_account",
+          "writable": true
+        },
+        {
+          "name": "liquidity_provider_quote_account",
+          "writable": true
+        },
+        {
+          "name": "amm_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_position",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "WithdrawLiquidityParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "collect_fees",
+      "discriminator": [
+        164,
+        152,
+        207,
+        99,
+        30,
+        186,
+        19,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "base_token_account",
+          "writable": true
+        },
+        {
+          "name": "quote_token_account",
+          "writable": true
+        },
+        {
+          "name": "amm_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "execute_spending_limit_change",
+      "discriminator": [
+        146,
+        175,
+        145,
+        31,
+        184,
+        129,
+        252,
+        79
+      ],
+      "accounts": [
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "dao",
+          "writable": true
+        },
+        {
+          "name": "squads_proposal",
+          "writable": true
+        },
+        {
+          "name": "squads_multisig"
+        },
+        {
+          "name": "squads_multisig_program"
+        },
+        {
+          "name": "vault_transaction"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AmmPosition",
+      "discriminator": [
+        34,
+        97,
+        105,
+        74,
+        17,
+        226,
+        212,
+        0
+      ]
+    },
+    {
+      "name": "Dao",
+      "discriminator": [
+        163,
+        9,
+        47,
+        31,
+        52,
+        85,
+        197,
+        49
+      ]
+    },
+    {
+      "name": "Proposal",
+      "discriminator": [
+        26,
+        94,
+        189,
+        187,
+        116,
+        136,
+        53,
+        33
+      ]
+    },
+    {
+      "name": "StakeAccount",
+      "discriminator": [
+        80,
+        158,
+        67,
+        124,
+        50,
+        189,
+        192,
+        255
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "CollectFeesEvent",
+      "discriminator": [
+        226,
+        2,
+        53,
+        67,
+        132,
+        158,
+        125,
+        173
+      ]
+    },
+    {
+      "name": "InitializeDaoEvent",
+      "discriminator": [
+        119,
+        48,
+        153,
+        116,
+        127,
+        37,
+        226,
+        228
+      ]
+    },
+    {
+      "name": "UpdateDaoEvent",
+      "discriminator": [
+        12,
+        58,
+        244,
+        224,
+        171,
+        25,
+        33,
+        56
+      ]
+    },
+    {
+      "name": "InitializeProposalEvent",
+      "discriminator": [
+        141,
+        56,
+        246,
+        192,
+        168,
+        254,
+        64,
+        111
+      ]
+    },
+    {
+      "name": "StakeToProposalEvent",
+      "discriminator": [
+        94,
+        69,
+        68,
+        151,
+        90,
+        149,
+        240,
+        191
+      ]
+    },
+    {
+      "name": "UnstakeFromProposalEvent",
+      "discriminator": [
+        89,
+        129,
+        63,
+        211,
+        55,
+        33,
+        194,
+        171
+      ]
+    },
+    {
+      "name": "LaunchProposalEvent",
+      "discriminator": [
+        177,
+        55,
+        191,
+        93,
+        203,
+        124,
+        184,
+        11
+      ]
+    },
+    {
+      "name": "FinalizeProposalEvent",
+      "discriminator": [
+        45,
+        29,
+        122,
+        181,
+        79,
+        224,
+        57,
+        141
+      ]
+    },
+    {
+      "name": "SpotSwapEvent",
+      "discriminator": [
+        29,
+        253,
+        121,
+        255,
+        82,
+        60,
+        148,
+        195
+      ]
+    },
+    {
+      "name": "ConditionalSwapEvent",
+      "discriminator": [
+        2,
+        166,
+        200,
+        160,
+        94,
+        212,
+        68,
+        45
+      ]
+    },
+    {
+      "name": "ProvideLiquidityEvent",
+      "discriminator": [
+        38,
+        2,
+        37,
+        238,
+        229,
+        214,
+        255,
+        235
+      ]
+    },
+    {
+      "name": "WithdrawLiquidityEvent",
+      "discriminator": [
+        214,
+        6,
+        161,
+        45,
+        191,
+        142,
+        124,
+        186
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AmmTooOld",
+      "msg": "Amms must have been created within 5 minutes (counted in slots) of proposal initialization"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidInitialObservation",
+      "msg": "An amm has an `initial_observation` that doesn't match the `dao`'s config"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidMaxObservationChange",
+      "msg": "An amm has a `max_observation_change_per_update` that doesn't match the `dao`'s config"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidStartDelaySlots",
+      "msg": "An amm has a `start_delay_slots` that doesn't match the `dao`'s config"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidSettlementAuthority",
+      "msg": "One of the vaults has an invalid `settlement_authority`"
+    },
+    {
+      "code": 6005,
+      "name": "ProposalTooYoung",
+      "msg": "Proposal is too young to be executed or rejected"
+    },
+    {
+      "code": 6006,
+      "name": "MarketsTooYoung",
+      "msg": "Markets too young for proposal to be finalized. TWAP might need to be cranked"
+    },
+    {
+      "code": 6007,
+      "name": "ProposalAlreadyFinalized",
+      "msg": "This proposal has already been finalized"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidVaultNonce",
+      "msg": "A conditional vault has an invalid nonce. A nonce should encode the proposal number"
+    },
+    {
+      "code": 6009,
+      "name": "ProposalNotPassed",
+      "msg": "This proposal can't be executed because it isn't in the passed state"
+    },
+    {
+      "code": 6010,
+      "name": "InsufficientLiquidity",
+      "msg": "More liquidity needs to be in the AMM to launch this proposal"
+    },
+    {
+      "code": 6011,
+      "name": "ProposalDurationTooShort",
+      "msg": "Proposal duration must be longer 1 day and longer than 2 times the TWAP start delay"
+    },
+    {
+      "code": 6012,
+      "name": "PassThresholdTooHigh",
+      "msg": "Pass threshold must be less than 10%"
+    },
+    {
+      "code": 6013,
+      "name": "QuestionMustBeBinary",
+      "msg": "Question must have exactly 2 outcomes for binary futarchy"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidSquadsProposalStatus",
+      "msg": "Squads proposal must be in Draft status"
+    },
+    {
+      "code": 6015,
+      "name": "CastingOverflow",
+      "msg": "Casting overflow. If you're seeing this, please report this"
+    },
+    {
+      "code": 6016,
+      "name": "InsufficientBalance",
+      "msg": "Insufficient balance"
+    },
+    {
+      "code": 6017,
+      "name": "ZeroLiquidityRemove",
+      "msg": "Cannot remove zero liquidity"
+    },
+    {
+      "code": 6018,
+      "name": "SwapSlippageExceeded",
+      "msg": "Swap slippage exceeded"
+    },
+    {
+      "code": 6019,
+      "name": "AssertFailed",
+      "msg": "Assert failed"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidAdmin",
+      "msg": "Invalid admin"
+    },
+    {
+      "code": 6021,
+      "name": "ProposalNotInDraftState",
+      "msg": "Proposal is not in draft state"
+    },
+    {
+      "code": 6022,
+      "name": "InsufficientTokenBalance",
+      "msg": "Insufficient token balance"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount"
+    },
+    {
+      "code": 6024,
+      "name": "InsufficientStakeToLaunch",
+      "msg": "Insufficient stake to launch proposal"
+    },
+    {
+      "code": 6025,
+      "name": "StakerNotFound",
+      "msg": "Staker not found in proposal"
+    },
+    {
+      "code": 6026,
+      "name": "PoolNotInSpotState",
+      "msg": "Pool must be in spot state"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidDaoCreateLiquidity",
+      "msg": "If you're providing liquidity, you must provide both base and quote token accounts"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidStakeAccount",
+      "msg": "Invalid stake account"
+    },
+    {
+      "code": 6029,
+      "name": "InvariantViolated",
+      "msg": "An invariant was violated. You should get in contact with the MetaDAO team if you see this"
+    },
+    {
+      "code": 6030,
+      "name": "ProposalNotActive",
+      "msg": "Proposal needs to be active to perform a conditional swap"
+    },
+    {
+      "code": 6031,
+      "name": "InvalidTransaction",
+      "msg": "This Squads transaction should only contain calls to update spending limits"
+    }
+  ],
+  "types": [
+    {
+      "name": "CommonFields",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "dao_seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConditionalSwapParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market",
+            "type": {
+              "defined": {
+                "name": "Market"
+              }
+            }
+          },
+          {
+            "name": "swap_type",
+            "type": {
+              "defined": {
+                "name": "SwapType"
+              }
+            }
+          },
+          {
+            "name": "input_amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_output_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeDaoParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "twap_initial_observation",
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "twap_start_delay_seconds",
+            "type": "u32"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "base_to_stake",
+            "type": "u64"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "seconds_per_proposal",
+            "type": "u32"
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "initial_spending_limit",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "InitialSpendingLimit"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProvideLiquidityParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "quote_amount",
+            "docs": [
+              "How much quote token you will deposit to the pool"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_base_amount",
+            "docs": [
+              "The maximum base token you will deposit to the pool"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_liquidity",
+            "docs": [
+              "The minimum liquidity you will be assigned"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "position_authority",
+            "docs": [
+              "The account that will own the LP position, usually the same as the",
+              "liquidity provider"
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SpotSwapParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "input_amount",
+            "type": "u64"
+          },
+          {
+            "name": "swap_type",
+            "type": {
+              "defined": {
+                "name": "SwapType"
+              }
+            }
+          },
+          {
+            "name": "min_output_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeToProposalParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnstakeFromProposalParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateDaoParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pass_threshold_bps",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "seconds_per_proposal",
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "twap_initial_observation",
+            "type": {
+              "option": "u128"
+            }
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": {
+              "option": "u128"
+            }
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "base_to_stake",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawLiquidityParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "liquidity_to_withdraw",
+            "docs": [
+              "How much liquidity to withdraw"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "min_base_amount",
+            "docs": [
+              "Minimum base tokens to receive"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_quote_amount",
+            "docs": [
+              "Minimum quote tokens to receive"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitialSpendingLimit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount_per_month",
+            "type": "u64"
+          },
+          {
+            "name": "members",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FutarchyAmm",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "PoolState"
+              }
+            }
+          },
+          {
+            "name": "total_liquidity",
+            "type": "u128"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_quote_vault",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TwapOracle",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "aggregator",
+            "docs": [
+              "Running sum of slots_per_last_update * last_observation.",
+              "",
+              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
+              "we can store 18 million slots worth of observations, which turns out to",
+              "be ~85 days worth of slots.",
+              "",
+              "Assuming that latest observations are 100x smaller than they could theoretically",
+              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
+              "very conservative assumption - META/USDC prices should be between 1e9 and",
+              "1e15, which would overflow after 1e15 years worth of slots.",
+              "",
+              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
+              "client's responsibility to sanity check the assets or to handle an",
+              "aggregator at T2 being smaller than an aggregator at T1."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "last_updated_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "created_at_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "last_price",
+            "docs": [
+              "A price is the number of quote units per base unit multiplied by 1e12.",
+              "You cannot simply divide by 1e12 to get a price you can display in the UI",
+              "because the base and quote decimals may be different. Instead, do:",
+              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "last_observation",
+            "docs": [
+              "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
+              "a few extremely large outliers. So we use observations, which can only move",
+              "by `max_observation_change_per_update` per update."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "max_observation_change_per_update",
+            "docs": [
+              "The most that an observation can change per update."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "initial_observation",
+            "docs": [
+              "What the initial `latest_observation` is set to."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "start_delay_seconds",
+            "docs": [
+              "Number of seconds after amm.created_at_slot to start recording TWAP"
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Pool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle",
+            "type": {
+              "defined": {
+                "name": "TwapOracle"
+              }
+            }
+          },
+          {
+            "name": "quote_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "base_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "quote_protocol_fee_balance",
+            "type": "u64"
+          },
+          {
+            "name": "base_protocol_fee_balance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PoolState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Spot",
+            "fields": [
+              {
+                "name": "spot",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "Futarchy",
+            "fields": [
+              {
+                "name": "spot",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              },
+              {
+                "name": "pass",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              },
+              {
+                "name": "fail",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Market",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Spot"
+          },
+          {
+            "name": "Pass"
+          },
+          {
+            "name": "Fail"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SwapType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "Sell"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Token",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Base"
+          },
+          {
+            "name": "Quote"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposalState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Draft",
+            "fields": [
+              {
+                "name": "amount_staked",
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Passed"
+          },
+          {
+            "name": "Failed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AmmPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "position_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "liquidity",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Dao",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amm",
+            "docs": [
+              "Embedded FutarchyAmm - 1:1 relationship"
+            ],
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          },
+          {
+            "name": "nonce",
+            "docs": [
+              "`nonce` + `dao_creator` are PDA seeds"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "dao_creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposal_count",
+            "type": "u32"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "seconds_per_proposal",
+            "type": "u32"
+          },
+          {
+            "name": "twap_initial_observation",
+            "docs": [
+              "For manipulation-resistance the TWAP is a time-weighted average observation,",
+              "where observation tries to approximate price but can only move by",
+              "`twap_max_observation_change_per_update` per update. Because it can only move",
+              "a little bit per update, you need to check that it has a good initial observation.",
+              "Otherwise, an attacker could create a very high initial observation in the pass",
+              "market and a very low one in the fail market to force the proposal to pass.",
+              "",
+              "We recommend setting an initial observation around the spot price of the token,",
+              "and max observation change per update around 2% the spot price of the token.",
+              "For example, if the spot price of META is $400, we'd recommend setting an initial",
+              "observation of 400 (converted into the AMM prices) and a max observation change per",
+              "update of 8 (also converted into the AMM prices). Observations can be updated once",
+              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
+              "in 50 minutes."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "twap_start_delay_seconds",
+            "docs": [
+              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "docs": [
+              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
+              "in both futarchic markets in order to create a proposal.",
+              "",
+              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
+              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
+              "10 * 1_000_000_000 (10 META)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "base_to_stake",
+            "docs": [
+              "Minimum amount of base tokens that must be staked to launch a proposal"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "seq_num",
+            "type": "u64"
+          },
+          {
+            "name": "initial_spending_limit",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "InitialSpendingLimit"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Proposal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "number",
+            "type": "u32"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp_enqueued",
+            "type": "i64"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "ProposalState"
+              }
+            }
+          },
+          {
+            "name": "base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "question",
+            "type": "pubkey"
+          },
+          {
+            "name": "duration_in_seconds",
+            "type": "u32"
+          },
+          {
+            "name": "squads_proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "fail_base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "fail_quote_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "staker",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CollectFeesEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_quote_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_fees_collected",
+            "type": "u64"
+          },
+          {
+            "name": "base_fees_collected",
+            "type": "u64"
+          },
+          {
+            "name": "post_amm_state",
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeDaoEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "seconds_per_proposal",
+            "type": "u32"
+          },
+          {
+            "name": "twap_initial_observation",
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "base_to_stake",
+            "type": "u64"
+          },
+          {
+            "name": "initial_spending_limit",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "InitialSpendingLimit"
+                }
+              }
+            }
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig_vault",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateDaoEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "seconds_per_proposal",
+            "type": "u32"
+          },
+          {
+            "name": "twap_initial_observation",
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "base_to_stake",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeProposalEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "question",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "number",
+            "type": "u32"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "duration_in_seconds",
+            "type": "u32"
+          },
+          {
+            "name": "squads_proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig_vault",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeToProposalEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "staker",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_staked",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnstakeFromProposalEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "staker",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_staked",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchProposalEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_staked",
+            "type": "u64"
+          },
+          {
+            "name": "post_amm_state",
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FinalizeProposalEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "pass_market_twap",
+            "type": "u128"
+          },
+          {
+            "name": "fail_market_twap",
+            "type": "u128"
+          },
+          {
+            "name": "threshold",
+            "type": "u128"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "ProposalState"
+              }
+            }
+          },
+          {
+            "name": "squads_proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "post_amm_state",
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SpotSwapEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "swap_type",
+            "type": {
+              "defined": {
+                "name": "SwapType"
+              }
+            }
+          },
+          {
+            "name": "input_amount",
+            "type": "u64"
+          },
+          {
+            "name": "output_amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_output_amount",
+            "type": "u64"
+          },
+          {
+            "name": "post_amm_state",
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConditionalSwapEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "trader",
+            "type": "pubkey"
+          },
+          {
+            "name": "market",
+            "type": {
+              "defined": {
+                "name": "Market"
+              }
+            }
+          },
+          {
+            "name": "swap_type",
+            "type": {
+              "defined": {
+                "name": "SwapType"
+              }
+            }
+          },
+          {
+            "name": "input_amount",
+            "type": "u64"
+          },
+          {
+            "name": "output_amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_output_amount",
+            "type": "u64"
+          },
+          {
+            "name": "post_amm_state",
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProvideLiquidityEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "liquidity_provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "position_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_amount",
+            "type": "u64"
+          },
+          {
+            "name": "base_amount",
+            "type": "u64"
+          },
+          {
+            "name": "liquidity_minted",
+            "type": "u128"
+          },
+          {
+            "name": "min_liquidity",
+            "type": "u128"
+          },
+          {
+            "name": "post_amm_state",
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawLiquidityEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "dao",
+            "type": "pubkey"
+          },
+          {
+            "name": "liquidity_provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "liquidity_withdrawn",
+            "type": "u128"
+          },
+          {
+            "name": "min_base_amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_quote_amount",
+            "type": "u64"
+          },
+          {
+            "name": "base_amount",
+            "type": "u64"
+          },
+          {
+            "name": "quote_amount",
+            "type": "u64"
+          },
+          {
+            "name": "post_amm_state",
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

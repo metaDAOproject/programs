@@ -583,7 +583,7 @@ export default function () {
       "sold through a Dao on another token",
     );
     await sellIx(this, 1, { oracle: otherDao })
-      .accounts({
+      .accountsPartial({
         ammBaseVault: getAssociatedTokenAddressSync(otherMint, otherDao, true),
       })
       .signers([recipient])

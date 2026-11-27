@@ -5,7 +5,7 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
-import { BanksClient } from "solana-bankrun";
+import { BanksClient } from "../litesvm/index.js";
 import {
   MintGovernorClient,
   getMintGovernorAddr,

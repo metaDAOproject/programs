@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -13,9 +13,9 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
-  PriceBasedPerformancePackage,
-  IDL as PriceBasedPerformancePackageIDL,
-} from "./types/price_based_performance_package.js";
+  PriceBasedPerformancePackageProgram as PriceBasedPerformancePackage,
+  PriceBasedPerformancePackageIDL,
+} from "./types/index.js";
 import {
   FUTARCHY_V0_6_PROGRAM_ID,
   PRICE_BASED_PERFORMANCE_PACKAGE_PROGRAM_ID,
@@ -56,8 +56,10 @@ export class PriceBasedPerformancePackageClient {
     this.provider = provider;
     this.programId = priceBasedTokenLockProgramId;
     this.program = new Program<PriceBasedPerformancePackage>(
-      PriceBasedPerformancePackageIDL,
-      priceBasedTokenLockProgramId,
+      {
+        ...PriceBasedPerformancePackageIDL,
+        address: priceBasedTokenLockProgramId.toBase58(),
+      },
       provider,
     );
   }
@@ -86,7 +88,7 @@ export class PriceBasedPerformancePackageClient {
   }) {
     return this.program.methods
       .initializePerformancePackage(params.params)
-      .accounts(this.initializePerformancePackageAccounts(params));
+      .accountsPartial(this.initializePerformancePackageAccounts(params));
   }
 
   public initializePerformancePackageWithLimitsIx(params: {
@@ -98,7 +100,7 @@ export class PriceBasedPerformancePackageClient {
   }) {
     return this.program.methods
       .initializePerformancePackageWithLimits(params.params)
-      .accounts(this.initializePerformancePackageAccounts(params));
+      .accountsPartial(this.initializePerformancePackageAccounts(params));
   }
 
   // Both initialisers share one accounts struct.
@@ -139,7 +141,7 @@ export class PriceBasedPerformancePackageClient {
     oracleAccount: PublicKey;
     recipient: PublicKey;
   }) {
-    return this.program.methods.startUnlock().accounts({
+    return this.program.methods.startUnlock().accountsPartial({
       performancePackage: params.performancePackage,
       oracleAccount: params.oracleAccount,
       recipient: params.recipient,
@@ -150,7 +152,7 @@ export class PriceBasedPerformancePackageClient {
     performancePackage: PublicKey;
     oracleAccount: PublicKey;
   }) {
-    return this.program.methods.completeUnlock().accounts({
+    return this.program.methods.completeUnlock().accountsPartial({
       performancePackage: params.performancePackage,
       oracleAccount: params.oracleAccount,
     });
@@ -176,7 +178,7 @@ export class PriceBasedPerformancePackageClient {
   }) {
     return this.program.methods
       .withdrawTokens({ amount, maxQuoteValue })
-      .accounts({
+      .accountsPartial({
         performancePackage,
         oracleAccount,
         performancePackageTokenVault: getAssociatedTokenAddressSync(
@@ -220,7 +222,7 @@ export class PriceBasedPerformancePackageClient {
   }) {
     return this.program.methods
       .withdrawViaSell({ amount, minQuoteOut })
-      .accounts({
+      .accountsPartial({
         performancePackage,
         dao,
         performancePackageTokenVault: getAssociatedTokenAddressSync(
@@ -268,7 +270,7 @@ export class PriceBasedPerformancePackageClient {
       params.params.pdaNonce,
     );
 
-    return this.program.methods.proposeChange(params.params).accounts({
+    return this.program.methods.proposeChange(params.params).accountsPartial({
       changeRequest: changeRequestAddress,
       performancePackage: params.performancePackage,
       proposer: params.proposer,
@@ -284,7 +286,7 @@ export class PriceBasedPerformancePackageClient {
   }) {
     return this.program.methods
       .executeChange({ expectedProposedAt: params.expectedProposedAt })
-      .accounts({
+      .accountsPartial({
         changeRequest: params.changeRequest,
         performancePackage: params.performancePackage,
         executor: params.executor,
@@ -300,7 +302,7 @@ export class PriceBasedPerformancePackageClient {
       .changePerformancePackageAuthority({
         newPerformancePackageAuthority: params.newPerformancePackageAuthority,
       })
-      .accounts({
+      .accountsPartial({
         performancePackage: params.performancePackage,
         currentAuthority: params.currentAuthority,
       });
@@ -330,29 +332,31 @@ export class PriceBasedPerformancePackageClient {
       true,
     );
 
-    const builder = this.program.methods.burnPerformancePackage().accounts({
-      performancePackage,
-      performancePackageTokenVault: getAssociatedTokenAddressSync(
-        tokenMint,
+    const builder = this.program.methods
+      .burnPerformancePackage()
+      .accountsPartial({
         performancePackage,
-        true,
-      ),
-      recipient,
-      recipientTokenAccount: recipientTokenAccount ?? recipientAta,
-      admin,
-      spillAccount,
-      tokenMint,
-      quoteMint: quoteSweep?.quoteMint ?? null,
-      packageQuoteAccount: quoteSweep
-        ? getAssociatedTokenAddressSync(
-            quoteSweep.quoteMint,
-            performancePackage,
-            true,
-          )
-        : null,
-      quoteDestination: quoteSweep?.quoteDestination ?? null,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    });
+        performancePackageTokenVault: getAssociatedTokenAddressSync(
+          tokenMint,
+          performancePackage,
+          true,
+        ),
+        recipient,
+        recipientTokenAccount: recipientTokenAccount ?? recipientAta,
+        admin,
+        spillAccount,
+        tokenMint,
+        quoteMint: quoteSweep?.quoteMint ?? null,
+        packageQuoteAccount: quoteSweep
+          ? getAssociatedTokenAddressSync(
+              quoteSweep.quoteMint,
+              performancePackage,
+              true,
+            )
+          : null,
+        quoteDestination: quoteSweep?.quoteDestination ?? null,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      });
 
     if (recipientTokenAccount) {
       return builder;
@@ -373,7 +377,7 @@ export class PriceBasedPerformancePackageClient {
     performancePackage: PublicKey;
     payer: PublicKey;
   }) {
-    return this.program.methods.resizePerformancePackage().accounts({
+    return this.program.methods.resizePerformancePackage().accountsPartial({
       performancePackage: params.performancePackage,
       payer: params.payer,
       systemProgram: SystemProgram.programId,

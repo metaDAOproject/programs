@@ -379,7 +379,7 @@ export default function suite() {
         baseMint,
         quoteMint,
       })
-      .accounts({
+      .accountsPartial({
         refundRecord: realRefundRecord,
       })
       .signers([wrongRecipient])

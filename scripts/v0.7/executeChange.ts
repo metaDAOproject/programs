@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import BN from "bn.js";
 import { PriceBasedPerformancePackageClient } from "@metadaoproject/programs/price_based_performance_package";
 import { PublicKey } from "@solana/web3.js";

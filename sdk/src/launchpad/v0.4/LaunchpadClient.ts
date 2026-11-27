@@ -1,11 +1,11 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import {
   PublicKey,
   Keypair,
   AccountInfo,
   ComputeBudgetProgram,
 } from "@solana/web3.js";
-import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
+import { LaunchpadProgram as Launchpad, LaunchpadIDL } from "./types/index.js";
 import {
   LAUNCHPAD_V0_4_PROGRAM_ID,
   RAYDIUM_AUTHORITY,
@@ -37,7 +37,7 @@ import {
 import { getDaoTreasuryAddr } from "../../autocrat/v0.4/pda.js";
 import { getEventAuthorityAddr, getMetadataAddr } from "../../pda.js";
 import { AutocratClient } from "../../autocrat/v0.4/AutocratClient.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
@@ -55,8 +55,12 @@ export class LaunchpadClient {
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
     this.launchpad = new Program(
-      LaunchpadIDL,
-      params.launchpadProgramId || LAUNCHPAD_V0_4_PROGRAM_ID,
+      {
+        ...LaunchpadIDL,
+        address: (
+          params.launchpadProgramId || LAUNCHPAD_V0_4_PROGRAM_ID
+        ).toBase58(),
+      },
       this.provider,
     );
     this.autocratClient = AutocratClient.createClient({
@@ -143,7 +147,7 @@ export class LaunchpadClient {
         tokenSymbol,
         tokenUri,
       })
-      .accounts({
+      .accountsPartial({
         launch,
         launchSigner,
         usdcVault,
@@ -170,7 +174,7 @@ export class LaunchpadClient {
     launch: PublicKey,
     launchAuthority: PublicKey = this.provider.publicKey,
   ) {
-    return this.launchpad.methods.startLaunch().accounts({
+    return this.launchpad.methods.startLaunch().accountsPartial({
       launch,
       launchAuthority,
     });
@@ -200,7 +204,7 @@ export class LaunchpadClient {
       funder,
     );
 
-    return this.launchpad.methods.fund(amount).accounts({
+    return this.launchpad.methods.fund(amount).accountsPartial({
       launch,
       launchUsdcVault,
       fundingRecord,
@@ -285,7 +289,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods
       .completeLaunch()
-      .accounts({
+      .accountsPartial({
         launch,
         launchSigner,
         launchUsdcVault,
@@ -354,7 +358,7 @@ export class LaunchpadClient {
     );
     const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder, true);
 
-    return this.launchpad.methods.refund().accounts({
+    return this.launchpad.methods.refund().accountsPartial({
       launch,
       launchSigner,
       launchUsdcVault,
@@ -381,7 +385,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods
       .claim()
-      .accounts({
+      .accountsPartial({
         launch,
         fundingRecord,
         launchSigner,

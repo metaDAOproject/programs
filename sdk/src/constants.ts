@@ -1,5 +1,5 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { BN } from "bn.js";
 
 export const AUTOCRAT_V0_3_PROGRAM_ID = new PublicKey(

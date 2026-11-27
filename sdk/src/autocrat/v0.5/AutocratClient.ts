@@ -1,4 +1,4 @@
-import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, IdlTypes, Program } from "@anchor-lang/core";
 import {
   AccountInfo,
   AccountMeta,
@@ -12,7 +12,7 @@ import {
 } from "@solana/web3.js";
 import { InitializeDaoParams, UpdateDaoParams } from "./types/index.js";
 
-import { Autocrat, IDL as AutocratIDL } from "./types/autocrat.js";
+import { AutocratProgram as Autocrat, AutocratIDL } from "./types/index.js";
 
 import BN from "bn.js";
 import {
@@ -74,8 +74,7 @@ export class AutocratClient {
   ) {
     this.provider = provider;
     this.autocrat = new Program<Autocrat>(
-      AutocratIDL,
-      autocratProgramId,
+      { ...AutocratIDL, address: autocratProgramId.toBase58() },
       provider,
     );
     this.vaultClient = ConditionalVaultClient.createClient({
@@ -312,7 +311,7 @@ export class AutocratClient {
       createKey: dao,
     })[0];
 
-    return this.autocrat.methods.initializeDao(params).accounts({
+    return this.autocrat.methods.initializeDao(params).accountsPartial({
       dao,
       baseMint,
       quoteMint,
@@ -484,7 +483,7 @@ export class AutocratClient {
         passLpTokensToLock,
         failLpTokensToLock,
       })
-      .accounts({
+      .accountsPartial({
         question,
         proposal,
         squadsProposal,
@@ -555,7 +554,7 @@ export class AutocratClient {
 
     const [vaultEventAuthority] = getEventAuthorityAddr(vaultProgramId);
 
-    return this.autocrat.methods.finalizeProposal().accounts({
+    return this.autocrat.methods.finalizeProposal().accountsPartial({
       proposal,
       passAmm,
       failAmm,
@@ -589,7 +588,7 @@ export class AutocratClient {
   //   const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
   //   return this.autocrat.methods
   //     .executeProposal()
-  //     .accounts({
+  //     .accountsPartial({
   //       proposal,
   //       dao,
   //       // daoTreasury,
@@ -616,7 +615,7 @@ export class AutocratClient {
       index: 0,
     })[0];
 
-    return this.autocrat.methods.updateDao(params).accounts({
+    return this.autocrat.methods.updateDao(params).accountsPartial({
       dao,
       squadsMultisigVault,
     });

@@ -323,7 +323,7 @@ export default function suite() {
   it("rejects a removed proposal", async function () {
     await this.futarchy.futarchy.methods
       .adminRemoveProposal()
-      .accounts({ proposal, dao, admin: this.payer.publicKey })
+      .accountsPartial({ proposal, dao, admin: this.payer.publicKey })
       .rpc();
 
     const callbacks = expectError(

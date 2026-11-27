@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import { AccountInfo, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
@@ -12,9 +12,9 @@ import {
 import { getPerformancePackageV2Addr, getChangeRequestV2Addr } from "./pda.js";
 import { getEventAuthorityAddr } from "../../pda.js";
 import {
-  PerformancePackageV2 as PerformancePackageV2Program,
-  IDL as PerformancePackageV2IDL,
-} from "./types/performance_package_v2.js";
+  PerformancePackageV2Program,
+  PerformancePackageV2IDL,
+} from "./types/index.js";
 import type {
   PerformancePackageV2Account,
   PerformancePackageV2ChangeRequestAccount,
@@ -36,8 +36,7 @@ export class PerformancePackageV2Client {
     this.provider = provider;
     this.programId = programId;
     this.program = new Program<PerformancePackageV2Program>(
-      PerformancePackageV2IDL,
-      programId,
+      { ...PerformancePackageV2IDL, address: programId.toBase58() },
       provider,
     );
   }
@@ -135,7 +134,7 @@ export class PerformancePackageV2Client {
         rewardFunction,
         minUnlockTimestamp,
       })
-      .accounts({
+      .accountsPartial({
         performancePackage,
         mint,
         mintGovernor,
@@ -157,7 +156,7 @@ export class PerformancePackageV2Client {
     signer?: PublicKey;
     dao?: PublicKey;
   }) {
-    const builder = this.program.methods.startUnlock().accounts({
+    const builder = this.program.methods.startUnlock().accountsPartial({
       performancePackage,
       signer,
     });
@@ -194,7 +193,7 @@ export class PerformancePackageV2Client {
       MINT_GOVERNOR_V0_7_PROGRAM_ID,
     );
 
-    const builder = this.program.methods.completeUnlock().accounts({
+    const builder = this.program.methods.completeUnlock().accountsPartial({
       performancePackage,
       mintGovernor,
       mintAuthority,
@@ -224,7 +223,7 @@ export class PerformancePackageV2Client {
     authority?: PublicKey;
     newAuthority: PublicKey;
   }) {
-    return this.program.methods.changeAuthority().accounts({
+    return this.program.methods.changeAuthority().accountsPartial({
       performancePackage,
       authority,
       newAuthority,
@@ -261,7 +260,7 @@ export class PerformancePackageV2Client {
         newOracleReader,
         newRewardFunction,
       })
-      .accounts({
+      .accountsPartial({
         performancePackage,
         changeRequest,
         proposer,
@@ -281,7 +280,7 @@ export class PerformancePackageV2Client {
     executor?: PublicKey;
     rentDestination?: PublicKey;
   }) {
-    return this.program.methods.executeChange().accounts({
+    return this.program.methods.executeChange().accountsPartial({
       performancePackage,
       changeRequest,
       executor,
@@ -298,7 +297,7 @@ export class PerformancePackageV2Client {
     admin?: PublicKey;
     rentDestination?: PublicKey;
   }) {
-    return this.program.methods.closePerformancePackage().accounts({
+    return this.program.methods.closePerformancePackage().accountsPartial({
       performancePackage,
       admin,
       rentDestination,

@@ -5,8 +5,8 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import { assert } from "chai";
+import { getAccount, getMint } from "../../litesvm/index.js";
 import BN from "bn.js";
-import { getAccount, getMint } from "spl-token-bankrun";
 import {
   ACCOUNT_SIZE,
   AuthorityType,
@@ -425,7 +425,7 @@ export default function () {
     // The SDK only builds the sweep as a pair, so the accounts are assembled by hand
     await this.priceBasedPerformancePackage.program.methods
       .burnPerformancePackage()
-      .accounts({
+      .accountsPartial({
         performancePackage,
         performancePackageTokenVault: vaultAddress(),
         recipient: recipient.publicKey,

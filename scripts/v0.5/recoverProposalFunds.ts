@@ -7,7 +7,7 @@ import { AmmClient } from "@metadaoproject/programs/amm/v0.5";
 import { ConditionalVaultClient } from "@metadaoproject/programs/conditional_vault/v0.4";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "bn.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 const provider = anchor.AnchorProvider.env();

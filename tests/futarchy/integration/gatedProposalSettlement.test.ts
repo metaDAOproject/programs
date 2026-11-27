@@ -65,7 +65,7 @@ function adminCancelProposalIx(
     CONDITIONAL_VAULT_V0_4_PROGRAM_ID,
   );
 
-  return ctx.futarchy.futarchy.methods.adminCancelProposal().accounts({
+  return ctx.futarchy.futarchy.methods.adminCancelProposal().accountsPartial({
     proposal,
     dao,
     question,

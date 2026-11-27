@@ -6,12 +6,14 @@ use conditional_vault::{ConditionalVault, Question};
 
 pub mod error;
 pub mod events;
+pub mod foreign;
 pub mod instructions;
 pub mod squads;
 pub mod state;
 
 pub use error::FutarchyError;
 pub use events::*;
+pub use foreign::*;
 pub use instructions::*;
 pub use squads::*;
 pub use state::*;

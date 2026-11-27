@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   repository-guard:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       EMERGENCY_BYPASS: ${{ contains(github.event.pull_request.labels.*.name, 'emergency-override') }}
 
@@ -37,7 +37,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.18.0'
+          node-version: '24.22.1'
           cache: 'yarn'
 
       # sdk first: the root install links `link:./sdk` and needs sdk/node_modules to exist.

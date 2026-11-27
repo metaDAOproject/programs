@@ -1,4 +1,4 @@
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider } from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
 import BN from "bn.js";
 import {
@@ -144,7 +144,7 @@ export const buildAdminApprovalTransactions = async ({
         .adminEnqueueMultisigProposalApproval({
           transactionIndex: new BN(daoTransactionIndex.toString()),
         })
-        .accounts({
+        .accountsPartial({
           dao,
           admin: METADAO_MULTISIG_VAULT,
           squadsMultisig: daoMultisig,

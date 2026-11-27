@@ -182,7 +182,7 @@ export default function suite() {
         amountIn: new BN(1_000_000), // 1 USDC swap
         minimumAmountOut: new BN(0),
       })
-      .accounts({
+      .accountsPartial({
         tokenAMint: META,
         tokenBMint: MAINNET_USDC,
         tokenAProgram: TOKEN_PROGRAM_ID,

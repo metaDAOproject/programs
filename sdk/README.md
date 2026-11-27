@@ -70,7 +70,7 @@ import { ConditionalVaultClient } from "@metadaoproject/programs/conditional_vau
 All clients follow the same construction pattern via a static `createClient` factory and accept an Anchor `AnchorProvider`. Program IDs default to mainnet; pass overrides for devnet or local testing.
 
 ```ts
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider } from "@anchor-lang/core";
 import { FutarchyClient } from "@metadaoproject/programs/futarchy";
 
 const provider = AnchorProvider.env();

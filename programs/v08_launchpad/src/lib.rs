@@ -48,7 +48,7 @@ pub const PP_PRICE_MULTIPLIERS: [u128; 5] = [2, 4, 8, 16, 32];
 pub const PP_TWAP_MIN_DURATION: u32 = 3 * 30 * 24 * 60 * 60; // 7_776_000 seconds
 
 pub mod usdc_mint {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     #[cfg(feature = "devnet")]
     declare_id!("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
@@ -58,7 +58,7 @@ pub mod usdc_mint {
 }
 
 pub mod metadao_multisig_vault {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // MetaDAO operations multisig vault
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");

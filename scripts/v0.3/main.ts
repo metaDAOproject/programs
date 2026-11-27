@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Legacy script
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import * as token from "@solana/spl-token";
 const { BN, Program } = anchor;
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
@@ -91,21 +91,18 @@ anchor.setProvider(provider);
 export const payer = provider.wallet["payer"];
 
 export const autocratProgram = new Program<AutocratV0>(
-  AutocratIDL,
-  AUTOCRAT_PROGRAM_ID,
+  { ...AutocratIDL, address: AUTOCRAT_PROGRAM_ID.toBase58() },
   provider,
 );
 
 export const vaultProgram = new Program<ConditionalVault>(
-  ConditionalVaultIDL,
-  CONDITIONAL_VAULT_PROGRAM_ID,
+  { ...ConditionalVaultIDL, address: CONDITIONAL_VAULT_PROGRAM_ID.toBase58() },
   provider,
 );
 
 export const openbook = new OpenBookV2Client(provider);
 export const openbookTwap = new Program<OpenbookTwap>(
-  OpenbookTwapIDL,
-  OPENBOOK_TWAP_PROGRAM_ID,
+  { ...OpenbookTwapIDL, address: OPENBOOK_TWAP_PROGRAM_ID.toBase58() },
   provider,
 );
 
@@ -197,7 +194,7 @@ async function generateAddMetadataToConditionalTokensIx(
       passTokenMetadataUri,
       failTokenMetadataUri,
     )
-    .accounts({
+    .accountsPartial({
       payer: payer.publicKey,
       vault,
       underlyingTokenMint: mint,
@@ -254,7 +251,7 @@ async function initializeVault(
 
   const initializeConditionalVaultBuilder = vaultProgram.methods
     .initializeConditionalVault(settlementAuthority, nonce)
-    .accounts({
+    .accountsPartial({
       vault,
       underlyingTokenMint,
       vaultUnderlyingTokenAccount,
@@ -302,7 +299,7 @@ async function initializeVault(
 // export async function initializeDAO(META: any, USDC: any) {
 //   await autocratProgram.methods
 //     .initializeDao()
-//     .accounts({
+//     .accountsPartial({
 //       dao,
 //       metaMint: META,
 //       usdcMint: USDC,
@@ -351,7 +348,7 @@ export async function fetchDao() {
 
 //   const ix = await migrator.methods
 //         .multiTransfer2()
-//         .accounts({
+//         .accountsPartial({
 //           authority: daoTreasury,
 //           from0: treasuryMetaAccount.address,
 //           to0: newTreasuryMetaAccount.address,
@@ -369,7 +366,7 @@ export async function fetchDao() {
 
 //   let tx = await autocratProgram.methods
 //         .finalizeProposal()
-//         .accounts({
+//         .accountsPartial({
 //           proposal,
 //           openbookTwapPassMarket: storedProposal.openbookTwapPassMarket,
 //           openbookTwapFailMarket: storedProposal.openbookTwapFailMarket,
@@ -542,14 +539,14 @@ export async function initializeProposal(
       ),
       await openbookTwap.methods
         .createTwapMarket(new BN(10_000), maxObservationChangePerUpdateLots)
-        .accounts({
+        .accountsPartial({
           market: openbookPassMarketKP.publicKey,
           twapMarket: openbookTwapPassMarket,
         })
         .instruction(),
       await openbookTwap.methods
         .createTwapMarket(new BN(10_000), maxObservationChangePerUpdateLots)
-        .accounts({
+        .accountsPartial({
           market: openbookFailMarketKP.publicKey,
           twapMarket: openbookTwapFailMarket,
         })
@@ -557,7 +554,7 @@ export async function initializeProposal(
       cuPriceIx,
       cuLimitIx,
     ])
-    .accounts({
+    .accountsPartial({
       proposal: proposalKeypair.publicKey,
       dao,
       daoTreasury,
@@ -628,7 +625,7 @@ async function placeOrdersOnBothSides(twapMarket: any) {
 
   await openbookTwap.methods
     .placeOrder(buyArgs)
-    .accounts({
+    .accountsPartial({
       asks: storedMarket.asks,
       bids: storedMarket.bids,
       marketVault: storedMarket.marketQuoteVault,
@@ -643,7 +640,7 @@ async function placeOrdersOnBothSides(twapMarket: any) {
 
   await openbookTwap.methods
     .placeOrder(sellArgs)
-    .accounts({
+    .accountsPartial({
       asks: storedMarket.asks,
       bids: storedMarket.bids,
       marketVault: storedMarket.marketBaseVault,
@@ -699,7 +696,7 @@ async function placeTakeOrder(twapMarket: any) {
 
   let tx = await openbookTwap.methods
     .placeTakeOrder(buyArgs)
-    .accounts({
+    .accountsPartial({
       asks: storedMarket.asks,
       bids: storedMarket.bids,
       eventHeap: storedMarket.eventHeap,
@@ -773,7 +770,7 @@ export async function mintConditionalTokens(amount: number, vault: PublicKey) {
   // Mint conditional tokens
   await vaultProgram.methods
     .mintConditionalTokens(bnAmount)
-    .accounts({
+    .accountsPartial({
       authority: payer.publicKey,
       vault,
       vaultUnderlyingTokenAccount,

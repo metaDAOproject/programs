@@ -90,7 +90,7 @@ export default function suite() {
 
     await launchpadClient.launchpad.methods
       .returnFunds({ amount: amount_wrongly_sent })
-      .accounts({
+      .accountsPartial({
         launch,
         recipient: this.payer.publicKey,
         recipientQuoteAccount,

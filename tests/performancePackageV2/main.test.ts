@@ -9,11 +9,11 @@ import {
   MintGovernorClient,
   PerformancePackageV2Client,
 } from "@metadaoproject/programs";
-import { BankrunProvider } from "anchor-bankrun";
+import { LiteSVMProvider } from "../litesvm/index.js";
 
 export default function suite() {
   before(async function () {
-    const provider = new BankrunProvider(this.context);
+    const provider = new LiteSVMProvider(this.context);
     this.mintGovernor = MintGovernorClient.createClient({
       provider: provider as any,
     });

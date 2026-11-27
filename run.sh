@@ -49,7 +49,7 @@ test_logs_no_build() {
 # ./test.sh build_verifiable autocrat
 build_verifiable() {
     PROGRAM_NAME=$1
-    solana-verify build --library-name "$PROGRAM_NAME" -b ellipsislabs/solana:1.16.10
+    solana-verify build --library-name "$PROGRAM_NAME" --arch v3
 }
 
 deploy() {
@@ -65,7 +65,7 @@ deploy_verifiable() {
     solana program deploy --use-rpc -u "$CLUSTER" --program-id ./target/deploy/"$PROGRAM_NAME"-keypair.json ./verifiable-builds/"$PROGRAM_NAME".so --with-compute-unit-price 5 --max-sign-attempts 15 && 
     PROGRAM_ID=$(solana-keygen pubkey ./target/deploy/"$PROGRAM_NAME"-keypair.json) && 
     anchor idl init --filepath ./target/idl/"$PROGRAM_NAME".json $PROGRAM_ID --provider.cluster "$CLUSTER" &&
-    solana-verify verify-from-repo --remote -u "$CLUSTER" --program-id $PROGRAM_ID https://github.com/metaDAOproject/programs --library-name $PROGRAM_NAME -b ellipsislabs/solana:1.17.16 -y -- --features $FEATURES
+    solana-verify verify-from-repo --remote -u "$CLUSTER" --program-id $PROGRAM_ID https://github.com/metaDAOproject/programs --library-name $PROGRAM_NAME --arch v3 -y -- --features $FEATURES
 }
 
 verify() {
@@ -73,7 +73,7 @@ verify() {
     PROGRAM_ID=$2
     CLUSTER=$3
     FEATURES=$4
-    solana-verify verify-from-repo --remote -u "$CLUSTER" --program-id $PROGRAM_ID https://github.com/metaDAOproject/programs --library-name $PROGRAM_NAME -b ellipsislabs/solana:1.17.16 -y -- --features $FEATURES
+    solana-verify verify-from-repo --remote -u "$CLUSTER" --program-id $PROGRAM_ID https://github.com/metaDAOproject/programs --library-name $PROGRAM_NAME --arch v3 -y -- --features $FEATURES
 }
 
 assign_to_multisig() {
@@ -92,14 +92,14 @@ export_verifiable() {
     PROGRAM_NAME=$1
     PROGRAM_ID=$2
     FEATURES=$3
-    solana-verify export-pda-tx -um https://github.com/metaDAOproject/futarchy --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf -b ellipsislabs/solana:1.17.31 --library-name "$PROGRAM_NAME" -- --features $FEATURES
+    solana-verify export-pda-tx -um https://github.com/metaDAOproject/futarchy --program-id "$PROGRAM_ID" --uploader 6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf --arch v3 --library-name "$PROGRAM_NAME" -- --features $FEATURES
 }
 
 verify_local() {
     PROGRAM_NAME=$1
     PROGRAM_ID=$2
     FEATURES=$3
-    solana-verify verify-from-repo --remote -um --program-id $PROGRAM_ID https://github.com/metaDAOproject/futarchy --library-name $PROGRAM_NAME -b ellipsislabs/solana:1.17.31 -- --features $FEATURES
+    solana-verify verify-from-repo --remote -um --program-id $PROGRAM_ID https://github.com/metaDAOproject/futarchy --library-name $PROGRAM_NAME --arch v3 -- --features $FEATURES
 }
 
 # verify() {

@@ -1,10 +1,11 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import { PublicKey, AccountInfo, ComputeBudgetProgram } from "@solana/web3.js";
-import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
 import {
-  Launchpad as v0_6_0_launchpad,
-  IDL as v0_6_0_launchpadIDL,
-} from "./types/v0.6.0-launchpad.js";
+  LaunchpadProgram as Launchpad,
+  LaunchpadIDL,
+  v0_6_0_Launchpad as v0_6_0_launchpad,
+  v0_6_0_LaunchpadIDL as v0_6_0_launchpadIDL,
+} from "./types/index.js";
 import {
   LAUNCHPAD_V0_6_PROGRAM_ID,
   MPL_TOKEN_METADATA_PROGRAM_ID,
@@ -56,13 +57,21 @@ export class LaunchpadClient {
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
     this.launchpad = new Program(
-      LaunchpadIDL,
-      params.launchpadProgramId || LAUNCHPAD_V0_6_PROGRAM_ID,
+      {
+        ...LaunchpadIDL,
+        address: (
+          params.launchpadProgramId || LAUNCHPAD_V0_6_PROGRAM_ID
+        ).toBase58(),
+      },
       this.provider,
     );
     this.v0_6_0_launchpad = new Program<v0_6_0_launchpad>(
-      v0_6_0_launchpadIDL,
-      params.launchpadProgramId || LAUNCHPAD_V0_6_PROGRAM_ID,
+      {
+        ...v0_6_0_launchpadIDL,
+        address: (
+          params.launchpadProgramId || LAUNCHPAD_V0_6_PROGRAM_ID
+        ).toBase58(),
+      },
       this.provider,
     );
     this.futarchyClient = FutarchyClient.createClient({
@@ -182,7 +191,7 @@ export class LaunchpadClient {
         monthsUntilInsidersCanUnlock,
         teamAddress,
       })
-      .accounts({
+      .accountsPartial({
         launch,
         launchSigner,
         quoteVault,
@@ -212,7 +221,7 @@ export class LaunchpadClient {
     launch: PublicKey;
     launchAuthority?: PublicKey;
   }) {
-    return this.launchpad.methods.startLaunch().accounts({
+    return this.launchpad.methods.startLaunch().accountsPartial({
       launch,
       launchAuthority,
     });
@@ -247,7 +256,7 @@ export class LaunchpadClient {
       funder,
     );
 
-    return this.launchpad.methods.fund(amount).accounts({
+    return this.launchpad.methods.fund(amount).accountsPartial({
       launch,
       launchQuoteVault,
       fundingRecord,
@@ -257,7 +266,7 @@ export class LaunchpadClient {
   }
 
   closeLaunchIx({ launch }: { launch: PublicKey }) {
-    return this.launchpad.methods.closeLaunch().accounts({
+    return this.launchpad.methods.closeLaunch().accountsPartial({
       launch,
     });
   }
@@ -404,7 +413,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods
       .completeLaunch({ finalRaiseAmount })
-      .accounts({
+      .accountsPartial({
         launch,
         launchSigner,
         launchQuoteVault,
@@ -501,7 +510,7 @@ export class LaunchpadClient {
       true,
     );
 
-    return this.launchpad.methods.refund().accounts({
+    return this.launchpad.methods.refund().accountsPartial({
       launch,
       launchSigner,
       launchQuoteVault,
@@ -528,7 +537,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods
       .claim()
-      .accounts({
+      .accountsPartial({
         launch,
         fundingRecord,
         launchSigner,

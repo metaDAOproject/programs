@@ -1,8 +1,8 @@
 [toolchain]
-solana_version = "1.17.34"
+anchor_version = "0.32.2"
+solana_version = "4.3.0"
 
 [features]
-seeds = false
 skip-lint = false
 
 [programs.localnet]
@@ -57,6 +57,8 @@ v06-return-funds = "yarn run tsx scripts/v0.6/returnFunds.ts"
 v06-dump-daos = "yarn run tsx scripts/v0.6/dumpDaos.ts"
 v06-migrate-daos = "yarn run tsx scripts/v0.6/migrateDaos.ts"
 v06-sponsor-proposal = "yarn run tsx scripts/v0.6/sponsorProposal.ts"
+v06-stage-idl-buffer = "yarn run tsx scripts/v0.6/stageIdlBuffer.ts"
+v06-propose-idl-account-resize = "yarn run tsx scripts/v0.6/proposeIdlAccountResize.ts"
 v07-collect-meteora-damm-fees = "yarn run tsx scripts/v0.7/collectMeteoraDammFees.ts"
 v07-launch-template = "yarn run tsx scripts/v0.7/launchTemplate.ts"
 v07-start-launch = "yarn run tsx scripts/v0.7/startLaunch.ts"
@@ -79,7 +81,7 @@ v07-extend-launch = "yarn run tsx scripts/v0.7/extendLaunch.ts"
 v07-extend-liquidation = "yarn run tsx scripts/v0.7/extendLiquidation.ts"
 
 [test]
-startup_wait = 5000
+startup_wait = 20000
 shutdown_wait = 2000
 upgradeable = false
 

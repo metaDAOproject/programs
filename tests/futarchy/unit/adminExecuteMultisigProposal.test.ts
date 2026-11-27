@@ -116,7 +116,7 @@ export default function suite() {
     // Then execute
     await this.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
-      .accounts({
+      .accountsPartial({
         dao: dao,
         squadsMultisig: daoAccount.squadsMultisig,
         squadsMultisigProposal: squadsProposalPda,
@@ -220,7 +220,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
-      .accounts({
+      .accountsPartial({
         dao: dao,
         squadsMultisig: daoAccount.squadsMultisig,
         squadsMultisigProposal: squadsProposalPda,

@@ -13,10 +13,10 @@ import { TestContext } from "../../main.test.js";
 import { assert } from "chai";
 
 // Rewrites a real (new-layout) Proposal account to the pre-migration on-chain
-// layout by re-encoding its body as the `oldProposal` IDL type (dropping the
-// appended `pass_threshold_bps`, `council_can_block`, `action` and
-// `params_overridden`, and collapsing `sponsored_by` back to the
-// `is_team_sponsored` bit). The optional overrides let a test pin
+// layout by re-encoding its body with the v0.6.1 snapshot IDL's `proposal`
+// layout, which predates the appended `pass_threshold_bps`, `council_can_block`,
+// `action` and `params_overridden` and still has the `is_team_sponsored` bit in
+// place of `sponsored_by`. The optional overrides let a test pin
 // `is_team_sponsored`, the state, or the duration without driving the
 // sponsor/launch flows.
 async function makeOldLayout(
@@ -44,7 +44,10 @@ async function makeOldLayout(
   if (overrides.durationInSeconds !== undefined)
     decoded.durationInSeconds = overrides.durationInSeconds;
 
-  const body = await coder.encode("oldProposal", decoded);
+  const body = await ctx.futarchy.v0_6_1_futarchy.coder.accounts.encode(
+    "proposal",
+    decoded,
+  );
   const buf = Buffer.alloc(BEFORE);
   disc.copy(buf, 0);
   body.subarray(8).copy(buf, 8);
@@ -140,7 +143,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .resizeProposal()
-      .accounts({ proposal, dao, payer: this.payer.publicKey })
+      .accountsPartial({ proposal, dao, payer: this.payer.publicKey })
       .rpc();
 
     const resized = await this.banksClient.getAccount(proposal);
@@ -164,7 +167,7 @@ export default function suite() {
     // Idempotent: a second crank is a no-op (compute-budget bump for a unique sig).
     await this.futarchy.futarchy.methods
       .resizeProposal()
-      .accounts({ proposal, dao, payer: this.payer.publicKey })
+      .accountsPartial({ proposal, dao, payer: this.payer.publicKey })
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
       ])
@@ -185,7 +188,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .resizeProposal()
-      .accounts({ proposal, dao, payer: this.payer.publicKey })
+      .accountsPartial({ proposal, dao, payer: this.payer.publicKey })
       .rpc();
 
     const migrated = await this.futarchy.getProposal(proposal);
@@ -207,7 +210,7 @@ export default function suite() {
 
       await this.futarchy.futarchy.methods
         .resizeProposal()
-        .accounts({ proposal, dao, payer: this.payer.publicKey })
+        .accountsPartial({ proposal, dao, payer: this.payer.publicKey })
         .rpc();
 
       const migrated = await this.futarchy.getProposal(proposal);
@@ -226,7 +229,7 @@ export default function suite() {
 
       await this.futarchy.futarchy.methods
         .resizeProposal()
-        .accounts({ proposal, dao, payer: this.payer.publicKey })
+        .accountsPartial({ proposal, dao, payer: this.payer.publicKey })
         .rpc();
 
       const migrated = await this.futarchy.getProposal(proposal);
@@ -248,7 +251,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .resizeProposal()
-      .accounts({ proposal, dao, payer: this.payer.publicKey })
+      .accountsPartial({ proposal, dao, payer: this.payer.publicKey })
       .rpc();
 
     const migrated = await this.futarchy.getProposal(proposal);
@@ -270,7 +273,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .resizeProposal()
-      .accounts({ proposal, dao, payer: this.payer.publicKey })
+      .accountsPartial({ proposal, dao, payer: this.payer.publicKey })
       .rpc();
 
     const migrated = await this.futarchy.getProposal(proposal);
@@ -288,7 +291,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .resizeProposal()
-      .accounts({ proposal, dao, payer: this.payer.publicKey })
+      .accountsPartial({ proposal, dao, payer: this.payer.publicKey })
       .rpc();
 
     const afterRaw = await this.banksClient.getAccount(proposal);
@@ -306,7 +309,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .resizeProposal()
-      .accounts({ proposal, dao, payer: this.payer.publicKey })
+      .accountsPartial({ proposal, dao, payer: this.payer.publicKey })
       .rpc();
 
     const migrated = await this.futarchy.getProposal(proposal);
@@ -345,7 +348,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .resizeProposal()
-      .accounts({ proposal, dao: otherDao, payer: this.payer.publicKey })
+      .accountsPartial({ proposal, dao: otherDao, payer: this.payer.publicKey })
       .rpc()
       .then(callbacks[0], callbacks[1]);
   });

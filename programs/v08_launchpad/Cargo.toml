@@ -13,23 +13,33 @@ no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
+idl-build = [
+    "anchor-lang/idl-build",
+    "anchor-spl/idl-build",
+    "futarchy/idl-build",
+    "performance_package_v2/idl-build",
+    "mint_governor/idl-build",
+    "damm_v2_cpi/idl-build",
+    "bid_wall/idl-build",
+    "gated_mint/idl-build",
+    "squads-multisig-program/idl-build",
+]
 default = ["custom-heap"]
 devnet = []
 production = []
 custom-heap = []
 
 [dependencies]
-anchor-lang = { version = "=0.29.0", features = ["init-if-needed", "event-cpi"] }
-anchor-spl = "=0.29.0"
+anchor-lang = { version = "=0.32.2", features = ["init-if-needed", "event-cpi"] }
+anchor-spl = "=0.32.2"
 futarchy = { path = "../futarchy", features = ["cpi"] }
 performance_package_v2 = { path = "../performance_package_v2", features = ["cpi"] }
 mint_governor = { path = "../mint_governor", features = ["cpi"] }
-spl-memo = "=4.0.0"
-solana-program = "=1.17.14"
-spl-token = "=4.0.0"
-ahash = "=0.8.6"
 solana-security-txt = "=1.1.1"
-squads-multisig-program = { git = "https://github.com/Squads-Protocol/v4", package = "squads-multisig-program", rev = "6d5235da621a2e9b7379ea358e48760e981053be", features = ["cpi"] }
+squads-multisig-program = { git = "https://github.com/Squads-Protocol/v4", package = "squads-multisig-program", rev = "af94153ff77a28b6effe46b9c94baaa93742b48c", features = ["cpi"] }
 damm_v2_cpi = { path = "../damm_v2_cpi", features = ["cpi"] }
 bid_wall = { path = "../bid_wall", features = ["cpi"] }
 gated_mint = { path = "../gated_mint", features = ["no-entrypoint"] }
+
+[lints]
+workspace = true

@@ -1,5 +1,5 @@
-import {
-  SharedLiquidityManager as SharedLiquidityManagerProgram,
-  IDL as SharedLiquidityManagerIDL,
-} from "./shared_liquidity_manager.js";
-export { SharedLiquidityManagerProgram, SharedLiquidityManagerIDL };
+import type { SharedLiquidityManager as SharedLiquidityManagerProgram } from "./shared_liquidity_manager.js";
+import sharedLiquidityManagerIdl from "./shared_liquidity_manager.json" with { type: "json" };
+export type { SharedLiquidityManagerProgram };
+export const SharedLiquidityManagerIDL =
+  sharedLiquidityManagerIdl as SharedLiquidityManagerProgram;

@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { utils } from "@coral-xyz/anchor";
+import { utils } from "@anchor-lang/core";
 import { AMM_V0_4_PROGRAM_ID } from "../../constants.js";
 
 export const getAmmAddr = (

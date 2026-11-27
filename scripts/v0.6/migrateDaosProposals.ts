@@ -6,9 +6,10 @@ import {
   VersionedTransaction,
   TransactionMessage,
 } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import {
   FutarchyClient,
+  FutarchyIDL,
   getSpendingLimitAddr,
 } from "@metadaoproject/programs/futarchy/v0.6";
 import dotenv from "dotenv";
@@ -21,7 +22,7 @@ const payer = provider.wallet["payer"];
 
 function getDiscriminator(accountName: string): Buffer {
   return Buffer.from(
-    anchor.BorshAccountsCoder.accountDiscriminator(accountName),
+    FutarchyIDL.accounts.find((a) => a.name === accountName)!.discriminator,
   );
 }
 
@@ -90,7 +91,7 @@ async function main() {
       batch.map(async ({ pubkey }) => {
         return await futarchy.futarchy.methods
           .resizeDao()
-          .accounts({
+          .accountsPartial({
             dao: pubkey,
             spendingLimit: getSpendingLimitAddr({ dao: pubkey })[0],
             payer: payer.publicKey,
@@ -133,7 +134,7 @@ async function main() {
       batch.map(async ({ pubkey, account }) => {
         return await futarchy.futarchy.methods
           .resizeProposal()
-          .accounts({
+          .accountsPartial({
             proposal: pubkey,
             dao: getProposalDao(account.data),
             payer: payer.publicKey,

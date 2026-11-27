@@ -18,7 +18,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
 import { assert } from "chai";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";

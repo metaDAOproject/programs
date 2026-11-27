@@ -15,7 +15,7 @@ env:
 
 jobs:
   run-anchor-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.18.0'
+          node-version: '24.22.1'
           cache: 'yarn'
           cache-dependency-path: sdk/yarn.lock
 
@@ -39,7 +39,7 @@ jobs:
 
       - uses: ./.github/actions/anchor-test
         with:
-          anchor-version: '0.29.0'
-          solana-cli-version: '1.17.31'
-          node-version: '20.18.0'
+          anchor-version: '0.32.2'
+          solana-cli-version: '4.3.0'
+          node-version: '24.22.1'
 

@@ -1,4 +1,4 @@
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider } from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
 import { sha256 } from "@noble/hashes/sha256";
 import {

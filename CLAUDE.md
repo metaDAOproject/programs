@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MetaDAO Futarchy Protocol - Solana programs for market-driven governance and token launches. Uses Anchor 0.29.0, Solana 1.17.34, Rust 1.78.0.
+MetaDAO Futarchy Protocol - Solana programs for market-driven governance and token launches. Uses Anchor 0.32.2, Agave 4.3.0, the standalone cargo-build-sbf 4.4.0 (`cargo install cargo-build-sbf --version 4.4.0 --locked`; it emits SBPFv3 by default, so `anchor build` needs no arch flag), host Rust 1.95.0 pinned by `rust-toolchain.toml`.
 
 ## Build & Test Commands
 
@@ -46,7 +46,7 @@ sdk/                         # TypeScript client library (@metadaoproject/progra
 │   └── index.ts            #   Re-exports the latest version
 └── package.json
 
-tests/                       # TypeScript tests (bankrun + mocha)
+tests/                       # TypeScript tests (LiteSVM + mocha)
 ├── conditionalVault/       # Unit + integration tests per program
 ├── futarchy/
 ├── launchpad/
@@ -185,13 +185,13 @@ Always append new error variants to the **end** of `#[error_code]` enums. Anchor
 2. Update client methods in the corresponding SDK module at the program's current version (e.g. `sdk/src/futarchy/v0.6/`, `sdk/src/launchpad/v0.7/`)
 3. Add unit tests in `tests/[program]/unit/`
 
-### Testing with Bankrun
-Tests use `solana-bankrun` for deterministic testing without external RPC:
+### Testing with LiteSVM
+Tests run in-process on LiteSVM through the facade in `tests/litesvm/` (a bankrun-shaped `BanksClient` / `ProgramTestContext` / provider), with no external RPC:
 - `setupBasicDao()` - Create a test DAO with mints
 - `advanceBySlots()` - Simulate time progression
 - Time constants: `TEN_SECONDS_IN_SLOTS`, `ONE_MINUTE_IN_SLOTS`, `HOUR_IN_SLOTS`, `DAY_IN_SLOTS`
 
-**Getting unique transaction signatures:** When testing error cases that call the same instruction multiple times (e.g., verifying an action fails after state changes), add a `ComputeBudgetProgram.setComputeUnitLimit()` instruction with incrementing values to produce different transaction signatures:
+**Getting unique transaction signatures:** The LiteSVM facade rotates the blockhash after every processed transaction, so repeated identical instructions get distinct signatures and this is no longer required. Existing tests still carry the older convention of adding a `ComputeBudgetProgram.setComputeUnitLimit()` instruction with incrementing values:
 
 ```typescript
 // First call (200_000), second call (200_001), etc.
@@ -301,8 +301,6 @@ External programs required for tests. These are pre-compiled `.so` files in `tes
 **Module resolution errors**: `cd sdk && yarn build-local` (the root `node_modules` entry is a symlink to `sdk/`, so no root reinstall is needed)
 
 **Tests timeout**: Increase `startup_wait` in `Anchor.toml`
-
-**Cargo.lock version error**: If `Cargo.lock` ends up with `version = 4`, simply change it back to `version = 3` to fix lockfile issues. You don't have to remove the lockfile.
 
 ## Mainnet Program IDs
 

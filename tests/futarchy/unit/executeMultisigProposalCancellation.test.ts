@@ -148,7 +148,7 @@ export default function suite() {
 
     await context.futarchy.futarchy.methods
       .adminExecuteMultisigProposal()
-      .accounts({
+      .accountsPartial({
         dao,
         squadsMultisig,
         squadsMultisigProposal: configProposal,

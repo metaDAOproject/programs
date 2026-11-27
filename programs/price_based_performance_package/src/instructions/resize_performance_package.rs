@@ -24,7 +24,7 @@ impl ResizePerformancePackage<'_> {
         let data = self.performance_package.try_borrow_data()?;
         require_gte!(data.len(), 8, ErrorCode::AccountDiscriminatorNotFound);
         require!(
-            data[..8] == PerformancePackage::discriminator(),
+            &data[..8] == PerformancePackage::DISCRIMINATOR,
             ErrorCode::AccountDiscriminatorMismatch
         );
 
@@ -67,7 +67,7 @@ impl ResizePerformancePackage<'_> {
             last_change_proposed_at: 0,
         };
 
-        performance_package.realloc(PerformancePackage::SIZE, true)?;
+        performance_package.resize(PerformancePackage::SIZE)?;
 
         let lamports_needed = Rent::get()?.minimum_balance(PerformancePackage::SIZE);
         if lamports_needed > performance_package.lamports() {

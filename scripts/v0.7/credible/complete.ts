@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import {
   LaunchpadClient,
   getLaunchAddr,
@@ -9,7 +9,6 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { createLookupTableForTransaction } from "../../utils/utils.js";
-import { token } from "@coral-xyz/anchor/dist/cjs/utils/index.js";
 import { TOKEN_SEED } from "./constants.js";
 
 const provider = anchor.AnchorProvider.env();
@@ -23,7 +22,7 @@ export const completeLaunch = async () => {
   const TOKEN = await PublicKey.createWithSeed(
     payer.publicKey,
     TOKEN_SEED,
-    token.TOKEN_PROGRAM_ID,
+    anchor.utils.token.TOKEN_PROGRAM_ID,
   );
   console.log("Token address:", TOKEN.toBase58());
 

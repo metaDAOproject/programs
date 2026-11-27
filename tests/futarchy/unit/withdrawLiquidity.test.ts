@@ -47,7 +47,7 @@ export default function suite() {
         minBaseAmount,
         minQuoteAmount,
       })
-      .accounts({
+      .accountsPartial({
         dao,
         positionAuthority: authority,
         liquidityProviderBaseAccount: getAssociatedTokenAddressSync(

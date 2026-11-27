@@ -1,4 +1,4 @@
-import { BN } from "@coral-xyz/anchor";
+import { BN } from "@anchor-lang/core";
 import { PublicKey } from "@solana/web3.js";
 import { BID_WALL_V0_7_PROGRAM_ID } from "../../constants.js";
 

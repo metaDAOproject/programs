@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Legacy script
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { AutocratClient, getDaoAddr } from "@metadaoproject/programs/v0.6";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
@@ -120,7 +120,7 @@ async function main() {
 
   await autocratClient.autocrat.methods
     .initializeFutarchyAmm()
-    .accounts({
+    .accountsPartial({
       futarchyAmm,
       createKey: payer.publicKey,
       payer: payer.publicKey,
@@ -159,7 +159,7 @@ async function main() {
       maxBaseAmount: new BN(100_000 * 1_000_000), // 100,000 META equivalent
       minLiquidity: new BN(0),
     })
-    .accounts({
+    .accountsPartial({
       futarchyAmm,
       payer: payer.publicKey,
       ammBaseVault: token.getAssociatedTokenAddressSync(

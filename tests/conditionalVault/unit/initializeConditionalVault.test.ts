@@ -11,7 +11,7 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { assert } from "chai";
-import { createMint, getAccount, getMint } from "spl-token-bankrun";
+import { createMint, getAccount, getMint } from "../../litesvm/index.js";
 import * as token from "@solana/spl-token";
 import { expectError } from "../../utils.js";
 

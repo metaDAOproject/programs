@@ -1,7 +1,7 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import { PublicKey, Transaction } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
+import { BN } from "@anchor-lang/core";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];

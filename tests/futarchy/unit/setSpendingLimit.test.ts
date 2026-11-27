@@ -193,7 +193,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .setSpendingLimit({ config: null })
-      .accounts({
+      .accountsPartial({
         dao,
         squadsMultisigVault: attacker.publicKey,
       })

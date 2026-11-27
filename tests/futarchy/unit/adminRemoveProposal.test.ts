@@ -102,7 +102,7 @@ export default function suite() {
     // Call admin_remove_proposal
     await this.futarchy.futarchy.methods
       .adminRemoveProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         admin: this.payer.publicKey,
@@ -133,7 +133,7 @@ export default function suite() {
     // Remove the proposal
     await this.futarchy.futarchy.methods
       .adminRemoveProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         admin: this.payer.publicKey,
@@ -169,7 +169,7 @@ export default function suite() {
     // Remove the proposal first
     await this.futarchy.futarchy.methods
       .adminRemoveProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         admin: this.payer.publicKey,
@@ -253,7 +253,7 @@ export default function suite() {
 
     await this.futarchy.futarchy.methods
       .adminRemoveProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         admin: this.payer.publicKey,

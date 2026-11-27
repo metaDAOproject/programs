@@ -1,6 +1,6 @@
 import * as token from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 
 const mints: PublicKey[] = [
   new PublicKey("Et9wvs9gEBQtFY2RkvLw2XVLaBqjotHPvQBDvqkKxDR8"), // ORE

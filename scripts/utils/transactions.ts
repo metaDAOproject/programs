@@ -1,4 +1,4 @@
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider } from "@anchor-lang/core";
 import bs58 from "bs58";
 import { Keypair, SendTransactionError, Transaction } from "@solana/web3.js";
 

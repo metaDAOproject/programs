@@ -18,7 +18,7 @@ pub struct ExecuteMultisigProposalCancellation<'info> {
         bump,
         seeds::program = squads_multisig_program::ID,
     )]
-    pub squads_multisig: Account<'info, squads_multisig_program::Multisig>,
+    pub squads_multisig: Account<'info, SquadsMultisig>,
 
     #[account(
         mut,
@@ -32,7 +32,7 @@ pub struct ExecuteMultisigProposalCancellation<'info> {
         bump,
         seeds::program = squads_multisig_program::ID,
     )]
-    pub squads_multisig_proposal: Account<'info, squads_multisig_program::Proposal>,
+    pub squads_multisig_proposal: Account<'info, SquadsProposal>,
 
     #[account(
         mut,

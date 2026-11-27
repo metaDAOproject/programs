@@ -1,0 +1,3442 @@
+{
+  "address": "pbPPQH7jyKoSLu8QYs3rSY3YkDRXEBojKbTgnUg7NDS",
+  "metadata": {
+    "name": "price_based_performance_package",
+    "version": "0.6.1",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "burn_performance_package",
+      "discriminator": [
+        232,
+        251,
+        10,
+        122,
+        204,
+        255,
+        248,
+        208
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "Emptied by the payout and the burn, then closed to the spill account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          },
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "recipient",
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "recipient_token_account",
+          "docs": [
+            "Any token account owned by the recipient; receives the unlocked balance"
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "spill_account",
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "writable": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "The mint of the package's quote ATA; any mint other than the package's token mint"
+          ],
+          "optional": true
+        },
+        {
+          "name": "package_quote_account",
+          "docs": [
+            "The package's quote ATA, swept into `quote_destination` and closed when passed"
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "quote_destination",
+          "docs": [
+            "Where the quote balance goes, chosen by the admin"
+          ],
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "change_performance_package_authority",
+      "discriminator": [
+        167,
+        96,
+        117,
+        32,
+        209,
+        186,
+        226,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "current_authority",
+          "signer": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ChangePerformancePackageAuthorityParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "complete_unlock",
+      "discriminator": [
+        22,
+        203,
+        15,
+        189,
+        239,
+        125,
+        25,
+        132
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "oracle_account"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "execute_change",
+      "discriminator": [
+        104,
+        53,
+        136,
+        238,
+        82,
+        222,
+        200,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "change_request",
+          "writable": true
+        },
+        {
+          "name": "performance_package",
+          "writable": true,
+          "relations": [
+            "change_request"
+          ]
+        },
+        {
+          "name": "executor",
+          "docs": [
+            "The party executing the change (must be opposite of proposer)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ExecuteChangeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_performance_package",
+      "discriminator": [
+        3,
+        171,
+        56,
+        55,
+        135,
+        100,
+        163,
+        186
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  102,
+                  111,
+                  114,
+                  109,
+                  97,
+                  110,
+                  99,
+                  101,
+                  95,
+                  112,
+                  97,
+                  99,
+                  107,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "create_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "create_key",
+          "docs": [
+            "Used to derive the PDA"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The mint of the tokens to be locked"
+          ]
+        },
+        {
+          "name": "grantor_token_account",
+          "docs": [
+            "The token account containing the tokens to be locked"
+          ],
+          "writable": true
+        },
+        {
+          "name": "grantor",
+          "docs": [
+            "The authority of the token account"
+          ],
+          "signer": true
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "The locker's token account where tokens will be stored"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializePerformancePackageParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_performance_package_with_limits",
+      "discriminator": [
+        49,
+        132,
+        41,
+        239,
+        119,
+        107,
+        42,
+        229
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  114,
+                  102,
+                  111,
+                  114,
+                  109,
+                  97,
+                  110,
+                  99,
+                  101,
+                  95,
+                  112,
+                  97,
+                  99,
+                  107,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "create_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "create_key",
+          "docs": [
+            "Used to derive the PDA"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The mint of the tokens to be locked"
+          ]
+        },
+        {
+          "name": "grantor_token_account",
+          "docs": [
+            "The token account containing the tokens to be locked"
+          ],
+          "writable": true
+        },
+        {
+          "name": "grantor",
+          "docs": [
+            "The authority of the token account"
+          ],
+          "signer": true
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "The locker's token account where tokens will be stored"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializePerformancePackageWithLimitsParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "propose_change",
+      "discriminator": [
+        167,
+        211,
+        18,
+        222,
+        93,
+        215,
+        74,
+        159
+      ],
+      "accounts": [
+        {
+          "name": "change_request",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  110,
+                  103,
+                  101,
+                  95,
+                  114,
+                  101,
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "account",
+                "path": "proposer"
+              },
+              {
+                "kind": "arg",
+                "path": "params.pda_nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "proposer",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ProposeChangeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "resize_performance_package",
+      "discriminator": [
+        99,
+        88,
+        136,
+        7,
+        47,
+        157,
+        30,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "start_unlock",
+      "discriminator": [
+        53,
+        202,
+        212,
+        31,
+        76,
+        178,
+        31,
+        123
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "oracle_account"
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "Only the token recipient can start unlock"
+          ],
+          "signer": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdraw_tokens",
+      "discriminator": [
+        2,
+        4,
+        225,
+        61,
+        19,
+        182,
+        106,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "oracle_account"
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "The token account where locked tokens are stored"
+          ],
+          "writable": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "token_mint",
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "recipient_token_account",
+          "docs": [
+            "The recipient's ATA where tokens will be sent - created if needed"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "recipient"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "Only the recipient can withdraw"
+          ],
+          "signer": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Payer for creating the ATA if needed"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "WithdrawTokensParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw_via_sell",
+      "discriminator": [
+        14,
+        241,
+        77,
+        159,
+        41,
+        120,
+        59,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "performance_package",
+          "writable": true
+        },
+        {
+          "name": "dao",
+          "docs": [
+            "The futarchy Dao whose spot pool buys the tokens"
+          ],
+          "writable": true
+        },
+        {
+          "name": "performance_package_token_vault",
+          "docs": [
+            "The token account where locked tokens are stored; the sale is paid out of it"
+          ],
+          "writable": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "token_mint",
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "amm_base_vault",
+          "writable": true
+        },
+        {
+          "name": "amm_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "package_quote_account",
+          "docs": [
+            "The package's quote ATA that receives the proceeds before they are forwarded"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "performance_package"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient_quote_account",
+          "docs": [
+            "The recipient's quote ATA where the proceeds are sent"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "recipient"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "Only the recipient can withdraw"
+          ],
+          "signer": true,
+          "relations": [
+            "performance_package"
+          ]
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Payer for creating the ATAs if needed"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "futarchy_program",
+          "address": "FUTARELBfJfQ8RDGhg1wdhddq1odMAJUePHFuBYfUxKq"
+        },
+        {
+          "name": "futarchy_event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "futarchy_program"
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "WithdrawViaSellParams"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ChangeRequest",
+      "discriminator": [
+        75,
+        130,
+        166,
+        47,
+        15,
+        217,
+        131,
+        190
+      ]
+    },
+    {
+      "name": "Dao",
+      "discriminator": [
+        163,
+        9,
+        47,
+        31,
+        52,
+        85,
+        197,
+        49
+      ]
+    },
+    {
+      "name": "PerformancePackage",
+      "discriminator": [
+        228,
+        146,
+        174,
+        131,
+        121,
+        249,
+        99,
+        132
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "ChangeExecuted",
+      "discriminator": [
+        50,
+        115,
+        8,
+        12,
+        139,
+        8,
+        191,
+        26
+      ]
+    },
+    {
+      "name": "ChangeProposed",
+      "discriminator": [
+        170,
+        10,
+        10,
+        8,
+        244,
+        196,
+        146,
+        151
+      ]
+    },
+    {
+      "name": "PerformancePackageAuthorityChanged",
+      "discriminator": [
+        61,
+        106,
+        117,
+        16,
+        219,
+        103,
+        0,
+        43
+      ]
+    },
+    {
+      "name": "PerformancePackageInitialized",
+      "discriminator": [
+        215,
+        87,
+        36,
+        3,
+        199,
+        219,
+        188,
+        121
+      ]
+    },
+    {
+      "name": "TokensSold",
+      "discriminator": [
+        217,
+        83,
+        68,
+        137,
+        134,
+        225,
+        94,
+        45
+      ]
+    },
+    {
+      "name": "TokensWithdrawn",
+      "discriminator": [
+        30,
+        116,
+        110,
+        147,
+        87,
+        89,
+        9,
+        158
+      ]
+    },
+    {
+      "name": "UnlockCompleted",
+      "discriminator": [
+        9,
+        6,
+        169,
+        127,
+        233,
+        218,
+        94,
+        165
+      ]
+    },
+    {
+      "name": "UnlockStarted",
+      "discriminator": [
+        156,
+        214,
+        102,
+        63,
+        177,
+        19,
+        228,
+        124
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UnlockTimestampNotReached",
+      "msg": "Unlock timestamp has not been reached yet"
+    },
+    {
+      "code": 6001,
+      "name": "UnlockTimestampInThePast",
+      "msg": "Unlock timestamp must be in the future"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidPerformancePackageState",
+      "msg": "Performance package is not in the expected state"
+    },
+    {
+      "code": 6003,
+      "name": "TwapPeriodNotElapsed",
+      "msg": "TWAP calculation failed"
+    },
+    {
+      "code": 6004,
+      "name": "PriceThresholdNotMet",
+      "msg": "Price threshold not met"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidOracleData",
+      "msg": "Invalid oracle account data"
+    },
+    {
+      "code": 6006,
+      "name": "UnauthorizedChangeRequest",
+      "msg": "Unauthorized to create or execute change request"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidChangeRequest",
+      "msg": "Change request does not match locker"
+    },
+    {
+      "code": 6008,
+      "name": "UnauthorizedLockerAuthority",
+      "msg": "Unauthorized locker authority"
+    },
+    {
+      "code": 6009,
+      "name": "InvariantViolated",
+      "msg": "An invariant was violated. You should get in contact with the MetaDAO team if you see this"
+    },
+    {
+      "code": 6010,
+      "name": "TranchePriceThresholdsNotMonotonic",
+      "msg": "Tranche price thresholds must be monotonically increasing"
+    },
+    {
+      "code": 6011,
+      "name": "TrancheTokenAmountZero",
+      "msg": "Tranche token amount must be greater than 0"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidTwapLength",
+      "msg": "TWAP length must be greater than or equal to 1 day and less than 1 year"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidAdmin",
+      "msg": "Invalid admin"
+    },
+    {
+      "code": 6014,
+      "name": "TotalTokenAmountOverflow",
+      "msg": "Total token amount calculation would overflow"
+    },
+    {
+      "code": 6015,
+      "name": "RecipientAuthorityMustDiffer",
+      "msg": "Recipient and performance package authority must be different keys"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidWithdrawalLimits",
+      "msg": "Withdrawal limits must have non-zero caps, a future end, and a window of at least one second"
+    },
+    {
+      "code": 6017,
+      "name": "InsufficientWithdrawableBalance",
+      "msg": "Amount exceeds the withdrawable balance"
+    },
+    {
+      "code": 6018,
+      "name": "TokenWindowLimitExceeded",
+      "msg": "Token cap for the current window exceeded"
+    },
+    {
+      "code": 6019,
+      "name": "QuoteWindowLimitExceeded",
+      "msg": "Quote cap for the current window exceeded"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidPriceObservation",
+      "msg": "Oracle price observation is missing or zero"
+    },
+    {
+      "code": 6021,
+      "name": "WithdrawTokensDisabled",
+      "msg": "Token withdrawals are disabled by the withdrawal mode"
+    },
+    {
+      "code": 6022,
+      "name": "WithdrawViaSellDisabled",
+      "msg": "Sell withdrawals are disabled by the withdrawal mode"
+    },
+    {
+      "code": 6023,
+      "name": "AccountNotMigrated",
+      "msg": "Performance package has not been resized to the current layout"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidQuoteMint",
+      "msg": "Quote mint must differ from the package's token mint"
+    },
+    {
+      "code": 6025,
+      "name": "QuoteSweepAccountsIncomplete",
+      "msg": "The package's quote account and the quote destination must be passed together"
+    },
+    {
+      "code": 6026,
+      "name": "OracleMintMismatch",
+      "msg": "Oracle Dao's base mint must be the package's token mint"
+    },
+    {
+      "code": 6027,
+      "name": "MaxQuoteValueExceeded",
+      "msg": "Withdrawal is valued above the recipient's maximum quote value"
+    },
+    {
+      "code": 6028,
+      "name": "StaleChangeRequest",
+      "msg": "Change request was proposed before the last executed change was proposed"
+    },
+    {
+      "code": 6029,
+      "name": "ChangeRequestMismatch",
+      "msg": "Change request was proposed at a different time than the executor expected"
+    }
+  ],
+  "types": [
+    {
+      "name": "CappedWithdrawal",
+      "docs": [
+        "Present on a withdrawal that ran under active limits"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price",
+            "docs": [
+              "The price the withdrawal was valued at: the higher of the spot pool's observation and its reserve price"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "quote_value",
+            "docs": [
+              "`amount` valued at that price, in quote atoms"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "usage",
+            "docs": [
+              "Window usage after this withdrawal"
+            ],
+            "type": {
+              "defined": {
+                "name": "WindowUsage"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeExecuted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_request",
+            "type": "pubkey"
+          },
+          {
+            "name": "executor",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_type",
+            "type": {
+              "defined": {
+                "name": "ChangeType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangePerformancePackageAuthorityParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "new_performance_package_authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeProposed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "locker",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_request",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_type",
+            "type": {
+              "defined": {
+                "name": "ChangeType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeRequest",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "performance_package",
+            "docs": [
+              "The performance package this change applies to"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "change_type",
+            "docs": [
+              "What is being changed"
+            ],
+            "type": {
+              "defined": {
+                "name": "ChangeType"
+              }
+            }
+          },
+          {
+            "name": "proposed_at",
+            "docs": [
+              "When the change was proposed"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "proposer_type",
+            "docs": [
+              "Who proposed this change (either token_recipient or locker_authority)"
+            ],
+            "type": {
+              "defined": {
+                "name": "ProposerType"
+              }
+            }
+          },
+          {
+            "name": "pda_nonce",
+            "docs": [
+              "Used to derive the PDA along with the proposer"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "pda_bump",
+            "docs": [
+              "The PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Oracle",
+            "fields": [
+              {
+                "name": "new_oracle_config",
+                "type": {
+                  "defined": {
+                    "name": "OracleConfig"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "Recipient",
+            "fields": [
+              {
+                "name": "new_recipient",
+                "type": "pubkey"
+              }
+            ]
+          },
+          {
+            "name": "UnlockTerms",
+            "fields": [
+              {
+                "name": "min_unlock_timestamp",
+                "type": "i64"
+              },
+              {
+                "name": "limits",
+                "type": {
+                  "option": {
+                    "defined": {
+                      "name": "LimitsParams"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "CommonFields",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "performance_package_seq_num",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Dao",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amm",
+            "docs": [
+              "Embedded FutarchyAmm - 1:1 relationship"
+            ],
+            "type": {
+              "defined": {
+                "name": "FutarchyAmm"
+              }
+            }
+          },
+          {
+            "name": "nonce",
+            "docs": [
+              "`nonce` + `dao_creator` are PDA seeds"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "dao_creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "type": "u8"
+          },
+          {
+            "name": "squads_multisig",
+            "type": "pubkey"
+          },
+          {
+            "name": "squads_multisig_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposal_count",
+            "type": "u32"
+          },
+          {
+            "name": "pass_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "seconds_per_proposal",
+            "type": "u32"
+          },
+          {
+            "name": "twap_initial_observation",
+            "docs": [
+              "For manipulation-resistance the TWAP is a time-weighted average observation,",
+              "where observation tries to approximate price but can only move by",
+              "`twap_max_observation_change_per_update` per update. Because it can only move",
+              "a little bit per update, you need to check that it has a good initial observation.",
+              "Otherwise, an attacker could create a very high initial observation in the pass",
+              "market and a very low one in the fail market to force the proposal to pass.",
+              "",
+              "We recommend setting an initial observation around the spot price of the token,",
+              "and max observation change per update around 2% the spot price of the token.",
+              "For example, if the spot price of META is $400, we'd recommend setting an initial",
+              "observation of 400 (converted into the AMM prices) and a max observation change per",
+              "update of 8 (also converted into the AMM prices). Observations can be updated once",
+              "a minute, so 2% allows the proposal market to reach double the spot price or 0",
+              "in 50 minutes."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "twap_max_observation_change_per_update",
+            "type": "u128"
+          },
+          {
+            "name": "twap_start_delay_seconds",
+            "docs": [
+              "Forces TWAP calculation to start after `twap_start_delay_seconds` seconds"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "min_quote_futarchic_liquidity",
+            "docs": [
+              "As an anti-spam measure and to help liquidity, you need to lock up some liquidity",
+              "in both futarchic markets in order to create a proposal.",
+              "",
+              "For example, for META, we can use a `min_quote_futarchic_liquidity` of",
+              "5000 * 1_000_000 (5000 USDC) and a `min_base_futarchic_liquidity` of",
+              "10 * 1_000_000_000 (10 META)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_base_futarchic_liquidity",
+            "type": "u64"
+          },
+          {
+            "name": "base_to_stake",
+            "docs": [
+              "Minimum amount of base tokens that must be staked to launch a proposal"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "seq_num",
+            "type": "u64"
+          },
+          {
+            "name": "initial_spending_limit",
+            "docs": [
+              "The authoritative record of what the Squads spending limit should be.",
+              "`None` = no limit. Kept in sync with the Squads-side account by",
+              "`sync_spending_limit`. (Named for its original init-only role)"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "InitialSpendingLimit"
+                }
+              }
+            }
+          },
+          {
+            "name": "team_sponsored_pass_threshold_bps",
+            "docs": [
+              "The percentage, in basis points, the pass price needs to be above the",
+              "fail price in order for the proposal to pass for team-sponsored proposals.",
+              "",
+              "Can be negative to allow for team-sponsored proposals to pass by default."
+            ],
+            "type": "i16"
+          },
+          {
+            "name": "team_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "optimistic_proposal",
+            "docs": [
+              "Deprecated in favor of typed proposals"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "OptimisticProposal"
+                }
+              }
+            }
+          },
+          {
+            "name": "is_optimistic_governance_enabled",
+            "docs": [
+              "Deprecated in favor of typed proposals"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "liquidator",
+            "docs": [
+              "`Some` means the DAO has been liquidated, and holds who runs the estate.",
+              "Set once by `finalize_proposal` the moment a hostile liquidation",
+              "passes, never cleared."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "last_failed_takeover_at",
+            "docs": [
+              "Unix time of the last failed hostile takeover. 0 = never."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "last_failed_liquidation_at",
+            "docs": [
+              "Unix time of the last failed hostile liquidation. 0 = never."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "spending_limit_dirty",
+            "docs": [
+              "Set by every write to the spending-limit record (`initial_spending_limit`),",
+              "consumed by `sync_spending_limit`."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "last_buyback_finalized_at",
+            "docs": [
+              "Unix time of the last buyback finalization. 0 = never."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "typed_proposals_enabled",
+            "docs": [
+              "Whether the DAO runs on the mini-instructions catalog. Never turns off."
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExecuteChangeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "expected_proposed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FutarchyAmm",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "PoolState"
+              }
+            }
+          },
+          {
+            "name": "total_liquidity",
+            "type": "u128"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_quote_vault",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitialSpendingLimit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount_per_month",
+            "type": "u64"
+          },
+          {
+            "name": "members",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializePerformancePackageParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tranches",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Tranche"
+                }
+              }
+            }
+          },
+          {
+            "name": "min_unlock_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "oracle_config",
+            "type": {
+              "defined": {
+                "name": "OracleConfig"
+              }
+            }
+          },
+          {
+            "name": "twap_length_seconds",
+            "type": "u32"
+          },
+          {
+            "name": "grantee",
+            "type": "pubkey"
+          },
+          {
+            "name": "performance_package_authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializePerformancePackageWithLimitsParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "base",
+            "type": {
+              "defined": {
+                "name": "InitializePerformancePackageParams"
+              }
+            }
+          },
+          {
+            "name": "limits",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "LimitsParams"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LimitsParams",
+      "docs": [
+        "What the two parties agree on; the program supplies `start_timestamp`"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "end_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "window_seconds",
+            "type": "u32"
+          },
+          {
+            "name": "max_tokens_per_window",
+            "type": "u64"
+          },
+          {
+            "name": "max_quote_per_window",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawal_mode",
+            "type": {
+              "defined": {
+                "name": "WithdrawalMode"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "OptimisticProposal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "squads_proposal",
+            "docs": [
+              "The squads proposal currently enqueued for execution if not challenged by a new proposal."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "enqueued_timestamp",
+            "docs": [
+              "The timestamp when the active optimistic squads proposal was enqueued."
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleConfig",
+      "docs": [
+        "Starting at `byte_offset` in `oracle_account`, the unlock instructions read:",
+        "- 16 bytes for the aggregator, stored as a little endian u128",
+        "- 8 bytes for the timestamp that the aggregator was last updated, stored as",
+        "a little endian i64",
+        "",
+        "While withdrawal limits are active, `oracle_account` must also be a futarchy",
+        "`Dao`: the withdraw instructions value withdrawals from its spot pool, at the",
+        "higher of the pool's damped observation and its reserve price.",
+        "",
+        "The aggregator should be a weighted sum of prices, where the weight is the",
+        "number of seconds between prices. Here's an example:",
+        "- at second 0, the aggregator is 0",
+        "- at second 1, the price is 10 and the aggregator is 10 (10 * 1)",
+        "- at second 4, the price is 11 and 3 seconds have passed, so the aggregator is",
+        "10 + 11 * 3 = 43",
+        "",
+        "This allows our program to read a TWAP over a time period by reading the",
+        "aggregator value at the beginning and at the end, and dividing the difference",
+        "by the number of seconds between the two."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "byte_offset",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackage",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tranches",
+            "docs": [
+              "The tranches that make up the performance package"
+            ],
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "StoredTranche"
+                }
+              }
+            }
+          },
+          {
+            "name": "total_token_amount",
+            "docs": [
+              "Total amount of tokens in the performance package"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "already_unlocked_amount",
+            "docs": [
+              "Amount of tokens already unlocked"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_unlock_timestamp",
+            "docs": [
+              "The timestamp when unlocking can begin"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "oracle_config",
+            "docs": [
+              "Where to pull price data from"
+            ],
+            "type": {
+              "defined": {
+                "name": "OracleConfig"
+              }
+            }
+          },
+          {
+            "name": "twap_length_seconds",
+            "docs": [
+              "Length of time in seconds for TWAP calculation, between 1 day and 1 year"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "recipient",
+            "docs": [
+              "The recipient of the tokens when unlocked"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "The current state of the locker"
+            ],
+            "type": {
+              "defined": {
+                "name": "PerformancePackageState"
+              }
+            }
+          },
+          {
+            "name": "create_key",
+            "docs": [
+              "Used to derive the PDA"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pda_bump",
+            "docs": [
+              "The PDA bump"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "performance_package_authority",
+            "docs": [
+              "The authorized locker authority that can execute changes, usually the organization"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "docs": [
+              "The mint of the locked tokens"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "seq_num",
+            "docs": [
+              "The sequence number of the performance package, used for indexing events"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "performance_package_token_vault",
+            "docs": [
+              "The vault that stores the tokens"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "withdrawal_policy",
+            "docs": [
+              "`None` means uncapped, and so do expired limits"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "WithdrawalPolicy"
+                }
+              }
+            }
+          },
+          {
+            "name": "last_change_proposed_at",
+            "docs": [
+              "When the last executed change was proposed (the creation time until then); requests proposed earlier can no longer be executed"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackageAuthorityChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "locker",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackageInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PerformancePackageState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Locked"
+          },
+          {
+            "name": "Unlocking",
+            "fields": [
+              {
+                "name": "start_aggregator",
+                "docs": [
+                  "The aggregator value when unlocking started"
+                ],
+                "type": "u128"
+              },
+              {
+                "name": "start_timestamp",
+                "docs": [
+                  "The timestamp when unlocking started"
+                ],
+                "type": "i64"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Pool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle",
+            "type": {
+              "defined": {
+                "name": "TwapOracle"
+              }
+            }
+          },
+          {
+            "name": "quote_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "base_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "quote_protocol_fee_balance",
+            "type": "u64"
+          },
+          {
+            "name": "base_protocol_fee_balance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PoolState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Spot",
+            "fields": [
+              {
+                "name": "spot",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "Futarchy",
+            "fields": [
+              {
+                "name": "spot",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              },
+              {
+                "name": "pass",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              },
+              {
+                "name": "fail",
+                "type": {
+                  "defined": {
+                    "name": "Pool"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposeChangeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "change_type",
+            "type": {
+              "defined": {
+                "name": "ChangeType"
+              }
+            }
+          },
+          {
+            "name": "pda_nonce",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposerType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Recipient"
+          },
+          {
+            "name": "Authority"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StoredTranche",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price_threshold",
+            "type": "u128"
+          },
+          {
+            "name": "token_amount",
+            "type": "u64"
+          },
+          {
+            "name": "is_unlocked",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokensSold",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "quote_received",
+            "type": "u64"
+          },
+          {
+            "name": "min_quote_out",
+            "type": "u64"
+          },
+          {
+            "name": "capped",
+            "docs": [
+              "Window usage after this sale; `None` when no limits were active"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "WindowUsage"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokensWithdrawn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "capped",
+            "docs": [
+              "`None` when no limits were active"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "CappedWithdrawal"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tranche",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price_threshold",
+            "docs": [
+              "The price at which this tranch unlocks"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "token_amount",
+            "docs": [
+              "The amount of tokens in this tranch"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TwapOracle",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "aggregator",
+            "docs": [
+              "Running sum of seconds_since_last_update * last_observation.",
+              "",
+              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
+              "we can store 18 million seconds worth of observations, which turns out to",
+              "be ~213 days.",
+              "",
+              "Assuming that latest observations are 100x smaller than they could theoretically",
+              "be, we can store ~57 years worth of them. Even this is a very",
+              "very conservative assumption - META/USDC prices should be between 1e9 and",
+              "1e15, which would overflow after 1e15 years.",
+              "",
+              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
+              "client's responsibility to sanity check the assets or to handle an",
+              "aggregator at T2 being smaller than an aggregator at T1."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "last_updated_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "created_at_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "last_price",
+            "docs": [
+              "A price is the number of quote units per base unit multiplied by 1e12.",
+              "You cannot simply divide by 1e12 to get a price you can display in the UI",
+              "because the base and quote decimals may be different. Instead, do:",
+              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "last_observation",
+            "docs": [
+              "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
+              "a few extremely large outliers. So we use observations, which can only move",
+              "by `max_observation_change_per_update` per update."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "max_observation_change_per_update",
+            "docs": [
+              "The most that an observation can change per update."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "initial_observation",
+            "docs": [
+              "What the initial `latest_observation` is set to."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "start_delay_seconds",
+            "docs": [
+              "Number of seconds after amm.created_at_slot to start recording TWAP"
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnlockCompleted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_amount",
+            "type": "u64"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "twap_price",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnlockStarted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "common",
+            "type": {
+              "defined": {
+                "name": "CommonFields"
+              }
+            }
+          },
+          {
+            "name": "performance_package",
+            "type": "pubkey"
+          },
+          {
+            "name": "start_aggregator",
+            "type": "u128"
+          },
+          {
+            "name": "start_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WindowUsage",
+      "docs": [
+        "Usage in the window the last withdrawal fell in"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "window_index",
+            "docs": [
+              "`(now - limits.start_timestamp) / limits.window_seconds` at the last withdrawal"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "tokens_used",
+            "type": "u64"
+          },
+          {
+            "name": "quote_used",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawTokensParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_quote_value",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawViaSellParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "min_quote_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalLimits",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "start_timestamp",
+            "docs": [
+              "Anchor for window boundaries; set by the program when limits take effect or `window_seconds` changes"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "end_timestamp",
+            "docs": [
+              "Caps apply while `now < end_timestamp`"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "window_seconds",
+            "docs": [
+              "Duration of the window in seconds"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "max_tokens_per_window",
+            "docs": [
+              "Max base tokens withdrawn per window"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_quote_per_window",
+            "docs": [
+              "Max quote value withdrawn per window, in quote atoms"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "withdrawal_mode",
+            "docs": [
+              "Which withdrawal routes the recipient may use while the caps are active"
+            ],
+            "type": {
+              "defined": {
+                "name": "WithdrawalMode"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalMode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Tokens"
+          },
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "Both"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalPolicy",
+      "docs": [
+        "The agreed limits together with the usage they are enforced against"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "limits",
+            "type": {
+              "defined": {
+                "name": "WithdrawalLimits"
+              }
+            }
+          },
+          {
+            "name": "usage",
+            "type": {
+              "defined": {
+                "name": "WindowUsage"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "PRICE_SCALE",
+      "docs": [
+        "Scale of oracle prices: quote atoms per base atom, times 1e12"
+      ],
+      "type": "u128",
+      "value": "1000000000000"
+    }
+  ]
+}

@@ -25,7 +25,7 @@ security_txt! {
 declare_id!("WALL8ucBuUyL46QYxwYJjidaFYhdvxUFrgvBxPshERx");
 
 pub mod usdc_mint {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     #[cfg(feature = "devnet")]
     declare_id!("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
@@ -35,7 +35,7 @@ pub mod usdc_mint {
 }
 
 pub mod metadao_multisig_vault {
-    use anchor_lang::prelude::declare_id;
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // MetaDAO operations multisig vault - hardcoded fee destination
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");

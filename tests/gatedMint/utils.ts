@@ -6,7 +6,7 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import * as token from "@solana/spl-token";
-import { BanksClient, ProgramTestContext } from "solana-bankrun";
+import { BanksClient, ProgramTestContext } from "../litesvm/index.js";
 import {
   GatedMintClient,
   getGatedMintConfigAddr,

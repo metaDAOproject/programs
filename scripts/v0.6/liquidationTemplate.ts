@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { PublicKey } from "@solana/web3.js";
 import { FutarchyClient } from "@metadaoproject/programs/futarchy/v0.6";
 import { METADAO_MULTISIG_VAULT } from "@metadaoproject/programs";

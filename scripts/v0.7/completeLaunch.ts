@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import { LaunchpadClient } from "@metadaoproject/programs/launchpad/v0.7";
 import {
   PublicKey,

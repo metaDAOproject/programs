@@ -1,4 +1,4 @@
-import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, IdlTypes, Program } from "@anchor-lang/core";
 import {
   AccountInfo,
   AccountMeta,
@@ -13,7 +13,7 @@ import {
 import { PriceMath } from "../../priceMath.js";
 import { ProposalInstruction, InitializeDaoParams } from "./types/index.js";
 
-import { Autocrat, IDL as AutocratIDL } from "./types/autocrat.js";
+import { AutocratProgram as Autocrat, AutocratIDL } from "./types/index.js";
 
 import BN from "bn.js";
 import {
@@ -70,8 +70,7 @@ export class AutocratClient {
   ) {
     this.provider = provider;
     this.autocrat = new Program<Autocrat>(
-      AutocratIDL,
-      autocratProgramId,
+      { ...AutocratIDL, address: autocratProgramId.toBase58() },
       provider,
     );
     this.vaultClient = ConditionalVaultClient.createClient({
@@ -290,7 +289,7 @@ export class AutocratClient {
   ) {
     return this.autocrat.methods
       .initializeDao(params)
-      .accounts({
+      .accountsPartial({
         dao: daoKeypair.publicKey,
         tokenMint,
         usdcMint,
@@ -602,7 +601,7 @@ export class AutocratClient {
         failLpTokensToLock,
         nonce,
       })
-      .accounts({
+      .accountsPartial({
         question,
         proposal,
         dao,
@@ -685,7 +684,7 @@ export class AutocratClient {
 
     const [vaultEventAuthority] = getEventAuthorityAddr(vaultProgramId);
 
-    return this.autocrat.methods.finalizeProposal().accounts({
+    return this.autocrat.methods.finalizeProposal().accountsPartial({
       proposal,
       passAmm,
       failAmm,
@@ -725,7 +724,7 @@ export class AutocratClient {
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     return this.autocrat.methods
       .executeProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         // daoTreasury,

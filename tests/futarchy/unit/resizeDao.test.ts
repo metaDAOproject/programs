@@ -346,7 +346,7 @@ export default function suite() {
     );
     await this.futarchy.futarchy.methods
       .resizeDao()
-      .accounts({
+      .accountsPartial({
         dao,
         spendingLimit: Keypair.generate().publicKey,
         payer: this.payer.publicKey,

@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
 import {
   PublicKey,
   SystemProgram,
@@ -38,11 +38,16 @@ import {
   updateMetadataAccountV2,
 } from "@metaplex-foundation/mpl-token-metadata";
 import {
+  createSignerFromKeypair,
   percentAmount,
   signerIdentity,
   publicKey as UmiPublicKey,
 } from "@metaplex-foundation/umi";
-import { toWeb3JsInstruction } from "@metaplex-foundation/umi-web3js-adapters";
+import {
+  fromWeb3JsKeypair,
+  fromWeb3JsPublicKey,
+  toWeb3JsInstruction,
+} from "@metaplex-foundation/umi-web3js-adapters";
 
 // Testing flag set to true to run it with seed.
 const MINT_FROM_SEED: boolean = true;
@@ -360,7 +365,8 @@ const initializeNewDaoAndToken = async () => {
 
   const umi = createUmi(provider.connection);
   umi.use(mplTokenMetadata());
-  umi.use(signerIdentity(payer.publicKey));
+  const umiPayer = createSignerFromKeypair(umi, fromWeb3JsKeypair(payer));
+  umi.use(signerIdentity(umiPayer));
 
   const umiMint = UmiPublicKey(TOKEN.toBase58());
   const umiUpdateAuthority = UmiPublicKey(squadsMultisigVault.toBase58()); // TODO: Confirm this.
@@ -368,7 +374,7 @@ const initializeNewDaoAndToken = async () => {
   // Generate Umi instructions
   const umiInstructions = createV1(umi, {
     mint: umiMint,
-    updateAuthority: payer.publicKey,
+    updateAuthority: fromWeb3JsPublicKey(payer.publicKey),
     name: "MetaDAO", // TODO: Review this is correct.
     symbol: "META", // TODO: Review this is correct.
     uri: "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/META/META.json",
@@ -380,7 +386,7 @@ const initializeNewDaoAndToken = async () => {
     decimals: 6,
     tokenStandard: TokenStandard.Fungible,
     isMutable: true, // TODO: Review this is correct.
-    payer: payer.publicKey,
+    payer: umiPayer,
   }).getInstructions();
 
   const asset = getMetadataAddr(TOKEN);

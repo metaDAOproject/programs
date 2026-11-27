@@ -321,7 +321,7 @@ export default function suite() {
         launchAuthority: launchAuthority.publicKey,
         hasBidWall: false,
       })
-      .accounts({
+      .accountsPartial({
         launch,
         launchSigner: fakeLaunchSigner.publicKey,
         quoteVault: token.getAssociatedTokenAddressSync(

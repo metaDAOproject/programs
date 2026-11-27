@@ -91,6 +91,7 @@ runs:
           --program-id ${{ inputs.program-id }} \
           --url ${{ inputs.rpc-url }} \
           --library-name ${{ inputs.program }} \
+          --arch v3 \
           -k ./deploy-keypair.json \
           $ARGS \
           ${{ inputs.repo-url }} \
@@ -108,6 +109,7 @@ runs:
           ${{ inputs.repo-url }} \
           --program-id ${{ inputs.program-id }} \
           --library-name ${{ inputs.program }} \
+          --arch v3 \
           --uploader ${{ inputs.vault-address }} \
           --commit-hash ${{ inputs.commit-hash }} \
           --url ${{ inputs.rpc-url }} \

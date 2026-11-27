@@ -20,11 +20,11 @@ on:
       anchor-version:
         description: 'Anchor version'
         required: true
-        default: '0.29.0'
+        default: '0.32.2'
       solana-cli-version:
         description: 'Solana CLI version'
         required: true
-        default: '1.17.16'
+        default: '4.3.0'
       features:
         description: 'Build features'
         required: true
@@ -37,10 +37,12 @@ on:
 
 jobs:
   verify-build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    env:
+      SOLANA_VERIFY_VERSION: "0.5.2"
     steps:
       - uses: actions/checkout@v4
-      - uses: metadaoproject/setup-anchor@7d1e9699eb18c33ba5f32f6a9952f0e90515996a # v3.2
+      - uses: ./.github/actions/setup-toolchain
         with:
           anchor-version: ${{ inputs.anchor-version }}
           solana-cli-version: ${{ inputs.solana-cli-version }}
@@ -59,14 +61,15 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/solana-verify
-          key: cargo-${{ runner.os }}-solana-verify
-      - run: cargo install solana-verify
+          key: solana-verify-${{ runner.os }}-${{ env.SOLANA_VERIFY_VERSION }}
+      - run: cargo install solana-verify --version ${{ env.SOLANA_VERIFY_VERSION }} --locked
         if: steps.cache-solana-verify.outputs.cache-hit != 'true'
         shell: bash
+      # The deployed artifacts are SBPFv3, so the rebuild must pass --arch v3 to reproduce them.
       - name: Verify build
         run: |
           if [ "${{ inputs.features }}" = "none" ]; then
-            solana-verify verify-from-repo --remote -um --program-id ${{ inputs.program_id }} https://github.com/${{ github.repository }} --library-name ${{ inputs.program_name }}
+            solana-verify verify-from-repo --remote -um --arch v3 --program-id ${{ inputs.program_id }} https://github.com/${{ github.repository }} --library-name ${{ inputs.program_name }}
           else
-            solana-verify verify-from-repo --remote -um --program-id ${{ inputs.program_id }} https://github.com/${{ github.repository }} --library-name ${{ inputs.program_name }} -- --features ${{ inputs.features }}
+            solana-verify verify-from-repo --remote -um --arch v3 --program-id ${{ inputs.program_id }} https://github.com/${{ github.repository }} --library-name ${{ inputs.program_name }} -- --features ${{ inputs.features }}
           fi

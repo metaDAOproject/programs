@@ -1,13 +1,10 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@anchor-lang/core";
 import { AccountInfo, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { MINT_GOVERNOR_V0_7_PROGRAM_ID } from "../../constants.js";
 import { getMintGovernorAddr, getMintAuthorityAddr } from "./pda.js";
 import BN from "bn.js";
-import {
-  MintGovernor as MintGovernorProgram,
-  IDL as MintGovernorIDL,
-} from "./types/mint_governor.js";
+import { MintGovernorProgram, MintGovernorIDL } from "./types/index.js";
 import type {
   MintGovernorAccount,
   MintAuthorityAccount,
@@ -27,8 +24,7 @@ export class MintGovernorClient {
     this.provider = provider;
     this.programId = programId;
     this.program = new Program<MintGovernorProgram>(
-      MintGovernorIDL,
-      programId,
+      { ...MintGovernorIDL, address: programId.toBase58() },
       provider,
     );
   }
@@ -87,7 +83,7 @@ export class MintGovernorClient {
       createKey,
     });
 
-    return this.program.methods.initializeMintGovernor().accounts({
+    return this.program.methods.initializeMintGovernor().accountsPartial({
       mint,
       mintGovernor,
       createKey,
@@ -107,7 +103,7 @@ export class MintGovernorClient {
     currentAuthority: PublicKey;
     tokenProgram?: PublicKey;
   }) {
-    return this.program.methods.transferAuthorityToGovernor().accounts({
+    return this.program.methods.transferAuthorityToGovernor().accountsPartial({
       mintGovernor,
       mint,
       currentAuthority,
@@ -134,7 +130,7 @@ export class MintGovernorClient {
       authorizedMinter,
     });
 
-    return this.program.methods.addMintAuthority({ maxTotal }).accounts({
+    return this.program.methods.addMintAuthority({ maxTotal }).accountsPartial({
       mintGovernor,
       mintAuthority,
       admin,
@@ -154,11 +150,13 @@ export class MintGovernorClient {
     admin: PublicKey;
     maxTotal: BN | null;
   }) {
-    return this.program.methods.updateMintAuthority({ maxTotal }).accounts({
-      mintGovernor,
-      mintAuthority,
-      admin,
-    });
+    return this.program.methods
+      .updateMintAuthority({ maxTotal })
+      .accountsPartial({
+        mintGovernor,
+        mintAuthority,
+        admin,
+      });
   }
 
   removeMintAuthorityIx({
@@ -172,7 +170,7 @@ export class MintGovernorClient {
     admin: PublicKey;
     rentDestination: PublicKey;
   }) {
-    return this.program.methods.removeMintAuthority().accounts({
+    return this.program.methods.removeMintAuthority().accountsPartial({
       mintGovernor,
       mintAuthority,
       admin,
@@ -201,7 +199,7 @@ export class MintGovernorClient {
       authorizedMinter,
     });
 
-    return this.program.methods.mintTokens({ amount }).accounts({
+    return this.program.methods.mintTokens({ amount }).accountsPartial({
       mintGovernor,
       mintAuthority,
       mint,
@@ -220,7 +218,7 @@ export class MintGovernorClient {
     admin: PublicKey;
     newAdmin: PublicKey;
   }) {
-    return this.program.methods.updateMintGovernorAdmin().accounts({
+    return this.program.methods.updateMintGovernorAdmin().accountsPartial({
       mintGovernor,
       admin,
       newAdmin,
@@ -240,7 +238,7 @@ export class MintGovernorClient {
     newAuthority: PublicKey;
     tokenProgram?: PublicKey;
   }) {
-    return this.program.methods.reclaimAuthority().accounts({
+    return this.program.methods.reclaimAuthority().accountsPartial({
       mintGovernor,
       mint,
       admin,

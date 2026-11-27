@@ -1,7 +1,7 @@
 use super::*;
 
-pub mod metadao_multisig_vault {
-    use anchor_lang::prelude::declare_id;
+mod metadao_multisig_vault {
+    use anchor_lang::solana_program::pubkey::declare_id;
 
     // MetaDAO operations multisig vault
     declare_id!("6awyHMshBGVjJ3ozdSJdyyDE1CTAXUwrpNMaRGMsb4sf");

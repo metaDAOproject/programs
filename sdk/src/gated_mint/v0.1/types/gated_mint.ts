@@ -1,306 +1,576 @@
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/gated_mint.json`.
+ */
 export type GatedMint = {
-  version: "0.1.0";
-  name: "gated_mint";
+  address: "GaTEjZy6eMdHg2BcL8dk3iE78jkJ9sPtyw1q2tMNi8PA";
+  metadata: {
+    name: "gatedMint";
+    version: "0.1.0";
+    spec: "0.1.0";
+    description: "Created with Anchor";
+  };
   instructions: [
     {
-      name: "initializeGatedMint";
+      name: "addWhitelistedUser";
+      discriminator: [211, 199, 16, 14, 43, 46, 211, 130];
       accounts: [
         {
-          name: "mint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "gatedMintConfig";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
-          name: "currentFreezeAuthority";
-          isMut: false;
-          isSigner: true;
+          name: "authority";
+          signer: true;
         },
         {
-          name: "admin";
-          isMut: false;
-          isSigner: false;
+          name: "mint";
+          relations: ["gatedMintConfig"];
+        },
+        {
+          name: "user";
+        },
+        {
+          name: "whitelistedUser";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116,
+                  101,
+                  100,
+                  95,
+                  117,
+                  115,
+                  101,
+                  114,
+                ];
+              },
+              {
+                kind: "account";
+                path: "mint";
+              },
+              {
+                kind: "account";
+                path: "user";
+              },
+            ];
+          };
         },
         {
           name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
+          writable: true;
+          signer: true;
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
+          address: "11111111111111111111111111111111";
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "disableGating";
+      discriminator: [26, 134, 241, 15, 176, 212, 81, 205];
+      accounts: [
+        {
+          name: "gatedMintConfig";
+          writable: true;
+        },
+        {
+          name: "admin";
+          signer: true;
+        },
+        {
+          name: "eventAuthority";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
+        },
+        {
+          name: "program";
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "gatedInvoke";
+      discriminator: [253, 225, 179, 175, 187, 144, 104, 247];
+      accounts: [
+        {
+          name: "caller";
+          signer: true;
+        },
+        {
+          name: "gatedMintConfig";
+          writable: true;
+        },
+        {
+          name: "whitelistedUser";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116,
+                  101,
+                  100,
+                  95,
+                  117,
+                  115,
+                  101,
+                  114,
+                ];
+              },
+              {
+                kind: "account";
+                path: "mint";
+              },
+              {
+                kind: "account";
+                path: "caller";
+              },
+            ];
+          };
+        },
+        {
+          name: "mint";
+          relations: ["gatedMintConfig", "whitelistedUser"];
+        },
+        {
+          name: "targetProgram";
+        },
+        {
+          name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+        },
+        {
+          name: "eventAuthority";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
+        },
+        {
+          name: "program";
         },
       ];
       args: [
         {
           name: "args";
           type: {
-            defined: "InitializeGatedMintArgs";
+            defined: {
+              name: "gatedInvokeArgs";
+            };
           };
         },
       ];
     },
     {
-      name: "addWhitelistedUser";
+      name: "initializeGatedMint";
+      discriminator: [104, 52, 160, 240, 89, 118, 217, 147];
       accounts: [
         {
-          name: "gatedMintConfig";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "authority";
-          isMut: false;
-          isSigner: true;
-        },
-        {
           name: "mint";
-          isMut: false;
-          isSigner: false;
+          writable: true;
         },
         {
-          name: "user";
-          isMut: false;
-          isSigner: false;
+          name: "gatedMintConfig";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  103,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                ];
+              },
+              {
+                kind: "account";
+                path: "mint";
+              },
+            ];
+          };
         },
         {
-          name: "whitelistedUser";
-          isMut: true;
-          isSigner: false;
+          name: "currentFreezeAuthority";
+          signer: true;
+        },
+        {
+          name: "admin";
         },
         {
           name: "payer";
-          isMut: true;
-          isSigner: true;
+          writable: true;
+          signer: true;
+        },
+        {
+          name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
+          address: "11111111111111111111111111111111";
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
-      args: [];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: {
+              name: "initializeGatedMintArgs";
+            };
+          };
+        },
+      ];
     },
     {
       name: "removeWhitelistedUser";
+      discriminator: [231, 10, 54, 151, 190, 230, 82, 6];
       accounts: [
         {
           name: "gatedMintConfig";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "authority";
-          isMut: false;
-          isSigner: true;
+          signer: true;
         },
         {
           name: "mint";
-          isMut: false;
-          isSigner: false;
+          relations: ["gatedMintConfig", "whitelistedUser"];
         },
         {
           name: "user";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "whitelistedUser";
-          isMut: true;
-          isSigner: false;
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116,
+                  101,
+                  100,
+                  95,
+                  117,
+                  115,
+                  101,
+                  114,
+                ];
+              },
+              {
+                kind: "account";
+                path: "mint";
+              },
+              {
+                kind: "account";
+                path: "user";
+              },
+            ];
+          };
         },
         {
           name: "rentDestination";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [];
     },
     {
       name: "setWhitelistAdmin";
+      discriminator: [224, 247, 186, 24, 93, 98, 152, 25];
       accounts: [
         {
           name: "gatedMintConfig";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "admin";
-          isMut: false;
-          isSigner: true;
+          signer: true;
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [
         {
           name: "args";
           type: {
-            defined: "SetWhitelistAdminArgs";
+            defined: {
+              name: "setWhitelistAdminArgs";
+            };
           };
         },
       ];
-    },
-    {
-      name: "gatedInvoke";
-      accounts: [
-        {
-          name: "caller";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "gatedMintConfig";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "whitelistedUser";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "mint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "targetProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [
-        {
-          name: "args";
-          type: {
-            defined: "GatedInvokeArgs";
-          };
-        },
-      ];
-    },
-    {
-      name: "disableGating";
-      accounts: [
-        {
-          name: "gatedMintConfig";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        },
-      ];
-      args: [];
     },
     {
       name: "thawAccount";
+      discriminator: [115, 152, 79, 213, 213, 169, 184, 35];
       accounts: [
         {
           name: "gatedMintConfig";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "mint";
-          isMut: false;
-          isSigner: false;
+          relations: ["gatedMintConfig"];
         },
         {
           name: "tokenAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
         },
         {
           name: "program";
-          isMut: false;
-          isSigner: false;
         },
       ];
       args: [];
@@ -309,62 +579,126 @@ export type GatedMint = {
   accounts: [
     {
       name: "gatedMintConfig";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "mint";
-            type: "publicKey";
-          },
-          {
-            name: "admin";
-            type: "publicKey";
-          },
-          {
-            name: "whitelistAdmin";
-            type: {
-              option: "publicKey";
-            };
-          },
-          {
-            name: "gatingDisabled";
-            type: "bool";
-          },
-          {
-            name: "seqNum";
-            type: "u64";
-          },
-          {
-            name: "bump";
-            type: "u8";
-          },
-        ];
-      };
+      discriminator: [58, 25, 220, 64, 205, 99, 235, 87];
     },
     {
       name: "whitelistedUser";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "mint";
-            type: "publicKey";
-          },
-          {
-            name: "user";
-            type: "publicKey";
-          },
-          {
-            name: "bump";
-            type: "u8";
-          },
-        ];
-      };
+      discriminator: [156, 78, 95, 223, 72, 234, 174, 85];
+    },
+  ];
+  events: [
+    {
+      name: "accountThawedEvent";
+      discriminator: [172, 202, 68, 155, 173, 98, 79, 74];
+    },
+    {
+      name: "gatedInvokeEvent";
+      discriminator: [111, 20, 226, 55, 0, 110, 86, 58];
+    },
+    {
+      name: "gatedMintInitializedEvent";
+      discriminator: [34, 94, 74, 87, 153, 151, 220, 10];
+    },
+    {
+      name: "gatingDisabledEvent";
+      discriminator: [183, 85, 68, 72, 163, 69, 125, 149];
+    },
+    {
+      name: "whitelistAdminSetEvent";
+      discriminator: [59, 215, 174, 4, 139, 231, 18, 173];
+    },
+    {
+      name: "whitelistedUserAddedEvent";
+      discriminator: [6, 53, 76, 25, 100, 133, 240, 41];
+    },
+    {
+      name: "whitelistedUserRemovedEvent";
+      discriminator: [28, 48, 239, 140, 118, 240, 96, 109];
+    },
+  ];
+  errors: [
+    {
+      code: 6000;
+      name: "unauthorizedAdmin";
+      msg: "Unauthorized: signer is not the gated mint admin";
+    },
+    {
+      code: 6001;
+      name: "unauthorizedFreezeAuthority";
+      msg: "Unauthorized: signer is not the current freeze authority of the mint";
+    },
+    {
+      code: 6002;
+      name: "mintMismatch";
+      msg: "Mint mismatch: account does not match the expected gated mint";
+    },
+    {
+      code: 6003;
+      name: "gatingDisabled";
+      msg: "Gating is already disabled for this mint";
+    },
+    {
+      code: 6004;
+      name: "gatingNotDisabled";
+      msg: "Gating must be disabled to call this instruction";
+    },
+    {
+      code: 6005;
+      name: "targetProgramNotWhitelisted";
+      msg: "Target program is not on the gated_mint whitelist";
+    },
+    {
+      code: 6006;
+      name: "selfInvocation";
+      msg: "Target program may not be the gated_mint program itself";
+    },
+    {
+      code: 6007;
+      name: "invalidTokenAccount";
+      msg: "Invalid token account: account is not a valid SPL Token account of the gated mint";
+    },
+    {
+      code: 6008;
+      name: "unauthorizedWhitelistAuthority";
+      msg: "Unauthorized: signer is neither admin nor whitelist admin";
+    },
+    {
+      code: 6009;
+      name: "invalidWhitelistAdmin";
+      msg: "Whitelist admin may not equal admin";
     },
   ];
   types: [
     {
-      name: "CommonFields";
+      name: "accountThawedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "gatedMintConfig";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "tokenAccount";
+            type: "pubkey";
+          },
+        ];
+      };
+    },
+    {
+      name: "commonFields";
       type: {
         kind: "struct";
         fields: [
@@ -384,7 +718,7 @@ export type GatedMint = {
       };
     },
     {
-      name: "GatedInvokeArgs";
+      name: "gatedInvokeArgs";
       type: {
         kind: "struct";
         fields: [
@@ -396,1058 +730,300 @@ export type GatedMint = {
       };
     },
     {
-      name: "InitializeGatedMintArgs";
+      name: "gatedInvokeEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "gatedMintConfig";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "caller";
+            type: "pubkey";
+          },
+          {
+            name: "targetProgram";
+            type: "pubkey";
+          },
+          {
+            name: "thawedCount";
+            type: "u32";
+          },
+          {
+            name: "frozenCount";
+            type: "u32";
+          },
+        ];
+      };
+    },
+    {
+      name: "gatedMintConfig";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "admin";
+            type: "pubkey";
+          },
+          {
+            name: "whitelistAdmin";
+            type: {
+              option: "pubkey";
+            };
+          },
+          {
+            name: "gatingDisabled";
+            type: "bool";
+          },
+          {
+            name: "seqNum";
+            type: "u64";
+          },
+          {
+            name: "bump";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
+      name: "gatedMintInitializedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "gatedMintConfig";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "admin";
+            type: "pubkey";
+          },
+          {
+            name: "whitelistAdmin";
+            type: {
+              option: "pubkey";
+            };
+          },
+          {
+            name: "previousFreezeAuthority";
+            type: "pubkey";
+          },
+          {
+            name: "pdaBump";
+            type: "u8";
+          },
+        ];
+      };
+    },
+    {
+      name: "gatingDisabledEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "gatedMintConfig";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+        ];
+      };
+    },
+    {
+      name: "initializeGatedMintArgs";
       type: {
         kind: "struct";
         fields: [
           {
             name: "whitelistAdmin";
             type: {
-              option: "publicKey";
+              option: "pubkey";
             };
           },
         ];
       };
     },
     {
-      name: "SetWhitelistAdminArgs";
+      name: "setWhitelistAdminArgs";
       type: {
         kind: "struct";
         fields: [
           {
             name: "whitelistAdmin";
             type: {
-              option: "publicKey";
+              option: "pubkey";
             };
           },
         ];
       };
     },
-  ];
-  events: [
     {
-      name: "GatedMintInitializedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "gatedMintConfig";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "admin";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "whitelistAdmin";
-          type: {
-            option: "publicKey";
-          };
-          index: false;
-        },
-        {
-          name: "previousFreezeAuthority";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "pdaBump";
-          type: "u8";
-          index: false;
-        },
-      ];
+      name: "whitelistAdminSetEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "gatedMintConfig";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "previousWhitelistAdmin";
+            type: {
+              option: "pubkey";
+            };
+          },
+          {
+            name: "newWhitelistAdmin";
+            type: {
+              option: "pubkey";
+            };
+          },
+        ];
+      };
     },
     {
-      name: "WhitelistedUserAddedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "gatedMintConfig";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "whitelistedUser";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "user";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "authority";
-          type: "publicKey";
-          index: false;
-        },
-      ];
+      name: "whitelistedUser";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "user";
+            type: "pubkey";
+          },
+          {
+            name: "bump";
+            type: "u8";
+          },
+        ];
+      };
     },
     {
-      name: "WhitelistedUserRemovedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "gatedMintConfig";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "whitelistedUser";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "user";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "authority";
-          type: "publicKey";
-          index: false;
-        },
-      ];
+      name: "whitelistedUserAddedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "gatedMintConfig";
+            type: "pubkey";
+          },
+          {
+            name: "whitelistedUser";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "user";
+            type: "pubkey";
+          },
+          {
+            name: "authority";
+            type: "pubkey";
+          },
+        ];
+      };
     },
     {
-      name: "WhitelistAdminSetEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "gatedMintConfig";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "previousWhitelistAdmin";
-          type: {
-            option: "publicKey";
-          };
-          index: false;
-        },
-        {
-          name: "newWhitelistAdmin";
-          type: {
-            option: "publicKey";
-          };
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "GatedInvokeEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "gatedMintConfig";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "caller";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "targetProgram";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "thawedCount";
-          type: "u32";
-          index: false;
-        },
-        {
-          name: "frozenCount";
-          type: "u32";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "GatingDisabledEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "gatedMintConfig";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-      ];
-    },
-    {
-      name: "AccountThawedEvent";
-      fields: [
-        {
-          name: "common";
-          type: {
-            defined: "CommonFields";
-          };
-          index: false;
-        },
-        {
-          name: "gatedMintConfig";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "tokenAccount";
-          type: "publicKey";
-          index: false;
-        },
-      ];
+      name: "whitelistedUserRemovedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "gatedMintConfig";
+            type: "pubkey";
+          },
+          {
+            name: "whitelistedUser";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
+            type: "pubkey";
+          },
+          {
+            name: "user";
+            type: "pubkey";
+          },
+          {
+            name: "authority";
+            type: "pubkey";
+          },
+        ];
+      };
     },
   ];
-  errors: [
-    {
-      code: 6000;
-      name: "UnauthorizedAdmin";
-      msg: "Unauthorized: signer is not the gated mint admin";
-    },
-    {
-      code: 6001;
-      name: "UnauthorizedFreezeAuthority";
-      msg: "Unauthorized: signer is not the current freeze authority of the mint";
-    },
-    {
-      code: 6002;
-      name: "MintMismatch";
-      msg: "Mint mismatch: account does not match the expected gated mint";
-    },
-    {
-      code: 6003;
-      name: "GatingDisabled";
-      msg: "Gating is already disabled for this mint";
-    },
-    {
-      code: 6004;
-      name: "GatingNotDisabled";
-      msg: "Gating must be disabled to call this instruction";
-    },
-    {
-      code: 6005;
-      name: "TargetProgramNotWhitelisted";
-      msg: "Target program is not on the gated_mint whitelist";
-    },
-    {
-      code: 6006;
-      name: "SelfInvocation";
-      msg: "Target program may not be the gated_mint program itself";
-    },
-    {
-      code: 6007;
-      name: "InvalidTokenAccount";
-      msg: "Invalid token account: account is not a valid SPL Token account of the gated mint";
-    },
-    {
-      code: 6008;
-      name: "UnauthorizedWhitelistAuthority";
-      msg: "Unauthorized: signer is neither admin nor whitelist admin";
-    },
-    {
-      code: 6009;
-      name: "InvalidWhitelistAdmin";
-      msg: "Whitelist admin may not equal admin";
-    },
-  ];
-};
-
-export const IDL: GatedMint = {
-  version: "0.1.0",
-  name: "gated_mint",
-  instructions: [
-    {
-      name: "initializeGatedMint",
-      accounts: [
-        {
-          name: "mint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "gatedMintConfig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "currentFreezeAuthority",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "InitializeGatedMintArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "addWhitelistedUser",
-      accounts: [
-        {
-          name: "gatedMintConfig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "authority",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "mint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "user",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "whitelistedUser",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "removeWhitelistedUser",
-      accounts: [
-        {
-          name: "gatedMintConfig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "authority",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "mint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "user",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "whitelistedUser",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "rentDestination",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "setWhitelistAdmin",
-      accounts: [
-        {
-          name: "gatedMintConfig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "SetWhitelistAdminArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "gatedInvoke",
-      accounts: [
-        {
-          name: "caller",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "gatedMintConfig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "whitelistedUser",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "mint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "targetProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "GatedInvokeArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "disableGating",
-      accounts: [
-        {
-          name: "gatedMintConfig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "thawAccount",
-      accounts: [
-        {
-          name: "gatedMintConfig",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "mint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-  ],
-  accounts: [
-    {
-      name: "gatedMintConfig",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "mint",
-            type: "publicKey",
-          },
-          {
-            name: "admin",
-            type: "publicKey",
-          },
-          {
-            name: "whitelistAdmin",
-            type: {
-              option: "publicKey",
-            },
-          },
-          {
-            name: "gatingDisabled",
-            type: "bool",
-          },
-          {
-            name: "seqNum",
-            type: "u64",
-          },
-          {
-            name: "bump",
-            type: "u8",
-          },
-        ],
-      },
-    },
-    {
-      name: "whitelistedUser",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "mint",
-            type: "publicKey",
-          },
-          {
-            name: "user",
-            type: "publicKey",
-          },
-          {
-            name: "bump",
-            type: "u8",
-          },
-        ],
-      },
-    },
-  ],
-  types: [
-    {
-      name: "CommonFields",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "slot",
-            type: "u64",
-          },
-          {
-            name: "unixTimestamp",
-            type: "i64",
-          },
-          {
-            name: "gatedMintConfigSeqNum",
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "GatedInvokeArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "instructionData",
-            type: "bytes",
-          },
-        ],
-      },
-    },
-    {
-      name: "InitializeGatedMintArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "whitelistAdmin",
-            type: {
-              option: "publicKey",
-            },
-          },
-        ],
-      },
-    },
-    {
-      name: "SetWhitelistAdminArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "whitelistAdmin",
-            type: {
-              option: "publicKey",
-            },
-          },
-        ],
-      },
-    },
-  ],
-  events: [
-    {
-      name: "GatedMintInitializedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "gatedMintConfig",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "admin",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "whitelistAdmin",
-          type: {
-            option: "publicKey",
-          },
-          index: false,
-        },
-        {
-          name: "previousFreezeAuthority",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "pdaBump",
-          type: "u8",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "WhitelistedUserAddedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "gatedMintConfig",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "whitelistedUser",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "user",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "authority",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "WhitelistedUserRemovedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "gatedMintConfig",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "whitelistedUser",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "user",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "authority",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "WhitelistAdminSetEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "gatedMintConfig",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "previousWhitelistAdmin",
-          type: {
-            option: "publicKey",
-          },
-          index: false,
-        },
-        {
-          name: "newWhitelistAdmin",
-          type: {
-            option: "publicKey",
-          },
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "GatedInvokeEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "gatedMintConfig",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "caller",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "targetProgram",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "thawedCount",
-          type: "u32",
-          index: false,
-        },
-        {
-          name: "frozenCount",
-          type: "u32",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "GatingDisabledEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "gatedMintConfig",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "AccountThawedEvent",
-      fields: [
-        {
-          name: "common",
-          type: {
-            defined: "CommonFields",
-          },
-          index: false,
-        },
-        {
-          name: "gatedMintConfig",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "tokenAccount",
-          type: "publicKey",
-          index: false,
-        },
-      ],
-    },
-  ],
-  errors: [
-    {
-      code: 6000,
-      name: "UnauthorizedAdmin",
-      msg: "Unauthorized: signer is not the gated mint admin",
-    },
-    {
-      code: 6001,
-      name: "UnauthorizedFreezeAuthority",
-      msg: "Unauthorized: signer is not the current freeze authority of the mint",
-    },
-    {
-      code: 6002,
-      name: "MintMismatch",
-      msg: "Mint mismatch: account does not match the expected gated mint",
-    },
-    {
-      code: 6003,
-      name: "GatingDisabled",
-      msg: "Gating is already disabled for this mint",
-    },
-    {
-      code: 6004,
-      name: "GatingNotDisabled",
-      msg: "Gating must be disabled to call this instruction",
-    },
-    {
-      code: 6005,
-      name: "TargetProgramNotWhitelisted",
-      msg: "Target program is not on the gated_mint whitelist",
-    },
-    {
-      code: 6006,
-      name: "SelfInvocation",
-      msg: "Target program may not be the gated_mint program itself",
-    },
-    {
-      code: 6007,
-      name: "InvalidTokenAccount",
-      msg: "Invalid token account: account is not a valid SPL Token account of the gated mint",
-    },
-    {
-      code: 6008,
-      name: "UnauthorizedWhitelistAuthority",
-      msg: "Unauthorized: signer is neither admin nor whitelist admin",
-    },
-    {
-      code: 6009,
-      name: "InvalidWhitelistAdmin",
-      msg: "Whitelist admin may not equal admin",
-    },
-  ],
 };

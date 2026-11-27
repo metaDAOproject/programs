@@ -1,4 +1,4 @@
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider } from "@anchor-lang/core";
 import * as multisig from "@sqds/multisig";
 import BN from "bn.js";
 import {
@@ -161,7 +161,7 @@ const withdrawLiquidityAction = async (
       minBaseAmount,
       minQuoteAmount,
     })
-    .accounts({
+    .accountsPartial({
       dao,
       positionAuthority: daoMultisigVault,
       liquidityProviderBaseAccount: vaultBaseTokenAccount,
@@ -876,7 +876,7 @@ export const proposePerformancePackageUnlockTerms =
             proposer: daoMultisigVault,
           })
           // The vault pays the rent; otherwise the payer defaults to the wallet
-          .accounts({ payer: daoMultisigVault })
+          .accountsPartial({ payer: daoMultisigVault })
           .instruction(),
       ],
     };

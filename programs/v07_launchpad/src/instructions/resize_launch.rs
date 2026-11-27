@@ -22,7 +22,7 @@ impl ResizeLaunch<'_> {
 
         // Discriminator check
         let is_discriminator_correct =
-            launch.data.try_borrow_mut().unwrap()[..8] == Launch::discriminator();
+            &launch.data.try_borrow_mut().unwrap()[..8] == Launch::DISCRIMINATOR;
         require_eq!(is_discriminator_correct, true);
 
         const AFTER_REALLOC_SIZE: usize = 8 + Launch::INIT_SPACE;
@@ -70,7 +70,7 @@ impl ResizeLaunch<'_> {
             has_bid_wall: false,
         };
 
-        launch.realloc(AFTER_REALLOC_SIZE, true)?;
+        launch.resize(AFTER_REALLOC_SIZE)?;
 
         let lamports_needed = Rent::get()?.minimum_balance(AFTER_REALLOC_SIZE);
 

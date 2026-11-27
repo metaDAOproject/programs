@@ -5,8 +5,11 @@ import {
   VersionedTransaction,
   TransactionMessage,
 } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
-import { PriceBasedPerformancePackageClient } from "@metadaoproject/programs/price_based_performance_package";
+import * as anchor from "@anchor-lang/core";
+import {
+  PriceBasedPerformancePackageClient,
+  PriceBasedPerformancePackageIDL,
+} from "@metadaoproject/programs/price_based_performance_package";
 import dotenv from "dotenv";
 import bs58 from "bs58";
 
@@ -17,7 +20,9 @@ const payer = provider.wallet["payer"];
 
 function getDiscriminator(accountName: string): Buffer {
   return Buffer.from(
-    anchor.BorshAccountsCoder.accountDiscriminator(accountName),
+    PriceBasedPerformancePackageIDL.accounts.find(
+      (a) => a.name === accountName,
+    )!.discriminator,
   );
 }
 
