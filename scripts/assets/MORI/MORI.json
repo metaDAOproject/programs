@@ -1,0 +1,6 @@
+{
+  "name": "Mori Finance",
+  "symbol": "MORI",
+  "description": "Sell covered calls on Solana tokens and get paid upfront in USDC. Market makers compete to quote every trade, including long-tail tokens other venues do not list.",
+  "image": "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/develop/scripts/assets/MORI/MORI.png"
+}

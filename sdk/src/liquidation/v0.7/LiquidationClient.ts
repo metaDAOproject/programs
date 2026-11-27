@@ -296,6 +296,33 @@ export class LiquidationClient {
       });
   }
 
+  adminExtendLiquidationIx({
+    newDurationSeconds,
+    liquidation,
+    quoteMint,
+    admin = this.provider.publicKey,
+  }: {
+    newDurationSeconds: number;
+    liquidation: PublicKey;
+    quoteMint: PublicKey;
+    admin?: PublicKey;
+  }) {
+    const liquidationQuoteVault = getAssociatedTokenAddressSync(
+      quoteMint,
+      liquidation,
+      true,
+    );
+
+    return this.liquidationProgram.methods
+      .adminExtendLiquidation({ newDurationSeconds })
+      .accountsPartial({
+        admin,
+        liquidation,
+        liquidationQuoteVault,
+        quoteMint,
+      });
+  }
+
   async getRefundRecord({
     liquidation,
     recipient,

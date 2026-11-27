@@ -5,6 +5,7 @@ import setRefundRecord from "./unit/setRefundRecord.test.js";
 import activateLiquidation from "./unit/activateLiquidation.test.js";
 import refund from "./unit/refund.test.js";
 import withdrawRemainingQuote from "./unit/withdrawRemainingQuote.test.js";
+import adminExtendLiquidation from "./unit/adminExtendLiquidation.test.js";
 
 export default function suite() {
   before(async function () {
@@ -19,4 +20,5 @@ export default function suite() {
   describe("#activate_liquidation", activateLiquidation);
   describe("#refund", refund);
   describe("#withdraw_remaining_quote", withdrawRemainingQuote);
+  describe("#admin_extend_liquidation", adminExtendLiquidation);
 }

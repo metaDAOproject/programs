@@ -164,6 +164,177 @@ export type Liquidation = {
       args: [];
     },
     {
+      name: "adminExtendLiquidation";
+      discriminator: [177, 153, 197, 195, 161, 67, 222, 58];
+      accounts: [
+        {
+          name: "admin";
+          signer: true;
+        },
+        {
+          name: "liquidation";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [108, 105, 113, 117, 105, 100, 97, 116, 105, 111, 110];
+              },
+              {
+                kind: "account";
+                path: "liquidation.base_mint";
+                account: "liquidation";
+              },
+              {
+                kind: "account";
+                path: "quoteMint";
+              },
+              {
+                kind: "account";
+                path: "liquidation.create_key";
+                account: "liquidation";
+              },
+            ];
+          };
+        },
+        {
+          name: "liquidationQuoteVault";
+          pda: {
+            seeds: [
+              {
+                kind: "account";
+                path: "liquidation";
+              },
+              {
+                kind: "const";
+                value: [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169,
+                ];
+              },
+              {
+                kind: "account";
+                path: "quoteMint";
+              },
+            ];
+            program: {
+              kind: "const";
+              value: [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ];
+            };
+          };
+        },
+        {
+          name: "quoteMint";
+          relations: ["liquidation"];
+        },
+        {
+          name: "eventAuthority";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ];
+              },
+            ];
+          };
+        },
+        {
+          name: "program";
+        },
+      ];
+      args: [
+        {
+          name: "args";
+          type: {
+            defined: {
+              name: "adminExtendLiquidationArgs";
+            };
+          };
+        },
+      ];
+    },
+    {
       name: "initializeLiquidation";
       discriminator: [176, 137, 148, 128, 141, 254, 91, 255];
       accounts: [
@@ -933,6 +1104,10 @@ export type Liquidation = {
       discriminator: [5, 223, 88, 192, 206, 170, 143, 203];
     },
     {
+      name: "liquidationExtendedEvent";
+      discriminator: [82, 109, 55, 170, 133, 114, 169, 122];
+    },
+    {
       name: "refundEvent";
       discriminator: [176, 159, 218, 59, 94, 213, 129, 218];
     },
@@ -1001,8 +1176,35 @@ export type Liquidation = {
       name: "invalidMint";
       msg: "Invalid mint";
     },
+    {
+      code: 6011;
+      name: "invalidAdmin";
+      msg: "Invalid admin";
+    },
+    {
+      code: 6012;
+      name: "durationNotIncreased";
+      msg: "New duration must be greater than the current duration";
+    },
+    {
+      code: 6013;
+      name: "vaultUnderfunded";
+      msg: "Vault does not cover the unpaid refunds";
+    },
   ];
   types: [
+    {
+      name: "adminExtendLiquidationArgs";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newDurationSeconds";
+            type: "u32";
+          },
+        ];
+      };
+    },
     {
       name: "commonFields";
       type: {
@@ -1193,6 +1395,34 @@ export type Liquidation = {
           {
             name: "pdaBump";
             type: "u8";
+          },
+        ];
+      };
+    },
+    {
+      name: "liquidationExtendedEvent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "common";
+            type: {
+              defined: {
+                name: "commonFields";
+              };
+            };
+          },
+          {
+            name: "liquidation";
+            type: "pubkey";
+          },
+          {
+            name: "oldDurationSeconds";
+            type: "u32";
+          },
+          {
+            name: "newDurationSeconds";
+            type: "u32";
           },
         ];
       };
